@@ -2,13 +2,15 @@ package ua.com.fielden.platform.swing.treewitheditors.domaintree.development;
 
 import javax.swing.Action;
 
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+
 /**
  * The {@link EntitiesTree2} with ability to add/edit/copy/remove calculated property.
  *
  * @author TG Team
  *
  */
-public class EditableEntitiesTree extends EntitiesTree2 {
+public class EditableEntitiesTree extends EntitiesTree2<ICentreDomainTreeManagerAndEnhancer> {
 
     private static final long serialVersionUID = -4085856123677198967L;
 
@@ -22,7 +24,7 @@ public class EditableEntitiesTree extends EntitiesTree2 {
      * @param removeAction
      */
     public EditableEntitiesTree(//
-	    final EntitiesTreeModel2 entitiesTreeModel2,//
+	    final EntitiesTreeModel2<ICentreDomainTreeManagerAndEnhancer> entitiesTreeModel2,//
 	    final Action newAction,//
 	    final Action editAction,//
 	    final Action copyAction,//

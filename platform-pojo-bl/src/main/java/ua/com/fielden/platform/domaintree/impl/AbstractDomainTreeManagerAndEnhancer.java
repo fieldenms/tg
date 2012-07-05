@@ -69,9 +69,9 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      *
      */
     protected static class DomainTreeEnhancerWithPropertiesPopulation implements IDomainTreeEnhancer {
-	private final transient Logger logger = Logger.getLogger(getClass());
+	private final static Logger logger = Logger.getLogger(DomainTreeEnhancerWithPropertiesPopulation.class);
 	private final DomainTreeEnhancer baseEnhancer;
-	private final DomainTreeRepresentationAndEnhancer dtr;
+	private final IDomainTreeRepresentationWithMutability dtr;
 
 	/**
 	 * A {@link DomainTreeEnhancerWithPropertiesPopulation} constructor which requires a base implementations of {@link DomainTreeEnhancer} and {@link AbstractDomainTreeRepresentation}.
@@ -79,7 +79,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	 * @param baseEnhancer
 	 * @param dtr
 	 */
-	protected DomainTreeEnhancerWithPropertiesPopulation(final DomainTreeEnhancer baseEnhancer, final DomainTreeRepresentationAndEnhancer dtr) {
+	protected DomainTreeEnhancerWithPropertiesPopulation(final DomainTreeEnhancer baseEnhancer, final IDomainTreeRepresentationWithMutability dtr) {
 	    this.baseEnhancer = baseEnhancer;
 	    this.dtr = dtr;
 	}
@@ -92,7 +92,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	 * @param props
 	 * @return
 	 */
-	private int nextBranchIndex(final int pathIndex, final String path, final List<String> props) {
+	private static int nextBranchIndex(final int pathIndex, final String path, final List<String> props) {
 	    int i = pathIndex + 1;
 	    final String prefix = "".equals(path) ? "" : (path + ".");
 	    while (i < props.size() && props.get(i).startsWith(prefix)) {
@@ -116,19 +116,19 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    }
 	    return set;
 	}
-	
-	private static Set<Pair<Class<?>, String>> union(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
+
+	protected static Set<Pair<Class<?>, String>> union(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
 	    final Set<Pair<Class<?>, String>> a_union_b = new HashSet<Pair<Class<?>, String>>(a);
 	    a_union_b.addAll(b);
 	    return a_union_b;
 	}
-	
+
 	private static Set<Pair<Class<?>, String>> subtract(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
 	    final Set<Pair<Class<?>, String>> a_subtract_b = new HashSet<Pair<Class<?>, String>>(a);
 	    a_subtract_b.removeAll(b);
 	    return a_subtract_b;
 	}
-	
+
 	private static Set<Pair<Class<?>, String>> intersect(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
 	    final Set<Pair<Class<?>, String>> a_intersect_b = new HashSet<Pair<Class<?>, String>>(a);
 	    a_intersect_b.retainAll(b);
@@ -139,10 +139,10 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	public void apply() {
 	    final Map<Class<?>, List<CalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer, false);
 	    final Map<Class<?>, List<CalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<CalculatedProperty>>(baseEnhancer.calculatedProperties());
-	    
+
 	    final Set<Pair<Class<?>, String>> was = migrateToSet(oldCalculatedProperties);
 	    final Set<Pair<Class<?>, String>> is = migrateToSet(newCalculatedProperties);
-	    
+
 	    // form a set of retained calculated properties:
 	    final Set<Pair<Class<?>, String>> retained = intersect(was, is);
 	    final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged = new HashSet<Pair<Class<?>, String>>();
@@ -153,40 +153,48 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 		    retainedAndSignificantlyChanged.add(rootAndProp);
 		}
 	    }
-	    
+
 	    // remove obsolete calc properties from included properties list
 	    final Set<Pair<Class<?>, String>> removed = subtract(union(was, is), is);
-	    for (final Pair<Class<?>, String> rootAndRemovalProp : union(removed, retainedAndSignificantlyChanged)) {
-		removeMetaStateFromPropertyToBeRemoved(rootAndRemovalProp.getKey(), rootAndRemovalProp.getValue());
-	    }
+	    beforeApplyPopulation(retainedAndSignificantlyChanged, removed);
 
 	    baseEnhancer.apply();
 
 	    // add new calc properties to included properties list
 	    final Set<Pair<Class<?>, String>> neew = subtract(union(was, is), was);
+	    afterApplyPopulation(retainedAndSignificantlyChanged, neew);
+	}
+
+	protected void beforeApplyPopulation(final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged, final Set<Pair<Class<?>, String>> removed) {
+	    for (final Pair<Class<?>, String> rootAndRemovalProp : union(removed, retainedAndSignificantlyChanged)) {
+		removeMetaStateFromPropertyToBeRemoved(rootAndRemovalProp.getKey(), rootAndRemovalProp.getValue(), dtr);
+	    }
+	}
+
+	protected void afterApplyPopulation(final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged, final Set<Pair<Class<?>, String>> neew) {
 	    for (final Pair<Class<?>, String> rootAndProp : union(neew, retainedAndSignificantlyChanged)) {
-		populateMetaStateForActuallyAddedNewProperty(rootAndProp.getKey(), rootAndProp.getValue());
+		populateMetaStateForActuallyAddedNewProperty(rootAndProp.getKey(), rootAndProp.getValue(), dtr);
 	    }
 	}
 
 	/**
 	 * Returns <code>true</code> when the property has been changed <b>significantly</b> which means that maybe category or place of the property has been changed.
-	 * This can be result of the {@link CalculatedProperty#setContextualExpression(String)} or {@link CalculatedProperty#setTitle(String)} or 
+	 * This can be result of the {@link CalculatedProperty#setContextualExpression(String)} or {@link CalculatedProperty#setTitle(String)} or
 	 * {@link CalculatedProperty#setAttribute(CalculatedPropertyAttribute)} actions.
-	 * 
+	 *
 	 * @param newProp
 	 * @param oldProp
 	 * @return
 	 */
 	private boolean significantlyChanged(final CalculatedProperty newProp, final CalculatedProperty oldProp) {
-//	    return !EntityUtils.equalsEx(newProp.getContextualExpression(), oldProp.getContextualExpression()) || // 
+//	    return !EntityUtils.equalsEx(newProp.getContextualExpression(), oldProp.getContextualExpression()) || //
 //	    !EntityUtils.equalsEx(newProp.getTitle(), oldProp.getTitle()) || //
 //	    !EntityUtils.equalsEx(newProp.getAttribute(), oldProp.getAttribute());
-	    return !EntityUtils.equalsEx(newProp.category(), oldProp.category()) || // 
+	    return !EntityUtils.equalsEx(newProp.category(), oldProp.category()) || //
 	    !EntityUtils.equalsEx(newProp.path(), oldProp.path());
 	}
 
-	private void removeMetaStateFromPropertyToBeRemoved(final Class<?> root, final String removedProperty) {
+	protected static void removeMetaStateFromPropertyToBeRemoved(final Class<?> root, final String removedProperty, final IDomainTreeRepresentationWithMutability dtr) {
 	    // this is a removed property. "includedProperties" should be updated (the removed property should be removed in incl properties).
 	    logger.debug("The property to be removed: root == " + root + ", property == " + removedProperty);
 	    dtr.includedPropertiesMutable(root).remove(removedProperty);
@@ -196,7 +204,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    }
 	}
 
-	private void populateMetaStateForActuallyAddedNewProperty(final Class<?> root, final String newProperty) {
+	protected static void populateMetaStateForActuallyAddedNewProperty(final Class<?> root, final String newProperty, final IDomainTreeRepresentationWithMutability dtr) {
 	    final List<String> inclProps = dtr.includedProperties(root);
 	    if (!dtr.isExcludedImmutably(root, newProperty)) {
 		// the property is not excluded 1) by contract 2) was not excluded manually
@@ -279,12 +287,22 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	dtr = createRepresentation((AbstractDomainTreeRepresentation) base.getRepresentation());
 	firstTick = createFirstTick((TickManager) base.getFirstTick());
 	secondTick = createSecondTick((TickManager) base.getSecondTick());
-	enhancerWithPropertiesPopulation = new DomainTreeEnhancerWithPropertiesPopulation((DomainTreeEnhancer) this.enhancer, dtr);
+	enhancerWithPropertiesPopulation = createEnhancerWrapperWithPropertiesPopulation();
 
 	final IPropertyListener oldListener = this.base.listener();
 	final IPropertyListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick(), (IDomainTreeRepresentationWithMutability) this.getRepresentation());
 	this.base.getRepresentation().removePropertyListener(oldListener);
 	this.getRepresentation().addPropertyListener(newListener);
+    }
+
+    /**
+     * Creates a domain tree enhancer wrapper that takes care about population of domain tree changes (calc props) in representation "included properties"
+     * (which triggers other population like manager's "checked properties" automatically).
+     *
+     * @return
+     */
+    protected DomainTreeEnhancerWithPropertiesPopulation createEnhancerWrapperWithPropertiesPopulation() {
+	return new DomainTreeEnhancerWithPropertiesPopulation((DomainTreeEnhancer) enhancer(), dtr);
     }
 
     @Override

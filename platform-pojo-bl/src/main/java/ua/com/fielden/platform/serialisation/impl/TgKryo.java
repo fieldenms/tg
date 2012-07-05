@@ -32,20 +32,14 @@ import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager.AnalysisDomainTreeManagerSerialiser;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManagerAndEnhancer.AnalysisDomainTreeManagerAndEnhancerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager.LifecycleDomainTreeManagerSerialiser;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManagerAndEnhancer.LifecycleDomainTreeManagerAndEnhancerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager.PivotDomainTreeManagerSerialiser;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManagerAndEnhancer.PivotDomainTreeManagerAndEnhancerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRepresentation.PivotDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager;
@@ -202,9 +196,6 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer lifecycleDomainTreeManagerSerialiser;
     private final Serializer locatorDomainTreeManagerAndEnhancerSerialiser;
     private final Serializer criteriaDomainTreeManagerAndEnhancerSerialiser;
-    private final Serializer pivotDomainTreeManagerAndEnhancerSerialiser;
-    private final Serializer analysisDomainTreeManagerAndEnhancerSerialiser;
-    private final Serializer lifecycleDomainTreeManagerAndEnhancerSerialiser;
     private final Serializer dynamicallyTypedQueryContainerSerialiser;
 
     @Inject
@@ -248,9 +239,6 @@ public class TgKryo extends Kryo implements ISerialiser {
 	lifecycleDomainTreeManagerSerialiser = new LifecycleDomainTreeManagerSerialiser(this);
 	locatorDomainTreeManagerAndEnhancerSerialiser = new LocatorDomainTreeManagerAndEnhancerSerialiser(this);
 	criteriaDomainTreeManagerAndEnhancerSerialiser = new CentreDomainTreeManagerAndEnhancerSerialiser(this);
-	pivotDomainTreeManagerAndEnhancerSerialiser = new PivotDomainTreeManagerAndEnhancerSerialiser(this);
-	analysisDomainTreeManagerAndEnhancerSerialiser = new AnalysisDomainTreeManagerAndEnhancerSerialiser(this);
-	lifecycleDomainTreeManagerAndEnhancerSerialiser = new LifecycleDomainTreeManagerAndEnhancerSerialiser(this);
 	dynamicallyTypedQueryContainerSerialiser = new DynamicallyTypedQueryContainerSerialiser(this);
 
 	// the following order of class registration is important
@@ -457,12 +445,6 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return locatorDomainTreeManagerAndEnhancerSerialiser;
 	} else if (CentreDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
 	    return criteriaDomainTreeManagerAndEnhancerSerialiser;
-	} else if (PivotDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
-	    return pivotDomainTreeManagerAndEnhancerSerialiser;
-	} else if (AnalysisDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
-	    return analysisDomainTreeManagerAndEnhancerSerialiser;
-	} else if (LifecycleDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
-	    return lifecycleDomainTreeManagerAndEnhancerSerialiser;
 	} else if (DynamicallyTypedQueryContainer.class.isAssignableFrom(type)) {
 	    return dynamicallyTypedQueryContainerSerialiser;
 	}

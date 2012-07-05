@@ -12,7 +12,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-interface IDomainTreeRepresentationWithMutability extends IDomainTreeRepresentation {
+public interface IDomainTreeRepresentationWithMutability extends IDomainTreeRepresentation {
     /**
      * Getter of mutable "included properties" cache for internal purposes.
      * <p>
@@ -35,12 +35,12 @@ interface IDomainTreeRepresentationWithMutability extends IDomainTreeRepresentat
      */
     Set<Pair<Class<?>, String>> excludedPropertiesMutable();
 
-//    /**
-//     * TODO
-//     *
-//     * @param root
-//     * @param property
-//     * @return
-//     */
-//    boolean isExcludedNaturally(final Class<?> root, final String property);
+    //    /**
+    //     * TODO
+    //     *
+    //     * @param root
+    //     * @param property
+    //     * @return
+    //     */
+    //    boolean isExcludedNaturally(final Class<?> root, final String property);
 }

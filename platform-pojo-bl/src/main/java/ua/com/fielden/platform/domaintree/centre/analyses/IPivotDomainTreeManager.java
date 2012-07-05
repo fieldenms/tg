@@ -11,15 +11,6 @@ import ua.com.fielden.platform.domaintree.centre.IWidthManager;
  *
  */
 public interface IPivotDomainTreeManager extends IAbstractAnalysisDomainTreeManager {
-    /**
-     * A <i>domain tree manager<i> with <i>enhancer</i> inside.
-     *
-     * @author TG Team
-     *
-     */
-    public interface IPivotDomainTreeManagerAndEnhancer extends IAbstractAnalysisDomainTreeManagerAndEnhancer, IPivotDomainTreeManager {
-    }
-
     IPivotAddToDistributionTickManager getFirstTick();
     IPivotAddToAggregationTickManager getSecondTick();
     IPivotDomainTreeRepresentation getRepresentation();

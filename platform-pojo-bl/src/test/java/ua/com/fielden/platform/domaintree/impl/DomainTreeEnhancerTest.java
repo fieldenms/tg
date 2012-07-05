@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -37,12 +36,14 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  */
 public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
-    private IDomainTreeEnhancer dm;
-
+    /**
+     * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
+     *
+     * @return
+     */
     @Override
-    @Before
-    public final void initEachTest() throws Exception {
-	dm = managerArray == null ? null : serialiser().deserialise(managerArray, DomainTreeEnhancer.class);
+    protected IDomainTreeEnhancer dtm() {
+	return (IDomainTreeEnhancer) super.dtm();
     }
 
     @BeforeClass
@@ -350,77 +351,77 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_Discard_operation() {
-	checkDiscardOperation(dm);
+	checkDiscardOperation(dtm());
     }
 
     @Test
     public void test_Discard_operation_FOR_THE_COPY_OF_MANAGER() {
 	// this is very important test due to JVM's lazy class loading!
-	checkDiscardOperation(EntityUtils.deepCopy(dm, getSerialiser()));
+	checkDiscardOperation(EntityUtils.deepCopy(dtm(), getSerialiser()));
     }
 
     @Test
     public void test_first_level_enhancements() {
-	checkDiscardOperation(dm);
-	checkFirstLevelEnhancements(dm);
+	checkDiscardOperation(dtm());
+	checkFirstLevelEnhancements(dtm());
     }
 
     @Test
     public void test_first_level_enhancements_FOR_THE_COPY_OF_MANAGER() {
-	checkDiscardOperation(dm);
+	checkDiscardOperation(dtm());
 	// this is very important test due to JVM's lazy class loading!
-	checkFirstLevelEnhancements(EntityUtils.deepCopy(dm, getSerialiser()));
+	checkFirstLevelEnhancements(EntityUtils.deepCopy(dtm(), getSerialiser()));
     }
 
     @Test
     public void test_second_level_enhancements() {
-	checkDiscardOperation(dm);
-	checkFirstLevelEnhancements(dm);
-	checkSecondLevelEnhancements(dm);
+	checkDiscardOperation(dtm());
+	checkFirstLevelEnhancements(dtm());
+	checkSecondLevelEnhancements(dtm());
     }
 
     @Test
     public void test_second_level_enhancements_FOR_THE_COPY_OF_MANAGER() {
-	checkDiscardOperation(dm);
-	checkFirstLevelEnhancements(dm);
+	checkDiscardOperation(dtm());
+	checkFirstLevelEnhancements(dtm());
 	// this is very important test due to JVM's lazy class loading!
-	checkSecondLevelEnhancements(EntityUtils.deepCopy(dm, getSerialiser()));
+	checkSecondLevelEnhancements(EntityUtils.deepCopy(dtm(), getSerialiser()));
     }
 
     @Test
     public void test_third_level_enhancements() {
-	checkDiscardOperation(dm);
-	checkFirstLevelEnhancements(dm);
-	checkSecondLevelEnhancements(dm);
-	checkThirdLevelEnhancements(dm);
+	checkDiscardOperation(dtm());
+	checkFirstLevelEnhancements(dtm());
+	checkSecondLevelEnhancements(dtm());
+	checkThirdLevelEnhancements(dtm());
     }
 
     @Test
     public void test_third_level_enhancements_FOR_THE_COPY_OF_MANAGER_1() {
-	checkDiscardOperation(dm);
-	checkFirstLevelEnhancements(dm);
-	checkSecondLevelEnhancements(dm);
+	checkDiscardOperation(dtm());
+	checkFirstLevelEnhancements(dtm());
+	checkSecondLevelEnhancements(dtm());
 	// this is very important test due to JVM's lazy class loading!
-	checkThirdLevelEnhancements(EntityUtils.deepCopy(dm, getSerialiser()));
+	checkThirdLevelEnhancements(EntityUtils.deepCopy(dtm(), getSerialiser()));
     }
 
     @Test
     public void test_third_level_enhancements_FOR_THE_COPY_OF_MANAGER_2() {
-	checkDiscardOperation(dm);
-	checkFirstLevelEnhancements(dm);
+	checkDiscardOperation(dtm());
+	checkFirstLevelEnhancements(dtm());
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
 	checkSecondLevelEnhancements(copy);
 	checkThirdLevelEnhancements(copy);
     }
 
     @Test
     public void test_third_level_enhancements_FOR_THE_COPY_OF_MANAGER_3() {
-	checkDiscardOperation(dm);
+	checkDiscardOperation(dtm());
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
 	checkFirstLevelEnhancements(copy);
 	checkSecondLevelEnhancements(copy);
 	checkThirdLevelEnhancements(copy);
@@ -486,77 +487,77 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     @Test
     public void test_that_calc_properties_adding_is_validated() {
 	// empty name
-	failAddition(dm, EnhancingMasterEntity.class, "", null);
-	failAddition(dm, EnhancingMasterEntity.class, "", "");
+	failAddition(dtm(), EnhancingMasterEntity.class, "", null);
+	failAddition(dtm(), EnhancingMasterEntity.class, "", "");
 	// non-existent domain root
-	failAddition(dm, EnhancingSlaveEntity.class, "", "correctProp");
+	failAddition(dtm(), EnhancingSlaveEntity.class, "", "correctProp");
 	// non-existent path
-	failAddition(dm, EnhancingMasterEntity.class, "masterEntityProp1", "Calc prop");
-	failAddition(dm, EnhancingMasterEntity.class, "masterEntityProp.evenSlaverEntityProp1", "Calc prop");
-	failAddition(dm, EnhancingMasterEntity.class, "slaveEntityProp.evenSlaverEntityProp.masterEntityProp1", "Calc prop");
+	failAddition(dtm(), EnhancingMasterEntity.class, "masterEntityProp1", "Calc prop");
+	failAddition(dtm(), EnhancingMasterEntity.class, "masterEntityProp.evenSlaverEntityProp1", "Calc prop");
+	failAddition(dtm(), EnhancingMasterEntity.class, "slaveEntityProp.evenSlaverEntityProp.masterEntityProp1", "Calc prop");
 	// existent calc properties
-	failAddition(dm, EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "Old single");
-	failAddition(dm, EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "Old double");
-	failAddition(dm, EnhancingMasterEntity.class, "slaveEntityProp", "Old triple");
-	failAddition(dm, EnhancingMasterEntity.class, "", "Old quadruple");
+	failAddition(dtm(), EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "Old single");
+	failAddition(dtm(), EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "Old double");
+	failAddition(dtm(), EnhancingMasterEntity.class, "slaveEntityProp", "Old triple");
+	failAddition(dtm(), EnhancingMasterEntity.class, "", "Old quadruple");
 	// existent simple properties
-	failAddition(dm, EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "Integer prop");
-	failAddition(dm, EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "Integer prop");
-	failAddition(dm, EnhancingMasterEntity.class, "slaveEntityProp", "Integer prop");
-	failAddition(dm, EnhancingMasterEntity.class, "", "Integer prop");
+	failAddition(dtm(), EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "Integer prop");
+	failAddition(dtm(), EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "Integer prop");
+	failAddition(dtm(), EnhancingMasterEntity.class, "slaveEntityProp", "Integer prop");
+	failAddition(dtm(), EnhancingMasterEntity.class, "", "Integer prop");
     }
 
     @Test
     public void test_that_calc_properties_removing_and_obtaining_is_validated() {
 	// empty name
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "");
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "");
 	// non-existent domain root
-	failGettingAndRemoving(dm, EnhancingSlaveEntity.class, "oldQuadRuple");
+	failGettingAndRemoving(dtm(), EnhancingSlaveEntity.class, "oldQuadRuple");
 	// non-existent path
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "masterEntityProp1.calcProp");
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "masterEntityProp.evenSlaverEntityProp1.calcProp");
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "slaveEntityProp.evenSlaverEntityProp.masterEntityProp1.calcProp");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "masterEntityProp1.calcProp");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "masterEntityProp.evenSlaverEntityProp1.calcProp");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "slaveEntityProp.evenSlaverEntityProp.masterEntityProp1.calcProp");
 	// non-existent calc properties
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle1");
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble1");
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "slaveEntityProp.oldTriple1");
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "oldQuadruple1");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle1");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble1");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "slaveEntityProp.oldTriple1");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "oldQuadruple1");
 	// existent simple properties (are not calculated!)
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.integerProp");
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.integerProp");
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "slaveEntityProp.integerProp");
-	failGettingAndRemoving(dm, EnhancingMasterEntity.class, "integerProp");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.integerProp");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.integerProp");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "slaveEntityProp.integerProp");
+	failGettingAndRemoving(dtm(), EnhancingMasterEntity.class, "integerProp");
     }
 
     @Test
     public void test_that_collectional_hierarchies_can_be_enhanced() {
 	// clear domain
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
-	dm.apply();
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
+	dtm().apply();
 
 	// check the snapshot of domain
-	checkEmptyDomain(dm);
+	checkEmptyDomain(dtm());
 
 	// modify domain
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "1 * integerProp", "Single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "2 * integerProp", "Double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "3 * integerProp", "Triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "1 * integerProp", "Single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "2 * integerProp", "Double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "3 * integerProp", "Triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "4 * integerProp", "Quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "5 * integerProp", "Quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "6 * integerProp", "Sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "4 * integerProp", "Quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "5 * integerProp", "Quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "6 * integerProp", "Sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "Septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "Septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
-	dm.apply();
+	dtm().apply();
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "oldSingle");
@@ -577,30 +578,30 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     @Test
     public void test_that_collectional_hierarchies_can_be_enhanced_by_ATTRIBUTED_COLLECTIONAL_EXPRESSIONs() {
 	// clear domain
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
-	dm.apply();
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
+	dtm().apply();
 
 	// check the snapshot of domain
-	checkEmptyDomain(dm);
+	checkEmptyDomain(dtm());
 
 	// modify domain
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "1 * integerProp", "All of single", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "2 * integerProp", "Any of double", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "3 * integerProp", "All of triple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "1 * integerProp", "All of single", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "2 * integerProp", "Any of double", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "3 * integerProp", "All of triple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
 
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "4 * integerProp", "Any of quadruple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "5 * integerProp", "All of quintuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "6 * integerProp", "Any of sextuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "All of septuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Any of octuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "4 * integerProp", "Any of quadruple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "5 * integerProp", "All of quintuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "6 * integerProp", "Any of sextuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "All of septuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Any of octuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
 
-	dm.apply();
+	dtm().apply();
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "oldSingle");
@@ -621,26 +622,26 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     @Test @Ignore
     public void test_that_collectional_hierarchies_can_be_enhanced_by_AGGREGATED_COLLECTIONAL_EXPRESSIONs() {
 	// clear domain
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
-	dm.apply();
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
+	dtm().apply();
 
 	// check the snapshot of domain
-	checkEmptyDomain(dm);
+	checkEmptyDomain(dtm());
 
 	// modify domain
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "SUM(1 * integerProp)", "Sum of single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "AVG(2 * integerProp)", "Avg of double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "MIN(3 * integerProp) + MAX(4 * integerProp)", "Min of triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "SUM(1 * integerProp)", "Sum of single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "AVG(2 * integerProp)", "Avg of double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "MIN(3 * integerProp) + MAX(4 * integerProp)", "Min of triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "MAX(4 * integerProp) * MIN(3 * integerProp)", "Max of quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "SUM(5 * integerProp + masterEntityProp.slaveEntityProp.integerProp)", "Sum of quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "SUM(6 * integerProp)", "Sum of sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "MAX(4 * integerProp) * MIN(3 * integerProp)", "Max of quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "SUM(5 * integerProp + masterEntityProp.slaveEntityProp.integerProp)", "Sum of quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "SUM(6 * integerProp)", "Sum of sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
 
 	copy.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "SUM(7 * integerProp)", "Sum of septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	copy.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
@@ -666,30 +667,30 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     @Test
     public void test_that_first_second_and_third_levels_can_be_enhanced_to_form_AGGREGATED_EXPRESSIONs_at_root_level() {
 	// clear domain
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
-	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
-	dm.apply();
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
+	dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
+	dtm().apply();
 
 	// check the snapshot of domain
-	checkEmptyDomain(dm);
+	checkEmptyDomain(dtm());
 
 	// modify domain
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp", "SUM(1 * integerProp)", "Sum of single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "AVG(2 * integerProp)", "Avg of double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp", "MIN(3 * integerProp) + MAX(4 * integerProp)", "Min of triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp", "SUM(1 * integerProp)", "Sum of single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "AVG(2 * integerProp)", "Avg of double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp", "MIN(3 * integerProp) + MAX(4 * integerProp)", "Min of triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "MAX(4 * integerProp) * MIN(3 * integerProp)", "Max of quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp", "SUM(5 * integerProp + masterEntityProp.slaveEntityProp.integerProp)", "Sum of quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.evenSlaverEntityProp", "SUM(6 * integerProp)", "Sum of sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.slaveEntityProp", "SUM(7 * integerProp)", "Sum of septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp.masterEntityProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "MAX(4 * integerProp) * MIN(3 * integerProp)", "Max of quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp", "SUM(5 * integerProp + masterEntityProp.slaveEntityProp.integerProp)", "Sum of quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.evenSlaverEntityProp", "SUM(6 * integerProp)", "Sum of sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.slaveEntityProp", "SUM(7 * integerProp)", "Sum of septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp.masterEntityProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
-	dm.apply();
+	dtm().apply();
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "oldSingle");

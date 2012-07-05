@@ -4,7 +4,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
@@ -72,7 +71,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
      *
      * @return
      */
-    public IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(){
+    public IAbstractAnalysisDomainTreeManager getAnalysisManager(){
 	return getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(getName());
     }
 

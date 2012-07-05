@@ -11,15 +11,6 @@ import java.util.List;
  *
  */
 public interface IAnalysisDomainTreeManager extends IAbstractAnalysisDomainTreeManager {
-    /**
-     * A <i>domain tree manager<i> with <i>enhancer</i> inside.
-     *
-     * @author TG Team
-     *
-     */
-    public interface IAnalysisDomainTreeManagerAndEnhancer extends IAbstractAnalysisDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager {
-    }
-
     IAnalysisAddToDistributionTickManager getFirstTick();
     IAnalysisAddToAggregationTickManager getSecondTick();
     IAnalysisDomainTreeRepresentation getRepresentation();

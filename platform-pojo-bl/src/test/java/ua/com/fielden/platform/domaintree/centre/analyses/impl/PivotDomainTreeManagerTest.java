@@ -7,7 +7,10 @@ import java.util.Set;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
 
@@ -19,8 +22,8 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
  */
 public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManagerTest {
     @Override
-    protected IPivotDomainTreeManagerAndEnhancer dtm() {
-	return (IPivotDomainTreeManagerAndEnhancer) super.dtm();
+    protected IPivotDomainTreeManager dtm() {
+	return (IPivotDomainTreeManager) ((ICentreDomainTreeManagerAndEnhancer) just_a_dtm()).getAnalysisManager("Report");
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
@@ -40,15 +43,18 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
      *
      * @param dtm
      */
-    protected static void manageTestingDTM_for_PivotDomainTreeManagerTest(final IPivotDomainTreeManagerAndEnhancer dtm) {
+    protected static void manageTestingDTM_for_PivotDomainTreeManagerTest(final IPivotDomainTreeManager dtm) {
 	manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(dtm);
     }
 
     @BeforeClass
     public static void initDomainTreeTest() {
-	final IPivotDomainTreeManagerAndEnhancer dtm = new PivotDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_PivotDomainTreeManagerTest());
+	final ICentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_PivotDomainTreeManagerTest());
+	centre.initAnalysisManagerByDefault("Report", AnalysisType.PIVOT);
+	final IPivotDomainTreeManager dtm = (IPivotDomainTreeManager) centre.getAnalysisManager("Report");
 	manageTestingDTM_for_PivotDomainTreeManagerTest(dtm);
-	setDtmArray(serialiser().serialise(dtm));
+	centre.acceptAnalysisManager("Report");
+	setDtmArray(serialiser().serialise(centre));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

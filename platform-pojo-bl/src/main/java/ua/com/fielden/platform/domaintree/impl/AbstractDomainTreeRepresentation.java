@@ -113,22 +113,22 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param fieldsAndKeys
      * @return
      */
-    private List<String> constructProperties(final Class<?> rootType, final String path, final List<Field> fieldsAndKeys) {
+    private List<String> constructProperties(final Class<?> managedType, final String path, final List<Field> fieldsAndKeys) {
 	final List<String> newIncludedProps = new ArrayList<String>();
 	for (final Field field : fieldsAndKeys) {
 	    final String property = StringUtils.isEmpty(path) ? field.getName() : path + "." + field.getName();
 	    final String reflectionProperty = reflectionProperty(property);
-	    if (!isExcludedImmutably(rootType, reflectionProperty)) {
+	    if (!isExcludedImmutably(managedType, reflectionProperty)) {
 		newIncludedProps.add(property);
 
 		// determine the type of property, which can be a) "union entity" property b) property under "union entity" c) collection property d) entity property e) simple property
-		final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(rootType, reflectionProperty);
+		final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(managedType, reflectionProperty);
 		final Class<?> parentType = penultAndLast.getKey();
 		final Class<?> propertyType = PropertyTypeDeterminator.determineClass(parentType, penultAndLast.getValue(), true, true);
 
 		// add the children for "property" based on its nature
 		if (EntityUtils.isEntityType(propertyType)) {
-		    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(rootType, reflectionProperty, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
+		    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
 
 		     final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
 
@@ -146,17 +146,17 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 			// a new tree branch should be created for "common" properties under "property"
 			final String commonBranch = createCommonBranch(property);
 			newIncludedProps.add(commonBranch); // final DefaultMutableTreeNode nodeForCommonProperties = addHotNode("common", null, false, klassNode, new Pair<String, String>("Common", TitlesDescsGetter.italic("<b>Common properties</b>")));
-			newIncludedProps.addAll(constructProperties(rootType, commonBranch, commonAndUnion.getKey()));
+			newIncludedProps.addAll(constructProperties(managedType, commonBranch, commonAndUnion.getKey()));
 			// "union" properties should be added directly to "property"
-			newIncludedProps.addAll(constructProperties(rootType, property, commonAndUnion.getValue()));
+			newIncludedProps.addAll(constructProperties(managedType, property, commonAndUnion.getValue()));
 		    } else if (EntityUtils.isUnionEntityType(parentType)) { // property under "union entity"
 			// the property under "union entity" should have only "non-common" properties added
 			final List<Field> propertiesWithoutCommon = constructKeysAndProperties(propertyType);
 			final List<String> parentCommonNames = AbstractUnionEntity.commonProperties((Class<? extends AbstractUnionEntity>) parentType);
 			propertiesWithoutCommon.removeAll(constructKeysAndProperties(propertyType, parentCommonNames));
-			newIncludedProps.addAll(constructProperties(rootType, property, propertiesWithoutCommon));
+			newIncludedProps.addAll(constructProperties(managedType, property, propertiesWithoutCommon));
 		    } else { // collectional or non-collectional entity property
-			newIncludedProps.addAll(constructProperties(rootType, property, constructKeysAndProperties(propertyType)));
+			newIncludedProps.addAll(constructProperties(managedType, property, constructKeysAndProperties(propertyType)));
 		    }
 		}
 	    }
@@ -344,7 +344,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     @Override
-    public final void excludeImmutably(final Class<?> root, final String property) {
+    public void excludeImmutably(final Class<?> root, final String property) {
 	manuallyExcludedProperties.add(key(root, property));
 
 	if (includedProperties.get(root) != null) { // not yet loaded
@@ -439,8 +439,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @return
      */
     @Override
-    public List<String> includedPropertiesMutable(final Class<?> root1) {
-	final Class<?> root = DynamicEntityClassLoader.getOriginalType(root1);
+    public List<String> includedPropertiesMutable(final Class<?> managedType) {
+	final Class<?> root = DynamicEntityClassLoader.getOriginalType(managedType);
 	if (includedProperties.get(root) == null) { // not yet loaded
 	    final Date st = new Date();
 	    enableListening(false);
@@ -451,7 +451,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		if (!EntityUtils.isEntityType(root)) {
 		    throw new IllegalArgumentException("Can not add children properties to non-entity type [" + root.getSimpleName() + "] in path [" + root.getSimpleName() + "=>" + "" + "].");
 		}
-		includedProps.addAll(constructProperties(root, "", constructKeysAndProperties(root)));
+		includedProps.addAll(constructProperties(managedType, "", constructKeysAndProperties(managedType)));
 	    }
 	    enableListening(true);
 	    includedProperties.put(root, includedProps);
@@ -494,41 +494,41 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * This method loads all missing properties on the tree path as defined in <code>fromPath</code> and <code>toPath</code> for type <code>root</code>.
      * Please note that property <code>fromPath</code> should be loaded itself (perhaps without its children).
      *
-     * @param root
+     * @param managedType
      * @param fromPath
      * @param toPath
      */
-    protected final boolean warmUp(final Class<?> root, final String fromPath, final String toPath) {
+    protected final boolean warmUp(final Class<?> managedType, final String fromPath, final String toPath) {
 	// System.out.println("Warm up => from = " + fromPath + "; to = " + toPath);
-	if (includedPropertiesMutable(root).contains(fromPath)) { // the property itself exists in "included properties" cache
+	if (includedPropertiesMutable(managedType).contains(fromPath)) { // the property itself exists in "included properties" cache
 	    final String dummyMarker = createDummyMarker(fromPath);
-	    final boolean shouldBeLoaded = includedPropertiesMutable(root).contains(dummyMarker);
+	    final boolean shouldBeLoaded = includedPropertiesMutable(managedType).contains(dummyMarker);
 	    if (shouldBeLoaded) { // the property is circular and has no children loaded -- it has to be done now
-		final int index = includedPropertiesMutable(root).indexOf(dummyMarker);
-		includedPropertiesMutable(root).remove(dummyMarker); // remove dummy property
-		includedPropertiesMutable(root).addAll(index, constructProperties(root, fromPath, constructKeysAndProperties(PropertyTypeDeterminator.determinePropertyType(root, fromPath))));
+		final int index = includedPropertiesMutable(managedType).indexOf(dummyMarker);
+		includedPropertiesMutable(managedType).remove(dummyMarker); // remove dummy property
+		includedPropertiesMutable(managedType).addAll(index, constructProperties(managedType, fromPath, constructKeysAndProperties(PropertyTypeDeterminator.determinePropertyType(managedType, fromPath))));
 	    }
 	    if (!EntityUtils.equalsEx(fromPath, toPath)) { // not the leaf is trying to be warmed up
 		final String part = "".equals(fromPath) ? toPath : toPath.replaceFirst(fromPath + ".", "");
 		final String part2 = part.indexOf(".") > 0 ? part.substring(0, part.indexOf(".")) : part;
 		final String part3 = "".equals(fromPath) ? part2 : fromPath + "." + part2;
-		final boolean hasBeenWarmedUp = warmUp(root, part3, toPath);
+		final boolean hasBeenWarmedUp = warmUp(managedType, part3, toPath);
 		return shouldBeLoaded || hasBeenWarmedUp;
 	    } else {
 		return shouldBeLoaded;
 	    }
 	} else {
-	    throw new IllegalArgumentException("The property [" + fromPath + "] in root [" + root.getSimpleName() + "] should be already loaded into 'included properties'.");
+	    throw new IllegalArgumentException("The property [" + fromPath + "] in root [" + managedType.getSimpleName() + "] should be already loaded into 'included properties'.");
 	}
     }
 
     @Override
-    public void warmUp(final Class<?> root, final String property) {
+    public void warmUp(final Class<?> managedType, final String property) {
 	final Date st = new Date();
-	illegalExcludedProperties(this, root, reflectionProperty(property), "Could not 'warm up' an 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "]. Only properties that are not excluded can be 'warmed up'.");
-	includedPropertiesMutable(root); // ensure "included properties" to be loaded
-	if (warmUp(root, "", property)) {
-	    logger().info("Warmed up root's [" + root.getSimpleName() + "] property [" + property + "] within " + (new Date().getTime() - st.getTime()) + "ms.");
+	illegalExcludedProperties(this, managedType, reflectionProperty(property), "Could not 'warm up' an 'excluded' property [" + property + "] in type [" + managedType.getSimpleName() + "]. Only properties that are not excluded can be 'warmed up'.");
+	includedPropertiesMutable(managedType); // ensure "included properties" to be loaded
+	if (warmUp(managedType, "", property)) {
+	    logger().info("Warmed up root's [" + managedType.getSimpleName() + "] property [" + property + "] within " + (new Date().getTime() - st.getTime()) + "ms.");
 	}
     }
 
@@ -586,7 +586,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	@Override
-	public final void disableImmutably(final Class<?> root, final String property) {
+	public void disableImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not disable already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    disabledManuallyProperties.add(key(root, property));
 
@@ -623,7 +623,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	@Override
-	public final void checkImmutably(final Class<?> root, final String property) {
+	public void checkImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not check immutably already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    tickManager.checkSimply(root, property, true);
 	    checkedManuallyProperties.add(key(root, property));

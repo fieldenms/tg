@@ -7,7 +7,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyStateListener;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -194,7 +194,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      * @param name -- a name that defines an analysis.
      * @return
      */
-    IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(final String name);
+    IAbstractAnalysisDomainTreeManager getAnalysisManager(final String name);
 
     /**
      * Freezes a current version of analysis manager with specified <code>name</code>. <br><br>

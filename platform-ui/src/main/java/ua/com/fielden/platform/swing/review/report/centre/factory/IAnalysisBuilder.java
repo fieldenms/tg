@@ -3,7 +3,7 @@ package ua.com.fielden.platform.swing.review.report.centre.factory;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
@@ -28,7 +28,7 @@ public interface IAnalysisBuilder<T extends AbstractEntity<?>> {
      * @param progressLayer
      * @return
      */
-    AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManagerAndEnhancer, ?, ?> createAnalysis(//
+    AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?, ?> createAnalysis(//
 	    final AnalysisType analysisType, //
 	    final String name, //
 	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //

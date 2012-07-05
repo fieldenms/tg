@@ -11,6 +11,7 @@ import javax.swing.tree.TreePath;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
@@ -21,7 +22,7 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 
     private static final long serialVersionUID = -9095582803874450838L;
 
-    public EntitiesTreeCellEditor(final EntitiesTree2 tree, final EntitiesTreeCellRenderer renderer) {
+    public EntitiesTreeCellEditor(final EntitiesTree2<ICentreDomainTreeManagerAndEnhancer> tree, final EntitiesTreeCellRenderer renderer) {
 	super(tree, renderer);
 
 	tree.getEntitiesModel().getFilterableModel().addFilterListener(new IFilterListener() {
@@ -44,9 +45,10 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 	});
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Component getTreeCellEditorComponent(final JTree tree, final Object value, final boolean isSelected, final boolean expanded, final boolean leaf, final int row) {
-	final EntitiesTreeNode2 node = (EntitiesTreeNode2) value;
+	final EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer> node = (EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer>) value;
 	getRenderer().setButtonsVisible(false);
 	try {
 	    getTree().getEntitiesModel().getManager().getEnhancer().getCalculatedProperty(node.getUserObject().getKey(), node.getUserObject().getValue());
@@ -62,14 +64,16 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 	return super.getTreeCellEditorComponent(tree, value, isSelected, expanded, leaf, row);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public EntitiesTree2 getTree() {
-	return (EntitiesTree2)super.getTree();
+    public EntitiesTree2<ICentreDomainTreeManagerAndEnhancer> getTree() {
+	return (EntitiesTree2<ICentreDomainTreeManagerAndEnhancer>)super.getTree();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Object getCellEditorValue() {
-	return ((EntitiesTreeNode2) getTree().getEditingPath().getLastPathComponent()).getUserObject();
+	return ((EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer>) getTree().getEditingPath().getLastPathComponent()).getUserObject();
     }
 
     @Override
@@ -77,6 +81,7 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 	return (EntitiesTreeCellRenderer)super.getRenderer();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean isCellEditable(final EventObject event) {
 	if(super.isCellEditable(event)){
@@ -90,7 +95,7 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 		    return false;
 		}
 		final Object lastComponent = path.getLastPathComponent();
-		final EntitiesTreeNode2 node = (EntitiesTreeNode2) lastComponent;
+		final EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer> node = (EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer>) lastComponent;
 		try {
 		    getTree().getEntitiesModel().getManager().getEnhancer().getCalculatedProperty(node.getUserObject().getKey(), node.getUserObject().getValue());
 		    return true;
@@ -104,7 +109,7 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 	return false;
     }
 
-    protected Class<?> propertyType(final EntitiesTreeNode2 node) {
+    protected Class<?> propertyType(final EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer> node) {
 	final Class<?> enhancedRoot = getTree().getEntitiesModel().getManager().getEnhancer().getManagedType(node.getUserObject().getKey());
 	final String property = node.getUserObject().getValue();
 	final Class<?> propertyType = StringUtils.isEmpty(property) ? enhancedRoot : PropertyTypeDeterminator.determinePropertyType(enhancedRoot, property);

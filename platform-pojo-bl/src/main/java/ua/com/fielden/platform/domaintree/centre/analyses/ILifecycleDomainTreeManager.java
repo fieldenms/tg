@@ -14,15 +14,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public interface ILifecycleDomainTreeManager extends IAbstractAnalysisDomainTreeManager {
-    /**
-     * A <i>domain tree manager<i> with <i>enhancer</i> inside.
-     *
-     * @author TG Team
-     *
-     */
-    public interface ILifecycleDomainTreeManagerAndEnhancer extends IAbstractAnalysisDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager {
-    }
-
     ILifecycleAddToDistributionTickManager getFirstTick();
     ILifecycleAddToCategoriesTickManager getSecondTick();
     ILifecycleDomainTreeRepresentation getRepresentation();

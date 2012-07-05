@@ -6,6 +6,8 @@ import java.awt.Font;
 import javax.swing.JTree;
 import javax.swing.tree.TreeNode;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellRenderer2;
@@ -29,7 +31,7 @@ public class FilterableEntitiesTreeCellRenderer extends MultipleCheckboxTreeCell
      *
      * @param model
      */
-    public FilterableEntitiesTreeCellRenderer(final EntitiesTreeModel2 model) {
+    public FilterableEntitiesTreeCellRenderer(final EntitiesTreeModel2<? extends IDomainTreeManager> model) {
 	super(model);
 
 	originalFont = label.getFont();
@@ -39,18 +41,20 @@ public class FilterableEntitiesTreeCellRenderer extends MultipleCheckboxTreeCell
 	label.setOpenIcon(null);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public EntitiesTreeModel2 getModel() {
-	return (EntitiesTreeModel2) super.getModel();
+    public EntitiesTreeModel2<? extends IDomainTreeManager> getModel() {
+	return (EntitiesTreeModel2<? extends IDomainTreeManager>) super.getModel();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
 
 	//Configuring the visibility of checking components.
       	setCheckingComponentsVisible(true);
 
-      	final EntitiesTreeNode2 node = (EntitiesTreeNode2) value;
+      	final EntitiesTreeNode2<IAbstractAnalysisDomainTreeManager> node = (EntitiesTreeNode2<IAbstractAnalysisDomainTreeManager>) value;
       	final Class<?> root = node.getUserObject().getKey();
       	final String property = node.getUserObject().getValue();
 

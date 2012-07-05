@@ -7,7 +7,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
@@ -26,16 +26,16 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
 
     private static final long serialVersionUID = 1664306691939896482L;
 
-    private final EntitiesTreePanel entitiesTreePanel;
+    private final EntitiesTreePanel<IAbstractAnalysisDomainTreeManager> entitiesTreePanel;
 
-    public AnalysisWizardView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> configurationOwner, final IAbstractAnalysisDomainTreeManagerAndEnhancer domainTreeManager) {
+    public AnalysisWizardView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> configurationOwner, final IAbstractAnalysisDomainTreeManager domainTreeManager) {
 	super(configurationOwner, domainTreeManager, "Choose distribution and aggregation properties");
 	this.addSelectionEventListener(createWizardSelectionListener());
 
-	//Configuring the entities tree.
-	final EntitiesTreeModel2 treeModel = new EntitiesTreeModel2(domainTreeManager, "distribution properties", "aggregation properties");
-	final EntitiesTree2 tree = new EntitiesTree2(treeModel);
-	entitiesTreePanel = new EntitiesTreePanel(tree);
+	// Configuring the entities tree.
+	final EntitiesTreeModel2<IAbstractAnalysisDomainTreeManager> treeModel = new EntitiesTreeModel2<IAbstractAnalysisDomainTreeManager>(domainTreeManager, "distribution properties", "aggregation properties");
+	final EntitiesTree2<IAbstractAnalysisDomainTreeManager> tree = new EntitiesTree2<IAbstractAnalysisDomainTreeManager>(treeModel);
+	entitiesTreePanel = new EntitiesTreePanel<IAbstractAnalysisDomainTreeManager>(tree);
 
 	layoutComponents();
     }

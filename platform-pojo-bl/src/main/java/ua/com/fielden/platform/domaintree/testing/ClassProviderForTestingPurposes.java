@@ -36,22 +36,16 @@ public class ClassProviderForTestingPurposes extends ProvidedSerialisationClassP
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.Union1ForIncludedPropertiesLogic"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.Union2ForIncludedPropertiesLogic"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.UnionEntityForIncludedPropertiesLogic"));
-	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1$AbstractAnalysisDomainTreeRepresentationAndEnhancer1"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeRepresentation1"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.DomainTreeRepresentation1"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1"));
-	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.DomainTreeManager1"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1"));
-	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1$AbstractAnalysisDomainTreeRepresentationAndEnhancer1$AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer1"));
-	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1$AbstractAnalysisDomainTreeRepresentationAndEnhancer1$AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer1"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeRepresentation1$AbstractAnalysisAddToAggregationTickRepresentation1"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeRepresentation1$AbstractAnalysisAddToDistributionTickRepresentation1"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.DomainTreeRepresentation1$TickRepresentationForTest"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1$AbstractAnalysisAddToAggregationTickManager1"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1$AbstractAnalysisAddToDistributionTickManager1"));
-	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1$AbstractAnalysisAddToAggregationTickManagerAndEnhancer1"));
-	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1$AbstractAnalysisAddToDistributionTickManagerAndEnhancer1"));
 	testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.DomainTreeManager1$TickManager1ForTest"));
     }
 

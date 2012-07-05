@@ -2,14 +2,13 @@ package ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.PivotAnalysisModel;
-import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
 public class PivotAnalysisConfigurationModel<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
@@ -20,7 +19,7 @@ public class PivotAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
     @Override
     protected Result canSetMode(final ReportMode mode) {
 	if(ReportMode.REPORT.equals(mode)){
-	    final IPivotDomainTreeManagerAndEnhancer pdtme = (IPivotDomainTreeManagerAndEnhancer)getAnalysisManager();
+	    final IPivotDomainTreeManager pdtme = (IPivotDomainTreeManager) getAnalysisManager();
 	    if(pdtme==null){
 		return new Result(this, new IllegalStateException("Simple analysis with " + getName() + " name can not be created!"));
 	    }
@@ -34,14 +33,7 @@ public class PivotAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
 
     final PivotAnalysisModel<T> createPivotAnalysisModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
-	final IPivotDomainTreeManagerAndEnhancer pdtme = (IPivotDomainTreeManagerAndEnhancer)cdtme.getAnalysisManager(getName());
+	final IPivotDomainTreeManager pdtme = (IPivotDomainTreeManager)cdtme.getAnalysisManager(getName());
 	return new PivotAnalysisModel<T>(getCriteria(), pdtme, getPageHolder());
     }
-
-    final DomainTreeEditorModel<T> createDomainTreeEditorModel() {
-	final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
-	final IPivotDomainTreeManagerAndEnhancer pdtme = (IPivotDomainTreeManagerAndEnhancer)cdtme.getAnalysisManager(getName());
-	return new DomainTreeEditorModel<T>(getCriteria().getEntityFactory(), pdtme, getCriteria().getEntityClass());
-    }
-
 }

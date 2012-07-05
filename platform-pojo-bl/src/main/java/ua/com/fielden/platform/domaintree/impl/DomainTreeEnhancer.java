@@ -158,7 +158,19 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
     @Override
     public Class<?> getManagedType(final Class<?> type) {
-	CalculatedProperty.validateRootWithoutRootTypeEnforcement(this, type);
+	// TODO
+	// TODO
+	// TODO
+	// TODO
+	// TODO
+	// TODO
+	// TODO
+	// TODO
+	// TODO
+	// TODO
+	// TODO
+	// TODO
+	// TODO CalculatedProperty.validateRootWithoutRootTypeEnforcement(this, type);
 	return originalAndEnhancedRootTypesAndArrays.get(type) == null ? type : originalAndEnhancedRootTypesAndArrays.get(type).getKey();
     }
 

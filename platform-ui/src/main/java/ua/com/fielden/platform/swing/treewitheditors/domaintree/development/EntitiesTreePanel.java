@@ -22,21 +22,22 @@ import javax.swing.event.ChangeListener;
 import javax.swing.tree.TreeNode;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
 import ua.com.fielden.platform.swing.menu.filter.ui.FilterControl;
 import ua.com.fielden.platform.swing.treetable.ViewportChangeEvent;
 
-public class EntitiesTreePanel extends JPanel {
+public class EntitiesTreePanel<DTM extends IDomainTreeManager> extends JPanel {
 
     private static final long serialVersionUID = 8553947680672851151L;
 
-    private final EntitiesTree2 entitiesTree;
+    private final EntitiesTree2<DTM> entitiesTree;
 
     //    private final JPanel search;
     //
     //    private final FilterControl filterControl;
 
-    public EntitiesTreePanel(final EntitiesTree2 entitiesTree) {
+    public EntitiesTreePanel(final EntitiesTree2<DTM> entitiesTree) {
 	super(new MigLayout("fill, insets 0", "[150::,grow,fill]", "[:30:][grow,fill]"));
 
 	this.entitiesTree = entitiesTree;
@@ -131,7 +132,7 @@ public class EntitiesTreePanel extends JPanel {
 	//	this.filterControl = filterControl;
     }
 
-    public EntitiesTree2 getTree() {
+    public EntitiesTree2<DTM> getTree() {
 	return entitiesTree;
     }
 

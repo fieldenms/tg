@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -85,14 +86,23 @@ public abstract class AbstractDomainTreeTest {
     }};
     private final static ISerialiser serialiser = createSerialiser(createFactory());
     protected static byte[] managerArray = null;
-    private IDomainTreeManagerAndEnhancer dtm = null;
+    private Object dtm = null;
 
     /**
      * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
      *
      * @return
      */
-    protected IDomainTreeManagerAndEnhancer dtm() {
+    protected Object dtm() {
+	return dtm;
+    }
+
+    /**
+     * Returns a testing manager.
+     *
+     * @return
+     */
+    protected final Object just_a_dtm() {
 	return dtm;
     }
 
@@ -119,7 +129,7 @@ public abstract class AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     @Before
     public void initEachTest() throws Exception {
-	dtm = managerArray == null ? null : serialiser.deserialise(managerArray, IDomainTreeManagerAndEnhancer.class);
+	dtm = managerArray == null ? null : serialiser.deserialise(managerArray, Object.class);
     }
 
     /**
@@ -355,7 +365,7 @@ public abstract class AbstractDomainTreeTest {
      * @param instance
      * @return
      */
-    public static boolean allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(final Object instance, final Object originalInstance) {
+    public static boolean allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(final Object instance, final Object originalInstance, final String ... fieldWhichReferenceShouldNotBeDistictButShouldBeEqual) {
 	final List<Field> fields = getDomainTreeFields(instance.getClass());
 	try {
 	    for (final Field field : fields) {
@@ -368,12 +378,12 @@ public abstract class AbstractDomainTreeTest {
 		    return false;
 		} else {
 		    final Class<?> fieldValueType = fieldValue.getClass();
-		    if (!Modifier.isStatic(field.getModifiers()) && originalInstance != null && !EntityUtils.isEnum(fieldValueType)) {
+		    if (!Modifier.isStatic(field.getModifiers()) && originalInstance != null && !EntityUtils.isEnum(fieldValueType) && !Arrays.asList(fieldWhichReferenceShouldNotBeDistictButShouldBeEqual).contains(field.getName())) {
 			final Object originalFieldValue = Finder.getFieldValue(field, originalInstance);
 			assertFalse("The references of corresponding fields should be distinct. Field = [" + field + "]; value original = [" + originalFieldValue + "]; value new = [" + fieldValue + "].", fieldValue == originalFieldValue);
 		    }
 		    // all non-transient domain-tree-typed fields should have children initialised!
-		    if (!Modifier.isTransient(field.getModifiers()) && Finder.isAssignableFrom(fieldValueType, DOMAIN_TREE_TYPES) && !EntityUtils.isEnum(fieldValueType) && !allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(fieldValue, originalInstance != null ? Finder.getFieldValue(field, originalInstance) : null)) {
+		    if (!Modifier.isTransient(field.getModifiers()) && Finder.isAssignableFrom(fieldValueType, DOMAIN_TREE_TYPES) && !EntityUtils.isEnum(fieldValueType) && !allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(fieldValue, originalInstance != null ? Finder.getFieldValue(field, originalInstance) : null, fieldWhichReferenceShouldNotBeDistictButShouldBeEqual)) {
 			return false;
 		    }
 		}
@@ -400,76 +410,71 @@ public abstract class AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////
     ////////////////////// 7. Persistence, equality & comparison //////////////////////
     ///////////////////////////////////////////////////////////////////////////////////
-    protected void test_that_manager_instantiation_works_for_inner_cross_references(final IDomainTreeManagerAndEnhancer dtm) {
-	final AbstractDomainTreeManagerAndEnhancer dtme = (AbstractDomainTreeManagerAndEnhancer) dtm;
-	final AbstractDomainTreeManager abstractDtm = (AbstractDomainTreeManager) dtme.base();
-	final AbstractDomainTreeRepresentation dtr = (AbstractDomainTreeRepresentation) abstractDtm.getRepresentation();
+    protected void test_that_manager_instantiation_works_for_inner_cross_references(final Object dtm) {
+	if (dtm instanceof AbstractDomainTreeManagerAndEnhancer) {
+	    final AbstractDomainTreeManagerAndEnhancer dtme = (AbstractDomainTreeManagerAndEnhancer) dtm;
+	    final AbstractDomainTreeManager abstractDtm = (AbstractDomainTreeManager) dtme.base();
+	    final AbstractDomainTreeRepresentation dtr = (AbstractDomainTreeRepresentation) abstractDtm.getRepresentation();
 
-	// check representation cross-references on itself (first / second representation ticks)
-	assertNotNull("Should be not null.", dtr);
-	final AbstractTickRepresentation firstTick = (AbstractTickRepresentation) dtr.getFirstTick();
-	assertNotNull("Should be not null.", firstTick);
-	assertNotNull("Should be not null.", firstTick.getDtr());
-	assertTrue("Should be identical.", dtr == firstTick.getDtr());
+	    // check representation cross-references on itself (first / second representation ticks)
+	    assertNotNull("Should be not null.", dtr);
+	    final AbstractTickRepresentation firstTick = (AbstractTickRepresentation) dtr.getFirstTick();
+	    assertNotNull("Should be not null.", firstTick);
+	    assertNotNull("Should be not null.", firstTick.getDtr());
+	    assertTrue("Should be identical.", dtr == firstTick.getDtr());
 
-	final AbstractTickRepresentation secondTick = (AbstractTickRepresentation) dtr.getSecondTick();
-	assertNotNull("Should be not null.", secondTick);
-	assertNotNull("Should be not null.", secondTick.getDtr());
-	assertTrue("Should be identical.", dtr == secondTick.getDtr());
+	    final AbstractTickRepresentation secondTick = (AbstractTickRepresentation) dtr.getSecondTick();
+	    assertNotNull("Should be not null.", secondTick);
+	    assertNotNull("Should be not null.", secondTick.getDtr());
+	    assertTrue("Should be identical.", dtr == secondTick.getDtr());
 
-	final TickManager firstTm = (TickManager) abstractDtm.getFirstTick();
-	assertNotNull("Should be not null.", firstTm);
-	assertNotNull("Should be not null.", firstTm.tr());
-	assertNotNull("Should be not null.", firstTm.dtr());
-	assertTrue("Should be identical.", firstTick == firstTm.tr());
-	assertTrue("Should be identical.", dtr == firstTm.dtr());
+	    final TickManager firstTm = (TickManager) abstractDtm.getFirstTick();
+	    assertNotNull("Should be not null.", firstTm);
+	    assertNotNull("Should be not null.", firstTm.tr());
+	    assertNotNull("Should be not null.", firstTm.dtr());
+	    assertTrue("Should be identical.", firstTick == firstTm.tr());
+	    assertTrue("Should be identical.", dtr == firstTm.dtr());
 
-	final TickManager secondTm = (TickManager) abstractDtm.getSecondTick();
-	assertNotNull("Should be not null.", secondTm);
-	assertNotNull("Should be not null.", secondTm.tr());
-	assertNotNull("Should be not null.", secondTm.dtr());
-	assertTrue("Should be identical.", secondTick == secondTm.tr());
-	assertTrue("Should be identical.", dtr == secondTm.dtr());
+	    final TickManager secondTm = (TickManager) abstractDtm.getSecondTick();
+	    assertNotNull("Should be not null.", secondTm);
+	    assertNotNull("Should be not null.", secondTm.tr());
+	    assertNotNull("Should be not null.", secondTm.dtr());
+	    assertTrue("Should be identical.", secondTick == secondTm.tr());
+	    assertTrue("Should be identical.", dtr == secondTm.dtr());
+	}
     }
 
     @Test
     public void test_that_serialisation_works() throws Exception {
-	if (dtm() != null) {
-	    final IDomainTreeManagerAndEnhancer dtm = dtm();
-	    assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
-	    test_that_manager_instantiation_works_for_inner_cross_references(dtm());
+	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm()));
+	test_that_manager_instantiation_works_for_inner_cross_references(dtm());
 
-	    // test that serialisation works
-	    final byte[] array = getSerialiser().serialise(dtm);
-	    assertNotNull("Serialised byte array should not be null.", array);
-	    final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
-	    // final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
-	    // final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
-	    assertNotNull("Deserialised instance should not be null.", copy);
+	// test that serialisation works
+	final byte[] array = getSerialiser().serialise(dtm());
+	assertNotNull("Serialised byte array should not be null.", array);
+	final Object copy = getSerialiser().deserialise(array, Object.class);
+	// final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
+	// final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
+	assertNotNull("Deserialised instance should not be null.", copy);
 
-	    // after deserialisation the instance should be fully defined (even for transient fields).
-	    // for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
-	    // So it should be checked:
-	    assertTrue("After deserialisation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
-	    test_that_manager_instantiation_works_for_inner_cross_references(copy);
-	}
+	// after deserialisation the instance should be fully defined (even for transient fields).
+	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
+	// So it should be checked:
+	assertTrue("After deserialisation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm()));
+	test_that_manager_instantiation_works_for_inner_cross_references(copy);
     }
 
     @Test
     public void test_that_equality_and_copying_works() {
-	if (dtm() != null) {
-	    final IDomainTreeManagerAndEnhancer dtm = dtm();
-	    dtm.getEnhancer().apply();
-	    assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
+	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm()));
 
-	    final IDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
-	    // after copying the instance should be fully defined (even for transient fields).
-	    // for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
-	    // So it should be checked:
-	    assertTrue("After coping of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
-	    test_that_manager_instantiation_works_for_inner_cross_references(copy);
-	    assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(copy, dtm));
-	}
+	final Object copy = EntityUtils.deepCopy(dtm(), getSerialiser());
+	// after copying the instance should be fully defined (even for transient fields).
+	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
+	// So it should be checked:
+	assertTrue("After coping of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm()));
+	test_that_manager_instantiation_works_for_inner_cross_references(copy);
+	assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(copy, dtm()));
     }
 
     protected static final IDomainTreeManagerAndEnhancer enhanceDomainWithCalculatedPropertiesOfDifferentTypes(final IDomainTreeManagerAndEnhancer dtm) {
@@ -537,11 +542,11 @@ public abstract class AbstractDomainTreeTest {
 
     @Test
     public void test_that_domain_tree_enhancements_work_as_expected_for_original_and_copied_manager() {
-	if (dtm() != null) {
-	    enhanceDomainWithCalculatedPropertiesOfDifferentTypes(dtm());
+	if (dtm() instanceof IDomainTreeManagerAndEnhancer) {
+	    enhanceDomainWithCalculatedPropertiesOfDifferentTypes((IDomainTreeManagerAndEnhancer) dtm());
 	    // to perform such a test it is enough to ask if the added calc properties can be asked for "excludement / disablement" (and the state is appropriate), after manual "disabling / excluding".
 	    // It will process the domain tree to the needed level of enhanced hierarchy.
-	    final IDomainTreeManagerAndEnhancer dtm = dtm();
+	    final IDomainTreeManagerAndEnhancer dtm = (IDomainTreeManagerAndEnhancer) dtm();
 
 	    dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "7 * integerProp", "Calculated Property", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	    dtm.getEnhancer().apply();

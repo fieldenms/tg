@@ -5,6 +5,7 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyStateListener;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
 
 /**
@@ -16,15 +17,6 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
  *
  */
 public interface IAbstractAnalysisDomainTreeManager extends IDomainTreeManager {
-    /**
-     * A <i>domain tree manager<i> with <i>enhancer</i> inside.
-     *
-     * @author TG Team
-     *
-     */
-    public interface IAbstractAnalysisDomainTreeManagerAndEnhancer extends IDomainTreeManagerAndEnhancer, IAbstractAnalysisDomainTreeManager {
-    }
-
     IAbstractAnalysisAddToDistributionTickManager getFirstTick();
     IAbstractAnalysisAddToAggregationTickManager getSecondTick();
 
@@ -34,6 +26,13 @@ public interface IAbstractAnalysisDomainTreeManager extends IDomainTreeManager {
      * @return
      */
     IAbstractAnalysisDomainTreeRepresentation getRepresentation();
+
+    /**
+     * Returns a parent centre manager which this analysis belongs to.
+     *
+     * @return
+     */
+    ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager();
 
     /**
      * Gets an <i>visible</i> flag for analysis manager.<br><br>

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.domaintree.master.impl;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeTest;
@@ -17,23 +18,28 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  */
 public class MasterDomainTreeManagerTest extends AbstractDomainTreeTest {
-    private final IMasterDomainTreeManager mdtm;
-
-    {
-	mdtm = new MasterDomainTreeManager(getSerialiser(), createRootTypes_for_AbstractDomainTreeTest());
+    /**
+     * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
+     *
+     * @return
+     */
+    @Override
+    protected IMasterDomainTreeManager dtm() {
+	return (IMasterDomainTreeManager) super.dtm();
     }
 
-    private IMasterDomainTreeManager mdtm() {
-	return mdtm;
+    @BeforeClass
+    public static void initDomainTreeTest() {
+	final IMasterDomainTreeManager mdtm = new MasterDomainTreeManager(serialiser(), createRootTypes_for_AbstractDomainTreeTest());
+	setDtmArray(serialiser().serialise(mdtm));
     }
-
 
     @Test
     public void test_that_locator_actions_cause_exceptions_for_NON_ENTITY_types_of_properties() {
 	final String message = "Non-AE property should cause IllegalArgument exception for locator-related logic.";
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		illegalAllLocatorActions(mdtm(), message, name);
+		illegalAllLocatorActions(dtm(), message, name);
 	    }
 	}, "integerProp", "moneyProp", "booleanProp");
     }
@@ -41,7 +47,7 @@ public class MasterDomainTreeManagerTest extends AbstractDomainTreeTest {
     @Override
     @Test
     public void test_that_serialisation_works() throws Exception {
-	final IMasterDomainTreeManager mdtm = mdtm();
+	final IMasterDomainTreeManager mdtm = dtm();
 	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(mdtm));
 
 	// test that serialisation works
@@ -61,7 +67,7 @@ public class MasterDomainTreeManagerTest extends AbstractDomainTreeTest {
     @Override
     @Test
     public void test_that_equality_and_copying_works() {
-	final IMasterDomainTreeManager mdtm = mdtm();
+	final IMasterDomainTreeManager mdtm = dtm();
 	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(mdtm));
 
 	final IMasterDomainTreeManager copy = EntityUtils.deepCopy(mdtm, getSerialiser());

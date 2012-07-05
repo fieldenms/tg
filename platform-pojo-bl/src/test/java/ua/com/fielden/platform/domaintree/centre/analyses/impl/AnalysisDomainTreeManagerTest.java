@@ -10,7 +10,10 @@ import java.util.Set;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
 /**
@@ -21,8 +24,8 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
  */
 public class AnalysisDomainTreeManagerTest extends AbstractAnalysisDomainTreeManagerTest {
     @Override
-    protected IAnalysisDomainTreeManagerAndEnhancer dtm() {
-	return (IAnalysisDomainTreeManagerAndEnhancer) super.dtm();
+    protected IAnalysisDomainTreeManager dtm() {
+	return (IAnalysisDomainTreeManager) ((ICentreDomainTreeManagerAndEnhancer) just_a_dtm()).getAnalysisManager("Report");
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
@@ -42,15 +45,18 @@ public class AnalysisDomainTreeManagerTest extends AbstractAnalysisDomainTreeMan
      *
      * @param dtm
      */
-    protected static void manageTestingDTM_for_AnalysisDomainTreeManagerTest(final IAnalysisDomainTreeManagerAndEnhancer dtm) {
+    protected static void manageTestingDTM_for_AnalysisDomainTreeManagerTest(final IAnalysisDomainTreeManager dtm) {
 	manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(dtm);
     }
 
     @BeforeClass
     public static void initDomainTreeTest() {
-	final IAnalysisDomainTreeManagerAndEnhancer dtm = new AnalysisDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AnalysisDomainTreeManagerTest());
+	final ICentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AnalysisDomainTreeManagerTest());
+	centre.initAnalysisManagerByDefault("Report", AnalysisType.SIMPLE);
+	final IAnalysisDomainTreeManager dtm = (IAnalysisDomainTreeManager) centre.getAnalysisManager("Report");
 	manageTestingDTM_for_AnalysisDomainTreeManagerTest(dtm);
-	setDtmArray(serialiser().serialise(dtm));
+	centre.acceptAnalysisManager("Report");
+	setDtmArray(serialiser().serialise(centre));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

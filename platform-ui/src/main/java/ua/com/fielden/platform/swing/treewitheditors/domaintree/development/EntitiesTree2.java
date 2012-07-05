@@ -4,6 +4,7 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
@@ -16,10 +17,10 @@ import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckbo
  * @author TG Team
  *
  */
-public class EntitiesTree2 extends MultipleCheckboxTree2 {
+public class EntitiesTree2<DTM extends IDomainTreeManager> extends MultipleCheckboxTree2 {
     private static final long serialVersionUID = -8348899877560659870L;
 
-    private final EntitiesTreeModel2 entitiesModel;
+    private final EntitiesTreeModel2<DTM> entitiesModel;
 
     /**
      * Creates entities tree and provides : filtering, toolTips and node's enablement.
@@ -27,7 +28,7 @@ public class EntitiesTree2 extends MultipleCheckboxTree2 {
      * @param entitiesTreeModel
      *            - the tree model to be used in EntitiesTree.
      */
-    public EntitiesTree2(final EntitiesTreeModel2 entitiesTreeModel2) {
+    public EntitiesTree2(final EntitiesTreeModel2<DTM> entitiesTreeModel2) {
 	super(entitiesTreeModel2);
 
 	this.entitiesModel = entitiesTreeModel2;
@@ -68,15 +69,16 @@ public class EntitiesTree2 extends MultipleCheckboxTree2 {
 	expandRow(0);
     }
 
-    public EntitiesTreeModel2 getEntitiesModel() {
+    public EntitiesTreeModel2<DTM> getEntitiesModel() {
 	return entitiesModel;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected boolean canExpand(final Object lastPathComponent) {
-	final EntitiesTreeNode2 node = (EntitiesTreeNode2) lastPathComponent;
+	final EntitiesTreeNode2<DTM> node = (EntitiesTreeNode2<DTM>) lastPathComponent;
 	if(node.getChildCount() == 1 && node.getFirstChild() != null){
-	    final EntitiesTreeNode2 childNode = (EntitiesTreeNode2) node.getFirstChild();
+	    final EntitiesTreeNode2<DTM> childNode = (EntitiesTreeNode2<DTM>) node.getFirstChild();
 	    final String propertyName = childNode.getUserObject().getValue();
 	    return !AbstractDomainTree.isDummyMarker(propertyName);
 	}

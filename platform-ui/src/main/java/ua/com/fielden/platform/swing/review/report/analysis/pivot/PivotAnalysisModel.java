@@ -18,8 +18,8 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
@@ -36,11 +36,11 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 
-public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManagerAndEnhancer, Void> {
+public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void> {
 
     private final PivotTreeTableModelEx pivotModel;
 
-    public PivotAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManagerAndEnhancer adtme, final PageHolder pageHolder) {
+    public PivotAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManager adtme, final PageHolder pageHolder) {
 	super(criteria, adtme, pageHolder);
 	pivotModel = new PivotTreeTableModelEx();
     }
@@ -156,7 +156,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		return String.class;
 	    }
 	    final Class<T> root = getCriteria().getEntityClass();
-	    final Class<?> managedType = adtme().getEnhancer().getManagedType(root);
+	    final Class<?> managedType = getCriteria().getManagedType();
 	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
 	    final String property = secondTick.usedProperties(root).get(column - 1);
 	    return PropertyTypeDeterminator.determineClass(managedType, property, true, true);

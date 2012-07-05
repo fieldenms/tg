@@ -16,7 +16,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentationTest;
@@ -37,8 +37,8 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepresentationTest {
     @Override
-    protected ICentreDomainTreeManagerAndEnhancer dtm() {
-	return (ICentreDomainTreeManagerAndEnhancer) super.dtm();
+    protected ICentreDomainTreeManager dtm() {
+	return (ICentreDomainTreeManager) super.dtm();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -239,31 +239,6 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 	assertTrue("Checked property should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.critOnlyProp"));
 	assertTrue("Checked property should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.critOnlyProp"));
 	assertTrue("Checked property should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyProp"));
-    }
-
-    ////////////////////// 5. Calculated properties logic //////////////////////
-    @Test
-    public void test_that_first_tick_for_AGGR_EXPR_calculated_properties_are_disabled() {
-	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dtm().getEnhancer().apply();
-
-	assertTrue("AGGREGATED EXPRESSION calculated property [" + "aggrExprProp1" + "] should be disabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "aggrExprProp1"));
-	assertTrue("AGGREGATED EXPRESSION calculated property [" + "aggrExprProp2" + "] should be disabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "aggrExprProp2"));
-	assertTrue("AGGREGATED EXPRESSION calculated property [" + "aggrExprProp3" + "] should be disabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "aggrExprProp3"));
-    }
-
-    @Test
-    public void test_that_second_tick_for_ATTR_COLL_EXPR_calculated_properties_are_disabled() {
-	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Attr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.ALL, "integerProp");
-	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Attr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.ANY, "integerProp");
-	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "collection", "2 * integerProp", "Attr Coll Expr Prop3", "desc", CalculatedPropertyAttribute.ALL, "integerProp");
-	dtm().getEnhancer().apply();
-
-	assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.attrCollExprProp1"));
-	assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.simpleEntityProp.attrCollExprProp2"));
-	assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.attrCollExprProp3"));
     }
 
     ////////////////////// 6. Specific entity-centre logic //////////////////////
@@ -480,24 +455,16 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     }
 
     @Override
-    public void test_that_PropertyListeners_work() {
-    }
-
-    @Override
-    public void test_that_domain_changes_for_calc_property_modifications_are_correctly_reflected_in_Included_properties() {
-    }
-
-    @Override
     @Test
     public void test_that_serialisation_works() throws Exception {
-	final ICentreDomainTreeManagerAndEnhancer dtm = dtm();
+	final ICentreDomainTreeManager dtm = dtm();
 	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
 	test_that_manager_instantiation_works_for_inner_cross_references(dtm);
 
 	// test that serialisation works
 	final byte[] array = getSerialiser().serialise(dtm);
 	assertNotNull("Serialised byte array should not be null.", array);
-	final ICentreDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, ICentreDomainTreeManagerAndEnhancer.class);
+	final ICentreDomainTreeManager copy = getSerialiser().deserialise(array, ICentreDomainTreeManager.class);
 	// final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
 	// final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
 	assertNotNull("Deserialised instance should not be null.", copy);
@@ -513,11 +480,10 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     @Override
     @Test
     public void test_that_equality_and_copying_works() {
-	final ICentreDomainTreeManagerAndEnhancer dtm = dtm();
-	dtm.getEnhancer().apply();
+	final ICentreDomainTreeManager dtm = dtm();
 	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
 
-	final ICentreDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
+	final ICentreDomainTreeManager copy = EntityUtils.deepCopy(dtm, getSerialiser());
 
 	copy.analysisKeys(); // this method will lazily initialise "currentAnalyses" -- it is essential to fully initialise centre manager
 	// after copying the instance should be fully defined (even for transient fields).

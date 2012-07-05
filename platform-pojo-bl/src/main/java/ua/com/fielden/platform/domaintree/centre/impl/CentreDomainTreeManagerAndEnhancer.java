@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +12,8 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
@@ -20,6 +22,8 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhan
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
@@ -42,10 +46,121 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     /**
+     * Creates a domain tree enhancer wrapper that takes care about population of domain tree changes (calc props) in representation "included properties"
+     * (which triggers other population like manager's "checked properties" automatically).
+     *
+     * @return
+     */
+    @Override
+    protected CentreDomainTreeEnhancerWithPropertiesPopulation createEnhancerWrapperWithPropertiesPopulation() {
+	return new CentreDomainTreeEnhancerWithPropertiesPopulation((DomainTreeEnhancer) enhancer(), this);
+    }
+
+    /**
+     * The {@link DomainTreeEnhancer} wrapper that reflects the changes in manager and also in children analyses.
+     *
+     * @author TG Team
+     *
+     */
+    protected static class CentreDomainTreeEnhancerWithPropertiesPopulation extends DomainTreeEnhancerWithPropertiesPopulation {
+	private final CentreDomainTreeManagerAndEnhancer mgrAndEnhancer;
+
+	/**
+	 * A {@link DomainTreeEnhancerWithPropertiesPopulation} constructor which requires a base implementations of {@link DomainTreeEnhancer} and {@link AbstractDomainTreeRepresentation}.
+	 *
+	 * @param baseEnhancer
+	 * @param dtr
+	 */
+	protected CentreDomainTreeEnhancerWithPropertiesPopulation(final DomainTreeEnhancer baseEnhancer, final CentreDomainTreeManagerAndEnhancer mgrAndEnhancer) {
+	    super(baseEnhancer, (DomainTreeRepresentationAndEnhancer) mgrAndEnhancer.getRepresentation());
+
+	    this.mgrAndEnhancer = mgrAndEnhancer;
+	}
+
+	@Override
+	protected void beforeApplyPopulation(final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged, final Set<Pair<Class<?>, String>> removed) {
+	    // Iterate through all analyses and all properties to be removed (or retained but significantly changed).
+	    // Find if there is at least one property that used in any analysis and which is trying to be removed / significantly changed.
+	    // If it exists -- throw illegal "removal exception"!
+	    // Otherwise -- remove all meta-state!
+	    for (final Pair<Class<?>, String> rootAndRemovalProp : union(removed, retainedAndSignificantlyChanged)) {
+		for (final String analysisKey : mgrAndEnhancer.analysisKeys()) {
+		    final IAbstractAnalysisDomainTreeManager analysis = mgrAndEnhancer.getAnalysisManager(analysisKey);
+		    final Class<?> root = rootAndRemovalProp.getKey();
+		    final String property = rootAndRemovalProp.getValue();
+		    if (!analysis.getRepresentation().isExcludedImmutably(root, property) && !analysis.getRepresentation().getFirstTick().isDisabledImmutably(root, property) && analysis.getFirstTick().isChecked(root, property) || //
+			    !analysis.getRepresentation().isExcludedImmutably(root, property) && !analysis.getRepresentation().getSecondTick().isDisabledImmutably(root, property) && analysis.getSecondTick().isChecked(root, property)) {
+			throw new Result(new IllegalArgumentException("Can not remove (or significantly change) a property [" + property + "] in type [" + root + "] which is used as distribution or aggregation property in analysis [" + analysisKey + "]."));
+		    }
+		}
+	    }
+	    for (final Pair<Class<?>, String> rootAndRemovalProp : union(removed, retainedAndSignificantlyChanged)) {
+		for (final String analysisKey : mgrAndEnhancer.analysisKeys()) {
+		    removeMetaStateFromPropertyToBeRemoved(rootAndRemovalProp.getKey(), rootAndRemovalProp.getValue(), mgrAndEnhancer.getAnalysisManager(analysisKey).getRepresentation());
+		}
+	    }
+	    super.beforeApplyPopulation(retainedAndSignificantlyChanged, removed);
+	}
+
+	@Override
+	protected void afterApplyPopulation(final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged, final Set<Pair<Class<?>, String>> neew) {
+	    super.afterApplyPopulation(retainedAndSignificantlyChanged, neew);
+
+	    for (final Pair<Class<?>, String> rootAndProp : union(neew, retainedAndSignificantlyChanged)) {
+		for (final String analysisKey : mgrAndEnhancer.analysisKeys()) {
+		    populateMetaStateForActuallyAddedNewProperty(rootAndProp.getKey(), rootAndProp.getValue(), mgrAndEnhancer.getAnalysisManager(analysisKey).getRepresentation());
+		}
+	    }
+	}
+    }
+
+    /**
      * A <i>manager with enhancer</i> constructor.
      */
     protected CentreDomainTreeManagerAndEnhancer(final CentreDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
 	super(base, enhancer);
+
+	if (base.persistentAnalysesNaked() != null) {
+	    for (final IAbstractAnalysisDomainTreeManager analysisManager : base.persistentAnalyses().values()) {
+		initAnalysisManagerReferencesOnThisCentreManager(analysisManager);
+	    }
+	}
+	if (base.currentAnalysesNaked() != null) {
+	    for (final IAbstractAnalysisDomainTreeManager analysisManager : base.currentAnalyses().values()) {
+		initAnalysisManagerReferencesOnThisCentreManager(analysisManager);
+	    }
+	}
+	if (base.freezedAnalysesNaked() != null) {
+	    for (final IAbstractAnalysisDomainTreeManager analysisManager : base.freezedAnalysesNaked().values()) {
+		initAnalysisManagerReferencesOnThisCentreManager(analysisManager);
+	    }
+	}
+    }
+
+    public IAbstractAnalysisDomainTreeManager initAnalysisManagerReferencesOnThisCentreManager(final IAbstractAnalysisDomainTreeManager analysisManager) {
+	final AbstractAnalysisDomainTreeManager mgr = (AbstractAnalysisDomainTreeManager) analysisManager;
+
+	// initialise the references on THIS instance in AbstractAnalysisDomainTreeManager, its both ticks, its representation and its both ticks
+	try {
+	    setValueForLazyField(mgr);
+	    setValueForLazyField(mgr.getFirstTick());
+	    setValueForLazyField(mgr.getSecondTick());
+	    setValueForLazyField(mgr.getDtr());
+	    setValueForLazyField(mgr.getDtr().getFirstTick());
+	    setValueForLazyField(mgr.getDtr().getSecondTick());
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    throw new IllegalStateException(e);
+	}
+	return analysisManager;
+    }
+
+    private void setValueForLazyField(final Object mgr) throws IllegalAccessException {
+	final Field parentCentreDomainTreeManagerField = Finder.findFieldByName(mgr.getClass(), "parentCentreDomainTreeManager");
+	final boolean isAccessible = parentCentreDomainTreeManagerField.isAccessible();
+	parentCentreDomainTreeManagerField.setAccessible(true);
+	parentCentreDomainTreeManagerField.set(mgr, this);
+	parentCentreDomainTreeManagerField.setAccessible(isAccessible);
     }
 
     @Override
@@ -64,7 +179,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     @Override
-    protected ICentreDomainTreeManager base() {
+    public ICentreDomainTreeManager base() {
 	return (ICentreDomainTreeManager) super.base();
     }
 
@@ -547,6 +662,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     @Override
     public void initAnalysisManagerByDefault(final String name, final AnalysisType analysisType) {
 	base().initAnalysisManagerByDefault(name, analysisType);
+
+	initAnalysisManagerReferencesOnThisCentreManager(getAnalysisManager(name));
     }
 
     @Override
@@ -580,7 +697,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     @Override
-    public IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(final String name) {
+    public IAbstractAnalysisDomainTreeManager getAnalysisManager(final String name) {
 	return base().getAnalysisManager(name);
     }
 

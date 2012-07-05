@@ -21,10 +21,10 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
@@ -53,12 +53,12 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class CentreDomainTreeManager extends AbstractDomainTreeManager implements ICentreDomainTreeManager {
     private final transient Logger logger = Logger.getLogger(getClass());
 
-    private final LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses;
+    private final LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses;
     private Boolean runAutomatically;
 
     /** Do <b>NOT</b> use this field directly! Please use currentAnalyses() method instead. */
-    private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> currentAnalyses;
-    private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> freezedAnalyses;
+    private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> currentAnalyses;
+    private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses;
 
     private final transient List<IAnalysisListener> analysisListeners;
 
@@ -69,7 +69,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param rootTypes
      */
     public CentreDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, new CentreDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManager(serialiser, rootTypes), new AddToResultTickManager(), new HashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>(), null);
+	this(serialiser, new CentreDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManager(serialiser, rootTypes), new AddToResultTickManager(), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), null);
     }
 
     /**
@@ -80,9 +80,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param firstTick
      * @param secondTick
      */
-    protected CentreDomainTreeManager(final ISerialiser serialiser, final CentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses, final Boolean runAutomatically) {
+    protected CentreDomainTreeManager(final ISerialiser serialiser, final CentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Boolean runAutomatically) {
 	super(serialiser, dtr, firstTick, secondTick);
-	this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+	this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
 	this.persistentAnalyses.putAll(persistentAnalyses);
 	this.runAutomatically = runAutomatically;
 
@@ -90,7 +90,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	// This constructor is explicitly used in deserialisation. That is why "currentAnalyses" initialisation (by copying "persistentAnalyses")
 	// should be performed after ALL deserialisation has been completed. In this case -- we will use lazy initialisation.
 	currentAnalyses = null; // this stuff will be initialised during the first invocation of currentAnalyses().
-	freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+	freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
 
 	this.analysisListeners = new ArrayList<IAnalysisListener>();
     }
@@ -103,15 +103,15 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param firstTick
      * @param secondTick
      */
-    protected CentreDomainTreeManager(final ISerialiser serialiser, final CentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses, final Boolean runAutomatically, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> currentAnalyses, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> freezedAnalyses) {
+    protected CentreDomainTreeManager(final ISerialiser serialiser, final CentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Boolean runAutomatically, final Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses, final Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses) {
 	super(serialiser, dtr, firstTick, secondTick);
-	this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+	this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
 	this.persistentAnalyses.putAll(persistentAnalyses);
 	this.runAutomatically = runAutomatically;
 
-	this.currentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+	this.currentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
 	this.currentAnalyses.putAll(currentAnalyses);
-	this.freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+	this.freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
 	this.freezedAnalyses.putAll(freezedAnalyses);
 
 	this.analysisListeners = new ArrayList<IAnalysisListener>();
@@ -122,23 +122,69 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      *
      * @return
      */
-    private LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> currentAnalyses() {
+    public LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> currentAnalyses() {
 	if (currentAnalyses == null) {
 	    try {
 		final Field currentAnalysesField = Finder.findFieldByName(CentreDomainTreeManager.class, "currentAnalyses");
 		final boolean isAccessible = currentAnalysesField.isAccessible();
 		currentAnalysesField.setAccessible(true);
-		currentAnalysesField.set(this, new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>());
+		currentAnalysesField.set(this, new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>());
 		currentAnalysesField.setAccessible(isAccessible);
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new IllegalStateException(e);
 	    }
-	    for (final Entry<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> entry : this.persistentAnalyses.entrySet()) {
-		currentAnalyses.put(entry.getKey(), EntityUtils.deepCopy(entry.getValue(), getSerialiser())); // should be initialised with copies of persistent analyses
+	    for (final Entry<String, IAbstractAnalysisDomainTreeManager> entry : this.persistentAnalyses.entrySet()) {
+		currentAnalyses.put(entry.getKey(), copyAnalysis(entry.getValue(), getSerialiser())); // should be initialised with copies of persistent analyses
 	    }
 	}
 	return currentAnalyses;
+    }
+
+    protected LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> currentAnalysesNaked() {
+	return currentAnalyses;
+    }
+
+    protected LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> persistentAnalysesNaked() {
+	return persistentAnalyses;
+    }
+
+    protected LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> freezedAnalysesNaked() {
+	return freezedAnalyses;
+    }
+
+    public static IAbstractAnalysisDomainTreeManager copyAnalysis(final IAbstractAnalysisDomainTreeManager analysisManager, final ISerialiser serialiser) {
+	if (analysisManager == null) {
+	    return null;
+	}
+	final IAbstractAnalysisDomainTreeManager copy = EntityUtils.deepCopy(analysisManager, serialiser);
+	return initAnalysisManagerReferencesOn(copy, analysisManager.parentCentreDomainTreeManager());
+    }
+
+    public static IAbstractAnalysisDomainTreeManager initAnalysisManagerReferencesOn(final IAbstractAnalysisDomainTreeManager analysisManager, final ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager) {
+	final AbstractAnalysisDomainTreeManager mgr = (AbstractAnalysisDomainTreeManager) analysisManager;
+
+	// initialise the references on THIS instance in AbstractAnalysisDomainTreeManager, its both ticks, its representation and its both ticks
+	try {
+	    setValueForLazyField(mgr, parentCentreDomainTreeManager);
+	    setValueForLazyField(mgr.getFirstTick(), parentCentreDomainTreeManager);
+	    setValueForLazyField(mgr.getSecondTick(), parentCentreDomainTreeManager);
+	    setValueForLazyField(mgr.getDtr(), parentCentreDomainTreeManager);
+	    setValueForLazyField(mgr.getDtr().getFirstTick(), parentCentreDomainTreeManager);
+	    setValueForLazyField(mgr.getDtr().getSecondTick(), parentCentreDomainTreeManager);
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    throw new IllegalStateException(e);
+	}
+	return analysisManager;
+    }
+
+    private static void setValueForLazyField(final Object mgr, final ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager) throws IllegalAccessException {
+	final Field parentCentreDomainTreeManagerField = Finder.findFieldByName(mgr.getClass(), "parentCentreDomainTreeManager");
+	final boolean isAccessible = parentCentreDomainTreeManagerField.isAccessible();
+	parentCentreDomainTreeManagerField.setAccessible(true);
+	parentCentreDomainTreeManagerField.set(mgr, parentCentreDomainTreeManager);
+	parentCentreDomainTreeManagerField.setAccessible(isAccessible);
     }
 
     @Override
@@ -919,11 +965,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 	// create a new instance and put to "current" map
 	if (AnalysisType.PIVOT.equals(analysisType)) {
-	    currentAnalyses().put(name, new PivotDomainTreeManagerAndEnhancer(getSerialiser(), getRepresentation().rootTypes()));
+	    currentAnalyses().put(name, new PivotDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
 	} if (AnalysisType.SIMPLE.equals(analysisType)) {
-	    currentAnalyses().put(name, new AnalysisDomainTreeManagerAndEnhancer(getSerialiser(), getRepresentation().rootTypes()));
+	    currentAnalyses().put(name, new AnalysisDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
 	} if (AnalysisType.LIFECYCLE.equals(analysisType)) {
-	    currentAnalyses().put(name, new LifecycleDomainTreeManagerAndEnhancer(getSerialiser(), getRepresentation().rootTypes()));
+	    currentAnalyses().put(name, new LifecycleDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
 	}
 	// fire "initialised" event
 	if (getAnalysisManager(name) != null) {
@@ -936,7 +982,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     @Override
     public void discardAnalysisManager(final String name) {
 	final boolean wasInitialised = getAnalysisManager(name) != null;
-	final IAbstractAnalysisDomainTreeManagerAndEnhancer dtm = EntityUtils.deepCopy(persistentAnalyses.get(name), getSerialiser());
+	final IAbstractAnalysisDomainTreeManager dtm = copyAnalysis(persistentAnalyses.get(name), getSerialiser());
 	if (dtm != null) {
 	    currentAnalyses().put(name, dtm);
 	} else {
@@ -959,9 +1005,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	if (isFreezedAnalysisManager(name)) {
 	    unfreeze(name);
 
-	    currentAnalyses().put(name, EntityUtils.deepCopy(currentAnalyses().get(name), getSerialiser())); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
+	    currentAnalyses().put(name, copyAnalysis(currentAnalyses().get(name), getSerialiser())); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
 	} else {
-	    final IAbstractAnalysisDomainTreeManagerAndEnhancer dtm = EntityUtils.deepCopy(currentAnalyses().get(name), getSerialiser());
+	    final IAbstractAnalysisDomainTreeManager dtm = copyAnalysis(currentAnalyses().get(name), getSerialiser());
 	    if (dtm != null) {
 		persistentAnalyses.put(name, dtm);
 	    } else {
@@ -996,7 +1042,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     }
 
     @Override
-    public IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(final String name) {
+    public IAbstractAnalysisDomainTreeManager getAnalysisManager(final String name) {
 	return currentAnalyses().get(name);
     }
 
@@ -1009,8 +1055,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	notInitiliasedError(persistentAnalyses.get(name), name);
 
 	freezedAnalyses.put(name, persistentAnalyses.remove(name));
-	persistentAnalyses.put(name, EntityUtils.deepCopy(currentAnalyses().get(name), getSerialiser()));
-	currentAnalyses().put(name, EntityUtils.deepCopy(currentAnalyses().get(name), getSerialiser())); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
+	persistentAnalyses.put(name, copyAnalysis(currentAnalyses().get(name), getSerialiser()));
+	currentAnalyses().put(name, copyAnalysis(currentAnalyses().get(name), getSerialiser())); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
     }
 
     /**
@@ -1044,7 +1090,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param root
      * @param name
      */
-    private void notInitiliasedError(final IAbstractAnalysisDomainTreeManagerAndEnhancer mgr, final String name) {
+    private void notInitiliasedError(final IAbstractAnalysisDomainTreeManager mgr, final String name) {
 	if (mgr == null) {
 	    error("Unable to perform this operation on the analysis instance, that wasn't initialised, for title [" + name + "].");
 	}
@@ -1081,7 +1127,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    final CentreDomainTreeRepresentation dtr = readValue(buffer, CentreDomainTreeRepresentation.class);
 	    final AddToCriteriaTickManager firstTick = readValue(buffer, AddToCriteriaTickManager.class);
 	    final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
-	    final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses = readValue(buffer, LinkedHashMap.class);
+	    final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses = readValue(buffer, LinkedHashMap.class);
 
 //	    for (final Entry<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> entry : persistentAnalyses.entrySet()) {
 //		EntityUtils.deepCopy(entry.getValue(), new TgKryoForDomainTreesTestingPurposes(kryo().factory(), new ClassProviderForTestingPurposes()));
@@ -1115,11 +1161,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    final CentreDomainTreeRepresentation dtr = readValue(buffer, CentreDomainTreeRepresentation.class);
 	    final AddToCriteriaTickManager firstTick = readValue(buffer, AddToCriteriaTickManager.class);
 	    final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
-	    final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses = readValue(buffer, LinkedHashMap.class);
+	    final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses = readValue(buffer, LinkedHashMap.class);
 	    final Boolean runAutomatically = readValue(buffer, Boolean.class);
 
-	    final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> currentAnalyses = readValue(buffer, LinkedHashMap.class);
-	    final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> freezedAnalyses = readValue(buffer, LinkedHashMap.class);
+	    final Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses = readValue(buffer, LinkedHashMap.class);
+	    final Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses = readValue(buffer, LinkedHashMap.class);
 
 	    return new CentreDomainTreeManager(kryo(), dtr, firstTick, secondTick, persistentAnalyses, runAutomatically, currentAnalyses, freezedAnalyses);
 	}
@@ -1164,7 +1210,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	return true;
     }
 
-    protected Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses() {
+    protected Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses() {
 	return persistentAnalyses;
     }
 

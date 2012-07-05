@@ -17,11 +17,13 @@ import javax.swing.tree.TreePath;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager.IPropertyCheckingListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation.IPropertyDisablementListener;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -38,16 +40,16 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
+public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends MultipleCheckboxTreeModel2 {
     private static final long serialVersionUID = -5156365765004770688L;
     public static final String ROOT_PROPERTY = "entities-root";
 
-    private final IDomainTreeManagerAndEnhancer manager;
-    private final EntitiesTreeNode2 rootNode;
+    private final DTM manager;
+    private final EntitiesTreeNode2<DTM> rootNode;
     /** A cached map of nodes by its names (includes "dummy" and "common"). */
-    private final EnhancementPropertiesMap<EntitiesTreeNode2> nodesCache;
+    private final EnhancementPropertiesMap<EntitiesTreeNode2<DTM>> nodesCache;
     /** A cached map of nodes by its names (includes only real properties without "dummy" and "common" stuff). */
-    private final EnhancementPropertiesMap<EntitiesTreeNode2> nodesForSimplePropertiesCache;
+    private final EnhancementPropertiesMap<EntitiesTreeNode2<DTM>> nodesForSimplePropertiesCache;
     private final TreeCheckingListener [] listeners;
     private final FilterableTreeModel filterableModel;
     //private final Logger logger = Logger.getLogger(getClass());
@@ -63,7 +65,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * 		  - the name of area corresponding to 1-check-box to which properties should be added/removed.
      */
     public EntitiesTreeModel2(//
-	    final IDomainTreeManagerAndEnhancer manager,//
+	    final DTM manager,//
 	    final String firstTickCaption,//
 	    final String secondTickCaption) {
 	super(2);
@@ -76,7 +78,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 
 	this.manager = manager;
 	this.listeners = new TreeCheckingListener [] { createTreeCheckingListener(this.manager.getFirstTick()), createTreeCheckingListener(this.manager.getSecondTick()) };
-	this.setRoot(this.rootNode = new EntitiesTreeNode2(createUserObject(EntitiesTreeModel2.class, ROOT_PROPERTY)));
+	this.setRoot(this.rootNode = new EntitiesTreeNode2<DTM>(createUserObject(EntitiesTreeModel2.class, ROOT_PROPERTY)));
 	this.nodesCache = AbstractDomainTree.createPropertiesMap();
 	this.nodesForSimplePropertiesCache = AbstractDomainTree.createPropertiesMap();
 
@@ -186,7 +188,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	return new TreePath(getPathToRoot(node(root, property, false)));
     }
 
-    protected FilterableTreeModel createFilteringModel(final EntitiesTreeModel2 entitiesTreeModel2) {
+    protected FilterableTreeModel createFilteringModel(final EntitiesTreeModel2<DTM> entitiesTreeModel2) {
 	// wrap the model
 	final FilterableTreeModel model = new FilterableTreeModel(entitiesTreeModel2);
 	// filter by "containing words".
@@ -201,10 +203,10 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * @param property
      */
     private void createAndAddNode(final Class<?> root, final String property) {
-	final EntitiesTreeNode2 parentNode = StringUtils.isEmpty(property) ? rootNode //
+	final EntitiesTreeNode2<DTM> parentNode = StringUtils.isEmpty(property) ? rootNode //
 		: !PropertyTypeDeterminator.isDotNotation(property) ? node(root, "", true) //
 			: node(root, PropertyTypeDeterminator.penultAndLast(property).getKey(), true);
-	final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
+	final EntitiesTreeNode2<DTM> node = new EntitiesTreeNode2<DTM>(createUserObject(root, property));
 	nodesCache.put(AbstractDomainTree.key(root, property), node);
 	if (isNotDummyAndNotCommonProperty(property)) {
 	    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
@@ -223,7 +225,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * @param property
      */
     private void removeNode(final Class<?> root, final String property) {
-	final EntitiesTreeNode2 node = node(root, property, true);
+	final EntitiesTreeNode2<DTM> node = node(root, property, true);
 	this.removeNodeFromParent(node);
 	nodesCache.remove(AbstractDomainTree.key(root, property));
 	if (isNotDummyAndNotCommonProperty(property)) {
@@ -272,7 +274,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * @param root
      * @param property
      */
-    protected void provideNodeState(final IDomainTreeManagerAndEnhancer manager, final Class<?> root, final String property) {
+    protected void provideNodeState(final DTM manager, final Class<?> root, final String property) {
 	final TreePath path = new TreePath(getPathToRoot(node(root, property, false)));
 	final TreeCheckingModel firstCheckingModel = getCheckingModel(0);
 	final TreeCheckingModel secondCheckingModel = getCheckingModel(1);
@@ -326,10 +328,11 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      */
     private TreeCheckingListener createTreeCheckingListener(final ITickManager tickManager) {
 	return new TreeCheckingListener() {
+	    @SuppressWarnings("unchecked")
 	    @Override
 	    public void valueChanged(final TreeCheckingEvent checkingEvent) {
-		final EntitiesTreeNode2 node = (EntitiesTreeNode2) checkingEvent.getPath().getLastPathComponent();
-		final EntitiesTreeUserObject userObject = node.getUserObject();
+		final EntitiesTreeNode2<DTM> node = (EntitiesTreeNode2<DTM>) checkingEvent.getPath().getLastPathComponent();
+		final EntitiesTreeUserObject<DTM> userObject = node.getUserObject();
 		final Class<?> root = userObject.getKey();
 		final String property = userObject.getValue();
 		if (!isNotDummyAndNotCommonProperty(property)) {
@@ -352,8 +355,8 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * @param withDummyNaming -- indicates whether a property can contain "dummy" or "common" properties
      * @return
      */
-    private EntitiesTreeNode2 node(final Class<?> root, final String property, final boolean withDummyNaming) {
-	final EnhancementPropertiesMap<EntitiesTreeNode2> cache = withDummyNaming ? nodesCache : nodesForSimplePropertiesCache;
+    private EntitiesTreeNode2<DTM> node(final Class<?> root, final String property, final boolean withDummyNaming) {
+	final EnhancementPropertiesMap<EntitiesTreeNode2<DTM>> cache = withDummyNaming ? nodesCache : nodesForSimplePropertiesCache;
 	return cache.get(AbstractDomainTree.key(root, property));
     }
 
@@ -364,9 +367,10 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      */
     public TreeWillExpandListener createTreeWillExpandListener() {
 	return new TreeWillExpandListener() {
+	    @SuppressWarnings("unchecked")
 	    @Override
 	    public void treeWillExpand(final TreeExpansionEvent event) throws ExpandVetoException {
-		final EntitiesTreeNode2 node = (EntitiesTreeNode2) event.getPath().getLastPathComponent();
+		final EntitiesTreeNode2<DTM> node = (EntitiesTreeNode2<DTM>) event.getPath().getLastPathComponent();
 		final Pair<Class<?>, String> rootAndProp = node.getUserObject();
 		manager.getRepresentation().warmUp(rootAndProp.getKey(), rootAndProp.getValue());
 	    }
@@ -405,7 +409,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      *
      * @return
      */
-    public IDomainTreeManagerAndEnhancer getManager() {
+    public DTM getManager() {
 	return manager;
     }
 
@@ -416,8 +420,8 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * @param property
      * @return
      */
-    protected EntitiesTreeUserObject createUserObject(final Class<?> root, final String property) {
-	return new EntitiesTreeUserObject(root, property);
+    protected EntitiesTreeUserObject<DTM> createUserObject(final Class<?> root, final String property) {
+	return new EntitiesTreeUserObject<DTM>(getManager(), root, property, firstTickCaption, secondTickCaption);
     }
 
     /**
@@ -426,14 +430,20 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * @author TG Team
      *
      */
-    public class EntitiesTreeUserObject extends Pair<Class<?>, String> {
+    public static class EntitiesTreeUserObject<DTM extends IDomainTreeManager> extends Pair<Class<?>, String> {
 	private static final long serialVersionUID = 6190072664610668018L;
 	private final String toStringTitle, labelTooltip, firstTickTooltip, secondTickTooltip;
 
-	public EntitiesTreeUserObject(final Class<?> root, final String property) {
-	    super(root, property);
+	private final String firstTickCaption, secondTickCaption;
+	private final DTM manager;
 
-	    final Class<?> managedRoot = EntitiesTreeModel2.ROOT_PROPERTY.equals(property) ? root : getManager().getEnhancer().getManagedType(root);
+	public EntitiesTreeUserObject(final DTM manager, final Class<?> root, final String property, final String firstTickCaption,//
+		    final String secondTickCaption) {
+	    super(root, property);
+	    this.manager= manager;
+	    this.firstTickCaption = firstTickCaption;
+	    this.secondTickCaption = secondTickCaption;
+	    final Class<?> managedRoot = EntitiesTreeModel2.ROOT_PROPERTY.equals(property) ? root : (manager instanceof IDomainTreeManagerAndEnhancer ? ((IDomainTreeManagerAndEnhancer)manager).getEnhancer().getManagedType(root) : (manager instanceof IAbstractAnalysisDomainTreeManager ? ((IAbstractAnalysisDomainTreeManager) manager).parentCentreDomainTreeManager().getEnhancer().getManagedType(root) : root));
 	    final Pair<String, String> titleAndDesc = extractTitleAndDesc(root, managedRoot, property);
 	    toStringTitle = titleAndDesc.getKey();
 	    labelTooltip = titleAndDesc.getValue();

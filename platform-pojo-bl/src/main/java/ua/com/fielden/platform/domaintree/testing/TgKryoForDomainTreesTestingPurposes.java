@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.domaintree.testing;
 
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1.AbstractAnalysisDomainTreeManager1Serialiser;
-import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1.AbstractAnalysisDomainTreeManagerAndEnhancer1Serialiser;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeRepresentation1.AbstractAnalysisDomainTreeRepresentation1Serialiser;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManager1.DomainTreeManagerForTestSerialiser;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1.DomainTreeManagerAndEnhancerForTestSerialiser;
@@ -34,8 +33,6 @@ public class TgKryoForDomainTreesTestingPurposes extends TgKryo {
 	    return new DomainTreeRepresentationForTestSerialiser(this);
 	} else if (AbstractAnalysisDomainTreeManager1.class.isAssignableFrom(type)) {
 	    return new AbstractAnalysisDomainTreeManager1Serialiser(this);
-	} else if (AbstractAnalysisDomainTreeManagerAndEnhancer1.class.isAssignableFrom(type)) {
-	    return new AbstractAnalysisDomainTreeManagerAndEnhancer1Serialiser(this);
 	} else if (AbstractAnalysisDomainTreeRepresentation1.class.isAssignableFrom(type)) {
 	    return new AbstractAnalysisDomainTreeRepresentation1Serialiser(this);
 	} else {

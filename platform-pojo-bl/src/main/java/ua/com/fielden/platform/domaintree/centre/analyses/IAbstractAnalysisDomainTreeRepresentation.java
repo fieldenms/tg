@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.domaintree.centre.analyses;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation;
+import ua.com.fielden.platform.domaintree.impl.IDomainTreeRepresentationWithMutability;
 
 /**
  * This interface defines how domain tree can be represented for <b>analyses</b> (base interface). <br><br>
@@ -11,7 +11,7 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation;
  * @author TG Team
  *
  */
-public interface IAbstractAnalysisDomainTreeRepresentation extends IDomainTreeRepresentation {
+public interface IAbstractAnalysisDomainTreeRepresentation extends IDomainTreeRepresentationWithMutability {
     IAbstractAnalysisAddToDistributionTickRepresentation getFirstTick();
     IAbstractAnalysisAddToAggregationTickRepresentation getSecondTick();
 

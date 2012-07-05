@@ -4,13 +4,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation.IAbstractAnalysisAddToAggregationTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -30,6 +30,8 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTreeManager implements IAbstractAnalysisDomainTreeManager {
     private Boolean visible;
+
+    private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
 
     @Override
     public IAbstractAnalysisAddToDistributionTickManager getFirstTick() {
@@ -54,9 +56,20 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
      * @param firstTick
      * @param secondTick
      */
-    protected AbstractAnalysisDomainTreeManager(final ISerialiser serialiser, final AbstractDomainTreeRepresentation dtr, final Boolean visible, final TickManager firstTick, final TickManager secondTick) {
+    protected AbstractAnalysisDomainTreeManager(final ISerialiser serialiser, final AbstractAnalysisDomainTreeRepresentation dtr, final Boolean visible, final AbstractAnalysisAddToDistributionTickManager firstTick, final AbstractAnalysisAddToAggregationTickManager secondTick) {
 	super(serialiser, dtr, firstTick, secondTick);
 	this.visible = visible;
+
+	parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
+    }
+
+    @Override
+    public ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager() {
+	return parentCentreDomainTreeManager;
+    }
+
+    protected Class<?> managedType(final Class<?> root) {
+	return parentCentreDomainTreeManager().getEnhancer().getManagedType(root);
     }
 
     @Override
@@ -104,6 +117,8 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
 	private final transient List<IPropertyUsageListener> propertyUsageListeners;
 
+	private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
+
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.
@@ -112,24 +127,82 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    super();
 	    rootsListsOfUsedProperties = createRootsMap();
 	    propertyUsageListeners = new ArrayList<IPropertyUsageListener>();
+
+	    parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
+	}
+
+	private ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager() {
+	    return parentCentreDomainTreeManager;
+	}
+
+	protected Class<?> managedType(final Class<?> root) {
+	    return parentCentreDomainTreeManager().getEnhancer().getManagedType(root);
+	}
+
+	@Override
+	public boolean isChecked(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    return super.isChecked(managedType(root), property);
+	}
+
+	@Override
+	public void check(final Class<?> root, final String property, final boolean check) {
+	    // inject an enhanced type into method implementation
+	    super.check(managedType(root), property, check);
+	}
+
+	@Override
+	public List<String> checkedProperties(final Class<?> root) {
+	    // inject an enhanced type into method implementation
+	    return super.checkedProperties(managedType(root));
+	}
+
+	@Override
+	public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
+	    // inject an enhanced type into method implementation
+	    return super.checkedPropertiesMutable(managedType(rootPossiblyEnhanced));
+	}
+
+	@Override
+	public void swap(final Class<?> root, final String property1, final String property2) {
+	    // inject an enhanced type into method implementation
+	    super.swap(managedType(root), property1, property2);
+	}
+
+	@Override
+	public void move(final Class<?> root, final String what, final String beforeWhat) {
+	    // inject an enhanced type into method implementation
+	    super.move(managedType(root), what, beforeWhat);
+	}
+
+	@Override
+	public void moveToTheEnd(final Class<?> root, final String what) {
+	    // inject an enhanced type into method implementation
+	    super.moveToTheEnd(managedType(root), what);
 	}
 
 	@Override
 	public final boolean isUsed(final Class<?> root, final String property) {
-	    illegalUncheckedProperties(this, root, property, "It's illegal to ask whether the specified property [" + property + "] is 'used' if it is not 'checked' in type [" + root.getSimpleName() + "].");
-	    return rootsListsOfUsedProperties.containsKey(root) && rootsListsOfUsedProperties.get(root).contains(property);
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    illegalUncheckedProperties(this, managedType, property, "It's illegal to ask whether the specified property [" + property + "] is 'used' if it is not 'checked' in type [" + managedType.getSimpleName() + "].");
+	    return rootsListsOfUsedProperties.containsKey(managedType) && rootsListsOfUsedProperties.get(managedType).contains(property);
 	}
 
 	@Override
 	public void use(final Class<?> root, final String property, final boolean check) {
-	    final List<String> listOfUsedProperties = getAndInitUsedProperties(root, property);
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
 	    if (check && !listOfUsedProperties.contains(property)) {
 		listOfUsedProperties.add(property);
 	    } else if (!check) {
 		listOfUsedProperties.remove(property);
 	    }
 	    for (final IPropertyUsageListener listener : propertyUsageListeners) {
-		listener.propertyStateChanged(root, property, check, null);
+		listener.propertyStateChanged(managedType, property, check, null);
 	    }
 	}
 
@@ -153,10 +226,13 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 
 	@Override
 	public final List<String> usedProperties(final Class<?> root) {
-	    final List<String> checkedProperties = checkedProperties(root);
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    final List<String> checkedProperties = checkedProperties(managedType);
 	    final List<String> usedProperties = new ArrayList<String>();
 	    for (final String property : checkedProperties) {
-		if (isUsed(root, property)) {
+		if (isUsed(managedType, property)) {
 		    usedProperties.add(property);
 		}
 	    }
@@ -200,6 +276,13 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	private final transient List<IPropertyUsageListener> propertyUsageListeners;
 	private final transient List<IPropertyOrderingListener> propertyOrderingListeners;
 
+	private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
+
+	@Override
+	protected IAbstractAnalysisAddToAggregationTickRepresentation tr() {
+	    return (IAbstractAnalysisAddToAggregationTickRepresentation) super.tr();
+	}
+
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.
@@ -210,35 +293,103 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    rootsListsOfUsedProperties = createRootsMap();
 	    propertyUsageListeners = new ArrayList<IPropertyUsageListener>();
 	    propertyOrderingListeners = new ArrayList<IPropertyOrderingListener>();
+
+	    parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
+	}
+
+	private ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager() {
+	    return parentCentreDomainTreeManager;
+	}
+
+	protected Class<?> managedType(final Class<?> root) {
+	    return parentCentreDomainTreeManager().getEnhancer().getManagedType(root);
 	}
 
 	@Override
-	protected IAbstractAnalysisAddToAggregationTickRepresentation tr() {
-	    return (IAbstractAnalysisAddToAggregationTickRepresentation) super.tr();
+	public boolean isChecked(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    return super.isChecked(managedType(root), property);
+	}
+
+	@Override
+	public void check(final Class<?> root, final String property, final boolean check) {
+	    // inject an enhanced type into method implementation
+	    super.check(managedType(root), property, check);
+	}
+
+	@Override
+	public List<String> checkedProperties(final Class<?> root) {
+	    // inject an enhanced type into method implementation
+	    return super.checkedProperties(managedType(root));
+	}
+
+	@Override
+	public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
+	    // inject an enhanced type into method implementation
+	    return super.checkedPropertiesMutable(managedType(rootPossiblyEnhanced));
+	}
+
+	@Override
+	public void swap(final Class<?> root, final String property1, final String property2) {
+	    // inject an enhanced type into method implementation
+	    super.swap(managedType(root), property1, property2);
+	}
+
+	@Override
+	public void move(final Class<?> root, final String what, final String beforeWhat) {
+	    // inject an enhanced type into method implementation
+	    super.move(managedType(root), what, beforeWhat);
+	}
+
+	@Override
+	public void moveToTheEnd(final Class<?> root, final String what) {
+	    // inject an enhanced type into method implementation
+	    super.moveToTheEnd(managedType(root), what);
 	}
 
 	@Override
 	public final boolean isUsed(final Class<?> root, final String property) {
-	    illegalUncheckedProperties(this, root, property, "It's illegal to ask whether the specified property [" + property + "] is 'used' if it is not 'checked' in type [" + root.getSimpleName() + "].");
-	    return rootsListsOfUsedProperties.containsKey(root) && rootsListsOfUsedProperties.get(root).contains(property);
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    illegalUncheckedProperties(this, managedType, property, "It's illegal to ask whether the specified property [" + property + "] is 'used' if it is not 'checked' in type [" + managedType.getSimpleName() + "].");
+	    return rootsListsOfUsedProperties.containsKey(managedType) && rootsListsOfUsedProperties.get(managedType).contains(property);
 	}
 
 	@Override
 	public void use(final Class<?> root, final String property, final boolean check) {
-	    final List<String> listOfUsedProperties = getAndInitUsedProperties(root, property);
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
 	    if (check && !listOfUsedProperties.contains(property)) {
 		listOfUsedProperties.add(property);
 	    } else if (!check && listOfUsedProperties.contains(property)) {
 		// before successful removal of the Usage -- the Ordering should be removed
-		while (isOrdered(property, orderedProperties(root))) {
-		    toggleOrdering(root, property);
+		while (isOrdered(property, orderedProperties(managedType))) {
+		    toggleOrdering(managedType, property);
 		}
 		// perform actual removal
 		listOfUsedProperties.remove(property);
 	    }
 	    for (final IPropertyUsageListener listener : propertyUsageListeners) {
-		listener.propertyStateChanged(root, property, check, null);
+		listener.propertyStateChanged(managedType, property, check, null);
 	    }
+	}
+
+	@Override
+	public final List<String> usedProperties(final Class<?> root) {
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    final List<String> checkedProperties = checkedProperties(managedType);
+	    final List<String> usedProperties = new ArrayList<String>();
+	    for (final String property : checkedProperties) {
+		if (isUsed(managedType, property)) {
+		    usedProperties.add(property);
+		}
+	    }
+	    return usedProperties;
 	}
 
 	private static boolean isOrdered(final String property, final List<Pair<String, Ordering>> orderedProperties) {
@@ -269,51 +420,45 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	}
 
 	@Override
-	public final List<String> usedProperties(final Class<?> root) {
-	    final List<String> checkedProperties = checkedProperties(root);
-	    final List<String> usedProperties = new ArrayList<String>();
-	    for (final String property : checkedProperties) {
-		if (isUsed(root, property)) {
-		    usedProperties.add(property);
-		}
-	    }
-	    return usedProperties;
-	}
-
-	@Override
 	public List<Pair<String, Ordering>> orderedProperties(final Class<?> root) {
-	    if (rootsListsOfOrderings.containsKey(root)) {
-		return rootsListsOfOrderings.get(root);
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    if (rootsListsOfOrderings.containsKey(managedType)) {
+		return rootsListsOfOrderings.get(managedType);
 	    } else {
-		return tr().orderedPropertiesByDefault(root);
+		return tr().orderedPropertiesByDefault(managedType);
 	    }
 	}
 
 	@Override
 	public void toggleOrdering(final Class<?> root, final String property) {
-	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not toggle 'ordering' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    if (!rootsListsOfOrderings.containsKey(root)) {
-		rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(tr().orderedPropertiesByDefault(root)));
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    AbstractDomainTree.illegalUnusedProperties(this, managedType, property, "Could not toggle 'ordering' for 'unused' property [" + property + "] in type [" + managedType.getSimpleName() + "].");
+	    if (!rootsListsOfOrderings.containsKey(managedType)) {
+		rootsListsOfOrderings.put(managedType, new ArrayList<Pair<String, Ordering>>(tr().orderedPropertiesByDefault(managedType)));
 	    }
-	    final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(root));
+	    final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(managedType));
 	    for (final Pair<String, Ordering> pair : list) {
 		if (pair.getKey().equals(property)) {
-		    final int index = rootsListsOfOrderings.get(root).indexOf(pair);
+		    final int index = rootsListsOfOrderings.get(managedType).indexOf(pair);
 		    if (Ordering.ASCENDING.equals(pair.getValue())) {
-			rootsListsOfOrderings.get(root).get(index).setValue(Ordering.DESCENDING);
+			rootsListsOfOrderings.get(managedType).get(index).setValue(Ordering.DESCENDING);
 		    } else { // Ordering.DESCENDING
-			rootsListsOfOrderings.get(root).remove(index);
+			rootsListsOfOrderings.get(managedType).remove(index);
 		    }
 		    for (final IPropertyOrderingListener listener : propertyOrderingListeners) {
-			listener.propertyStateChanged(root, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(root)), null);
+			listener.propertyStateChanged(managedType, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(managedType)), null);
 		    }
 		    return;
 		}
 	    } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
-	    rootsListsOfOrderings.get(root).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
+	    rootsListsOfOrderings.get(managedType).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
 
 	    for (final IPropertyOrderingListener listener : propertyOrderingListeners) {
-		listener.propertyStateChanged(root, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(root)), null);
+		listener.propertyStateChanged(managedType, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(managedType)), null);
 	    }
 	}
 

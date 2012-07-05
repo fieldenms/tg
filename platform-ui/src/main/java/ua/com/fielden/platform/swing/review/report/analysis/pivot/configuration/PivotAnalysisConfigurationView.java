@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IAbstractConfigurationViewEventListener;
 
-public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManagerAndEnhancer, Void, PivotAnalysisView<T>> {
+public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void, PivotAnalysisView<T>> {
 
     private static final long serialVersionUID = -1464413279095086886L;
 
@@ -39,12 +39,12 @@ public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends
 	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
 		switch (event.getEventAction()) {
 		case OPEN:
-		    IPivotDomainTreeManagerAndEnhancer pdtme = (IPivotDomainTreeManagerAndEnhancer)getModel().getAnalysisManager();
+		    IPivotDomainTreeManager pdtme = (IPivotDomainTreeManager) getModel().getAnalysisManager();
 		    if(pdtme == null){
 			getModel().initAnalysisManager(AnalysisType.PIVOT);
 			getModel().save();
 			getModel().setAnalysisVisible(true);
-			pdtme = (IPivotDomainTreeManagerAndEnhancer)getModel().getAnalysisManager();
+			pdtme = (IPivotDomainTreeManager) getModel().getAnalysisManager();
 		    }
 		    if(pdtme == null){
 			return new Result(PivotAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));

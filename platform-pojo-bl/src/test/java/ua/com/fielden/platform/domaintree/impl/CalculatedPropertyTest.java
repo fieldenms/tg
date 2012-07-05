@@ -28,6 +28,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyWarnin
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
@@ -43,6 +44,16 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
+     *
+     * @return
+     */
+    @Override
+    protected IDomainTreeManagerAndEnhancer dtm() {
+	return (IDomainTreeManagerAndEnhancer) super.dtm();
+    }
+
     /**
      * Creates root types.
      *

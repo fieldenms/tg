@@ -91,8 +91,8 @@ public class DomainTreeEditorModel<T extends AbstractEntity<?>> {
 	return expressionModel;
     }
 
-    public EntitiesTreeModel2 createTreeModel() {
-	return new EntitiesTreeModel2(dtme, "selection criteria", "result set");
+    public EntitiesTreeModel2<IDomainTreeManagerAndEnhancer> createTreeModel() {
+	return new EntitiesTreeModel2<IDomainTreeManagerAndEnhancer>(dtme, "selection criteria", "result set");
     }
 
     /**

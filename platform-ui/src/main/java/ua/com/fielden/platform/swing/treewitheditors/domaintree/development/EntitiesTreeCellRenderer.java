@@ -11,6 +11,7 @@ import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2.EntitiesTreeUserObject;
 
 public class EntitiesTreeCellRenderer extends FilterableEntitiesTreeCellRenderer {
@@ -29,7 +30,7 @@ public class EntitiesTreeCellRenderer extends FilterableEntitiesTreeCellRenderer
     private final List<ActionImagePanel> confPanel;
 
     public EntitiesTreeCellRenderer(//
-	    final EntitiesTreeModel2 model,//
+	    final EntitiesTreeModel2<ICentreDomainTreeManagerAndEnhancer> model,//
 	    final Action newAction,//
 	    final Action editAction,//
 	    final Action copyAction,//
@@ -121,23 +122,25 @@ public class EntitiesTreeCellRenderer extends FilterableEntitiesTreeCellRenderer
      *
      * @return
      */
-    protected IDomainTreeManagerAndEnhancer getManager() {
-	return getModel().getManager();
+    protected ICentreDomainTreeManagerAndEnhancer getManager() {
+	return (ICentreDomainTreeManagerAndEnhancer)getModel().getManager();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected String getLabelToolTipText(final TreePath treePath) {
 	if (treePath != null) {
-	    final EntitiesTreeUserObject userObject = ((EntitiesTreeNode2) treePath.getLastPathComponent()).getUserObject();
+	    final EntitiesTreeUserObject<ICentreDomainTreeManagerAndEnhancer> userObject = ((EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer>) treePath.getLastPathComponent()).getUserObject();
 	    return userObject.getLabelTooltip();
 	}
 	return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected String getCheckingComponentToolTipText(final int index, final TreePath treePath) {
 	if (treePath != null) {
-	    final EntitiesTreeUserObject userObject = ((EntitiesTreeNode2) treePath.getLastPathComponent()).getUserObject();
+	    final EntitiesTreeUserObject<ICentreDomainTreeManagerAndEnhancer> userObject = ((EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer>) treePath.getLastPathComponent()).getUserObject();
 	    if (index == 0) {
 		return userObject.getFirstTickTooltip(); // createCriteriaCheckboxToolTipText(root, property);
 	    } else if (index == 1) {

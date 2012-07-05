@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.review.report.analysis.chart.configuration
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IAbstractConfigurationViewEventListener;
 
-public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManagerAndEnhancer, Void, ChartAnalysisView<T>> {
+public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager, Void, ChartAnalysisView<T>> {
 
     private static final long serialVersionUID = -44217633254876740L;
 
@@ -39,12 +39,12 @@ public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends
 	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
 		switch (event.getEventAction()) {
 		case OPEN:
-		    IAnalysisDomainTreeManagerAndEnhancer adtme = (IAnalysisDomainTreeManagerAndEnhancer)getModel().getAnalysisManager();
+		    IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager)getModel().getAnalysisManager();
 		    if(adtme == null){
 			getModel().initAnalysisManager(AnalysisType.SIMPLE);
 			getModel().save();
 			getModel().setAnalysisVisible(true);
-			adtme = (IAnalysisDomainTreeManagerAndEnhancer)getModel().getAnalysisManager();
+			adtme = (IAnalysisDomainTreeManager)getModel().getAnalysisManager();
 		    }
 		    if(adtme == null){
 			return new Result(ChartAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));

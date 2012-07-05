@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
@@ -31,11 +32,23 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractDomainTreeRepresentation implements IAbstractAnalysisDomainTreeRepresentation {
+    private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
+
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    public AbstractAnalysisDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+    public AbstractAnalysisDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractAnalysisAddToDistributionTickRepresentation firstTick, final AbstractAnalysisAddToAggregationTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
 	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
+
+	parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
+    }
+
+    private ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager() {
+	return parentCentreDomainTreeManager;
+    }
+
+    protected Class<?> managedType(final Class<?> root) {
+	return parentCentreDomainTreeManager().getEnhancer().getManagedType(root);
     }
 
     @Override
@@ -46,6 +59,63 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
     @Override
     public IAbstractAnalysisAddToAggregationTickRepresentation getSecondTick() {
 	return (IAbstractAnalysisAddToAggregationTickRepresentation) super.getSecondTick();
+    }
+
+    @Override
+    public boolean isExcludedImmutably(final Class<?> root, final String property) {
+	// inject an enhanced type into method implementation
+	final Class<?> managedType = managedType(root);
+
+	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(managedType, property);
+	// overridden to exclude crit-only itself properties
+	return (super.isExcludedImmutably(managedType, property)) || // base TG domain representation usage
+	(!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())); // exclude crit-only properties
+    }
+
+    @Override
+    public final void excludeImmutably(final Class<?> root, final String property) {
+	// inject an enhanced type into method implementation
+        super.excludeImmutably(managedType(root), property);
+    }
+
+    @Override
+    public List<String> includedProperties(final Class<?> root) {
+	// inject an enhanced type into method implementation
+        return super.includedProperties(managedType(root));
+    }
+
+    /**
+     * Getter of mutable "included properties" cache for internal purposes.
+     * <p>
+     * Please note that you can only mutate this list with methods {@link List#add(Object)} and {@link List#remove(Object)} to correctly reflect the changes on depending objects.
+     * (e.g. UI tree models, checked properties etc.)
+     *
+     * @param root
+     * @return
+     */
+    @Override
+    public List<String> includedPropertiesMutable(final Class<?> root) {
+	return super.includedPropertiesMutable(managedType(root));
+    }
+
+    @Override
+    public void warmUp(final Class<?> root, final String property) {
+	// inject an enhanced type into method implementation
+        super.warmUp(managedType(root), property);
+    }
+
+    @Override
+    public Set<Function> availableFunctions(final Class<?> root, final String property) {
+	// inject an enhanced type into method implementation
+	final Class<?> managedType = managedType(root);
+
+	final Set<Function> availableFunctions = super.availableFunctions(managedType, property);
+	if (isInCollectionHierarchy(managedType, property)) {
+	    availableFunctions.remove(Function.ALL);
+	    availableFunctions.remove(Function.ANY);
+	}
+	return availableFunctions;
     }
 
     /**
@@ -59,31 +129,64 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
      *
      */
     protected abstract static class AbstractAnalysisAddToDistributionTickRepresentation extends AbstractTickRepresentation implements IAbstractAnalysisAddToDistributionTickRepresentation {
+	private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
+
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr" field.
 	 */
 	protected AbstractAnalysisAddToDistributionTickRepresentation() {
 	    super();
+
+	    parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
+	}
+
+	private ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager() {
+	    return parentCentreDomainTreeManager;
+	}
+
+	protected Class<?> managedType(final Class<?> root) {
+	    return parentCentreDomainTreeManager().getEnhancer().getManagedType(root);
 	}
 
 	@Override
 	public boolean isDisabledImmutably(final Class<?> root, final String property) {
-	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-	    final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(KeyType.class, propertyType);
-	    final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, root, property);
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
 
-	    return (super.isDisabledImmutably(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
+	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	    final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
+	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(KeyType.class, propertyType);
+	    final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, managedType, property);
+
+	    return (super.isDisabledImmutably(managedType, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
 	    // TODO (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
 	    (isEntityItself) || // empty property means "entity itself" and it should be disabled for distribution
-	    (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself
+	    (isCollectionOrInCollectionHierarchy(managedType, property)) || // disable properties in collectional hierarchy and collections itself
 	    (!isEntityItself && EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))) || // disable properties of "entity with AE or composite key" type
 
 	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation == null) || // disable non-calc integer props
-	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !StringUtils.isEmpty(calculatedAnnotation.origination()) && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination()))) || // disable integer calculated properties which were originated not from Date property
+	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !StringUtils.isEmpty(calculatedAnnotation.origination()) && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(managedType, calculatedAnnotation.origination()))) || // disable integer calculated properties which were originated not from Date property
 	    (!isEntityItself && !Integer.class.isAssignableFrom(propertyType) && !EntityUtils.isEntityType(propertyType) && !EntityUtils.isBoolean(propertyType)); // disable properties of non-"entity or boolean" type
 	    //		    Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination())));// disable integer calculated properties which were originated not from Date property
 	    //(!isEntityItself && !EntityUtils.isEntityType(propertyType) && !EntityUtils.isDate(propertyType) && !EntityUtils.isBoolean(propertyType)); // disable properties of "entity with AE or composite key" type
+	}
+
+	@Override
+	public final void disableImmutably(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    super.disableImmutably(managedType(root), property);
+	}
+
+	@Override
+	public boolean isCheckedImmutably(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    return super.isCheckedImmutably(managedType(root), property);
+	}
+
+	@Override
+	public final void checkImmutably(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    super.checkImmutably(managedType(root), property);
 	}
     }
 
@@ -101,6 +204,8 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 	private final EnhancementSet propertiesOrderingDisablement;
 
+	private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
+
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr" field.
 	 */
@@ -108,16 +213,29 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	    super();
 	    this.rootsListsOfOrderings = createRootsMap();
 	    this.propertiesOrderingDisablement = createSet();
+
+	    parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
+	}
+
+	private ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager() {
+	    return parentCentreDomainTreeManager;
+	}
+
+	protected Class<?> managedType(final Class<?> root) {
+	    return parentCentreDomainTreeManager().getEnhancer().getManagedType(root);
 	}
 
 	@Override
 	public boolean isDisabledImmutably(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
 	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	    //final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
 	    //final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, root, property);
 
-	    return (super.isDisabledImmutably(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
-	    !(!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION));//
+	    return (super.isDisabledImmutably(managedType, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
+	    !(!isEntityItself && isCalculatedAndOfTypes(managedType, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION));//
 	    //	    (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself
 	    //	    // TODO (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
 	    //	    (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)
@@ -126,30 +244,60 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	}
 
 	@Override
+	public final void disableImmutably(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    super.disableImmutably(managedType(root), property);
+	}
+
+	@Override
+	public boolean isCheckedImmutably(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    return super.isCheckedImmutably(managedType(root), property);
+	}
+
+	@Override
+	public final void checkImmutably(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    super.checkImmutably(managedType(root), property);
+	}
+
+	@Override
 	public boolean isOrderingDisabledImmutably(final Class<?> root, final String property) {
-	    illegalExcludedProperties(getDtr(), root, property, "Could not ask an 'ordering disablement' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return (propertiesOrderingDisablement.contains(key(root, property))) ? true : false;
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    illegalExcludedProperties(getDtr(), managedType, property, "Could not ask an 'ordering disablement' for already 'excluded' property [" + property + "] in type [" + managedType.getSimpleName() + "].");
+	    return (propertiesOrderingDisablement.contains(key(managedType, property))) ? true : false;
 	}
 
 	@Override
 	public void disableOrderingImmutably(final Class<?> root, final String property) {
-	    illegalExcludedProperties(getDtr(), root, property, "Could not disable an 'ordering' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    propertiesOrderingDisablement.add(key(root, property));
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    illegalExcludedProperties(getDtr(), managedType, property, "Could not disable an 'ordering' for already 'excluded' property [" + property + "] in type [" + managedType.getSimpleName() + "].");
+	    propertiesOrderingDisablement.add(key(managedType, property));
 	}
 
 	@Override
 	public List<Pair<String, Ordering>> orderedPropertiesByDefault(final Class<?> root) {
-	    illegalExcludedProperties(getDtr(), root, "", "Could not ask an 'ordering by default' for already 'excluded' type [" + root.getSimpleName() + "].");
-	    if (rootsListsOfOrderings.containsKey(root)) {
-		return rootsListsOfOrderings.get(root);
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    illegalExcludedProperties(getDtr(), managedType, "", "Could not ask an 'ordering by default' for already 'excluded' type [" + managedType.getSimpleName() + "].");
+	    if (rootsListsOfOrderings.containsKey(managedType)) {
+		return rootsListsOfOrderings.get(managedType);
 	    }
 	    return new ArrayList<Pair<String, Ordering>>();
 	}
 
 	@Override
 	public void setOrderedPropertiesByDefault(final Class<?> root, final List<Pair<String, Ordering>> orderedPropertiesByDefault) {
-	    illegalExcludedProperties(getDtr(), root, "", "Could not set an 'ordering by default' for already 'excluded' type [" + root.getSimpleName() + "].");
-	    rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault));
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    illegalExcludedProperties(getDtr(), managedType, "", "Could not set an 'ordering by default' for already 'excluded' type [" + managedType.getSimpleName() + "].");
+	    rootsListsOfOrderings.put(managedType, new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault));
 	}
 
 	@Override
@@ -182,24 +330,5 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 		return false;
 	    return true;
 	}
-    }
-
-    @Override
-    public boolean isExcludedImmutably(final Class<?> root, final String property) {
-	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-	final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
-	// overridden to exclude crit-only itself properties
-	return (super.isExcludedImmutably(root, property)) || // base TG domain representation usage
-	(!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())); // exclude crit-only properties
-    }
-
-    @Override
-    public Set<Function> availableFunctions(final Class<?> root, final String property) {
-	final Set<Function> availableFunctions = super.availableFunctions(root, property);
-	if (isInCollectionHierarchy(root, property)) {
-	    availableFunctions.remove(Function.ALL);
-	    availableFunctions.remove(Function.ANY);
-	}
-	return availableFunctions;
     }
 }

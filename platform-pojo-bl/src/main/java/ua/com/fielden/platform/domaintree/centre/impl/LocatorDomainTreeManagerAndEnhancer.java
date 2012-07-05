@@ -35,7 +35,7 @@ public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManager
     }
 
     @Override
-    protected ILocatorDomainTreeManager base() {
+    public ILocatorDomainTreeManager base() {
 	return (ILocatorDomainTreeManager) super.base();
     }
 
