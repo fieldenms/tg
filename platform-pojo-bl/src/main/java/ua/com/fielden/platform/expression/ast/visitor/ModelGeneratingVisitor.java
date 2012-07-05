@@ -114,8 +114,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	// identify right operand expression model
 	final AstNode rightOperand = node.getChildren().get(1);
-	final IStandAloneExprOperationAndClose exprWithRight;
-	exprWithRight = operandOperationModel(expr, rightOperand);
+	final IStandAloneExprOperationAndClose exprWithRight = operandOperationModel(expr, rightOperand);
 	return exprWithRight.model();
     }
 
@@ -155,7 +154,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	if (cat == EgTokenCategory.NAME) {
 	    return expr.prop(relative2AbsoluteInverted(operand.getToken().text));
 	} else {
-	    return (operand.getModel() != null) ? expr.expr(operand.getModel()) : expr.val(operand.getToken().text);
+	    return (operand.getModel() != null) ? expr.expr(operand.getModel()) : expr.val(operand.getValue());
 	}
     }
 
@@ -171,7 +170,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	if (cat == EgTokenCategory.NAME) {
 	    return expr.prop(relative2AbsoluteInverted(operand.getToken().text));
 	} else {
-	    return (operand.getModel() != null) ? expr.expr(operand.getModel()) : expr.val(operand.getToken().text);
+	    return (operand.getModel() != null) ? expr.expr(operand.getModel()) : expr.val(operand.getValue());
 	}
     }
 
@@ -217,7 +216,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	if (cat1 == EgTokenCategory.NAME) {
 	    exprWithOperand =  expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
 	} else {
-	    exprWithOperand = (leftOperand.getModel() != null) ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getToken().text);
+	    exprWithOperand = (leftOperand.getModel() != null) ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
 	}
 
 
@@ -231,7 +230,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	if (cat2 == EgTokenCategory.NAME) {
 	    exprWithOperand1 =  andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
 	} else {
-	    exprWithOperand1 = (leftOperand.getModel() != null) ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getToken().text);
+	    exprWithOperand1 = (leftOperand.getModel() != null) ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
 	}
 
 
