@@ -50,7 +50,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 	    return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource(entityMetadata, (String) secondValue(), getQueryBuilder().getDomainMetadataAnalyser()));
 	} else {
 	    final List<QueryModel> readyModels = new ArrayList<QueryModel>();
-	    readyModels.add(entityMetadata.getModel());
+	    readyModels.addAll(entityMetadata.getModels());
 	    return getResultForEntityModelAsSource(readyModels, (String) secondValue());
 	}
     }

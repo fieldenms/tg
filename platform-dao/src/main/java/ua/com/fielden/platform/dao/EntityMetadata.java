@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.dao;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SortedMap;
 
 import org.apache.commons.lang.StringUtils;
@@ -7,25 +9,29 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-public class EntityMetadata {
+public class EntityMetadata<ET extends AbstractEntity<?>> {
     private final String table;
-    private final EntityResultQueryModel<? extends AbstractEntity<?>> model;
-    private final Class<? extends AbstractEntity<?>> type;
+    private final List<EntityResultQueryModel<ET>> models = new ArrayList<EntityResultQueryModel<ET>>();
+    private final Class<ET> type;
     private final SortedMap<String, PropertyMetadata> props;
 
-    public EntityMetadata(final String table, final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyMetadata> props) {
+    public EntityMetadata(final String table, final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
 	this(table, null, type, props);
     }
 
-    public EntityMetadata(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyMetadata> props) {
-	this(null, model, type, props);
+    public EntityMetadata(final List<EntityResultQueryModel<ET>> models, final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
+	this(null, models, type, props);
     }
 
-    public EntityMetadata(final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyMetadata> props) {
+    public EntityMetadata(final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
 	this(null, null, type, props);
     }
 
-    private EntityMetadata(final String table, final EntityResultQueryModel<? extends AbstractEntity<?>> model, final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyMetadata> props) {
+//    private static List<EntityResultQueryModel<ET>> produceModelIfAny(final Class<? extends AbstractEntity<?>> type) {
+//	return new ArrayList<EntityResultQueryModel<? extends AbstractEntity<?>>>();
+//    }
+
+    private EntityMetadata(final String table, final List<EntityResultQueryModel<ET>> models, final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
 	super();
 	this.table = table;
 	this.type = type;
@@ -33,7 +39,9 @@ public class EntityMetadata {
 	    throw new IllegalArgumentException("Missing entity type!");
 	}
 	this.props = props;
-	this.model = model;
+	if (models != null) {
+	    this.models.addAll(models);
+	}
     }
 
     public boolean isPersisted() {
@@ -41,7 +49,7 @@ public class EntityMetadata {
     }
 
     public boolean isSynthetic() {
-	return model != null;
+	return models.size() == 1;
     }
 
     public boolean isPure() {
@@ -58,8 +66,8 @@ public class EntityMetadata {
         return props;
     }
 
-    public EntityResultQueryModel<? extends AbstractEntity<?>> getModel() {
-        return model;
+    public List<EntityResultQueryModel<ET>> getModels() {
+        return models;
     }
 
     public static enum EntityCategory {
@@ -73,7 +81,7 @@ public class EntityMetadata {
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + ((model == null) ? 0 : model.hashCode());
+	result = prime * result + ((models == null) ? 0 : models.hashCode());
 	result = prime * result + ((props == null) ? 0 : props.hashCode());
 	result = prime * result + ((table == null) ? 0 : table.hashCode());
 	result = prime * result + ((type == null) ? 0 : type.hashCode());
@@ -92,11 +100,11 @@ public class EntityMetadata {
 	    return false;
 	}
 	final EntityMetadata other = (EntityMetadata) obj;
-	if (model == null) {
-	    if (other.model != null) {
+	if (models == null) {
+	    if (other.models != null) {
 		return false;
 	    }
-	} else if (!model.equals(other.model)) {
+	} else if (!models.equals(other.models)) {
 	    return false;
 	}
 	if (props == null) {

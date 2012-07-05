@@ -19,18 +19,18 @@ public class DomainMetadataAnalyser {
 	entityMetadataMap.putAll(domainMetadata.getEntityMetadataMap());
     }
 
-    public EntityMetadata getEntityMetadata(final Class<? extends AbstractEntity<?>> entityType) {
+    public <ET extends AbstractEntity<?>> EntityMetadata<ET> getEntityMetadata(final Class<ET> entityType) {
 	if (entityType == null || !AbstractEntity.class.isAssignableFrom(entityType) || EntityAggregates.class.equals(entityType)) {
 	    return null;
 	}
 
-	final EntityMetadata existing = entityMetadataMap.get(entityType);
+	final EntityMetadata<ET> existing = entityMetadataMap.get(entityType);
 
 	if (existing != null) {
 	    return existing;
 	} else {
 	    try {
-		final EntityMetadata newOne = domainMetadata.generateEntityMetadata(entityType);
+		final EntityMetadata<ET> newOne = domainMetadata.generateEntityMetadata(entityType);
 		entityMetadataMap.put(entityType, newOne);
 		return newOne;
 	    } catch (final Exception e) {
@@ -46,8 +46,8 @@ public class DomainMetadataAnalyser {
      * @param propName
      * @return
      */
-    public PropertyMetadata getPropPersistenceInfoExplicitly(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
-	final EntityMetadata map = getEntityMetadata(entityType);
+    public <ET extends AbstractEntity<?>> PropertyMetadata getPropPersistenceInfoExplicitly(final Class<ET> entityType, final String propName) {
+	final EntityMetadata<ET> map = getEntityMetadata(entityType);
 	return map != null ? map.getProps().get(propName) : null;
     }
 

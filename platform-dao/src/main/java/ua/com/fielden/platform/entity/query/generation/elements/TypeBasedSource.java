@@ -12,13 +12,13 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class TypeBasedSource extends AbstractSource {
     private final boolean generated;
-    private EntityMetadata entityMetadata;
+    private EntityMetadata<? extends AbstractEntity<?>> entityMetadata;
 
-    public TypeBasedSource(final EntityMetadata entityMetadata, final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
+    public TypeBasedSource(final EntityMetadata<? extends AbstractEntity<?>> entityMetadata, final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
 	this(entityMetadata, alias, false, domainMetadataAnalyser);
     }
 
-    public TypeBasedSource(final EntityMetadata entityMetadata, final String alias, final boolean generated, final DomainMetadataAnalyser domainMetadataAnalyser) {
+    public TypeBasedSource(final EntityMetadata<? extends AbstractEntity<?>> entityMetadata, final String alias, final boolean generated, final DomainMetadataAnalyser domainMetadataAnalyser) {
 	super(alias, domainMetadataAnalyser);
 	this.generated = generated;
 	this.entityMetadata = entityMetadata;

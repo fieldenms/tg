@@ -21,14 +21,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PROP;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY;
@@ -46,20 +39,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final ExpressionModel expressionModel;
     private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
 
-    private final static Set<PropertyCategory> typesThatAffectsMapping = new HashSet<PropertyCategory>();
-    static {
-	typesThatAffectsMapping.add(ENTITY);
-	typesThatAffectsMapping.add(ENTITY_KEY);
-	typesThatAffectsMapping.add(ENTITY_MEMBER_OF_COMPOSITE_KEY);
-	typesThatAffectsMapping.add(ID);
-	typesThatAffectsMapping.add(ONE2ONE_ID);
-	typesThatAffectsMapping.add(PRIMITIVE_KEY);
-	typesThatAffectsMapping.add(PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
-	typesThatAffectsMapping.add(COMPONENT_HEADER);
-	typesThatAffectsMapping.add(PROP);
-	typesThatAffectsMapping.add(VERSION);
-	typesThatAffectsMapping.add(UNION_ENTITY);
-    }
+
 
     public YieldDetailsType getYieldDetailType() {
 	return isCompositeProperty() ? YieldDetailsType.COMPOSITE_TYPE_HEADER : (isUnionEntity() ? YieldDetailsType.UNION_ENTITY_HEADER : YieldDetailsType.USUAL_PROP);
@@ -70,7 +50,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public boolean affectsMapping() {
-	return typesThatAffectsMapping.contains(type);
+	return type.affectsMappings();
     }
 
     public Type getHibTypeAsType() {
@@ -271,23 +251,111 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public static enum PropertyCategory {
-	PROP, //
-	COLLECTIONAL, //
-	ENTITY, //
-	ID, //
-	ONE2ONE_ID, //
-	VERSION, //
-	PRIMITIVE_KEY, //
-	ENTITY_KEY, //
-	ENTITY_MEMBER_OF_COMPOSITE_KEY, //
-	PRIMITIVE_MEMBER_OF_COMPOSITE_KEY, //
-	COMPONENT_HEADER, //
-	COMPONENT_DETAILS, //
-	EXPRESSION, //
-	SYNTHETIC, //
-	UNION_ENTITY, //
-	UNION_DETAILS, //
-	VIRTUAL_OVERRIDE; // the case of virtual generation of composite entity key by concatenation of all members during eQuery processing.
+	PROP {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	COLLECTIONAL {
+	    @Override
+	    boolean affectsMappings() {
+		return false;
+	    }
+	}, //
+	ENTITY {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	ID {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	ONE2ONE_ID {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	VERSION {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	PRIMITIVE_KEY {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	ENTITY_KEY {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	ENTITY_MEMBER_OF_COMPOSITE_KEY {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	PRIMITIVE_MEMBER_OF_COMPOSITE_KEY {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	COMPONENT_HEADER {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	COMPONENT_DETAILS {
+	    @Override
+	    boolean affectsMappings() {
+		return false;
+	    }
+	}, //
+	EXPRESSION {
+	    @Override
+	    boolean affectsMappings() {
+		return false;
+	    }
+	}, //
+	SYNTHETIC {
+	    @Override
+	    boolean affectsMappings() {
+		return false;
+	    }
+	}, //
+	UNION_ENTITY {
+	    @Override
+	    boolean affectsMappings() {
+		return true;
+	    }
+	}, //
+	UNION_DETAILS {
+	    @Override
+	    boolean affectsMappings() {
+		return false;
+	    }
+	}, //
+	VIRTUAL_OVERRIDE {
+	    @Override
+	    boolean affectsMappings() {
+		return false;
+	    }
+	}; // the case of virtual generation of composite entity key by concatenation of all members during eQuery processing.
+
+	abstract boolean affectsMappings();
+
     }
 
     public ExpressionModel getExpressionModel() {
@@ -297,7 +365,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     public boolean isAggregatedExpression() {
         return aggregatedExpression;
     }
-
 
     @Override
     public int hashCode() {

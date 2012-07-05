@@ -76,12 +76,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
-/**
- * Generates hibernate class mappings from MapTo annotations on domain entity types.
- *
- * @author TG Team
- *
- */
 public class DomainMetadata {
     public final static List<String> specialProps = Arrays.asList(new String[] { AbstractEntity.ID, AbstractEntity.KEY, AbstractEntity.VERSION });
     private final static PropertyColumn id = new PropertyColumn("_ID");
@@ -118,20 +112,20 @@ public class DomainMetadata {
 	}
     }
 
-    public <ET extends AbstractEntity<?>> EntityMetadata generateEntityMetadata(final Class<ET> entityType) throws Exception {
+    public <ET extends AbstractEntity<?>> EntityMetadata<ET> generateEntityMetadata(final Class<ET> entityType) throws Exception {
 
-	final String tableClase = getTableClause(entityType);
-	if (tableClase != null) {
-	    return new EntityMetadata(tableClase, entityType, generatePropertyMetadatasForEntity(entityType, PERSISTED));
+	final String tableClause = getTableClause(entityType);
+	if (tableClause != null) {
+	    return new EntityMetadata<ET>(tableClause, entityType, generatePropertyMetadatasForEntity(entityType, PERSISTED));
 	}
 
-	final EntityResultQueryModel<ET> entityModel = getEntityModel(entityType);
+	final List<EntityResultQueryModel<ET>> entityModel = getEntityModel(entityType);
 
 	if (entityModel != null) {
-	    return new EntityMetadata(entityModel, entityType, generatePropertyMetadatasForEntity(entityType, CALCULATED));
+	    return new EntityMetadata<ET>(entityModel, entityType, generatePropertyMetadatasForEntity(entityType, CALCULATED));
 	}
 
-	return new EntityMetadata(entityType, generatePropertyMetadatasForEntity(entityType, EntityUtils.isUnionEntityType(entityType) ? UNION : PURE));
+	return new EntityMetadata<ET>(entityType, generatePropertyMetadatasForEntity(entityType, EntityUtils.isUnionEntityType(entityType) ? UNION : PURE));
     }
 
     public Object getBooleanValue(final boolean value) {
@@ -473,14 +467,23 @@ public class DomainMetadata {
 	return getPropertyAnnotation(Calculated.class, entityType, propName);
     }
 
-    private <ET extends AbstractEntity<?>> EntityResultQueryModel<ET> getEntityModel(final Class<ET> entityType) {
+    private <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> getEntityModel(final Class<ET> entityType) {
+	final List<EntityResultQueryModel<ET>> result = new ArrayList<EntityResultQueryModel<ET>>();
 	try {
 	    final Field exprField = entityType.getDeclaredField("model_");
 	    exprField.setAccessible(true);
-	    return (EntityResultQueryModel<ET>) exprField.get(null);
+	    result.add((EntityResultQueryModel<ET>) exprField.get(null));
+	    return result;
 	} catch (final Exception e) {
-	    return null;
 	}
+	try {
+	    final Field exprField = entityType.getDeclaredField("models_");
+	    exprField.setAccessible(true);
+	    result.addAll((List<EntityResultQueryModel<ET>>) exprField.get(null));
+	    return result;
+	} catch (final Exception e) {
+	}
+	return null;
     }
 
     private String getTableClause(final Class<? extends AbstractEntity<?>> entityType) {

@@ -130,7 +130,7 @@ public class HibernateMappingsGenerator {
      * @return
      * @throws Exception
      */
-    private String generateEntityClassMapping(final EntityMetadata entityMetadata) throws Exception {
+    private <ET extends AbstractEntity<?>> String generateEntityClassMapping(final EntityMetadata<ET> entityMetadata) throws Exception {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("<class name=\"" + entityMetadata.getType().getName() + "\" table=\"" + entityMetadata.getTable() + "\">\n");
 

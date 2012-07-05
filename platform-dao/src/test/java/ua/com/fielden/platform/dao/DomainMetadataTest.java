@@ -17,7 +17,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
     @Test
     public void test_one_to_one_property_metadata() throws Exception {
-	final EntityMetadata entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgVehicle.class);
+	final EntityMetadata<TgVehicle> entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgVehicle.class);
 	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("finDetails");
 
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("finDetails", TgVehicleFinDetails.class, true). //
@@ -31,13 +31,13 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
     @Test
     public void test_that_critonly_props_are_excluded() throws Exception {
-	final EntityMetadata entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgAverageFuelUsage.class);
+	final EntityMetadata<TgAverageFuelUsage> entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgAverageFuelUsage.class);
 	assertNull(entityMetadata.getProps().get("datePeriod"));
     }
 
     @Test
     public void test_one_to_one_property_metadata_for_synthetic_entity() throws Exception {
-	final EntityMetadata entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgAverageFuelUsage.class);
+	final EntityMetadata<TgAverageFuelUsage> entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgAverageFuelUsage.class);
 	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", TgVehicle.class, false). //
 	hibType(Hibernate.LONG). //
@@ -48,7 +48,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
     @Test
     public void test_deduced_id_for_synthetic_entity() throws Exception {
-	final EntityMetadata entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgAverageFuelUsage.class);
+	final EntityMetadata<TgAverageFuelUsage> entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgAverageFuelUsage.class);
 	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
 	hibType(Hibernate.LONG). //
@@ -60,7 +60,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
     @Test
     public void test_deduced_id_for_union_entity() throws Exception {
-	final EntityMetadata entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgBogieLocation.class);
+	final EntityMetadata<TgBogieLocation> entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgBogieLocation.class);
 	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
 
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
