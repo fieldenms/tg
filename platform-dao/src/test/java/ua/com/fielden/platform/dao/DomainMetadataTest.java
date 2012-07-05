@@ -22,7 +22,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("finDetails", TgVehicleFinDetails.class, true). //
 	hibType(Hibernate.LONG). //
-	type(PropertyCategory.CALCULATED). //
+	type(PropertyCategory.EXPRESSION). //
 	expression(expr().prop("id").model()). //
 	build();
 
@@ -52,7 +52,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
 	hibType(Hibernate.LONG). //
-	type(PropertyCategory.CALCULATED). //
+	type(PropertyCategory.EXPRESSION). //
 	expression(expr().prop("key").model()). //
 	build();
 	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
@@ -65,7 +65,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
 	hibType(Hibernate.LONG). //
-	type(PropertyCategory.CALCULATED). //
+	type(PropertyCategory.EXPRESSION). //
 	expression(expr().ifNull().prop("wagonSlot").then().val(0).add().ifNull().prop("workshop").then().val(0).model()). //
 	build();
 	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);

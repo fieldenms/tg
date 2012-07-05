@@ -165,7 +165,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public Set<PropertyMetadata> getComponentTypeSubprops() {
 	final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
-	if (PropertyCategory.UNION_ENTITY.equals(type)) {
+	if (UNION_ENTITY.equals(type)) {
 	    final List<Field> propsFields = AbstractUnionEntity.unionProperties(javaType);
 	    for (final Field subpropField : propsFields) {
 		final MapTo mapTo = subpropField.getAnnotation(MapTo.class);
@@ -283,7 +283,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	PRIMITIVE_MEMBER_OF_COMPOSITE_KEY, //
 	COMPONENT_HEADER, //
 	COMPONENT_DETAILS, //
-	CALCULATED, //
+	EXPRESSION, //
 	SYNTHETIC, //
 	UNION_ENTITY, //
 	UNION_DETAILS, //
