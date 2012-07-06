@@ -70,4 +70,12 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 	build();
 	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
     }
+
+    @Test
+    public void test_union_entity_generated_models() throws Exception {
+	final EntityMetadata<TgBogieLocation> entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgBogieLocation.class);
+	System.out.println(entityMetadata.getModels());
+	assertNull(entityMetadata.getProps().get("datePeriod"));
+    }
+
 }

@@ -35,7 +35,9 @@ import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
@@ -68,6 +70,7 @@ import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNIO
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
@@ -119,13 +122,16 @@ public class DomainMetadata {
 	    return new EntityMetadata<ET>(tableClause, entityType, generatePropertyMetadatasForEntity(entityType, PERSISTED));
 	}
 
-	final List<EntityResultQueryModel<ET>> entityModel = getEntityModel(entityType);
-
-	if (entityModel != null) {
-	    return new EntityMetadata<ET>(entityModel, entityType, generatePropertyMetadatasForEntity(entityType, CALCULATED));
+	final List<EntityResultQueryModel<ET>> entityModels = getEntityModels(entityType);
+	if (entityModels != null) {
+	    return new EntityMetadata<ET>(entityModels, entityType, generatePropertyMetadatasForEntity(entityType, CALCULATED));
 	}
 
-	return new EntityMetadata<ET>(entityType, generatePropertyMetadatasForEntity(entityType, EntityUtils.isUnionEntityType(entityType) ? UNION : PURE));
+	if (isUnionEntityType(entityType)) {
+	    return new EntityMetadata<ET>(getUnionEntityModels(entityType), entityType, generatePropertyMetadatasForEntity(entityType,  UNION));
+	} else {
+	    return new EntityMetadata<ET>(entityType, generatePropertyMetadatasForEntity(entityType,  PURE));
+	}
     }
 
     public Object getBooleanValue(final boolean value) {
@@ -467,7 +473,7 @@ public class DomainMetadata {
 	return getPropertyAnnotation(Calculated.class, entityType, propName);
     }
 
-    private <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> getEntityModel(final Class<ET> entityType) {
+    private <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> getEntityModels(final Class<ET> entityType) {
 	final List<EntityResultQueryModel<ET>> result = new ArrayList<EntityResultQueryModel<ET>>();
 	try {
 	    final Field exprField = entityType.getDeclaredField("model_");
@@ -484,6 +490,29 @@ public class DomainMetadata {
 	} catch (final Exception e) {
 	}
 	return null;
+    }
+
+    private <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> getUnionEntityModels(final Class<ET> entityType) {
+	final List<EntityResultQueryModel<ET>> result = new ArrayList<EntityResultQueryModel<ET>>();
+	final List<Field> unionProps = AbstractUnionEntity.unionProperties((Class<? extends AbstractUnionEntity>) entityType);
+	for (final Field currProp : unionProps) {
+	    result.add(generateModelForUnionEntityProperty(unionProps, currProp).modelAsEntity(entityType));
+	}
+	return result;
+    }
+
+    private <PT extends AbstractEntity<?>> ISubsequentCompletedAndYielded<PT> generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp) {
+	final IFromAlias<PT> modelInProgress = select((Class<PT>) currProp.getType());
+	ISubsequentCompletedAndYielded<PT> m = null;
+	for (final Field field : unionProps) {
+	    if (m == null) {
+		m = field.equals(currProp) ? modelInProgress.yield().prop(currProp.getName()).as(field.getName()) : modelInProgress.yield().val(null).as(field.getName());
+	    } else {
+		m = field.equals(currProp) ? m.yield().prop(currProp.getName()).as(field.getName()) : m.yield().val(null).as(field.getName());
+	    }
+	}
+
+	return m;
     }
 
     private String getTableClause(final Class<? extends AbstractEntity<?>> entityType) {
