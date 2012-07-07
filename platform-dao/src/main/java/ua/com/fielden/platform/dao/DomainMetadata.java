@@ -506,9 +506,9 @@ public class DomainMetadata {
 	ISubsequentCompletedAndYielded<PT> m = null;
 	for (final Field field : unionProps) {
 	    if (m == null) {
-		m = field.equals(currProp) ? modelInProgress.yield().prop(currProp.getName()).as(field.getName()) : modelInProgress.yield().val(null).as(field.getName());
+		m = field.equals(currProp) ? modelInProgress.yield().prop(AbstractEntity.ID).as(field.getName()) : modelInProgress.yield().val(null).as(field.getName());
 	    } else {
-		m = field.equals(currProp) ? m.yield().prop(currProp.getName()).as(field.getName()) : m.yield().val(null).as(field.getName());
+		m = field.equals(currProp) ? m.yield().prop(AbstractEntity.ID).as(field.getName()) : m.yield().val(null).as(field.getName());
 	    }
 	}
 

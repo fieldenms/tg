@@ -135,7 +135,7 @@ public abstract class AbstractSource implements ISource {
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
         if (isPersistedEntityType(sourceType()) && prop.getName().equalsIgnoreCase(getAlias())) {
-            final PurePropInfo idProp = new PurePropInfo(AbstractEntity.ID, Long.class, Hibernate.LONG, false || isNullable());
+            final PurePropInfo idProp = new PurePropInfo(AbstractEntity.ID, /*sourceType()*/Long.class, Hibernate.LONG, false || isNullable());
             return new PropResolutionInfo(prop, getAlias(), idProp, idProp, true); // id property is meant here, but is it for all contexts?
         } else {
             return null;

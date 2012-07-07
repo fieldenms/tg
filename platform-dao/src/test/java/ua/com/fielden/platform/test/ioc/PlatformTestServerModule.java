@@ -19,6 +19,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.controller.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogie;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogieClass;
+import ua.com.fielden.platform.sample.domain.controller.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelType;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgMakeCount;
@@ -49,6 +50,7 @@ import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleModelDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgWorkshopDao;
 import ua.com.fielden.platform.test.entities.daos.TgBogieClassDao;
 import ua.com.fielden.platform.test.entities.daos.TgBogieDao;
+import ua.com.fielden.platform.test.entities.daos.TgBogieLocationDao;
 import ua.com.fielden.platform.test.entities.daos.TgFuelUsageDao;
 import ua.com.fielden.platform.test.entities.daos.TgOrgUnit1Dao;
 import ua.com.fielden.platform.test.entities.daos.TgOrgUnit2Dao;
@@ -110,6 +112,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 	bind(ITgOrgUnit4.class).to(TgOrgUnit4Dao.class);
 	bind(ITgOrgUnit5.class).to(TgOrgUnit5Dao.class);
 
+	bind(ITgBogieLocation.class).to(TgBogieLocationDao.class);
 	bind(ITgBogie.class).to(TgBogieDao.class);
 	bind(ITgBogieClass.class).to(TgBogieClassDao.class);
 	bind(ITgWagon.class).to(TgWagonDao.class);

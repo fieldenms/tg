@@ -210,6 +210,8 @@ public class EntQuery implements ISingleOperand {
             } else {
                 return yieldTypeAccordingToQueryResultType;
             }
+        } else if (EntityUtils.isUnionEntityType(type())) {
+            return PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
         } else {
             return yield.getOperand().type();
         }

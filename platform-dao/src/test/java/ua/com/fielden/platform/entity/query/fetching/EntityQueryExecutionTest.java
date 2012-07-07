@@ -15,6 +15,8 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -42,6 +44,7 @@ import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.controller.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogie;
+import ua.com.fielden.platform.sample.domain.controller.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgMakeCount;
 import ua.com.fielden.platform.sample.domain.controller.ITgOrgUnit5;
@@ -71,6 +74,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     private final ITgBogie bogieDao = getInstance(ITgBogie.class);
+    private final ITgBogieLocation bogieLocationDao = getInstance(ITgBogieLocation.class);
     private final ITgWagon wagonDao = getInstance(ITgWagon.class);
     private final ITgWorkshop workshopDao = getInstance(ITgWorkshop.class);
     private final ITgWagonSlot wagonSlotDao = getInstance(ITgWagonSlot.class);
@@ -90,7 +94,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_case_when_function() {
-	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").then().prop("key").end().isNotNull().model();
+	//final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").then().prop("key").end().isNotNull().model();
+	final IFunctionCompoundCondition0<IComparisonOperator0<TgVehicle>,TgVehicle> qry = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --");
     }
 
 
@@ -257,6 +262,41 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final EntityResultQueryModel<TgWorkshop> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").yield().prop("location.workshop").modelAsEntity(TgWorkshop.class);
 	final List<TgWorkshop> models = workshopDao.getAllEntities(from(qry).with(fetch(TgWorkshop.class)).model());
 	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
+    }
+
+    @Test
+    public void test_query_union_entity_() {
+	final EntityResultQueryModel<TgBogieLocation> qry1 = select(TgWagonSlot.class).as("a").yield().prop("a").as("wagonSlot").yield().val(null).as("workshop").modelAsEntity(TgBogieLocation.class);
+	final EntityResultQueryModel<TgBogieLocation> qry2 = select(TgWorkshop.class).as("a").yield().val(null).as("wagonSlot").yield().prop("a").as("workshop").modelAsEntity(TgBogieLocation.class);
+	final EntityResultQueryModel<TgBogieLocation> qry3 = select(qry2, qry1).model();
+
+	bogieLocationDao.getAllEntities(from(qry1)/*.with(fetchAll(TgBogieLocation.class))*/.model());
+	bogieLocationDao.getAllEntities(from(qry2)/*.with(fetchAll(TgBogieLocation.class))*/.model());
+
+	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry3)/*.with(fetchAll(TgBogieLocation.class))*/.model());
+	assertEquals("Incorrect key", 13, models.size());
+
+	//assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
+    }
+
+
+    @Test
+    public void test_query_union_entityA_() {
+	final EntityResultQueryModel<TgBogieLocation> qry1 = select(TgWagonSlot.class).as("a").yield().prop("a").as("wagonSlot").modelAsEntity(TgBogieLocation.class);
+	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry1)/*.with(fetchAll(TgBogieLocation.class))*/.model());
+	//assertEquals("Incorrect key", 13, models.size());
+
+	//assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
+    }
+
+
+    @Test
+    public void test_query_union_entity0() {
+	final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).model();
+	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry)/*.with(fetchAll(TgBogieLocation.class))*/.model());
+	assertEquals("Incorrect key", 13, models.size());
+
+	//assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
     }
 
     @Test

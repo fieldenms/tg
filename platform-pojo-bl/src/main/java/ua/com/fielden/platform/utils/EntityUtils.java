@@ -556,7 +556,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isUnionEntityType(final Class<?> type) {
-        return AbstractUnionEntity.class.isAssignableFrom(type);
+        return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
     }
 
     /**
