@@ -5,6 +5,8 @@ import javax.swing.tree.MutableTreeNode;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.api.IItemSelector;
+import ua.com.fielden.platform.swing.review.report.ReportMode;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationView;
 
 /**
  * {@link TreeMenuItem} that wraps it's parent {@link MiSaveAsConfiguration} node.
@@ -104,12 +106,10 @@ public class TreeMenuItemWrapper<T extends AbstractEntity<?>> extends TreeMenuIt
      */
     @Override
     public void selectTreeMenuItem(final String name) {
-	//TODO must be implemented later after entity centre modifications.
-	//	final DynamicEntityReview<T> view = getView().getView();
-	//	if (view instanceof DynamicEntityReviewWithTabs) {
-	//	    final DynamicEntityReviewWithTabs<T, DAO, R> viewWithTabs = (DynamicEntityReviewWithTabs<T, DAO, R>) view;
-	//	    viewWithTabs.selectTab(name);
-	//	}
+	final CentreConfigurationView<T, ?> centre = getView().getCentreConfigurationView();
+	if(centre.getModel().getMode() == ReportMode.REPORT){
+	    centre.getPreviousView().selectAnalysis(name);
+	}
     }
 
     @Override

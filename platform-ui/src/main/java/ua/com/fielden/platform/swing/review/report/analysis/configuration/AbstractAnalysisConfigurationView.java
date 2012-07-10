@@ -9,6 +9,8 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomai
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.model.ICloseGuard;
+import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
@@ -107,6 +109,26 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      */
     public final AbstractEntityCentre<T, CDTME> getOwner() {
 	return owner;
+    }
+
+    @Override
+    public ICloseGuard canClose() {
+	final ICloseGuard result= super.canClose();
+	if(result != null){
+	    return result;
+	}
+	return getModel().getMode() == ReportMode.WIZARD ? this : null;
+    }
+
+    @Override
+    public String whyCannotClose() {
+        return "Please save or cancel changes for " + getModel().getName() + " analysis";
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        getModel().save();
     }
 
     @Override

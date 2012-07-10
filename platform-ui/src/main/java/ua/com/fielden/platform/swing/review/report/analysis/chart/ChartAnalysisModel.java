@@ -57,8 +57,15 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     @Override
     protected Result canLoadData() {
-	// TODO Auto-generated method stub
-	return null;
+	final Result result = getCriteria().isValid();
+	if(!result.isSuccessful()){
+	    return result;
+	}
+	final Class<T> entityClass = getCriteria().getEntityClass();
+	if(adtme().getFirstTick().usedProperties(entityClass).isEmpty()){
+	    return new Result(new IllegalStateException("Please choose distribution property"));
+	}
+	return Result.successful(this);
     }
 
     @Override
@@ -96,7 +103,7 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer());
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(queryModel)
 	.with(DynamicOrderingBuilder.createOrderingModel(getCriteria().getManagedType(), orderingPairs))//
-	.with(DynamicFetchBuilder.createFetchModel(getCriteria().getManagedType(), new HashSet<String>(distributionProperties))).model();
+	.with(DynamicFetchBuilder.createFetchModel(getCriteria().getManagedType(), new HashSet<String>(yieldProperties))).model();
 
 	final IPage<T> result = getCriteria().run(resultQuery, analysisView.getPageSize());
 	chartAnalysisDataProvider.setUsedProperties(distributionProperties, aggregationProperties);
@@ -135,7 +142,9 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	@Override
 	public Number getAggregatedDataValue(final int index, final String aggregated) {
 	    final Object value = loadedData.get(index).get(aggregated);
-	    if (value instanceof Money) {
+	    if(value == null){
+		return null;
+	    }else if (value instanceof Money) {
 		return ((Money) value).getAmount();
 	    } else if (value instanceof Number) {
 		return (Number) value;

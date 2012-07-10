@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrder
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
@@ -50,7 +52,6 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	final Class<T> root = getCriteria().getEntityClass();
 	final List<String> distributionProperties = adtme().getFirstTick().usedProperties(root);
-	final List<String> aggregationProperties = adtme().getSecondTick().usedProperties(root);
 
 	final List<String> groups = new ArrayList<String>();
 	final Map<String, List<T>> resultMap = new HashMap<String, List<T>>();
@@ -59,7 +60,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    groups.add(groupProperty);
 	    resultMap.put(groupProperty, getGroupList(groups));
 	}
-	pivotModel.loadData(resultMap, distributionProperties, aggregationProperties);
+	pivotModel.loadData(resultMap, distributionProperties, adtme().getSecondTick().usedProperties(root));
 	return null;
     }
 
@@ -69,8 +70,15 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     @Override
     protected Result canLoadData() {
-	// TODO Auto-generated method stub
-	return null;
+	final Result result = getCriteria().isValid();
+	if(!result.isSuccessful()){
+	    return result;
+	}
+	final Class<T> entityClass = getCriteria().getEntityClass();
+	if(adtme().getFirstTick().usedProperties(entityClass).isEmpty() && adtme().getSecondTick().usedProperties(entityClass).isEmpty()){
+	    return new Result(new IllegalStateException("Please choose distribution or aggregation properties"));
+	}
+	return Result.successful(this);
     }
 
     /**
@@ -112,7 +120,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer());
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(queryModel)
 	.with(DynamicOrderingBuilder.createOrderingModel(getCriteria().getManagedType(), orderingPairs))//
-	.with(DynamicFetchBuilder.createFetchModel(getCriteria().getManagedType(), new HashSet<String>(groups))).model();
+	.with(DynamicFetchBuilder.createFetchModel(getCriteria().getManagedType(), new HashSet<String>(yieldProperties))).model();
 
 	return getCriteria().run(resultQuery);
     }
@@ -175,6 +183,21 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
 	    final String property = secondTick.usedProperties(root).get(column - 1);
 	    return property;
+	}
+
+	@Override
+	int getColumnWidth(final int column) {
+	    final Class<T> root = getCriteria().getEntityClass();
+	    final IPivotAddToDistributionTickManager firstTick = adtme().getFirstTick();
+	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
+	    final List<String> distributionUsedProperties = firstTick.usedProperties(root);
+	    final List<String> aggregationUsedProperties = secondTick.usedProperties(root);
+	    if(column == 0 && !distributionUsedProperties.isEmpty()){
+		return firstTick.getWidth(root, distributionUsedProperties.get(0));
+	    } else if(column > 0) {
+		return secondTick.getWidth(root, aggregationUsedProperties.get(column-1));
+	    }
+	    return 0;
 	}
 
 	@Override
@@ -265,7 +288,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		if (column == 0) {
 		    if (getUserObject() instanceof AbstractEntity) {
 			final AbstractEntity<?> entity = (AbstractEntity<?>) getUserObject();
-			return entity.getKey().toString() + " - " + entity.getDesc();
+			return entity.getKey().toString() + (StringUtils.isEmpty(entity.getDesc()) ? "" : " - " + entity.getDesc());
 		    }
 		    return getUserObject();
 		}

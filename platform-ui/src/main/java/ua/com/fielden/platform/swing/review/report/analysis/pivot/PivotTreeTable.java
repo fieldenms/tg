@@ -14,6 +14,8 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
 import org.jdesktop.swingx.JXTable;
+import org.jdesktop.swingx.table.ColumnFactory;
+import org.jdesktop.swingx.table.TableColumnExt;
 
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTable;
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTableModel;
@@ -36,7 +38,7 @@ public class PivotTreeTable extends FilterableTreeTable {
 	setGridColor(new Color(214, 217, 223));
 	setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	setAutoResizeMode(JXTable.AUTO_RESIZE_OFF);
-	//setColumnFactory(createPivotColumnFactory());
+	setColumnFactory(createPivotColumnFactory());
 
 	getColumnModel().addColumnModelListener(new TableColumnModelListener() {
 
@@ -72,8 +74,8 @@ public class PivotTreeTable extends FilterableTreeTable {
     }
 
     /**
-     * 
-     * 
+     *
+     *
      * @param columnClass
      * @return
      */
@@ -82,26 +84,26 @@ public class PivotTreeTable extends FilterableTreeTable {
     }
 
 
-    //    /**
-    //     * Returns the column factory for this {@link PivotTreeTable} instance.
-    //     *
-    //     * @return
-    //     */
-    //    private ColumnFactory createPivotColumnFactory() {
-    //	return new ColumnFactory() {
-    //	    @Override
-    //	    public void configureColumnWidths(final JXTable table, final TableColumnExt columnExt) {
-    //		final int index = table.getColumnModel().getColumnIndex(columnExt.getIdentifier());
-    //		final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //		final int width = pivotModel.getColumnWidthAt(index);
-    //		if (width == 0) {
-    //		    super.configureColumnWidths(table, columnExt);
-    //		} else {
-    //		    columnExt.setPreferredWidth(width);
-    //		}
-    //	    }
-    //	};
-    //    }
+        /**
+         * Returns the column factory for this {@link PivotTreeTable} instance.
+         *
+         * @return
+         */
+        private ColumnFactory createPivotColumnFactory() {
+    	return new ColumnFactory() {
+    	    @Override
+    	    public void configureColumnWidths(final JXTable table, final TableColumnExt columnExt) {
+    		final int index = table.getColumnModel().getColumnIndex(columnExt.getIdentifier());
+    		final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
+    		final int width = pivotModel.getColumnWidth(index);
+    		if (width == 0) {
+    		    super.configureColumnWidths(table, columnExt);
+    		} else {
+    		    columnExt.setPreferredWidth(width);
+    		}
+    	    }
+    	};
+        }
 
     /**
      * Adds the tool tips to the table headers.

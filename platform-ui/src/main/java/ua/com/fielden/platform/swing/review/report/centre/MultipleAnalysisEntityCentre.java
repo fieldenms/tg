@@ -37,7 +37,9 @@ import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabDialog;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabDialogModel;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabOptions;
+import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
@@ -102,6 +104,30 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     }
 
     @Override
+    public void selectAnalysis(final String name) {
+	final IAbstractAnalysisDomainTreeManager analysis = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name);
+	AnalysisType analysisType = null;
+	if(analysis != null){
+	    analysisType = determineAnalysisType(analysis);
+	}
+	showAnalysis(name, analysisType);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ICloseGuard canClose() {
+        for (int analysisIndex = 0; analysisIndex < tabPanel.getTabCount(); analysisIndex++) {
+	    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysisView =//
+		    (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>) tabPanel.getComponentAt(analysisIndex);
+	    if (analysisView.canClose() != null) {
+		showAnalysis(analysisView.getModel().getName(), null);
+		return analysisView;
+	    }
+	}
+        return null;
+    }
+
+    @Override
     protected ConfigureAction createConfigureAction() {
 	return new ConfigureAction(getOwner()) {
 
@@ -110,6 +136,20 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    {
 		putValue(Action.NAME, "Configure");
 		putValue(Action.SHORT_DESCRIPTION, "Configure this entity centre");
+	    }
+
+	    @Override
+	    protected boolean preAction() {
+		final boolean result = super.preAction();
+		if (!result) {
+		    return false;
+		}
+		final ICloseGuard closeGuard = canClose();
+		if (closeGuard != null) {
+		    JOptionPane.showMessageDialog(MultipleAnalysisEntityCentre.this, closeGuard.whyCannotClose(), "Warning", JOptionPane.WARNING_MESSAGE);
+		    return false;
+		}
+		return true;
 	    }
 
 	    @Override
@@ -181,7 +221,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      */
     private void hideAnalysis(final String name) {
 	final int tabIndex = tabIndex(tabPanel, name);
-	if(canRemoveTabSheet(tabIndex)){
+	if(canRemoveTabSheet(tabIndex, false)){
 	    removeTabSheet(tabIndex);
 	}
     }
@@ -454,14 +494,18 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    @Override
 	    protected boolean preAction() {
 		if(super.preAction()){
-		    return canRemoveTabSheet(tabPanel.getSelectedIndex());
+		    return canRemoveTabSheet(tabPanel.getSelectedIndex(), true);
 		}
 		return false;
 	    }
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		getCurrentAnalysisConfigurationView().getModel().remove();
+		final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> analysisModel = getCurrentAnalysisConfigurationView().getModel();
+		if(analysisModel.isFreeze()){
+		    analysisModel.discard();
+		}
+		analysisModel.remove();
 		return null;
 	    }
 
@@ -480,21 +524,21 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @return
      */
     @SuppressWarnings("unchecked")
-    private boolean canRemoveTabSheet(final int index){
+    private boolean canRemoveTabSheet(final int index, final boolean remove){
 	if(index < 0){
 	    throw new IllegalArgumentException("The tab index can not be less then 0");
 	}
 	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)tabPanel.getComponentAt(index);
 	if(analysis instanceof GridConfigurationView){
-	    JOptionPane.showMessageDialog(this, "Main details analysis can not be removed", "Informotaion", JOptionPane.INFORMATION_MESSAGE);
+	    JOptionPane.showMessageDialog(this, "Main details analysis can not be removed", "Informotaion", JOptionPane.WARNING_MESSAGE);
 	    return false;
 	}
 	if(getReviewProgressLayer().isLocked()){
-	    JOptionPane.showMessageDialog(this, "This analysis can not be removed right now.", "Informotaion", JOptionPane.INFORMATION_MESSAGE);
+	    JOptionPane.showMessageDialog(this, "This analysis can not be removed right now.", "Informotaion", JOptionPane.WARNING_MESSAGE);
 	    return false;
 	}
-	if(analysis.canClose() != null){
-	    JOptionPane.showMessageDialog(this, getCurrentAnalysisConfigurationView().whyCannotClose(), "Close tab sheet", JOptionPane.INFORMATION_MESSAGE);
+	if(!remove && analysis.canClose() != null){
+	    JOptionPane.showMessageDialog(this, getCurrentAnalysisConfigurationView().whyCannotClose(), "Close tab sheet", JOptionPane.WARNING_MESSAGE);
 	    return false;
 	}
 	return true;

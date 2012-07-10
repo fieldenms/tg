@@ -40,6 +40,11 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 	return getReviewProgressLayer();
     }
 
+    @Override
+    public void selectAnalysis(final String name) {
+	throw new UnsupportedOperationException("This entity centre has only one analysis that is always selected. No need to select it twice!");
+    }
+
     /**
      * Returns the single analysis view.
      *

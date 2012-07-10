@@ -68,6 +68,17 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	if(getModel().getEntityCentreManager() == null){
 	    return null;
 	}
+	//See whether centre can be close
+	if (getPreviousView() != null) {
+	    final ICloseGuard unclosable = getPreviousView().canClose();
+	    if(unclosable != null){
+		return unclosable;
+	    }
+	}
+	//Save analysis.
+	getModel().saveAnalysis();
+
+	//See whether centre model changed.
 	final String title = StringUtils.isEmpty(getModel().getName()) ? TitlesDescsGetter.getEntityTitleAndDesc(getModel().getEntityType()).getKey() : getModel().getName();
 	boolean isChanged = getModel().isChanged();
 	final boolean wasFreezed = getModel().isFreezed();
@@ -77,19 +88,21 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	    isFreezed = false;
 	    isChanged = getModel().isChanged();
 	}
-	if(isChanged){
-	    switch(JOptionPane.showConfirmDialog(null, "Would you like to save changes"
-		    + (!StringUtils.isEmpty(title) ? " for the " + title : "") + " before closing?", "Save report", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)){
-		    case JOptionPane.YES_OPTION:
-			closeSaveAction();
-			return null;
-		    case JOptionPane.NO_OPTION:
-			closeDiscardAction();
-			return null;
-		    case JOptionPane.CANCEL_OPTION:
-			createCloseCancelAction(wasFreezed).actionPerformed(null);
-			return this;
-	    };
+	if (isChanged) {
+	    switch (JOptionPane.showConfirmDialog(null, "Would you like to save changes" + (!StringUtils.isEmpty(title) ? " for the " + title : "") + " before closing?", "Save report", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)) {
+	    case JOptionPane.YES_OPTION:
+		closeSaveAction();
+		return null;
+	    case JOptionPane.NO_OPTION:
+		closeDiscardAction();
+		return null;
+	    case JOptionPane.CANCEL_OPTION:
+		if (!isFreezed && wasFreezed) {
+		    createCloseCancelAction().actionPerformed(null);
+		}
+		return this;
+	    }
+	    ;
 	}
 	if(isFreezed){
 	    getModel().discard();
@@ -177,25 +190,21 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
      * @param shouldFreez
      * @return
      */
-    private Action createCloseCancelAction(final boolean shouldFreez){
+    private Action createCloseCancelAction() {
 	return new BlockingLayerCommand<Void>("Cancel", getProgressLayer()) {
 
 	    private static final long serialVersionUID = 6219947950780861547L;
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		if(shouldFreez){
-		    getModel().freez();
-		}
+		getModel().freez();
 		return null;
 	    }
 
 	    @Override
 	    protected void postAction(final Void value) {
 		super.postAction(value);
-		if(shouldFreez){
-		    getModel().setMode(ReportMode.WIZARD);
-		}
+		getModel().setMode(ReportMode.WIZARD);
 	    }
 	};
     }
@@ -246,8 +255,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
 	    @Override
 	    protected boolean preAction() {
-		final boolean result= super.preAction();
-		if(!result){
+		if(!super.preAction() || !canCloseCentre()){
 		    return false;
 		}
 		final boolean shouldSave = SaveReportOptions.APPROVE.equals(saveReportDialog.showDialog());
@@ -262,6 +270,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
+		getModel().saveAnalysis();
 		getModel().saveAs(saveAsName);
 		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, CentreConfigurationAction.SAVE_AS));
 		return null;
@@ -290,15 +299,14 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
 	    @Override
 	    protected boolean preAction() {
-		final boolean result= super.preAction();
-		if(!result){
-		    return false;
-		}
-		return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, CentreConfigurationAction.PRE_SAVE));
+		return super.preAction() //
+			&& canCloseCentre() //
+			&& fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, CentreConfigurationAction.PRE_SAVE));
 	    }
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
+		getModel().saveAnalysis();
 		getModel().save();
 		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, CentreConfigurationAction.SAVE));
 		return null;
@@ -346,6 +354,22 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 		}
 	    }
 	};
+    }
+
+    /**
+     * Determines whether the previous centre view can be closed or not.
+     *
+     * @return
+     */
+    private boolean canCloseCentre(){
+	if (getPreviousView() != null) {
+	    final ICloseGuard closeGuard = getPreviousView().canClose();
+	    if (closeGuard != null) {
+		JOptionPane.showMessageDialog(this, closeGuard.whyCannotClose(), "Warning", JOptionPane.WARNING_MESSAGE);
+		return false;
+	    }
+	}
+	return true;
     }
 
     /**

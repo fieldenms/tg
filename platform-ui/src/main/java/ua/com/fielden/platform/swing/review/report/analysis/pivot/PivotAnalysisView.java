@@ -266,7 +266,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public void sorterChanged(final PivotSorterChangeEvent event) {
 		final PivotTreeTable pivotTable = pivotTablePanel.getTreeTable();
-		final FilterableTreeTableModel filterableModel = (FilterableTreeTableModel) pivotTable.getModel();
+		final FilterableTreeTableModel filterableModel = pivotTable.getFilterableModel();
 		final TreeTableNode rootNode = filterableModel.getOriginModel().getRoot();
 		final TreePath selectedPath = pivotTable.getPathForRow(pivotTable.getSelectedRow());
 		if (rootNode != null) {
@@ -351,11 +351,12 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		    final Class<T> root = getModel().getCriteria().getEntityClass();
 		    final IPivotAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
 		    final IPivotAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
+		    final List<String> usedDistributionProperties = firstTick.usedProperties(root);
 		    final int columnIndex = pivotTable.getColumnModel().getColumnIndex(((TableColumn)evt.getSource()).getIdentifier());
-		    if(pivotTable.isHierarchical(columnIndex)){
-			firstTick.setWidth(root, firstTick.usedProperties(root).get(0), ((Integer)evt.getNewValue()).intValue());
-		    }else if(columnIndex > 0){
-			secondTick.setWidth(root, secondTick.usedProperties(root).get(columnIndex - 1), ((Integer)evt.getNewValue()).intValue());
+		    if (pivotTable.isHierarchical(columnIndex) && !usedDistributionProperties.isEmpty()) {
+			firstTick.setWidth(root, firstTick.usedProperties(root).get(0), ((Integer) evt.getNewValue()).intValue());
+		    } else if (!pivotTable.isHierarchical(columnIndex)) {
+			secondTick.setWidth(root, secondTick.usedProperties(root).get(columnIndex - 1), ((Integer) evt.getNewValue()).intValue());
 		    }
 		}
 	    }

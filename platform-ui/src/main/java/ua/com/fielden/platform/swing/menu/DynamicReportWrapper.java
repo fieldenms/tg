@@ -1,9 +1,13 @@
 package ua.com.fielden.platform.swing.menu;
 
+import java.util.EventListener;
+import java.util.EventObject;
 import java.util.Set;
 
 import javax.swing.JOptionPane;
+import javax.swing.event.EventListenerList;
 
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.DefaultUiModel;
@@ -24,7 +28,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 
     private static final long serialVersionUID = 1655601830703524962L;
 
-    //private final EventListenerList listenerList = new EventListenerList();
+    private final EventListenerList listenerList = new EventListenerList();
 
     //Menu item related properties.
     private final TreeMenuWithTabs<?> treeMenu;
@@ -42,6 +46,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
      * @param description
      * @param modelBuilder
      */
+    @SuppressWarnings("unchecked")
     public DynamicReportWrapper(
     //Menu item related parameters
     final String caption,//
@@ -57,28 +62,14 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	this.centreBuilder = centreBuilder;
 	this.menuItemClass = menuItemClass;
 	//Create and configure entity centre;
-	//final CentreConfigurationModel<T> configModel = new CentreConfigurationModel<T>(entityType, name, gdtm, entityFactory, masterManager, criteriaGenerator);
 	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
 	this.entityCentreConfigurationView = centreBuilder.createEntityCentre(menuItemClass, name, progressLayer);
 	this.entityCentreConfigurationView.addCentreConfigurationEventListener(createContreConfigurationListener());
-	//new MultipleAnalysisEntityCentreConfigurationView<T>(configModel, progressLayer);
 	progressLayer.setView(entityCentreConfigurationView);
 	add(progressLayer);
 	getModel().setView(this);
 
     }
-
-    //	final DynamicCriteriaModelBuilder<T, DAO, R> newCriteriaModelBuilder = getDynamicCriteriaModelBuilderFor(getKeyToSave(), saveReportDialog.getEnteredFileName());
-    //		final MiSaveAsConfiguration<T, DAO, R> newTreeMenuItem = new MiSaveAsConfiguration<T, DAO, R>(saveReportDialog.getEnteredFileName(), getView().getInfo(), newCriteriaModelBuilder, treeMenu);
-    //		newTreeMenuItem.getView().setSaveAction(newCriteriaModelBuilder.createSaveAction());
-    //		newTreeMenuItem.getView().setSaveAsAction(createSaveAsAction(newCriteriaModelBuilder));
-    //		newTreeMenuItem.getView().setRemoveAction(createRemoveAction(newTreeMenuItem));
-    //		newTreeMenuItem.getView().setPanelBuilder(createAnalysisActionPanel(newTreeMenuItem));
-    //		addItem(newTreeMenuItem);
-    //		treeMenu.getModel().getOriginModel().reload(MiWithConfigurationSupport.this);
-    //		if (!isClosing) {
-    //		    treeMenu.activateOrOpenItem(newTreeMenuItem);
-    //		}
 
     @Override
     public void buildUi() {
@@ -91,30 +82,15 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	return description;
     }
 
-    //    /**
-    //     * Returns value that indicates whether wrapper holds review or wizard model.
-    //     *
-    //     * @return
-    //     */
-    //    public boolean isReview() {
-    //	return getHoldingPanel().getComponent(0) instanceof DynamicEntityReview ? true : false;
-    //    }
-
     @Override
     public ICloseGuard canClose() {
 	return entityCentreConfigurationView.canClose();
     }
 
-    //TODO The notify method must be override and mast take care of cases when entity centre is closing.
-    //    @Override
-    //    public void notify(final String message, final MessageType messageType) {
-    //	super.notify(message, messageType);
-    //    }
-
     @Override
     public void close() {
 	entityCentreConfigurationView.close();
-	//fireCentreClosingEvent(new CentreClosingEvent(this));
+	fireCentreClosingEvent(new CentreClosingEvent(this));
     }
 
     /**
@@ -122,8 +98,30 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
      *
      * @return
      */
-    public Set<String> getNonPrincipleEntityCentreNames(){
+    public Set<String> getNonPrincipleEntityCentreNames() {
 	return entityCentreConfigurationView.getModel().getNonPrincipleEntityCentreList();
+    }
+
+    /**
+     * Returns the non null entity centre manager for this {@link DynamicReportWrapper} instance.
+     *
+     * @return
+     */
+    public ICentreDomainTreeManager getEntityCentreManager() {
+	final ICentreDomainTreeManager cdtm = entityCentreConfigurationView.getModel().getEntityCentreManager();
+	if(cdtm == null){
+	    entityCentreConfigurationView.getModel().initEntityCentreManager();
+	}
+	return entityCentreConfigurationView.getModel().getEntityCentreManager();
+    }
+
+    /**
+     * Returns the {@link CentreConfigurationView} instance wrapped by this {@link DynamicReportWrapper}.
+     *
+     * @return
+     */
+    public CentreConfigurationView<T, ?> getCentreConfigurationView() {
+	return entityCentreConfigurationView;
     }
 
     @Override
@@ -143,18 +141,6 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	return centreBuilder;
     }
 
-    //	final DynamicCriteriaModelBuilder<T, DAO, R> newCriteriaModelBuilder = getDynamicCriteriaModelBuilderFor(getKeyToSave(), saveReportDialog.getEnteredFileName());
-    //		final MiSaveAsConfiguration<T, DAO, R> newTreeMenuItem = new MiSaveAsConfiguration<T, DAO, R>(saveReportDialog.getEnteredFileName(), getView().getInfo(), newCriteriaModelBuilder, treeMenu);
-    //		newTreeMenuItem.getView().setSaveAction(newCriteriaModelBuilder.createSaveAction());
-    //		newTreeMenuItem.getView().setSaveAsAction(createSaveAsAction(newCriteriaModelBuilder));
-    //		newTreeMenuItem.getView().setRemoveAction(createRemoveAction(newTreeMenuItem));
-    //		newTreeMenuItem.getView().setPanelBuilder(createAnalysisActionPanel(newTreeMenuItem));
-    //		addItem(newTreeMenuItem);
-    //		treeMenu.getModel().getOriginModel().reload(MiWithConfigurationSupport.this);
-    //		if (!isClosing) {
-    //		    treeMenu.activateOrOpenItem(newTreeMenuItem);
-    //		}
-
     private ICentreConfigurationEventListener createContreConfigurationListener() {
 	return new ICentreConfigurationEventListener() {
 
@@ -164,8 +150,8 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 		case POST_SAVE_AS:
 		    final MiWithConfigurationSupport<T> principleEntityCentreMenuItem = getPrincipleEntityCentreMenuItem();
 		    final MiSaveAsConfiguration<T> newTreeMenuItem = new MiSaveAsConfiguration<T>(//
-			    principleEntityCentreMenuItem,//
-			    event.getSaveAsName());
+		    principleEntityCentreMenuItem,//
+		    event.getSaveAsName());
 		    principleEntityCentreMenuItem.addItem(newTreeMenuItem);
 		    treeMenu.getModel().getOriginModel().reload(principleEntityCentreMenuItem);
 		    treeMenu.activateOrOpenItem(newTreeMenuItem);
@@ -200,59 +186,59 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	}
     }
 
-    //    public void addCentreClosingListener(final CentreClosingListener l) {
-    //	listenerList.add(CentreClosingListener.class, l);
-    //    }
-    //
-    //    public void removeCentreClosingListener(final CentreClosingListener l) {
-    //	listenerList.remove(CentreClosingListener.class, l);
-    //    }
-    //
-    //    protected void fireCentreClosingEvent(final CentreClosingEvent event){
-    //	final Object[] listeners = listenerList.getListenerList();
-    //	// Process the listeners last to first, notifying
-    //	// those that are interested in this event
-    //	for (int i = listeners.length - 2; i >= 0; i -= 2) {
-    //	    if (listeners[i] == CentreClosingListener.class) {
-    //		((CentreClosingListener) listeners[i + 1]).centreClosing(event);
-    //	    }
-    //	}
-    //    }
+    public void addCentreClosingListener(final CentreClosingListener l) {
+	listenerList.add(CentreClosingListener.class, l);
+    }
 
-    //    /**
-    //     * Contract for anything that is interested in receiving {@link CentreClosingEvent}.
-    //     *
-    //     * @author TG Team
-    //     *
-    //     */
-    //    public static interface CentreClosingListener extends EventListener{
-    //
-    //	/**
-    //	 * Invoked after centre was closed to perform custom additional task.
-    //	 *
-    //	 * @param event
-    //	 */
-    //	void centreClosing(final CentreClosingEvent event);
-    //    }
-    //
-    //    /**
-    //     * Represents centre closing event.
-    //     *
-    //     * @author TG Team
-    //     *
-    //     */
-    //    public static class CentreClosingEvent extends EventObject {
-    //
-    //	private static final long serialVersionUID = 7671961023819217439L;
-    //
-    //	/**
-    //	 * Constructs centre closing event.
-    //	 *
-    //	 * @param source
-    //	 */
-    //	public CentreClosingEvent(final Object source) {
-    //	    super(source);
-    //	}
-    //
-    //    }
+    public void removeCentreClosingListener(final CentreClosingListener l) {
+	listenerList.remove(CentreClosingListener.class, l);
+    }
+
+    protected void fireCentreClosingEvent(final CentreClosingEvent event) {
+	final Object[] listeners = listenerList.getListenerList();
+	// Process the listeners last to first, notifying
+	// those that are interested in this event
+	for (int i = listeners.length - 2; i >= 0; i -= 2) {
+	    if (listeners[i] == CentreClosingListener.class) {
+		((CentreClosingListener) listeners[i + 1]).centreClosing(event);
+	    }
+	}
+    }
+
+    /**
+     * Contract for anything that is interested in receiving {@link CentreClosingEvent}.
+     *
+     * @author TG Team
+     *
+     */
+    public static interface CentreClosingListener extends EventListener {
+
+	/**
+	 * Invoked after centre was closed to perform custom additional task.
+	 *
+	 * @param event
+	 */
+	void centreClosing(final CentreClosingEvent event);
+    }
+
+    /**
+     * Represents centre closing event.
+     *
+     * @author TG Team
+     *
+     */
+    public static class CentreClosingEvent extends EventObject {
+
+	private static final long serialVersionUID = 7671961023819217439L;
+
+	/**
+	 * Constructs centre closing event.
+	 *
+	 * @param source
+	 */
+	public CentreClosingEvent(final Object source) {
+	    super(source);
+	}
+
+    }
 }

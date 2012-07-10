@@ -67,40 +67,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * Saves this configuration.
      */
     public void save(){
-	acceptAnalysis();
 	gdtm.saveEntityCentreManager(menuItemType, getName());
-    }
-
-    /**
-     * Accepts all the modifications applied to the analysis manager.
-     */
-    public void acceptAnalysis(){
-	final ICentreDomainTreeManager cdtm = getEntityCentreManager();
-	if(cdtm == null){
-	    return;
-	}
-	for(final String analysis : cdtm.analysisKeys()){
-	    if (cdtm.isFreezedAnalysisManager(analysis)) {
-		cdtm.acceptAnalysisManager(analysis);
-	    }
-	    cdtm.acceptAnalysisManager(analysis);
-	}
-    }
-
-    /**
-     * Discards the analysis managers.
-     */
-    public void discardAnalysis(){
-	final ICentreDomainTreeManager cdtm = getEntityCentreManager();
-	if(cdtm == null){
-	    return;
-	}
-	for(final String analysis : cdtm.analysisKeys()){
-	    if (cdtm.isFreezedAnalysisManager(analysis)) {
-		cdtm.discardAnalysisManager(analysis);
-	    }
-	    cdtm.discardAnalysisManager(analysis);
-	}
     }
 
     /**
@@ -115,7 +82,6 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * Saves as this configuration.
      */
     public void saveAs(final String saveAsName){
-	acceptAnalysis();
 	gdtm.saveAsEntityCentreManager(menuItemType, getName(), saveAsName);
     }
 
@@ -176,6 +142,32 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 	final Set<String> names = new HashSet<String>(gdtm.entityCentreNames(menuItemType));
 	names.remove(null); // remove principle centre key (null), which is returned in case when principle entity centre is persisted
 	return names;
+    }
+
+    /**
+     * Accepts all the modifications applied to the analysis manager.
+     */
+    public void saveAnalysis(){
+        final ICentreDomainTreeManager cdtm = getEntityCentreManager();
+        if(cdtm == null){
+            return;
+        }
+        for(final String analysis : cdtm.analysisKeys()){
+            cdtm.acceptAnalysisManager(analysis);
+        }
+    }
+
+    /**
+     * Discards the analysis managers.
+     */
+    public void discardAnalysis(){
+        final ICentreDomainTreeManager cdtm = getEntityCentreManager();
+        if(cdtm == null){
+            return;
+        }
+        for(final String analysis : cdtm.analysisKeys()){
+            cdtm.discardAnalysisManager(analysis);
+        }
     }
 
     @Override

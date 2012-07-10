@@ -246,6 +246,13 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     public abstract JComponent getReviewPanel();
 
     /**
+     * Selects the analysis with specified name.
+     *
+     * @param name
+     */
+    public abstract void selectAnalysis(final String name);
+
+    /**
      * Override this to provide custom tool bar.
      *
      * @return

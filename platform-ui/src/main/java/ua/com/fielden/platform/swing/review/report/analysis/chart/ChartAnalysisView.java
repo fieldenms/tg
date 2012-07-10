@@ -43,6 +43,8 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeMan
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.reportquery.AnalysisModelChangedEvent;
+import ua.com.fielden.platform.reportquery.AnalysisModelChangedListener;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.categorychart.ActionChartPanel;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
@@ -132,6 +134,9 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		new ChartAnalysisAggregationListDragToSupport<T, List<T>, CategoryChartTypes>(aggregationList, chartPanel, getModel()), true);
 	DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), //
 		new AnalysisListDragToSupport<T>(distributionList, getModel().getCriteria().getEntityClass(), getModel().adtme().getFirstTick()), true);
+
+	//Add the chart updater.
+	model.getChartAnalysisDataProvider().addAnalysisModelChangedListener(createModelUpdaterListener());
     }
 
     @SuppressWarnings("unchecked")
@@ -172,6 +177,21 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    }
 	}
 	return 0;
+    }
+
+    /**
+     * Returns the {@link AnalysisModelChangedListener} implementation that updates the chart according to the model changes.
+     *
+     * @return
+     */
+    private AnalysisModelChangedListener createModelUpdaterListener() {
+        return new AnalysisModelChangedListener() {
+
+            @Override
+            public void cahrtModelChanged(final AnalysisModelChangedEvent event) {
+        	updateChart(getModel().getChartAnalysisDataProvider().getLoadedData(), null);
+            }
+        };
     }
 
     /**

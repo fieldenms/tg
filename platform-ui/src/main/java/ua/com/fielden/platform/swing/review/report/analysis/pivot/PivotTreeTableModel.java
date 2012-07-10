@@ -10,6 +10,14 @@ abstract class PivotTreeTableModel extends DynamicTreeTableModel {
 
     private final EventListenerList listeners = new EventListenerList();
 
+    /**
+     * Returns the width for the specified column.
+     *
+     * @param column
+     * @return
+     */
+    abstract int getColumnWidth(int column);
+
     abstract String getColumnTooltipAt(int column);
 
     abstract List<String> categoryProperties();

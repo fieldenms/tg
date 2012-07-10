@@ -97,6 +97,15 @@ public class FilterableTreeTable extends JXTreeTable {
 	});
     }
 
+    /**
+     * Returns the {@link FilterableTreeTableModel} instance for this tree table.
+     *
+     * @return
+     */
+    public FilterableTreeTableModel getFilterableModel(){
+	return filterableModel;
+    }
+
     // defines the renderer if the delegating renderer is not of the DefaultTreeCellRenderer type
     private void enhanceRenderer(final IFilterableModel model) {
 	setClosedIcon(null);
@@ -163,7 +172,7 @@ public class FilterableTreeTable extends JXTreeTable {
 
     /**
      * Returns the action that expands all tree table nodes
-     * 
+     *
      * @return
      */
     private Action createExpandAllAction() {
@@ -193,7 +202,7 @@ public class FilterableTreeTable extends JXTreeTable {
 
     /**
      * Returns the action that collapses all tree table nodes
-     * 
+     *
      * @return
      */
     private Action createCollapseAllAction() {
@@ -222,7 +231,7 @@ public class FilterableTreeTable extends JXTreeTable {
 
     /**
      * Creates and returns the action that collapses all tree table nodes except the one that is currently selected.
-     * 
+     *
      * @return
      */
     private Action createCollapseAllExceptSelectedAction() {
@@ -251,7 +260,7 @@ public class FilterableTreeTable extends JXTreeTable {
 
     /**
      * see {@link #createExpandAllAction()}
-     * 
+     *
      * @return
      */
     public Action getExpandAllAction() {
@@ -260,7 +269,7 @@ public class FilterableTreeTable extends JXTreeTable {
 
     /**
      * see {@link #createCollapseAllAction()}
-     * 
+     *
      * @return
      */
     public Action getCollapseAllAction() {
@@ -269,7 +278,7 @@ public class FilterableTreeTable extends JXTreeTable {
 
     /**
      * see {@link #createCollapseAllExceptSelectedAction()}
-     * 
+     *
      * @return
      */
     public Action getCollapseAllExceptSelectedAction() {
@@ -296,7 +305,7 @@ public class FilterableTreeTable extends JXTreeTable {
     /**
      * Returns list of <code>numOfPaths</code> paths those starts from specified startPath. Uses depth-first search to build the paths.<br>
      * Throws NullPointerException if startPath is null.
-     * 
+     *
      * @param startPath
      * @param pathsToExpand
      * @param numOfPaths
@@ -319,7 +328,7 @@ public class FilterableTreeTable extends JXTreeTable {
 
     /**
      * Returns next available {@link TreePath} for specified one. This method uses back tracking to identify available path.
-     * 
+     *
      * @param startPath
      * @return
      */
@@ -341,7 +350,7 @@ public class FilterableTreeTable extends JXTreeTable {
 
     /**
      * Returns the number of rows visible in the viewport.
-     * 
+     *
      * @return
      */
     private int getViewportRowCount(){
