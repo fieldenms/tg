@@ -180,6 +180,14 @@ public interface EntityQueryProgressiveInterfaces {
         T end();
     }
 
+    interface ICaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> extends ICaseWhenFunctionEnd<T> {
+        ICaseWhenFunctionLastArgument<T, ET>  otherwise();
+    }
+
+    interface ICaseWhenFunctionWhen<T, ET extends AbstractEntity<?>>  extends ICaseWhenFunctionElseEnd<T, ET> {
+        IFunctionWhere0<T, ET> when();
+    }
+
     interface IIfNullFunctionThen<T, ET extends AbstractEntity<?>> {
         IFunctionLastArgument<T, ET> then();
     }
@@ -464,7 +472,10 @@ public interface EntityQueryProgressiveInterfaces {
     interface IDateDiffFunctionArgument<T, ET extends AbstractEntity<?>> extends IExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET>{
     }
 
-    interface ICaseWhenFunctionArgument<T, ET extends AbstractEntity<?>> extends IExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> {
+    interface ICaseWhenFunctionArgument<T, ET extends AbstractEntity<?>> extends IExprOperand<ICaseWhenFunctionWhen<T, ET>, IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET>, ET> {
+    }
+
+    interface ICaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> extends IExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> {
     }
 
     interface IIfNullFunctionArgument<T, ET extends AbstractEntity<?>> extends IExprOperand<IIfNullFunctionThen<T, ET>, IExprOperand0<IIfNullFunctionThen<T, ET>, ET>, ET> {
