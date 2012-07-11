@@ -3,39 +3,56 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.utils.Pair;
+
 
 public class CaseWhen implements ISingleOperand {
 
-    private final ICondition operand1;
-    private final ISingleOperand operand2;
+    private List<Pair<ICondition, ISingleOperand>> whenThenPairs = new ArrayList<Pair<ICondition, ISingleOperand>>();
+    private final ISingleOperand elseOperand;
 
-    public CaseWhen(final ICondition operand1, final ISingleOperand operand2) {
+    public CaseWhen(final List<Pair<ICondition, ISingleOperand>> whenThenPairs, final ISingleOperand elseOperand) {
 	super();
-	this.operand1 = operand1;
-	this.operand2 = operand2;
+	this.whenThenPairs.addAll(whenThenPairs);
+	this.elseOperand = elseOperand;
     }
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
-	result.addAll(operand1.getLocalSubQueries());
-	result.addAll(operand2.getLocalSubQueries());
+	for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
+	    result.addAll(whenThen.getKey().getLocalSubQueries());
+	    result.addAll(whenThen.getValue().getLocalSubQueries());
+	}
+	if (elseOperand != null) {
+	    result.addAll(elseOperand.getLocalSubQueries());
+	}
 	return result;
     }
 
     @Override
     public List<EntProp> getLocalProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
-	result.addAll(operand1.getLocalProps());
-	result.addAll(operand2.getLocalProps());
+	for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
+	    result.addAll(whenThen.getKey().getLocalProps());
+	    result.addAll(whenThen.getValue().getLocalProps());
+	}
+	if (elseOperand != null) {
+	    result.addAll(elseOperand.getLocalProps());
+	}
 	return result;
     }
 
     @Override
     public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
-	result.addAll(operand1.getAllValues());
-	result.addAll(operand2.getAllValues());
+	for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
+	    result.addAll(whenThen.getKey().getAllValues());
+	    result.addAll(whenThen.getValue().getAllValues());
+	}
+	if (elseOperand != null) {
+	    result.addAll(elseOperand.getAllValues());
+	}
 	return result;
     }
 
@@ -59,20 +76,26 @@ public class CaseWhen implements ISingleOperand {
 	return false;
     }
 
-    public ICondition getOperand1() {
-        return operand1;
-    }
-
-    public ISingleOperand getOperand2() {
-        return operand2;
+    @Override
+    public String sql() {
+	final StringBuffer sb = new StringBuffer();
+	sb.append("CASE");
+	for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
+	    sb.append(" WHEN " + whenThen.getKey().sql() + " THEN " + whenThen.getValue().sql());
+	}
+	if (elseOperand != null) {
+	    sb.append(" ELSE " + elseOperand.sql());
+	}
+	sb.append(" END");
+	return sb.toString();//"CASE WHEN " + getOperand1().sql() + " THEN  " + getOperand2().sql() + " END";
     }
 
     @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + ((operand1 == null) ? 0 : operand1.hashCode());
-	result = prime * result + ((operand2 == null) ? 0 : operand2.hashCode());
+	result = prime * result + ((elseOperand == null) ? 0 : elseOperand.hashCode());
+	result = prime * result + ((whenThenPairs == null) ? 0 : whenThenPairs.hashCode());
 	return result;
     }
 
@@ -88,25 +111,20 @@ public class CaseWhen implements ISingleOperand {
 	    return false;
 	}
 	final CaseWhen other = (CaseWhen) obj;
-	if (operand1 == null) {
-	    if (other.operand1 != null) {
+	if (elseOperand == null) {
+	    if (other.elseOperand != null) {
 		return false;
 	    }
-	} else if (!operand1.equals(other.operand1)) {
+	} else if (!elseOperand.equals(other.elseOperand)) {
 	    return false;
 	}
-	if (operand2 == null) {
-	    if (other.operand2 != null) {
+	if (whenThenPairs == null) {
+	    if (other.whenThenPairs != null) {
 		return false;
 	    }
-	} else if (!operand2.equals(other.operand2)) {
+	} else if (!whenThenPairs.equals(other.whenThenPairs)) {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    public String sql() {
-	return "CASE WHEN " + getOperand1().sql() + " THEN  " + getOperand2().sql() + " END";
     }
 }

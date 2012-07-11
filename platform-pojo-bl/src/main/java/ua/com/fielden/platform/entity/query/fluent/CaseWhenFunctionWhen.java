@@ -14,7 +14,6 @@ public class CaseWhenFunctionWhen<T, ET extends AbstractEntity<?>> extends CaseW
 
     @Override
     public IFunctionWhere0<T, ET> when() {
-	// TODO Auto-generated method stub
-	return null;
+	return new FunctionWhere0<T, ET>(getTokens(), parent);
     }
 }

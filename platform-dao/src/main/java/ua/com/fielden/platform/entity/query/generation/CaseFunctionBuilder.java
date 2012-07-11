@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
@@ -17,7 +19,8 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
 
     @Override
     public boolean isClosing() {
-	return getSize() == 2;
+	return TokenCategory.END_FUNCTION.equals(getLastCat());
+	//return getSize() == 2;
     }
 
     @Override
@@ -36,7 +39,10 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
 //	    final CompoundConditionModel subsequentCompoundCondition = (CompoundConditionModel) iterator.next().getValue();
 //	    otherConditions.add(subsequentCompoundCondition);
 //	}
-	return new CaseWhen((ICondition) firstValue(), (ISingleOperand) secondValue());
+	final List<Pair<ICondition, ISingleOperand>> whenThens = new ArrayList<Pair<ICondition, ISingleOperand>>();
+	whenThens.add(new Pair<ICondition, ISingleOperand>((ICondition) firstValue(), (ISingleOperand) secondValue()));
+
+	return new CaseWhen(whenThens, null);
     }
 
     @Override

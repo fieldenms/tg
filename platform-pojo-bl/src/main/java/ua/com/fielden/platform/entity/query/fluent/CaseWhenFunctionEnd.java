@@ -13,6 +13,6 @@ public class CaseWhenFunctionEnd<T> extends AbstractQueryLink implements ICaseWh
 
     @Override
     public T end() {
-	return copy(parent, getTokens());
+	return copy(parent, getTokens().endOfFunction());
     }
 }
