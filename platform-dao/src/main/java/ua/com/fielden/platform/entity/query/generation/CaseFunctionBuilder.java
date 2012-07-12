@@ -37,14 +37,13 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
 	ISingleOperand elseOperand = null;
 
 	for (final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator(); iterator.hasNext();) {
-	    final Object firstToken = iterator.next().getValue();
-	    final Object secondToken = iterator.hasNext() ? iterator.next().getValue() : null;
+	    final Pair<TokenCategory, Object> firstTokenPair = iterator.next();
+	    final Pair<TokenCategory, Object> secondTokenPair = iterator.hasNext() ? iterator.next() : null;
 
-	    if (secondToken != null) {
-		//System.out.println(secondToken + " " + secondToken.getClass());
-		whenThens.add(new Pair<ICondition, ISingleOperand>((ICondition) firstToken, (ISingleOperand) secondToken));
+	    if (secondTokenPair != null) {
+		whenThens.add(new Pair<ICondition, ISingleOperand>((ICondition) firstTokenPair.getValue(), getModelForSingleOperand(secondTokenPair)));
 	    } else {
-		elseOperand = (ISingleOperand) firstToken;
+		elseOperand = getModelForSingleOperand(firstTokenPair);
 	    }
 	}
 

@@ -121,7 +121,6 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     }
 
     @Test
-    @Ignore
     public void test_simple_query_model_02a() {
 	final List<Pair<ICondition, ISingleOperand>> whenThenPairs = new ArrayList<Pair<ICondition, ISingleOperand>>();
 	whenThenPairs.add(new Pair<ICondition, ISingleOperand>(new ComparisonTest(prop("price"), _gt, val(100)), prop("purchasePrice")));

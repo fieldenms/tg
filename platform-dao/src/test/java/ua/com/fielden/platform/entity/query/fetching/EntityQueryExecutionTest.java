@@ -111,6 +111,9 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
                 when().prop("a").isNotNull().then().prop("a").otherwise().prop("a").end(). //
                 isNotNull().model();
 
+        final EntityResultQueryModel<TgVehicle> qry6 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x"). //
+        then().prop("key").otherwise().prop("a").end(). //
+        isNotNull().model();
     }
 
 
