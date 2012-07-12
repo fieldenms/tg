@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryCompositionTCase;
+import ua.com.fielden.platform.entity.query.generation.elements.CaseWhen;
 import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundSingleOperand;
@@ -27,6 +28,8 @@ import ua.com.fielden.platform.entity.query.generation.elements.ExistenceTest;
 import ua.com.fielden.platform.entity.query.generation.elements.Expression;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupBy;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupBys;
+import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
+import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.LikeTest;
 import ua.com.fielden.platform.entity.query.generation.elements.MonthOf;
 import ua.com.fielden.platform.entity.query.generation.elements.Now;
@@ -51,6 +54,7 @@ import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.utils.Pair;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
@@ -114,6 +118,17 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 		conditions(new ComparisonTest(prop("price"), _gt, val(100)), //
 			compound(_and, new ComparisonTest(prop("purchasePrice"), _lt, prop("price")))), //
 		conditions(where_veh.prop("price").gt().val(100).and().prop("purchasePrice").lt().prop("price")));
+    }
+
+    @Test
+    @Ignore
+    public void test_simple_query_model_02a() {
+	final List<Pair<ICondition, ISingleOperand>> whenThenPairs = new ArrayList<Pair<ICondition, ISingleOperand>>();
+	whenThenPairs.add(new Pair<ICondition, ISingleOperand>(new ComparisonTest(prop("price"), _gt, val(100)), prop("purchasePrice")));
+	final CaseWhen caseWhen = new CaseWhen(whenThenPairs, prop("price"));
+	assertModelsEquals(//
+		conditions(new ComparisonTest(caseWhen, _eq, val(0))), //
+		conditions(where_veh.caseWhen().prop("price").gt().val(100).then().prop("purchasePrice").otherwise().prop("price").end().eq().val(0)));
     }
 
     @Test

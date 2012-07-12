@@ -41,6 +41,7 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
 	    final Object secondToken = iterator.hasNext() ? iterator.next().getValue() : null;
 
 	    if (secondToken != null) {
+		//System.out.println(secondToken + " " + secondToken.getClass());
 		whenThens.add(new Pair<ICondition, ISingleOperand>((ICondition) firstToken, (ISingleOperand) secondToken));
 	    } else {
 		elseOperand = (ISingleOperand) firstToken;
