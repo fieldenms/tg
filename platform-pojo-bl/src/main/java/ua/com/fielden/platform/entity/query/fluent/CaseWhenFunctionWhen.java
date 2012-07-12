@@ -6,8 +6,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 public class CaseWhenFunctionWhen<T, ET extends AbstractEntity<?>> extends CaseWhenFunctionElseEnd<T, ET> implements ICaseWhenFunctionWhen<T, ET> {
 
-    T parent;
-
     CaseWhenFunctionWhen(final Tokens queryTokens, final T parent) {
 	super(queryTokens, parent);
     }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +21,6 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
     @Override
     public boolean isClosing() {
 	return TokenCategory.END_FUNCTION.equals(getLastCat());
-	//return getSize() == 2;
     }
 
     @Override
@@ -29,20 +29,25 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
     }
 
     public CaseWhen getModel() {
-//	if (getChild() != null) {
-//	    throw new RuntimeException("Unable to produce result - unfinished model state!");
-//	}
-//	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-//	final ICondition firstCondition = (ICondition) iterator.next().getValue();
-//	final List<CompoundConditionModel> otherConditions = new ArrayList<CompoundConditionModel>();
-//	for (; iterator.hasNext();) {
-//	    final CompoundConditionModel subsequentCompoundCondition = (CompoundConditionModel) iterator.next().getValue();
-//	    otherConditions.add(subsequentCompoundCondition);
-//	}
-	final List<Pair<ICondition, ISingleOperand>> whenThens = new ArrayList<Pair<ICondition, ISingleOperand>>();
-	whenThens.add(new Pair<ICondition, ISingleOperand>((ICondition) firstValue(), (ISingleOperand) secondValue()));
+	if (TokenCategory.END_FUNCTION.equals(getLastCat())) {
+	    getTokens().remove(getSize() - 1);
+	}
 
-	return new CaseWhen(whenThens, null);
+	final List<Pair<ICondition, ISingleOperand>> whenThens = new ArrayList<Pair<ICondition, ISingleOperand>>();
+	ISingleOperand elseOperand = null;
+
+	for (final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator(); iterator.hasNext();) {
+	    final Object firstToken = iterator.next().getValue();
+	    final Object secondToken = iterator.hasNext() ? iterator.next().getValue() : null;
+
+	    if (secondToken != null) {
+		whenThens.add(new Pair<ICondition, ISingleOperand>((ICondition) firstToken, (ISingleOperand) secondToken));
+	    } else {
+		elseOperand = (ISingleOperand) firstToken;
+	    }
+	}
+
+	return new CaseWhen(whenThens, elseOperand);
     }
 
     @Override

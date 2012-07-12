@@ -93,12 +93,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
     @Test
-    @Ignore
     public void test_case_when_function() {
-	select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
-        then().prop("key").//
-        when().prop("a").isNotNull();
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").then().prop("key").end().isNotNull().model();
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").then().prop("key").end().isNotNull().model();
         final IFunctionCompoundCondition0<IComparisonOperator0<TgVehicle>,TgVehicle> qry2 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --");
         final EntityResultQueryModel<TgVehicle> qry3 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
                 then().prop("key").//

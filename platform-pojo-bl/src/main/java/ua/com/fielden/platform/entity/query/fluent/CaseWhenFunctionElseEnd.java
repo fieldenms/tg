@@ -6,15 +6,12 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 public class CaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> extends CaseWhenFunctionEnd<T> implements ICaseWhenFunctionElseEnd<T, ET> {
 
-    T parent;
-
     CaseWhenFunctionElseEnd(final Tokens queryTokens, final T parent) {
 	super(queryTokens, parent);
     }
 
     @Override
     public ICaseWhenFunctionLastArgument<T, ET> otherwise() {
-	// TODO Auto-generated method stub
-	return null;
+	return new CaseWhenFunctionLastArgument<T, ET>(getTokens(), parent);
     }
 }
