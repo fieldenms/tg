@@ -19,6 +19,6 @@ final class ConcatFunctionWith<T, ET extends AbstractEntity<?>> extends Abstract
 
     @Override
     public IConcatFunctionArgument<T, ET> with() {
-	return new ConcatFunctionArgument<T, ET>(this.getTokens(), parent);
+	return new ConcatFunctionArgument<T, ET>(getTokens(), parent);
     }
 }

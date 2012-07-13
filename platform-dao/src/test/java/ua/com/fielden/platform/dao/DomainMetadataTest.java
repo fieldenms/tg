@@ -66,7 +66,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
 	hibType(Hibernate.LONG). //
 	type(PropertyCategory.EXPRESSION). //
-	expression(expr().ifNull().prop("wagonSlot").then().val(0).add().ifNull().prop("workshop").then().val(0).model()). //
+	expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot").when().prop("workshop").isNotNull().then().prop("workshop").otherwise().val(null).end().model()). //
 	build();
 	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
     }

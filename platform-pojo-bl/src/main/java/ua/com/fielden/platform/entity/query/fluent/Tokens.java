@@ -379,6 +379,10 @@ final class Tokens {
 	return add(TokenCategory.ON, QueryTokens.ON);
     }
 
+    public Tokens conditionStart() {
+	return add(TokenCategory.COND_START, null);
+    }
+
     public Tokens endOfFunction() {
 	return add(TokenCategory.END_FUNCTION, null);
     }

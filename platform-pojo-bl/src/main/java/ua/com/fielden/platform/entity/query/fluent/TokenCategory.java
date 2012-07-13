@@ -20,6 +20,7 @@ public enum TokenCategory {
     SORT_ORDER,
 
     AS_ALIAS,
+    COND_START,
     END_FUNCTION,
     ENTITY_ALIAS,
     FUNCTION, COLLECTIONAL_FUNCTION,

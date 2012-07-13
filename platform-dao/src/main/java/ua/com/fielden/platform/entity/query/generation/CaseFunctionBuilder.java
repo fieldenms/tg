@@ -19,6 +19,18 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
     }
 
     @Override
+    public void add(final TokenCategory cat, final Object value) {
+	switch (cat) {
+	case COND_START: //eats token
+	    setChild(new ConditionBuilder(this, getQueryBuilder(), getParamValues()));
+	    break;
+	default:
+	    super.add(cat, value);
+	    break;
+	}
+    }
+
+    @Override
     public boolean isClosing() {
 	return TokenCategory.END_FUNCTION.equals(getLastCat());
     }

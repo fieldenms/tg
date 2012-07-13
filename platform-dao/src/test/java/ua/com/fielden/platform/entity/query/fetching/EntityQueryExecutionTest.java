@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -65,6 +66,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -261,11 +263,48 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore
+    public void test_query_with_union_property0a() {
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val("WSHOP1").model();
+	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class)).model());
+	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
+    }
+
+    @Test
+    public void test_query_with_union_property0b() {
+	final ExpressionModel idModel = expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot"). //
+		when().prop("workshop").isNotNull().then().prop("workshop").otherwise().val(null).end().model();
+
+	final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).where().expr(idModel).eq().val(workshopDao.findByKey("WSHOP1")).model();
+	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry).with(fetchAll(TgBogieLocation.class)).model());
+	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
+    }
+
+//    @Test
+//    public void test_query_with_union_property0c() {
+//	final ExpressionModel idModel = expr().caseWhen().prop("replacedBy").isNotNull().then().prop("replacedBy"). //
+//	when().prop("model").isNotNull().then().prop("replacedBy").otherwise().val(null).end().model();
+//
+//	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).yield().expr(idModel).modelAsEntity(TgVehicle.class);
+//	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetchAll(TgVehicle.class)).model());
+//	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
+//    }
+//
+//    @Test
+//    public void test_query_with_union_property0d() {
+//	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).yield().caseWhen().prop("replacedBy").eq().val(1).then().prop("replacedBy"). //
+//	when().prop("model").isNotNull().then().prop("model").otherwise().val(null).end().modelAsEntity(TgVehicle.class);
+//	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetchAll(TgVehicle.class)).model());
+//	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
+//    }
+//
+    @Test
     public void test_query_with_union_property0() {
 	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.id").eq().val(workshopDao.findByKey("WSHOP1")).model();
 	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class)).model());
 	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
     }
+
 
     @Test
     public void test_query_with_union_property1() {
@@ -330,6 +369,13 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_query_with_concat_function() {
 	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().prop("wagon.key").with().val("-").with().prop("wagon.desc").end().eq().val("WAGON2-Wagon 2").model();
+	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).model());
+	assertEquals("Incorrect key", 3, models.size());
+    }
+
+    @Test
+    public void test_query_with_concat_function2() {
+	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().ifNull().prop("wagon.key").then().val("NULL").with().val("-").with().prop("wagon.desc").end().eq().val("WAGON2-Wagon 2").model();
 	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).model());
 	assertEquals("Incorrect key", 3, models.size());
     }

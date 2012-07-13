@@ -12,6 +12,6 @@ public class CaseWhenFunctionWhen<T, ET extends AbstractEntity<?>> extends CaseW
 
     @Override
     public IFunctionWhere0<T, ET> when() {
-	return new FunctionWhere0<T, ET>(getTokens(), parent);
+	return new FunctionWhere0<T, ET>(getTokens().conditionStart(), parent);
     }
 }
