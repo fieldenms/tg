@@ -43,12 +43,12 @@ public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends
 		    if(adtme == null){
 			getModel().initAnalysisManager(AnalysisType.SIMPLE);
 			getModel().save();
-			getModel().setAnalysisVisible(true);
 			adtme = (IAnalysisDomainTreeManager)getModel().getAnalysisManager();
 		    }
 		    if(adtme == null){
 			return new Result(ChartAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));
 		    }
+		    getModel().setAnalysisVisible(true);
 		    return getModel().canSetMode(ReportMode.REPORT);
 
 		default:

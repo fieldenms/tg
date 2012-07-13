@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
+import java.awt.Dimension;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -15,7 +16,6 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.G
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
-import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityCentre<T, CDTME> {
 
@@ -43,6 +43,19 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
     @Override
     public void selectAnalysis(final String name) {
 	throw new UnsupportedOperationException("This entity centre has only one analysis that is always selected. No need to select it twice!");
+    }
+
+    @Override
+    public boolean isLoaded() {
+        return wasResized && wasAnalysisLoaded;
+    }
+
+    @Override
+    public void close() {
+	wasResized = false;
+	wasAnalysisLoaded = false;
+	setSize(new Dimension(0, 0));
+	super.close();
     }
 
     /**
@@ -88,14 +101,6 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
         		if(wasResized){
         		    fireLoadEvent(new LoadEvent(AbstractSingleAnalysisEntityCentre.this));
         		}
-        		// after this handler end its execution, lets remove it
-        		// from component because it is already not-useful
-        		final ILoadListener refToThis = this;
-        		SwingUtilitiesEx.invokeLater(new Runnable() {
-        		    public void run() {
-        			configView.removeLoadListener(refToThis);
-        		    }
-        		});
         	    }
         	}
             }
@@ -141,14 +146,6 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 			if(wasAnalysisLoaded){
 			    fireLoadEvent(new LoadEvent(AbstractSingleAnalysisEntityCentre.this));
 			}
-			// after this handler end its execution, lets remove it
-			// from component because it is already not-useful
-			final ComponentListener refToThis = this;
-			SwingUtilitiesEx.invokeLater(new Runnable() {
-			    public void run() {
-				removeComponentListener(refToThis);
-			    }
-			});
 		    }
 		}
 	    }

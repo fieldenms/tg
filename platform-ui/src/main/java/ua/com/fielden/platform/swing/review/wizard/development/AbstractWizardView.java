@@ -19,7 +19,6 @@ import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
-import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
  * Generic implementation for domain tree wizard. This wizard defines basic user interface and functionality that might be extended only for configuring purposes.
@@ -111,6 +110,21 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Se
 	return cancelAction;
     }
 
+    @Override
+    public void close() {
+	wasLoaded = false;
+	super.close();
+    }
+
+    /**
+     * Returns the value that indicates whether this wizard was loaded or not.
+     *
+     * @return
+     */
+    public boolean isLoaded(){
+	return wasLoaded;
+    }
+
     /**
      * Might be overridden to provide custom build action (see {@link #getBuildAction()} for more information about the purpose of this action).
      *
@@ -166,15 +180,6 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Se
 			// size changed events.
 			wasLoaded = true;
 			fireLoadEvent(new LoadEvent(AbstractWizardView.this));
-
-			// after this handler end its execution, lets remove it
-			// from component because it is already not-useful
-			final ComponentListener refToThis = this;
-			SwingUtilitiesEx.invokeLater(new Runnable() {
-			    public void run() {
-				removeComponentListener(refToThis);
-			    }
-			});
 		    }
 		}
 	    }

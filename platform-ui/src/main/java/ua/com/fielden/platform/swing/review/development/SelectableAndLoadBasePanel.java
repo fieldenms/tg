@@ -12,7 +12,7 @@ import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
  * Base class for all views those are interested in selection events.
- * 
+ *
  * @author TG Team
  *
  */
@@ -28,7 +28,7 @@ public class SelectableAndLoadBasePanel extends BasePanel implements ISelectable
 
     /**
      * Initiates this {@link SelectableAndLoadBasePanel} with {@link LayoutManager}
-     * 
+     *
      * @param layoutManager
      */
     public SelectableAndLoadBasePanel(final LayoutManager layoutManager) {
@@ -75,10 +75,11 @@ public class SelectableAndLoadBasePanel extends BasePanel implements ISelectable
 
     /**
      * Notifies all registered {@link ILoadListener} that this panel model was loaded.
-     * 
+     *
      * @param loadEvent
      */
     protected final void fireLoadEvent(final LoadEvent loadEvent){
+	System.out.println("loading view " + getClass().getSimpleName());
 	for(final ILoadListener listener : listenerList.getListeners(ILoadListener.class)){
 	    listener.viewWasLoaded(loadEvent);
 	}

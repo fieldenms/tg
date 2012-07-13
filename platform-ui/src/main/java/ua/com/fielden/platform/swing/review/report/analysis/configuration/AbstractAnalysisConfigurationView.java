@@ -126,12 +126,6 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
     }
 
     @Override
-    public void close() {
-        super.close();
-        getModel().save();
-    }
-
-    @Override
     protected AnalysisWizardView<T, CDTME> createWizardView() {
 	return new AnalysisWizardView<T, CDTME>(this, getModel().getAnalysisManager());
     }

@@ -66,7 +66,7 @@ public class PropertyBinderEnhancer {
     /**
      * Returns the pair of entity type and list of properties.
      * If the entityType parameter is an {@link EntityQueryCriteria} class then it returns pair of real entity type and checked property names.
-     * 
+     *
      * @param entityType
      * @param propertyNames
      * @return
@@ -79,10 +79,13 @@ public class PropertyBinderEnhancer {
 	    realEntityTypes.add(realRootAndPropertyName.getKey());
 	    realPropertyNames.add(realRootAndPropertyName.getValue());
 	}
-	if(realEntityTypes.size() != 1){
+
+	//Real entity types set may be empty, or may have only one real entity type. Other cases are illegal.
+	if(realEntityTypes.size() > 1){
 	    throw new IllegalStateException("The property names are associated with more then one entity type!");
 	}
-	return new Pair<Class<?>, Set<String>>(realEntityTypes.toArray(new Class<?>[0])[0], realPropertyNames);
+	final Class<?> realEntityType = realEntityTypes.isEmpty() ? null : realEntityTypes.toArray(new Class<?>[0])[0];
+	return new Pair<Class<?>, Set<String>>(realEntityType, realPropertyNames);
     }
 
     /**

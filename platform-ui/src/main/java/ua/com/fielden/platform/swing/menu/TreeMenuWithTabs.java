@@ -393,7 +393,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
      */
     protected void selectMenuItem(final TreeMenuItem<?> treeMenuItem) {
 	if (treeMenuItem instanceof IItemSelector) {
-	    ((IItemSelector) treeMenuItem).selectTreeMenuItem(treeMenuItem.toString());
+	    ((IItemSelector) treeMenuItem).selectTreeMenuItem();
 	}
     }
 

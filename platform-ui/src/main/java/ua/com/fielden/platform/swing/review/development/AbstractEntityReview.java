@@ -45,6 +45,13 @@ public abstract class AbstractEntityReview<T extends AbstractEntity<?>, CDTME ex
 	return model;
     }
 
+    /**
+     * Returns the value that indicates whether this entity review loaded or not.
+     *
+     * @return
+     */
+    abstract public boolean isLoaded();
+
 
     abstract protected ConfigureAction createConfigureAction();
 }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -48,7 +49,6 @@ import ua.com.fielden.platform.swing.review.report.centre.configuration.Multiple
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
-import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -113,6 +113,11 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	showAnalysis(name, analysisType);
     }
 
+    @Override
+    public boolean isLoaded() {
+        return wasAnalysisLoaded && wasSizeChanged && analysisSelected;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public ICloseGuard canClose() {
@@ -125,6 +130,15 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    }
 	}
         return null;
+    }
+
+    @Override
+    public void close() {
+	this.wasSizeChanged = false;
+	this.wasAnalysisLoaded = false;
+	this.analysisSelected = false;
+	setSize(new Dimension(0, 0));
+	super.close();
     }
 
     @Override
@@ -251,14 +265,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 			if(wasAnalysisLoaded && analysisSelected){
 			    fireLoadEvent(new LoadEvent(MultipleAnalysisEntityCentre.this));
 			}
-			// after this handler end its execution, lets remove it
-			// from component because it is already not-useful
-			final ComponentListener refToThis = this;
-			SwingUtilitiesEx.invokeLater(new Runnable() {
-			    public void run() {
-				removeComponentListener(refToThis);
-			    }
-			});
 		    }
 		}
 	    }
@@ -282,14 +288,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 			if(wasAnalysisLoaded && wasSizeChanged){
 			    fireLoadEvent(new LoadEvent(MultipleAnalysisEntityCentre.this));
 			}
-			final PropertyChangeListener refToThis = this;
-			SwingUtilitiesEx.invokeLater(new Runnable() {
-
-			    @Override
-			    public void run() {
-				removePropertyChangeListener(refToThis);
-			    }
-			});
 		    }
 		}
 	    }
@@ -373,15 +371,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 		@Override
 		public void viewWasLoaded(final LoadEvent event) {
 		    loadNextAnalysis(tabPane, analysisKeys, analysisIndex);
-
-		    final ILoadListener refToThis = this;
-		    SwingUtilitiesEx.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-			    configView.removeLoadListener(refToThis);
-			}
-		    });
 		}
 	    });
 	}

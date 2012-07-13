@@ -73,7 +73,6 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 
     @Override
     public void buildUi() {
-	treeMenu.updateSelectedMenuItem();
 	entityCentreConfigurationView.open();
     }
 

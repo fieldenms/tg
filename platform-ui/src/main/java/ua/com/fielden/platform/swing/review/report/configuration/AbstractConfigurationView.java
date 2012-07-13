@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.configuration;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -71,15 +72,6 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	wasChildLoaded = false;
 	addComponentListener(createComponentWasResized());
 	model.addPropertyChangeListener(createModeChangeListener());
-
-	//TODO remove after testing
-	//	addLoadListener(new ILoadListener() {
-	//
-	//	    @Override
-	//	    public void viewWasLoaded(final LoadEvent event) {
-	//		JOptionPane.showMessageDialog(AbstractConfigurationView.this, "The configuration view was loaded! Component size: " + event.getSource().getSize());
-	//	    }
-	//	});
     }
 
     /**
@@ -149,6 +141,24 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     }
 
     /**
+     * Returns the value that indicates whether this view was loaded or not.
+     *
+     * @return
+     */
+    public boolean isLoaded(){
+	return wasResized && wasChildLoaded;
+    }
+
+    @Override
+    public void close() {
+	setSize(new Dimension(0, 0));
+	getModel().setMode(ReportMode.NOT_SPECIFIED);
+	wasResized = false;
+	wasChildLoaded = false;
+	super.close();
+    }
+
+    /**
      * Override this to provide custom report view.
      *
      * @param configurableView - view to configure.
@@ -188,14 +198,6 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 			if(wasChildLoaded){
 			    fireLoadEvent(new LoadEvent(AbstractConfigurationView.this));
 			}
-			// after this handler end its execution, lets remove it
-			// from component because it is already not-useful
-			final ComponentListener refToThis = this;
-			SwingUtilitiesEx.invokeLater(new Runnable() {
-			    public void run() {
-				removeComponentListener(refToThis);
-			    }
-			});
 		    }
 		}
 	    }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.view;
 
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -28,7 +29,6 @@ import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
-import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -60,6 +60,18 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
     @Override
     public AbstractAnalysisConfigurationView<T, CDTME, ADTME, LDT, ? extends AbstractAnalysisReview<T, CDTME, ADTME, LDT>> getOwner() {
 	return (AbstractAnalysisConfigurationView<T, CDTME, ADTME, LDT, ? extends AbstractAnalysisReview<T, CDTME, ADTME, LDT>>) super.getOwner();
+    }
+
+    @Override
+    public boolean isLoaded() {
+        return wasLoaded;
+    }
+
+    @Override
+    public void close() {
+	wasLoaded = false;
+	setSize(new Dimension(0, 0));
+	super.close();
     }
 
     public void loadData() {
@@ -316,15 +328,6 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 			// size changed events.
 			wasLoaded = true;
 			fireLoadEvent(new LoadEvent(AbstractAnalysisReview.this));
-
-			// after this handler end its execution, lets remove it
-			// from component because it is already not-useful
-			final ComponentListener refToThis = this;
-			SwingUtilitiesEx.invokeLater(new Runnable() {
-			    public void run() {
-				removeComponentListener(refToThis);
-			    }
-			});
 		    }
 		}
 	    }

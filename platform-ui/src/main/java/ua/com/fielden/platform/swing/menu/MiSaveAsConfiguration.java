@@ -14,6 +14,8 @@ import ua.com.fielden.platform.swing.menu.api.IItemSelector;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationView;
+import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 
 /**
  * A menu item type for representing save-as menu items with custom configurations of the corresponding principle menu item.
@@ -27,6 +29,11 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
     private static final long serialVersionUID = 1628351742425600699L;
 
     private final IAnalysisListener analysisListener;
+
+    /**
+     * Determines whether associated view should be selected after load or not.
+     */
+    private boolean selectAfterLoad = false;
 
     public MiSaveAsConfiguration(//
 	    //Tree menu item related parameters
@@ -44,6 +51,7 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 
 	this.analysisListener = createAnalysisListener(parentItem.getView().getTreeMenu());
 	getView().getCentreConfigurationView().getModel().addPropertyChangeListener(createCentreModeChangeListener());
+	getView().getCentreConfigurationView().addLoadListener(createAnalysisSelectLoadListener());
 	getView().addCentreClosingListener(new CentreClosingListener() {
 
 	    @Override
@@ -167,11 +175,42 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 
 
     @Override
-    public void selectTreeMenuItem(final String name) {
+    public void selectTreeMenuItem() {
 	final CentreConfigurationView<T, ?> centre = getView().getCentreConfigurationView();
-	if(centre.getModel().getMode() == ReportMode.REPORT){
+	if(!centre.isLoaded()){
+	    selectAfterLoad = true;
+	}else if(!selectAfterLoad){
+	   selectGridAnalysisView();
+	}
+    }
+
+    /**
+     * Selects the grid analysis view.
+     */
+    private void selectGridAnalysisView(){
+	final CentreConfigurationView<T, ?> centre = getView().getCentreConfigurationView();
+	if (centre.getModel().getMode() == ReportMode.REPORT) {
 	    centre.getPreviousView().selectAnalysis(GridConfigurationModel.gridAnalysisName);
 	}
+    }
+
+    /**
+     * Creates the load listener that selects menu item after the centre was loaded.
+     *
+     * @param centre
+     * @return
+     */
+    private ILoadListener createAnalysisSelectLoadListener() {
+	return new ILoadListener() {
+
+	    @Override
+	    public void viewWasLoaded(final LoadEvent event) {
+		if (selectAfterLoad) {
+		    selectGridAnalysisView();
+		    selectAfterLoad = false;
+		}
+	    }
+	};
     }
 
 }

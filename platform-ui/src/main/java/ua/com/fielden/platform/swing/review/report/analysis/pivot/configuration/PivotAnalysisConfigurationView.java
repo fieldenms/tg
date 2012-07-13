@@ -43,12 +43,12 @@ public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends
 		    if(pdtme == null){
 			getModel().initAnalysisManager(AnalysisType.PIVOT);
 			getModel().save();
-			getModel().setAnalysisVisible(true);
 			pdtme = (IPivotDomainTreeManager) getModel().getAnalysisManager();
 		    }
 		    if(pdtme == null){
 			return new Result(PivotAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));
 		    }
+		    getModel().setAnalysisVisible(true);
 		    return getModel().canSetMode(ReportMode.REPORT);
 
 		default:
