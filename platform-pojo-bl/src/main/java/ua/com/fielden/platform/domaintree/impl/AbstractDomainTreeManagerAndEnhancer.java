@@ -508,12 +508,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    }
 
 	    @Override
-	    public void checkImmutably(final Class<?> root, final String property) {
-		// inject an enhanced type into method implementation
-		base.checkImmutably(enhancerWithPropertiesPopulation.getManagedType(root), property);
-	    }
-
-	    @Override
 	    public boolean addPropertyDisablementListener(final IPropertyDisablementListener listener) {
 		// inject an enhanced type into method implementation
 	        return base.addPropertyDisablementListener(listener);
@@ -528,11 +522,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    @Override
 	    public EnhancementSet disabledManuallyPropertiesMutable() {
 	        return base.disabledManuallyPropertiesMutable();
-	    }
-
-	    @Override
-	    public EnhancementSet checkedManuallyPropertiesMutable() {
-	        return base.checkedManuallyPropertiesMutable();
 	    }
 	}
 

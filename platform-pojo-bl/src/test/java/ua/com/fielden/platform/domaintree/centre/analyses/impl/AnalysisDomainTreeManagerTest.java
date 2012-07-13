@@ -5,12 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
@@ -23,45 +23,53 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
  *
  */
 public class AnalysisDomainTreeManagerTest extends AbstractAnalysisDomainTreeManagerTest {
-    @Override
-    protected IAnalysisDomainTreeManager dtm() {
-	return (IAnalysisDomainTreeManager) ((ICentreDomainTreeManagerAndEnhancer) just_a_dtm()).getAnalysisManager("Report");
-    }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Creates root types.
-     *
-     * @return
-     */
-    protected static Set<Class<?>> createRootTypes_for_AnalysisDomainTreeManagerTest() {
-	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractAnalysisDomainTreeManagerTest();
-	return rootTypes;
-    }
-
-    /**
-     * Provides a testing configuration for the manager.
-     *
-     * @param dtm
-     */
-    protected static void manageTestingDTM_for_AnalysisDomainTreeManagerTest(final IAnalysisDomainTreeManager dtm) {
-	manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(dtm);
+    @Override
+    protected IAnalysisDomainTreeManager dtm() {
+	return (IAnalysisDomainTreeManager) just_a_dtm();
     }
 
     @BeforeClass
-    public static void initDomainTreeTest() {
-	final ICentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AnalysisDomainTreeManagerTest());
-	centre.initAnalysisManagerByDefault("Report", AnalysisType.SIMPLE);
-	final IAnalysisDomainTreeManager dtm = (IAnalysisDomainTreeManager) centre.getAnalysisManager("Report");
-	manageTestingDTM_for_AnalysisDomainTreeManagerTest(dtm);
-	centre.acceptAnalysisManager("Report");
-	setDtmArray(serialiser().serialise(centre));
+    public static void initDomainTreeTest() throws Exception {
+	initialiseDomainTreeTest(AnalysisDomainTreeManagerTest.class);
     }
 
+    public static Object createDtm_for_AnalysisDomainTreeManagerTest() {
+	return new AnalysisDomainTreeManager(serialiser(), createRootTypes_for_AnalysisDomainTreeManagerTest());
+    }
+
+    public static Object createIrrelevantDtm_for_AnalysisDomainTreeManagerTest() {
+	final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AnalysisDomainTreeManagerTest());
+	enhanceManagerWithBasicCalculatedProperties(dtm);
+	return dtm;
+    }
+
+    protected static Set<Class<?>> createRootTypes_for_AnalysisDomainTreeManagerTest() {
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+	return rootTypes;
+    }
+
+    public static void manageTestingDTM_for_AnalysisDomainTreeManagerTest(final Object obj) {
+	manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(obj);
+    }
+
+    public static void performAfterDeserialisationProcess_for_AnalysisDomainTreeManagerTest(final Object obj) {
+	performAfterDeserialisationProcess_for_AbstractAnalysisDomainTreeManagerTest(obj);
+    }
+
+    public static void assertInnerCrossReferences_for_AnalysisDomainTreeManagerTest(final Object dtm) {
+	assertInnerCrossReferences_for_AbstractAnalysisDomainTreeManagerTest(dtm);
+    }
+
+    public static String [] fieldWhichReferenceShouldNotBeDistictButShouldBeEqual_for_AnalysisDomainTreeManagerTest() {
+	return fieldWhichReferenceShouldNotBeDistictButShouldBeEqual_for_AbstractAnalysisDomainTreeManagerTest();
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void test_that_usage_management_works_correctly_for_first_tick() {
         //////////////////// Overridden to provide "single-selection" logic, instead of "multiple-selection" as in abstract parent class ////////////////////

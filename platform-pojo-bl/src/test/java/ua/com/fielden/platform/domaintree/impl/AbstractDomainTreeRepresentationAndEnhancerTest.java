@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -31,53 +32,109 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
  *
  */
 public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDomainTreeTest {
-    /**
-     * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
-     *
-     * @return
-     */
+//    /**
+//     * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
+//     *
+//     * @return
+//     */
+//    @Override
+//    protected IDomainTreeManagerAndEnhancer dtm() {
+//	return (IDomainTreeManagerAndEnhancer) super.dtm();
+//    }
+//
+//    /**
+//     * Creates root types.
+//     *
+//     * @return
+//     */
+//    protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest() {
+//	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeTest();
+//	rootTypes.add(MasterEntityForIncludedPropertiesLogic.class);
+//	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
+//	return rootTypes;
+//    }
+//
+//    /**
+//     * Provides a testing configuration for the manager.
+//     *
+//     * @param dtm
+//     */
+//    protected static void manageTestingDTM_for_AbstractDomainTreeRepresentationAndEnhancerTest(final IDomainTreeManagerAndEnhancer dtm) {
+//	manageTestingDTM_for_AbstractDomainTreeTest(dtm);
+//
+//	allLevelsWithoutCollections(new IAction() {
+//	    public void action(final String name) {
+//		dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, name, "1 * integerProp", "Calc integer prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+//		dtm.getEnhancer().apply();
+//	    }
+//	}, "");
+//
+//	dtm.getFirstTick().checkedProperties(MasterEntity.class);
+//	dtm.getSecondTick().checkedProperties(MasterEntity.class);
+//    }
+//
+//    @BeforeClass
+//    public static void initDomainTreeTest() {
+//	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest());
+//	manageTestingDTM_for_AbstractDomainTreeRepresentationAndEnhancerTest(dtm);
+//	setDtmArray(serialiser().serialise(dtm));
+//    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Test initialisation ///////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
     protected IDomainTreeManagerAndEnhancer dtm() {
-	return (IDomainTreeManagerAndEnhancer) super.dtm();
+	return (IDomainTreeManagerAndEnhancer) just_a_dtm();
     }
 
-    /**
-     * Creates root types.
-     *
-     * @return
-     */
+    @BeforeClass
+    public static void initDomainTreeTest() throws Exception {
+	initialiseDomainTreeTest(AbstractDomainTreeRepresentationAndEnhancerTest.class);
+    }
+
+    protected static Object createDtm_for_AbstractDomainTreeRepresentationAndEnhancerTest() {
+	return new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest());
+    }
+
+    protected static Object createIrrelevantDtm_for_AbstractDomainTreeRepresentationAndEnhancerTest() {
+	return null;
+    }
+
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest() {
-	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeTest();
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
 	rootTypes.add(MasterEntityForIncludedPropertiesLogic.class);
 	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
 	return rootTypes;
     }
 
-    /**
-     * Provides a testing configuration for the manager.
-     *
-     * @param dtm
-     */
-    protected static void manageTestingDTM_for_AbstractDomainTreeRepresentationAndEnhancerTest(final IDomainTreeManagerAndEnhancer dtm) {
-	manageTestingDTM_for_AbstractDomainTreeTest(dtm);
+    protected static void manageTestingDTM_for_AbstractDomainTreeRepresentationAndEnhancerTest(final Object obj) {
+	final IDomainTreeManagerAndEnhancer dtmae = (IDomainTreeManagerAndEnhancer) obj;
+
+	manageTestingDTM_for_AbstractDomainTreeTest(dtmae.getRepresentation());
 
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, name, "1 * integerProp", "Calc integer prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-		dtm.getEnhancer().apply();
+		dtmae.getEnhancer().addCalculatedProperty(MasterEntity.class, name, "1 * integerProp", "Calc integer prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+		dtmae.getEnhancer().apply();
 	    }
 	}, "");
-
-	dtm.getFirstTick().checkedProperties(MasterEntity.class);
-	dtm.getSecondTick().checkedProperties(MasterEntity.class);
+	dtmae.getFirstTick().checkedProperties(MasterEntity.class);
+	dtmae.getSecondTick().checkedProperties(MasterEntity.class);
     }
 
-    @BeforeClass
-    public static void initDomainTreeTest() {
-	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest());
-	manageTestingDTM_for_AbstractDomainTreeRepresentationAndEnhancerTest(dtm);
-	setDtmArray(serialiser().serialise(dtm));
+    protected static void performAfterDeserialisationProcess_for_AbstractDomainTreeRepresentationAndEnhancerTest(final Object obj) {
     }
+
+    protected static void assertInnerCrossReferences_for_AbstractDomainTreeRepresentationAndEnhancerTest(final Object obj) {
+	final AbstractDomainTreeManagerAndEnhancer dtmae = (AbstractDomainTreeManagerAndEnhancer) obj;
+	final AbstractDomainTreeManager dtm = (AbstractDomainTreeManager) dtmae.base();
+	AbstractDomainTreeManagerTest.assertInnerCrossReferences_for_AbstractDomainTreeManagerTest(dtm);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// End of Test initialisation ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////
     ////////////////////// 1. Excluding logic //////////////////////
@@ -205,8 +262,8 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
 
 	// serialise and deserialise and then check the order of "checked properties"
-	final byte[] array = getSerialiser().serialise(dtm());
-	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
+	final byte[] array = serialiser().serialise(dtm());
+	final IDomainTreeManagerAndEnhancer copy = serialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), copy.getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
 
@@ -408,7 +465,8 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
 	assertEquals("Incorrect value 'i'.", 1, i);
 	assertEquals("Incorrect value 'j'.", 0, j);
 
-	dtm().getRepresentation().getFirstTick().checkImmutably(MasterEntity.class, "bigDecimalProp");
+	dtm().getFirstTick().check(MasterEntity.class, "bigDecimalProp", true);
+	dtm().getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "bigDecimalProp");
 	assertEquals("Incorrect value 'i'.", 2, i);
 	assertEquals("Incorrect value 'j'.", 0, j);
 

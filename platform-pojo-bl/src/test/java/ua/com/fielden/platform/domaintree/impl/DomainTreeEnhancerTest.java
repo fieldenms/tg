@@ -36,30 +36,16 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  */
 public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
-    /**
-     * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
-     *
-     * @return
-     */
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Test initialisation ///////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
     protected IDomainTreeEnhancer dtm() {
-	return (IDomainTreeEnhancer) super.dtm();
+	return (IDomainTreeEnhancer) just_a_dtm();
     }
 
     @BeforeClass
-    public static void initDomainTreeTest() {
-	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
-	rootTypes.add(EnhancingMasterEntity.class);
-
-	final DomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser(), rootTypes);
-	dte.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "1 * integerProp", "Old single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dte.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "2 * integerProp", "Old double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dte.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "3 * integerProp", "Old triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dte.addCalculatedProperty(EnhancingMasterEntity.class, "", "4 * integerProp", "Old quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dte.apply();
-
-	assertEquals("Incorrect count of enhanced types byte arrays.", 6, dte.getManagedTypeArrays(EnhancingMasterEntity.class).size());
-
+    public static void initDomainTreeTest() throws Exception {
 	/////////////////////////////////////////////////////////////////
 	//////////////////////// IMPORTANT //////////////////////////////
 	/////////////////////////////////////////////////////////////////
@@ -71,9 +57,43 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	/////////////////////////////////////////////////////////////////
 	//////////////////////// IMPORTANT //////////////////////////////
 	/////////////////////////////////////////////////////////////////
-	setDtmArray(serialiser().serialise(dte));
-	System.out.println("Domain Tree Enhancer with enhanced domain has been serialised successfully.");
+	initialiseDomainTreeTest(DomainTreeEnhancerTest.class);
     }
+
+    protected static Object createDtm_for_DomainTreeEnhancerTest() {
+	final DomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser(), createRootTypes_for_DomainTreeEnhancerTest());
+
+	dte.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "1 * integerProp", "Old single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dte.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "2 * integerProp", "Old double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dte.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "3 * integerProp", "Old triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dte.addCalculatedProperty(EnhancingMasterEntity.class, "", "4 * integerProp", "Old quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dte.apply();
+
+	assertEquals("Incorrect count of enhanced types byte arrays.", 6, dte.getManagedTypeArrays(EnhancingMasterEntity.class).size());
+	return dte;
+    }
+
+    protected static Object createIrrelevantDtm_for_DomainTreeEnhancerTest() {
+	return null;
+    }
+
+    protected static Set<Class<?>> createRootTypes_for_DomainTreeEnhancerTest() {
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
+	rootTypes.add(EnhancingMasterEntity.class);
+	return rootTypes;
+    }
+
+    protected static void manageTestingDTM_for_DomainTreeEnhancerTest(final Object obj) {
+    }
+
+    protected static void performAfterDeserialisationProcess_for_DomainTreeEnhancerTest(final Object obj) {
+    }
+
+    protected static void assertInnerCrossReferences_for_DomainTreeEnhancerTest(final Object obj) {
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// End of Test initialisation ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static void fieldDoesNotExist(final Class<?> type, final String prop) {
 	try {
@@ -357,7 +377,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     @Test
     public void test_Discard_operation_FOR_THE_COPY_OF_MANAGER() {
 	// this is very important test due to JVM's lazy class loading!
-	checkDiscardOperation(EntityUtils.deepCopy(dtm(), getSerialiser()));
+	checkDiscardOperation(EntityUtils.deepCopy(dtm(), serialiser()));
     }
 
     @Test
@@ -370,7 +390,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     public void test_first_level_enhancements_FOR_THE_COPY_OF_MANAGER() {
 	checkDiscardOperation(dtm());
 	// this is very important test due to JVM's lazy class loading!
-	checkFirstLevelEnhancements(EntityUtils.deepCopy(dtm(), getSerialiser()));
+	checkFirstLevelEnhancements(EntityUtils.deepCopy(dtm(), serialiser()));
     }
 
     @Test
@@ -385,7 +405,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	checkDiscardOperation(dtm());
 	checkFirstLevelEnhancements(dtm());
 	// this is very important test due to JVM's lazy class loading!
-	checkSecondLevelEnhancements(EntityUtils.deepCopy(dtm(), getSerialiser()));
+	checkSecondLevelEnhancements(EntityUtils.deepCopy(dtm(), serialiser()));
     }
 
     @Test
@@ -402,7 +422,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	checkFirstLevelEnhancements(dtm());
 	checkSecondLevelEnhancements(dtm());
 	// this is very important test due to JVM's lazy class loading!
-	checkThirdLevelEnhancements(EntityUtils.deepCopy(dtm(), getSerialiser()));
+	checkThirdLevelEnhancements(EntityUtils.deepCopy(dtm(), serialiser()));
     }
 
     @Test
@@ -411,7 +431,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	checkFirstLevelEnhancements(dtm());
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), serialiser());
 	checkSecondLevelEnhancements(copy);
 	checkThirdLevelEnhancements(copy);
     }
@@ -421,7 +441,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	checkDiscardOperation(dtm());
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), serialiser());
 	checkFirstLevelEnhancements(copy);
 	checkSecondLevelEnhancements(copy);
 	checkThirdLevelEnhancements(copy);
@@ -557,7 +577,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	dtm().apply();
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), serialiser());
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "oldSingle");
@@ -601,7 +621,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	dtm().apply();
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), serialiser());
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "oldSingle");
@@ -641,7 +661,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	dtm().addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "SUM(6 * integerProp)", "Sum of sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), serialiser());
 
 	copy.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "SUM(7 * integerProp)", "Sum of septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	copy.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
@@ -690,7 +710,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	dtm().apply();
 
 	// this is very important test due to JVM's lazy class loading!
-	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), getSerialiser());
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dtm(), serialiser());
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "oldSingle");

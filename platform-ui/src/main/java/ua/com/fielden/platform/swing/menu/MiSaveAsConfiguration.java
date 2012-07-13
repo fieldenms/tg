@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.swing.tree.MutableTreeNode;
 
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAnalysisListener;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.IAnalysisListener;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.DynamicReportWrapper.CentreClosingEvent;
 import ua.com.fielden.platform.swing.menu.DynamicReportWrapper.CentreClosingListener;

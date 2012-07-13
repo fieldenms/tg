@@ -4,15 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
-import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
 
 /**
@@ -22,46 +21,86 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
  *
  */
 public class LocatorDomainTreeManagerTest extends CentreDomainTreeManagerTest {
-    @Override
-    protected ILocatorDomainTreeManagerAndEnhancer dtm() {
-	return (ILocatorDomainTreeManagerAndEnhancer) super.dtm();
-    }
-
+//    ///////////////////////////////////////////////////////////////////////////////////////////////////
+//    /////////////////////////////////////// Test initialisation ///////////////////////////////////////
+//    ///////////////////////////////////////////////////////////////////////////////////////////////////
+//    @Override
+//    protected ILocatorDomainTreeManagerAndEnhancer dtm() {
+//	return (ILocatorDomainTreeManagerAndEnhancer) super.dtm();
+//    }
+//
+//    /**
+//     * Creates root types.
+//     *
+//     * @return
+//     */
+//    protected static Set<Class<?>> createRootTypes_for_LocatorDomainTreeManagerTest() {
+//	final Set<Class<?>> rootTypes = createRootTypes_for_CentreDomainTreeManagerTest();
+//	return rootTypes;
+//    }
+//
+//    /**
+//     * Provides a testing configuration for the manager.
+//     *
+//     * @param dtm
+//     */
+//    protected static void manageTestingDTM_for_LocatorDomainTreeManagerTest(final ILocatorDomainTreeManager dtm) {
+//	manageTestingDTM_for_CentreDomainTreeManagerTest(dtm);
+//
+//	dtm.getFirstTick().checkedProperties(MasterEntity.class);
+//	dtm.getSecondTick().checkedProperties(MasterEntity.class);
+//    }
+//
+//    @BeforeClass
+//    public static void initDomainTreeTest() {
+//	final ILocatorDomainTreeManagerAndEnhancer dtm = new LocatorDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_LocatorDomainTreeManagerTest());
+//	manageTestingDTM_for_LocatorDomainTreeManagerTest(dtm);
+//	setDtmArray(serialiser().serialise(dtm));
+//    }
+//
+//    ///////////////////////////////////////////////////////////////////////////////////////////////////
+//    /////////////////////////////////////// End of Test initialisation ////////////////////////////////
+//    ///////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Creates root types.
-     *
-     * @return
-     */
-    protected static Set<Class<?>> createRootTypes_for_LocatorDomainTreeManagerTest() {
-	final Set<Class<?>> rootTypes = createRootTypes_for_CentreDomainTreeManagerTest();
-	return rootTypes;
-    }
-
-    /**
-     * Provides a testing configuration for the manager.
-     *
-     * @param dtm
-     */
-    protected static void manageTestingDTM_for_LocatorDomainTreeManagerTest(final ILocatorDomainTreeManager dtm) {
-	manageTestingDTM_for_CentreDomainTreeManagerTest(dtm);
-
-	dtm.getFirstTick().checkedProperties(MasterEntity.class);
-	dtm.getSecondTick().checkedProperties(MasterEntity.class);
+    @Override
+    protected ILocatorDomainTreeManager dtm() {
+	return (ILocatorDomainTreeManager) just_a_dtm();
     }
 
     @BeforeClass
-    public static void initDomainTreeTest() {
-	final ILocatorDomainTreeManagerAndEnhancer dtm = new LocatorDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_LocatorDomainTreeManagerTest());
-	manageTestingDTM_for_LocatorDomainTreeManagerTest(dtm);
-	setDtmArray(serialiser().serialise(dtm));
+    public static void initDomainTreeTest() throws Exception {
+	initialiseDomainTreeTest(LocatorDomainTreeManagerTest.class);
     }
 
+    public static Object createDtm_for_LocatorDomainTreeManagerTest() {
+	return new LocatorDomainTreeManager(serialiser(), createRootTypes_for_LocatorDomainTreeManagerTest());
+    }
+
+    public static Object createIrrelevantDtm_for_LocatorDomainTreeManagerTest() {
+	return null;
+    }
+
+    protected static Set<Class<?>> createRootTypes_for_LocatorDomainTreeManagerTest() {
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_CentreDomainTreeManagerTest());
+	return rootTypes;
+    }
+
+    public static void manageTestingDTM_for_LocatorDomainTreeManagerTest(final Object obj) {
+	manageTestingDTM_for_CentreDomainTreeManagerTest(obj);
+    }
+
+    public static void performAfterDeserialisationProcess_for_LocatorDomainTreeManagerTest(final Object obj) {
+    }
+
+    public static void assertInnerCrossReferences_for_LocatorDomainTreeManagerTest(final Object dtm) {
+	assertInnerCrossReferences_for_CentreDomainTreeManagerTest(dtm);
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Test
     public void test_that_UseForAutocompletion_can_be_set_and_altered() {
 	// THE FIRST TIME -- returns DEFAULT VALUE //

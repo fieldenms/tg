@@ -19,7 +19,6 @@ import ua.com.fielden.platform.domaintree.FunctionUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -52,7 +51,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private final AbstractTickRepresentation secondTick;
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
     private final EnhancementRootsMap<ListenedArrayList> includedProperties;
-    private final transient AbstractDomainTreeManager dtm;
 
     private final transient List<IPropertyListener> propertyListeners, disabledPropertyListeners;
 
@@ -70,8 +68,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
 	propertyListeners = new ArrayList<IPropertyListener>();
 	disabledPropertyListeners = new ArrayList<IPropertyListener>();
-
-	this.dtm = null; // IMPORTANT : to use this "dtm", this representation should be passed into manager constructor, which should initialise "dtm" field.
 
 	// initialise the references on this instance in its children
 	try {
@@ -559,9 +555,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     public static abstract class AbstractTickRepresentation implements ITickRepresentationWithMutability {
 	private final EnhancementSet disabledManuallyProperties;
-	private final EnhancementSet checkedManuallyProperties;
 	private final transient AbstractDomainTreeRepresentation dtr;
-	private final transient TickManager tickManager;
 
 	private final transient List<IPropertyDisablementListener> propertyDisablementListeners;
 
@@ -570,12 +564,10 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	 */
 	protected AbstractTickRepresentation() {
 	    this.disabledManuallyProperties = createSet();
-	    this.checkedManuallyProperties = createSet();
 
 	    this.propertyDisablementListeners = new ArrayList<IPropertyDisablementListener>();
 
 	    this.dtr = null; // IMPORTANT : to use this tick it should be passed into representation constructor, which should initialise "dtr" field.
-	    this.tickManager = null; // IMPORTANT : to use this tick it should be passed into manager constructor, which should initialise "tickManager" field.
 	}
 
 	@Override
@@ -619,16 +611,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	@Override
 	public boolean isCheckedImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return checkedManuallyProperties.contains(key(root, property)); // check+disable manually checked properties
-	}
-
-	@Override
-	public void checkImmutably(final Class<?> root, final String property) {
-	    illegalExcludedProperties(dtr, root, property, "Could not check immutably already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    tickManager.checkSimply(root, property, true);
-	    checkedManuallyProperties.add(key(root, property));
-
-	    fireDisablingEvent(root, property);
+	    return false;
 	}
 
 	public AbstractDomainTreeRepresentation getDtr() {
@@ -639,7 +622,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	public int hashCode() {
 	    final int prime = 31;
 	    int result = 1;
-	    result = prime * result + (checkedManuallyProperties == null ? 0 : checkedManuallyProperties.hashCode());
 	    result = prime * result + (disabledManuallyProperties == null ? 0 : disabledManuallyProperties.hashCode());
 	    return result;
 	}
@@ -656,13 +638,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		return false;
 	    }
 	    final AbstractTickRepresentation other = (AbstractTickRepresentation) obj;
-	    if (checkedManuallyProperties == null) {
-		if (other.checkedManuallyProperties != null) {
-		    return false;
-		}
-	    } else if (!checkedManuallyProperties.equals(other.checkedManuallyProperties)) {
-		return false;
-	    }
 	    if (disabledManuallyProperties == null) {
 		if (other.disabledManuallyProperties != null) {
 		    return false;
@@ -676,11 +651,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	@Override
 	public EnhancementSet disabledManuallyPropertiesMutable() {
 	    return disabledManuallyProperties;
-	}
-
-	@Override
-	public EnhancementSet checkedManuallyPropertiesMutable() {
-	    return checkedManuallyProperties;
 	}
     }
 
@@ -767,37 +737,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	return  calculatedAnnotation != null && !Integer.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination()));
     }
 
-    //    public static class Tuple <K, L, M, N> {
-    //	private final K first;
-    //	private final L second;
-    //	private final M third;
-    //	private final N fourth;
-    //
-    //	public Tuple(final K first, final L second, final M third, final N fourth) {
-    //	    super();
-    //	    this.first = first;
-    //	    this.second = second;
-    //	    this.third = third;
-    //	    this.fourth = fourth;
-    //	}
-    //
-    //	public K first() {
-    //	    return first;
-    //	}
-    //
-    //	public L second() {
-    //	    return second;
-    //	}
-    //
-    //	public M third() {
-    //	    return third;
-    //	}
-    //
-    //	public N fourth() {
-    //	    return fourth;
-    //	}
-    //    }
-    //
     /**
      * A specific Kryo serialiser for {@link AbstractDomainTreeRepresentation}.
      *
@@ -884,10 +823,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /** Please do not use this directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
     protected EnhancementRootsMap<ListenedArrayList> includedProperties() {
 	return includedProperties;
-    }
-
-    public AbstractDomainTreeManager dtm() {
-	return dtm;
     }
 
     public EnhancementLinkedRootsSet getRootTypes() {

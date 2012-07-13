@@ -13,7 +13,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -55,32 +54,19 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	// initialise the references on "dtr" instance in "firstTick" and "secondTick" fields
 	// and initialise the references on "firstTick" and "secondTick" instances in "dtr.firstTick" and "dtr.secondTick" fields
 	try {
-	    final Field dtmField = Finder.findFieldByName(AbstractDomainTreeRepresentation.class, "dtm");
-	    boolean isAccessible = dtmField.isAccessible();
-	    dtmField.setAccessible(true);
-	    dtmField.set(this.dtr, this);
-	    dtmField.setAccessible(isAccessible);
-
 	    final Field dtrField = Finder.findFieldByName(TickManager.class, "dtr");
-	    isAccessible = dtrField.isAccessible();
+	    boolean isAccessible = dtrField.isAccessible();
 	    dtrField.setAccessible(true);
-	    dtrField.set(this.firstTick, dtr);
-	    dtrField.set(this.secondTick, dtr);
+	    dtrField.set(this.firstTick, this.dtr);
+	    dtrField.set(this.secondTick, this.dtr);
 	    dtrField.setAccessible(isAccessible);
 
 	    final Field trField = Finder.findFieldByName(TickManager.class, "tr");
 	    isAccessible = trField.isAccessible();
 	    trField.setAccessible(true);
-	    trField.set(this.firstTick, dtr.getFirstTick());
-	    trField.set(this.secondTick, dtr.getSecondTick());
+	    trField.set(this.firstTick, this.dtr.getFirstTick());
+	    trField.set(this.secondTick, this.dtr.getSecondTick());
 	    trField.setAccessible(isAccessible);
-
-	    final Field tickManagerField = Finder.findFieldByName(AbstractTickRepresentation.class, "tickManager");
-	    isAccessible = tickManagerField.isAccessible();
-	    tickManagerField.setAccessible(true);
-	    tickManagerField.set(this.dtr.getFirstTick(), this.firstTick);
-	    tickManagerField.set(this.dtr.getSecondTick(), this.secondTick);
-	    tickManagerField.setAccessible(isAccessible);
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new IllegalStateException(e);
@@ -147,14 +133,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	 * @return
 	 */
 	EnhancementSet disabledManuallyPropertiesMutable();
-
-	/**
-	 * Getter of mutable "checked manually properties" cache for internal purposes.
-	 *
-	 * @param root
-	 * @return
-	 */
-	EnhancementSet checkedManuallyPropertiesMutable();
     }
 
     /**
@@ -215,14 +193,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		    }
 		    if (secondTickRepresentation.disabledManuallyPropertiesMutable().contains(key(root, reflectionProperty))) {
 			secondTickRepresentation.disabledManuallyPropertiesMutable().remove(key(root, reflectionProperty));
-		    }
-
-		    // update manually immutably checked properties
-		    if (firstTickRepresentation.checkedManuallyPropertiesMutable().contains(key(root, reflectionProperty))) {
-			firstTickRepresentation.checkedManuallyPropertiesMutable().remove(key(root, reflectionProperty));
-		    }
-		    if (secondTickRepresentation.checkedManuallyPropertiesMutable().contains(key(root, reflectionProperty))) {
-			secondTickRepresentation.checkedManuallyPropertiesMutable().remove(key(root, reflectionProperty));
 		    }
 		}
 	    }

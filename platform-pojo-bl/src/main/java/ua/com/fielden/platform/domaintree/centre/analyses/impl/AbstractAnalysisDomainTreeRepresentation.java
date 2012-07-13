@@ -43,7 +43,7 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
     }
 
-    private ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager() {
+    protected ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager() {
 	return parentCentreDomainTreeManager;
     }
 
@@ -182,12 +182,6 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	    // inject an enhanced type into method implementation
 	    return super.isCheckedImmutably(managedType(root), property);
 	}
-
-	@Override
-	public final void checkImmutably(final Class<?> root, final String property) {
-	    // inject an enhanced type into method implementation
-	    super.checkImmutably(managedType(root), property);
-	}
     }
 
     /**
@@ -253,12 +247,6 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	public boolean isCheckedImmutably(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    return super.isCheckedImmutably(managedType(root), property);
-	}
-
-	@Override
-	public final void checkImmutably(final Class<?> root, final String property) {
-	    // inject an enhanced type into method implementation
-	    super.checkImmutably(managedType(root), property);
 	}
 
 	@Override

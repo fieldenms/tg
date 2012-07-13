@@ -2,12 +2,12 @@ package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
 import static org.junit.Assert.fail;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
@@ -21,45 +21,53 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
  *
  */
 public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManagerTest {
-    @Override
-    protected IPivotDomainTreeManager dtm() {
-	return (IPivotDomainTreeManager) ((ICentreDomainTreeManagerAndEnhancer) just_a_dtm()).getAnalysisManager("Report");
-    }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Creates root types.
-     *
-     * @return
-     */
-    protected static Set<Class<?>> createRootTypes_for_PivotDomainTreeManagerTest() {
-	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractAnalysisDomainTreeManagerTest();
-	return rootTypes;
-    }
-
-    /**
-     * Provides a testing configuration for the manager.
-     *
-     * @param dtm
-     */
-    protected static void manageTestingDTM_for_PivotDomainTreeManagerTest(final IPivotDomainTreeManager dtm) {
-	manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(dtm);
+    @Override
+    protected IPivotDomainTreeManager dtm() {
+	return (IPivotDomainTreeManager) just_a_dtm();
     }
 
     @BeforeClass
-    public static void initDomainTreeTest() {
-	final ICentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_PivotDomainTreeManagerTest());
-	centre.initAnalysisManagerByDefault("Report", AnalysisType.PIVOT);
-	final IPivotDomainTreeManager dtm = (IPivotDomainTreeManager) centre.getAnalysisManager("Report");
-	manageTestingDTM_for_PivotDomainTreeManagerTest(dtm);
-	centre.acceptAnalysisManager("Report");
-	setDtmArray(serialiser().serialise(centre));
+    public static void initDomainTreeTest() throws Exception {
+	initialiseDomainTreeTest(PivotDomainTreeManagerTest.class);
     }
 
+    public static Object createDtm_for_PivotDomainTreeManagerTest() {
+	return new PivotDomainTreeManager(serialiser(), createRootTypes_for_PivotDomainTreeManagerTest());
+    }
+
+    public static Object createIrrelevantDtm_for_PivotDomainTreeManagerTest() {
+	final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_PivotDomainTreeManagerTest());
+	enhanceManagerWithBasicCalculatedProperties(dtm);
+	return dtm;
+    }
+
+    protected static Set<Class<?>> createRootTypes_for_PivotDomainTreeManagerTest() {
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+	return rootTypes;
+    }
+
+    public static void manageTestingDTM_for_PivotDomainTreeManagerTest(final Object obj) {
+	manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(obj);
+    }
+
+    public static void performAfterDeserialisationProcess_for_PivotDomainTreeManagerTest(final Object obj) {
+	performAfterDeserialisationProcess_for_AbstractAnalysisDomainTreeManagerTest(obj);
+    }
+
+    public static void assertInnerCrossReferences_for_PivotDomainTreeManagerTest(final Object dtm) {
+	assertInnerCrossReferences_for_AbstractAnalysisDomainTreeManagerTest(dtm);
+    }
+
+    public static String [] fieldWhichReferenceShouldNotBeDistictButShouldBeEqual_for_PivotDomainTreeManagerTest() {
+	return fieldWhichReferenceShouldNotBeDistictButShouldBeEqual_for_AbstractAnalysisDomainTreeManagerTest();
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Test
     public void test_that_unused_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {
 	final String message = "Unused property should cause IllegalArgument exception.";

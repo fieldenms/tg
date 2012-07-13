@@ -5,7 +5,6 @@ import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
@@ -30,7 +29,7 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
      * @param firstTick
      * @param secondTick
      */
-    protected DomainTreeManager1(final ISerialiser serialiser, final AbstractDomainTreeRepresentation dtr, final TickManager firstTick, final TickManager secondTick) {
+    /* protected */ public DomainTreeManager1(final ISerialiser serialiser, final DomainTreeRepresentation1 dtr, final TickManager1ForTest firstTick, final TickManager secondTick) {
 	super(serialiser, dtr, firstTick, secondTick);
     }
 
@@ -68,9 +67,4 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
 	    return new DomainTreeManager1(kryo(), dtr, firstTick, secondTick);
 	}
     }
-
-    //	@Override
-    //	protected ITickManager createFirstTick(final IDomainTreeRepresentation dtr) {
-    //	    return new TickManager1ForTest(dtr, dtr.getFirstTick());
-    //	}
 }

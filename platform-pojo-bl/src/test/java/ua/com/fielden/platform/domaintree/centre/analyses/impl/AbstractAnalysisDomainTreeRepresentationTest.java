@@ -2,12 +2,12 @@ package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -18,11 +18,10 @@ import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentationTest;
-import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1;
+import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeRepresentation1;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
@@ -31,7 +30,6 @@ import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -41,26 +39,29 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomainTreeRepresentationTest {
-    /**
-     * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
-     *
-     * @return
-     */
-    @Override
-    protected IAbstractAnalysisDomainTreeManager dtm() {
-	return ((ICentreDomainTreeManagerAndEnhancer) just_a_dtm()).getAnalysisManager("Report");
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Creates root types.
-     *
-     * @return
-     */
+    @Override
+    protected IAbstractAnalysisDomainTreeRepresentation dtm() {
+	return (IAbstractAnalysisDomainTreeRepresentation) just_a_dtm();
+    }
+
+    @BeforeClass
+    public static void initDomainTreeTest() throws Exception {
+	initialiseDomainTreeTest(AbstractAnalysisDomainTreeRepresentationTest.class);
+    }
+
+    public static Object createDtm_for_AbstractAnalysisDomainTreeRepresentationTest() {
+	return new AbstractAnalysisDomainTreeRepresentation1(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
+    }
+
+    public static Object createIrrelevantDtm_for_AbstractAnalysisDomainTreeRepresentationTest() {
+	return new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
+    }
+
     protected static Set<Class<?>> createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest() {
-	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeRepresentationTest();
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeRepresentationTest());
 	rootTypes.add(SlaveEntity.class);
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
@@ -68,27 +69,22 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 	return rootTypes;
     }
 
-    /**
-     * Provides a testing configuration for the manager.
-     *
-     * @param dtm
-     */
-    protected static void manageTestingDTM_for_AbstractAnalysisDomainTreeRepresentationTest(final IAbstractAnalysisDomainTreeManager dtm) {
-	manageTestingDTM_for_AbstractDomainTreeRepresentationTest(dtm);
-
-	dtm.getFirstTick().checkedProperties(MasterEntity.class);
-	dtm.getSecondTick().checkedProperties(MasterEntity.class);
+    public static void manageTestingDTM_for_AbstractAnalysisDomainTreeRepresentationTest(final Object obj) {
+	manageTestingDTM_for_AbstractDomainTreeRepresentationTest(obj);
     }
 
-    @BeforeClass
-    public static void initDomainTreeTest() {
-	final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
-	((CentreDomainTreeManager) centre.base()).currentAnalyses().put("Report", new AbstractAnalysisDomainTreeManager1(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest()));
-	final IAbstractAnalysisDomainTreeManager dtm = centre.getAnalysisManager("Report");
-	centre.initAnalysisManagerReferencesOnThisCentreManager(dtm);
-	manageTestingDTM_for_AbstractAnalysisDomainTreeRepresentationTest(dtm);
-	centre.acceptAnalysisManager("Report");
-	setDtmArray(serialiser().serialise(centre));
+    public static void performAfterDeserialisationProcess_for_AbstractAnalysisDomainTreeRepresentationTest(final Object obj) {
+	CentreDomainTreeManagerAndEnhancer.initAnalysisManagerReferencesOn((IAbstractAnalysisDomainTreeRepresentation) obj, (ICentreDomainTreeManagerAndEnhancer) irrelevantDtm());
+    }
+
+    public static void assertInnerCrossReferences_for_AbstractAnalysisDomainTreeRepresentationTest(final Object dtm) {
+	assertInnerCrossReferences_for_AbstractDomainTreeRepresentationTest(dtm);
+    }
+
+    public static String [] fieldWhichReferenceShouldNotBeDistictButShouldBeEqual_for_AbstractAnalysisDomainTreeRepresentationTest() {
+	final String [] fieldWhichReferenceShouldNotBeDistictButShouldBeEqual = new String [1];
+	fieldWhichReferenceShouldNotBeDistictButShouldBeEqual[0] = "parentCentreDomainTreeManager";
+	return fieldWhichReferenceShouldNotBeDistictButShouldBeEqual;
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
@@ -101,25 +97,25 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     ////////////////////// 1.3. Type related logic //////////////////////
     @Test
     public void test_that_collections_itself_and_their_children_are_disabled() {
-	assertTrue("Collection itself should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection"));
-	assertTrue("Collection itself should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection"));
+	assertTrue("Collection itself should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection"));
+	assertTrue("Collection itself should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection"));
 
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.entityProp"));
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.integerProp"));
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp"));
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.integerProp"));
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.entityProp.integerProp"));
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.integerProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.entityProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.integerProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.integerProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.entityProp.integerProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.integerProp"));
 
-	assertTrue("Collection itself should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection"));
-	assertTrue("Collection itself should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection"));
+	assertTrue("Collection itself should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection"));
+	assertTrue("Collection itself should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection"));
 
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.entityProp"));
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.integerProp"));
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp"));
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.integerProp"));
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.entityProp.integerProp"));
-	assertTrue("Collection property child should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.integerProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.entityProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.integerProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.integerProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.entityProp.integerProp"));
+	assertTrue("Collection property child should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.integerProp"));
     }
 
     ////////////////////// 1.4. Annotation related logic //////////////////////
@@ -132,7 +128,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_crit_only_properties_are_excluded() {
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertTrue("Crit-only property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, name));
+		assertTrue("Crit-only property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
 	}, "critOnlyProp");
     }
@@ -147,11 +143,11 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     @Override
     @Test
     public void test_entities_itself_first_tick_disabling() {
-	assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, ""));
-	assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(SlaveEntity.class, ""));
-	assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(EntityWithStringKeyType.class, ""));
-	assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
-	assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(EntityWithKeyTitleAndWithAEKeyType.class, ""));
+	assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, ""));
+	assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(SlaveEntity.class, ""));
+	assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(EntityWithStringKeyType.class, ""));
+	assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
+	assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(EntityWithKeyTitleAndWithAEKeyType.class, ""));
     }
 
     @Override
@@ -160,7 +156,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 	super.test_that_any_excluded_properties_first_tick_disabling_and_isDisabled_checking_cause_IllegalArgument_exception();
 
 	try {
-	    dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "critOnlyProp");
+	    dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "critOnlyProp");
 	    fail("Excluded property should cause illegal argument exception.");
 	} catch (final IllegalArgumentException e) {
 	}
@@ -172,7 +168,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_first_tick_for_properties_of_entity_with_AE_or_composite_key_type_are_disabled() {
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
 	    }
 	}, "entityPropWithAEKeyType", "entityWithCompositeKeyProp");
     }
@@ -183,7 +179,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 	// integer
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertTrue("Property should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		assertTrue("Property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
 	    }
 	}, "integerProp", "doubleProp", "bigDecimalProp", "moneyProp", "stringProp", "dateProp");
     }
@@ -192,7 +188,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_first_tick_for_properties_of_entity_or_date_or_boolean_are_NOT_disabled() {
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		assertFalse("Property should be not disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		assertFalse("Property should be not disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
 	    }
 	}, "simpleEntityProp", "booleanProp");
     }
@@ -201,10 +197,9 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_first_tick_for_integer_EXPR_calculated_properties_originated_from_date_property_are_enabled() {
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		dtm().parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Calc date prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
-		dtm().parentCentreDomainTreeManager().getEnhancer().apply();
-
-		assertFalse("EXPRESSION calculated properties of integer type based on date property should be enabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, name(name, "calcDateProp")));
+		((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Calc date prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+		((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().apply();
+		assertFalse("EXPRESSION calculated properties of integer type based on date property should be enabled for first tick.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name(name, "calcDateProp")));
 	    }
 	}, ""); // calcDateProp
     }
@@ -217,11 +212,11 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     @Override
     @Test
     public void test_entities_itself_second_tick_disabling() {
-	assertTrue("All second tick properties should be disabled, including entity itself", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, ""));
-	assertTrue("All second tick properties should be disabled, including entity itself", dtm().getRepresentation().getSecondTick().isDisabledImmutably(EntityWithNormalNature.class, ""));
-	assertTrue("All second tick properties should be disabled, including entity itself", dtm().getRepresentation().getSecondTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
-	assertTrue("All second tick properties should be disabled, including entity itself", dtm().getRepresentation().getSecondTick().isDisabledImmutably(EntityWithKeyTitleAndWithAEKeyType.class, ""));
-	assertTrue("All second tick properties should be disabled, including entity itself", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterSyntheticEntity.class, ""));
+	assertTrue("All second tick properties should be disabled, including entity itself", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, ""));
+	assertTrue("All second tick properties should be disabled, including entity itself", dtm().getSecondTick().isDisabledImmutably(EntityWithNormalNature.class, ""));
+	assertTrue("All second tick properties should be disabled, including entity itself", dtm().getSecondTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
+	assertTrue("All second tick properties should be disabled, including entity itself", dtm().getSecondTick().isDisabledImmutably(EntityWithKeyTitleAndWithAEKeyType.class, ""));
+	assertTrue("All second tick properties should be disabled, including entity itself", dtm().getSecondTick().isDisabledImmutably(MasterSyntheticEntity.class, ""));
     }
 
     @Override
@@ -229,7 +224,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_any_excluded_properties_second_tick_disabling_and_isDisabled_checking_cause_IllegalArgument_exception() {
 	super.test_that_any_excluded_properties_second_tick_disabling_and_isDisabled_checking_cause_IllegalArgument_exception();
 	try {
-	    dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "critOnlyProp");
+	    dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "critOnlyProp");
 	    fail("Excluded property should cause illegal argument exception.");
 	} catch (final IllegalArgumentException e) {
 	}
@@ -242,15 +237,15 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 	// TODO check whether it's correct
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertTrue("Property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
+		assertTrue("Property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
 	    }
 	}, "integerProp", "doubleProp", "bigDecimalProp", "moneyProp", "stringProp", "simpleEntityProp", "entityPropWithAEKeyType", "entityWithCompositeKeyProp", "dateProp", "booleanProp");
     }
 
     protected void checkSecTickEnablementForAGGR_EXPRessions(final String originationProperty, final int i, final String contextPath) {
-	dtm().parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, contextPath, "MAX(" + originationProperty + ")", originationProperty + " aggr expr " + i, "Desc", CalculatedPropertyAttribute.NO_ATTR, originationProperty);
-	dtm().parentCentreDomainTreeManager().getEnhancer().apply();
-	assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, originationProperty + "AggrExpr" + i));
+	((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, contextPath, "MAX(" + originationProperty + ")", originationProperty + " aggr expr " + i, "Desc", CalculatedPropertyAttribute.NO_ATTR, originationProperty);
+	((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().apply();
+	assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, originationProperty + "AggrExpr" + i));
     }
 
     @Test
@@ -281,9 +276,9 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     @Override
     @Test
     public void test_that_other_properties_are_not_disabled() {
-	assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "simpleEntityProp"));
-	assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.simpleEntityProp"));
-	assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.simpleEntityProp"));
+	assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "simpleEntityProp"));
+	assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.simpleEntityProp"));
+	assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.simpleEntityProp"));
     }
 
     @Override
@@ -301,24 +296,24 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 	    public void action(final String name) {
 		// isOrderingDisabled/disableOrdering
 		try {
-		    dtm().getRepresentation().getSecondTick().isOrderingDisabledImmutably(MasterEntity.class, name);
+		    dtm().getSecondTick().isOrderingDisabledImmutably(MasterEntity.class, name);
 		    fail(message);
 		} catch (final IllegalArgumentException e) {
 		}
 		try {
-		    dtm().getRepresentation().getSecondTick().disableOrderingImmutably(MasterEntity.class, name);
+		    dtm().getSecondTick().disableOrderingImmutably(MasterEntity.class, name);
 		    fail(message);
 		} catch (final IllegalArgumentException e) {
 		}
 
 		// get/set Ordering by default
 		try {
-		    dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(EvenSlaverEntity.class);
+		    dtm().getSecondTick().orderedPropertiesByDefault(EvenSlaverEntity.class);
 		    fail(message);
 		} catch (final IllegalArgumentException e) {
 		}
 		try {
-		    dtm().getRepresentation().getSecondTick().setOrderedPropertiesByDefault(EvenSlaverEntity.class, new ArrayList<Pair<String, Ordering>>());
+		    dtm().getSecondTick().setOrderedPropertiesByDefault(EvenSlaverEntity.class, new ArrayList<Pair<String, Ordering>>());
 		    fail(message);
 		} catch (final IllegalArgumentException e) {
 		}
@@ -331,66 +326,92 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_ordering_disablements_for_second_tick_are_desired_and_can_be_altered() {
 	// DEFAULT CONTRACT //
 	// none of the properties should have ordering disabled by default.
-	checkOrSetMethodValues(false, "dateProp", dtm().getRepresentation().getSecondTick(), "isOrderingDisabledImmutably");
-	checkOrSetMethodValues(false, "integerProp", dtm().getRepresentation().getSecondTick(), "isOrderingDisabledImmutably");
+	checkOrSetMethodValues(false, "dateProp", dtm().getSecondTick(), "isOrderingDisabledImmutably");
+	checkOrSetMethodValues(false, "integerProp", dtm().getSecondTick(), "isOrderingDisabledImmutably");
 
 	// Alter DEFAULT and check //
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		dtm().getRepresentation().getSecondTick().disableOrderingImmutably(MasterEntity.class, name);
+		dtm().getSecondTick().disableOrderingImmutably(MasterEntity.class, name);
 	    }
 	}, "dateProp");
-	checkOrSetMethodValues(true, "dateProp", dtm().getRepresentation().getSecondTick(), "isOrderingDisabledImmutably");
+	checkOrSetMethodValues(true, "dateProp", dtm().getSecondTick(), "isOrderingDisabledImmutably");
     }
 
     @Test
     public void test_that_orderings_by_default_for_second_tick_are_desired_and_can_be_altered(){
 	// DEFAULT CONTRACT //
 	// Default ordering for the analysis's second tick should be empty.
-	assertEquals("Default value is incorrect.", Arrays.asList(), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
-	assertEquals("Default value is incorrect.", Arrays.asList(), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(EntityWithCompositeKey.class));
-	assertEquals("Default value is incorrect.", Arrays.asList(), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(EntityWithKeyTitleAndWithAEKeyType.class));
+	assertEquals("Default value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
+	assertEquals("Default value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedPropertiesByDefault(EntityWithCompositeKey.class));
+	assertEquals("Default value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedPropertiesByDefault(EntityWithKeyTitleAndWithAEKeyType.class));
 
 	// Alter DEFAULT and check //
 	final List<Pair<String, Ordering>> ordering = Arrays.asList(new Pair<String, Ordering>("integerProp", Ordering.ASCENDING), new Pair<String, Ordering>("moneyProp", Ordering.DESCENDING));
-	dtm().getRepresentation().getSecondTick().setOrderedPropertiesByDefault(MasterEntity.class, ordering);
-	assertEquals("Default value is incorrect.", ordering, dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
+	dtm().getSecondTick().setOrderedPropertiesByDefault(MasterEntity.class, ordering);
+	assertEquals("Default value is incorrect.", ordering, dtm().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
+    }
+
+//    @Override
+//    @Test
+//    public void test_that_serialisation_works() throws Exception {
+//	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm()));
+//	test_that_manager_instantiation_works_for_inner_cross_references(dtm());
+//
+//	// test that serialisation works
+//	final byte[] array = getSerialiser().serialise(dtm());
+//	assertNotNull("Serialised byte array should not be null.", array);
+//	final Object copy = getSerialiser().deserialise(array, Object.class);
+//	// final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
+//	// final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
+//	assertNotNull("Deserialised instance should not be null.", copy);
+//
+//	CentreDomainTreeManager.initAnalysisManagerReferencesOn((IAbstractAnalysisDomainTreeManager) copy, dtm().parentCentreDomainTreeManager());
+//
+//	// after deserialisation the instance should be fully defined (even for transient fields).
+//	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
+//	// So it should be checked:
+//	assertTrue("After deserialisation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm(), "parentCentreDomainTreeManager"));
+//	test_that_manager_instantiation_works_for_inner_cross_references(copy);
+//    }
+//
+//    @Override
+//    @Test
+//    public void test_that_equality_and_copying_works() {
+//	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm()));
+//
+//	final Object copy = CentreDomainTreeManager.copyAnalysis(dtm(), getSerialiser());
+//	// after copying the instance should be fully defined (even for transient fields).
+//	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
+//	// So it should be checked:
+//	assertTrue("After coping of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm(), "parentCentreDomainTreeManager"));
+//	test_that_manager_instantiation_works_for_inner_cross_references(copy);
+//	assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(copy, dtm()));
+//    }
+
+    @Override
+    @Test
+    public void test_entities_itself_second_tick_checking() {
+	assertFalse("An entity itself (represented by empty 'property') should NOT be checked.", dtm().getSecondTick().isCheckedImmutably(MasterEntity.class, ""));
+	assertFalse("By contract should be unchecked.", dtm().getSecondTick().isCheckedImmutably(EntityWithStringKeyType.class, ""));
+	assertTrue("By contract should NOT be disabled.", dtm().getSecondTick().isDisabledImmutably(EntityWithStringKeyType.class, ""));
     }
 
     @Override
     @Test
-    public void test_that_serialisation_works() throws Exception {
-	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm()));
-	test_that_manager_instantiation_works_for_inner_cross_references(dtm());
-
-	// test that serialisation works
-	final byte[] array = getSerialiser().serialise(dtm());
-	assertNotNull("Serialised byte array should not be null.", array);
-	final Object copy = getSerialiser().deserialise(array, Object.class);
-	// final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
-	// final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
-	assertNotNull("Deserialised instance should not be null.", copy);
-
-	CentreDomainTreeManager.initAnalysisManagerReferencesOn((IAbstractAnalysisDomainTreeManager) copy, dtm().parentCentreDomainTreeManager());
-
-	// after deserialisation the instance should be fully defined (even for transient fields).
-	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
-	// So it should be checked:
-	assertTrue("After deserialisation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm(), "parentCentreDomainTreeManager"));
-	test_that_manager_instantiation_works_for_inner_cross_references(copy);
+    public void test_that_checked_properties_first_tick_are_actually_disabled() {
+	allLevels(new IAction() {
+	    public void action(final String name) {
+		assertTrue("By contract of 'disabled' it should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+	    }
+	}, "checkedManuallyProp");
     }
 
     @Override
     @Test
-    public void test_that_equality_and_copying_works() {
-	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm()));
-
-	final Object copy = CentreDomainTreeManager.copyAnalysis(dtm(), getSerialiser());
-	// after copying the instance should be fully defined (even for transient fields).
-	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
-	// So it should be checked:
-	assertTrue("After coping of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm(), "parentCentreDomainTreeManager"));
-	test_that_manager_instantiation_works_for_inner_cross_references(copy);
-	assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(copy, dtm()));
+    public void test_entities_itself_first_tick_checking() {
+	assertFalse("An entity itself (represented by empty 'property') should NOT be checked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, ""));
+	assertFalse("By contract should be checked.", dtm().getFirstTick().isCheckedImmutably(EntityWithStringKeyType.class, ""));
+	assertTrue("By contract should be enabled.", dtm().getFirstTick().isDisabledImmutably(EntityWithStringKeyType.class, ""));
     }
 }

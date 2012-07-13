@@ -1,14 +1,12 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
@@ -41,7 +39,7 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
      * @param rootTypes
      */
     public LocatorDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, new LocatorDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManagerForLocator(serialiser, rootTypes), new AddToResultTickManager(), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), null, null, SearchBy.KEY);
+	this(serialiser, new LocatorDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManagerForLocator(serialiser, rootTypes), new AddToResultTickManager(), null, null, SearchBy.KEY);
     }
 
     /**
@@ -52,8 +50,8 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
      * @param firstTick
      * @param secondTick
      */
-    protected LocatorDomainTreeManager(final ISerialiser serialiser, final LocatorDomainTreeRepresentation dtr, final AddToCriteriaTickManagerForLocator firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Boolean runAutomatically, final Boolean useForAutocompletion, final SearchBy searchBy) {
-	super(serialiser, dtr, firstTick, secondTick, persistentAnalyses, runAutomatically);
+    protected LocatorDomainTreeManager(final ISerialiser serialiser, final LocatorDomainTreeRepresentation dtr, final AddToCriteriaTickManagerForLocator firstTick, final AddToResultTickManager secondTick, final Boolean runAutomatically, final Boolean useForAutocompletion, final SearchBy searchBy) {
+	super(serialiser, dtr, firstTick, secondTick, runAutomatically);
 
 	this.useForAutocompletion = useForAutocompletion;
 	this.searchBy = searchBy;
@@ -170,11 +168,10 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
 	    final LocatorDomainTreeRepresentation dtr = readValue(buffer, LocatorDomainTreeRepresentation.class);
 	    final AddToCriteriaTickManagerForLocator firstTick = readValue(buffer, AddToCriteriaTickManagerForLocator.class);
 	    final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
-	    final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses = readValue(buffer, HashMap.class);
 	    final Boolean runAutomatically = readValue(buffer, Boolean.class);
 	    final Boolean useForAutocompletion = readValue(buffer, Boolean.class);
 	    final SearchBy searchBy = readValue(buffer, SearchBy.class);
-	    return new LocatorDomainTreeManager(kryo(), dtr, firstTick, secondTick, persistentAnalyses, runAutomatically, useForAutocompletion, searchBy);
+	    return new LocatorDomainTreeManager(kryo(), dtr, firstTick, secondTick, runAutomatically, useForAutocompletion, searchBy);
 	}
 
 	@Override
@@ -184,7 +181,6 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
 	    writeValue(buffer, manager.getFirstTick());
 	    writeValue(buffer, manager.getSecondTick());
 
-	    writeValue(buffer, manager.persistentAnalyses());
 	    writeValue(buffer, manager.runAutomatically());
 
 	    writeValue(buffer, manager.useForAutocompletion);

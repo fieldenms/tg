@@ -33,6 +33,189 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      *
      */
     public interface ICentreDomainTreeManagerAndEnhancer extends IDomainTreeManagerAndEnhancer, ICentreDomainTreeManager {
+	    /**
+	     * A type of analysis.
+	     *
+	     * @author TG Team
+	     *
+	     */
+	    public enum AnalysisType {
+		SIMPLE, PIVOT, LIFECYCLE
+	    }
+
+	    /**
+	     * A post-successful listener for analysis adding / removal.
+	     *
+	     * @author TG Team
+	     *
+	     */
+	    public interface IAnalysisListener extends IPropertyStateListener<Boolean> {
+		/**
+		 * @param hasBeenInitialised -- <code>true</code> to indicate that analysis with <i>name</i> was successfully initialised, <code>false</code> to indicate that it has been ceased to exist successfully.
+		 */
+		@Override
+		void propertyStateChanged(final Class<?> nothing, final String name, final Boolean hasBeenInitialised, final Boolean oldState);
+	    }
+
+	    /**
+	     * Adds a {@link IAnalysisListener} listener.
+	     *
+	     * @param listener
+	     * @return
+	     */
+	    boolean addAnalysisListener(final IAnalysisListener listener);
+
+	    /**
+	     * Removes a {@link IAnalysisListener} listener.
+	     *
+	     * @param listener
+	     * @return
+	     */
+	    boolean removeAnalysisListener(final IAnalysisListener listener);
+
+	    /**
+	     * Initialises a brand new <b>analysis manager</b> with specified <code>name</code> and <code>analysisType</code>. The initialisation uses raw instance creation. <br><br>
+	     *
+	     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
+	     * [persistentAnalyses => currentAnalyses]. <br><br>
+	     *
+	     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
+	     * {@link #discardAnalysisManager(String)} method). <br><br>
+	     *
+	     * @param name -- a name that defines an analysis
+	     * @param analysisType -- a type of an analysis.
+	     * @return
+	     */
+	    void initAnalysisManagerByDefault(final String name, final AnalysisType analysisType);
+
+	    /**
+	     * Discards a current version of analysis manager with specified <code>name</code>.
+	     * If a current version of <b>analysis manager</b> was freezed then it just "discards" the changes after freezing.
+	     * <br><br>
+	     *
+	     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
+	     * [persistentAnalyses => currentAnalyses]. <br><br>
+	     *
+	     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
+	     * {@link #discardAnalysisManager(String)} method). <br><br>
+	     *
+	     * @param name -- a name that defines an analysis.
+	     * @return
+	     */
+	    void discardAnalysisManager(final String name);
+
+	    /**
+	     * Accepts a current version of analysis manager with specified <code>name</code>.
+	     * If a current version of <b>analysis manager</b> was freezed then it just "accepts" the current version.
+	     * <br><br>
+	     *
+	     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
+	     * [persistentAnalyses => currentAnalyses]. <br><br>
+	     *
+	     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
+	     * {@link #discardAnalysisManager(String)} method). <br><br>
+	     *
+	     * @param name -- a name that defines an analysis.
+	     * @return
+	     */
+	    void acceptAnalysisManager(final String name);
+
+	    /**
+	     * Returns <code>true</code> if the current version of analysis manager instance with specified <code>name</code> has been changed since last saving/discard (or since the beginning of analysis history). <br><br>
+	     *
+	     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
+	     * [persistentAnalyses => currentAnalyses]. <br><br>
+	     *
+	     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
+	     * {@link #discardAnalysisManager(String)} method). <br><br>
+	     *
+	     * @param name -- a name that defines an analysis.
+	     * @return
+	     */
+	    boolean isChangedAnalysisManager(final String name);
+
+	    /**
+	     * Removes an analysis manager with specified <code>name</code>. Throws {@link IllegalArgumentException} when analysis does not exist. The analysis to be removed can be persisted or not (but should exist - at least locally). <br><br>
+	     *
+	     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
+	     * [persistentAnalyses => currentAnalyses]. <br><br>
+	     *
+	     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
+	     * {@link #discardAnalysisManager(String)} method). <br><br>
+	     *
+	     * @param name -- a name that defines an analysis.
+	     * @return
+	     */
+	    void removeAnalysisManager(final String name);
+
+	    /**
+	     * Gets a current version of analysis manager with specified <code>name</code>. <br><br>
+	     *
+	     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
+	     * [persistentAnalyses => currentAnalyses]. <br><br>
+	     *
+	     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
+	     * {@link #discardAnalysisManager(String)} method). <br><br>
+	     *
+	     * @param name -- a name that defines an analysis.
+	     * @return
+	     */
+	    IAbstractAnalysisDomainTreeManager getAnalysisManager(final String name);
+
+	    /**
+	     * Freezes a current version of analysis manager with specified <code>name</code>. <br><br>
+	     *
+	     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
+	     * [persistentAnalyses => currentAnalyses]. <br><br>
+	     *
+	     * This current version of a analysis manager can be altered by its methods, and then accepted ({@link #acceptAnalysisManager(String)} method) or discarded (
+	     * {@link #discardAnalysisManager(String)} method). <br><br>
+	     *
+	     * @param name -- a name that defines an analysis.
+	     * @return
+	     */
+	    void freezeAnalysisManager(final String name);
+
+	    /**
+	     * Returns <code>true</code> if the current version of analysis manager instance with specified <code>name</code> is in freezed state.
+	     * Use {@link #discardAnalysisManager(String)} or {@link #acceptAnalysisManager(String)} to discard / accept the changes that were made after
+	     * freezing (these actions trigger automatic unfreezing after that).
+	     * <br><br>
+	     *
+	     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
+	     * [persistentAnalyses => currentAnalyses]. <br><br>
+	     *
+	     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
+	     * {@link #discardAnalysisManager(String)} method). <br><br>
+	     *
+	     * @param name -- a name that defines an analysis.
+	     * @return
+	     */
+	    boolean isFreezedAnalysisManager(final String name);
+
+	    /**
+	     * Returns an <b>ordered</b> list of existent analysis names (which are the keys, that can be used in {@link #getAnalysisManager(String)} method).
+	     *
+	     * @return
+	     */
+	    List<String> analysisKeys();
+
+	    //    /**
+	    //     * Moves property <code>what</code> to the place <b>before</b> property <code>beforeWhat</code> in an ordered list of checked properties for concrete <code>root</code> type.
+	    //     *
+	    //     * @param root -- a root type that contains a checked properties.
+	    //     * @param what -- a property to move
+	    //     * @param beforeWhat -- a property before which property "what" will be inserted
+	    //     */
+	    //    void moveAnalysis(final String what, final String beforeWhat);
+	    //
+	    //    /**
+	    //     * Moves property <code>what</code> to the place after all properties in an ordered list of checked properties for concrete <code>root</code> type.
+	    //     *
+	    //     * @param root -- a root type that contains a checked properties.
+	    //     * @param what -- a property to move
+	    //     */
+	    //    void moveAnalysisToTheEnd(final String what);
     }
 
     /**
@@ -66,190 +249,6 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      * @return -- a criteria manager
      */
     ICentreDomainTreeManager setRunAutomatically(final boolean runAutomatically);
-
-    /**
-     * A type of analysis.
-     *
-     * @author TG Team
-     *
-     */
-    public enum AnalysisType {
-	SIMPLE, PIVOT, LIFECYCLE
-    }
-
-    /**
-     * A post-successful listener for analysis adding / removal.
-     *
-     * @author TG Team
-     *
-     */
-    public interface IAnalysisListener extends IPropertyStateListener<Boolean> {
-	/**
-	 * @param hasBeenInitialised -- <code>true</code> to indicate that analysis with <i>name</i> was successfully initialised, <code>false</code> to indicate that it has been ceased to exist successfully.
-	 */
-	@Override
-	void propertyStateChanged(final Class<?> nothing, final String name, final Boolean hasBeenInitialised, final Boolean oldState);
-    }
-
-    /**
-     * Adds a {@link IAnalysisListener} listener.
-     *
-     * @param listener
-     * @return
-     */
-    boolean addAnalysisListener(final IAnalysisListener listener);
-
-    /**
-     * Removes a {@link IAnalysisListener} listener.
-     *
-     * @param listener
-     * @return
-     */
-    boolean removeAnalysisListener(final IAnalysisListener listener);
-
-    /**
-     * Initialises a brand new <b>analysis manager</b> with specified <code>name</code> and <code>analysisType</code>. The initialisation uses raw instance creation. <br><br>
-     *
-     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
-     * [persistentAnalyses => currentAnalyses]. <br><br>
-     *
-     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
-     * {@link #discardAnalysisManager(String)} method). <br><br>
-     *
-     * @param name -- a name that defines an analysis
-     * @param analysisType -- a type of an analysis.
-     * @return
-     */
-    void initAnalysisManagerByDefault(final String name, final AnalysisType analysisType);
-
-    /**
-     * Discards a current version of analysis manager with specified <code>name</code>.
-     * If a current version of <b>analysis manager</b> was freezed then it just "discards" the changes after freezing.
-     * <br><br>
-     *
-     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
-     * [persistentAnalyses => currentAnalyses]. <br><br>
-     *
-     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
-     * {@link #discardAnalysisManager(String)} method). <br><br>
-     *
-     * @param name -- a name that defines an analysis.
-     * @return
-     */
-    void discardAnalysisManager(final String name);
-
-    /**
-     * Accepts a current version of analysis manager with specified <code>name</code>.
-     * If a current version of <b>analysis manager</b> was freezed then it just "accepts" the current version.
-     * <br><br>
-     *
-     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
-     * [persistentAnalyses => currentAnalyses]. <br><br>
-     *
-     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
-     * {@link #discardAnalysisManager(String)} method). <br><br>
-     *
-     * @param name -- a name that defines an analysis.
-     * @return
-     */
-    void acceptAnalysisManager(final String name);
-
-    /**
-     * Returns <code>true</code> if the current version of analysis manager instance with specified <code>name</code> has been changed since last saving/discard (or since the beginning of analysis history). <br><br>
-     *
-     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
-     * [persistentAnalyses => currentAnalyses]. <br><br>
-     *
-     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
-     * {@link #discardAnalysisManager(String)} method). <br><br>
-     *
-     * @param name -- a name that defines an analysis.
-     * @return
-     */
-    boolean isChangedAnalysisManager(final String name);
-
-    /**
-     * Removes an analysis manager with specified <code>name</code>. Throws {@link IllegalArgumentException} when analysis does not exist. The analysis to be removed can be persisted or not (but should exist - at least locally). <br><br>
-     *
-     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
-     * [persistentAnalyses => currentAnalyses]. <br><br>
-     *
-     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
-     * {@link #discardAnalysisManager(String)} method). <br><br>
-     *
-     * @param name -- a name that defines an analysis.
-     * @return
-     */
-    void removeAnalysisManager(final String name);
-
-    /**
-     * Gets a current version of analysis manager with specified <code>name</code>. <br><br>
-     *
-     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
-     * [persistentAnalyses => currentAnalyses]. <br><br>
-     *
-     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
-     * {@link #discardAnalysisManager(String)} method). <br><br>
-     *
-     * @param name -- a name that defines an analysis.
-     * @return
-     */
-    IAbstractAnalysisDomainTreeManager getAnalysisManager(final String name);
-
-    /**
-     * Freezes a current version of analysis manager with specified <code>name</code>. <br><br>
-     *
-     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
-     * [persistentAnalyses => currentAnalyses]. <br><br>
-     *
-     * This current version of a analysis manager can be altered by its methods, and then accepted ({@link #acceptAnalysisManager(String)} method) or discarded (
-     * {@link #discardAnalysisManager(String)} method). <br><br>
-     *
-     * @param name -- a name that defines an analysis.
-     * @return
-     */
-    void freezeAnalysisManager(final String name);
-
-    /**
-     * Returns <code>true</code> if the current version of analysis manager instance with specified <code>name</code> is in freezed state.
-     * Use {@link #discardAnalysisManager(String)} or {@link #acceptAnalysisManager(String)} to discard / accept the changes that were made after
-     * freezing (these actions trigger automatic unfreezing after that).
-     * <br><br>
-     *
-     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
-     * [persistentAnalyses => currentAnalyses]. <br><br>
-     *
-     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
-     * {@link #discardAnalysisManager(String)} method). <br><br>
-     *
-     * @param name -- a name that defines an analysis.
-     * @return
-     */
-    boolean isFreezedAnalysisManager(final String name);
-
-    /**
-     * Returns an <b>ordered</b> list of existent analysis names (which are the keys, that can be used in {@link #getAnalysisManager(String)} method).
-     *
-     * @return
-     */
-    List<String> analysisKeys();
-
-    //    /**
-    //     * Moves property <code>what</code> to the place <b>before</b> property <code>beforeWhat</code> in an ordered list of checked properties for concrete <code>root</code> type.
-    //     *
-    //     * @param root -- a root type that contains a checked properties.
-    //     * @param what -- a property to move
-    //     * @param beforeWhat -- a property before which property "what" will be inserted
-    //     */
-    //    void moveAnalysis(final String what, final String beforeWhat);
-    //
-    //    /**
-    //     * Moves property <code>what</code> to the place after all properties in an ordered list of checked properties for concrete <code>root</code> type.
-    //     *
-    //     * @param root -- a root type that contains a checked properties.
-    //     * @param what -- a property to move
-    //     */
-    //    void moveAnalysisToTheEnd(final String what);
 
     /**
      * This interface defines <b>entity centre</b> domain tree can be managed for <b>criteria</b> (property represents as a criteria editor). <br><br>

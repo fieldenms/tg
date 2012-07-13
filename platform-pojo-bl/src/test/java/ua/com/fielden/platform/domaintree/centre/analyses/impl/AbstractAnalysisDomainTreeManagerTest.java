@@ -2,11 +2,11 @@ package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -19,14 +19,12 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrder
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 
@@ -37,50 +35,60 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
-    @Override
-    protected IAbstractAnalysisDomainTreeManager dtm() {
-	return ((ICentreDomainTreeManagerAndEnhancer) just_a_dtm()).getAnalysisManager("Report");
-    }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Creates root types.
-     *
-     * @return
-     */
+    @Override
+    protected IAbstractAnalysisDomainTreeManager dtm() {
+	return (IAbstractAnalysisDomainTreeManager) just_a_dtm();
+    }
+
+    @BeforeClass
+    public static void initDomainTreeTest() throws Exception {
+	initialiseDomainTreeTest(AbstractAnalysisDomainTreeManagerTest.class);
+    }
+
+    public static Object createDtm_for_AbstractAnalysisDomainTreeManagerTest() {
+	return new AbstractAnalysisDomainTreeManager1(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+    }
+
+    public static Object createIrrelevantDtm_for_AbstractAnalysisDomainTreeManagerTest() {
+	final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+	enhanceManagerWithBasicCalculatedProperties(dtm);
+	return dtm;
+    }
+
+    protected static void enhanceManagerWithBasicCalculatedProperties(final ICentreDomainTreeManagerAndEnhancer dtm) {
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(integerProp)", "Int agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(bigDecimalProp)", "Big decimal agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Money agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Unchecked agg expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+	dtm.getEnhancer().apply();
+    }
+
     protected static Set<Class<?>> createRootTypes_for_AbstractAnalysisDomainTreeManagerTest() {
-	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeManagerTest();
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeManagerTest());
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
 	return rootTypes;
     }
 
-    /**
-     * Provides a testing configuration for the manager.
-     *
-     * @param dtm
-     */
-    protected static void manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(final IAbstractAnalysisDomainTreeManager dtm) {
-	manageTestingDTM_for_AbstractDomainTreeManagerTest(dtm);
+    public static void manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(final Object obj) {
+	final IAbstractAnalysisDomainTreeManager dtm = (IAbstractAnalysisDomainTreeManager) obj;
+
+	// TODO manageTestingDTM_for_AbstractDomainTreeManagerTest(obj);
+	manageTestingDTM_for_AbstractDomainTreeTest(dtm.getRepresentation());
 
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
 	dtm.getSecondTick().checkedProperties(MasterEntity.class);
-
-	dtm.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(integerProp)", "Int agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dtm.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(bigDecimalProp)", "Big decimal agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
-	dtm.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Money agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
-	dtm.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
-
-	dtm.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Unchecked agg expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
-	dtm.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
-	dtm.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
-
-	dtm.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
-	dtm.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
-	dtm.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
-
-	dtm.parentCentreDomainTreeManager().getEnhancer().apply();
 
 	dtm.getSecondTick().check(MasterEntity.class, "intAggExprProp", true);
 	dtm.getSecondTick().check(MasterEntity.class, "bigDecimalAggExprProp", true);
@@ -90,17 +98,19 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 	dtm.getFirstTick().check(MasterEntity.class, "booleanProp", true);
     }
 
-    @BeforeClass
-    public static void initDomainTreeTest() {
-	final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
-	((CentreDomainTreeManager) centre.base()).currentAnalyses().put("Report", new AbstractAnalysisDomainTreeManager1(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest()));
-	final IAbstractAnalysisDomainTreeManager dtm = centre.getAnalysisManager("Report");
-	centre.initAnalysisManagerReferencesOnThisCentreManager(dtm);
-	manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(dtm);
-	centre.acceptAnalysisManager("Report");
-	setDtmArray(serialiser().serialise(centre));
+    public static void performAfterDeserialisationProcess_for_AbstractAnalysisDomainTreeManagerTest(final Object obj) {
+	CentreDomainTreeManagerAndEnhancer.initAnalysisManagerReferencesOn((IAbstractAnalysisDomainTreeManager) obj, (ICentreDomainTreeManagerAndEnhancer) irrelevantDtm());
     }
 
+    public static void assertInnerCrossReferences_for_AbstractAnalysisDomainTreeManagerTest(final Object dtm) {
+	assertInnerCrossReferences_for_AbstractDomainTreeManagerTest(dtm);
+    }
+
+    public static String [] fieldWhichReferenceShouldNotBeDistictButShouldBeEqual_for_AbstractAnalysisDomainTreeManagerTest() {
+	final String [] fieldWhichReferenceShouldNotBeDistictButShouldBeEqual = new String [1];
+	fieldWhichReferenceShouldNotBeDistictButShouldBeEqual[0] = "parentCentreDomainTreeManager";
+	return fieldWhichReferenceShouldNotBeDistictButShouldBeEqual;
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -398,42 +408,5 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
 	assertEquals("Incorrect value 'i'.", 4, i);
-    }
-
-    @Override
-    @Test
-    public void test_that_serialisation_works() throws Exception {
-	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm()));
-	test_that_manager_instantiation_works_for_inner_cross_references(dtm());
-
-	// test that serialisation works
-	final byte[] array = getSerialiser().serialise(dtm());
-	assertNotNull("Serialised byte array should not be null.", array);
-	final Object copy = getSerialiser().deserialise(array, Object.class);
-	// final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
-	// final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
-	assertNotNull("Deserialised instance should not be null.", copy);
-
-	CentreDomainTreeManager.initAnalysisManagerReferencesOn((IAbstractAnalysisDomainTreeManager) copy, dtm().parentCentreDomainTreeManager());
-
-	// after deserialisation the instance should be fully defined (even for transient fields).
-	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
-	// So it should be checked:
-	assertTrue("After deserialisation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm(), "parentCentreDomainTreeManager"));
-	test_that_manager_instantiation_works_for_inner_cross_references(copy);
-    }
-
-    @Override
-    @Test
-    public void test_that_equality_and_copying_works() {
-	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm()));
-
-	final Object copy = CentreDomainTreeManager.copyAnalysis(dtm(), getSerialiser());
-	// after copying the instance should be fully defined (even for transient fields).
-	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
-	// So it should be checked:
-	assertTrue("After coping of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm(), "parentCentreDomainTreeManager"));
-	test_that_manager_instantiation_works_for_inner_cross_references(copy);
-	assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(copy, dtm()));
     }
 }

@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedP
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.createEmpty;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
@@ -26,10 +27,6 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyWarning;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
-import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
@@ -44,48 +41,47 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
-     *
-     * @return
-     */
     @Override
-    protected IDomainTreeManagerAndEnhancer dtm() {
-	return (IDomainTreeManagerAndEnhancer) super.dtm();
-    }
-
-    /**
-     * Creates root types.
-     *
-     * @return
-     */
-    protected static Set<Class<?>> createRootTypes_for_CalculatedPropertyTest() {
-	return createRootTypes_for_AbstractDomainTreeTest();
-    }
-
-    /**
-     * Provides a testing configuration for the manager.
-     *
-     * @param dtm
-     */
-    protected static void manageTestingDTM_for_CalculatedPropertyTest(final IDomainTreeManager dtm) {
-	dtm.getFirstTick().checkedProperties(MasterEntity.class);
-	// dtm.getSecondTick().checkedProperties(MasterEntity.class);
+    protected IDomainTreeEnhancer dtm() {
+	return (IDomainTreeEnhancer) just_a_dtm();
     }
 
     @BeforeClass
-    public static void initDomainTreeTest() {
-	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_CalculatedPropertyTest());
-	manageTestingDTM_for_CalculatedPropertyTest(dtm);
-	setDtmArray(serialiser().serialise(dtm));
+    public static void initDomainTreeTest() throws Exception {
+	initialiseDomainTreeTest(CalculatedPropertyTest.class);
     }
+
+    protected static Object createDtm_for_CalculatedPropertyTest() {
+	return new DomainTreeEnhancer(serialiser(), createRootTypes_for_CalculatedPropertyTest());
+    }
+
+    protected static Object createIrrelevantDtm_for_CalculatedPropertyTest() {
+	return null;
+    }
+
+    protected static Set<Class<?>> createRootTypes_for_CalculatedPropertyTest() {
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
+	return rootTypes;
+    }
+
+    protected static void manageTestingDTM_for_CalculatedPropertyTest(final Object obj) {
+    }
+
+    protected static void performAfterDeserialisationProcess_for_CalculatedPropertyTest(final Object obj) {
+    }
+
+    protected static void assertInnerCrossReferences_for_CalculatedPropertyTest(final Object obj) {
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// End of Test initialisation ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////// Utilities ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	final CalculatedProperty calc = CalculatedProperty.createCorrect(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm().getEnhancer());
-	checkTrivialParams(calc, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm().getEnhancer());
+	final CalculatedProperty calc = CalculatedProperty.createCorrect(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm());
+	checkTrivialParams(calc, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm());
 	return calc;
     }
 
@@ -123,7 +119,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     @Test
     public void test_that_empty_calculated_property_creation_with_null_Factory_fails() {
 	try {
-	    createEmpty(null, MasterEntity.class, "", dtm().getEnhancer());
+	    createEmpty(null, MasterEntity.class, "", dtm());
 	    fail("Cannot create calc property without Factory.");
 	} catch (final IncorrectCalcPropertyException e) {
 	}
@@ -142,21 +138,21 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     public void test_that_empty_calculated_property_creation_with_Root_type_not_present_in_enhancer_fails() {
 	// null
 	try {
-	    createEmpty(factory(), null, "", dtm().getEnhancer());
+	    createEmpty(factory(), null, "", dtm());
 	    fail("Cannot create calc property without Root type.");
 	} catch (final IncorrectCalcPropertyException e) {
 	}
 
 	// Class type -- even non-entity-typed
 	try {
-	    createEmpty(factory(), CalculatedPropertyTest.class, "", dtm().getEnhancer());
+	    createEmpty(factory(), CalculatedPropertyTest.class, "", dtm());
 	    fail("Cannot create calc property with non-Root type of enhancer.");
 	} catch (final IncorrectCalcPropertyException e) {
 	}
 
 	// Non-root-type from enhancer
 	try {
-	    createEmpty(factory(), SlaveEntity.class, "", dtm().getEnhancer());
+	    createEmpty(factory(), SlaveEntity.class, "", dtm());
 	    fail("Cannot create calc property with non-Root type of enhancer.");
 	} catch (final IncorrectCalcPropertyException e) {
 	}
@@ -166,14 +162,14 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     public void test_that_empty_calculated_property_creation_with_non_existent_ContextPath_fails() {
 	// null
 	try {
-	    createEmpty(factory(), MasterEntity.class, null, dtm().getEnhancer());
+	    createEmpty(factory(), MasterEntity.class, null, dtm());
 	    fail("Cannot create calc property without ContextPath.");
 	} catch (final IncorrectCalcPropertyException e) {
 	}
 
 	// non-existent
 	try {
-	    createEmpty(factory(), MasterEntity.class, "non_existent_prop.non_existent_sub_prop", dtm().getEnhancer());
+	    createEmpty(factory(), MasterEntity.class, "non_existent_prop.non_existent_sub_prop", dtm());
 	    fail("Cannot create calc property with non-existent ContextPath.");
 	} catch (final IncorrectCalcPropertyException e) {
 	}
@@ -183,12 +179,12 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     public void test_that_empty_calculated_property_creation_with_non_entity_typed_ContextPath_fails() {
 	// Non-entity-typed contextPath
 	try {
-	    createEmpty(factory(), MasterEntity.class, "integerProp", dtm().getEnhancer());
+	    createEmpty(factory(), MasterEntity.class, "integerProp", dtm());
 	    fail("Cannot create calc property with Non-entity-typed contextPath.");
 	} catch (final IncorrectCalcPropertyException e) {
 	}
 	try {
-	    createEmpty(factory(), MasterEntity.class, "entityProp.integerProp", dtm().getEnhancer());
+	    createEmpty(factory(), MasterEntity.class, "entityProp.integerProp", dtm());
 	    fail("Cannot create calc property with Non-entity-typed contextPath.");
 	} catch (final IncorrectCalcPropertyException e) {
 	}
@@ -196,9 +192,9 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_empty_calculated_property_creation_with_appropriate_parameters_does_not_fail() {
-	createEmpty(factory(), MasterEntity.class, "", dtm().getEnhancer());
-	createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
-	createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm().getEnhancer());
+	createEmpty(factory(), MasterEntity.class, "", dtm());
+	createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
+	createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm());
     }
 
     private static void assertMetaState(final CalculatedProperty cp, final String property, final boolean required, final boolean editable, final boolean valid) {
@@ -209,9 +205,9 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_empty_calculated_property_creation_with_correct_parameters_initialises_whole_appropriate_state() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, null, null, null, SlaveEntity.class, null, null);
 
 	assertMetaState1(cp);
@@ -219,7 +215,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_validation_upon_empty_calculated_property_is_appropriate() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 
 	assertFalse("Should be not successful.", cp.isValid().isSuccessful());
 	assertFalse("Expression should be incorrect.", cp.getProperty("contextualExpression").isValidWithRequiredCheck());
@@ -240,7 +236,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_Not_Assigned_calculated_property_copying_is_not_permitted() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("2 * integerProp").setTitle("Calculated property");
 	assertTrue("Should be valid.", cp.isValid().isSuccessful());
 	try {
@@ -252,7 +248,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_Invalid_calculated_property_copying_is_not_permitted() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	assertFalse("Should be invalid.", cp.isValid().isSuccessful());
 	try {
 	    cp.copy();
@@ -263,17 +259,17 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_calculated_property_copying_creates_a_copy_with_the_same_invalid_title() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("2 * integerProp").setTitle("Calculated property");
 	assertTrue("Should be valid.", cp.isValid().isSuccessful());
-	dtm().getEnhancer().addCalculatedProperty(cp);
+	dtm().addCalculatedProperty(cp);
 
-	final CalculatedProperty copy = (CalculatedProperty) dtm().getEnhancer().copyCalculatedProperty(MasterEntity.class, "entityProp.calculatedProperty");
+	final CalculatedProperty copy = (CalculatedProperty) dtm().copyCalculatedProperty(MasterEntity.class, "entityProp.calculatedProperty");
 	assertFalse("Should be not successful.", copy.isValid().isSuccessful());
 	assertFalse("Title should be incorrect (the same as original calc prop).", copy.getProperty("title").isValidWithRequiredCheck());
 	assertEquals("Should be equal.", copy.isValid(), copy.getProperty("title").getFirstFailure());
 
-	checkTrivialParams(copy, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(copy, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(copy, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState(copy, "root", true, false, true);
 	assertMetaState(copy, "contextPath", false, false, true);
@@ -285,7 +281,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	copy.setTitle("Calculated property Copy");
 	assertTrue("Should become successful.", copy.isValid().isSuccessful());
 
-	checkTrivialParams(copy, MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property Copy", null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(copy, MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property Copy", null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(copy, EXPRESSION, "calculatedPropertyCopy", "entityProp", "entityProp.calculatedPropertyCopy", SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState1(copy);
     }
@@ -309,12 +305,12 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_ContextualExpression_mutation_makes_it_invalid_for_null_or_empty_expression() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("2 * integerProp");
 
 	cp.setContextualExpression("");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState0(cp);
 
@@ -322,40 +318,40 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
 	cp.setContextualExpression(null);
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "3 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "3 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState0(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_makes_it_invalid_for_incorrect_expression() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 
 	cp.setContextualExpression("2 * integerPropUnknown");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, null, null, null, SlaveEntity.class, null, null);
 	assertMetaState0(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_makes_it_invalid_for_TwiceOrMore_Aggregated_simple_expression() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 
 	cp.setContextualExpression("MAX(SUM(integerProp))");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, null, null, null, SlaveEntity.class, null, null);
 	assertMetaState0(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_makes_it_invalid_for_Aggregated_collectional_expression_temporarily_at_this_stage() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm());
 
 	cp.setContextualExpression("SUM(integerProp)");
 
-	checkTrivialParams(cp, MasterEntity.class, "collection", null, null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "collection", null, null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, null, null, null, SlaveEntity.class, null, null);
 	assertMetaState0(cp);
     }
@@ -371,44 +367,44 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_EXPRESSION_at_1_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "", dtm());
 
 	cp.setContextualExpression("2 * integerProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "", "2 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "", "2 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "", null, MasterEntity.class, MasterEntity.class, Integer.class);
 	assertMetaState1(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_EXPRESSION_at_2_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 
 	cp.setContextualExpression("2 * integerProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState1(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_EXPRESSION_at_3_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.entityProp", dtm());
 
 	cp.setContextualExpression("2 * integerProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp.entityProp", null, EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
 	assertMetaState1(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_EXPRESSION_for_expression_with_undefined_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 
 	cp.setContextualExpression("2 * 3 - 17");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * 3 - 17", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * 3 - 17", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState1(cp);
     }
@@ -424,33 +420,33 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_AGGREGATED_EXPRESSION_at_1_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "", dtm());
 
 	cp.setContextualExpression("2 * MAX(2 * integerProp)");
 
-	checkTrivialParams(cp, MasterEntity.class, "", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, AGGREGATED_EXPRESSION, null, "", null, MasterEntity.class, MasterEntity.class, Integer.class);
 	assertMetaState2(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_AGGREGATED_EXPRESSION_at_2_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 
 	cp.setContextualExpression("2 * MAX(2 * integerProp)");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, AGGREGATED_EXPRESSION, null, "", null, SlaveEntity.class, MasterEntity.class, Integer.class);
 	assertMetaState2(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_AGGREGATED_EXPRESSION_at_3_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.entityProp", dtm());
 
 	cp.setContextualExpression("2 * MAX(2 * integerProp)");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.entityProp", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.entityProp", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, AGGREGATED_EXPRESSION, null, "", null, EvenSlaverEntity.class, MasterEntity.class, Integer.class);
 	assertMetaState2(cp);
     }
@@ -466,44 +462,44 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_COLLECTIONAL_EXPRESSION_at_1_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm());
 
 	cp.setContextualExpression("2 * integerProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, COLLECTIONAL_EXPRESSION, null, "collection", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState3(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_COLLECTIONAL_EXPRESSION_at_2_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm());
 
 	cp.setContextualExpression("2 * integerProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", "2 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", "2 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, COLLECTIONAL_EXPRESSION, null, "entityProp.collection", null, EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
 	assertMetaState3(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_COLLECTIONAL_EXPRESSION_at_3_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection.slaveEntityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection.slaveEntityProp", dtm());
 
 	cp.setContextualExpression("2 * integerProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, COLLECTIONAL_EXPRESSION, null, "entityProp.collection.slaveEntityProp", null, EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
 	assertMetaState3(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_COLLECTIONAL_EXPRESSION_for_collectional_expression_with_undefined_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm());
 
 	cp.setContextualExpression("2 * 3 - 17");
 
-	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * 3 - 17", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * 3 - 17", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, COLLECTIONAL_EXPRESSION, null, "collection", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState3(cp);
     }
@@ -519,94 +515,94 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test @Ignore
     public void test_that_ContextualExpression_mutation_forms_simple_AGGREGATED_COLLECTIONAL_EXPRESSION_at_1_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm());
 
 	cp.setContextualExpression("2 * MAX(2 * integerProp)");
 
-	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, AGGREGATED_COLLECTIONAL_EXPRESSION, null, "", null, SlaveEntity.class, MasterEntity.class, Integer.class);
 	assertMetaState4(cp);
     }
 
     @Test @Ignore
     public void test_that_ContextualExpression_mutation_forms_simple_AGGREGATED_COLLECTIONAL_EXPRESSION_at_2_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm());
 
 	cp.setContextualExpression("2 * MAX(2 * integerProp)");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, AGGREGATED_COLLECTIONAL_EXPRESSION, null, "entityProp", null, EvenSlaverEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState4(cp);
     }
 
     @Test @Ignore
     public void test_that_ContextualExpression_mutation_forms_simple_AGGREGATED_COLLECTIONAL_EXPRESSION_at_3_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection.slaveEntityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection.slaveEntityProp", dtm());
 
 	cp.setContextualExpression("2 * MAX(2 * integerProp)");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, AGGREGATED_COLLECTIONAL_EXPRESSION, null, "entityProp", null, EvenSlaverEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState4(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_ATTRIBUTED_COLLECTIONAL_EXPRESSION_at_1_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm());
 
 	cp.setContextualExpression("2 * integerProp");
 	cp.setAttribute(ALL);
 
-	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * integerProp", null, null, ALL, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * integerProp", null, null, ALL, null, dtm());
 	assertCalculatedProperty(cp, ATTRIBUTED_COLLECTIONAL_EXPRESSION, null, "collection", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState3(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_ATTRIBUTED_COLLECTIONAL_EXPRESSION_at_2_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm());
 
 	cp.setContextualExpression("2 * integerProp");
 	cp.setAttribute(ANY);
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", "2 * integerProp", null, null, ANY, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", "2 * integerProp", null, null, ANY, null, dtm());
 	assertCalculatedProperty(cp, ATTRIBUTED_COLLECTIONAL_EXPRESSION, null, "entityProp.collection", null, EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
 	assertMetaState3(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_forms_simple_ATTRIBUTED_COLLECTIONAL_EXPRESSION_at_3_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection.slaveEntityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection.slaveEntityProp", dtm());
 
 	cp.setContextualExpression("2 * integerProp");
 	cp.setAttribute(ALL);
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * integerProp", null, null, ALL, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * integerProp", null, null, ALL, null, dtm());
 	assertCalculatedProperty(cp, ATTRIBUTED_COLLECTIONAL_EXPRESSION, null, "entityProp.collection.slaveEntityProp", null, EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
 	assertMetaState3(cp);
     }
 
     @Test @Ignore
     public void test_that_ContextualExpression_mutation_resets_Attribute_when_property_becomes_AGGREGATED_COLLECTIONAL_EXPRESSION() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection.slaveEntityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection.slaveEntityProp", dtm());
 	cp.setContextualExpression("2 * integerProp");
 	cp.setAttribute(ALL);
 
 	cp.setContextualExpression("MAX(2 * integerProp)");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection.slaveEntityProp", "MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection.slaveEntityProp", "MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, AGGREGATED_COLLECTIONAL_EXPRESSION, null, "entityProp", null, EvenSlaverEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState4(cp);
     }
 
     @Test
     public void test_that_ContextualExpression_mutation_causes_Title_revalidation() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setTitle("String prop");
 
 	cp.setContextualExpression("2 * integerProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", "String prop", null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", "String prop", null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, EXPRESSION, "stringProp", "entityProp", "entityProp.stringProp", SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -618,12 +614,12 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_ContextualExpression_mutation_causes_OriginationProperty_revalidation() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setOriginationProperty("bigDecimalProp");
 
 	cp.setContextualExpression("2 * integerProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, "bigDecimalProp", dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, "bigDecimalProp", dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -651,12 +647,12 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_Title_mutation_makes_it_invalid_for_null_or_empty_title() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setTitle("Calc");
 
 	cp.setTitle("");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "Calc", null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "Calc", null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, "calc", null, null, SlaveEntity.class, null, null);
 	assertMetaState5(cp);
 
@@ -664,75 +660,75 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
 	cp.setTitle(null);
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "Calculated", null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "Calculated", null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, "calculated", null, null, SlaveEntity.class, null, null);
 	assertMetaState5(cp);
     }
 
     @Test
     public void test_that_Title_mutation_makes_it_invalid_for_title_without_letters() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setTitle("Calc");
 
 	cp.setTitle("-  % ^% &^ %&78434 213 321123-% ^% &^ %&% ");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "Calc", null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "Calc", null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, "calc", null, null, SlaveEntity.class, null, null);
 	assertMetaState5(cp);
     }
 
     @Test
     public void test_that_Title_mutation_makes_it_invalid_for_title_that_already_exists_in_enhancer() {
-	final CalculatedProperty old = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty old = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	old.setContextualExpression("2 * integerProp").setTitle("Old");
-	dtm().getEnhancer().addCalculatedProperty(old);
+	dtm().addCalculatedProperty(old);
 
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("3 * integerProp");
 
 	cp.setTitle("Old");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "3 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "3 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState5(cp);
     }
 
     @Test
     public void test_that_Title_mutation_makes_it_invalid_for_title_that_already_exists_in_original_domain() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("2 * integerProp");
 
 	cp.setTitle("Integer prop");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState5(cp);
     }
 
     @Test
     public void test_that_Title_mutation_populates_appropriate_cropped_name() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setTitle("Calculated property");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "Calculated property", null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "Calculated property", null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, "calculatedProperty", null, null, SlaveEntity.class, null, null);
 	assertMetaState1(cp);
 
 	cp.setTitle("CalCulaTed pRopertY");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "CalCulaTed pRopertY", null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "CalCulaTed pRopertY", null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, "calCulaTedPRopertY", null, null, SlaveEntity.class, null, null);
 	assertMetaState1(cp);
 
 	cp.setTitle("-  % ^% &^ %&Calculated property-% ^% &^ %&% ");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "-  % ^% &^ %&Calculated property-% ^% &^ %&% ", null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "-  % ^% &^ %&Calculated property-% ^% &^ %&% ", null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, "calculatedProperty", null, null, SlaveEntity.class, null, null);
 	assertMetaState1(cp);
 
 	cp.setTitle("-  % ^% &^ %&   87 87Calc$^&^$%&^ulated pro&^%^&perty 56 bum 71 -% ^% &^ %&% ");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "-  % ^% &^ %&   87 87Calc$^&^$%&^ulated pro&^%^&perty 56 bum 71 -% ^% &^ %&% ", null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", null, "-  % ^% &^ %&   87 87Calc$^&^$%&^ulated pro&^%^&perty 56 bum 71 -% ^% &^ %&% ", null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, "calculatedProperty56Bum71", null, null, SlaveEntity.class, null, null);
 	assertMetaState1(cp);
     }
@@ -752,46 +748,46 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_Attribute_mutation_makes_it_invalid_for_null_attribute() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm());
 
 	cp.setAttribute(null);
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", null, null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", null, null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, null, null, null, EvenSlaverEntity.class, null, null);
 	assertMetaState6(cp);
     }
 
     @Test
     public void test_that_Attribute_mutation_makes_it_invalid_for_undefined_category() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm());
 
 	cp.setAttribute(ANY);
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", null, null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", null, null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, null, null, null, null, EvenSlaverEntity.class, null, null);
 	assertMetaState6(cp);
     }
 
     @Test
     public void test_that_Attribute_mutation_makes_it_invalid_for_non_EXPRESSION_category_and_ALL_or_ANY_attribute() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("2 * integerProp");
 
 	cp.setAttribute(ANY);
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState6(cp);
     }
 
     @Test
     public void test_that_Attribute_mutation_makes_it_invalid_for_non_AGGREGATED_EXPRESSION_category_and_ALL_or_ANY_attribute() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("MAX(2 * integerProp)");
 
 	cp.setAttribute(ALL);
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, AGGREGATED_EXPRESSION, null, "", null, SlaveEntity.class, MasterEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -803,12 +799,12 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test @Ignore
     public void test_that_Attribute_mutation_makes_it_invalid_for_non_AGGREGATED_COLLECTIONAL_EXPRESSION_category_and_ALL_or_ANY_attribute() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm());
 	cp.setContextualExpression("MAX(2 * integerProp)");
 
 	cp.setAttribute(ANY);
 
-	checkTrivialParams(cp, MasterEntity.class, "collection", "MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "collection", "MAX(2 * integerProp)", null, null, NO_ATTR, null, dtm());
 	assertCalculatedProperty(cp, AGGREGATED_COLLECTIONAL_EXPRESSION, null, "", null, SlaveEntity.class, MasterEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -820,25 +816,25 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_Attribute_mutation_forms_simple_ATTRIBUTED_COLLECTIONAL_EXPRESSION_at_2_level() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp.collection", dtm());
 	cp.setContextualExpression("2 * integerProp");
 
 	cp.setAttribute(ANY);
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", "2 * integerProp", null, null, ANY, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp.collection", "2 * integerProp", null, null, ANY, null, dtm());
 	assertCalculatedProperty(cp, ATTRIBUTED_COLLECTIONAL_EXPRESSION, null, "entityProp.collection", null, EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
 	assertMetaState3(cp);
     }
 
     @Test
     public void test_that_Attribute_mutation_remains_it_valid_for_ATTRIBUTED_COLLECTIONAL_EXPRESSION_category_and_other_ALL_or_ANY_attribute() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm());
 	cp.setContextualExpression("2 * integerProp");
 	cp.setAttribute(ANY);
 
 	cp.setAttribute(ALL);
 
-	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * integerProp", null, null, ALL, null, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * integerProp", null, null, ALL, null, dtm());
 	assertCalculatedProperty(cp, ATTRIBUTED_COLLECTIONAL_EXPRESSION, null, "collection", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -854,13 +850,13 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_OriginationProperty_mutation_makes_it_invalid_for_null_origProp_and_AGGREGATED_EXPRESSION() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("MAX(2 * integerProp)");
 	cp.setOriginationProperty("integerProp");
 
 	cp.setOriginationProperty(null);
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "MAX(2 * integerProp)", null, null, NO_ATTR, "integerProp", dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "MAX(2 * integerProp)", null, null, NO_ATTR, "integerProp", dtm());
 	assertCalculatedProperty(cp, AGGREGATED_EXPRESSION, null, "", null, SlaveEntity.class, MasterEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -873,13 +869,13 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_OriginationProperty_mutation_makes_it_invalid_for_empty_origProp_and_AGGREGATED_EXPRESSION() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("MAX(2 * integerProp)");
 	cp.setOriginationProperty("integerProp");
 
 	cp.setOriginationProperty("");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "MAX(2 * integerProp)", null, null, NO_ATTR, "integerProp", dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "MAX(2 * integerProp)", null, null, NO_ATTR, "integerProp", dtm());
 	assertCalculatedProperty(cp, AGGREGATED_EXPRESSION, null, "", null, SlaveEntity.class, MasterEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -892,13 +888,13 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_OriginationProperty_mutation_makes_it_invalid_for_non_existent_origProp() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("2 * integerProp");
 	cp.setOriginationProperty("integerProp");
 
 	cp.setOriginationProperty("non_existent_prop");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, "integerProp", dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, "integerProp", dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -911,11 +907,11 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_OriginationProperty_mutation_forms_valid_state_for_Origination_present_in_contextualExpression() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("2 * integerProp");
 	cp.setOriginationProperty("integerProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, "integerProp", dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, "integerProp", dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -928,11 +924,11 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_OriginationProperty_mutation_forms_valid_state_for_Origination_present_in_contextualExpression_with_context_ousiders() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("2 * integerProp * ←.integerProp");
 	cp.setOriginationProperty("←.integerProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp * ←.integerProp", null, null, NO_ATTR, "←.integerProp", dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp * ←.integerProp", null, null, NO_ATTR, "←.integerProp", dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -945,11 +941,11 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_OriginationProperty_mutation_forms_valid_state_with_warning_for_Origination_NOT_present_in_contextualExpression() {
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("2 * integerProp");
 	cp.setOriginationProperty("bigDecimalProp");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, "bigDecimalProp", dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, "bigDecimalProp", dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -962,16 +958,16 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_OriginationProperty_mutation_forms_valid_state_for_calculated_Origination_expression_present_in_contextualExpression() {
-	final CalculatedProperty orEx = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty orEx = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	orEx.setTitle("single").setContextualExpression("2 * integerProp");
-	dtm().getEnhancer().addCalculatedProperty(orEx);
-	dtm().getEnhancer().apply();
+	dtm().addCalculatedProperty(orEx);
+	dtm().apply();
 
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("(2 * integerProp + 13) * 73");
 	cp.setOriginationProperty("single");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "(2 * integerProp + 13) * 73", null, null, NO_ATTR, "single", dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "(2 * integerProp + 13) * 73", null, null, NO_ATTR, "single", dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -982,9 +978,9 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertEquals("Incorrect hasWarnings for property [originationProperty].", false, cp.getProperty("originationProperty").hasWarnings());
 
 	cp.setTitle("Expr");
-	dtm().getEnhancer().addCalculatedProperty(cp);
+	dtm().addCalculatedProperty(cp);
 	try {
-	    dtm().getEnhancer().removeCalculatedProperty(MasterEntity.class, "entityProp.single");
+	    dtm().removeCalculatedProperty(MasterEntity.class, "entityProp.single");
 	    fail("Should be failed.");
 	} catch (final IllegalArgumentException e) {
 	}
@@ -992,16 +988,16 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_OriginationProperty_mutation_forms_valid_state_with_warning_for_calculated_Origination_expression_NOT_present_in_contextualExpression() {
-	final CalculatedProperty orEx = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty orEx = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	orEx.setTitle("single").setContextualExpression("2 * integerProp");
-	dtm().getEnhancer().addCalculatedProperty(orEx);
-	dtm().getEnhancer().apply();
+	dtm().addCalculatedProperty(orEx);
+	dtm().apply();
 
-	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm().getEnhancer());
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 	cp.setContextualExpression("(3 * integerProp + 13) * 73");
 	cp.setOriginationProperty("single");
 
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", "(3 * integerProp + 13) * 73", null, null, NO_ATTR, "single", dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", "(3 * integerProp + 13) * 73", null, null, NO_ATTR, "single", dtm());
 	assertCalculatedProperty(cp, EXPRESSION, null, "entityProp", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
 	assertMetaState(cp, "root", true, false, true);
 	assertMetaState(cp, "contextPath", false, false, true);
@@ -1012,9 +1008,9 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertEquals("Incorrect hasWarnings for property [originationProperty].", true, cp.getProperty("originationProperty").hasWarnings());
 
 	cp.setTitle("Expr");
-	dtm().getEnhancer().addCalculatedProperty(cp);
+	dtm().addCalculatedProperty(cp);
 	try {
-	    dtm().getEnhancer().removeCalculatedProperty(MasterEntity.class, "entityProp.single");
+	    dtm().removeCalculatedProperty(MasterEntity.class, "entityProp.single");
 	    fail("Should be failed.");
 	} catch (final IllegalArgumentException e) {
 	}

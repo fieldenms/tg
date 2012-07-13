@@ -7,7 +7,7 @@ import java.util.Set;
 import javax.swing.JOptionPane;
 import javax.swing.event.EventListenerList;
 
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.DefaultUiModel;
@@ -106,8 +106,8 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
      *
      * @return
      */
-    public ICentreDomainTreeManager getEntityCentreManager() {
-	final ICentreDomainTreeManager cdtm = entityCentreConfigurationView.getModel().getEntityCentreManager();
+    public ICentreDomainTreeManagerAndEnhancer getEntityCentreManager() {
+	final ICentreDomainTreeManagerAndEnhancer cdtm = entityCentreConfigurationView.getModel().getEntityCentreManager();
 	if(cdtm == null){
 	    entityCentreConfigurationView.getModel().initEntityCentreManager();
 	}

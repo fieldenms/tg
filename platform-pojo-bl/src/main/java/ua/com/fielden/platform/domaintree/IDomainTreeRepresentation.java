@@ -231,23 +231,6 @@ public interface IDomainTreeRepresentation extends IRootTyped {
          */
         boolean isCheckedImmutably(final Class<?> root, final String property);
 
-        /**
-         * Marks a concrete property's tick to be <b>immutably</b> checked (and automatically disabled!) in domain tree representation. <br><br>
-         *
-         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
-         *
-         * The method should be mainly concentrated on "concrete" property's ticks that should be checked.
-         * If you want to define which "classes" of property's ticks should be checked (based on i.e. types, nature, parents, annotations assigned) --
-         * use {@link #isCheckedImmutably(Class, String)} method. <br><br>
-         *
-         * <b>IMPORTANT</b> : the checked (and disabled) <b>immutably</b> property's ticks could not be unchecked (and enabled) anymore.
-         *
-         * @param root -- a root type that contains property.
-         * @param property -- a dot-notation expression that defines a property (empty property defines an entity itself).
-         *
-         */
-        void checkImmutably(final Class<?> root, final String property);
-
         @Override
         public boolean equals(Object obj);
 

@@ -47,7 +47,7 @@ import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.Ad
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager.AddToCriteriaTickManagerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.CentreDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer.CentreDomainTreeManagerAndEnhancerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer.CentreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeRepresentation.CentreDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManager;
@@ -55,7 +55,7 @@ import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManager.A
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManager.AddToCriteriaTickManagerForLocator.AddToCriteriaTickManagerForLocatorSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManager.LocatorDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer.LocatorDomainTreeManagerAndEnhancerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer.LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation.LocatorDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
@@ -194,8 +194,8 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer pivotDomainTreeManagerSerialiser;
     private final Serializer analysisDomainTreeManagerSerialiser;
     private final Serializer lifecycleDomainTreeManagerSerialiser;
-    private final Serializer locatorDomainTreeManagerAndEnhancerSerialiser;
-    private final Serializer criteriaDomainTreeManagerAndEnhancerSerialiser;
+    private final Serializer locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
+    private final Serializer centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
     private final Serializer dynamicallyTypedQueryContainerSerialiser;
 
     @Inject
@@ -237,8 +237,8 @@ public class TgKryo extends Kryo implements ISerialiser {
 	pivotDomainTreeManagerSerialiser = new PivotDomainTreeManagerSerialiser(this);
 	analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(this);
 	lifecycleDomainTreeManagerSerialiser = new LifecycleDomainTreeManagerSerialiser(this);
-	locatorDomainTreeManagerAndEnhancerSerialiser = new LocatorDomainTreeManagerAndEnhancerSerialiser(this);
-	criteriaDomainTreeManagerAndEnhancerSerialiser = new CentreDomainTreeManagerAndEnhancerSerialiser(this);
+	locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser = new LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(this);
+	centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser = new CentreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(this);
 	dynamicallyTypedQueryContainerSerialiser = new DynamicallyTypedQueryContainerSerialiser(this);
 
 	// the following order of class registration is important
@@ -441,10 +441,10 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return analysisDomainTreeManagerSerialiser;
 	} else if (LifecycleDomainTreeManager.class.isAssignableFrom(type)) {
 	    return lifecycleDomainTreeManagerSerialiser;
-	} else if (LocatorDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) { // higher in hierarchy above CriteriaDomainTreeManagerAndEnhancer!
-	    return locatorDomainTreeManagerAndEnhancerSerialiser;
+	} else if (LocatorDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) { // higher in hierarchy above CentreDomainTreeManagerAndEnhancer!
+	    return locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
 	} else if (CentreDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
-	    return criteriaDomainTreeManagerAndEnhancerSerialiser;
+	    return centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
 	} else if (DynamicallyTypedQueryContainer.class.isAssignableFrom(type)) {
 	    return dynamicallyTypedQueryContainerSerialiser;
 	}

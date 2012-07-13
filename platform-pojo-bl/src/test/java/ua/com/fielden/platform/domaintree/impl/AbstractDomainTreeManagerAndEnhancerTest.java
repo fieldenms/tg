@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
@@ -15,7 +16,6 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
@@ -32,45 +32,47 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
-     *
-     * @return
-     */
     @Override
     protected IDomainTreeManagerAndEnhancer dtm() {
-	return (IDomainTreeManagerAndEnhancer) super.dtm();
+	return (IDomainTreeManagerAndEnhancer) just_a_dtm();
     }
 
-    /**
-     * Creates root types.
-     *
-     * @return
-     */
+    @BeforeClass
+    public static void initDomainTreeTest() throws Exception {
+	initialiseDomainTreeTest(AbstractDomainTreeManagerAndEnhancerTest.class);
+    }
+
+    protected static Object createDtm_for_AbstractDomainTreeManagerAndEnhancerTest() {
+	return new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest());
+    }
+
+    protected static Object createIrrelevantDtm_for_AbstractDomainTreeManagerAndEnhancerTest() {
+	return null;
+    }
+
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest() {
-	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeTest();
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
 	rootTypes.add(MasterEntityForIncludedPropertiesLogic.class);
 	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
 	return rootTypes;
     }
 
-    /**
-     * Provides a testing configuration for the manager.
-     *
-     * @param dtm
-     */
-    protected static void manageTestingDTM_for_AbstractDomainTreeManagerAndEnhancerTest(final IDomainTreeManager dtm) {
-	manageTestingDTM_for_AbstractDomainTreeTest(dtm);
+    protected static void manageTestingDTM_for_AbstractDomainTreeManagerAndEnhancerTest(final Object obj) {
+	final IDomainTreeManagerAndEnhancer dtmae = (IDomainTreeManagerAndEnhancer) obj;
 
-	dtm.getFirstTick().checkedProperties(MasterEntity.class);
-	dtm.getSecondTick().checkedProperties(MasterEntity.class);
+	manageTestingDTM_for_AbstractDomainTreeTest(dtmae.getRepresentation());
+
+	dtmae.getFirstTick().checkedProperties(MasterEntity.class);
+	dtmae.getSecondTick().checkedProperties(MasterEntity.class);
     }
 
-    @BeforeClass
-    public static void initDomainTreeTest() {
-	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest());
-	manageTestingDTM_for_AbstractDomainTreeManagerAndEnhancerTest(dtm);
-	setDtmArray(serialiser().serialise(dtm));
+    protected static void performAfterDeserialisationProcess_for_AbstractDomainTreeManagerAndEnhancerTest(final Object obj) {
+    }
+
+    protected static void assertInnerCrossReferences_for_AbstractDomainTreeManagerAndEnhancerTest(final Object obj) {
+	final AbstractDomainTreeManagerAndEnhancer dtmae = (AbstractDomainTreeManagerAndEnhancer) obj;
+	final AbstractDomainTreeManager dtm = (AbstractDomainTreeManager) dtmae.base();
+	AbstractDomainTreeManagerTest.assertInnerCrossReferences_for_AbstractDomainTreeManagerTest(dtm);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,10 +126,12 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
 	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2.5 * moneyProp", "Calc prop3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
 	dtm().getEnhancer().apply();
 	assertFalse("The brand new calculated property should be immutable unchecked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
-	dtm().getRepresentation().getSecondTick().checkImmutably(MasterEntity.class, "calcProp3");
+	dtm().getSecondTick().check(MasterEntity.class, "calcProp3", true);
+	dtm().getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, "calcProp3");
 	assertTrue("The brand new calculated property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-	assertTrue("The brand new calculated property should be immutable checked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
+	assertTrue("The brand new calculated property should be checked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp3"));
+	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "calcProp3"));
 
 	// enhance domain with new calculated property
 	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2.5 * moneyProp", "Calc prop4", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
@@ -140,7 +144,8 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
 	dtm().getSecondTick().check(MasterEntity.class, "calcProp5", true);
 	assertTrue("The brand new calculated property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-	assertTrue("The brand new calculated property should be immutable checked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
+	assertTrue("The brand new calculated property should be checked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp3"));
+	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "calcProp3"));
 	assertTrue("The brand new calculated property should be checked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
 
 	/////////////// MODIFYING & MANAGING ///////////////
@@ -149,7 +154,8 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
 	dtm().getEnhancer().apply();
 	assertTrue("The brand new calculated property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-	assertTrue("The brand new calculated property should be immutable checked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
+	assertTrue("The brand new calculated property should be checked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp3"));
+	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "calcProp3"));
 	assertTrue("The brand new calculated property should be checked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
 
 	/////////////// REMOVING & MANAGING ///////////////
@@ -194,20 +200,22 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
 	dtm().getEnhancer().apply();
 	assertFalse("The calculated property with the same name should 'become' included.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertFalse("The calculated property with the same name should 'become' enabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-	assertFalse("The calculated property with the same name should 'become' immutably unchecked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
+	assertFalse("The calculated property with the same name should 'become' unchecked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp3"));
+	assertFalse("The calculated property with the same name should 'become' enabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "calcProp3"));
 	assertFalse("The calculated property with the same name should 'become' unchecked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// serialise and deserialise and then check the order of "checked properties"
-	final byte[] array = getSerialiser().serialise(dtm());
-	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
+	final byte[] array = serialiser().serialise(dtm());
+	final IDomainTreeManagerAndEnhancer copy = serialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp1"));
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, calcProp2));
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp3"));
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp5"));
 	assertFalse("The calculated property with the same name should 'become' excluded.", copy.getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertFalse("The calculated property with the same name should 'become' disabled.", copy.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-	assertFalse("The calculated property with the same name should 'become' immutably unchecked.", copy.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
+	assertFalse("The calculated property with the same name should 'become' unchecked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp3"));
+	assertFalse("The calculated property with the same name should 'become' enabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "calcProp3"));
 	assertFalse("The calculated property with the same name should 'become' checked.", copy.getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
     }
 }

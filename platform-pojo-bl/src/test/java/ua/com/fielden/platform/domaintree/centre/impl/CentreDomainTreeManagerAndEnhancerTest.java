@@ -9,17 +9,16 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAnalysisListener;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.IAnalysisListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancerTest;
 import ua.com.fielden.platform.domaintree.testing.EntityForCentreCheckedProperties;
@@ -29,7 +28,6 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForCentreDomainTree;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 
 /**
@@ -39,22 +37,29 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  */
 public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeManagerAndEnhancerTest {
-
-    @Override
-    protected ICentreDomainTreeManagerAndEnhancer dtm() {
-	return (ICentreDomainTreeManagerAndEnhancer) super.dtm();
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Creates root types.
-     *
-     * @return
-     */
+    @Override
+    protected ICentreDomainTreeManagerAndEnhancer dtm() {
+	return (ICentreDomainTreeManagerAndEnhancer) just_a_dtm();
+    }
+
+    @BeforeClass
+    public static void initDomainTreeTest() throws Exception {
+	initialiseDomainTreeTest(CentreDomainTreeManagerAndEnhancerTest.class);
+    }
+
+    public static Object createDtm_for_CentreDomainTreeManagerAndEnhancerTest() {
+	return new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CentreDomainTreeManagerAndEnhancerTest());
+    }
+
+    public static Object createIrrelevantDtm_for_CentreDomainTreeManagerAndEnhancerTest() {
+	return null;
+    }
+
     protected static Set<Class<?>> createRootTypes_for_CentreDomainTreeManagerAndEnhancerTest() {
-	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest();
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest());
 	rootTypes.add(MasterEntityForCentreDomainTree.class);
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
@@ -63,62 +68,23 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
 	return rootTypes;
     }
 
-    /**
-     * Provides a testing configuration for the manager.
-     *
-     * @param dtm
-     */
-    protected static void manageTestingDTM_for_CentreDomainTreeManagerAndEnhancerTest(final ICentreDomainTreeManager dtm) {
-	manageTestingDTM_for_AbstractDomainTreeTest(dtm);
+    public static void manageTestingDTM_for_CentreDomainTreeManagerAndEnhancerTest(final Object obj) {
+	final ICentreDomainTreeManagerAndEnhancer dtmae = (ICentreDomainTreeManagerAndEnhancer) obj;
 
-	dtm.getFirstTick().checkedProperties(MasterEntity.class);
-	dtm.getSecondTick().checkedProperties(MasterEntity.class);
-
-	// check some properties to test its values, exclusiveness, etc.
-	allLevels(new IAction() {
-	    public void action(final String name) {
-		dtm.getRepresentation().getFirstTick().checkImmutably(MasterEntity.class, name);
-		dtm.getRepresentation().getSecondTick().checkImmutably(MasterEntity.class, name);
-	    }
-	}, "critOnlySingleAEProp", "critOnlyAEProp");
-	allLevels(new IAction() {
-	    public void action(final String name) {
-		dtm.getFirstTick().check(MasterEntity.class, name, true);
-	    }
-	}, "stringProp", "booleanProp", "dateProp", "integerProp", "moneyProp", "mutablyCheckedProp");
-	allLevelsWithoutCollections(new IAction() {
-	    public void action(final String name) {
-		dtm.getSecondTick().check(MasterEntity.class, name, true);
-	    }
-	}, "stringProp", "booleanProp", "dateProp", "integerProp", "moneyProp");
-
-	// for ordering second tick test
-	dtm.getSecondTick().check(MasterEntity.class, "", true);
-
-	// check 'entityProp.simpleEntityProp' for Locators test
-	dtm.getFirstTick().check(MasterEntity.class, "entityProp.simpleEntityProp", true);
-	dtm.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	CentreDomainTreeManagerTest.manageTestingDTM_for_CentreDomainTreeManagerTest(obj);
 
 	// initialise analysis to ensure that equals / serialisation / copying works
-	dtm.initAnalysisManagerByDefault("New Pivot analysis.", AnalysisType.PIVOT);
-	dtm.getAnalysisManager("New Pivot analysis.").getFirstTick().check(MasterEntity.class, "booleanProp", true);
-	dtm.acceptAnalysisManager("New Pivot analysis.");
+	dtmae.initAnalysisManagerByDefault("New Pivot analysis.", AnalysisType.PIVOT);
+	dtmae.getAnalysisManager("New Pivot analysis.").getFirstTick().check(MasterEntity.class, "booleanProp", true);
+	dtmae.acceptAnalysisManager("New Pivot analysis.");
     }
 
-    @BeforeClass
-    public static void initDomainTreeTest() {
-	final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CentreDomainTreeManagerAndEnhancerTest());
-	manageTestingDTM_for_CentreDomainTreeManagerAndEnhancerTest(dtm);
-	setDtmArray(serialiser().serialise(dtm));
+    public static void performAfterDeserialisationProcess_for_CentreDomainTreeManagerAndEnhancerTest(final Object obj) {
     }
 
-    @Override
-    @Before
-    public void initEachTest() throws Exception {
-	super.initEachTest();
-	dtm().analysisKeys(); // this method will lazily initialise "currentAnalyses" -- it is essential to fully initialise centre manager
+    public static void assertInnerCrossReferences_for_CentreDomainTreeManagerAndEnhancerTest(final Object obj) {
+	assertInnerCrossReferences_for_AbstractDomainTreeManagerAndEnhancerTest(obj);
     }
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,53 +113,6 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
 	dtm().getEnhancer().removeCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop2_mutablyCheckedProp");
 	dtm().getEnhancer().apply();
 	assertEquals("Incorrect checked properties.", Arrays.asList("integerProp", "1-placeholder-origin-0-1", "0-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
-    }
-
-    @Override
-    @Test
-    public void test_that_serialisation_works() throws Exception {
-	final ICentreDomainTreeManagerAndEnhancer dtm = dtm();
-//	dtm.getFirstTick().refreshLocatorManager(root, property);
-//	dtm.getFirstTick().getLocatorManager(root, property).getFirstTick().check(propertyType, "integerProp", true);
-//	dtm.getFirstTick().getLocatorManager(root, property).getSecondTick().check(propertyType, "integerProp", true);
-//	dtm.getFirstTick().getLocatorManager(root, property).getRepresentation().getFirstTick().disableImmutably(propertyType, "bigDecimalProp");
-//	dtm.getFirstTick().acceptLocatorManager(root, property);
-
-	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
-	test_that_manager_instantiation_works_for_inner_cross_references(dtm);
-
-	// test that serialisation works
-	final byte[] array = getSerialiser().serialise(dtm);
-	assertNotNull("Serialised byte array should not be null.", array);
-	final ICentreDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, ICentreDomainTreeManagerAndEnhancer.class);
-	// final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
-	// final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
-	assertNotNull("Deserialised instance should not be null.", copy);
-
-	copy.analysisKeys(); // this method will lazily initialise "currentAnalyses" -- it is essential to fully initialise centre manager
-	// after deserialisation the instance should be fully defined (even for transient fields).
-	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
-	// So it should be checked:
-	assertTrue("After deserialisation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
-	test_that_manager_instantiation_works_for_inner_cross_references(copy);
-    }
-
-    @Override
-    @Test
-    public void test_that_equality_and_copying_works() {
-	final ICentreDomainTreeManagerAndEnhancer dtm = dtm();
-	dtm.getEnhancer().apply();
-	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
-
-	final ICentreDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
-
-	copy.analysisKeys(); // this method will lazily initialise "currentAnalyses" -- it is essential to fully initialise centre manager
-	// after copying the instance should be fully defined (even for transient fields).
-	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
-	// So it should be checked:
-	assertTrue("After coping of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
-	test_that_manager_instantiation_works_for_inner_cross_references(copy);
-	assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(copy, dtm));
     }
 
     protected void test_initialisation_discarding_and_saving_of_Analyses(final AnalysisType analysisType, final String name) {

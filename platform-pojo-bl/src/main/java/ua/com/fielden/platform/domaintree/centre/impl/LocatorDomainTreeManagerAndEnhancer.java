@@ -1,12 +1,15 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
@@ -22,11 +25,11 @@ import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer
  */
 public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManagerAndEnhancer implements ILocatorDomainTreeManagerAndEnhancer {
     public LocatorDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new LocatorDomainTreeManager(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)));
+	this(serialiser, new LocatorDomainTreeManager(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), new HashMap<String, IAbstractAnalysisDomainTreeManager>());
     }
 
-    protected LocatorDomainTreeManagerAndEnhancer(final LocatorDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
-	super(base, enhancer);
+    protected LocatorDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final LocatorDomainTreeManager base, final IDomainTreeEnhancer enhancer, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses, final Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses) {
+	super(serialiser, base, enhancer, persistentAnalyses, currentAnalyses, freezedAnalyses);
     }
 
     @Override
@@ -84,8 +87,8 @@ public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManager
      * @author TG Team
      *
      */
-    public static class LocatorDomainTreeManagerAndEnhancerSerialiser extends TgSimpleSerializer<LocatorDomainTreeManagerAndEnhancer> {
-	public LocatorDomainTreeManagerAndEnhancerSerialiser(final TgKryo kryo) {
+    public static class LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser extends TgSimpleSerializer<LocatorDomainTreeManagerAndEnhancer> {
+	public LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(final TgKryo kryo) {
 	    super(kryo);
 	}
 
@@ -93,13 +96,19 @@ public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManager
 	public LocatorDomainTreeManagerAndEnhancer read(final ByteBuffer buffer) {
 	    final LocatorDomainTreeManager base = readValue(buffer, LocatorDomainTreeManager.class);
 	    final DomainTreeEnhancer enhancer = readValue(buffer, DomainTreeEnhancer.class);
-	    return new LocatorDomainTreeManagerAndEnhancer(base, enhancer);
+	    final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses = readValue(buffer, HashMap.class);
+	    final Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses = readValue(buffer, HashMap.class);
+	    final Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses = readValue(buffer, HashMap.class);
+	    return new LocatorDomainTreeManagerAndEnhancer(kryo, base, enhancer, persistentAnalyses, currentAnalyses, freezedAnalyses);
 	}
 
 	@Override
 	public void write(final ByteBuffer buffer, final LocatorDomainTreeManagerAndEnhancer manager) {
 	    writeValue(buffer, manager.base());
 	    writeValue(buffer, manager.enhancer());
+	    writeValue(buffer, manager.persistentAnalyses());
+	    writeValue(buffer, manager.currentAnalyses());
+	    writeValue(buffer, manager.freezedAnalyses());
 	}
     }
 }

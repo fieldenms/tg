@@ -26,9 +26,8 @@ import javax.swing.border.EtchedBorder;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
@@ -416,7 +415,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @return
      */
     private int findFirstVisibleAnalysis(final List<String> analysisKeys, final int analysisIndex){
-	final ICentreDomainTreeManager centreManager = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
+	final ICentreDomainTreeManagerAndEnhancer centreManager = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
 	int index = analysisIndex;
 	for(; index < analysisKeys.size(); index++){
 	    final IAbstractAnalysisDomainTreeManager analysisManager = centreManager.getAnalysisManager(analysisKeys.get(index));

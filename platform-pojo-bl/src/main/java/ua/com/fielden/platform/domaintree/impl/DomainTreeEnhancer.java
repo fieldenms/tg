@@ -57,7 +57,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     /** Holds current domain differences from "standard" domain (all calculated properties for all root types). */
     private final transient Map<Class<?>, List<CalculatedProperty>> calculatedProperties;
 
-
     public static class ByteArray {
 	private final byte[] array;
 

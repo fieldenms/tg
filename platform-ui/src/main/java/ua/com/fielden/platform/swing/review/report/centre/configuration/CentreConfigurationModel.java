@@ -148,7 +148,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * Accepts all the modifications applied to the analysis manager.
      */
     public void saveAnalysis(){
-        final ICentreDomainTreeManager cdtm = getEntityCentreManager();
+        final ICentreDomainTreeManagerAndEnhancer cdtm = getEntityCentreManager();
         if(cdtm == null){
             return;
         }
@@ -161,7 +161,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * Discards the analysis managers.
      */
     public void discardAnalysis(){
-        final ICentreDomainTreeManager cdtm = getEntityCentreManager();
+        final ICentreDomainTreeManagerAndEnhancer cdtm = getEntityCentreManager();
         if(cdtm == null){
             return;
         }
