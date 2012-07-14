@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeTest;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
+import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
 
 /**
@@ -39,7 +40,8 @@ public class MasterDomainTreeManagerTest extends AbstractDomainTreeTest {
     }
 
     protected static Set<Class<?>> createRootTypes_for_MasterDomainTreeManagerTest() {
-	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
+	rootTypes.add(MasterEntity.class);
 	return rootTypes;
     }
 

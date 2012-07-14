@@ -20,7 +20,6 @@ import ua.com.fielden.platform.domaintree.testing.DomainTreeManager1;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
-import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
 
 /**
  * A test for {@link AbstractDomainTreeManager}.
@@ -52,8 +51,6 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeManagerTest() {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
-	rootTypes.add(MasterEntityForIncludedPropertiesLogic.class);
-	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
 	return rootTypes;
     }
 

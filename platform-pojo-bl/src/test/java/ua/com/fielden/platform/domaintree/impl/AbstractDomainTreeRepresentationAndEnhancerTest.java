@@ -22,7 +22,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickReprese
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
-import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 /**
@@ -103,8 +102,6 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
 
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest() {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
-	rootTypes.add(MasterEntityForIncludedPropertiesLogic.class);
-	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
 	return rootTypes;
     }
 

@@ -33,7 +33,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhan
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -139,7 +138,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 		    final String property = rootAndRemovalProp.getValue();
 		    if (!analysis.getRepresentation().isExcludedImmutably(root, property) && !analysis.getRepresentation().getFirstTick().isDisabledImmutably(root, property) && analysis.getFirstTick().isChecked(root, property) || //
 			    !analysis.getRepresentation().isExcludedImmutably(root, property) && !analysis.getRepresentation().getSecondTick().isDisabledImmutably(root, property) && analysis.getSecondTick().isChecked(root, property)) {
-			throw new Result(new IllegalArgumentException("Can not remove (or significantly change) a property [" + property + "] in type [" + root + "] which is used as distribution or aggregation property in analysis [" + analysisKey + "]."));
+			throw new IncorrectCalcPropertyException("Can not remove (or significantly change) a property [" + property + "] in type [" + root + "] which is used as distribution or aggregation property in analysis [" + analysisKey + "].");
 		    }
 		}
 	    }

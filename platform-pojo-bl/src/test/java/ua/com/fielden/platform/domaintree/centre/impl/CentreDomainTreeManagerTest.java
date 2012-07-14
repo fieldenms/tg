@@ -82,20 +82,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
 	dtm.getSecondTick().checkedProperties(MasterEntity.class);
 
-	// check some properties to test its values, exclusiveness, etc.
-	allLevels(new IAction() {
-	    public void action(final String name) {
-		// TODO
-		// TODO
-		// TODO
-		// TODO
-		// TODO
-//		dtm.getFirstTick().check(MasterEntity.class, name, true);
-//		dtm.getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, name);
-//		dtm.getSecondTick().check(MasterEntity.class, name, true);
-//		dtm.getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, name);
-	    }
-	}, "critOnlySingleAEProp", "critOnlyAEProp");
 	allLevels(new IAction() {
 	    public void action(final String name) {
 		dtm.getFirstTick().check(MasterEntity.class, name, true);
@@ -116,8 +102,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     public static void performAfterDeserialisationProcess_for_CentreDomainTreeManagerTest(final Object obj) {
-	// final ICentreDomainTreeManager dtm = (ICentreDomainTreeManager) obj;
-	// dtm.analysisKeys(); // this method will lazily initialise "currentAnalyses" -- it is essential to fully initialise centre manager
     }
 
     public static void assertInnerCrossReferences_for_CentreDomainTreeManagerTest(final Object dtm) {

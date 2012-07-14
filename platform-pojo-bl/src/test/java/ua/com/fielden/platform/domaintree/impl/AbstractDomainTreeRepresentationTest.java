@@ -60,8 +60,6 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeRepresentationTest() {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
-	rootTypes.add(MasterEntityForIncludedPropertiesLogic.class);
-	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
 	return rootTypes;
     }
 

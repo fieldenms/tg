@@ -83,8 +83,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 
     public static void manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(final Object obj) {
 	final IAbstractAnalysisDomainTreeManager dtm = (IAbstractAnalysisDomainTreeManager) obj;
-
-	// TODO manageTestingDTM_for_AbstractDomainTreeManagerTest(obj);
+ 
 	manageTestingDTM_for_AbstractDomainTreeTest(dtm.getRepresentation());
 
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);

@@ -16,6 +16,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.IAnalysisListener;
@@ -88,6 +89,45 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    @Test
+    public void test_that_domain_changes_are_not_permitted_for_used_in_analyses_properties() throws Exception {
+	// enhance centre domain with new calculated property
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(1 * 2.5 * bigDecimalProp)", "Calc prop5", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
+	dtm().getEnhancer().apply();
+
+	dtm().initAnalysisManagerByDefault("Report", AnalysisType.SIMPLE);
+	dtm().acceptAnalysisManager("Report");
+	
+	// use property in one of the analyses
+	dtm().getAnalysisManager("Report").getSecondTick().check(MasterEntity.class, "calcProp5", true);
+	
+	// removal
+	dtm().getEnhancer().removeCalculatedProperty(MasterEntity.class, "calcProp5");
+	try {
+	    dtm().getEnhancer().apply();
+	    fail("Should be failed.");
+	} catch (final IncorrectCalcPropertyException e) {
+	}
+	dtm().getEnhancer().discard();
+	
+	// 'significant' changes
+	dtm().getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp5").setContextualExpression("1 * 2.5 * bigDecimalProp");
+	try {
+	    dtm().getEnhancer().apply();
+	    fail("Should be failed.");
+	} catch (final IncorrectCalcPropertyException e) {
+	}
+	dtm().getEnhancer().discard();
+	
+	dtm().getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp5").setTitle("Completely another title");
+	try {
+	    dtm().getEnhancer().apply();
+	    fail("Should be failed.");
+	} catch (final IncorrectCalcPropertyException e) {
+	}
+	dtm().getEnhancer().discard();
+    }
 
     @Override
     @Test
