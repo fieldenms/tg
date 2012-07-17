@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import org.hibernate.Hibernate;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
@@ -66,7 +67,21 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
 	hibType(Hibernate.LONG). //
 	type(PropertyCategory.EXPRESSION). //
-	expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot").when().prop("workshop").isNotNull().then().prop("workshop").otherwise().val(null).end().model()). //
+	expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.id").when().prop("workshop").isNotNull().then().prop("workshop.id").otherwise().val(null).end().model()). //
+	build();
+	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
+    }
+
+    @Test
+    @Ignore
+    public void test_deduced_key_for_union_entity() throws Exception {
+	final EntityMetadata<TgBogieLocation> entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgBogieLocation.class);
+	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
+
+	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", String.class, false). //
+	hibType(Hibernate.STRING). //
+	type(PropertyCategory.EXPRESSION). //
+	expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.key").when().prop("workshop").isNotNull().then().prop("workshop.key").otherwise().val(null).end().model()). //
 	build();
 	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
     }

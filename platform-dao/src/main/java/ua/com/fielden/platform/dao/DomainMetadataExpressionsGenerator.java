@@ -19,45 +19,16 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 public class DomainMetadataExpressionsGenerator {
-//    ExpressionModel generateUnionEntityIdExpression(final Class<? extends AbstractUnionEntity> entityType) {
-//	final List<Field> props = AbstractUnionEntity.unionProperties(entityType);
-//
-//	final Iterator<Field> iterator = props.iterator();
-//	IStandAloneExprOperationAndClose expressionModelInProgress = expr().ifNull().prop(iterator.next().getName()).then().val(0);
-//
-//	for (; iterator.hasNext();) {
-//	    expressionModelInProgress = expressionModelInProgress.add().ifNull().prop(iterator.next().getName()).then().val(0);
-//	}
-//
-//	return expressionModelInProgress.model();
-//    }
 
-    ExpressionModel generateUnionEntityIdExpression(final Class<? extends AbstractUnionEntity> entityType) {
+    ExpressionModel generateUnionEntityPropertyExpression(final Class<? extends AbstractUnionEntity> entityType, final String commonPropName) {
 	final List<Field> props = AbstractUnionEntity.unionProperties(entityType);
-
 	final Iterator<Field> iterator = props.iterator();
 	final String firstUnionPropName = iterator.next().getName();
-	ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose,AbstractEntity<?>> expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName);
+	ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose,AbstractEntity<?>> expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName + "." + commonPropName);
 
 	for (; iterator.hasNext();) {
 	    final String unionPropName = iterator.next().getName();
-	    expressionModelInProgress = expressionModelInProgress.when().prop(unionPropName).isNotNull().then().prop(unionPropName);
-	}
-
-	return expressionModelInProgress.otherwise().val(null).end().model();
-    }
-
-
-    ExpressionModel generateUnionEntityKeyExpression(final Class<? extends AbstractUnionEntity> entityType) {
-	final List<Field> props = AbstractUnionEntity.unionProperties(entityType);
-
-	final Iterator<Field> iterator = props.iterator();
-	final String firstUnionPropName = iterator.next().getName();
-	ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose,AbstractEntity<?>> expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName + ".key");
-
-	for (; iterator.hasNext();) {
-	    final String unionPropName = iterator.next().getName();
-	    expressionModelInProgress = expressionModelInProgress.when().prop(unionPropName).isNotNull().then().prop(unionPropName + ".key");
+	    expressionModelInProgress = expressionModelInProgress.when().prop(unionPropName).isNotNull().then().prop(unionPropName + "." + commonPropName);
 	}
 
 	return expressionModelInProgress.otherwise().val(null).end().model();

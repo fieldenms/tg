@@ -157,7 +157,7 @@ public class DomainMetadata {
 	case CALCULATED:
 	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(expr().prop("key").model()).type(EXPRESSION).build();
 	case UNION:
-	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(dmeg.generateUnionEntityIdExpression((Class<? extends AbstractUnionEntity>) entityType)).type(EXPRESSION).build();
+	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "id")).type(EXPRESSION).build();
 	default:
 	    return null;
 	}
@@ -184,7 +184,8 @@ public class DomainMetadata {
 		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PRIMITIVE_KEY).build();
 	    case CALCULATED:
 		return null; //FIXME
-		//return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).hibType(TypeFactory.basic("long")).type(IMPLICITLY_CALCULATED).build();
+//	    case UNION:
+//		return new PropertyMetadata.Builder(AbstractEntity.KEY, String.class, false).hibType(TypeFactory.basic("string")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "key")).type(EXPRESSION).build();
 	    default:
 		return null;
 	    }

@@ -14,14 +14,14 @@ public class DomainMetadataExpressionsGeneratorTest extends BaseEntQueryTCase {
     @Test
     public void test_union_entity_key_prop_model_generation() throws Exception {
 	final ExpressionModel exp = expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.key").when().prop("workshop").isNotNull().then().prop("workshop.key").otherwise().val(null).end().model();
-	final ExpressionModel act = dmeg.generateUnionEntityKeyExpression(TgBogieLocation.class);
+	final ExpressionModel act = dmeg.generateUnionEntityPropertyExpression(TgBogieLocation.class, "key");
 	assertEquals(exp, act);
     }
 
     @Test
     public void test_union_entity_id_prop_model_generation() throws Exception {
-	final ExpressionModel exp = expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot").when().prop("workshop").isNotNull().then().prop("workshop").otherwise().val(null).end().model();
-	final ExpressionModel act = dmeg.generateUnionEntityIdExpression(TgBogieLocation.class);
+	final ExpressionModel exp = expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.id").when().prop("workshop").isNotNull().then().prop("workshop.id").otherwise().val(null).end().model();
+	final ExpressionModel act = dmeg.generateUnionEntityPropertyExpression(TgBogieLocation.class, "id");
 	assertEquals(exp, act);
     }
 }
