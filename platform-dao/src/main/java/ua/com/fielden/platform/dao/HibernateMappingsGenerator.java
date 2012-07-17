@@ -29,7 +29,9 @@ public class HibernateMappingsGenerator {
 
 	for (final EntityMetadata entityMetadata : entityMetadatas) {
 	    try {
-		sb.append(generateEntityClassMapping(entityMetadata));
+		if (entityMetadata.isPersisted()) {
+		    sb.append(generateEntityClassMapping(entityMetadata));
+		}
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new RuntimeException("Couldn't generate mapping for " + entityMetadata.getType().getName() + " due to: " + e.getMessage());
