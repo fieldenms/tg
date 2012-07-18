@@ -46,7 +46,7 @@ public class RangePropertyEditor implements IPropertyEditor {
 	this.entity = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>)fromEditor.getEntity();
 	final String criteriaParameters = CriteriaReflector.getCriteriaProperty(entity.getType(), fromEditor.getPropertyName());
 
-	this.propertyName = CriteriaReflector.generateCriteriaPropertyName(entity.getEntityClass(), criteriaParameters, null);
+	this.propertyName = CriteriaReflector.generateCriteriaPropertyName(entity.getEntityClass(), criteriaParameters);
 
 	this.fromEditor = fromEditor;
 	this.toEditor = toEditor;

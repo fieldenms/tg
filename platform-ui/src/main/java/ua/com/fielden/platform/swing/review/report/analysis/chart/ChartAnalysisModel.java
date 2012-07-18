@@ -111,6 +111,19 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	return null;
     }
 
+    @Override
+    protected void exportData(final String fileName) throws IOException {
+	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");
+    }
+
+    @Override
+    protected String[] getExportFileExtensions() {
+	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");    }
+
+    @Override
+    protected String getDefaultExportFileExtension() {
+	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");    }
+
     /**
      * Set the analysis view for this model. Throws {@link IllegalStateException} if the model was already set.
      *
@@ -195,23 +208,5 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	public List<String> categoryProperties() {
 	    return Collections.unmodifiableList(categoryAliasMap);
 	}
-    }
-
-    @Override
-    protected void exportData(final String fileName) throws IOException {
-	// TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected String[] getExportFileExtensions() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    protected String getDefaultExportFileExtension() {
-	// TODO Auto-generated method stub
-	return null;
     }
 }

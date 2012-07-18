@@ -41,6 +41,7 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
+import ua.com.fielden.platform.swing.review.DynamicParamBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -133,17 +134,21 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public final IPage<T> run(final int pageSize) {
 	final Class<?> root = getEntityClass();
-	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+	final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+	final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager.orderedProperties(root), enhancer);
+	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
+	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, resultTickManager.orderedProperties(root), enhancer);
+	final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
 		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs))//
-		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).model();
+		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey()))//
+		.with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
 	if (!separatedFetch.getValue().isEmpty()) {
 	    final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = from(notOrderedQuery)//
-		    .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue())).model();
+		    .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue()))//
+		    .with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
 	    return firstPage(resultQuery, totalQuery, pageSize);
 	} else {
 	    return run(resultQuery, pageSize);

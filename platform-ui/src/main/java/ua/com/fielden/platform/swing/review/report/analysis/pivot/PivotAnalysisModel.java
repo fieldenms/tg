@@ -47,6 +47,10 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	pivotModel = new PivotTreeTableModelEx();
     }
 
+    public PivotTreeTableModel getPivotModel() {
+        return pivotModel;
+    }
+
     @Override
     protected Void executeAnalysisQuery() {
 
@@ -64,10 +68,6 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	return null;
     }
 
-    public PivotTreeTableModel getPivotModel() {
-	return pivotModel;
-    }
-
     @Override
     protected Result canLoadData() {
 	final Result result = getCriteria().isValid();
@@ -79,6 +79,22 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    return new Result(new IllegalStateException("Please choose distribution or aggregation properties"));
 	}
 	return Result.successful(this);
+    }
+
+    @Override
+    protected void exportData(final String fileName) throws IOException {
+        // TODO Auto-generated method stub
+    
+    }
+
+    @Override
+    protected String[] getExportFileExtensions() {
+        return new String[] {getDefaultExportFileExtension()};
+    }
+
+    @Override
+    protected String getDefaultExportFileExtension() {
+        return "xls";
     }
 
     /**
@@ -407,23 +423,5 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    }
 
 	}
-    }
-
-    @Override
-    protected void exportData(final String fileName) throws IOException {
-	// TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected String[] getExportFileExtensions() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    protected String getDefaultExportFileExtension() {
-	// TODO Auto-generated method stub
-	return null;
     }
 }

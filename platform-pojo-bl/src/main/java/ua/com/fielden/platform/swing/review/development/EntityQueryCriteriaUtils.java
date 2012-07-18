@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.swing.review.development;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
@@ -10,7 +12,9 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
@@ -68,6 +72,26 @@ public class EntityQueryCriteriaUtils {
         	fetchProperties.add(property);
             }
         return new Pair<Set<String>, Set<String>>(fetchProperties, totalProperties);
+    }
+
+    /**
+     * Returns the map between real property name and pair of it's values. If the second value doesn't exists then it is null.
+     *
+     * @param root
+     * @param managedType
+     * @param tickManager
+     * @return
+     */
+    public static Map<String, Pair<Object, Object>> createParamValuesMap(final Class<?> root, final Class<?> managedType, final IAddToCriteriaTickManager tickManager){
+	final Map<String, Pair<Object, Object>> paramValues = new HashMap<String, Pair<Object, Object>>();
+	for (final String propertyName : tickManager.checkedProperties(root)) {
+	    if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
+		paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));
+	    }else{
+		paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), null));
+	    }
+	}
+	return paramValues;
     }
 
     /**

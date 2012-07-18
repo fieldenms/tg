@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -52,8 +57,6 @@ import com.google.inject.Inject;
 public class CriteriaGenerator implements ICriteriaGenerator {
 
     private static final Logger logger = Logger.getLogger(CriteriaGenerator.class);
-
-    private static final String _IS = "_is", _NOT = "_not", _FROM = "_from", _TO = "_to";
 
     private final EntityFactory entityFactory;
 
@@ -174,7 +177,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	    add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 	}};
 
-	return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName, ""), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
+	return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
     }
 
     /**
@@ -188,8 +191,8 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      */
     @SuppressWarnings("serial")
     private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc) {
-	final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, EntityUtils.isBoolean(propertyType) ? _IS : _FROM);
-	final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, EntityUtils.isBoolean(propertyType) ? _NOT : _TO);
+	final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
+	final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
 	final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType;
 
 	final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //

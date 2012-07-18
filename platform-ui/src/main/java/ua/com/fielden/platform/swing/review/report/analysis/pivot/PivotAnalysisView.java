@@ -424,51 +424,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 
     //////////////////////Refactor code below//////////////////////////////////
-    //Used for creating view in AnalysisReportMode.REPORT mode.
-    //Pivot tree table.
-    //    private final PivotAnalysisDataProvider<T, DAO> dataProvider;
-
-
-    //TODO this methods is needed to change position of aggregation and distribution properties.
-    //    private IValueSwaper createAggregationSwapper() {
-    //	return new IValueSwaper() {
-    //
-    //	    @Override
-    //	    public void swapValues(final int oldIndex, final int newindex) {
-    //		pivotTablePanel.getTreeTable().swapTotalParameter(oldIndex, newindex);
-    //
-    //	    }
-    //	};
-    //    }
-    //
-    //    private IValueSwaper createDistributionSwapper() {
-    //	return new IValueSwaper() {
-    //
-    //	    @Override
-    //	    public void swapValues(final int oldIndex, final int newindex) {
-    //		new BlockingLayerCommand<Void>("add/remove group", tabPaneLayer) {
-    //
-    //		    private static final long serialVersionUID = -628123890478386500L;
-    //
-    //		    @Override
-    //		    protected Void action(final ActionEvent actionEvent) throws Exception {
-    //			setMessage("regrouping data...");
-    //			dataProvider.reload();
-    //			return null;
-    //		    }
-    //
-    //		    @Override
-    //		    protected void postAction(final Void value) {
-    //			pivotTablePanel.getTreeTable().swapGroupParameter(oldIndex, newindex);
-    //			pivotTablePanel.getFilterControl().refresh();
-    //			super.postAction(value);
-    //		    }
-    //		}.actionPerformed(null);
-    //	    }
-    //	};
-    //
-    //    }
-
     private void layoutComponents() {
 	removeAll();
 	setLayout(new MigLayout("fill, insets 0", "[fill,grow]", "[fill,grow]"));
