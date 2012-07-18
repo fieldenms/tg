@@ -2,8 +2,10 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -13,6 +15,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QueryBasedSource extends AbstractSource {
     private final List<EntQuery> models;
+    private final Map<String, List<Yield>> yieldsMatrix = new HashMap<String, List<Yield>>();
 
     private EntQuery model() {
 	return models.get(0);
@@ -21,12 +24,48 @@ public class QueryBasedSource extends AbstractSource {
     public QueryBasedSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final EntQuery... models) {
 	super(alias, domainMetadataAnalyser);
 	this.models = Arrays.asList(models);
+	populateYieldMatrixFromQueryModels(models);
+	validateYieldsMatrix();
+    }
+
+    private void populateYieldMatrixFromQueryModels(final EntQuery... models) {
+	for (final EntQuery entQuery : models) {
+	    for (final Yield yield : entQuery.getYields().getYields()) {
+		final List<Yield> foundYields = yieldsMatrix.get(yield.getAlias());
+		if (foundYields != null) {
+		    foundYields.add(yield);
+		} else {
+		    final List<Yield> newList = new ArrayList<Yield>();
+		    newList.add(yield);
+		    yieldsMatrix.put(yield.getAlias(), newList);
+		}
+	    }
+	}
+    }
+
+    private boolean getYieldNullability(final String yieldAlias) {
+	final boolean result = false;
+	for (final Yield yield : yieldsMatrix.get(yieldAlias)) {
+	    if (yield.getInfo().isNullable()) {
+		return true;
+	    }
+	}
+	return result;
+    }
+
+    private void validateYieldsMatrix() {
+	for (final Map.Entry<String, List<Yield>> entry : yieldsMatrix.entrySet()) {
+	    if (entry.getValue().size() != models.size()) {
+		throw new IllegalStateException("Incorrect models used as query source - their result types are different!");
+	    }
+	}
     }
 
     @Override
     public void populateSourceItems(final boolean parentLeftJoinLegacy) {
 	for (final Yield yield : model().getYields().getYields()) {
-	    sourceItems.put(yield.getAlias(), new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), yield.getInfo().isNullable() || parentLeftJoinLegacy, yield.getInfo().getYieldDetailsType()));
+	    sourceItems.put(yield.getAlias(), new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), //
+		    getYieldNullability(yield.getInfo().getName())/*yield.getInfo().isNullable()*/ || parentLeftJoinLegacy, yield.getInfo().getYieldDetailsType()));
 	}
     }
 
