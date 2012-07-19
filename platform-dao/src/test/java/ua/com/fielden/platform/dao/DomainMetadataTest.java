@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.dao;
 
 import org.hibernate.Hibernate;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
@@ -73,7 +72,6 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
     }
 
     @Test
-    @Ignore
     public void test_deduced_key_for_union_entity() throws Exception {
 	final EntityMetadata<TgBogieLocation> entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgBogieLocation.class);
 	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");

@@ -184,8 +184,8 @@ public class DomainMetadata {
 		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PRIMITIVE_KEY).build();
 	    case CALCULATED:
 		return null; //FIXME
-//	    case UNION:
-//		return new PropertyMetadata.Builder(AbstractEntity.KEY, String.class, false).hibType(TypeFactory.basic("string")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "key")).type(EXPRESSION).build();
+	    case UNION:
+		return new PropertyMetadata.Builder(AbstractEntity.KEY, String.class, false).hibType(TypeFactory.basic("string")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "key")).type(EXPRESSION).build();
 	    default:
 		return null;
 	    }

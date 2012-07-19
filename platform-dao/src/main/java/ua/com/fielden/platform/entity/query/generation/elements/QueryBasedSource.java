@@ -133,13 +133,13 @@ public class QueryBasedSource extends AbstractSource {
 		return null;
 	    } else {
 		final boolean propNullability = getDomainMetadataAnalyser().isNullable(firstLevelPropYield.getInfo().getJavaType(), rest);
-		final boolean explicitPartNullability = firstLevelPropYield.getInfo().isNullable() || isNullable();
+		final boolean explicitPartNullability = getYieldNullability(firstLevelPropYield.getAlias())/*firstLevelPropYield.getInfo().isNullable()*/ || isNullable();
 		return new Pair<PurePropInfo, PurePropInfo>(
 			new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), explicitPartNullability),
 			new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || explicitPartNullability));
 	    }
 	} else {
-	    final PurePropInfo ppi = new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), firstLevelPropYield.getInfo().isNullable() || isNullable());
+	    final PurePropInfo ppi = new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), getYieldNullability(firstLevelPropYield.getAlias())/*firstLevelPropYield.getInfo().isNullable()*/ || isNullable());
 
 	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	}

@@ -49,7 +49,7 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public String toString() {
-        return name + " [" + (propType != null ? propType.getSimpleName() : "") + ", pr = " + isPreliminaryResolved() + ", fr = " + isFinallyResolved() + ", gen = " + generated + ", " + getStage() + "] " + getSource();
+        return name + " [" + (propType != null ? propType.getSimpleName() : "") + ", pr = " + isPreliminaryResolved() + ", fr = " + isFinallyResolved() + ", gen = " + generated + ", " + getStage() + ", nullable = " + nullable + "] " + getSource();
     }
 
     @Override
