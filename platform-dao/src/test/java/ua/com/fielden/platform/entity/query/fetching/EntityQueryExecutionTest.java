@@ -64,6 +64,7 @@ import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
@@ -94,44 +95,87 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
+    ////////////////////////////////////////////////////////////////   UNION ENTITIES ////////////////////////////////////////////////////////////
     @Test
-    public void test_case_when_function() {
-	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").then().prop("key").end().isNotNull().model();
-        final IFunctionCompoundCondition0<IComparisonOperator0<TgVehicle>,TgVehicle> qry2 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --");
-        final EntityResultQueryModel<TgVehicle> qry3 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
-                then().prop("key").//
-                when().prop("a").isNotNull().then().prop("a").end()
-                .isNotNull().model();
+    public void test_query_union_entity_implied_query_model() {
+	final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).model();
+	assertEquals(workshopDao.count(select(TgWorkshop.class).model()) + wagonSlotDao.count(select(TgWagonSlot.class).model()), bogieLocationDao.count(qry));
+    }
 
-        final EntityResultQueryModel<TgVehicle> qry4 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
-                then().prop("key").//
-                when().prop("a").isNotNull().then().prop("a").otherwise().prop("a").end(). //
-                isNotNull().model();
+    @Test
+    public void test_query_with_union_property_being_null() {
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("key").eq().val("BOGIE2").model();
+	assertNull(bogieDao.getEntity(from(qry).model()).getLocation());
+    }
 
-        final EntityResultQueryModel<TgVehicle> qry5 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
-                then().prop("key").//
-                when().prop("a").isNotNull().then().prop("a").otherwise().prop("a").end(). //
-                isNotNull().model();
+    @Test
+    public void test_query_with_union_property_subproperties() {
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
+	assertEquals(bogieDao.findByKey("BOGIE1"), bogieDao.getEntity(from(qry).model()));
+    }
 
-        final EntityResultQueryModel<TgVehicle> qry6 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x"). //
-        then().prop("key").otherwise().prop("a").end(). //
-        isNotNull().model();
+    @Test
+    public void test_query_with_union_property_subproperties_via_query_based_source() {
+	final EntityResultQueryModel<TgBogie> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
+	assertEquals(bogieDao.findByKey("BOGIE1"), bogieDao.getEntity(from(qry).model()));
+    }
+
+    @Test
+    public void test_query_with_union_entity_id_property() {
+	final Long workshopId = workshopDao.findByKey("WSHOP1").getId();
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.id").eq().val(workshopId).model();
+	final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.id").eq().val(workshopId).model();
+	assertEquals(bogieDao.getEntity(from(expQry).model()), bogieDao.getEntity(from(qry).model()));
+    }
+
+    @Test
+    public void test_query_with_union_entity_key_property() {
+	final String workshopKey = "WSHOP1";
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
+	final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.key").eq().val(workshopKey).model();
+	assertEquals(bogieDao.getEntity(from(expQry).model()), bogieDao.getEntity(from(qry).model()));
+    }
+
+    @Test
+    public void test_query_with_union_property0b() {
+	final ExpressionModel idModel = expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot"). //
+		when().prop("workshop").isNotNull().then().prop("workshop").otherwise().val(null).end().model();
+
+	final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).where().expr(idModel).eq().val(workshopDao.findByKey("WSHOP1")).model();
+	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry).with(fetchAll(TgBogieLocation.class)).model());
+	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
     }
 
 
     @Test
-    public void test_condition_on_121_property() {
-	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").model();
-	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class)).model());
-	assertEquals("Incorrect key", 0, models.size());
+    @Ignore
+    public void test_query_with_union_property2() {
+	final EntityResultQueryModel<TgWorkshop> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").yield().prop("location.workshop").modelAsEntity(TgWorkshop.class);
+	final List<TgWorkshop> models = workshopDao.getAllEntities(from(qry).with(fetch(TgWorkshop.class)).model());
+	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
     }
 
     @Test
-    public void test_fetching_of_121_property() {
-	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
-	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class).with("finDetails")).model());
-	assertEquals("Incorrect key", "CAP_NO1", models.get(0).getFinDetails().getCapitalWorksNo());
+    public void test_query_union_entity_() {
+	final EntityResultQueryModel<TgBogieLocation> qry1 = select(TgWagonSlot.class).as("a").yield().prop("a").as("wagonSlot").yield().val(null).as("workshop").modelAsEntity(TgBogieLocation.class);
+	final EntityResultQueryModel<TgBogieLocation> qry2 = select(TgWorkshop.class).as("a").yield().val(null).as("wagonSlot").yield().prop("a").as("workshop").modelAsEntity(TgBogieLocation.class);
+	final EntityResultQueryModel<TgBogieLocation> qry3 = select(qry1, qry2).model();
+
+	bogieLocationDao.getAllEntities(from(qry1)/*.with(fetchAll(TgBogieLocation.class))*/.model());
+	bogieLocationDao.getAllEntities(from(qry2)/*.with(fetchAll(TgBogieLocation.class))*/.model());
+
+	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry3).model());
+	assertEquals("Incorrect key", 13, models.size());
     }
+
+    @Test
+    public void test_query_union_entityA_() {
+	final EntityResultQueryModel<TgBogieLocation> qry1 = select(TgWagonSlot.class).as("a").yield().prop("a").as("wagonSlot").modelAsEntity(TgBogieLocation.class);
+	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry1).model());
+    }
+
+
+    ////////////////////////////////////////////////////////////////   SYNTHETIC ENTITIES ////////////////////////////////////////////////////////////
 
     @Test
     public void test_retrieval_of_synthetic_entity6() {
@@ -193,242 +237,47 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect key", 2, models.size());
     }
 
+
+
+    ////////////////////////////////////////////////////////////////   CALCULATED PROPS ////////////////////////////////////////////////////////////
+
     @Test
-    public void test_validation_of_duplicate_yields() {
-	final AggregatedResultQueryModel model = select(TgVehicle.class). //
-		yield().prop("id").as("id"). //
-		yield().prop("key").as("key"). //
-		yield().prop("version").as("id"). //
-		modelAsAggregate();
-	try {
-	    aggregateDao.getAllEntities(from(model).model());
-	    fail("Should have failed while trying to yield duplicates");
-	} catch (final Exception e) {
-	}
+    public void test_calculated_entity_props_in_condition() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).model();
+	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).model());
+	assertEquals("Incorrect count", 1, vehicles.size());
+	final TgVehicle vehicle = vehicles.get(0);
+	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
     }
 
     @Test
-    public void test_retrieval_of_non_persisted_prop_from_type() {
-	final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicleMake.class).where().prop("npProp").eq().val("val").model();
-	try {
-	    vehicleMakeDao.getAllEntities(from(qry).model());
-	    fail("Should have failed while trying to resolve property [npProp]");
-	} catch (final Exception e) {
-	}
+    public void test_calculated_entity_prop_in_fetching() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).model();
+	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class).with("lastFuelUsage", fetchAll(TgFuelUsage.class))).model());
+	assertEquals("Incorrect count", 1, vehicles.size());
+	final TgVehicle vehicle = vehicles.get(0);
+	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+	assertEquals("Incorrect key", "P", vehicle.getLastFuelUsage().getFuelType().getKey());
     }
 
     @Test
-    public void test_retrieval_of_non_persisted_prop_from_model() {
-	final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicleMake.class). //
-	yield().prop("id").as("id"). //
-	yield().prop("version").as("version"). //
-	yield().prop("key").as("key"). //
-	yield().prop("desc").as("desc"). //
-	yield().val("val").as("npProp"). //
-	modelAsEntity(TgVehicleMake.class);
-	assertEquals("Incorrect key", 4, vehicleMakeDao.getAllEntities(from(qry).model()).size());
+    public void test_calculated_entity_props_in_condition_() {
+	final AggregatedResultQueryModel qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).yield().countAll().as("aa").modelAsAggregate();
+	final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).model());
+	assertEquals("Incorrect count", 1, vehicles.size());
+//	final TgVehicle vehicle = vehicles.get(0);
+//	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
     }
 
     @Test
-    public void test_retrieval_of_non_persisted_entity_prop_from_model() {
-	final EntityResultQueryModel<TgVehicleMake> makeQry = select(TgVehicleMake.class). //
-		where().prop("key").eq().val("MERC"). //
-	yield().prop("id").as("id"). //
-	yield().prop("version").as("version"). //
-	yield().prop("key").as("key"). //
-	yield().prop("desc").as("desc"). //
-	yield().beginExpr().val(vehicleMakeDao.findByKey("BMW")).add().val(1).sub().val(1).endExpr().as("competitor"). //
-	modelAsEntity(TgVehicleMake.class);
-	final EntityResultQueryModel<TgVehicleMake> qry = select(makeQry). //
-		where().prop("competitor.key").eq().val("BMW").model();
-	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(qry).with(fetchAll(TgVehicleMake.class).with("competitor")).model());
-	assertEquals("Incorrect size", 1, models.size());
-	assertEquals("Incorrect key", "BMW", models.get(0).getCompetitor().getKey());
+    public void test_calculated_entity_props_in_condition2() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).leftJoin(TgFuelUsage.class).as("lastFuelUsage").on().prop("lastFuelUsage").eq().prop("lastFuelUsage.id").where().prop("lastFuelUsage.qty").gt().val(100).model();
+	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).model());
+	assertEquals("Incorrect count", 1, vehicles.size());
+	final TgVehicle vehicle = vehicles.get(0);
+	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+
     }
-
-    @Test
-    public void test_query_with_union_property_being_null() {
-	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("key").eq().val("BOGIE2").model();
-	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class)).model());
-	assertEquals("Incorrect key 1", "BOGIE2", models.get(0).getKey());
-	assertTrue("Incorrect key 1", models.get(0).getLocation() == null);
-    }
-
-    @Test
-    public void test_query_with_union_property() {
-	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
-	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class)).model());
-	assertEquals("Incorrect key 1", "BOGIE1", models.get(0).getKey());
-	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
-    }
-
-    @Test
-    @Ignore
-    public void test_query_with_union_property0a() {
-	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val("WSHOP1").model();
-	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class)).model());
-	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
-    }
-
-    @Test
-    public void test_query_with_union_property0b() {
-	final ExpressionModel idModel = expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot"). //
-		when().prop("workshop").isNotNull().then().prop("workshop").otherwise().val(null).end().model();
-
-	final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).where().expr(idModel).eq().val(workshopDao.findByKey("WSHOP1")).model();
-	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry).with(fetchAll(TgBogieLocation.class)).model());
-	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
-    }
-
-//    @Test
-//    public void test_query_with_union_property0c() {
-//	final ExpressionModel idModel = expr().caseWhen().prop("replacedBy").isNotNull().then().prop("replacedBy"). //
-//	when().prop("model").isNotNull().then().prop("replacedBy").otherwise().val(null).end().model();
-//
-//	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).yield().expr(idModel).modelAsEntity(TgVehicle.class);
-//	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetchAll(TgVehicle.class)).model());
-//	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
-//    }
-//
-//    @Test
-//    public void test_query_with_union_property0d() {
-//	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).yield().caseWhen().prop("replacedBy").eq().val(1).then().prop("replacedBy"). //
-//	when().prop("model").isNotNull().then().prop("model").otherwise().val(null).end().modelAsEntity(TgVehicle.class);
-//	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetchAll(TgVehicle.class)).model());
-//	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
-//    }
-//
-    @Test
-    public void test_query_with_union_property0() {
-	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.id").eq().val(workshopDao.findByKey("WSHOP1")).model();
-	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class)).model());
-	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
-    }
-
-
-    @Test
-    public void test_query_with_union_property1() {
-	final EntityResultQueryModel<TgBogie> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
-	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).model());
-	assertEquals("Incorrect key 1", "BOGIE1", models.get(0).getKey());
-    }
-
-    @Test
-    @Ignore
-    public void test_query_with_union_property2() {
-	final EntityResultQueryModel<TgWorkshop> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").yield().prop("location.workshop").modelAsEntity(TgWorkshop.class);
-	final List<TgWorkshop> models = workshopDao.getAllEntities(from(qry).with(fetch(TgWorkshop.class)).model());
-	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
-    }
-
-    @Test
-    public void test_query_union_entity_() {
-	final EntityResultQueryModel<TgBogieLocation> qry1 = select(TgWagonSlot.class).as("a").yield().prop("a").as("wagonSlot").yield().val(null).as("workshop").modelAsEntity(TgBogieLocation.class);
-	final EntityResultQueryModel<TgBogieLocation> qry2 = select(TgWorkshop.class).as("a").yield().val(null).as("wagonSlot").yield().prop("a").as("workshop").modelAsEntity(TgBogieLocation.class);
-	final EntityResultQueryModel<TgBogieLocation> qry3 = select(qry2, qry1).model();
-
-	bogieLocationDao.getAllEntities(from(qry1)/*.with(fetchAll(TgBogieLocation.class))*/.model());
-	bogieLocationDao.getAllEntities(from(qry2)/*.with(fetchAll(TgBogieLocation.class))*/.model());
-
-	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry3)/*.with(fetchAll(TgBogieLocation.class))*/.model());
-	assertEquals("Incorrect key", 13, models.size());
-
-	//assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
-    }
-
-
-    @Test
-    public void test_query_union_entityA_() {
-	final EntityResultQueryModel<TgBogieLocation> qry1 = select(TgWagonSlot.class).as("a").yield().prop("a").as("wagonSlot").modelAsEntity(TgBogieLocation.class);
-	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry1)/*.with(fetchAll(TgBogieLocation.class))*/.model());
-	//assertEquals("Incorrect key", 13, models.size());
-
-	//assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
-    }
-
-
-    @Test
-    public void test_query_union_entity0() {
-	final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).model();
-	final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry)/*.with(fetchAll(TgBogieLocation.class))*/.model());
-	assertEquals("Incorrect key", 13, models.size());
-
-	//assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
-    }
-
-    @Test
-    public void test_query_with_virtual_property() {
-	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().prop("key").like().val("WAGON%1").model();
-	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).with(orderBy().prop("key").desc().model()).model());
-	assertEquals("Incorrect key", 2, models.size());
-	assertEquals("Incorrect key 1", "WAGON2", models.get(0).getWagon().getKey());
-	assertEquals("Incorrect key 2", "1", models.get(0).getPosition().toString());
-	assertEquals("Incorrect key 2", "WAGON2 1", models.get(0).getKey().toString());
-    }
-
-    @Test
-    public void test_query_with_concat_function() {
-	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().prop("wagon.key").with().val("-").with().prop("wagon.desc").end().eq().val("WAGON2-Wagon 2").model();
-	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).model());
-	assertEquals("Incorrect key", 3, models.size());
-    }
-
-    @Test
-    public void test_query_with_concat_function2() {
-	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().ifNull().prop("wagon.key").then().val("NULL").with().val("-").with().prop("wagon.desc").end().eq().val("WAGON2-Wagon 2").model();
-	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).model());
-	assertEquals("Incorrect key", 3, models.size());
-    }
-
-    @Test
-    public void test_query_with_concat_function_with_non_string_argument() {
-	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().prop("wagon.key").with().val(2).end().eq().val("WAGON22").model();
-	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).model());
-	assertEquals("Incorrect key", 3, models.size());
-    }
-
-    @Test
-    public void test_fetch_with_sorted_collection() {
-	final EntityResultQueryModel<TgWagon> qry = select(TgWagon.class).where().prop("key").eq().val("WAGON1").model();
-	final List<TgWagon> models = wagonDao.getAllEntities(from(qry).with(fetch(TgWagon.class).with("slots", fetch(TgWagonSlot.class).with("bogie"))).model());
-	assertEquals("Incorrect key", 1, models.size());
-	assertEquals("Incorrect key", 8, models.get(0).getSlots().size());
-	assertEquals("Incorrect slot position", new Integer("1"), models.get(0).getSlots().iterator().next().getPosition());
-	assertNotNull("Bogie should be present", models.get(0).getSlots().iterator().next().getBogie());
-	assertEquals("Incorrect key", "BOGIE4", models.get(0).getSlots().iterator().next().getBogie().getKey());
-    }
-
-    @Test
-    public void test_sql_injection() {
-	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("desc").eq().val("x'; DROP TABLE members; --").model();
-	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class)).model());
-	assertEquals("Incorrect key", 0, models.size());
-    }
-
-    @Test
-    public void test_yielding_const_value() {
-	final AggregatedResultQueryModel makeModel = select(TgVehicleMake.class).where().prop("key").eq().val("MERC").yield().prop("key").as("key").yield().val("MERC").as("konst").modelAsAggregate();
-	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(makeModel).model());
-	assertEquals("Incorrect key", 1, models.size());
-     }
-
-    @Test
-    public void test_nested_uncorrelated_subqueries() {
-	final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("model").eq().extProp("id").model();
-	final EntityResultQueryModel<TgVehicleModel> vehModelSubqry = select(TgVehicleModel.class).where().prop("key").eq().val("316").and().exists(vehSubqry).model();
-	final EntityResultQueryModel<TgVehicleMake> makeModel = select(TgVehicleMake.class).where().exists(vehModelSubqry).model();
-	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(makeModel).model());
-	assertEquals("Incorrect key", 4, models.size());
-     }
-
-    @Test
-    public void test_nested_subqueries_with_ext_props() {
-	final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("model").eq().extProp("id").model();
-	final EntityResultQueryModel<TgVehicleModel> vehModelSubqry = select(TgVehicleModel.class).where().prop("make").eq().extProp("id").and().exists(vehSubqry).model();
-	final EntityResultQueryModel<TgVehicleMake> makeModel = select(TgVehicleMake.class).where().exists(vehModelSubqry).model();
-	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(makeModel).model());
-	assertEquals("Incorrect key", 2, models.size());
-     }
 
     @Test
     public void test0_0() {
@@ -516,6 +365,182 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).model());
 	assertEquals("Incorrect key", 0, models.size());
     }
+
+
+
+    ////////////////////////////////////////////////////////////////   FUNCTIONS  ////////////////////////////////////////////////////////////
+
+    @Test
+    public void test_query_with_concat_function() {
+	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().prop("wagon.key").with().val("-").with().prop("wagon.desc").end().eq().val("WAGON2-Wagon 2").model();
+	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).model());
+	assertEquals("Incorrect key", 3, models.size());
+    }
+
+    @Test
+    public void test_query_with_concat_function2() {
+	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().ifNull().prop("wagon.key").then().val("NULL").with().val("-").with().prop("wagon.desc").end().eq().val("WAGON2-Wagon 2").model();
+	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).model());
+	assertEquals("Incorrect key", 3, models.size());
+    }
+
+    @Test
+    public void test_query_with_concat_function_with_non_string_argument() {
+	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().prop("wagon.key").with().val(2).end().eq().val("WAGON22").model();
+	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).model());
+	assertEquals("Incorrect key", 3, models.size());
+    }
+
+    @Test
+    public void test_case_when_function() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").then().prop("key").end().isNotNull().model();
+        final IFunctionCompoundCondition0<IComparisonOperator0<TgVehicle>,TgVehicle> qry2 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --");
+        final EntityResultQueryModel<TgVehicle> qry3 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
+                then().prop("key").//
+                when().prop("a").isNotNull().then().prop("a").end()
+                .isNotNull().model();
+
+        final EntityResultQueryModel<TgVehicle> qry4 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
+                then().prop("key").//
+                when().prop("a").isNotNull().then().prop("a").otherwise().prop("a").end(). //
+                isNotNull().model();
+
+        final EntityResultQueryModel<TgVehicle> qry5 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
+                then().prop("key").//
+                when().prop("a").isNotNull().then().prop("a").otherwise().prop("a").end(). //
+                isNotNull().model();
+
+        final EntityResultQueryModel<TgVehicle> qry6 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x"). //
+        then().prop("key").otherwise().prop("a").end(). //
+        isNotNull().model();
+    }
+
+
+    ////////////////////////////////////////////////////////////////   OTHERS  ////////////////////////////////////////////////////////////
+
+    @Test
+    public void test_condition_on_121_property() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class)).model());
+	assertEquals("Incorrect key", 0, models.size());
+    }
+
+    @Test
+    public void test_fetching_of_121_property() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class).with("finDetails")).model());
+	assertEquals("Incorrect key", "CAP_NO1", models.get(0).getFinDetails().getCapitalWorksNo());
+    }
+
+
+    @Test
+    public void test_validation_of_duplicate_yields() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class). //
+		yield().prop("id").as("id"). //
+		yield().prop("key").as("key"). //
+		yield().prop("version").as("id"). //
+		modelAsAggregate();
+	try {
+	    aggregateDao.getAllEntities(from(model).model());
+	    fail("Should have failed while trying to yield duplicates");
+	} catch (final Exception e) {
+	}
+    }
+
+    @Test
+    public void test_retrieval_of_non_persisted_prop_from_type() {
+	final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicleMake.class).where().prop("npProp").eq().val("val").model();
+	try {
+	    vehicleMakeDao.getAllEntities(from(qry).model());
+	    fail("Should have failed while trying to resolve property [npProp]");
+	} catch (final Exception e) {
+	}
+    }
+
+    @Test
+    public void test_retrieval_of_non_persisted_prop_from_model() {
+	final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicleMake.class). //
+	yield().prop("id").as("id"). //
+	yield().prop("version").as("version"). //
+	yield().prop("key").as("key"). //
+	yield().prop("desc").as("desc"). //
+	yield().val("val").as("npProp"). //
+	modelAsEntity(TgVehicleMake.class);
+	assertEquals("Incorrect key", 4, vehicleMakeDao.getAllEntities(from(qry).model()).size());
+    }
+
+    @Test
+    public void test_retrieval_of_non_persisted_entity_prop_from_model() {
+	final EntityResultQueryModel<TgVehicleMake> makeQry = select(TgVehicleMake.class). //
+		where().prop("key").eq().val("MERC"). //
+	yield().prop("id").as("id"). //
+	yield().prop("version").as("version"). //
+	yield().prop("key").as("key"). //
+	yield().prop("desc").as("desc"). //
+	yield().beginExpr().val(vehicleMakeDao.findByKey("BMW")).add().val(1).sub().val(1).endExpr().as("competitor"). //
+	modelAsEntity(TgVehicleMake.class);
+	final EntityResultQueryModel<TgVehicleMake> qry = select(makeQry). //
+		where().prop("competitor.key").eq().val("BMW").model();
+	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(qry).with(fetchAll(TgVehicleMake.class).with("competitor")).model());
+	assertEquals("Incorrect size", 1, models.size());
+	assertEquals("Incorrect key", "BMW", models.get(0).getCompetitor().getKey());
+    }
+
+
+    @Test
+    public void test_query_with_virtual_property() {
+	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().prop("key").like().val("WAGON%1").model();
+	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).with(orderBy().prop("key").desc().model()).model());
+	assertEquals("Incorrect key", 2, models.size());
+	assertEquals("Incorrect key 1", "WAGON2", models.get(0).getWagon().getKey());
+	assertEquals("Incorrect key 2", "1", models.get(0).getPosition().toString());
+	assertEquals("Incorrect key 2", "WAGON2 1", models.get(0).getKey().toString());
+    }
+
+
+    @Test
+    public void test_fetch_with_sorted_collection() {
+	final EntityResultQueryModel<TgWagon> qry = select(TgWagon.class).where().prop("key").eq().val("WAGON1").model();
+	final List<TgWagon> models = wagonDao.getAllEntities(from(qry).with(fetch(TgWagon.class).with("slots", fetch(TgWagonSlot.class).with("bogie"))).model());
+	assertEquals("Incorrect key", 1, models.size());
+	assertEquals("Incorrect key", 8, models.get(0).getSlots().size());
+	assertEquals("Incorrect slot position", new Integer("1"), models.get(0).getSlots().iterator().next().getPosition());
+	assertNotNull("Bogie should be present", models.get(0).getSlots().iterator().next().getBogie());
+	assertEquals("Incorrect key", "BOGIE4", models.get(0).getSlots().iterator().next().getBogie().getKey());
+    }
+
+    @Test
+    public void test_sql_injection() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("desc").eq().val("x'; DROP TABLE members; --").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class)).model());
+	assertEquals("Incorrect key", 0, models.size());
+    }
+
+    @Test
+    public void test_yielding_const_value() {
+	final AggregatedResultQueryModel makeModel = select(TgVehicleMake.class).where().prop("key").eq().val("MERC").yield().prop("key").as("key").yield().val("MERC").as("konst").modelAsAggregate();
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(makeModel).model());
+	assertEquals("Incorrect key", 1, models.size());
+     }
+
+    @Test
+    public void test_nested_uncorrelated_subqueries() {
+	final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("model").eq().extProp("id").model();
+	final EntityResultQueryModel<TgVehicleModel> vehModelSubqry = select(TgVehicleModel.class).where().prop("key").eq().val("316").and().exists(vehSubqry).model();
+	final EntityResultQueryModel<TgVehicleMake> makeModel = select(TgVehicleMake.class).where().exists(vehModelSubqry).model();
+	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(makeModel).model());
+	assertEquals("Incorrect key", 4, models.size());
+     }
+
+    @Test
+    public void test_nested_subqueries_with_ext_props() {
+	final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("model").eq().extProp("id").model();
+	final EntityResultQueryModel<TgVehicleModel> vehModelSubqry = select(TgVehicleModel.class).where().prop("make").eq().extProp("id").and().exists(vehSubqry).model();
+	final EntityResultQueryModel<TgVehicleMake> makeModel = select(TgVehicleMake.class).where().exists(vehModelSubqry).model();
+	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(makeModel).model());
+	assertEquals("Incorrect key", 2, models.size());
+     }
+
 
     @Test
     public void test_111() {
@@ -989,47 +1014,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final EntityAggregates value = aggregateDao.getAllEntities(from(model).with(fetchModel).model()).get(0);
 	assertEquals("Incorrect key", "orgunit5", ((TgOrgUnit5) value.get("station")).getKey());
     }
-
-    @Test
-    public void test_calculated_entity_props_in_condition() {
-	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).model();
-	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).model());
-	assertEquals("Incorrect count", 1, vehicles.size());
-	final TgVehicle vehicle = vehicles.get(0);
-	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
-
-    }
-
-    @Test
-    public void test_calculated_entity_prop_in_fetching() {
-	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).model();
-	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class).with("lastFuelUsage", fetchAll(TgFuelUsage.class))).model());
-	assertEquals("Incorrect count", 1, vehicles.size());
-	final TgVehicle vehicle = vehicles.get(0);
-	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
-	assertEquals("Incorrect key", "P", vehicle.getLastFuelUsage().getFuelType().getKey());
-    }
-
-    @Test
-    public void test_calculated_entity_props_in_condition_() {
-	final AggregatedResultQueryModel qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).yield().countAll().as("aa").modelAsAggregate();
-	final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).model());
-	assertEquals("Incorrect count", 1, vehicles.size());
-//	final TgVehicle vehicle = vehicles.get(0);
-//	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
-
-    }
-
-    @Test
-    public void test_calculated_entity_props_in_condition2() {
-	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).leftJoin(TgFuelUsage.class).as("lastFuelUsage").on().prop("lastFuelUsage").eq().prop("lastFuelUsage.id").where().prop("lastFuelUsage.qty").gt().val(100).model();
-	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).model());
-	assertEquals("Incorrect count", 1, vehicles.size());
-	final TgVehicle vehicle = vehicles.get(0);
-	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
-
-    }
-
 
     @Test
     public void test_parameter_setting() {
