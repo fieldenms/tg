@@ -84,7 +84,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
     @Override
     protected void exportData(final String fileName) throws IOException {
         // TODO Auto-generated method stub
-    
+
     }
 
     @Override

@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
@@ -97,10 +98,11 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 		createPropertyDescriptorMatcherForCollection(propertyOwnerEntityType, propertyName, entityEntry);
 	    } else {
 		final Class<?> keyType = AnnotationReflector.getKeyType(elType.value());
+		final Class<? extends AbstractEntity<?>> notEnhancedElType = (Class<AbstractEntity<?>>)DynamicEntityClassLoader.getOriginalType(elType.value());
 		if (keyType != null && AbstractEntity.class.isAssignableFrom(keyType)) {
-		    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao((Class<? extends AbstractEntity<?>>) elType.value()), "key.key", "key.key"));
+		    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao(notEnhancedElType), "key.key", "key.key"));
 		} else {
-		    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao((Class<? extends AbstractEntity<?>>) elType.value()), "key"));
+		    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao(notEnhancedElType), "key"));
 		}
 	    }
 	} else if (propType.isEnum()) {

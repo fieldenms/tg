@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
@@ -83,7 +84,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	final EntityType entityTypeAnnotation = AnnotationReflector.getPropertyAnnotation(EntityType.class, entity.getType(), propertyName);
 	final boolean isSingle = isSingle(entity, propertyName);
 	final boolean stringBinding = isStringBinded(entity, propertyName);
-	final Class<?> elementType = isSingle ? metaProp.getType() : (stringBinding ? entityTypeAnnotation.value() : propertyAnnotation.value());
+	final Class<?> elementType = isSingle ? metaProp.getType() : (stringBinding ? DynamicEntityClassLoader.getOriginalType(entityTypeAnnotation.value()) : propertyAnnotation.value());
 	if(!AbstractEntity.class.isAssignableFrom(elementType)){
 	    throw new IllegalArgumentException("The property: " + propertyName + " of " + entity.getType().getSimpleName() + " type, can not be bind to the autocompleter!");
 	}
@@ -199,7 +200,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	/**
 	 * Set the binded property editor for this value matcher. The binded property editor must have reference on to this value matcher.
 	 * Otherwise it throws {@link IllegalArgumentException}.
-	 * 
+	 *
 	 * @param bindedPropertyEditor
 	 */
 	public void setBindedPropertyEditor(final EntityPropertyEditorWithLocator bindedPropertyEditor) {
@@ -268,9 +269,9 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
 	/**
 	 * Initialises the property editor's autocompleter. Set highlight for first and second value.
-	 * 
+	 *
 	 * @param ldtme
-	 * 
+	 *
 	 */
 	private void initEditor(final ILocatorDomainTreeManagerAndEnhancer ldtme) {
 	    if(bindedPropertyEditor != null && ldtme.isUseForAutocompletion()){
@@ -289,7 +290,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
 	/**
 	 * Returns the instance of {@link ILocatorDomainTreeManagerAndEnhancer} associated with this value matcher.
-	 * 
+	 *
 	 * @return
 	 */
 	private ILocatorDomainTreeManagerAndEnhancer ldtme(){

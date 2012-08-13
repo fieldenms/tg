@@ -13,8 +13,6 @@ import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
 
 import net.miginfocom.swing.MigLayout;
@@ -28,6 +26,7 @@ import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase;
+import ua.com.fielden.platform.swing.components.bind.development.SwingWorkerCatcher;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
@@ -446,31 +445,8 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    label = DummyBuilder.label(titleAndDesc.getKey());
 	    label.setToolTipText(titleAndDesc.getValue());
 
-	    textEditor = ComponentFactory.createCustomStringTextField(entity, propertyName, true, entity.getProperty(propertyName).getDesc(), EditorCase.MIXED_CASE, createExpressionEditorDocument());
+	    textEditor = ComponentFactory.createCustomStringTextField(entity, propertyName, true, entity.getProperty(propertyName).getDesc(), EditorCase.MIXED_CASE, new PlainDocument());
 	    manualTextSetter = new ManualTextSetter(textEditor, entity, propertyName);
-	}
-
-	private PlainDocument createExpressionEditorDocument(){
-	    return new PlainDocument(){
-
-		private static final long serialVersionUID = -6048781732872266049L;
-
-		@Override
-		public void replace(final int offset, final int length, final String text, final AttributeSet attrs) throws BadLocationException {
-		    super.replace(offset, length, text, attrs);
-		    if (manualTextSetter != null) {
-			manualTextSetter.updateComponent();
-		    }
-		}
-
-		@Override
-		public void insertString(final int offs, final String str, final AttributeSet a) throws BadLocationException {
-		    super.insertString(offs, str, a);
-		    if (manualTextSetter != null) {
-			manualTextSetter.updateComponent();
-		    }
-		}
-	    };
 	}
 
 	/**
@@ -639,11 +615,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	private int relativeCaretPosition;
 
 	/**
-	 * Current action that must be performed after text was set to the model.
-	 */
-	private AfterTextSetAction textSetAction = AfterTextSetAction.NONE;
-
-	/**
 	 * Initiates this {@link ManualTextSetter} with specified {@link BoundedValidationLayer} instance.
 	 *
 	 * @param textComponent
@@ -660,18 +631,15 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	public void updateComponent() {
 	    final JTextField field = textComponent.getView();
 
-	    if(textSetAction == AfterTextSetAction.UPDATE_COMPONENT){
-		field.setCaretPosition(startIndex + relativeCaretPosition);
-		if (select) {
-		    field.select(startIndex + selectionStartIndex, startIndex + selectionStartIndex + charNumberToSelect);
-		} else {
-		    field.select(field.getCaretPosition(), field.getCaretPosition());
-		}
-		startIndex = endIndex = relativeCaretPosition = charNumberToSelect = selectionStartIndex = 0;
-		select = false;
-		textSetAction = AfterTextSetAction.NONE;
-		field.requestFocusInWindow();
-            }
+	    field.setCaretPosition(startIndex + relativeCaretPosition);
+	    if (select) {
+		field.select(startIndex + selectionStartIndex, startIndex + selectionStartIndex + charNumberToSelect);
+	    } else {
+		field.select(field.getCaretPosition(), field.getCaretPosition());
+	    }
+	    startIndex = endIndex = relativeCaretPosition = charNumberToSelect = selectionStartIndex = 0;
+	    select = false;
+	    field.requestFocusInWindow();
 	}
 
 	/**
@@ -691,6 +659,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 * @param select - indicates whether select inserted text or not.
 	 */
 	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int selectionStartIndex, final int charNumberToSelect, final int relativeCaretPosition){
+	    textComponent.commit();
 	    final JTextField field = textComponent.getView();
 	    final String textToSet;
 	    if(field.getSelectionStart() == field.getSelectionEnd()){
@@ -734,20 +703,30 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		}
 	    }
 	    final String previousText = field.getText();
-	    textSetAction = AfterTextSetAction.UPDATE_COMPONENT;
-	    entity.set(propertyName, previousText.substring(0, startIndex) + textToSet + previousText.substring(endIndex));
+	    promoteValueOnSeparateThread(previousText.substring(0, startIndex) + textToSet + previousText.substring(endIndex));
 	}
 
-	/**
-	 * Determines the action that must be performed after text was set to the model.
-	 *
-	 * @author TG Team
-	 *
-	 */
-	private static enum AfterTextSetAction{
-	    UPDATE_COMPONENT, NONE;
-	}
+	private void promoteValueOnSeparateThread(final String newValue) {
+	    entity.lock();
+	    // now create and execute the swing worker
+	    new SwingWorkerCatcher<Result, Void>() {
+		@Override
+		protected Result tryToDoInBackground() throws Exception {
+		    entity.set(propertyName, newValue);
+		    return null;
+		}
 
+		@Override
+		protected void tryToDone() {
+		    // need to unlock subjectBean in all cases:
+		    // 1. setter not performed - exception throwed
+		    // 2. setter not performed - the committing logic didn't invoke setter
+		    // 3. setter performed correctly
+		    entity.unlock();
+		    updateComponent();
+		}
+	    }.execute();
+	}
     }
 
     /**

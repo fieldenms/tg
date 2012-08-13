@@ -8,10 +8,7 @@ import javax.swing.tree.TreeNode;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellRenderer2;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * {@link MultipleCheckboxTreeCellRenderer2} implementation for filtering.
@@ -55,19 +52,19 @@ public class FilterableEntitiesTreeCellRenderer extends MultipleCheckboxTreeCell
       	setCheckingComponentsVisible(true);
 
       	final EntitiesTreeNode2<IAbstractAnalysisDomainTreeManager> node = (EntitiesTreeNode2<IAbstractAnalysisDomainTreeManager>) value;
-      	final Class<?> root = node.getUserObject().getKey();
+      	//final Class<?> root = node.getUserObject().getKey();
       	final String property = node.getUserObject().getValue();
 
       	if (!getModel().isNotDummyAndNotCommonProperty(property)) {
       	    setCheckingComponentsVisible(false);
       	}
 
-      	if (PropertyTypeDeterminator.isDotNotation(property)) {
-      	    final String parentProperty = PropertyTypeDeterminator.penultAndLast(property).getKey();
-      	    if (!AbstractDomainTree.isCommonBranch(parentProperty) && EntityUtils.isUnionEntityType(PropertyTypeDeterminator.determinePropertyType(root, AbstractDomainTree.reflectionProperty(parentProperty)))) {
-      		setCheckingComponentVisible(1, false);
-      	    }
-      	}
+	/*if (PropertyTypeDeterminator.isDotNotation(property)) {
+	    final String parentProperty = PropertyTypeDeterminator.penultAndLast(property).getKey();
+	    if (!AbstractDomainTree.isCommonBranch(parentProperty) && EntityUtils.isUnionEntityType(PropertyTypeDeterminator.determinePropertyType(root, AbstractDomainTree.reflectionProperty(parentProperty)))) {
+		setCheckingComponentVisible(1, false);
+	    }
+	}*/
 
       	// this action should make matched nodes to render bold.
       	if (getModel().getFilterableModel().matches((TreeNode) value)) {
