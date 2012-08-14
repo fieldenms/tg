@@ -12,6 +12,7 @@ import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class FetchModel<T extends AbstractEntity<?>> {
     private final fetch<T> originalFetch;
@@ -32,7 +33,9 @@ public class FetchModel<T extends AbstractEntity<?>> {
 		includeAllFirstLevelPrimPropsAndKey();
 		break;
 	    case NONE:
-		includeIdAndVersionOnly();
+		if (EntityUtils.isPersistedEntityType(getEntityType())) {
+		    includeIdAndVersionOnly();
+		}
 		break;
 	    default:
 		throw new IllegalStateException("Unknown fetch category [" + originalFetch.getFetchCategory() + "]");
