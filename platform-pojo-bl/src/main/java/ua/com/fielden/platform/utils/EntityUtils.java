@@ -32,6 +32,9 @@ import ua.com.fielden.platform.utils.ConverterFactory.Converter;
 public class EntityUtils {
     private final static Logger logger = Logger.getLogger(EntityUtils.class);
 
+    /** Private default constructor to prevent instantiation. */
+    private EntityUtils() {}
+
     /**
      * dd/MM/yyyy format instance
      */
@@ -89,7 +92,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean safeEquals(final Object o1, final Object o2) {
-	if ((o1 == null && o2 == null) || (o1 != null && o1.equals(o2))) {
+	if (o1 == null && o2 == null || o1 != null && o1.equals(o2)) {
 	    return true;
 	}
 	return false;
@@ -225,10 +228,10 @@ public class EntityUtils {
      * @return
      */
     public static String getLabelText(final Object value, final Converter converter) {
-	if (value != null && (!value.getClass().equals(String.class)) && converter == null) {
+	if (value != null && !value.getClass().equals(String.class) && converter == null) {
 	    return value.toString();
 	}
-	final String str = (converter != null) ? converter.convertToString(value) : (String) value;
+	final String str = converter != null ? converter.convertToString(value) : (String) value;
 	return str == null ? "" : str;
     }
 
@@ -273,7 +276,7 @@ public class EntityUtils {
      * @return boolean {@code true} if and only if both objects are {@code null} or equal
      */
     public static boolean equalsEx(final Object o1, final Object o2) {
-	return (o1 == o2) || ((o1 != null) && (o2 != null) && (o1.equals(o2)));
+	return o1 == o2 || o1 != null && o2 != null && o1.equals(o2);
     }
 
     /**
@@ -342,12 +345,12 @@ public class EntityUtils {
 	    if (start != null) {
 		if (start.after(finish)) {
 		    throw new Result("", new Exception(finishSetter ? //
-		    /*      */finishProperty.getTitle() + " cannot be before " + startProperty.getTitle() + "." //
+			    /*      */finishProperty.getTitle() + " cannot be before " + startProperty.getTitle() + "." //
 			    : startProperty.getTitle() + " cannot be after " + finishProperty.getTitle() + "."));
 		}
 	    } else {
 		throw new Result("", new Exception(finishSetter ? //
-		/*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
+			/*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
 			: startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
 	    }
 	}
@@ -370,12 +373,12 @@ public class EntityUtils {
 	    if (start != null) {
 		if (start.isAfter(finish)) {
 		    throw new Result("", new Exception(finishSetter ? //
-		    /*      */finishProperty.getTitle() + " cannot be before " + startProperty.getTitle() + "." //
+			    /*      */finishProperty.getTitle() + " cannot be before " + startProperty.getTitle() + "." //
 			    : startProperty.getTitle() + " cannot be after " + finishProperty.getTitle() + "."));
 		}
 	    } else {
 		throw new Result("", new Exception(finishSetter ? //
-		/*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
+			/*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
 			: startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
 	    }
 	}
@@ -400,12 +403,12 @@ public class EntityUtils {
 	    if (start != null) {
 		if (start.compareTo(finish) > 0) { //  after(finish)
 		    throw new Result("", new Exception(finishSetter ? //
-		    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
+			    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
 			    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
 		}
 	    } else {
 		throw new Result("", new Exception(finishSetter ? //
-		/*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
+			/*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
 			: startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
 	    }
 	}
@@ -427,12 +430,12 @@ public class EntityUtils {
 	    if (start != null) {
 		if (start.compareTo(finish) > 0) { //  after(finish)
 		    throw new Result("", new Exception(finishSetter ? //
-		    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
+			    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
 			    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
 		}
 	    } else {
 		throw new Result("", new Exception(finishSetter ? //
-		/*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
+			/*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
 			: startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
 	    }
 	}
@@ -454,12 +457,12 @@ public class EntityUtils {
 	    if (start != null) {
 		if (start.compareTo(finish) > 0) { //  after(finish)
 		    throw new Result("", new Exception(finishSetter ? //
-		    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
+			    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
 			    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
 		}
 	    } else {
 		throw new Result("", new Exception(finishSetter ? //
-		/*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
+			/*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
 			: startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
 	    }
 	}
@@ -472,7 +475,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isEnum(final Class<?> type) {
-        return Enum.class.isAssignableFrom(type);
+	return Enum.class.isAssignableFrom(type);
     }
 
     /**
@@ -482,7 +485,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isRangeType(final Class<?> type) {
-        return Number.class.isAssignableFrom(type) || Money.class.isAssignableFrom(type) || Date.class.isAssignableFrom(type);
+	return Number.class.isAssignableFrom(type) || Money.class.isAssignableFrom(type) || Date.class.isAssignableFrom(type);
     }
 
     /**
@@ -492,7 +495,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isBoolean(final Class<?> type) {
-        return boolean.class.isAssignableFrom(type);
+	return boolean.class.isAssignableFrom(type);
     }
 
     /**
@@ -502,7 +505,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isDate(final Class<?> type) {
-        return Date.class.isAssignableFrom(type);
+	return Date.class.isAssignableFrom(type);
     }
 
     /**
@@ -511,7 +514,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isString(final Class<?> type) {
-        return String.class.isAssignableFrom(type);
+	return String.class.isAssignableFrom(type);
     }
 
     /**
@@ -520,7 +523,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isEntityType(final Class<?> type) {
-        return AbstractEntity.class.isAssignableFrom(type);
+	return AbstractEntity.class.isAssignableFrom(type);
     }
 
     /**
@@ -538,7 +541,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isCollectional(final Class<?> type) {
-        return Collection.class.isAssignableFrom(type);
+	return Collection.class.isAssignableFrom(type);
     }
 
     /**
@@ -547,7 +550,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isPropertyDescriptor(final Class<?> type) {
-        return PropertyDescriptor.class.isAssignableFrom(type);
+	return PropertyDescriptor.class.isAssignableFrom(type);
     }
 
     /**
@@ -556,7 +559,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isUnionEntityType(final Class<?> type) {
-        return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
+	return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
     }
 
     /**
@@ -581,32 +584,32 @@ public class EntityUtils {
 	} catch (final Exception e) {
 	    throw deepCopyError(oldObj, e);
 	}
-//	final ObjectOutputStream oos = null;
-//	final ObjectInputStream ois = null;
-//	try {
-//	    final ByteArrayOutputStream bos = new ByteArrayOutputStream(); // A
-//	    oos = new ObjectOutputStream(bos); // B
-//	    // serialize and pass the object
-//	    oos.writeObject(oldObj); // C
-//	    oos.flush(); // D
-//	    final ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray()); // E
-//	    ois = new ObjectInputStream(bin); // F
-//	    // return the new object
-//	    return (T) ois.readObject(); // G
-//	} catch (final Exception e) {
-//	    throw deepCopyError(oldObj, e);
-//	} finally {
-//	    try {
-//		if (oos != null) {
-//		    oos.close();
-//		}
-//		if (ois != null) {
-//		    ois.close();
-//		}
-//	    } catch (final IOException e2) {
-//		throw deepCopyError(oldObj, e2);
-//	    }
-//	}
+	//	final ObjectOutputStream oos = null;
+	//	final ObjectInputStream ois = null;
+	//	try {
+	//	    final ByteArrayOutputStream bos = new ByteArrayOutputStream(); // A
+	//	    oos = new ObjectOutputStream(bos); // B
+	//	    // serialize and pass the object
+	//	    oos.writeObject(oldObj); // C
+	//	    oos.flush(); // D
+	//	    final ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray()); // E
+	//	    ois = new ObjectInputStream(bin); // F
+	//	    // return the new object
+	//	    return (T) ois.readObject(); // G
+	//	} catch (final Exception e) {
+	//	    throw deepCopyError(oldObj, e);
+	//	} finally {
+	//	    try {
+	//		if (oos != null) {
+	//		    oos.close();
+	//		}
+	//		if (ois != null) {
+	//		    ois.close();
+	//		}
+	//	    } catch (final IOException e2) {
+	//		throw deepCopyError(oldObj, e2);
+	//	    }
+	//	}
     }
 
     protected static IllegalStateException deepCopyError(final Object oldObj, final Exception e) {
@@ -624,13 +627,13 @@ public class EntityUtils {
      * @return
      */
     public static <E extends Enum<E>> List<Class<?>> extractTypes(final Class<E> type) {
-        final List<Class<?>> result = new ArrayList<Class<?>>();
-        result.add(type);
-        final EnumSet<E> mnemonicEnumSet = EnumSet.allOf(type);
-        for (final E value : mnemonicEnumSet) {
-            result.add(value.getClass());
-        }
-        return result;
+	final List<Class<?>> result = new ArrayList<Class<?>>();
+	result.add(type);
+	final EnumSet<E> mnemonicEnumSet = EnumSet.allOf(type);
+	for (final E value : mnemonicEnumSet) {
+	    result.add(value.getClass());
+	}
+	return result;
     }
 
     /**
