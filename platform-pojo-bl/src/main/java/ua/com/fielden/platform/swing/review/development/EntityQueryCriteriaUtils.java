@@ -82,13 +82,15 @@ public class EntityQueryCriteriaUtils {
      * @param tickManager
      * @return
      */
-    public static Map<String, Pair<Object, Object>> createParamValuesMap(final Class<?> root, final Class<?> managedType, final IAddToCriteriaTickManager tickManager){
+    public static Map<String, Pair<Object, Object>> createParamValuesMap(final Class<?> root, final Class<?> managedType, final IAddToCriteriaTickManager tickManager) {
 	final Map<String, Pair<Object, Object>> paramValues = new HashMap<String, Pair<Object, Object>>();
 	for (final String propertyName : tickManager.checkedProperties(root)) {
-	    if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
-		paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));
-	    }else{
-		paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), null));
+	    if (!AbstractDomainTree.isPlaceholder(propertyName)) {
+		if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
+		    paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));
+		} else {
+		    paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), null));
+		}
 	    }
 	}
 	return paramValues;

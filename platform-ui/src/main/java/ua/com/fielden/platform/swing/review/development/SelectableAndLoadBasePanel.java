@@ -79,7 +79,6 @@ public class SelectableAndLoadBasePanel extends BasePanel implements ISelectable
      * @param loadEvent
      */
     protected final void fireLoadEvent(final LoadEvent loadEvent){
-	System.out.println("loading view " + getClass().getSimpleName());
 	for(final ILoadListener listener : listenerList.getListeners(ILoadListener.class)){
 	    listener.viewWasLoaded(loadEvent);
 	}

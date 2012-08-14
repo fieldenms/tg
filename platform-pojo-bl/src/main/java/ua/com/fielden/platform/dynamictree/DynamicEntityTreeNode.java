@@ -37,8 +37,8 @@ public class DynamicEntityTreeNode {
 
 	setParent(null);
     }
-    public void addChild(final String key, final DynamicEntityTreeNode treeNode) {
 
+    public void addChild(final String key, final DynamicEntityTreeNode treeNode) {
 	children.put(key, treeNode);
 	treeNode.setParent(this);
     }

@@ -71,7 +71,7 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
 	final EntityLocatorConfig elc;
 
 	if (elcController.entityWithKeyExists(baseOfTheCurrentUser, propertyTypeName)) { // the persistence layer contains a default locator for "propertyType"
-	    elc = elcController.findByKeyAndFetch(fetchOnly(EntityLocatorConfig.class), baseOfTheCurrentUser, propertyTypeName);
+	    elc = elcController.findByKeyAndFetch(fetchOnly(EntityLocatorConfig.class).with("owner").with("locatorType"), baseOfTheCurrentUser, propertyTypeName);
 	} else { // there is no default locator for "propertyType" -- save a brand new instance
 	    elc = factory.newByKey(EntityLocatorConfig.class, baseOfTheCurrentUser, propertyTypeName);
 	}
