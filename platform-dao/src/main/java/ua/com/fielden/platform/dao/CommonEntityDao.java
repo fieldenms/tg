@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -50,6 +47,9 @@ import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
@@ -529,6 +529,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	for (final T entity : toBeDeleted) {
 	    defaultDelete(entity);
 	}
+    }
+
+    @SessionRequired
+    protected void defaultDelete(final EntityResultQueryModel<T> model) {
+	defaultDelete(model, Collections.<String, Object> emptyMap());
     }
 
     protected EntityFactory getEntityFactory() {
