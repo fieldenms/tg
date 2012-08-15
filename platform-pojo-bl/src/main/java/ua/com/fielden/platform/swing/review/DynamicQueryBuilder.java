@@ -106,7 +106,7 @@ public class DynamicQueryBuilder {
 		this.collectionNameInItsParentTypeContext = null;
 		this.inNestedCollections = null;
 	    }
-	    this.conditionBuildingName = isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL() ? propertyNameWithinCollectionalHierarchy : (ALIAS + "." + analyser.getCriteriaFullName());
+	    this.conditionBuildingName = isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL() ? propertyNameWithinCollectionalHierarchy : ALIAS + "." + analyser.getCriteriaFullName();
 
 	    final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
 	    this.critOnly = critAnnotation != null;
@@ -194,7 +194,7 @@ public class DynamicQueryBuilder {
 	    if (EntityUtils.isBoolean(type)) {
 		final boolean is = (Boolean) value;
 		final boolean isNot = (Boolean) value2;
-		return is && isNot || (!is && !isNot); // both true and both false will be indicated as default
+		return is && isNot || !is && !isNot; // both true and both false will be indicated as default
 	    } else if (EntityUtils.isRangeType(type)) { // both values should be "empty" to be indicated as default
 		return valueEqualsToEmpty(value, type, single) && valueEqualsToEmpty(value2, type, single);
 	    } else {
@@ -222,7 +222,7 @@ public class DynamicQueryBuilder {
 	 * @return
 	 */
 	public boolean shouldBeIgnored() {
-	    return isCritOnly() || (isEmpty() && !Boolean.TRUE.equals(orNull));
+	    return isCritOnly() || isEmpty() && !Boolean.TRUE.equals(orNull);
 	}
 
 	/**
@@ -360,7 +360,7 @@ public class DynamicQueryBuilder {
 		propertyNameOfCollectionParent = property.getPropertyNameOfCollectionParent();
 	    }
 	    final Calculated calcAnnotation = AnnotationReflector.getPropertyAnnotation(Calculated.class, property.getEntityClass(), property.getPropertyName());
-	    final Boolean all = calcAnnotation == null ? null : (calcAnnotation.attribute().equals(CalculatedPropertyAttribute.ALL) ? Boolean.TRUE : (calcAnnotation.attribute().equals(CalculatedPropertyAttribute.ANY) ? Boolean.FALSE : null));
+	    final Boolean all = calcAnnotation == null ? null : calcAnnotation.attribute().equals(CalculatedPropertyAttribute.ALL) ? Boolean.TRUE : calcAnnotation.attribute().equals(CalculatedPropertyAttribute.ANY) ? Boolean.FALSE : null;
 	    if (Boolean.TRUE.equals(all)) {
 		allProperties.add(property); // ALL properties list
 	    } else if (Boolean.FALSE.equals(all)) {
@@ -497,8 +497,8 @@ public class DynamicQueryBuilder {
     public static Pair<Date, Date> getDateValuesFrom(final DateRangePrefixEnum datePrefix, final MnemonicEnum dateMnemonic, final Boolean andBefore) {
 	final DateUtilities du = new DateUtilities();
 	final Date currentDate = new Date();
-	final Date from = (Boolean.TRUE.equals(andBefore)) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, datePrefix, dateMnemonic), //
-		/*         */to = (Boolean.FALSE.equals(andBefore)) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, datePrefix, dateMnemonic);
+	final Date from = Boolean.TRUE.equals(andBefore) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, datePrefix, dateMnemonic), //
+		/*         */to = Boolean.FALSE.equals(andBefore) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, datePrefix, dateMnemonic);
 	// left boundary should be inclusive and right -- exclusive!
 	return new Pair<Date, Date>(from, to);
     }
@@ -562,7 +562,7 @@ public class DynamicQueryBuilder {
 	// property.getPropertyNameOfCollectionParent() == "vehicle"
 	final Class<? extends AbstractEntity<?>> collectionContainerType = collectionProperties.getCollectionContatinerType();
 	final String nameOfCollectionController = collectionProperties.getNameOfCollectionController();
-	final String mainModelProperty = collectionProperties.getPropertyNameOfCollectionParent().isEmpty() ? alias : (alias + "." + collectionProperties.getPropertyNameOfCollectionParent());
+	final String mainModelProperty = collectionProperties.getPropertyNameOfCollectionParent().isEmpty() ? alias : alias + "." + collectionProperties.getPropertyNameOfCollectionParent();
 
 	final IWhere2<ET> collectionBegin = whereAtGroup1.begin();
 	ICompoundCondition2<ET> compoundConditionAtGroup2 = null;
@@ -695,19 +695,19 @@ public class DynamicQueryBuilder {
 		return conditionGroup.prop(propertyName).ge().iVal(fromAndTo.getKey()).and().prop(propertyName).lt().iVal(fromAndTo.getValue()).end();
 	    } else {
 		final IComparisonOperator3<ET> scag = conditionGroup.prop(propertyName);
-		final IComparisonOperator3<ET> scag2 = (Boolean.TRUE.equals(property.getExclusive())) ? //
+		final IComparisonOperator3<ET> scag2 = Boolean.TRUE.equals(property.getExclusive()) ? //
 			/*      */scag.gt().iVal(property.getValue()).and().prop(propertyName) // exclusive
 			: scag.ge().iVal(property.getValue()).and().prop(propertyName); // inclusive
-			return (Boolean.TRUE.equals(property.getExclusive2())) ? //
+			return Boolean.TRUE.equals(property.getExclusive2()) ? //
 				/*      */scag2.lt().iVal(property.getValue2()).end() // exclusive
 				: scag2.le().iVal(property.getValue2()).end(); // inclusive
 	    }
 	} else if (EntityUtils.isBoolean(property.getType())) {
 	    final boolean is = (Boolean) property.getValue();
 	    final boolean isNot = (Boolean) property.getValue2();
-	    return (is && !isNot) ? conditionGroup.prop(propertyName).eq().val(true).end() : (!is && isNot ? conditionGroup.prop(propertyName).eq().val(false).end() : null);
+	    return is && !isNot ? conditionGroup.prop(propertyName).eq().val(true).end() : !is && isNot ? conditionGroup.prop(propertyName).eq().val(false).end() : null;
 	} else if (EntityUtils.isString(property.getType())) {
-	    return conditionGroup.prop(propertyName).like().anyOfValues(prepare((String) property.getValue())).end();
+	    return conditionGroup.prop(propertyName).iLike().anyOfValues(prepare((String) property.getValue())).end();
 	} else if (EntityUtils.isEntityType(property.getType())) {
 	    return conditionGroup.prop(propertyName).like().anyOfValues(prepare((List<String>) property.getValue())).end();
 	} else {
@@ -766,7 +766,7 @@ public class DynamicQueryBuilder {
     }
 
     private static String replaceLast(final String s, final String what, final String byWhat) {
-        final int i = s.lastIndexOf(what);
-        return i >= 0 ? s.substring(0, i) : s;
+	final int i = s.lastIndexOf(what);
+	return i >= 0 ? s.substring(0, i) : s;
     }
 }
