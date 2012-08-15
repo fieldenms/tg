@@ -709,7 +709,7 @@ public class DynamicQueryBuilder {
 	} else if (EntityUtils.isString(property.getType())) {
 	    return conditionGroup.prop(propertyName).iLike().anyOfValues(prepare((String) property.getValue())).end();
 	} else if (EntityUtils.isEntityType(property.getType())) {
-	    return conditionGroup.prop(propertyName).like().anyOfValues(prepare((List<String>) property.getValue())).end();
+	    return conditionGroup.prop(propertyName).iLike().anyOfValues(prepare((List<String>) property.getValue())).end();
 	} else {
 	    throw new UnsupportedTypeException(property.getType());
 	}

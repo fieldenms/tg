@@ -556,7 +556,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted<? extends AbstractEntity<?>> expected = //
 		/**/iJoin.where().begin() //
 		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
-		/*    */.begin().prop(cbn).like().anyOfValues(DynamicQueryBuilder.prepare((List<String>) property.getValue())).end() //
+		/*    */.begin().prop(cbn).iLike().anyOfValues(DynamicQueryBuilder.prepare((List<String>) property.getValue())).end() //
 		/*  */.end() //s
 		/**/.end(); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
