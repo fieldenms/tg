@@ -196,6 +196,12 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	    private static final long serialVersionUID = 6219947950780861547L;
 
 	    @Override
+	    protected boolean preAction() {
+		setMessage("Cancel...");
+		return super.preAction();
+	    }
+
+	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
 		getModel().freez();
 		return null;
@@ -216,6 +222,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
 	    @Override
 	    protected boolean preAction() {
+		setMessage("Removing centre...");
 		final boolean result = super.preAction();
 		if(!result){
 		    return false;
@@ -255,6 +262,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
 	    @Override
 	    protected boolean preAction() {
+		setMessage("Saving centre as...");
 		if(!super.preAction() || !canCloseCentre()){
 		    return false;
 		}
@@ -299,6 +307,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
 	    @Override
 	    protected boolean preAction() {
+		setMessage("Saving centre...");
 		return super.preAction() //
 			&& canCloseCentre() //
 			&& fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, CentreConfigurationAction.PRE_SAVE));

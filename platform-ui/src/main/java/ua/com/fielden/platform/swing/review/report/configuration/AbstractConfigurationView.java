@@ -217,6 +217,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	    @Override
 	    protected boolean preAction() {
+		setMessage("Opening...");
 		final boolean superResult = super.preAction();
 		if(!superResult){
 		    return false;
@@ -237,6 +238,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	    @Override
 	    protected void postAction(final List<Result> value) {
 		super.postAction(value);
+		setMessage("");
 		fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.POST_OPEN));
 		for(final Result valueRes : value){
 		    if(!valueRes.isSuccessful()){
@@ -476,6 +478,16 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	@Override
 	protected boolean preAction() {
+	    String message = "";
+	    switch (reportMode) {
+	    case REPORT:
+		message = "Building the report view";
+		break;
+	    case WIZARD:
+		message = "Loading wizard";
+		break;
+	    }
+	    setMessage(message);
 	    if(!super.preAction()){
 		return false;
 	    }

@@ -8,7 +8,6 @@ import javax.swing.JOptionPane;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
-import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.SingleAnalysisEntityLocator;
@@ -65,7 +64,7 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 
     /**
      * Returns the "save" action.
-     * 
+     *
      * @return
      */
     public Action getSave() {
@@ -74,7 +73,7 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 
     /**
      * Returns the "save as default" action.
-     * 
+     *
      * @return
      */
     public Action getSaveAsDefault() {
@@ -83,7 +82,7 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 
     /**
      * Returns the "load default" action.
-     * 
+     *
      * @return
      */
     public Action getLoadDefault() {
@@ -139,26 +138,6 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 	}
     }
 
-    //    /**
-    //     * Returns specific {@link IReviewEventListener} for the locator.
-    //     *
-    //     * @return
-    //     */
-    //    private IReviewEventListener createLocatorEventListener() {
-    //	return new IReviewEventListener() {
-    //
-    //	    @Override
-    //	    public boolean configureActionPerformed(final ReviewEvent e) {
-    //		switch (e.getReviewAction()) {
-    //		case CONFIGURE:
-    //		    getModel().locatorManager.freezeLocatorManager(getModel().rootType, getModel().name);
-    //		    break;
-    //		}
-    //		return true;
-    //	    }
-    //	};
-    //    }
-
     private IAbstractConfigurationViewEventListener createOpenEventListener() {
 	return new IAbstractConfigurationViewEventListener() {
 
@@ -186,6 +165,7 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 
 	    @Override
 	    protected boolean preAction() {
+		setMessage("Saving locator...");
 		final boolean result= super.preAction();
 		if(!result){
 		    return false;
@@ -222,6 +202,7 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 
 	    @Override
 	    protected boolean preAction() {
+		setMessage("Saving locator globally...");
 		final boolean result= super.preAction();
 		if(!result){
 		    return false;
@@ -253,12 +234,13 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
     }
 
     private Action createLoadDefaultAction() {
-	return new Command<Void>("Load Default") {
+	return new BlockingLayerCommand<Void>("Load Default", getProgressLayer()) {
 
 	    private static final long serialVersionUID = -1337109555032877767L;
 
 	    @Override
 	    protected boolean preAction() {
+		setMessage("Loading global locator configuration...");
 		final boolean result= super.preAction();
 		if(!result){
 		    return false;

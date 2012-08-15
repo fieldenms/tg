@@ -4,7 +4,6 @@ import java.util.EventListener;
 import java.util.EventObject;
 import java.util.Set;
 
-import javax.swing.JOptionPane;
 import javax.swing.event.EventListenerList;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -162,9 +161,6 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 		    } else {
 			throw new IllegalStateException("The principle tree menu item can not be removed!");
 		    }
-		    break;
-		case REMOVE_FAILED:
-		    JOptionPane.showMessageDialog(DynamicReportWrapper.this, event.getException().getMessage(), "Information", JOptionPane.INFORMATION_MESSAGE);
 		    break;
 		}
 		return true;

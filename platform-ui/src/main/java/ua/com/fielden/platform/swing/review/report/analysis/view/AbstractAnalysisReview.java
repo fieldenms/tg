@@ -157,9 +157,6 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 		if (!result.getKey().isSuccessful()) {
 		    JOptionPane.showMessageDialog(AbstractAnalysisReview.this, result.getKey().getMessage());
 		}
-		//		else {
-		//		    setDataToView(result.getValue()); // note that currently setting data to view and updating buttons state etc. perform in this single IReviewContract implementor method.
-		//		}
 		enableRelatedActions(true, false);
 		super.postAction(result);
 	    }
@@ -195,7 +192,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 
 	    @Override
 	    protected boolean preAction() {
-		setMessage("Loading...");
+		setMessage("Exporting...");
 		final boolean result = super.preAction();
 		if (!result) {
 		    return result;
