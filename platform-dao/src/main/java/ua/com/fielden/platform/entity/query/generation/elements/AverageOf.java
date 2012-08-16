@@ -10,6 +10,6 @@ public class AverageOf extends SingleOperandFunction {
 
     @Override
     public String sql() {
-	return "AVG(" + (distinct ? "DISTINCT " : "") + getOperand().sql() + ")";
+	return "AVG(" + (distinct ? "DISTINCT " : "") + "CAST (" + getOperand().sql() + " AS FLOAT))";
     }
 }

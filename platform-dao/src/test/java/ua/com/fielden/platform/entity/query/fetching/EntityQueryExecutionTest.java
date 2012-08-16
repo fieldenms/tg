@@ -752,7 +752,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 		avgOf().beginExpr().prop("price.amount").add().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
 	final List<EntityAggregates> values = aggregateDao.getAllEntities(from(model).model());
     	assertEquals("Incorrect count", 1, values.size());
-    	assertEquals("Incorrect value", new BigDecimal("165"), values.get(0).get("aa"));
+    	assertEquals("Incorrect value", "165.0", values.get(0).get("aa").toString());
     }
 
     @Test
@@ -775,7 +775,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 		beginExpr().avgOf().prop("price.amount").add().avgOf().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
 	final List<EntityAggregates> values = aggregateDao.getAllEntities(from(model).model());
     	assertEquals("Incorrect count", 1, values.size());
-    	assertEquals("Incorrect value", new BigDecimal("165"), values.get(0).get("aa"));
+    	assertEquals("Incorrect value", "165.0", values.get(0).get("aa").toString());
     }
 
     @Test

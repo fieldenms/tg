@@ -134,7 +134,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    final Class propType = getPropType(propName);
 
 	    if (propType != fetchModel.getEntityType()) {
-		throw new IllegalArgumentException("Mismatch between actual type of property and its fetch model type!");
+		 throw new IllegalArgumentException("Mismatch between actual type [" + propType + "] of property [" + propName + "] in entity type [" + getEntityType() + "] and its fetch model type [" + fetchModel.getEntityType() + "]!");
 	    }
 	}
 
