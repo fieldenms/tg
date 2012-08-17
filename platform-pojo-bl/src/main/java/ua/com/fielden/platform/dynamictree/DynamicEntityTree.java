@@ -37,7 +37,7 @@ public class DynamicEntityTree<T extends AbstractEntity> {
 		}
 	    }
 	    if (EntityUtils.isEntityType(currentNode.getType())) {
-		currentNode.addChild(AbstractEntity.KEY, new DynamicEntityTreeNode(AbstractEntity.KEY, AnnotationReflector.getKeyType(rootType)));
+		currentNode.addChild(AbstractEntity.KEY, new DynamicEntityTreeNode(AbstractEntity.KEY, AnnotationReflector.getKeyType(currentNode.getType())));
 		if (EntityDescriptor.hasDesc(currentNode.getType())) {
 		    currentNode.addChild(AbstractEntity.DESC, new DynamicEntityTreeNode(AbstractEntity.DESC, PropertyTypeDeterminator.determinePropertyType(currentNode.getType(), AbstractEntity.DESC)));
 		}

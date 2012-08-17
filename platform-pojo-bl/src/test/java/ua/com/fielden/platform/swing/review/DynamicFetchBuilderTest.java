@@ -13,6 +13,8 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
+import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
+import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -61,6 +63,8 @@ public class DynamicFetchBuilderTest {
  	mutableKeyType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.mutablyCheckedProp");
  	evenSlaveKlass = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.entityProp");
  	stringKeyKlass = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.entityProp.simpleEntityProp");
+ 	//
+ 	//final IDomainTreeEnhancer dteForComplexEntity = new DomainTreeEnhancer(serialiser, new HashSet<Class<?>>() {{ add(EntityWithKeyTitleAndWithAEKeyType.class); }});
     }
 
     @Test
@@ -148,5 +152,14 @@ public class DynamicFetchBuilderTest {
 	final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchOnly(masterKlass).with("sumInt").with("avgInt").with("mutIntSum")//
 		.with("propIntSum").with("propIntAvg").with("propIntMin").without("id").without("version");
 	assertEquals("The fetch for total proerties doesn't work", masterEntityFetch, DynamicFetchBuilder.createTotalFetchModel(masterKlass, fetchProperties));
+    }
+
+    @Test
+    public void test_that_fetch_model_for_entity_with_AE_key_was_composed_correctlly(){
+	final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] {
+		"key", //
+	}));
+	final fetch<? extends AbstractEntity<?>> complexEntityFetch = fetchOnly(EntityWithKeyTitleAndWithAEKeyType.class).with("key", fetchOnly(EntityWithNormalNature.class).with("key"));
+	assertEquals("The fetch for entity with entity key doesn't work", complexEntityFetch, DynamicFetchBuilder.createFetchModel(EntityWithKeyTitleAndWithAEKeyType.class, fetchProperties));
     }
 }
