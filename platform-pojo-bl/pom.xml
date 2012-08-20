@@ -31,15 +31,17 @@
 		</dependency>
 		<!-- end of Kryo specific libs -->
 
-		<!-- Hibernate 3.2.6.ga conflicts with A 3.3.1, thus Guice packaged version of ASM is used. -->
+		<!-- Hibernate 3.2.6.ga conflicts with A 3.3.1, thus Guice packaged version 
+			of ASM is used. -->
 		<!-- kryo depends on asm only for managing public fields -->
-		<!-- dependency>
-			<groupId>asm</groupId>
-			<artifactId>asm-all</artifactId>
-			<version>3.3.1</version>
-		</dependency-->
+		<!-- dependency> <groupId>asm</groupId> <artifactId>asm-all</artifactId> 
+			<version>3.3.1</version> </dependency -->
 
-
+		<dependency>
+			<groupId>fielden</groupId>
+			<artifactId>csv-parser</artifactId>
+			<version>1.0</version>
+		</dependency>
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>
 			<artifactId>xstream</artifactId>
