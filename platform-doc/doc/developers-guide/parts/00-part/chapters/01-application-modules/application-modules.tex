@@ -45,11 +45,13 @@ user@workstation:~/workspace-tg-apps$ mvn archetype:generate -Dfilter=fielden:
 [INFO] Generating project in Interactive mode
 [INFO] No archetype defined.
 Choose archetype:
-1: local -> fielden:tg-application-archetype (This is a project template for constructing 
-	TG-based information systems. It provides templates for all application modules as 
-	per Trident Genesis platform specification. The development teams should use this 
-	template to significantly automates the initial creation of TG-based applications.)
-Choose a number or apply filter (format: [groupId:]artifactId, case sensitive contains): : 
+1: local -> fielden:tg-application-archetype (This is a project template for 
+	constructing TG-based information systems. It provides templates for all 
+	application modules as per Trident Genesis platform specification. 
+	The development teams should use this template to significantly automates
+	the initial creation of TG-based applications.)
+Choose a number or apply filter (format: [groupId:]artifactId, case sensitive
+contains): : 
     \end{lstlisting}
   \end{code}
 
@@ -153,6 +155,22 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
       \end{lstlisting}
     \end{code}
 
+    \item Define value for property 'platformVersion': : -- a TG archetype specific variable, which should be provided to specify the version of the platfrom that his project sould depend on; type the required version and hit \texttt{enter} to confirm.
+    
+    \begin{code}{Trident Genesis version}{\label{lst::archetype-platformVerson}}{terminalbgcolor}
+      \begin{lstlisting}
+	Define value for property 'groupId': : fielden		
+	Define value for property 'artifactId': : coolapp
+	Define value for property 'version': 1.0-SNAPSHOT:
+	Define value for property 'package': fielden:	
+	Define value for property 'companyName': : Fielden Management Services
+	Define value for property 'prjectName': : Cool App
+	Define value for property 'prjectWebSite': : http://www.fielden.com.au/coolapp
+	Define value for property 'supportEmail': : coolapp@support.fielden.com.au
+	Define value for property 'platformVersion': : 1.2
+      \end{lstlisting}
+    \end{code}
+
   \end{enumerate}
 
   Once the above variables have been entered Maven lists all of their values and prompts the developer to confirm their values before generating the project. 
@@ -171,6 +189,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 	projectName: Cool App
 	projectWebSite: http://www.fielden.com.au/coolapp
 	supportEmail: coolapp@support.fielden.com.au
+	platformVersion: 1.2
 	Y:
       \end{lstlisting}
   \end{code}
@@ -191,7 +210,8 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 	-DcompanyName="Fielden Management Servces" \
 	-DprojectName="Cool App" \
 	-DprojectWebSite=http://www.fielden.com.au/coolapp \
-	-DsupportEmail=coolapp@support.fielden.com.au
+	-DsupportEmail=coolapp@support.fielden.com.au \
+        -DplatformVersion=1.2
       \end{lstlisting}
   \end{code}
 
@@ -274,7 +294,8 @@ user@workstation:~/workspace-tg-apps/coolapp$
 
   \begin{code}{Application server directories}{\label{lst:app_server}}{terminalbgcolor}
      \begin{lstlisting}
-user@workstation:~/workspace-tg-apps/coolapp$ tree -L 1 coolapp-web-server/target/deployment/
+user@workstation:~/workspace-tg-apps/coolapp$ tree -L 1 coolapp-web-server/
+target/deployment/
 coolapp-web-server/target/deployment/
 |-- application.properties
 |-- attachments
