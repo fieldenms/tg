@@ -12,13 +12,13 @@ import javax.swing.UIManager;
 
 /**
  * A renderer for a JTableHeader with text rotated 90° counterclockwise.
- * 
+ *
  * @author oleh
  */
 public class VerticalTableHeaderCellRenderer extends DefaultTableHeaderCellRenderer {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 5520985320881014836L;
 
@@ -37,7 +37,7 @@ public class VerticalTableHeaderCellRenderer extends DefaultTableHeaderCellRende
 
     /**
      * Overridden to return a rotated version of the sort icon.
-     * 
+     *
      * @param table
      *            the <code>JTable</code>.
      * @param column
@@ -46,7 +46,7 @@ public class VerticalTableHeaderCellRenderer extends DefaultTableHeaderCellRende
      */
     @Override
     protected Icon getIcon(final JTable table, final int column) {
-	final SortKey sortKey = getSortKey(table, column);
+	final SortKey sortKey = getSortKey(table);
 	if (sortKey != null && sortKey.getColumn() == column) {
 	    final SortOrder sortOrder = sortKey.getSortOrder();
 	    switch (sortOrder) {
@@ -54,6 +54,10 @@ public class VerticalTableHeaderCellRenderer extends DefaultTableHeaderCellRende
 		return VerticalSortIcon.ASCENDING;
 	    case DESCENDING:
 		return VerticalSortIcon.DESCENDING;
+	    case UNSORTED:
+		break;
+	    default:
+		break;
 	    }
 	}
 	return null;
@@ -74,7 +78,7 @@ public class VerticalTableHeaderCellRenderer extends DefaultTableHeaderCellRende
 	 * passed in Graphics reference by the VerticalLabelUI.
 	 * <P>
 	 * The icon is retrieved from the UIManager to obtain an icon appropriate to the L&F.
-	 * 
+	 *
 	 * @param c
 	 *            the component to which the icon is to be rendered
 	 * @param g
@@ -104,7 +108,7 @@ public class VerticalTableHeaderCellRenderer extends DefaultTableHeaderCellRende
 
 	/**
 	 * Returns the width of the rotated icon.
-	 * 
+	 *
 	 * @return the <B>height</B> of the contained icon
 	 */
 	@Override
@@ -114,7 +118,7 @@ public class VerticalTableHeaderCellRenderer extends DefaultTableHeaderCellRende
 
 	/**
 	 * Returns the height of the rotated icon.
-	 * 
+	 *
 	 * @return the <B>width</B> of the contained icon
 	 */
 	@Override

@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.swing.egi;
 
+import static com.jidesoft.grid.TableModelWrapperUtils.getActualRowAt;
+import static javax.swing.SwingUtilities.invokeLater;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.swing.utils.DummyBuilder.invokeWhenGainedFocus;
+import static ua.com.fielden.platform.swing.utils.Utils2D.blend;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.KeyAdapter;
@@ -35,12 +41,6 @@ import ua.com.fielden.platform.swing.utils.RenderingDecorator;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
 
-import static com.jidesoft.grid.TableModelWrapperUtils.getActualRowAt;
-import static javax.swing.SwingUtilities.invokeLater;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.swing.utils.DummyBuilder.invokeWhenGainedFocus;
-import static ua.com.fielden.platform.swing.utils.Utils2D.blend;
-
 /**
  * Represents mapping between column and some read/write access property of class T.<br>
  * <br>
@@ -55,8 +55,7 @@ import static ua.com.fielden.platform.swing.utils.Utils2D.blend;
  * @param <ColumnType>
  *            - type of value, shown in cell (for instance property type could be {@link Rotable} but it would be shown probably as String (i.e. only key))
  */
-@SuppressWarnings("unchecked")
-public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity> {
+public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity<?>> {
     /**
      * Singleton renderer to draw totals
      */

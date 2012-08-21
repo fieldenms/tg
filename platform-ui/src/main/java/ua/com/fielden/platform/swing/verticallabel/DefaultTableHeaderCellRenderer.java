@@ -6,23 +6,25 @@ import java.awt.Graphics2D;
 import java.util.List;
 
 import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.JTable;
+import javax.swing.Painter;
 import javax.swing.RowSorter;
 import javax.swing.RowSorter.SortKey;
 import javax.swing.SortOrder;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableModel;
 
-import com.sun.java.swing.Painter;
 
 /**
  * A default cell renderer for a JTableHeader.
  * <P>
  * Extends {@link DefaultTableCellRenderer}.
  * <P>
- * 
+ *
  * To apply any desired customization, DefaultTableHeaderCellRenderer may be suitably extended.
- * 
+ *
  * @author oleh
  */
 public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
@@ -32,21 +34,22 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
     private boolean mouseOver;
 
     // painters for table header cell. Added to support Nimbus L&F
-    private final Painter headerEnable;
-    private final Painter headerMouseOver;
+    private final Painter<JComponent> headerEnable;
+    private final Painter<JComponent> headerMouseOver;
 
     /**
      * Constructs a <code>DefaultTableHeaderCellRenderer</code>.
      * <P>
      * The horizontal alignment and text position are set as appropriate to a table header cell, and the renderer is set to be non-opaque.
      */
+    @SuppressWarnings("unchecked")
     public DefaultTableHeaderCellRenderer() {
 	setHorizontalAlignment(CENTER);
 	setHorizontalTextPosition(LEFT);
 	setOpaque(false);
 
-	headerEnable = (Painter) UIManager.get("TableHeader:" + '"' + "TableHeader.renderer" + '"' + "[Enabled].backgroundPainter");
-	headerMouseOver = (Painter) UIManager.get("TableHeader:" + '"' + "TableHeader.renderer" + '"' + "[MouseOver].backgroundPainter");
+	headerEnable = (Painter<JComponent>) UIManager.get("TableHeader:" + '"' + "TableHeader.renderer" + '"' + "[Enabled].backgroundPainter");
+	headerMouseOver = (Painter<JComponent>) UIManager.get("TableHeader:" + '"' + "TableHeader.renderer" + '"' + "[MouseOver].backgroundPainter");
 
     }
 
@@ -56,7 +59,7 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
      * The icon is set as appropriate for the header cell of a sorted or unsorted column, and the border appropriate to a table header cell is applied.
      * <P>
      * Subclasses may override this method to provide custom content or formatting.
-     * 
+     *
      * @param table
      *            the <code>JTable</code>.
      * @param value
@@ -70,7 +73,7 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
      * @param column
      *            the column of the header cell to render
      * @return the default table header cell renderer
-     * 
+     *
      * @see DefaultTableCellRenderer#getTableCellRendererComponent(JTable, Object, boolean, boolean, int, int)
      */
     @Override
@@ -97,7 +100,7 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
 
     /**
      * Overridden to return an icon suitable to a sorted column, or null if the column is unsorted.
-     * 
+     *
      * @param table
      *            the <code>JTable</code>.
      * @param column
@@ -105,7 +108,7 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
      * @return the sort icon, or null if the column is unsorted.
      */
     protected Icon getIcon(final JTable table, final int column) {
-	final SortKey sortKey = getSortKey(table, column);
+	final SortKey sortKey = getSortKey(table);
 	if (sortKey != null && sortKey.getColumn() == column) {
 	    final SortOrder sortOrder = sortKey.getSortOrder();
 	    switch (sortOrder) {
@@ -113,27 +116,31 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
 		return UIManager.getIcon("Table.ascendingSortIcon");
 	    case DESCENDING:
 		return UIManager.getIcon("Table.descendingSortIcon");
+	    case UNSORTED:
+		break;
+	    default:
+		break;
 	    }
 	}
 	return null;
     }
 
-    protected SortKey getSortKey(final JTable table, final int column) {
-	final RowSorter rowSorter = table.getRowSorter();
+    protected SortKey getSortKey(final JTable table) {
+	final RowSorter<? extends TableModel> rowSorter = table.getRowSorter();
 	if (rowSorter == null) {
 	    return null;
 	}
 
-	final List sortedColumns = rowSorter.getSortKeys();
+	final List<? extends SortKey> sortedColumns = rowSorter.getSortKeys();
 	if (sortedColumns.size() > 0) {
-	    return (SortKey) sortedColumns.get(0);
+	    return sortedColumns.get(0);
 	}
 	return null;
     }
 
     /**
      * Set the mouse over property. This property is used during painting the cell renderer component.
-     * 
+     *
      * @param mouseOver
      */
     public void setMouseOver(final boolean mouseOver) {
@@ -142,7 +149,7 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
 
     /**
      * Returns the mouse over property. See {@link #setMouseOver(boolean)} for more information about that property.
-     * 
+     *
      * @return
      */
     public boolean isMouseOver() {
