@@ -84,7 +84,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	final Class<?> managedType = cdtme.getEnhancer().getManagedType(rootType);
 	this.egi = createEgi(createGridModel(managedType, gridDataModel.getKey()));
 
-	configureEgiWithOrdering(rootType, cdtme);
+	configureEgiWithOrdering(egi, rootType, cdtme);
 
 	if (!gridDataModel.getValue().isEmpty()) {
 	    setLayout(new MigLayout("fill, insets 0", "[]", "[grow]0[shrink 0]0[]"));
@@ -137,14 +137,14 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
     /**
      * Configures the analysis entity grid inspector with ordering facility.
      */
-    private void configureEgiWithOrdering(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme){
+    private void configureEgiWithOrdering(final EntityGridInspector<T> egi, final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme){
 	final IAddToResultTickManager tickManager = cdtme.getSecondTick();
-	egi.getColumnModel().addColumnModelListener(createColumnSwapModelListener(root, tickManager));
-	egi.getTableHeader().addMouseListener(createTableHeaderClickMouseListener(root, tickManager));
+	egi.getColumnModel().addColumnModelListener(createColumnSwapModelListener(egi, root, tickManager));
+	egi.getTableHeader().addMouseListener(createTableHeaderClickMouseListener(egi, root, tickManager));
 	for (int columnIndex = 0; columnIndex < egi.getColumnCount(); columnIndex++) {
 	    final TableColumn column =  egi.getColumnModel().getColumn(columnIndex);
-	    column.setHeaderRenderer(new SortableTableHeaderCellRenderer(root, tickManager));
-	    column.addPropertyChangeListener(createColumnWidthChangeListener(root, tickManager));
+	    column.setHeaderRenderer(new SortableTableHeaderCellRenderer(egi, root, tickManager));
+	    column.addPropertyChangeListener(createColumnWidthChangeListener(egi, root, tickManager));
 	}
 	final MouseDefaultHeaderHandler mouseHandler = new MouseDefaultHeaderHandler();
 	egi.getTableHeader().addMouseMotionListener(mouseHandler);
@@ -159,14 +159,14 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * @param egi
      * @return
      */
-    private PropertyChangeListener createColumnWidthChangeListener(final Class<T> root, final IAddToResultTickManager tickManager) {
+    private PropertyChangeListener createColumnWidthChangeListener(final EntityGridInspector<T> egi, final Class<T> root, final IAddToResultTickManager tickManager) {
 	return new PropertyChangeListener() {
 
 	    @Override
 	    public void propertyChange(final PropertyChangeEvent evt) {
 		if (evt.getPropertyName().equals("width")) {
 		    final TableColumn tableColumn = (TableColumn)evt.getSource();
-		    final String columnProperty = tickManager.checkedProperties(root).get(egi.getColumnModel().getColumnIndex(tableColumn.getIdentifier()));
+		    final String columnProperty = egi.getActualModel().getPropertyColumnMappings().get(tableColumn.getModelIndex()).getPropertyName();
 		    tickManager.setWidth(root, columnProperty, ((Integer)evt.getNewValue()).intValue());
 		}
 	    }
@@ -181,14 +181,15 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * @param egi
      * @return
      */
-    private MouseListener createTableHeaderClickMouseListener(final Class<T> root, final IAddToResultTickManager tickManager) {
+    private MouseListener createTableHeaderClickMouseListener(final EntityGridInspector<T> egi, final Class<T> root, final IAddToResultTickManager tickManager) {
 	return new MouseAdapter() {
 	    @Override
 	    public void mouseClicked(final MouseEvent e) {
 		final TableColumnModel columnModel = egi.getColumnModel();
-		final int viewColumn = columnModel.getColumnIndexAtX(e.getX());
-		if (e.getClickCount() == 1 && viewColumn >= 0 && (e.getModifiers() & InputEvent.CTRL_MASK) != 0) {
-		    final String property = tickManager.checkedProperties(root).get(viewColumn);
+		final int viewColumnIndex = columnModel.getColumnIndexAtX(e.getX());
+		if (e.getClickCount() == 1 && viewColumnIndex >= 0 && (e.getModifiers() & InputEvent.CTRL_MASK) != 0) {
+		    final TableColumn viewColumn = columnModel.getColumn(viewColumnIndex);
+		    final String property = egi.getActualModel().getPropertyColumnMappings().get(viewColumn.getModelIndex()).getPropertyName();
 		    tickManager.toggleOrdering(root, property);
 		    egi.getTableHeader().repaint();
 		}
@@ -204,7 +205,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * @param tickManager
      * @return
      */
-    private TableColumnModelListener createColumnSwapModelListener(final Class<T> root, final IAddToResultTickManager tickManager) {
+    private TableColumnModelListener createColumnSwapModelListener(final EntityGridInspector<T> egi, final Class<T> root, final IAddToResultTickManager tickManager) {
 	return new TableColumnModelListener() {
 
 	    @Override
@@ -222,9 +223,10 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	    @Override
 	    public void columnMoved(final TableColumnModelEvent e) {
 		if(e.getFromIndex() != e.getToIndex()){
-		    final List<String> checkedProperties = tickManager.checkedProperties(root);
-		    final String fromProperty = checkedProperties.get(e.getFromIndex());
-		    final String toProperty = checkedProperties.get(e.getToIndex());
+		    final TableColumn fromColumn = egi.getColumnModel().getColumn(e.getFromIndex());
+		    final TableColumn toColumn = egi.getColumnModel().getColumn(e.getToIndex());
+		    final String fromProperty = egi.getActualModel().getPropertyColumnMappings().get(fromColumn.getModelIndex()).getPropertyName();
+		    final String toProperty = egi.getActualModel().getPropertyColumnMappings().get(toColumn.getModelIndex()).getPropertyName();
 		    tickManager.swap(root, fromProperty, toProperty);
 		}
 
@@ -275,11 +277,11 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	if (total != null) {
 	    final EntityDescriptor ed = new EntityDescriptor(managedType, total);
 	    for(int totalIndex = 0; totalIndex < total.size() - 1; totalIndex++){
-		final JTextField totalEditor = createTotalEditor(managedType, total.get(totalIndex), size, ed);
+		final JTextField totalEditor = createTotalEditor(total.get(totalIndex), size, ed);
 		totalPanel.add(totalEditor, "wrap");
 		totalEditors.put(total.get(totalIndex), totalEditor);
 	    }
-	    final JTextField totalEditor = createTotalEditor(managedType, total.get(total.size()-1), size, ed);
+	    final JTextField totalEditor = createTotalEditor(total.get(total.size()-1), size, ed);
 	    totalPanel.add(totalEditor);
 	    totalEditors.put(total.get(total.size()-1), totalEditor);
 	}
@@ -292,7 +294,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      *
      * @return
      */
-    private static JTextField createTotalEditor(final Class<?> managedType, final String propertyName, final Integer size, final EntityDescriptor ed) {
+    private static JTextField createTotalEditor(final String propertyName, final Integer size, final EntityDescriptor ed) {
 	final JTextField totalsEditor = new JTextField();
 	totalsEditor.setPreferredSize(new Dimension(size, ROW_HEIGHT));
 	totalsEditor.setEditable(false);
@@ -472,7 +474,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * @author TG Team
      *
      */
-    private class SortableTableHeaderCellRenderer extends DefaultTableHeaderCellRenderer{
+    private static class SortableTableHeaderCellRenderer<T extends AbstractEntity<?>> extends DefaultTableHeaderCellRenderer{
 
 	private static final long serialVersionUID = -6294136148685562497L;
 
@@ -480,6 +482,11 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	 * The ordering arrow to be drawn on the table column.
 	 */
 	private final OrderingIcon orderingIcon = new OrderingIcon();
+
+	/**
+	 * Table for which this cell renderer will be created.
+	 */
+	private final EntityGridInspector<T> egi;
 
 	/**
 	 * The entity type for which this analysis was created.
@@ -501,7 +508,8 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	 * @param tickManager
 	 * @param root
 	 */
-	public SortableTableHeaderCellRenderer(final Class<T> root, final IAddToResultTickManager tickManager) {
+	public SortableTableHeaderCellRenderer(final EntityGridInspector<T> egi, final Class<T> root, final IAddToResultTickManager tickManager) {
+	    this.egi = egi;
 	    this.root = root;
 	    this.tickManager = tickManager;
 	    setHorizontalAlignment(LEFT);
@@ -510,7 +518,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 
 	@Override
 	protected Icon getIcon(final JTable table, final int column) {
-	    final String property = tickManager.checkedProperties(root).get(column);
+	    final String property = egi.getActualModel().getPropertyColumnMappings().get(egi.getColumnModel().getColumn(column).getModelIndex()).getPropertyName();
 
 	    final List<Pair<String, Ordering>> sortKeys = tickManager.orderedProperties(root);
 	    orderingIcon.setSortOrder(SortOrder.UNSORTED);
