@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -533,6 +534,40 @@ public class EntityUtils {
      */
     public static boolean isPersistedEntityType(final Class<?> type) {
 	return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(MapEntityTo.class, type) != null;
+    }
+
+    /**
+     * Indicates that given entity type is based on query model.
+     *
+     * @return
+     */
+    public static <ET extends AbstractEntity<?>> boolean isQueryBasedEntityType(final Class<ET> type) {
+	return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(MapEntityTo.class, type) == null && getEntityModelsOfQueryBasedEntityType(type).size() > 0;
+    }
+
+    /**
+     * Returns list of query models, which given entity type is based on (assuming it is after all).
+     *
+     * @param entityType
+     * @return
+     */
+    public static <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> getEntityModelsOfQueryBasedEntityType(final Class<ET> entityType) {
+	final List<EntityResultQueryModel<ET>> result = new ArrayList<EntityResultQueryModel<ET>>();
+	try {
+	    final Field exprField = entityType.getDeclaredField("model_");
+	    exprField.setAccessible(true);
+	    result.add((EntityResultQueryModel<ET>) exprField.get(null));
+	    return result;
+	} catch (final Exception e) {
+	}
+	try {
+	    final Field exprField = entityType.getDeclaredField("models_");
+	    exprField.setAccessible(true);
+	    result.addAll((List<EntityResultQueryModel<ET>>) exprField.get(null));
+	    return result;
+	} catch (final Exception e) {
+	}
+	return result;
     }
 
     /**

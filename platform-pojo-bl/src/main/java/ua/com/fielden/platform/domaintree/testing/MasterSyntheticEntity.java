@@ -4,8 +4,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.equery.IParameterGetter;
-import ua.com.fielden.platform.equery.IQueryModelProvider;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Entity for "domain tree representation" testing.
@@ -15,14 +15,11 @@ import ua.com.fielden.platform.equery.IQueryModelProvider;
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(String.class)
-public class MasterSyntheticEntity extends AbstractEntity<String>  implements IQueryModelProvider<MasterSyntheticEntity> {
+public class MasterSyntheticEntity extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    protected MasterSyntheticEntity() {
-    }
+    private static EntityResultQueryModel<MasterSyntheticEntity> model_ = select(TgVehicleMake.class).yield().prop("key").as("key").modelAsEntity(MasterSyntheticEntity.class);
 
-    @Override
-    public EntityResultQueryModel<MasterSyntheticEntity> model(final IParameterGetter parameterGetter) {
-	return null;
+    protected MasterSyntheticEntity() {
     }
 }

@@ -7,11 +7,11 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.equery.IQueryModelProvider;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Finder.IPropertyPathFilteringCondition;
 import ua.com.fielden.platform.test.domain.entities.Workshop;
 import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Inject;
 
@@ -54,7 +54,7 @@ public class DataFilter implements IFilter {
 	    return select(entityType).where().prop("key").eq().val(workshop).model();
 	}
 
-	if (entityType == EntityAggregates.class || IQueryModelProvider.class.isAssignableFrom(entityType)) {
+	if (entityType == EntityAggregates.class || EntityUtils.isQueryBasedEntityType(entityType)) {
 	    throw new UnsupportedOperationException("Unsupported type for filtering enhancement: " + entityType.getName());
 	} else {
 	    final List<String> properties = Finder.findPathsForPropertiesOfType(entityType, Workshop.class, filter);

@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
-import ua.com.fielden.platform.equery.IQueryModelProvider;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -235,7 +235,7 @@ public final class Reflector {
      * @return
      */
     public static boolean isSynthetic(final Class<?> clazz) {
-	return IQueryModelProvider.class.isAssignableFrom(clazz);
+	return EntityUtils.isQueryBasedEntityType((Class<? extends AbstractEntity<?>>) clazz);
     }
 
     /**

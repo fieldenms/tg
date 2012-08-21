@@ -71,6 +71,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -119,8 +120,8 @@ public class DomainMetadata {
 	    return new EntityMetadata<ET>(tableClause, entityType, generatePropertyMetadatasForEntity(entityType, PERSISTED));
 	}
 
-	final List<EntityResultQueryModel<ET>> entityModels = getEntityModels(entityType);
-	if (entityModels != null) {
+	final List<EntityResultQueryModel<ET>> entityModels = getEntityModelsOfQueryBasedEntityType(entityType);
+	if (entityModels.size() > 0) {
 	    return new EntityMetadata<ET>(entityModels, entityType, generatePropertyMetadatasForEntity(entityType, CALCULATED));
 	}
 
@@ -412,25 +413,6 @@ public class DomainMetadata {
 
     private Calculated getCalculatedPropExpression(final Class entityType, final String propName) {
 	return getPropertyAnnotation(Calculated.class, entityType, propName);
-    }
-
-    private <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> getEntityModels(final Class<ET> entityType) {
-	final List<EntityResultQueryModel<ET>> result = new ArrayList<EntityResultQueryModel<ET>>();
-	try {
-	    final Field exprField = entityType.getDeclaredField("model_");
-	    exprField.setAccessible(true);
-	    result.add((EntityResultQueryModel<ET>) exprField.get(null));
-	    return result;
-	} catch (final Exception e) {
-	}
-	try {
-	    final Field exprField = entityType.getDeclaredField("models_");
-	    exprField.setAccessible(true);
-	    result.addAll((List<EntityResultQueryModel<ET>>) exprField.get(null));
-	    return result;
-	} catch (final Exception e) {
-	}
-	return null;
     }
 
     private <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> getUnionEntityModels(final Class<ET> entityType) {
