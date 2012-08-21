@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.expression;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
-import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
-
 import java.math.BigDecimal;
 
 import org.junit.Test;
@@ -17,6 +11,11 @@ import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.types.Money;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
 
 public class ExpressionText2ModelConverter4CountTest {
 
@@ -26,7 +25,7 @@ public class ExpressionText2ModelConverter4CountTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
-	final ExpressionModel func = expr().countOf().prop("collectional.intProperty").model();
+	final ExpressionModel func = expr().countOfDistinct().prop("collectional.intProperty").model();
 	final ExpressionModel plus3 = expr().prop("decimalProperty").add().prop("moneyProperty").model();
 	final ExpressionModel plus2 = expr().prop("intProperty").add().expr(plus3).model();
 	final ExpressionModel plus1 = expr().expr(func).add().expr(plus2).model();
@@ -40,7 +39,7 @@ public class ExpressionText2ModelConverter4CountTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
-	final ExpressionModel func = expr().countOf().prop("collectional.intProperty").model();
+	final ExpressionModel func = expr().countOfDistinct().prop("collectional.intProperty").model();
 	final ExpressionModel plus1 = expr().expr(func).add().prop("intProperty").model();
 	final ExpressionModel model = expr().expr(plus1).mult().val(2).model();
 	assertEquals("Incorrect model.", model, root.getModel());
@@ -52,7 +51,7 @@ public class ExpressionText2ModelConverter4CountTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
-	final ExpressionModel func = expr().countOf().prop("collectional.intProperty").model();
+	final ExpressionModel func = expr().countOfDistinct().prop("collectional.intProperty").model();
 	final ExpressionModel plus1 = expr().expr(func).add().prop("intProperty").model();
 	final ExpressionModel model = expr().expr(plus1).mult().val(2).model();
 	assertEquals("Incorrect model.", model, root.getModel());
@@ -64,7 +63,7 @@ public class ExpressionText2ModelConverter4CountTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
-	final ExpressionModel func = expr().countOf().prop("collectional.intProperty").model();
+	final ExpressionModel func = expr().countOfDistinct().prop("collectional.intProperty").model();
 	final ExpressionModel mult = expr().prop("intProperty").mult().prop("intProperty").model();
 	final ExpressionModel model = expr().expr(mult).div().expr(func).model();
 	assertEquals("Incorrect model.", model, root.getModel());
@@ -76,7 +75,7 @@ public class ExpressionText2ModelConverter4CountTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
-	final ExpressionModel func = expr().countOf().prop("collectional.intProperty").model();
+	final ExpressionModel func = expr().countOfDistinct().prop("collectional.intProperty").model();
 	final ExpressionModel mult2 = expr().expr(func).mult().prop("intProperty").model();
 	final ExpressionModel mult1 = expr().prop("intProperty").mult().prop("intProperty").model();
 	final ExpressionModel model = expr().expr(mult1).div().expr(mult2).model();
@@ -90,7 +89,7 @@ public class ExpressionText2ModelConverter4CountTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
-	final ExpressionModel func = expr().countOf().prop("collectional.intProperty").model();
+	final ExpressionModel func = expr().countOfDistinct().prop("collectional.intProperty").model();
 	final ExpressionModel mult2 = expr().expr(func).mult().prop("intProperty").model();
 	final ExpressionModel mult1 = expr().prop("entityProperty.intProperty").mult().prop("intProperty").model();
 	final ExpressionModel model = expr().expr(mult1).div().expr(mult2).model();
@@ -103,7 +102,7 @@ public class ExpressionText2ModelConverter4CountTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
-	final ExpressionModel func = expr().countOf().prop("collectional.intProperty").model();
+	final ExpressionModel func = expr().countOfDistinct().prop("collectional.intProperty").model();
 	final ExpressionModel model = expr().prop("entityProperty.intProperty").mult().expr(func).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -114,7 +113,7 @@ public class ExpressionText2ModelConverter4CountTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
-	final ExpressionModel func = expr().countOf().prop("collectional.intProperty").model();
+	final ExpressionModel func = expr().countOfDistinct().prop("collectional.intProperty").model();
 	final ExpressionModel model = expr().prop("entityProperty.intProperty").mult().expr(func).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -125,7 +124,7 @@ public class ExpressionText2ModelConverter4CountTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
-	final ExpressionModel fun = expr().countOf().prop("entityProperty.collectional.moneyProperty").model();
+	final ExpressionModel fun = expr().countOfDistinct().prop("entityProperty.collectional.moneyProperty").model();
 	final ExpressionModel model = expr().prop("selfProperty.intProperty").sub().expr(fun).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -136,8 +135,8 @@ public class ExpressionText2ModelConverter4CountTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
-	final ExpressionModel count1 = expr().countOf().prop("entityProperty.collectional.moneyProperty").model();
-	final ExpressionModel count2 = expr().countOf().prop("collectional.intProperty").model();
+	final ExpressionModel count1 = expr().countOfDistinct().prop("entityProperty.collectional.moneyProperty").model();
+	final ExpressionModel count2 = expr().countOfDistinct().prop("collectional.intProperty").model();
 	final ExpressionModel model = expr().expr(count1).add().expr(count2).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -171,8 +170,8 @@ public class ExpressionText2ModelConverter4CountTest {
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 	assertEquals("Incorrect expression tag", SUPER, root.getTag());
 
-	final ExpressionModel count1 = expr().countOf().prop("selfProperty.intProperty").model();
-	final ExpressionModel count2 = expr().countOf().prop("entityProperty.intProperty").model();
+	final ExpressionModel count1 = expr().countOfDistinct().prop("selfProperty.intProperty").model();
+	final ExpressionModel count2 = expr().countOfDistinct().prop("entityProperty.intProperty").model();
 	final ExpressionModel model = expr().expr(count1).add().expr(count2).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -184,8 +183,8 @@ public class ExpressionText2ModelConverter4CountTest {
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
 
-	final ExpressionModel count1 = expr().countOf().prop("selfProperty.collectional.intProperty").model();
-	final ExpressionModel count2 = expr().countOf().prop("entityProperty.collectional.moneyProperty").model();
+	final ExpressionModel count1 = expr().countOfDistinct().prop("selfProperty.collectional.intProperty").model();
+	final ExpressionModel count2 = expr().countOfDistinct().prop("entityProperty.collectional.moneyProperty").model();
 	final ExpressionModel model = expr().expr(count1).add().expr(count2).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -198,7 +197,7 @@ public class ExpressionText2ModelConverter4CountTest {
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
 
 	final ExpressionModel max = expr().maxOf().prop("collectional.collectional.moneyProperty").model();
-	final ExpressionModel count = expr().countOf().expr(max).model();
+	final ExpressionModel count = expr().countOfDistinct().expr(max).model();
 	final ExpressionModel model = expr().expr(count).add().prop("intProperty").model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -210,9 +209,9 @@ public class ExpressionText2ModelConverter4CountTest {
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
 
-	final ExpressionModel count1 = expr().countOf().prop("collectional.collectional.moneyProperty").model();
+	final ExpressionModel count1 = expr().countOfDistinct().prop("collectional.collectional.moneyProperty").model();
 	final ExpressionModel plus = expr().expr(count1).add().prop("collectional.intProperty").model();
-	final ExpressionModel count2 = expr().countOf().expr(plus).model();
+	final ExpressionModel count2 = expr().countOfDistinct().expr(plus).model();
 	final ExpressionModel model = expr().expr(count2).add().prop("intProperty").model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -238,8 +237,8 @@ public class ExpressionText2ModelConverter4CountTest {
 
 	final ExpressionModel sum = expr().sumOf().prop("collectional.collectional.moneyProperty").model();
 	final ExpressionModel plus = expr().expr(sum).add().prop("collectional.intProperty").model();
-	final ExpressionModel count1 = expr().countOf().expr(plus).model();
-	final ExpressionModel count2 = expr().countOf().prop("selfProperty.collectional.collectional.moneyProperty").model();
+	final ExpressionModel count1 = expr().countOfDistinct().expr(plus).model();
+	final ExpressionModel count2 = expr().countOfDistinct().prop("selfProperty.collectional.collectional.moneyProperty").model();
 	final ExpressionModel avg = expr().avgOf().expr(count2).model();
 	final ExpressionModel model = expr().expr(count1).add().expr(avg).model();
 	assertEquals("Incorrect model.", model, root.getModel());
@@ -264,11 +263,11 @@ public class ExpressionText2ModelConverter4CountTest {
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
 
-	final ExpressionModel count1 = expr().countOf().prop("collectional.collectional.moneyProperty").model();
+	final ExpressionModel count1 = expr().countOfDistinct().prop("collectional.collectional.moneyProperty").model();
 	final ExpressionModel plus = expr().expr(count1).add().prop("collectional.intProperty").model();
 	final ExpressionModel min = expr().minOf().expr(plus).model();
 	final ExpressionModel sum = expr().sumOf().prop("selfProperty.collectional.collectional.moneyProperty").model();
-	final ExpressionModel count2 = expr().countOf().expr(sum).model();
+	final ExpressionModel count2 = expr().countOfDistinct().expr(sum).model();
 	final ExpressionModel model = expr().expr(min).div().expr(count2).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -305,8 +304,8 @@ public class ExpressionText2ModelConverter4CountTest {
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
 
 	final ExpressionModel sum = expr().sumOf().prop("collectional.collectional.moneyProperty").model();
-	final ExpressionModel count1 = expr().countOf().expr(sum).model();
-	final ExpressionModel count2 = expr().countOf().prop("entityProperty.collectional.moneyProperty").model();
+	final ExpressionModel count1 = expr().countOfDistinct().expr(sum).model();
+	final ExpressionModel count2 = expr().countOfDistinct().prop("entityProperty.collectional.moneyProperty").model();
 	final ExpressionModel model = expr().expr(count1).add().expr(count2).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }

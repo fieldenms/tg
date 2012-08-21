@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionBetween;
@@ -13,6 +12,7 @@ import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * A visitor, which generates a computational model for AST.
@@ -256,7 +256,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	    expr = expr().maxOf();
 	    break;
 	case COUNT:
-	    expr = expr().countOf();
+	    expr = expr().countOfDistinct();
 	    break;
 	default:
 	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());

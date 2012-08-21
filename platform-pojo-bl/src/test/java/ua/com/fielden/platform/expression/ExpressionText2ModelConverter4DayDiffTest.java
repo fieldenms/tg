@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.expression;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -12,6 +8,9 @@ import ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 public class ExpressionText2ModelConverter4DayDiffTest {
 
@@ -45,7 +44,7 @@ public class ExpressionText2ModelConverter4DayDiffTest {
 
 	final ExpressionModel max = expr().maxOf().prop("collectional.dateProperty").model();
 	final ExpressionModel fun = expr().countDays().between().expr(max).and().prop("dateProperty").model();
-	final ExpressionModel countOfDays = expr().countOf().expr(fun).model();
+	final ExpressionModel countOfDays = expr().countOfDistinct().expr(fun).model();
 	final ExpressionModel sum = expr().sumOf().prop("intProperty").model();
 	final ExpressionModel plus1 = expr().expr(countOfDays).add().expr(sum).model();
 	final ExpressionModel model = expr().expr(plus1).mult().val(2).model();

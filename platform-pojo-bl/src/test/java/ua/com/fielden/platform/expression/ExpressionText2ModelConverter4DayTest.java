@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.expression;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
-import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
-
 import java.math.BigDecimal;
 
 import org.junit.Test;
@@ -16,6 +10,11 @@ import ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
 
 public class ExpressionText2ModelConverter4DayTest {
 
@@ -128,7 +127,7 @@ public class ExpressionText2ModelConverter4DayTest {
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
 	final ExpressionModel fun = expr().dayOf().prop("entityProperty.collectional.dateProperty").model();
-	final ExpressionModel count = expr().countOf().expr(fun).model();
+	final ExpressionModel count = expr().countOfDistinct().expr(fun).model();
 	final ExpressionModel model = expr().prop("selfProperty.intProperty").sub().expr(count).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -141,7 +140,7 @@ public class ExpressionText2ModelConverter4DayTest {
 
 	final ExpressionModel max = expr().maxOf().prop("entityProperty.collectional.dateProperty").model();
 	final ExpressionModel fun = expr().dayOf().expr(max).model();
-	final ExpressionModel count2 = expr().countOf().prop("collectional.intProperty").model();
+	final ExpressionModel count2 = expr().countOfDistinct().prop("collectional.intProperty").model();
 	final ExpressionModel model = expr().expr(fun).add().expr(count2).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -167,7 +166,7 @@ public class ExpressionText2ModelConverter4DayTest {
 	final ExpressionModel func1 = expr().dayOf().prop("selfProperty.dateProperty").model();
 	final ExpressionModel func2 = expr().dayOf().prop("entityProperty.dateProperty").model();
 	final ExpressionModel plus = expr().expr(func1).add().expr(func2).model();
-	final ExpressionModel model = expr().countOf().expr(plus).model();
+	final ExpressionModel model = expr().countOfDistinct().expr(plus).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
 
@@ -179,9 +178,9 @@ public class ExpressionText2ModelConverter4DayTest {
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
 
 	final ExpressionModel fun1 = expr().dayOf().prop("selfProperty.collectional.dateProperty").model();
-	final ExpressionModel count1 = expr().countOf().expr(fun1).model();
+	final ExpressionModel count1 = expr().countOfDistinct().expr(fun1).model();
 	final ExpressionModel fun2 = expr().dayOf().prop("entityProperty.collectional.dateProperty").model();
-	final ExpressionModel count2 = expr().countOf().expr(fun2).model();
+	final ExpressionModel count2 = expr().countOfDistinct().expr(fun2).model();
 	final ExpressionModel model = expr().expr(count1).add().expr(count2).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
