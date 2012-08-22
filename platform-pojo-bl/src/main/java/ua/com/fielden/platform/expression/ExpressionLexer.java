@@ -19,6 +19,7 @@ import ua.com.fielden.platform.expression.lexer.function.lower.LowerTokenAutomat
 import ua.com.fielden.platform.expression.lexer.function.max.MaxTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.min.MinTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.month.MonthTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.self.SelfTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.sum.SumTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.upper.UpperTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.year.YearTokenAutomata;
@@ -51,9 +52,12 @@ public class ExpressionLexer {
 	new CountTokenAutomata(), new DayTokenAutomata(), new MonthTokenAutomata(), new YearTokenAutomata(), //
 	new UpperTokenAutomata(), new LowerTokenAutomata(), new DayDiffTokenAutomata(), //
 	////////////////////////////////////////////////////
+	new SelfTokenAutomata(), // should go before the name
 	new NameTokenAutomata(),//
 	new StringTokenAutomata(),//
-	new DateConstantTokenAutomata(), new DecimalTokenAutomata(), new IntegerTokenAutomata()};
+	new DateConstantTokenAutomata(), //
+	new DecimalTokenAutomata(), //
+	new IntegerTokenAutomata()};
 
     public ExpressionLexer(final String input) {
 	if (StringUtils.isEmpty(input)) {
@@ -70,7 +74,7 @@ public class ExpressionLexer {
      */
     public Token nextToken() throws SequenceRecognitionFailed {
 	while (currChar != EOF) {
-	    return  predict(input.substring(curPosition));
+	    return predict(input.substring(curPosition));
 	}
 	return new Token(EgTokenCategory.EOF, "<EOF>", input.length(), input.length());
     }
