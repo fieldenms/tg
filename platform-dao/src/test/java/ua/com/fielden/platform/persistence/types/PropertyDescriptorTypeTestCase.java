@@ -2,8 +2,8 @@ package ua.com.fielden.platform.persistence.types;
 
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.sample.domain.controller.ITgWorkorder;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
-import ua.com.fielden.platform.test.domain.entities.daos.ITgWorkorder;
 
 /**
  * Tests Hibernate type {@link PropertyDescriptorType}.

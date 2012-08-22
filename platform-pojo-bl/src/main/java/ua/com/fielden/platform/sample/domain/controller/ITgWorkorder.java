@@ -1,7 +1,7 @@
 /**
  *
  */
-package ua.com.fielden.platform.test.domain.entities.daos;
+package ua.com.fielden.platform.sample.domain.controller;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
