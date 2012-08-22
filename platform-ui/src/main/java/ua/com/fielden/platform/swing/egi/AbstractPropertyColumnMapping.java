@@ -55,7 +55,7 @@ import com.jidesoft.grid.TableModelWrapperUtils;
  * @param <ColumnType>
  *            - type of value, shown in cell (for instance property type could be {@link Rotable} but it would be shown probably as String (i.e. only key))
  */
-public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity<?>> {
+public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity> {
     /**
      * Singleton renderer to draw totals
      */
@@ -532,7 +532,7 @@ public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity<?>>
 	    if (backgroundColor != null) {
 		// if renderer's previous background colour is not null then blend the defined colour with it
 		rendererComponent.setBackground(rendererComponent.getBackground() == null ? //
-		backgroundColor	: blend(backgroundColor, rendererComponent.getBackground(), 0.5));
+			backgroundColor	: blend(backgroundColor, rendererComponent.getBackground(), 0.5));
 	    }
 
 	    return rendererComponent;
