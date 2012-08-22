@@ -19,7 +19,7 @@ import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
  */
 public class ExpressionText2ModelConverter {
     private final String expressionText;
-    private final Class<? extends AbstractEntity> higherOrderType;
+    private final Class<? extends AbstractEntity<?>> higherOrderType;
     private final String contextProperty;
 
     /**
@@ -32,7 +32,7 @@ public class ExpressionText2ModelConverter {
      * @param expressionText -- a textual representations of the expression, which gets parsed and validated.
      */
 
-    public ExpressionText2ModelConverter(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty, final String expressionText) {
+    public ExpressionText2ModelConverter(final Class<? extends AbstractEntity<?>> higherOrderType, final String contextProperty, final String expressionText) {
 	this.higherOrderType = higherOrderType;
 	this.contextProperty = contextProperty;
 	this.expressionText = expressionText;
@@ -44,8 +44,7 @@ public class ExpressionText2ModelConverter {
      * @param higherOrderType
      * @param expressionText
      */
-
-    public ExpressionText2ModelConverter(final Class<? extends AbstractEntity> higherOrderType, final String expressionText) {
+    public ExpressionText2ModelConverter(final Class<? extends AbstractEntity<?>> higherOrderType, final String expressionText) {
 	this(higherOrderType, null, expressionText);
     }
 

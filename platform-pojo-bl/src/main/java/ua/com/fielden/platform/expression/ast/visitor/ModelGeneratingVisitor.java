@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionBetween;
@@ -12,7 +13,6 @@ import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * A visitor, which generates a computational model for AST.
@@ -25,7 +25,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
     /**
      * {@inheritDoc}
      */
-    public ModelGeneratingVisitor(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty) {
+    public ModelGeneratingVisitor(final Class<? extends AbstractEntity<?>> higherOrderType, final String contextProperty) {
 	super(higherOrderType, contextProperty);
     }
 
@@ -39,33 +39,37 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	case STRING:
 	case DATE_CONST:
 	    break;
-	// property types
+	    // property types
 	case NAME:
 	    node.setModel(createPropertyModel(node));
 	    break;
-	// bi-operand operation types
+	    // self types
+	case SELF:
+	    node.setModel(createSelfModel(node));
+	    break;
+	    // bi-operand operation types
 	case PLUS:
 	case MINUS:
 	case MULT:
 	case DIV:
 	    node.setModel(createOperationModel(node));
 	    break;
-	// uno-operand date type functions
+	    // uno-operand date type functions
 	case DAY:
 	case MONTH:
 	case YEAR:
 	    node.setModel(createDateFunctionModel(node));
 	    break;
-	// uno-operand string type functions
+	    // uno-operand string type functions
 	case UPPER:
 	case LOWER:
 	    node.setModel(createStringFunctionModel(node));
 	    break;
-	// bi-operand date type functions
+	    // bi-operand date type functions
 	case DAY_DIFF:
 	    node.setModel(createDayDiffFunctionModel(node));
 	    break;
-	// uno-operand aggregation functions
+	    // uno-operand aggregation functions
 	case AVG:
 	case SUM:
 	case MIN:
@@ -84,6 +88,14 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	    throw new IllegalArgumentException("Only property nodes are permitted.");
 	}
 	return expr().prop(relative2AbsoluteInverted(node.getToken().text)).model();
+    }
+
+    private ExpressionModel createSelfModel(final AstNode node) {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (cat != EgTokenCategory.SELF) {
+	    throw new IllegalArgumentException("Only SELF nodes are permitted.");
+	}
+	return expr().prop(AbstractEntity.ID).model();
     }
 
     private ExpressionModel createOperationModel(final AstNode node) {
@@ -154,7 +166,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	if (cat == EgTokenCategory.NAME) {
 	    return expr.prop(relative2AbsoluteInverted(operand.getToken().text));
 	} else {
-	    return (operand.getModel() != null) ? expr.expr(operand.getModel()) : expr.val(operand.getValue());
+	    return operand.getModel() != null ? expr.expr(operand.getModel()) : expr.val(operand.getValue());
 	}
     }
 
@@ -170,7 +182,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	if (cat == EgTokenCategory.NAME) {
 	    return expr.prop(relative2AbsoluteInverted(operand.getToken().text));
 	} else {
-	    return (operand.getModel() != null) ? expr.expr(operand.getModel()) : expr.val(operand.getValue());
+	    return operand.getModel() != null ? expr.expr(operand.getModel()) : expr.val(operand.getValue());
 	}
     }
 
@@ -216,7 +228,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	if (cat1 == EgTokenCategory.NAME) {
 	    exprWithOperand =  expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
 	} else {
-	    exprWithOperand = (leftOperand.getModel() != null) ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
+	    exprWithOperand = leftOperand.getModel() != null ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
 	}
 
 
@@ -230,7 +242,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	if (cat2 == EgTokenCategory.NAME) {
 	    exprWithOperand1 =  andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
 	} else {
-	    exprWithOperand1 = (leftOperand.getModel() != null) ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
+	    exprWithOperand1 = leftOperand.getModel() != null ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
 	}
 
 
