@@ -32,11 +32,11 @@ public class EntQueryGenerator {
     }
 
     public EntQuery generateEntQueryAsResultQuery(final QueryExecutionModel<?, ?> qem) {
-	return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getFetchModel(), qem.getParamValues(), QueryCategory.RESULT_QUERY, filter, username);
+	return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), null, qem.getFetchModel(), qem.getParamValues(), QueryCategory.RESULT_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsResultQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
-	return generateEntQuery(qryModel, null, null, paramValues, QueryCategory.RESULT_QUERY, filter, username);
+	return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.RESULT_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsResultQuery(final QueryModel<?> qryModel) {
@@ -44,11 +44,11 @@ public class EntQueryGenerator {
     }
 
     public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues, final IFilter filter, final String username) {
-	return generateEntQuery(qryModel, null, null, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
+	return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
     }
 
-    public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
-	return generateEntQuery(qryModel, null, null, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
+    public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues, final Class resultType) {
+	return generateEntQuery(qryModel, null, resultType, null, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel) {
@@ -56,14 +56,14 @@ public class EntQueryGenerator {
     }
 
     public EntQuery generateEntQueryAsSubquery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
-	return generateEntQuery(qryModel, null, null, paramValues, QueryCategory.SUB_QUERY, filter, username);
+	return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.SUB_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsSubquery(final QueryModel<?> qryModel) {
 	return generateEntQueryAsSubquery(qryModel, new HashMap<String, Object>());
     }
 
-    private EntQuery generateEntQuery(final QueryModel<?> qryModel, final OrderingModel orderModel, final fetch fetchModel, final Map<String, Object> paramValues, final QueryCategory category, final IFilter filter, final String username) {
+    private EntQuery generateEntQuery(final QueryModel<?> qryModel, final OrderingModel orderModel, final Class resultType, final fetch fetchModel, final Map<String, Object> paramValues, final QueryCategory category, final IFilter filter, final String username) {
 	ConditionsBuilder where = null;
 	final QrySourcesBuilder from = new QrySourcesBuilder(null, this, paramValues);
 	final QryYieldsBuilder select = new QryYieldsBuilder(null, this, paramValues);
@@ -118,7 +118,7 @@ public class EntQueryGenerator {
 
 	}
 
-	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), orderBy.getModel(), qryModel.getResultType(), category, //
+	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), orderBy.getModel(), resultType != null ? resultType : qryModel.getResultType(), category, //
 		domainMetadataAnalyser, filter, username, this, fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser));
     }
 

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.EntityMetadata;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSource;
@@ -45,22 +46,24 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     }
 
     private Pair<TokenCategory, Object> getResultForEntityTypeAsSource() {
-	final EntityMetadata entityMetadata = getQueryBuilder().getDomainMetadataAnalyser().getEntityMetadata((Class) firstValue());
+	final Class<AbstractEntity<?>> resultType = (Class) firstValue();
+	final EntityMetadata entityMetadata = getQueryBuilder().getDomainMetadataAnalyser().getEntityMetadata(resultType);
 	if (entityMetadata.isPersisted()) {
 	    return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource(entityMetadata, (String) secondValue(), getQueryBuilder().getDomainMetadataAnalyser()));
 	} else {
 	    final List<QueryModel> readyModels = new ArrayList<QueryModel>();
 	    readyModels.addAll(entityMetadata.getModels());
-	    return getResultForEntityModelAsSource(readyModels, (String) secondValue());
+	    return getResultForEntityModelAsSource(readyModels, (String) secondValue(), resultType);
 	}
     }
 
-    private Pair<TokenCategory, Object> getResultForEntityModelAsSource(final List<QueryModel> readyModels, final String readyAlias) {
+    private Pair<TokenCategory, Object> getResultForEntityModelAsSource(final List<QueryModel> readyModels, final String readyAlias, final Class readyResultType) {
 	final List<QueryModel> models = readyModels != null ? readyModels : (List<QueryModel>) firstValue();
 	final String alias = readyAlias != null ? readyAlias : (String) secondValue();
+	final Class resultType = readyResultType != null ? readyResultType : null;
 	final List<EntQuery> queries = new ArrayList<EntQuery>();
 	for (final QueryModel qryModel : models) {
-	    queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, getParamValues()));
+	    queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, getParamValues(), resultType));
 	}
 
 	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new QueryBasedSource(alias, getQueryBuilder().getDomainMetadataAnalyser(), queries.toArray(new EntQuery[]{})));
@@ -71,7 +74,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 	if (isEntityTypeAsSourceTest() || isEntityTypeAsSourceWithoutAliasTest()) {
 	    return getResultForEntityTypeAsSource();
 	} else if (isEntityModelAsSourceTest() || isEntityModelAsSourceWithoutAliasTest()) {
-	    return getResultForEntityModelAsSource(null, null);
+	    return getResultForEntityModelAsSource(null, null, null);
 	} else {
 	    throw new RuntimeException("Unable to get result - unrecognised state.");
 	}

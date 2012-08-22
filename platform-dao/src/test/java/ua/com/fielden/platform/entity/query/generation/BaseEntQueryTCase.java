@@ -109,7 +109,7 @@ public class BaseEntQueryTCase {
     }
 
     protected static EntQuery entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-	return qb.generateEntQueryAsSourceQuery(qryModel, paramValues);
+	return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, null);
     }
 
     protected static EntQuery entResultQry(final QueryModel qryModel) {
