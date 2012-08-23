@@ -20,7 +20,7 @@ public class ExpressionText2ModelConverter4DayDiffTest {
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
-	final ExpressionModel func = expr().countDays().between().prop("dateProperty").and().prop("dateProperty").model();
+	final ExpressionModel func = expr().count().days().between().prop("dateProperty").and().prop("dateProperty").model();
 	final ExpressionModel model = expr().expr(func).add().prop("intProperty").model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -32,7 +32,7 @@ public class ExpressionText2ModelConverter4DayDiffTest {
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
 	final ExpressionModel max = expr().maxOf().prop("collectional.dateProperty").model();
-	final ExpressionModel model = expr().countDays().between().expr(max).and().prop("dateProperty").model();
+	final ExpressionModel model = expr().count().days().between().expr(max).and().prop("dateProperty").model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
 
@@ -43,7 +43,7 @@ public class ExpressionText2ModelConverter4DayDiffTest {
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
 	final ExpressionModel max = expr().maxOf().prop("collectional.dateProperty").model();
-	final ExpressionModel fun = expr().countDays().between().expr(max).and().prop("dateProperty").model();
+	final ExpressionModel fun = expr().count().days().between().expr(max).and().prop("dateProperty").model();
 	final ExpressionModel countOfDays = expr().countOfDistinct().expr(fun).model();
 	final ExpressionModel sum = expr().sumOf().prop("intProperty").model();
 	final ExpressionModel plus1 = expr().expr(countOfDays).add().expr(sum).model();

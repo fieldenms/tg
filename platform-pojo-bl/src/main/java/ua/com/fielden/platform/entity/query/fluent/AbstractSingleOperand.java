@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionArgument;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunction;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffIntervalFunction;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IIfNullFunctionArgument;
@@ -59,8 +59,8 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
     }
 
     @Override
-    public IDateDiffFunction<T, ET> countDays() {
-	return new DateDiffFunction<T, ET>(getTokens().countDaysFunction(), getParent());
+    public IDateDiffIntervalFunction<T, ET> count() {
+	return new DateDiffIntervalFunction<T, ET>(getTokens().countDaysFunction(), getParent());
     }
 
     @Override

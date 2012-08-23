@@ -909,7 +909,9 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 		yield().lowerCase().prop("model.make.key").as("make").
 		yield().ifNull().prop("replacedBy").then().val(1).as("not-replaced-yet").
 		yield().ifNull().prop("model.make.key").then().val("unknown").as("make-key").
-		yield().countDays().between().now().and().now().as("zero-days").
+		yield().count().days().between().now().and().now().as("zero-days").
+		yield().count().months().between().now().and().now().as("zero-months").
+		yield().count().years().between().now().and().now().as("zero-years").
 		yield().caseWhen().prop("price.amount").ge().prop("purchasePrice.amount").then().
 		beginExpr().beginExpr().prop("price.amount").add().prop("purchasePrice.amount").endExpr().div().val(2).endExpr().end().as("avgPrice"). //
 		yield().round().beginExpr().prop("price.amount").div().val(3).endExpr().to(1).as("third-of-price"). //
@@ -921,6 +923,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     	assertEquals("Incorrect value", "1", values.get(0).get("not-replaced-yet").toString());
     	assertEquals("Incorrect value", "MERC", values.get(0).get("make-key"));
     	assertEquals("Incorrect value", "0", values.get(0).get("zero-days").toString());
+    	assertEquals("Incorrect value", "0", values.get(0).get("zero-months").toString());
+    	assertEquals("Incorrect value", "0", values.get(0).get("zero-years").toString());
     	assertEquals("Incorrect value", "150", values.get(0).get("avgPrice").toString());
     	assertEquals("Incorrect value", "66.7", values.get(0).get("third-of-price").toString());
     }

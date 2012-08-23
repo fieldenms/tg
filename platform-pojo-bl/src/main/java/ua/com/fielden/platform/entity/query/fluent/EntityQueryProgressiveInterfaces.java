@@ -90,7 +90,7 @@ public interface EntityQueryProgressiveInterfaces {
 
         // built-in SQL functions
         T now();
-        IDateDiffFunction<T, ET> countDays();
+        IDateDiffIntervalFunction<T, ET> count();
         IFunctionLastArgument<T, ET> upperCase();
         IFunctionLastArgument<T, ET> lowerCase();
         IFunctionLastArgument<T, ET> secondOf();
@@ -167,6 +167,13 @@ public interface EntityQueryProgressiveInterfaces {
     interface IDateDiffFunction<T, ET extends AbstractEntity<?>> {
         IDateDiffFunctionArgument<T, ET> between();
     }
+
+    interface IDateDiffIntervalFunction<T, ET extends AbstractEntity<?>> {
+	IDateDiffFunction<T, ET> days();
+	IDateDiffFunction<T, ET> months();
+	IDateDiffFunction<T, ET> years();
+    }
+
 
     interface ICaseWhenFunction<T, ET extends AbstractEntity<?>> {
         ICaseWhenFunctionArgument<T, ET> then();

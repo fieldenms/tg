@@ -4,7 +4,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.generation.elements.CountDays;
 
-public class CountDaysBuilder extends TwoArgumentsFunctionBuilder {
+public class CountDaysBuilder extends ThreeArgumentsFunctionBuilder {
 
     protected CountDaysBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
@@ -12,6 +12,6 @@ public class CountDaysBuilder extends TwoArgumentsFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new CountDays(getModelForSingleOperand(firstCat(), firstValue()), getModelForSingleOperand(secondCat(), secondValue()));
+	return new CountDays((String)firstValue(), getModelForSingleOperand(secondCat(), secondValue()), getModelForSingleOperand(thirdCat(), thirdValue()));
     }
 }

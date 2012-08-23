@@ -259,6 +259,18 @@ final class Tokens {
 	return add(TokenCategory.FUNCTION, Functions.COUNT_DAYS);
     }
 
+    public Tokens daysInterval() {
+	return add(TokenCategory.FUNCTION_INTERVAL, "DAY");
+    }
+
+    public Tokens monthsInterval() {
+	return add(TokenCategory.FUNCTION_INTERVAL, "MONTH");
+    }
+
+    public Tokens yearsInterval() {
+	return add(TokenCategory.FUNCTION_INTERVAL, "YEAR");
+    }
+
     public Tokens caseWhenFunction() {
 	return add(TokenCategory.FUNCTION, Functions.CASE_WHEN);
     }
