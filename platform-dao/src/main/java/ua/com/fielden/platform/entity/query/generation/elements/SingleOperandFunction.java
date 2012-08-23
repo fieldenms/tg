@@ -2,13 +2,17 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.List;
 
+import ua.com.fielden.platform.entity.query.generation.DbVersion;
+
 
 abstract class SingleOperandFunction implements ISingleOperand {
 
     private final ISingleOperand operand;
+    private final DbVersion dbVersion;
 
-    public SingleOperandFunction(final ISingleOperand operand) {
+    public SingleOperandFunction(final DbVersion dbVersion, final ISingleOperand operand) {
 	super();
+	this.dbVersion = dbVersion;
 	this.operand = operand;
     }
 
@@ -79,5 +83,9 @@ abstract class SingleOperandFunction implements ISingleOperand {
 
     public ISingleOperand getOperand() {
         return operand;
+    }
+
+    public DbVersion getDbVersion() {
+        return dbVersion;
     }
 }

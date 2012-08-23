@@ -12,6 +12,6 @@ public class MinuteOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new MinuteOf(getModelForSingleOperand(firstCat(), firstValue()));
+	return new MinuteOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
     }
 }

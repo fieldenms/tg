@@ -13,6 +13,6 @@ public class CountDateIntervalBuilder extends ThreeArgumentsFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new CountDateInterval((DateIntervalUnit) firstValue(), getModelForSingleOperand(secondCat(), secondValue()), getModelForSingleOperand(thirdCat(), thirdValue()));
+	return new CountDateInterval((DateIntervalUnit) firstValue(), getModelForSingleOperand(secondCat(), secondValue()), getModelForSingleOperand(thirdCat(), thirdValue()), getDbVersion());
     }
 }

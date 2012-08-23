@@ -343,4 +343,8 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     public Map<String, Object> getParamValues() {
 	return paramValues;
     }
+
+    public DbVersion getDbVersion() {
+	return getQueryBuilder().getDbVersion();
+    }
 }

@@ -12,6 +12,6 @@ public class MonthOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new MonthOf(getModelForSingleOperand(firstCat(), firstValue()));
+	return new MonthOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
     }
 }

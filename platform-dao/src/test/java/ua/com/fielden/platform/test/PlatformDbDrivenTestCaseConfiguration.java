@@ -19,7 +19,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
-import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.migration.LegacyConnectionModule;
@@ -78,7 +77,6 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
     static {
-	Rdbms.rdbms = Rdbms.H2;
 	hibTypeDefaults.put(boolean.class, YesNoType.class);
 	hibTypeDefaults.put(Boolean.class, YesNoType.class);
 	hibTypeDefaults.put(Date.class, DateTimeType.class);

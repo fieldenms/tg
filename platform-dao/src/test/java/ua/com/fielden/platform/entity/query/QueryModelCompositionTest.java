@@ -200,14 +200,14 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_simple_query_model_11() {
 	assertModelsEquals(//
-		conditions(new ComparisonTest(new DayOf(prop("initDate")), _gt, val(15)), compound(_and, new ComparisonTest(prop("price"), _lt, prop("purchasePrice")))), //
+		conditions(new ComparisonTest(new DayOf(prop("initDate"), null), _gt, val(15)), compound(_and, new ComparisonTest(prop("price"), _lt, prop("purchasePrice")))), //
 		conditions(where_veh.dayOf().prop("initDate").gt().val(15).and().prop("price").lt().prop("purchasePrice")));
     }
 
     @Test
     public void test_simple_query_model_12() {
 	assertModelsEquals(//
-		conditions(new ComparisonTest(new MonthOf(prop("initDate")), _gt, val(3)), compound(_and, new ComparisonTest(prop("price"), _lt, prop("purchasePrice")))), //
+		conditions(new ComparisonTest(new MonthOf(prop("initDate"), null), _gt, val(3)), compound(_and, new ComparisonTest(prop("price"), _lt, prop("purchasePrice")))), //
 		conditions(where_veh.monthOf().prop("initDate").gt().val(3).and().prop("price").lt().prop("purchasePrice")));
     }
 
@@ -303,7 +303,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 
 	final List<CompoundCondition> others2 = new ArrayList<CompoundCondition>();
 	others2.add(new CompoundCondition(_and, new ComparisonTest(prop("price"), _lt, prop("purchasePrice"))));
-	final Conditions exp2 = new Conditions(new ComparisonTest(new DayOf(prop("initDate")), _gt, val(15)), others2);
+	final Conditions exp2 = new Conditions(new ComparisonTest(new DayOf(prop("initDate"), null), _gt, val(15)), others2);
 	assertEquals(exp2, act.getConditions());
     }
 
@@ -328,7 +328,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_query_with_several_groups() {
 	final AggregatedResultQueryModel qry = select(VEHICLE).groupBy().prop("model").groupBy().yearOf().prop("initDate").yield().prop("model").as("model").yield().yearOf().prop("initDate").as("initYear").modelAsAggregate();
 	final EntQuery act = entResultQry(qry);
-	final YearOf yearOfModel = new YearOf(new EntProp("initDate"));
+	final YearOf yearOfModel = new YearOf(new EntProp("initDate"), null);
 	final EntProp eqClassProp = new EntProp("model");
 
 	final Yields exp = new Yields();

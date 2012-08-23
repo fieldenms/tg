@@ -319,8 +319,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private LikeTest getPlainILikeTest() {
-	final ISingleOperand firstOperand = new LowerCaseOf(getModelForSingleOperand(firstCat(), firstValue()));
-	final ISingleOperand secondOperand = new LowerCaseOf(getModelForSingleOperand(thirdCat(), thirdValue()));
+	final ISingleOperand firstOperand = new LowerCaseOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
+	final ISingleOperand secondOperand = new LowerCaseOf(getModelForSingleOperand(thirdCat(), thirdValue()), getDbVersion());
 	return new LikeTest(firstOperand, secondOperand, (Boolean) secondValue(), false);
     }
 
@@ -354,7 +354,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	for (final ISingleOperand leftOperand : leftOperands) {
 	    final List<ICondition> innerConditions = new ArrayList<ICondition>();
 	    for (final ISingleOperand rightOperand : rightOperands) {
-		innerConditions.add(new LikeTest(new LowerCaseOf(leftOperand), new LowerCaseOf(rightOperand), (Boolean) secondValue(), false));
+		innerConditions.add(new LikeTest(new LowerCaseOf(leftOperand, getDbVersion()), new LowerCaseOf(rightOperand, getDbVersion()), (Boolean) secondValue(), false));
 	    }
 	    final GroupedConditions group = getGroup(innerConditions, rightLogicalOperator);
 	    outerConditions.add(group);
@@ -375,10 +375,10 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private GroupedConditions getMultipleVsSingleILikeTest() {
 	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
-	final ISingleOperand singleOperand = new LowerCaseOf(getModelForSingleOperand(thirdCat(), thirdValue()));
+	final ISingleOperand singleOperand = new LowerCaseOf(getModelForSingleOperand(thirdCat(), thirdValue()), getDbVersion());
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
-	    conditions.add(new LikeTest(new LowerCaseOf(operand), singleOperand, (Boolean) secondValue(), false));
+	    conditions.add(new LikeTest(new LowerCaseOf(operand, getDbVersion()), singleOperand, (Boolean) secondValue(), false));
 	}
 	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
 	return getGroup(conditions, logicalOperator);
@@ -398,10 +398,10 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private GroupedConditions getSingleVsMultipleILikeTest() {
 	final List<ISingleOperand> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
-	final ISingleOperand singleOperand = new LowerCaseOf(getModelForSingleOperand(firstCat(), firstValue()));
+	final ISingleOperand singleOperand = new LowerCaseOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
-	    conditions.add(new LikeTest(singleOperand, new LowerCaseOf(operand), (Boolean) secondValue(), false));
+	    conditions.add(new LikeTest(singleOperand, new LowerCaseOf(operand, getDbVersion()), (Boolean) secondValue(), false));
 	}
 	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
 	return getGroup(conditions, logicalOperator);

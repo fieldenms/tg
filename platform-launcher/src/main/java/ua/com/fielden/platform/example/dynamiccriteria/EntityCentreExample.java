@@ -13,7 +13,6 @@ import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.client.config.IMainMenuBinder;
 import ua.com.fielden.platform.client.ui.DefaultApplicationMainPanel;
 import ua.com.fielden.platform.client.ui.menu.TreeMenuFactory;
-import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.master.SimpleCompositeEntityMasterFactory;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -115,7 +114,6 @@ public class EntityCentreExample extends AbstractUiApplication {
     }
 
     public static void main(final String[] args) {
-	Rdbms.rdbms = Rdbms.H2;
 	DOMConfigurator.configure("src/main/resources/log4j.xml");
 	new EntityCentreExample().launch(args);
     }

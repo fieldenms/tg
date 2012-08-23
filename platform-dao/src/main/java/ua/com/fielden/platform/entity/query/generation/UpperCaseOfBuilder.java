@@ -12,6 +12,6 @@ public class UpperCaseOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new UpperCaseOf(getModelForSingleOperand(firstCat(), firstValue()));
+	return new UpperCaseOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
     }
 }

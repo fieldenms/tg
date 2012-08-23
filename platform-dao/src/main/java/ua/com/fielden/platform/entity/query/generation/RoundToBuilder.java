@@ -12,6 +12,6 @@ public class RoundToBuilder extends TwoArgumentsFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new RoundTo(getModelForSingleOperand(firstCat(), firstValue()), getModelForSingleOperand(secondCat(), secondValue()));
+	return new RoundTo(getModelForSingleOperand(firstCat(), firstValue()), getModelForSingleOperand(secondCat(), secondValue()), getDbVersion());
     }
 }

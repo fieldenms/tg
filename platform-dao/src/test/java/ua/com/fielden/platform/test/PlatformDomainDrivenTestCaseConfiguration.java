@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.DefaultFilter;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
-import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.impl.DefaultSerialisationClassProvider;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
@@ -34,7 +33,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
 	// instantiate all the factories and Hibernate utility
 	try {
 	    DOMConfigurator.configure("src/test/resources/log4j.xml");
-	    Rdbms.rdbms = Rdbms.H2;
 	    final Properties props = new Properties(hbc);
 	    // application properties
 	    props.setProperty("app.home", "");

@@ -13,6 +13,6 @@ public class AverageOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new AverageOf(getModelForSingleOperand(firstCat(), firstValue()), distinct);
+	return new AverageOf(getModelForSingleOperand(firstCat(), firstValue()), distinct, getDbVersion());
     }
 }

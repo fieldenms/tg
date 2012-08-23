@@ -1,14 +1,15 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import ua.com.fielden.platform.entity.query.fluent.DateIntervalUnit;
+import ua.com.fielden.platform.entity.query.generation.DbVersion;
 
 
 public class CountDateInterval extends TwoOperandsFunction {
 
     private DateIntervalUnit intervalUnit;
 
-    public CountDateInterval(final DateIntervalUnit intervalUnit, final ISingleOperand operand1, final ISingleOperand operand2) {
-	super(operand1, operand2);
+    public CountDateInterval(final DateIntervalUnit intervalUnit, final ISingleOperand operand1, final ISingleOperand operand2, final DbVersion dbVersion) {
+	super(dbVersion, operand1, operand2);
 	this.intervalUnit = intervalUnit;
     }
 

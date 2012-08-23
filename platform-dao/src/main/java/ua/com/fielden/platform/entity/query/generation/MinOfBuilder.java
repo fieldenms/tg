@@ -12,6 +12,6 @@ public class MinOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new MinOf(getModelForSingleOperand(firstCat(), firstValue()));
+	return new MinOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
     }
 }
