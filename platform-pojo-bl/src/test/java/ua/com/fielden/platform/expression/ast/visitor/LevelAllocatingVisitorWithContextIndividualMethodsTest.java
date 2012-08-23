@@ -11,6 +11,7 @@ import ua.com.fielden.platform.expression.EgTokenCategory;
 import ua.com.fielden.platform.expression.Token;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1;
+import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 
@@ -36,7 +37,7 @@ public class LevelAllocatingVisitorWithContextIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_level_based_on_operands_with_agnostic_and_assigned_levels_out_of_context() throws SemanticException {
+    public void test_calc_of_level_based_on_operands_with_agnostic_and_assigned_levels_out_of_context() throws SemanticException, RecognitionException {
 	final Token intToken = new Token(EgTokenCategory.INT, "3");
 	final AstNode intNode = new AstNode(intToken);
 
@@ -53,7 +54,7 @@ public class LevelAllocatingVisitorWithContextIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_level_based_on_operands_with_different_assigned_levels_out_of_context() throws SemanticException {
+    public void test_calc_of_level_based_on_operands_with_different_assigned_levels_out_of_context() throws SemanticException, RecognitionException {
 	final Token colPropToken = new Token(EgTokenCategory.NAME, "←.collectional.intProperty");
 	final AstNode colPropNode = new AstNode(colPropToken);
 	colPropNode.setLevel(2);
@@ -75,7 +76,7 @@ public class LevelAllocatingVisitorWithContextIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_level_for_aggregation_functions_nodes_with_level_agnostic_operand() throws SemanticException {
+    public void test_calc_of_level_for_aggregation_functions_nodes_with_level_agnostic_operand() throws SemanticException, RecognitionException {
 	final Token operandToken = new Token(EgTokenCategory.INT, "2");
 	final AstNode operandNode = new AstNode(operandToken);
 
@@ -88,7 +89,7 @@ public class LevelAllocatingVisitorWithContextIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_level_for_aggregation_functions_nodes_with_collectional_operand_out_of_context() throws SemanticException {
+    public void test_calc_of_level_for_aggregation_functions_nodes_with_collectional_operand_out_of_context() throws SemanticException, RecognitionException {
 	final Token operandToken = new Token(EgTokenCategory.NAME, "←.collectional.intProperty");
 	final AstNode operandNode = new AstNode(operandToken);
 	operandNode.setLevel(2);
@@ -102,7 +103,7 @@ public class LevelAllocatingVisitorWithContextIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_level_for_aggregation_functions_nodes_without_collectional_operand_out_of_context() throws SemanticException {
+    public void test_calc_of_level_for_aggregation_functions_nodes_without_collectional_operand_out_of_context() throws SemanticException, RecognitionException {
 	final Token operandToken = new Token(EgTokenCategory.NAME, "←.entityProperty.intProperty");
 	final AstNode operandNode = new AstNode(operandToken);
 	operandNode.setLevel(1);

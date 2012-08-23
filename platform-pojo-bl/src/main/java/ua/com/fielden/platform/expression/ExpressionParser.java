@@ -226,7 +226,17 @@ public class ExpressionParser {
      * @throws RecognitionException
      */
     private AstNode self() throws RecognitionException {
-	return new AstNode(match(EgTokenCategory.SELF));
+	return new AstNode(match(EgTokenCategory.SELF)) {
+	    @Override
+	    protected boolean canBeAddedTo(final AstNode intendedParentNode, final StringBuilder reason) {
+		final boolean originalResult = super.canBeAddedTo(intendedParentNode, reason);
+		if (originalResult && intendedParentNode.getToken().category != EgTokenCategory.COUNT) {
+		    reason.append("Token " + EgTokenCategory.SELF + " can only be used as part of " + EgTokenCategory.COUNT + ".");
+		    return false;
+		}
+		return originalResult;
+	    }
+	};
     }
 
     /**

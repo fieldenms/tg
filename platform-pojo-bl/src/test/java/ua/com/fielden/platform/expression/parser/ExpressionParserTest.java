@@ -11,6 +11,7 @@ import ua.com.fielden.platform.expression.ExpressionParser;
 import ua.com.fielden.platform.expression.Token;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
+import ua.com.fielden.platform.expression.exception.MisplacedTokenException;
 import ua.com.fielden.platform.expression.exception.MissingTokenException;
 import ua.com.fielden.platform.expression.exception.NoViableAltException;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
@@ -232,14 +233,23 @@ public class ExpressionParserTest {
     }
 
     @Test
+    public void self_keyword_should_be_used_only_as_part_of_count() throws RecognitionException, SequenceRecognitionFailed {
+	final Token[] tokens = new ExpressionLexer("AVG( SELF ) + 2").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	try {
+	    parser.parse();
+	    fail("Expression is invalid and should not be parsed");
+	} catch (final MisplacedTokenException e) {
+	    assertEquals("Incorrect parsing error message.", "Token " + EgTokenCategory.SELF + " can only be used as part of " + EgTokenCategory.COUNT + ".", e.getMessage());
+	}
+    }
+
+    @Test
     public void should_have_failed_to_parsed_expressions_with_incorrectly_used_self_keyword() throws RecognitionException, SequenceRecognitionFailed {
 	final Token[] tokens = new ExpressionLexer("COUNT( SELF + 2)").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	try {
-	    final AstNode ast = parser.parse();
-	    assertEquals("Incorrectly recognition of SELF",
-		    EgTokenCategory.SELF,
-		    ast.getChildren().get(0).getChildren().get(0).getToken().category);
+	    parser.parse();
 	    fail("Expression is invalid and should not be parsed");
 	} catch (final ReservedNameException e) {
 	    assertEquals("Incorrect parsing error message.", "SELF is a keyword, should not be used as some property name.", e.getMessage());

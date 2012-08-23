@@ -12,6 +12,7 @@ import ua.com.fielden.platform.expression.EgTokenCategory;
 import ua.com.fielden.platform.expression.Token;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1;
+import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 
@@ -47,7 +48,7 @@ public class CollectionalContextVisitorIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_tag_based_on_tag_agnostic_operands() throws SemanticException {
+    public void test_calc_of_tag_based_on_tag_agnostic_operands() throws SemanticException, RecognitionException {
 	final Token intToken = new Token(EgTokenCategory.INT, "3");
 	final AstNode intNode = new AstNode(intToken);
 
@@ -63,7 +64,7 @@ public class CollectionalContextVisitorIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_tag_based_on_operands_with_agnostic_and_assigned_tags() throws SemanticException {
+    public void test_calc_of_tag_based_on_operands_with_agnostic_and_assigned_tags() throws SemanticException, RecognitionException {
 	final Token intToken = new Token(EgTokenCategory.INT, "3");
 	final AstNode intNode = new AstNode(intToken);
 
@@ -80,7 +81,7 @@ public class CollectionalContextVisitorIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_tag_based_on_operands_with_different_assigned_tags() throws SemanticException {
+    public void test_calc_of_tag_based_on_operands_with_different_assigned_tags() throws SemanticException, RecognitionException {
 	final Token colPropToken = new Token(EgTokenCategory.NAME, "selfProperty.selfProperty.collectional.intProperty");
 	final AstNode colPropNode = new AstNode(colPropToken);
 	colPropNode.setTag("selfProperty.selfProperty.collectional");
@@ -105,7 +106,7 @@ public class CollectionalContextVisitorIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_tag_for_aggregation_functions_nodes_with_tag_agnostic_operand() throws SemanticException {
+    public void test_calc_of_tag_for_aggregation_functions_nodes_with_tag_agnostic_operand() throws SemanticException, RecognitionException {
 	final Token operandToken = new Token(EgTokenCategory.INT, "2");
 	final AstNode operandNode = new AstNode(operandToken);
 
@@ -118,7 +119,7 @@ public class CollectionalContextVisitorIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_tag_for_aggregation_functions_nodes_with_collectional_operand() throws SemanticException {
+    public void test_calc_of_tag_for_aggregation_functions_nodes_with_collectional_operand() throws SemanticException, RecognitionException {
 	final Token operandToken = new Token(EgTokenCategory.NAME, "selfProperty.selfProperty.collectional.intProperty");
 	final AstNode operandNode = new AstNode(operandToken);
 	operandNode.setTag("selfProperty.selfProperty.collectional");
@@ -132,7 +133,7 @@ public class CollectionalContextVisitorIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_tag_for_aggregation_functions_nodes_with_non_collectional_operand() throws SemanticException {
+    public void test_calc_of_tag_for_aggregation_functions_nodes_with_non_collectional_operand() throws SemanticException, RecognitionException {
 	final Token operandToken = new Token(EgTokenCategory.NAME, "selfProperty.selfProperty.entityProperty.intProperty");
 	final AstNode operandNode = new AstNode(operandToken);
 	operandNode.setTag(THIS);
@@ -146,7 +147,7 @@ public class CollectionalContextVisitorIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_tag_for_aggregation_functions_nodes_with_two_level_deep_collectional_operand_case_01() throws SemanticException {
+    public void test_calc_of_tag_for_aggregation_functions_nodes_with_two_level_deep_collectional_operand_case_01() throws SemanticException, RecognitionException {
 	//////////////// create the property AST node associated with property of two-level deep collectional context ////////////////////
 	final String property =  "selfProperty.selfProperty.collectional.selfProperty.collectional.intProperty";
 	final Token operandToken = new Token(EgTokenCategory.NAME, property);
@@ -168,7 +169,7 @@ public class CollectionalContextVisitorIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_tag_for_aggregation_functions_nodes_with_two_level_deep_collectional_operand_case_02() throws SemanticException {
+    public void test_calc_of_tag_for_aggregation_functions_nodes_with_two_level_deep_collectional_operand_case_02() throws SemanticException, RecognitionException {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// selfProperty.selfProperty.collectional.intProperty - AVG ( selfProperty.selfProperty.collectional.selfProperty.collectional.intProperty ) ///
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,7 +212,7 @@ public class CollectionalContextVisitorIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_tag_for_operational_functions_nodes_with_two_level_deep_collectional_operand_case_03() throws SemanticException {
+    public void test_calc_of_tag_for_operational_functions_nodes_with_two_level_deep_collectional_operand_case_03() throws SemanticException, RecognitionException {
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// selfProperty.selfProperty.collectional.intProperty - selfProperty.selfProperty.collectional.selfProperty.collectional.intProperty ///
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -248,7 +249,7 @@ public class CollectionalContextVisitorIndividualMethodsTest {
     }
 
     @Test
-    public void test_calc_of_tag_for_aggregation_functions_nodes_with_two_level_deep_collectional_operand_case_04() throws SemanticException {
+    public void test_calc_of_tag_for_aggregation_functions_nodes_with_two_level_deep_collectional_operand_case_04() throws SemanticException, RecognitionException {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// selfProperty.selfProperty.collectional.intProperty - selfProperty.selfProperty.collectional.selfProperty.collectional.intProperty + ///
 	/// AVG ( selfProperty.selfProperty.collectional.selfProperty.collectional.intProperty )                                                ///

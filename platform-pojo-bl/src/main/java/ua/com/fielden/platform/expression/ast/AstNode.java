@@ -6,6 +6,8 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.Token;
+import ua.com.fielden.platform.expression.exception.MisplacedTokenException;
+import ua.com.fielden.platform.expression.exception.RecognitionException;
 
 /**
  * A base class for the expression grammar AST node.
@@ -33,9 +35,26 @@ public class AstNode {
 	return token;
     }
 
-    public AstNode addChild(final AstNode node) {
+    public AstNode addChild(final AstNode node) throws RecognitionException {
+	final StringBuilder reason = new StringBuilder();
+	if (!node.canBeAddedTo(this, reason)) {
+	    throw new MisplacedTokenException(reason.toString(), node.token);
+	}
 	children.add(node);
 	return this;
+    }
+
+    /**
+     * This method is introduced specifically to facilitate cases where an AST node being added to the parent knows that it whould not be added there.
+     * <p>
+     * For example, an AST node associated with token SELF can only be added to a node for token COUNT.
+     *
+     * @param intendedParentNode
+     * @param reason
+     * @return
+     */
+    protected boolean canBeAddedTo(final AstNode intendedParentNode, final StringBuilder reason) {
+	return true;
     }
 
     @Override
