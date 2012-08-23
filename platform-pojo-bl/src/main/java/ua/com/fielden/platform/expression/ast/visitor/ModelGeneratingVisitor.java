@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionBetween;
@@ -12,7 +13,6 @@ import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * A visitor, which generates a computational model for AST.
@@ -90,6 +90,12 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	return expr().prop(relative2AbsoluteInverted(node.getToken().text)).model();
     }
 
+    /**
+     * The model for keyword SELF is not really needed as it can be used only in the context of function COUNT that
+     * is provided with <code>countAll()</code> model (no arguments that would depend on the model for SELF).
+     * @param node
+     * @return
+     */
     private ExpressionModel createSelfModel(final AstNode node) {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
 	if (cat != EgTokenCategory.SELF) {
