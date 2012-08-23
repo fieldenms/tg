@@ -60,7 +60,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
 
     @Override
     public IDateDiffIntervalFunction<T, ET> count() {
-	return new DateDiffIntervalFunction<T, ET>(getTokens().countDaysFunction(), getParent());
+	return new DateDiffIntervalFunction<T, ET>(getTokens().countDateIntervalFunction(), getParent());
     }
 
     @Override

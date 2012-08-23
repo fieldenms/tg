@@ -1,25 +1,28 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import ua.com.fielden.platform.entity.query.fluent.DateIntervalUnit;
 
-public class CountDays extends TwoOperandsFunction {
 
-    private String intervalUnit;
+public class CountDateInterval extends TwoOperandsFunction {
 
-    public CountDays(final String intervalUnit, final ISingleOperand operand1, final ISingleOperand operand2) {
+    private DateIntervalUnit intervalUnit;
+
+    public CountDateInterval(final DateIntervalUnit intervalUnit, final ISingleOperand operand1, final ISingleOperand operand2) {
 	super(operand1, operand2);
 	this.intervalUnit = intervalUnit;
     }
 
     @Override
     public String sql() {
-	if ("DAY".equals(intervalUnit)) {
+	switch (intervalUnit) {
+	case DAY:
 	    return "DATEDIFF('DAY', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
-	} else if ("MONTH".equals(intervalUnit)) {
+	case MONTH:
 	    return "DATEDIFF('MONTH', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
-	} else if ("YEAR".equals(intervalUnit)) {
+	case YEAR:
 	    return "DATEDIFF('YEAR', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
+	default:
+	    throw new IllegalStateException("Unexpected interval unit: " + intervalUnit);
 	}
-
-	return null;
     }
 }

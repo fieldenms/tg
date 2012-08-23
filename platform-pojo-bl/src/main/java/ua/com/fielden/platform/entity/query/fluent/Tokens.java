@@ -255,20 +255,20 @@ final class Tokens {
 	return add(TokenCategory.SET_OF_EXPR_TOKENS, getListFromArray(expressions));
     }
 
-    public Tokens countDaysFunction() {
-	return add(TokenCategory.FUNCTION, Functions.COUNT_DAYS);
+    public Tokens countDateIntervalFunction() {
+	return add(TokenCategory.FUNCTION, Functions.COUNT_DATE_INTERVAL);
     }
 
     public Tokens daysInterval() {
-	return add(TokenCategory.FUNCTION_INTERVAL, "DAY");
+	return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.DAY);
     }
 
     public Tokens monthsInterval() {
-	return add(TokenCategory.FUNCTION_INTERVAL, "MONTH");
+	return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.MONTH);
     }
 
     public Tokens yearsInterval() {
-	return add(TokenCategory.FUNCTION_INTERVAL, "YEAR");
+	return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.YEAR);
     }
 
     public Tokens caseWhenFunction() {
