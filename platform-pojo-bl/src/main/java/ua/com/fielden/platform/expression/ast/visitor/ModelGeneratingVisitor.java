@@ -254,6 +254,12 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
 	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr;
 
+	// first check if the current node represents COUNT with SELF argument
+	if (EgTokenCategory.COUNT == cat && EgTokenCategory.SELF == node.getChildren().get(0).getToken().category) {
+	    return expr().countAll().model();
+	}
+
+	// otherwise proceed is a generic for all functions way
 	switch (cat) {
 	case SUM:
 	    expr = expr().sumOf();
@@ -273,6 +279,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	default:
 	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
 	}
+
 	return unoOperandModel(expr, node.getChildren().get(0)).model();
     }
 

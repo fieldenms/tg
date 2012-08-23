@@ -77,6 +77,9 @@ public class CollectionalContextVisitor extends AbstractAstVisitor {
 	case DATE_CONST:
 	    node.setTag(null);
 	    break;
+	case SELF:
+	    node.setTag(THIS);
+	    break;
 	// collectional property dependent level
 	case NAME:
 	    node.setTag(determineTagForProperty(node.getToken().text));

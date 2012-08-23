@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.expression;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
+
 import java.math.BigDecimal;
 
 import org.junit.Test;
@@ -11,11 +17,6 @@ import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.types.Money;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
-import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
 
 public class ExpressionText2ModelConverter4CountTest {
 
@@ -309,5 +310,30 @@ public class ExpressionText2ModelConverter4CountTest {
 	final ExpressionModel model = expr().expr(count1).add().expr(count2).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
+
+    @Test
+    public void simple_self_in_count_should_work() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(SELF)");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Integer.class, root.getType());
+	assertEquals("Incorrect expression tag", SUPER, root.getTag());
+	assertEquals("Incorrect expression type", EntityLevel1.class, root.getChildren().get(0).getType());
+	final ExpressionModel model = expr().countAll().model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void count_of_self_as_part_of_more_complex_expression_should_work() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(moneyProperty) / COUNT(SELF)");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Money.class, root.getType());
+	assertEquals("Incorrect expression tag", SUPER, root.getTag());
+
+	final ExpressionModel sum = expr().sumOf().prop("moneyProperty").model();
+	final ExpressionModel count = expr().countAll().model();
+	final ExpressionModel model = expr().expr(sum).div().expr(count).model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
 
 }

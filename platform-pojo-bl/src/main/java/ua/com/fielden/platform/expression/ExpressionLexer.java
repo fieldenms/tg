@@ -52,7 +52,7 @@ public class ExpressionLexer {
 	new CountTokenAutomata(), new DayTokenAutomata(), new MonthTokenAutomata(), new YearTokenAutomata(), //
 	new UpperTokenAutomata(), new LowerTokenAutomata(), new DayDiffTokenAutomata(), //
 	////////////////////////////////////////////////////
-	new SelfTokenAutomata(), // should go before the name
+	new SelfTokenAutomata(), // should go before the name token
 	new NameTokenAutomata(),//
 	new StringTokenAutomata(),//
 	new DateConstantTokenAutomata(), //

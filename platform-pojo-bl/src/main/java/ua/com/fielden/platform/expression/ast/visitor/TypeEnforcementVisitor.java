@@ -62,6 +62,9 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	case DATE_CONST:
 	    processDateLiteralToken(node);
 	    break;
+	case SELF:
+	    node.setType(getContextPropertyType());
+	    break;
 	// property types
 	case NAME:
 	    node.setType(identifyPropertyType(node));

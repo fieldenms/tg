@@ -78,6 +78,9 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 	    node.setLevel(null);
 	    break;
 	// collectional property dependent level
+	case SELF:
+	    node.setLevel(getBaseLevel());
+	    break;
 	case NAME:
 	    node.setLevel(determineLevelForProperty(node.getToken().text));
 	    break;
@@ -122,7 +125,7 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
     }
 
     private int determineLevel(final String[] parts, final Class<?> type) {
-	int level = getContextLevel() == null ? 1 : getContextLevel();
+	int level = getBaseLevel();
 	String property = "";
 	for (int index = 0; index < parts.length; index++) {
 	    property += parts[index];
@@ -133,6 +136,15 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 	    property += ".";
 	}
 	return level;
+    }
+
+    /**
+     * Returns the base level for the whole expression. This is the level with respect to which all other levels are calcualted.
+     *
+     * @return
+     */
+    private int getBaseLevel() {
+	return getContextLevel() == null ? 1 : getContextLevel();
     }
 
     /**
