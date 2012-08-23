@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>fielden</groupId>
@@ -8,7 +9,7 @@
 
 	<artifactId>platform-ui</artifactId>
 	<packaging>jar</packaging>
-	
+
 	<name>Trident Genesis Platform UI</name>
 	<dependencies>
 		<!-- inner module dependencies -->
@@ -23,16 +24,9 @@
 			<groupId>com.oracle</groupId>
 			<artifactId>javafx</artifactId>
 			<version>2.2</version>
-			<systemPath>${java.home}/lib/jfxrt.jar</systemPath>
-			<scope>system</scope>
 		</dependency>
-		<!-- transition from rule-ui! ("rule-core") 
-		<dependency>
-			<groupId>edu.umd.cs</groupId>
-			<artifactId>piccolo</artifactId>
-			<version>1.2.1</version>
-		</dependency>
-		 -->
+		<!-- transition from rule-ui! ("rule-core") <dependency> <groupId>edu.umd.cs</groupId> 
+			<artifactId>piccolo</artifactId> <version>1.2.1</version> </dependency> -->
 		<dependency>
 			<groupId>jfree</groupId>
 			<artifactId>jfreechart</artifactId>
@@ -92,13 +86,13 @@
 			<groupId>org.jvnet</groupId>
 			<artifactId>flamingo</artifactId>
 			<version>3.1</version>
-		</dependency>		 
-		<dependency>
-	    	<groupId>it.cnr.imaa.essi</groupId>
-    		<artifactId>lablib-checkboxtree</artifactId>
-    		<version>3.0.2</version>
 		</dependency>
-	</dependencies>	
+		<dependency>
+			<groupId>it.cnr.imaa.essi</groupId>
+			<artifactId>lablib-checkboxtree</artifactId>
+			<version>3.0.2</version>
+		</dependency>
+	</dependencies>
 	<build>
 		<resources>
 			<resource>
