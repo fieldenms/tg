@@ -274,7 +274,9 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
      * @return
      */
     protected static String generateNameFrom(final String title) {
-	return StringUtils.uncapitalize(WordUtils.capitalize(title.trim()).replaceAll("\\W", "").replaceFirst("\\d*", ""));
+	return StringUtils.uncapitalize(WordUtils.capitalize(title.trim()).
+		/*remove non-words, but keep digits and underscore*/replaceAll("[^\\p{L}\\d_]", "").
+		/*remove the digit at the beginning of the word*/replaceFirst("\\d*", ""));
     }
 
     @Override
