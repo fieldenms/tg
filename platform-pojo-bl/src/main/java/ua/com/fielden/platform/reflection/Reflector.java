@@ -282,7 +282,7 @@ public final class Reflector {
     public static String fromRelative2AbsotulePath(final String context, final String relativePropertyPath) {
 	// if the relativePropertyPath path does not start with ← then it is absolute already
 	if (!relativePropertyPath.startsWith("←")) {
-	    return StringUtils.isEmpty(context) ? relativePropertyPath : context + "." + relativePropertyPath;
+	    return StringUtils.isEmpty(context) ? relativePropertyPath : context + /*TODO this trivial change breaks test_case_34() in ExpressionText2ModelConverter4FunctionsMinMaxTest : (StringUtils.isEmpty(relativePropertyPath) ? "" : */"." + relativePropertyPath/*)*/;
 	}
 
 	final int endOfLevelUp = relativePropertyPath.lastIndexOf(UP_LEVEL);

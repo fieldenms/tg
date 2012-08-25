@@ -11,6 +11,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
@@ -236,11 +237,26 @@ public class ReflectorTest {
     }
 
     @Test
+    @Ignore
+    public void test_conversion_of_relative_property_paths_to_absolute_for_SELF_properties() {
+	assertEquals("", Reflector.fromRelative2AbsotulePath("", ""));
+	assertEquals("vehicle", Reflector.fromRelative2AbsotulePath("vehicle", ""));
+	assertEquals("vehicle.driver", Reflector.fromRelative2AbsotulePath("vehicle.driver", ""));
+    }
+
+    @Test
     public void test_conversion_of_absolute_property_paths_to_relative() {
 	assertEquals("originator.name", Reflector.fromAbsotule2RelativePath("", "originator.name"));
 	assertEquals("name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.driver.name"));
 	assertEquals("←.←.originator.name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "originator.name"));
 	assertEquals("←.owner.name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.owner.name"));
+    }
+
+    @Test
+    public void test_conversion_of_absolute_property_paths_to_relative_for_SELF_properties() {
+	assertEquals("", Reflector.fromAbsotule2RelativePath("", ""));
+	assertEquals("", Reflector.fromAbsotule2RelativePath("vehicle", "vehicle"));
+	assertEquals("", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.driver"));
     }
 
     @Test
