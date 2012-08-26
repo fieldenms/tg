@@ -97,6 +97,24 @@ public class ParsingComparisonExpressionsTest {
     }
 
     @Test
+    public void less_comparison_with_arithmetic_expression_and_paren() throws RecognitionException, SequenceRecognitionFailed {
+	final Token[] tokens = new ExpressionLexer("(1 + 2 > 3 - 1)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+	assertEquals("Incorrectly formed AST", "(> (+ 1 2) (- 3 1))", ast.treeToString());
+    }
+
+    @Test
+    public void less_comparison_with_arithmetic_expression_and_paren_and_subparen() throws RecognitionException, SequenceRecognitionFailed {
+	final Token[] tokens = new ExpressionLexer("((1 + 2) > (3 - 1))").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+	assertEquals("Incorrectly formed AST", "(> (+ 1 2) (- 3 1))", ast.treeToString());
+    }
+
+    @Test
     public void less_comparison_with_arithmetic_expression_as_subsentences() throws RecognitionException, SequenceRecognitionFailed {
 	final Token[] tokens = new ExpressionLexer("(1 + 2) > (3 - 1)").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
