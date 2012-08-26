@@ -8,6 +8,11 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
 import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;
 import ua.com.fielden.platform.expression.lexer.and.AndTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.case_when.case_.CaseTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.case_when.else_.ElseTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.case_when.end.EndTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.case_when.then_.ThenTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.case_when.when.WhenTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.comma.CommaTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.date_constant.DateConstantTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.decimal.DecimalTokenAutomata;
@@ -59,6 +64,12 @@ public class ExpressionLexer {
 	new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), new MaxTokenAutomata(),//
 	new CountTokenAutomata(), new DayTokenAutomata(), new MonthTokenAutomata(), new YearTokenAutomata(), //
 	new UpperTokenAutomata(), new LowerTokenAutomata(), new DayDiffTokenAutomata(), //
+	////////////////////////////////////////////////////
+	new CaseTokenAutomata(), // this block of lexers should go begore the name lexer
+	new WhenTokenAutomata(),
+	new ThenTokenAutomata(),
+	new ElseTokenAutomata(),
+	new EndTokenAutomata(),
 	////////////////////////////////////////////////////
 	new SelfTokenAutomata(), // should go before the name token
 	new NameTokenAutomata(),//

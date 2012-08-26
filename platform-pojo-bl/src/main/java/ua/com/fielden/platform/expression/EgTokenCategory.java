@@ -42,7 +42,13 @@ public enum EgTokenCategory implements ILexemeCategory {
     NE(31),
     ////////////// logical operations ////////////////////////
     AND(32),
-    OR(33);
+    OR(33),
+    ////////////// case/when operations ////////////////////////
+    CASE(34),
+    WHEN(35),
+    THEN(36),
+    ELSE(37),
+    END(38);
 
     public final int index;
 

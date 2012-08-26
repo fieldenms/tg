@@ -16,7 +16,8 @@ import ua.com.fielden.platform.expression.exception.UnwantedTokenException;
  * <p>
  * Here is a short-hand grammar rules for Expression Language, where only parsing rules are outlined, omitting lexer rules for brevity.
  * <pre>
- * sentence : logical-expression | arithmetic-expression
+ * sentence : case-expression | logical-expression | arithmetic-expression
+ * case-expression : CASE (WHEN logical-expression THEN STRING)+ ELSE STRING END
  * logical-expression : '(' logical-expression ')' | comparison-expression (logical-op comparison-expression)*
  * comparison-expression : '(' comparison-expression ')' | arithmetic-expression cmp-op arithmetic-expression
  * arithmetic-expression : term (arithmetic-op term)*
