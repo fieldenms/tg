@@ -318,7 +318,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
     @Test
     public void test_case_25() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) + " +
-			"AVG(MAX(selfProperty.collectional.collectional.moneyProperty))");
+		"AVG(MAX(selfProperty.collectional.collectional.moneyProperty))");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -346,7 +346,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
     @Test
     public void test_case_27() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(MAX(collectional.collectional.moneyProperty) + collectional.intProperty) / " +
-			"AVG(SUM(selfProperty.collectional.collectional.moneyProperty))");
+		"AVG(SUM(selfProperty.collectional.collectional.moneyProperty))");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -547,7 +547,5 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	final ExpressionModel model = expr().prop("one2manyAssociationSpecialCase").model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
-
-
 
 }

@@ -18,7 +18,7 @@ import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.ReservedNameException;
 import ua.com.fielden.platform.expression.exception.UnwantedTokenException;
 
-public class ExpressionParserTest {
+public class ParsingArithmeticExpressionsWithAggreagationFunctionsTest {
 
     @Test
     public void test_single_application_of_rules_term_op_term() throws RecognitionException, SequenceRecognitionFailed {
@@ -28,6 +28,45 @@ public class ExpressionParserTest {
 	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
 	assertEquals("Incorrectly formed AST", "(+ 1 2)", ast.treeToString());
     }
+
+
+    @Test
+    public void parantheses_usage_case1() throws RecognitionException, SequenceRecognitionFailed {
+	final Token[] tokens = new ExpressionLexer("(1 + 2)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+	assertEquals("Incorrectly formed AST", "(+ 1 2)", ast.treeToString());
+    }
+
+    @Test
+    public void parantheses_usage_case2() throws RecognitionException, SequenceRecognitionFailed {
+	final Token[] tokens = new ExpressionLexer("(1 + 2) * 2").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+	assertEquals("Incorrectly formed AST", "(* (+ 1 2) 2)", ast.treeToString());
+    }
+
+
+    @Test
+    public void parantheses_usage_case3() throws RecognitionException, SequenceRecognitionFailed {
+	final Token[] tokens = new ExpressionLexer("1 * (2 + 3)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+	assertEquals("Incorrectly formed AST", "(* 1 (+ 2 3))", ast.treeToString());
+    }
+
+    @Test
+    public void parantheses_usage_case4() throws RecognitionException, SequenceRecognitionFailed {
+	final Token[] tokens = new ExpressionLexer("(1 + 4) * (2 + 3)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+	assertEquals("Incorrectly formed AST", "(* (+ 1 4) (+ 2 3))", ast.treeToString());
+    }
+
 
     @Test
     public void test_application_of_rules_term_op_term_op_term() throws RecognitionException, SequenceRecognitionFailed {
@@ -181,6 +220,18 @@ public class ExpressionParserTest {
 	    fail("Expression is invalid and should not be parsed");
 	} catch (final MissingTokenException e) {
 	    assertEquals("Incorrect parsing error message.", "Missing token after token <'+',PLUS>", e.getMessage());
+	}
+    }
+
+    @Test
+    public void unrelated_part_of_arithmetic_expression_shoul_fail_parsing() throws SequenceRecognitionFailed, RecognitionException {
+	final Token[] tokens = new ExpressionLexer("(property + 1) (3 + 4)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+
+	try {
+	    parser.parse();
+	    fail("Expression is invalid and should not be parsed");
+	} catch (final UnwantedTokenException e) {
 	}
     }
 

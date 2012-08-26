@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.expression;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.exception.MismatchedTokenException;
 import ua.com.fielden.platform.expression.exception.MissingTokenException;
@@ -10,29 +13,30 @@ import ua.com.fielden.platform.expression.exception.UnwantedTokenException;
 
 /**
  * The expression language grammar parser, which constructs an AST as it parses the expression.
- *
+ * 
  * The main method is {@link #parse()} that either returns a root node of the constructed AST or throws {@link RecognitionException}.
  * <p>
  * Here is a usage example:
- *
+ * 
  * <pre>
  * final ExpressionLexer el = new ExpressionLexer(&quot;9 + (6 + 2) * 6 - (SUM (property.subPropety)+3) / (34 - prop)&quot;);
- *
+ * 
  * final ExpressionParser parser = new ExpressionParser(el.tokenize());
  * final AstNode root = parser.parse();
  * System.out.println(root.treeToString());
  * </pre>
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class ExpressionParser {
     private final Token[] tokens;
     private int position;
+    private final List<Integer> markers = new ArrayList<>();
 
     /**
      * Construct an array of tokens to be parsed.
-     *
+     * 
      * @param tokens
      */
     public ExpressionParser(final Token[] tokens) {
@@ -42,7 +46,7 @@ public class ExpressionParser {
 
     /**
      * The main API method to be used for triggering input parsing. Should be invoked only once.
-     *
+     * 
      * @return
      * @throws RecognitionException
      */
@@ -55,59 +59,183 @@ public class ExpressionParser {
     }
 
     /**
-     * Implements parsing of the rule sentence: <code><b>term (op term)*</b></code>
-     *
+     * Implements parsing of the rule sentence: <code><b>sentence ::= arithmetic_expression (comparison_expression)</b></code>
+     * 
      * @return
      * @throws RecognitionException
      */
     private AstNode sentence() throws RecognitionException {
+	if (speculate_cmp_expression()) {
+	    return match_cmp_expression();
+	} else { //if (speculate_arithmetic_expression()) { alternatively could speculate... but for better error reporting it makes sense to simply try to parse the last most likely alternative
+	    return match_arithmetic_expression();
+	}
+	//    throw new NoViableAltException("Could not find any suitable expression language rule.", null);
+
+    }
+
+    /** TODO reserved for later use. */
+    private boolean speculate_arithmetic_expression() {
+	mark();
+	try {
+	    match_arithmetic_expression();
+	    return lookahead() == EgTokenCategory.EOF;
+	} catch (final Exception ex) {
+	    return false;
+	} finally {
+	    release();
+	}
+    }
+
+    private boolean speculate_cmp_expression() {
+	mark();
+	try {
+	    match_cmp_expression();
+	    return true;
+	} catch (final Exception ex) {
+	    return false;
+	} finally {
+	    release();
+	}
+    }
+
+    private boolean speculate_cmp_expression_with_paren() {
+	mark();
+	try {
+	    match_cmp_expression_with_paren();
+	    return true;
+	} catch (final Exception ex) {
+	    return false;
+	} finally {
+	    release();
+	}
+    }
+
+    private AstNode match_arithmetic_expression() throws RecognitionException {
 	final AstNode leftNode = term();
-	return operation(leftNode);
+	return arithmetic_operation(leftNode);
     }
 
     /**
-     * Handles parsing of the <code><b>(op term)*</b></code> portion of the rule <code><b>term (op term)*</b></code>.
-     * This include correct handling of operation precedence when construction an AST.
-     *
+     * Produces an AST node representing a subsentence or expression wrapped in parentheses.
+     * 
+     * @return
+     * @throws RecognitionException
+     */
+    private AstNode match_arithmetic_expression_with_paren() throws RecognitionException {
+	match(EgTokenCategory.LPAREN);
+	final AstNode node = match_arithmetic_expression();
+	match(EgTokenCategory.RPAREN);
+	return node;
+    }
+
+
+    private AstNode match_cmp_expression() throws RecognitionException {
+	if (lookahead() == EgTokenCategory.LPAREN) {
+	    if (speculate_cmp_expression_with_paren()) {
+		return match_cmp_expression_with_paren();
+	    } else {
+		final AstNode leftNode = match_arithmetic_expression();
+		final AstNode node = cmp_op();
+		final AstNode rightNode = match_arithmetic_expression();
+		return node.addChild(leftNode).addChild(rightNode);
+	    }
+	} else {
+	    final AstNode leftNode = match_arithmetic_expression();
+	    final AstNode node = cmp_op();
+	    final AstNode rightNode = match_arithmetic_expression();
+	    return node.addChild(leftNode).addChild(rightNode);
+	}
+    }
+
+    private AstNode match_cmp_expression_with_paren() throws RecognitionException {
+	match(EgTokenCategory.LPAREN);
+	final AstNode node = match_cmp_expression();
+	match(EgTokenCategory.RPAREN);
+	return node;
+    }
+
+    private int mark() {
+	markers.add(position);
+	return position;
+    }
+
+    private void release() {
+	final int marker = markers.get(markers.size() - 1);
+	markers.remove(markers.size() - 1);
+	seek(marker);
+    }
+
+    private void seek(final int marker) {
+	position = marker;
+    }
+
+    /**
+     * Handles parsing of the <code><b>arithmetic_operation :: = (arithmetic_op term)*</b></code> portion of the rule <code><b>arithmetic_expression</b></code>. This include
+     * correct handling of operation precedence when construction an AST.
+     * 
      * Produces an AST node representing an operation (currently +, -, /, *) with all its children, which are defined recursively.
-     *
+     * 
      * @param leftOperandNode
      * @return
      * @throws RecognitionException
      */
-    private AstNode operation(final AstNode leftOperandNode) throws RecognitionException {
-	while (isOpNext()) {
-	    final AstNode node = op();
+    private AstNode arithmetic_operation(final AstNode leftOperandNode) throws RecognitionException {
+	// its okey not to have any operation as part of an arithmetic expression -- a single term is sufficient
+	// thus need to check whether the next token actually represents an arithmetic operation
+	if (isArithmeticOpNext()) {
+	    final AstNode node = arithmetic_op();
 	    final AstNode rightNode = term();
-
 	    final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
 
 	    // anything that follows PLUS has higher precedence of execution and thus should be represented by a separate AST node
 	    // for example, 5 + 2 * 5, 5 + 6 - 2
 	    if (cat == EgTokenCategory.PLUS) {
-		final AstNode rightOperandNode = operation(rightNode);
-		return operation(node.addChild(leftOperandNode).addChild(rightOperandNode));
+		final AstNode rightOperandNode = arithmetic_operation(rightNode);
+		return arithmetic_operation(node.addChild(leftOperandNode).addChild(rightOperandNode));
 	    }
 	    // anything that follows MINUS except PLUS has higher order of execution and thus should be represented by a separate AST node
 	    // for example, 5 - 2 * 2, but in 5 - 4 + 3 token "-" has higher precedence
 	    final EgTokenCategory next = lookahead();
 	    if (cat == EgTokenCategory.MINUS && (next == EgTokenCategory.MULT || next == EgTokenCategory.DIV)) { // look ahead to determine if the next token is an operation of higher precedence
-		final AstNode rightOperandNode = operation(rightNode);
-		return operation(node.addChild(leftOperandNode).addChild(rightOperandNode));
+		final AstNode rightOperandNode = arithmetic_operation(rightNode);
+		return arithmetic_operation(node.addChild(leftOperandNode).addChild(rightOperandNode));
 	    }
 
-	    return operation(node.addChild(leftOperandNode).addChild(rightNode));
+	    return arithmetic_operation(node.addChild(leftOperandNode).addChild(rightNode));
 	}
 
 	return leftOperandNode;
     }
 
     /**
-     * Produces an AST node representing a single term that is current in the token stream.
-     * Any literal, left parenthesis and functions are considered to be valid terms.
+     * Produces an AST node that contains only a comparison operation token (i.e. without its arguments) in the current position. If the current position does not point to one of
+     * the comparison operation tokens then an exception is thrown.
+     * 
+     * @return
+     * @throws RecognitionException
+     */
+    private AstNode cmp_op() throws RecognitionException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(tokens[position].category.getIndex());
+	switch (cat) {
+	// trying to match literal rule
+	case LESS:
+	case GREATER:
+	case LE:
+	case GE:
+	case EQ:
+	case NE:
+	    return new AstNode(match(cat));
+	default:
+	    throw new NoViableAltException("Unexpected token '" + tokens[position].text + "' instead of a comparison operation.", tokens[position]);
+	}
+    }
+
+    /**
+     * Produces an AST node representing a single term that is current in the token stream. Any literal, left parenthesis and functions are considered to be valid terms.
      * <p>
      * The resultant node includes relevant children (if any).
-     *
+     * 
      * @return
      * @throws RecognitionException
      */
@@ -131,7 +259,7 @@ public class ExpressionParser {
 	    return property();
 	    // trying to match SELF rule
 	case LPAREN:
-	    return subSentence();
+	    return match_arithmetic_expression_with_paren(); //new AstNode(tokens[position]); // does not move position forward
 	    // trying to match functions
 	case AVG:
 	case SUM:
@@ -152,13 +280,13 @@ public class ExpressionParser {
     }
 
     /**
-     * Produces an AST node that contains only an operation token (i.e. without its arguments) in the current position.
-     * If the current position does not point to one of the operation tokens then an exception is thrown.
-     *
+     * Produces an AST node that contains only an arithmetic operation token (i.e. without its arguments) in the current position. If the current position does not point to one of
+     * the arithmetic operation tokens then an exception is thrown.
+     * 
      * @return
      * @throws RecognitionException
      */
-    private AstNode op() throws RecognitionException {
+    private AstNode arithmetic_op() throws RecognitionException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(tokens[position].category.getIndex());
 	switch (cat) {
 	// trying to match literal rule
@@ -168,11 +296,11 @@ public class ExpressionParser {
 	case DIV:
 	    return new AstNode(match(cat));
 	default:
-	    throw new NoViableAltException("Unexpected token '" + tokens[position].text + "' instead of an operation.", tokens[position]);
+	    throw new NoViableAltException("Unexpected token '" + tokens[position].text + "' instead of an arithmetic operation.", tokens[position]);
 	}
     }
 
-    private boolean isOpNext() {
+    private boolean isArithmeticOpNext() {
 	if (position >= tokens.length) {
 	    return false;
 	}
@@ -191,7 +319,7 @@ public class ExpressionParser {
 
     /**
      * A convenient method for looking ahead into the token stream without actually changing the current position.
-     *
+     * 
      * @return
      */
     private EgTokenCategory lookahead() {
@@ -207,7 +335,7 @@ public class ExpressionParser {
 
     /**
      * Produces an AST node representing the name of some property, which could be in a property dot notation format.
-     *
+     * 
      * @return
      * @throws RecognitionException
      */
@@ -221,7 +349,7 @@ public class ExpressionParser {
 
     /**
      * Produces an AST node representing SELF keyword.
-     *
+     * 
      * @return
      * @throws RecognitionException
      */
@@ -240,22 +368,9 @@ public class ExpressionParser {
     }
 
     /**
-     * Produces an AST node representing a subsentence or expression wrapped in parentheses.
-     *
-     * @return
-     * @throws RecognitionException
-     */
-    private AstNode subSentence() throws RecognitionException {
-	match(EgTokenCategory.LPAREN);
-	final AstNode node = sentence();
-	match(EgTokenCategory.RPAREN);
-	return node;
-    }
-
-    /**
-     * Produces an AST node based on the token category, which is expected to be one of the supported functions.
-     * The resultant AST node has all its relevant children determined recursively.
-     *
+     * Produces an AST node based on the token category, which is expected to be one of the supported functions. The resultant AST node has all its relevant children determined
+     * recursively.
+     * 
      * @param cat
      * @return
      * @throws RecognitionException
@@ -273,14 +388,14 @@ public class ExpressionParser {
 	case YEAR:
 	case UPPER:
 	case LOWER:
-	    return new AstNode(match(cat)).addChild(subSentence());
+	    return new AstNode(match(cat)).addChild(match_arithmetic_expression_with_paren());
 	    // trying to match two argument function
 	case DAY_DIFF:
 	    final AstNode node = new AstNode(match(EgTokenCategory.DAY_DIFF));
 	    match(EgTokenCategory.LPAREN);
-	    final AstNode leftArgNode = sentence();
+	    final AstNode leftArgNode = match_arithmetic_expression();
 	    match(EgTokenCategory.COMMA);
-	    final AstNode rightArgNode = sentence();
+	    final AstNode rightArgNode = match_arithmetic_expression();
 	    match(EgTokenCategory.RPAREN);
 	    return node.addChild(leftArgNode).addChild(rightArgNode);
 	default:
@@ -290,9 +405,8 @@ public class ExpressionParser {
     }
 
     /**
-     * Tries to match the token of a given category.
-     * Moves the position in the token steam after the matched token and returns the matched token for further processing.
-     *
+     * Tries to match the token of a given category. Moves the position in the token steam after the matched token and returns the matched token for further processing.
+     * 
      * @param cat
      * @return
      * @throws RecognitionException
@@ -318,7 +432,7 @@ public class ExpressionParser {
 
     /**
      * Returns the current position in the token stream.
-     *
+     * 
      * @return
      */
     public int getPosition() {

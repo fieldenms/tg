@@ -11,6 +11,7 @@ import ua.com.fielden.platform.expression.lexer.comma.CommaTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.date_constant.DateConstantTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.decimal.DecimalTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.div.DivTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.eq.EqualTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.avg.AvgTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.count.CountTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.day.DayTokenAutomata;
@@ -23,11 +24,16 @@ import ua.com.fielden.platform.expression.lexer.function.self.SelfTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.sum.SumTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.upper.UpperTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.year.YearTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.greater.GreaterTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.greater_or_eq.GreaterOrEqualTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.integer.IntegerTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.less.LessTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.less_or_eq.LessOrEqualTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.lparen.LparenTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.minus.MinusTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.mult.MultTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.name.NameTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.not_eq.NotEqualTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.plus.PlusTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.rparen.RparenTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.string.StringTokenAutomata;
@@ -57,7 +63,15 @@ public class ExpressionLexer {
 	new StringTokenAutomata(),//
 	new DateConstantTokenAutomata(), //
 	new DecimalTokenAutomata(), //
-	new IntegerTokenAutomata()};
+	new IntegerTokenAutomata(),//
+	/////////////////////////////////////////////////////
+	new NotEqualTokenAutomata(), // should go before the less token
+	new EqualTokenAutomata(),//
+	new LessOrEqualTokenAutomata(),// should go before the less token
+	new GreaterOrEqualTokenAutomata(), // should go before the greater token
+	new LessTokenAutomata(), //
+	new GreaterTokenAutomata()//
+    };
 
     public ExpressionLexer(final String input) {
 	if (StringUtils.isEmpty(input)) {
@@ -120,6 +134,6 @@ public class ExpressionLexer {
 		index++;
 	    }
 	}
-	throw (error != null ? error : new SequenceRecognitionFailed("Unrecognisable symbol at position " + curPosition, curPosition));
+	throw error != null ? error : new SequenceRecognitionFailed("Unrecognisable symbol at position " + curPosition, curPosition);
     }
- }
+}
