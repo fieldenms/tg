@@ -7,6 +7,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
 import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;
+import ua.com.fielden.platform.expression.lexer.and.AndTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.comma.CommaTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.date_constant.DateConstantTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.decimal.DecimalTokenAutomata;
@@ -34,6 +35,7 @@ import ua.com.fielden.platform.expression.lexer.minus.MinusTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.mult.MultTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.name.NameTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.not_eq.NotEqualTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.or.OrTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.plus.PlusTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.rparen.RparenTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.string.StringTokenAutomata;
@@ -70,7 +72,10 @@ public class ExpressionLexer {
 	new LessOrEqualTokenAutomata(),// should go before the less token
 	new GreaterOrEqualTokenAutomata(), // should go before the greater token
 	new LessTokenAutomata(), //
-	new GreaterTokenAutomata()//
+	new GreaterTokenAutomata(),//
+	//////////////////////////////////////////////////////
+	new AndTokenAutomata(), //
+	new OrTokenAutomata()//
     };
 
     public ExpressionLexer(final String input) {

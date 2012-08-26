@@ -12,8 +12,17 @@ import ua.com.fielden.platform.expression.exception.ReservedNameException;
 import ua.com.fielden.platform.expression.exception.UnwantedTokenException;
 
 /**
- * The expression language grammar parser, which constructs an AST as it parses the expression.
+ * The expression language grammar parser, which constructs an AST as it parses sentences in Expression Language.
+ * <p>
+ * Here is a short-hand grammar rules for Expression Language, where only parsing rules are outlined, omitting lexer rules for brevity.
+ * <pre>
+ * sentence : logical-expression | arithmetic-expression
+ * logical-expression : '(' logical-expression ')' | comparison-expression (logical-op comparison-expression)*
+ * comparison-expression : '(' comparison-expression ')' | arithmetic-expression cmp-op arithmetic-expression
+ * arithmetic-expression : term (arithmetic-op term)*
+ * </pre>
  * 
+ * <p>
  * The main method is {@link #parse()} that either returns a root node of the constructed AST or throws {@link RecognitionException}.
  * <p>
  * Here is a usage example:
@@ -59,38 +68,24 @@ public class ExpressionParser {
     }
 
     /**
-     * Implements parsing of the rule sentence: <code><b>sentence ::= arithmetic_expression (comparison_expression)</b></code>
+     * Implements parsing of the rule sentence: <code><b>sentence ::= logical-expression | arithmetic_expression</b></code>
+     * It uses the backtracking pattern with arbitrary lookahead to properly identify the matching rule.
      * 
      * @return
      * @throws RecognitionException
      */
     private AstNode sentence() throws RecognitionException {
-	if (speculate_cmp_expression()) {
-	    return match_cmp_expression();
-	} else { //if (speculate_arithmetic_expression()) { alternatively could speculate... but for better error reporting it makes sense to simply try to parse the last most likely alternative
+	if (speculate_logical_expression()) {
+	    return match_logical_expression();
+	} else {
 	    return match_arithmetic_expression();
 	}
-	//    throw new NoViableAltException("Could not find any suitable expression language rule.", null);
-
     }
 
-    /** TODO reserved for later use. */
-    private boolean speculate_arithmetic_expression() {
+    private boolean speculate_logical_expression() {
 	mark();
 	try {
-	    match_arithmetic_expression();
-	    return lookahead() == EgTokenCategory.EOF;
-	} catch (final Exception ex) {
-	    return false;
-	} finally {
-	    release();
-	}
-    }
-
-    private boolean speculate_cmp_expression() {
-	mark();
-	try {
-	    match_cmp_expression();
+	    match_logical_expression();
 	    return true;
 	} catch (final Exception ex) {
 	    return false;
@@ -111,24 +106,73 @@ public class ExpressionParser {
 	}
     }
 
-    private AstNode match_arithmetic_expression() throws RecognitionException {
-	final AstNode leftNode = term();
-	return arithmetic_operation(leftNode);
-    }
-
     /**
-     * Produces an AST node representing a subsentence or expression wrapped in parentheses.
+     * Logical expressions may have several comparison expression chained by arbitrary number of logical operations || and &&, grouped by parentheses as deemed necessary.
+     * Both logical operations are considered of the same precedence. Parentheses should be used to impose any specific order.
      * 
      * @return
      * @throws RecognitionException
      */
-    private AstNode match_arithmetic_expression_with_paren() throws RecognitionException {
+    private AstNode match_logical_expression() throws RecognitionException {
+	if (lookahead() == EgTokenCategory.LPAREN) {
+	    // the LPAREN ahead may or may not be part of the logical expression.
+	    // e.g. it could be part of the comparison expression used as part of the logical expression
+	    // thus, it is necessary to speculate and if succefull backtrac and match logical expression in parentheses
+	    if (speculate_logical_expression_with_paren()) {
+		return match_logical_expression_with_paren();
+	    } else {
+		final AstNode leftNode = match_cmp_expression();
+		if (lookahead() == EgTokenCategory.AND || lookahead() == EgTokenCategory.OR) {
+		    final AstNode node = logical_op();
+		    final AstNode rightNode = match_logical_expression();
+		    return node.addChild(leftNode).addChild(rightNode);
+		}
+		return leftNode;
+	    }
+	} else {
+	    final AstNode leftNode = match_cmp_expression();
+	    if (lookahead() == EgTokenCategory.AND || lookahead() == EgTokenCategory.OR) {
+		final AstNode node = logical_op();
+		final AstNode rightNode = match_logical_expression();
+		return node.addChild(leftNode).addChild(rightNode);
+	    }
+	    return leftNode;
+	}
+    }
+
+    /**
+     * This matching is used as part of the logical expression matching where it is suspected that expression is surounded with parentheses.
+     * 
+     * @return
+     * @throws RecognitionException
+     */
+    private AstNode match_logical_expression_with_paren() throws RecognitionException {
 	match(EgTokenCategory.LPAREN);
-	final AstNode node = match_arithmetic_expression();
+	final AstNode node = match_logical_expression();
+	if (node.getToken().category != EgTokenCategory.AND && node.getToken().category != EgTokenCategory.OR) {
+	    throw new NoViableAltException("Could not complete parsing of a logical expression with parentheses.", tokens[position]);
+	}
 	match(EgTokenCategory.RPAREN);
+	// logical expression surounded in parentheses may be followed by another logical operation, which needs to be checked
+	if (lookahead() == EgTokenCategory.AND || lookahead() == EgTokenCategory.OR) {
+	    final AstNode  nextNode = logical_op();
+	    final AstNode rightNode = match_logical_expression();
+	    return nextNode.addChild(node).addChild(rightNode);
+	}
 	return node;
     }
 
+    private boolean speculate_logical_expression_with_paren() {
+	mark();
+	try {
+	    match_logical_expression_with_paren();
+	    return true;
+	} catch (final Exception ex) {
+	    return false;
+	} finally {
+	    release();
+	}
+    }
 
     private AstNode match_cmp_expression() throws RecognitionException {
 	if (lookahead() == EgTokenCategory.LPAREN) {
@@ -169,6 +213,31 @@ public class ExpressionParser {
     private void seek(final int marker) {
 	position = marker;
     }
+
+    /**
+     * Produces an AT node representing an arithmetic expression not surounded by parentheses.
+     * 
+     * @return
+     * @throws RecognitionException
+     */
+    private AstNode match_arithmetic_expression() throws RecognitionException {
+	final AstNode leftNode = term();
+	return arithmetic_operation(leftNode);
+    }
+
+    /**
+     * Produces an AST node representing a subsentence or expression wrapped in parentheses.
+     * 
+     * @return
+     * @throws RecognitionException
+     */
+    private AstNode match_arithmetic_expression_with_paren() throws RecognitionException {
+	match(EgTokenCategory.LPAREN);
+	final AstNode node = match_arithmetic_expression();
+	match(EgTokenCategory.RPAREN);
+	return node;
+    }
+
 
     /**
      * Handles parsing of the <code><b>arithmetic_operation :: = (arithmetic_op term)*</b></code> portion of the rule <code><b>arithmetic_expression</b></code>. This include
@@ -225,6 +294,25 @@ public class ExpressionParser {
 	case GE:
 	case EQ:
 	case NE:
+	    return new AstNode(match(cat));
+	default:
+	    throw new NoViableAltException("Unexpected token '" + tokens[position].text + "' instead of a comparison operation.", tokens[position]);
+	}
+    }
+
+    /**
+     * Produces an AST node that contains only a logical operation token (i.e. without its arguments) in the current position. If the current position does not point to one of the
+     * logical operation tokens then an exception is thrown.
+     * 
+     * @return
+     * @throws RecognitionException
+     */
+    private AstNode logical_op() throws RecognitionException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(tokens[position].category.getIndex());
+	switch (cat) {
+	// trying to match literal rule
+	case AND:
+	case OR:
 	    return new AstNode(match(cat));
 	default:
 	    throw new NoViableAltException("Unexpected token '" + tokens[position].text + "' instead of a comparison operation.", tokens[position]);
