@@ -441,7 +441,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationCollectional", "MIN(intProp - ←.moneyProp)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
-	assertEquals("Incorrect expression collectional context", "one2manyAssociationCollectional", root.getTag());
+	assertEquals("Incorrect expression collectional context", THIS, root.getTag());
 
 	final ExpressionModel minus = expr().prop("intProp").sub().prop("key1.moneyProp").model();
 	final ExpressionModel model = expr().minOf().expr(minus).model();

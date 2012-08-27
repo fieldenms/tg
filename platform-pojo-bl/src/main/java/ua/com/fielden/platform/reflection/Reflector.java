@@ -282,7 +282,12 @@ public final class Reflector {
     public static String fromRelative2AbsotulePath(final String context, final String relativePropertyPath) {
 	// if the relativePropertyPath path does not start with ← then it is absolute already
 	if (!relativePropertyPath.startsWith("←")) {
-	    return StringUtils.isEmpty(context) ? relativePropertyPath : context + /*TODO this trivial change breaks test_case_34() in ExpressionText2ModelConverter4FunctionsMinMaxTest : (StringUtils.isEmpty(relativePropertyPath) ? "" : */"." + relativePropertyPath/*)*/;
+	    if ("SELF".equalsIgnoreCase(relativePropertyPath)) {
+		return context;
+	    }
+	    return (StringUtils.isEmpty(context)) ? relativePropertyPath : context + "." + relativePropertyPath;
+	} else if ("SELF".equalsIgnoreCase(relativePropertyPath)) {
+	    throw new IllegalStateException("SELF should be not be used in relative paths.");
 	}
 
 	final int endOfLevelUp = relativePropertyPath.lastIndexOf(UP_LEVEL);
@@ -333,6 +338,9 @@ public final class Reflector {
     public static String fromAbsotule2RelativePath(final String context, final String absolutePropertyPath) {
 	if (absolutePropertyPath.contains("←")) {
 	    throw new IllegalArgumentException("Both the context and the property path should be absolute.");
+	}
+	if (context.equals(absolutePropertyPath)) {
+	    return "SELF";
 	}
 
 	// calculate the matching path depth from the beginning
