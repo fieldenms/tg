@@ -33,8 +33,30 @@ public class CollectionalContextVisitorTest {
     }
 
     @Test
+    public void test_expression_level_calc_with_tag_compatible_nodes_case_1_logical_expression() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("(2 + 6) > 3").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
+
+	assertNull("Incorrect tag for expression", ast.getTag());
+    }
+
+    @Test
     public void test_expression_tag_calc_with_tag_compatible_nodes_case_2() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("(2 + entityProperty.intProperty) / 3").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
+
+	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
+    }
+
+    @Test
+    public void test_expression_tag_calc_with_tag_compatible_nodes_case_2_logical_expression() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("(2 + entityProperty.intProperty) <= 3").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
@@ -66,8 +88,30 @@ public class CollectionalContextVisitorTest {
     }
 
     @Test
+    public void test_expression_tag_calc_with_tag_compatible_nodes_case_4_logical_expression() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("AVG((2 + entityProperty.intProperty) / (3 - selfProperty.entityProperty.intProperty)) = SUM(entityProperty.intProperty)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
+
+	assertEquals("Incorrect tag for expression", SUPER, ast.getTag());
+    }
+
+    @Test
     public void test_expression_tag_calc_with_tag_compatible_nodes_case_5() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("AVG(selfProperty.selfProperty.collectional.intProperty) / selfProperty.entityProperty.intProperty").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
+
+	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
+    }
+
+    @Test
+    public void test_expression_tag_calc_with_tag_compatible_nodes_case_5_logical_expression() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("AVG(selfProperty.selfProperty.collectional.intProperty) <> selfProperty.entityProperty.intProperty").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
@@ -88,8 +132,31 @@ public class CollectionalContextVisitorTest {
     }
 
     @Test
+    public void test_expression_tag_calc_with_tag_compatible_nodes_case_6_logical_expression() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("AVG(selfProperty.selfProperty.collectional.intProperty) >100 && 1000 <= SUM(selfProperty.selfProperty.collectional.intProperty)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
+
+	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
+    }
+
+
+    @Test
     public void test_expression_tag_calc_with_tag_compatible_nodes_case_7() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("AVG(2) + SUM(selfProperty.selfProperty.collectional.intProperty)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
+
+	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
+    }
+
+    @Test
+    public void test_expression_tag_calc_with_tag_compatible_nodes_case_7_case_when() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("CASE WHEN SUM(selfProperty.selfProperty.collectional.intProperty) > 2000 THEN \"alarm\" ELSE \"cool\" END").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 

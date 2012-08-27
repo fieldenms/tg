@@ -374,8 +374,8 @@ public class ExpressionParser {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(tokens[position].category.getIndex());
 	switch (cat) {
 	// trying to match literal rule
-	case LESS:
-	case GREATER:
+	case LT:
+	case GT:
 	case LE:
 	case GE:
 	case EQ:

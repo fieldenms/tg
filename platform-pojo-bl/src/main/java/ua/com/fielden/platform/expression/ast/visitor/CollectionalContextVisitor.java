@@ -95,6 +95,16 @@ public class CollectionalContextVisitor extends AbstractAstVisitor {
 	case UPPER:
 	case LOWER:
 	case DAY_DIFF:
+	case LT:
+	case GT:
+	case LE:
+	case GE:
+	case EQ:
+	case NE:
+	case AND:
+	case OR:
+	case CASE:
+	case WHEN:
 	    node.setTag(determineTagBasedOnOperands(node));
 	    break;
 	// operand dependent and decreasing level operations
