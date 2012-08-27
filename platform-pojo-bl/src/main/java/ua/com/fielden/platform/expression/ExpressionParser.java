@@ -15,7 +15,7 @@ import ua.com.fielden.platform.expression.exception.UnwantedTokenException;
  * The expression language grammar parser, which constructs an AST as it parses sentences in Expression Language.
  * <p>
  * Here is a short-hand grammar rules for Expression Language, where only parsing rules are outlined, omitting lexer rules for brevity.
- *
+ * <p>
  * <pre>
  * sentence : case-expression | logical-expression | arithmetic-expression
  * case-expression : CASE (WHEN logical-expression THEN STRING)+ ELSE STRING END
