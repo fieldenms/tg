@@ -135,11 +135,15 @@ public class EntQuery implements ISingleOperand {
 	    } else {
 		final QueryBasedSource sourceModel = (QueryBasedSource) getSources().getMain();
 		for (final ResultQueryYieldDetails ppi : sourceModel.sourceItems.values()) {
-		    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
+		    final boolean skipProperty = (ppi.getYieldDetailsType() == YieldDetailsType.AGGREGATED_EXPRESSION && !isResultQuery());
+		    if (!skipProperty) {
+			yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
+		    }
 		}
 		if (type() != EntityAggregates.class) {
 		    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
-			if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null) {
+			    final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
+			if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null && !skipProperty) {
 			    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
 			}
 		    }
@@ -186,7 +190,8 @@ public class EntQuery implements ISingleOperand {
         if (finalPropInfo != null) {
             return finalPropInfo.getYieldDetailType();
         } else {
-            return YieldDetailsType.USUAL_PROP /*TEMP*/;
+            return yield.getInfo() != null ? yield.getInfo().getYieldDetailsType() : YieldDetailsType.USUAL_PROP;
+            //return YieldDetailsType.USUAL_PROP /*TEMP*/;
         }
     }
 

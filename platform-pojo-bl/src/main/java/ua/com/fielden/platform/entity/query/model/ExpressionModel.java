@@ -13,7 +13,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class ExpressionModel {
-    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
+    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<>();
     private boolean contextPrefixNeeded = true;
 
     protected ExpressionModel() {}

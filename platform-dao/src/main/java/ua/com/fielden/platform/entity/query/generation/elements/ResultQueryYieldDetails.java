@@ -8,6 +8,13 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetails> {
 
+    private final String name;
+    private final Class javaType;
+    private final Object hibType;
+    private final String column;
+    private final boolean nullable;
+    private final YieldDetailsType yieldDetailsType;
+
     public ResultQueryYieldDetails(final String name, final Class javaType, final Object hibType, final String column, final boolean nullable, final YieldDetailsType yieldDetailsType) {
 	super();
 	this.name = name;
@@ -21,13 +28,6 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
     public ResultQueryYieldDetails(final String name, final Class javaType, final Object hibType, final String column, final YieldDetailsType yieldDetailsType) {
 	this(name, javaType, hibType, column, false, yieldDetailsType);
     }
-
-    private final String name;
-    private final Class javaType;
-    private final Object hibType;
-    private final String column;
-    private final boolean nullable;
-    private final YieldDetailsType yieldDetailsType;
 
     public Type getHibTypeAsType() {
 	return hibType instanceof Type ? (Type) hibType : null;
@@ -94,6 +94,7 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
 
     public static enum YieldDetailsType {
 	USUAL_PROP, //
+	AGGREGATED_EXPRESSION, // as per PropertyMetadata property
 	UNION_ENTITY_HEADER, //
 	COMPOSITE_TYPE_HEADER;
     }

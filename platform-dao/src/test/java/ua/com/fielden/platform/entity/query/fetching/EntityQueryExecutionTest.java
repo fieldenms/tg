@@ -95,6 +95,20 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
+
+//    @Test
+//    public void text() {
+//	final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().logicalExpr(null).and().expr(expr().countAll().model()).eq().val(0).and().logicalExpr(null)..model();
+//    }
+    @Ignore
+    @Test
+    public void test_query_query_with_grouping_and_aggregation() {
+	final AggregatedResultQueryModel qry = select(TgVehicleModel.class).as("AAA").groupBy().prop("make.key").yield().countOf().prop("make").as("dmakes").modelAsAggregate();
+	final AggregatedResultQueryModel qryCount = select(qry).yield().countAll().as("KOUNT").modelAsAggregate();
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qryCount).model());
+    }
+
+
     ////////////////////////////////////////////////////////////////   UNION ENTITIES ////////////////////////////////////////////////////////////
     @Test
     public void test_query_union_entity_implied_query_model() {

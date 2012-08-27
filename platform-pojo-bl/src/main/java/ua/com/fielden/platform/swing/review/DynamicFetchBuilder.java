@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.swing.review;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-
 import java.util.Set;
 
 import ua.com.fielden.platform.dynamictree.DynamicEntityTree;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.utils.EntityUtils;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isQueryBasedEntityType;
 
 public class DynamicFetchBuilder {
 
@@ -27,7 +27,8 @@ public class DynamicFetchBuilder {
      * @return
      */
     public static <T extends AbstractEntity<?>> fetch<T> createTotalFetchModel(final Class<T> managedType, final Set<String> fetchProperties) {
-	return fetch(managedType, fetchProperties).without("id").without("version");
+	final fetch<T> result = fetch(managedType, fetchProperties);
+	return isQueryBasedEntityType(managedType) ? result : result.without("id").without("version");
     }
 
     /**
@@ -64,7 +65,7 @@ public class DynamicFetchBuilder {
 
         for (final DynamicEntityTreeNode dynamicTreeNode : treeNode.getChildren()) {
             final Class<?> propertyType = dynamicTreeNode.getType();
-            if (!EntityUtils.isEntityType(propertyType)) {
+            if (!isEntityType(propertyType)) {
         	fetchModel = fetchModel.with(dynamicTreeNode.getName());
             }else{
         	final fetch<? extends AbstractEntity<?>> fetchSubModel = buildFetchModels((Class<? extends AbstractEntity<?>>) propertyType, dynamicTreeNode);
