@@ -33,6 +33,17 @@ public class LevelAllocatingVisitorIntegratedTest {
     }
 
     @Test
+    public void test_expression_level_calc_with_level_compatible_nodes_case_1_logical_expression() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("(2 + 6) > 3").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new LevelAllocatingVisitor(EntityLevel1.class)).walk();
+
+	assertNull("Incorrect level for expression", ast.getLevel());
+    }
+
+    @Test
     public void test_expression_level_calc_with_level_compatible_nodes_case_2() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("(2 + entityProperty.intProperty) / 3").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
@@ -53,6 +64,18 @@ public class LevelAllocatingVisitorIntegratedTest {
 
 	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
     }
+
+    @Test
+    public void test_expression_level_calc_with_level_compatible_nodes_case_10_logical_expression() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("COUNT(MONTH(collectional.dateProperty) + MONTH(selfProperty.collectional.dateProperty)) >= 200").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new LevelAllocatingVisitor(EntityLevel1.class)).walk();
+
+	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+    }
+
 
     @Test
     public void test_expression_level_calc_with_level_compatible_nodes_case_3() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
@@ -81,6 +104,19 @@ public class LevelAllocatingVisitorIntegratedTest {
     @Test
     public void test_expression_level_calc_with_level_compatible_nodes_case_4() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("AVG((2 + entityProperty.intProperty) / (3 - selfProperty.entityProperty.intProperty))").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class);
+
+	new AstWalker(ast, visitor).walk();
+
+	assertEquals("Incorrect level for expression", new Integer(0), ast.getLevel());
+    }
+
+    @Test
+    public void test_expression_level_calc_with_level_compatible_nodes_case_4_case_when() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("CASE WHEN AVG((2 + entityProperty.intProperty) / (3 - selfProperty.entityProperty.intProperty)) > 23 && SUM(entityProperty.intProperty) < 1000  THEN \"word\" " +
+			"WHEN SUM(entityProperty.intProperty) > 1000  THEN \"word\" ELSE \"word\" END").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class);
