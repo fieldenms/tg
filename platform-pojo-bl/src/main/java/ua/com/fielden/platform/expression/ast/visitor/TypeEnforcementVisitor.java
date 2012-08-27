@@ -33,7 +33,6 @@ import ua.com.fielden.platform.types.Money;
  */
 public class TypeEnforcementVisitor extends AbstractAstVisitor {
 
-
     public TypeEnforcementVisitor(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty) {
 	super(higherOrderType, contextProperty);
     }
@@ -103,9 +102,117 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	case COUNT:
 	    processCount(node);
 	    break;
+	case LT:
+	case GT:
+	case LE:
+	case GE:
+	case EQ:
+	case NE:
+	    processComparisonOperator(node);
+	    break;
+	case AND:
+	case OR:
+	    processLogicalOperator(node);
+	    break;
+	case CASE:
+	    processCaseOperator(node);
+	    break;
+	case WHEN:
+	    processWhenOperator(node);
+	    break;
 	default:
 	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
 	}
+    }
+
+    private void processComparisonOperator(final AstNode node) throws SemanticException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (node.getChildren().size() != 2) {
+	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 2 operands, found " + node.getChildren().size(), node.getToken());
+	}
+	// check if the operands have type
+	final AstNode leftOperand = node.getChildren().get(0);
+	final Class<?> leftOperandType = leftOperand.getType();
+	if (leftOperandType == null) {
+	    throw new TypeCompatibilityException("Operand " + leftOperand + " is missing type.", leftOperand.getToken());
+	}
+	final AstNode rightOperand = node.getChildren().get(1);
+	final Class<?> rightOperandType = rightOperand.getType();
+	if (rightOperandType == null) {
+	    throw new TypeCompatibilityException("Operand " + rightOperand + " is missing type.", rightOperand.getToken());
+	}
+
+	// check compatibility of operand types
+	if (String.class.isAssignableFrom(leftOperandType) && !leftOperandType.isAssignableFrom(rightOperandType)) {
+	    throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());
+	} else if (Money.class.isAssignableFrom(leftOperandType) && !leftOperandType.isAssignableFrom(rightOperandType) && !Number.class.isAssignableFrom(rightOperandType)) {
+	    throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());
+	} else if (Number.class.isAssignableFrom(leftOperandType) && !Number.class.isAssignableFrom(rightOperandType) && !Money.class.isAssignableFrom(rightOperandType)) {
+	    throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());
+	}
+	// the type of the operation should be the lease restrictive type of its operands
+	node.setType(boolean.class);
+    }
+
+    private void processLogicalOperator(final AstNode node) throws SemanticException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (node.getChildren().size() != 2) {
+	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 2 operands, found " + node.getChildren().size(), node.getToken());
+	}
+	// check if the operands have type
+	final AstNode leftOperand = node.getChildren().get(0);
+	final Class<?> leftOperandType = leftOperand.getType();
+	if (leftOperandType == null) {
+	    throw new TypeCompatibilityException("Operand " + leftOperand + " is missing type.", leftOperand.getToken());
+	}
+	final AstNode rightOperand = node.getChildren().get(1);
+	final Class<?> rightOperandType = rightOperand.getType();
+	if (rightOperandType == null) {
+	    throw new TypeCompatibilityException("Operand " + rightOperand + " is missing type.", rightOperand.getToken());
+	}
+
+	// check compatibility of operand types
+	if (!boolean.class.isAssignableFrom(leftOperandType) || !boolean.class.isAssignableFrom(rightOperandType)) {
+	    throw new UnsupportedTypeException("Operands for operation " + cat + " should both be of boolean type.", leftOperandType, node.getToken());
+	}
+	node.setType(boolean.class);
+    }
+
+    private void processCaseOperator(final AstNode node) throws SemanticException {
+	// simply ensure that all operands have type assigned
+	for (final AstNode child : node.getChildren()) {
+	    if (child.getType() == null) {
+		throw new TypeCompatibilityException("Operand " + child + " is missing type.", child.getToken());
+	    }
+	}
+	node.setType(String.class);
+    }
+
+    private void processWhenOperator(final AstNode node) throws SemanticException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (node.getChildren().size() != 2) {
+	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 2 operands, found " + node.getChildren().size(), node.getToken());
+	}
+	// check if the operands have type
+	final AstNode leftOperand = node.getChildren().get(0);
+	final Class<?> leftOperandType = leftOperand.getType();
+	if (leftOperandType == null) {
+	    throw new TypeCompatibilityException("Operand " + leftOperand + " is missing type.", leftOperand.getToken());
+	}
+	final AstNode rightOperand = node.getChildren().get(1);
+	final Class<?> rightOperandType = rightOperand.getType();
+	if (rightOperandType == null) {
+	    throw new TypeCompatibilityException("Operand " + rightOperand + " is missing type.", rightOperand.getToken());
+	}
+
+	// check compatibility of operand types
+	if (!boolean.class.isAssignableFrom(leftOperandType)) {
+	    throw new UnsupportedTypeException("First operand for operation " + cat + " should be of boolen type.", leftOperandType, node.getToken());
+	}
+	if (!String.class.isAssignableFrom(rightOperandType)) {
+	    throw new UnsupportedTypeException("Second operand for operation " + cat + " should be of string type.", leftOperandType, node.getToken());
+	}
+	node.setType(String.class);
     }
 
     private void processAvgSum(final AstNode node) throws SemanticException {
