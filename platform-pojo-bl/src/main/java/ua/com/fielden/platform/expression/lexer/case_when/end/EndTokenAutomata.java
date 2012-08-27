@@ -13,7 +13,7 @@ import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;
 public class EndTokenAutomata extends BaseNonDeterministicAutomata {
 
     public EndTokenAutomata() {
-	super(EgTokenCategory.END, TEXT_POST_PROCESSING.REMOVE_WS, new State0(), new State1(), new State2(), new State3(), new State4());
+	super(EgTokenCategory.END, TEXT_POST_PROCESSING.REMOVE_WS, new State0(), new State1(), new State2(), new State3());
     }
 
     @Override

@@ -17,6 +17,7 @@ public class EndTokenAutomataTest {
 	assertEquals("Incorrect recognition result", "END", automata.recognisePartiallyFromStart("END ", 0));
 	assertEquals("Incorrect recognition result", "END", automata.recognisePartiallyFromStart("    eNd  ", 0));
 	assertEquals("Incorrect recognition result", "END", automata.recognisePartiallyFromStart("\t\nEND\t", 0));
+	assertEquals("Incorrect recognition result", "END", automata.recognisePartiallyFromStart(" END", 0));
     }
 
     @Test
@@ -34,11 +35,6 @@ public class EndTokenAutomataTest {
 	}
 	try {
 	    automata.recognisePartiallyFromStart("(END", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart(" END", 0);
 	    fail("Should have failed");
 	} catch (final SequenceRecognitionFailed e) {
 	}
