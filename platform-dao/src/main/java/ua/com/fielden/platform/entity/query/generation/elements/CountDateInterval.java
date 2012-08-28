@@ -15,6 +15,17 @@ public class CountDateInterval extends TwoOperandsFunction {
 
     @Override
     public String sql() {
+	switch (getDbVersion()) {
+	case H2:
+	    return sqlForH2();
+	case MSSQL:
+	    return sqlForMsSql();
+	default:
+	    throw new IllegalStateException("Function [" + getClass().getSimpleName() +"] is not yet implemented for RDBMS [" + getDbVersion() + "]!");
+	}
+    }
+
+    private String sqlForH2() {
 	switch (intervalUnit) {
 	case DAY:
 	    return "DATEDIFF('DAY', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
@@ -26,4 +37,18 @@ public class CountDateInterval extends TwoOperandsFunction {
 	    throw new IllegalStateException("Unexpected interval unit: " + intervalUnit);
 	}
     }
+
+    private String sqlForMsSql() {
+	switch (intervalUnit) {
+	case DAY:
+	    return "DATEDIFF(DAY, " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
+	case MONTH:
+	    return "DATEDIFF(MONTH, " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
+	case YEAR:
+	    return "DATEDIFF(YEAR, " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
+	default:
+	    throw new IllegalStateException("Unexpected interval unit: " + intervalUnit);
+	}
+    }
+
 }

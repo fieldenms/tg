@@ -11,6 +11,15 @@ public class SecondOf extends SingleOperandFunction {
 
     @Override
     public String sql() {
-	return "SECOND(" + getOperand().sql() + ")";
+	switch (getDbVersion()) {
+	case H2:
+	    return "SECOND(" + getOperand().sql() + ")";
+	case MSSQL:
+	    return "DATEPART(ss, " + getOperand().sql() + ")";
+	case POSTGRESQL:
+	    return "CAST(EXTRACT(SECOND FROM " + getOperand().sql() + ") AS INT)";
+	default:
+	    throw new IllegalStateException("Function [" + getClass().getSimpleName() +"] is not yet implemented for RDBMS [" + getDbVersion() + "]!");
+	}
     }
 }

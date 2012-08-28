@@ -13,11 +13,12 @@ public class YearOf extends SingleOperandFunction {
     public String sql() {
 	switch (getDbVersion()) {
 	case H2:
+	case MSSQL:
 	    return "YEAR(" + getOperand().sql() + ")";
 	case POSTGRESQL:
 	    return "CAST(EXTRACT(YEAR FROM " + getOperand().sql() + ") AS INT)";
 	default:
-	    return null;
+	    throw new IllegalStateException("Function [" + getClass().getSimpleName() +"] is not yet implemented for RDBMS [" + getDbVersion() + "]!");
 	}
 
     }

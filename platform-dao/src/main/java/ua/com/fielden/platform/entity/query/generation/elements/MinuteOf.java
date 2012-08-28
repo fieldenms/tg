@@ -11,6 +11,15 @@ public class MinuteOf extends SingleOperandFunction {
 
     @Override
     public String sql() {
-	return "MINUTE(" + getOperand().sql() + ")";
+	switch (getDbVersion()) {
+	case H2:
+	    return "MINUTE(" + getOperand().sql() + ")";
+	case MSSQL:
+	    return "DATEPART(mi, " + getOperand().sql() + ")";
+	case POSTGRESQL:
+	    return "CAST(EXTRACT(MINUTE FROM " + getOperand().sql() + ") AS INT)";
+	default:
+	    throw new IllegalStateException("Function [" + getClass().getSimpleName() +"] is not yet implemented for RDBMS [" + getDbVersion() + "]!");
+	}
     }
 }
