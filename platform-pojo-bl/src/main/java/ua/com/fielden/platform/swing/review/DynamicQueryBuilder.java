@@ -25,10 +25,12 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition1;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition2;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere1;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere2;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere3;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -753,6 +755,77 @@ public class DynamicQueryBuilder {
      */
     public static <E extends AbstractEntity<?>> ICompleted<E> createQuery(final Class<E> managedType, final List<QueryProperty> queryProperties){
 	return buildConditions(createJoinCondition(managedType), queryProperties);
+    }
+
+
+    /**
+     * Creates the aggregation query that groups by distribution properties and aggregates by aggregation properties.
+     *
+     * @param managedType
+     * @param queryProperties
+     * @param distributionProperties
+     * @param aggregationProperties
+     * @return
+     */
+    public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final Class<E> managedType, final List<QueryProperty> queryProperties, final List<Pair<String, ExpressionModel>> distributionProperties, final List<Pair<String, ExpressionModel>> aggregationProperties){
+
+	ICompleted<E> baseQuery = DynamicQueryBuilder.createQuery(managedType, queryProperties);
+	for (final Pair<String, ExpressionModel> groupProperty : distributionProperties) {
+	    baseQuery = groupBy(groupProperty, baseQuery);
+	}
+	final List<Pair<String, ExpressionModel>> yieldProperties = new ArrayList<>();
+	yieldProperties.addAll(distributionProperties);
+	yieldProperties.addAll(aggregationProperties);
+	ISubsequentCompletedAndYielded<E> yieldedQuery = null;
+	for (final Pair<String, ExpressionModel> yieldProperty : yieldProperties){
+	    yieldedQuery = yieldedQuery == null //
+			? yield(yieldProperty, baseQuery) //
+			: yield(yieldProperty, yieldedQuery);
+	}
+	if(yieldedQuery == null){
+	    throw new IllegalStateException("The query was compound incorrectly!");
+	}
+
+	return yieldedQuery;
+    }
+
+    /**
+     * Groups the given query by specified proerty.
+     *
+     * @param proeprtyName
+     * @param query
+     * @return
+     */
+    private static <E extends AbstractEntity<?>> ICompleted<E> groupBy(final Pair<String, ExpressionModel> distribution, final ICompleted<E> query){
+	return distribution.getValue() == null
+		? query.groupBy().prop(distribution.getKey().isEmpty() ? ALIAS : ALIAS + "." + distribution.getKey())//
+		: query.groupBy().expr(distribution.getValue());
+    }
+
+    /**
+     * Groups the given query by specified property.
+     *
+     * @param proeprtyName
+     * @param query
+     * @return
+     */
+    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Pair<String, ExpressionModel> aggregation, final ICompleted<E> query){
+	return aggregation.getValue() == null ? //
+	/*	*/query.yield().prop(aggregation.getKey().isEmpty() ? ALIAS : ALIAS + "." + aggregation.getKey()).as(aggregation.getKey())//
+	/*    */: query.yield().expr(aggregation.getValue()).as(aggregation.getKey());
+    }
+
+    /**
+     * Groups the given query by specified property.
+     *
+     * @param proeprtyName
+     * @param query
+     * @return
+     */
+    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Pair<String, ExpressionModel> aggregation, final ISubsequentCompletedAndYielded<E> query){
+	return aggregation.getValue() == null ? //
+		/*	*/query.yield().prop(aggregation.getKey().isEmpty() ? ALIAS : ALIAS + "." + aggregation.getKey()).as(aggregation.getKey())//
+		/*    */: query.yield().expr(aggregation.getValue()).as(aggregation.getKey());
     }
 
     /**

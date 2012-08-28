@@ -4,15 +4,15 @@ import javax.swing.ListCellRenderer;
 
 /**
  * Cell renderer for {@link CheckboxList}.
- * 
+ *
  * @author oleh
- * 
+ *
  */
-public interface CheckingListCellRenderer<T> extends ListCellRenderer {
+public interface CheckingListCellRenderer<T> extends ListCellRenderer<T> {
 
     /**
      * Returns value that indicates whether point specified with x and y coordinates is on the checking component or not.
-     * 
+     *
      * @param x
      * @param y
      * @return

@@ -16,6 +16,7 @@ import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -23,9 +24,8 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManage
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
@@ -103,27 +103,20 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
      * @param groups
      * @return
      */
+    @SuppressWarnings("unchecked")
     private List<T> getGroupList(final List<String> groups){
 	final Class<T> root = getCriteria().getEntityClass();
+	final IDomainTreeEnhancer enhancer = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer();
 	final List<String> aggregationProperties = adtme().getSecondTick().usedProperties(root);
 
-	ICompleted<T> baseQuery = DynamicQueryBuilder.createQuery(getCriteria().getManagedType(), getCriteria().createQueryProperties());
-	for (final String groupProperty : groups) {
-	    baseQuery = getCriteria().groupBy(groupProperty, baseQuery);
-	}
+	final List<Pair<String, ExpressionModel>> distribution = getPropertyExpressionPair(groups);
+	final List<Pair<String, ExpressionModel>> aggregation = getPropertyExpressionPair(aggregationProperties);
+
 	final List<String> yieldProperties = new ArrayList<String>();
 	yieldProperties.addAll(groups);
 	yieldProperties.addAll(aggregationProperties);
-	ISubsequentCompletedAndYielded<T> yieldedQuery = null;
-	for (final String yieldProperty : yieldProperties){
-	    yieldedQuery = yieldedQuery == null //
-			? getCriteria().yield(yieldProperty, baseQuery) //
-			: getCriteria().yield(yieldProperty, yieldedQuery);
-	}
-	if(yieldedQuery == null){
-	    throw new IllegalStateException("The query was compound incorrectly!");
-	}
-	final EntityResultQueryModel<T> queryModel = yieldedQuery.modelAsEntity(getCriteria().getManagedType());
+
+	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery((Class<T>)enhancer.getManagedType(root), getCriteria().createQueryProperties(), distribution, aggregation).modelAsEntity(getCriteria().getManagedType());
 
 	final List<Pair<String, Ordering>> orderingProperties = new ArrayList<Pair<String,Ordering>>(adtme().getSecondTick().orderedProperties(root));
 	if(orderingProperties.isEmpty()){
@@ -139,6 +132,23 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	.with(DynamicFetchBuilder.createFetchModel(getCriteria().getManagedType(), new HashSet<String>(yieldProperties))).model();
 
 	return getCriteria().run(resultQuery);
+    }
+
+    /**
+     * Returns the list of property name and it's expression model pairs.
+     *
+     * @param propertyForExpression
+     * @return
+     */
+    private List<Pair<String, ExpressionModel>> getPropertyExpressionPair(final List<String> propertyForExpression){
+        final Class<T> root = getCriteria().getEntityClass();
+        final IDomainTreeEnhancer enhancer = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer();
+        final List<Pair<String, ExpressionModel>> propertyExpressionPair = new ArrayList<>();
+        for (final String property : propertyForExpression) {
+            final ExpressionModel expression = EntityQueryCriteriaUtils.getExpressionForProp(root, property, enhancer);
+            propertyExpressionPair.add(new Pair<>(property, expression));
+        }
+        return propertyExpressionPair;
     }
 
     private class PivotTreeTableModelEx extends PivotTreeTableModel {

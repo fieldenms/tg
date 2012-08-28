@@ -32,11 +32,8 @@ import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
@@ -255,53 +252,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             }
         }
         return queryProperties;
-    }
-
-    /**
-     * Groups the given query by specified proerty.
-     *
-     * @param proeprtyName
-     * @param query
-     * @return
-     */
-    public final ICompleted<T> groupBy(final String propertyName, final ICompleted<T> query){
-	final ExpressionModel expression = EntityQueryCriteriaUtils.getExpressionForProp(getEntityClass(), //
-		propertyName, getCentreDomainTreeMangerAndEnhancer().getEnhancer());
-	if(expression == null){
-	    return query.groupBy().prop(propertyName);
-	}else{
-	    return query.groupBy().expr(expression);
-	}
-    }
-
-    /**
-     * Groups the given query by specified property.
-     *
-     * @param proeprtyName
-     * @param query
-     * @return
-     */
-    public final ISubsequentCompletedAndYielded<T> yield(final String propertyName, final ICompleted<T> query){
-	final ExpressionModel expression = EntityQueryCriteriaUtils.getExpressionForProp(getEntityClass(), //
-		propertyName, getCentreDomainTreeMangerAndEnhancer().getEnhancer());
-	return expression == null ? //
-	/*	*/query.yield().prop(propertyName).as(propertyName)//
-	/*    */: query.yield().expr(expression).as(propertyName);
-    }
-
-    /**
-     * Groups the given query by specified property.
-     *
-     * @param proeprtyName
-     * @param query
-     * @return
-     */
-    public final ISubsequentCompletedAndYielded<T> yield(final String propertyName, final ISubsequentCompletedAndYielded<T> query){
-	final ExpressionModel expression = EntityQueryCriteriaUtils.getExpressionForProp(getEntityClass(), //
-		propertyName, getCentreDomainTreeMangerAndEnhancer().getEnhancer());
-	return expression == null ? //
-	/*	*/query.yield().prop(propertyName).as(propertyName)//
-	/*    */: query.yield().expr(expression).as(propertyName);
     }
 
     /**

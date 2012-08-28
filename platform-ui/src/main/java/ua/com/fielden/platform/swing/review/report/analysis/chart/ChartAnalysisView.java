@@ -43,6 +43,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeMan
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.reportquery.AnalysisModelChangedEvent;
 import ua.com.fielden.platform.reportquery.AnalysisModelChangedListener;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
@@ -69,9 +70,12 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
 import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListCheckingModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListSortingModel;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager, Void> {
@@ -82,7 +86,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     /**
      * The list of available distribution properties.
      */
-    private final JList distributionList;
+    private final JList<String> distributionList;
     /**
      * The list of available aggregation properties.
      */
@@ -235,8 +239,13 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	};
     }
 
-    private JList createDistributionList() {
-	final DefaultListModel listModel = new DefaultListModel();
+    /**
+     * Returns the {@link JList} of distribution properties.
+     *
+     * @return
+     */
+    private JList<String> createDistributionList() {
+	final DefaultListModel<String> listModel = new DefaultListModel<String>();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
 	final IAnalysisAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
@@ -244,24 +253,31 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	for (final String distributionProperty : firstTick.checkedProperties(root)) {
 	    listModel.addElement(distributionProperty);
 	}
-	final JList distributionList = new JList(listModel);
+	final JList<String> distributionList = new JList<String>(listModel);
 	distributionList.setCellRenderer(new DefaultListCellRenderer() {
 
 	    private static final long serialVersionUID = 7712966992046861840L;
 
-	    @Override
-	    public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+	    private final EntityDescriptor ed = new EntityDescriptor(getModel().getCriteria().getManagedType(), firstTick.checkedProperties(root));
 
-		final Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+	    @Override
+	    public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+		super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+		final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value.toString());
+		setText(titleAndDesc.getKey());
+		setToolTipText(titleAndDesc.getValue());
+
 		if (!isSelected) {
 		    if (getModel().getChartAnalysisDataProvider().categoryProperties().contains(value)) {
-			rendererComponent.setBackground(new Color(175, 240, 208));
+			setBackground(new Color(175, 240, 208));
 		    } else {
-			rendererComponent.setBackground(Color.WHITE);
+			setBackground(Color.WHITE);
 		    }
 		}
-		return rendererComponent;
+		return this;
 	    }
+
 
 	});
 	distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -303,8 +319,13 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	return distributionList;
     }
 
+    /**
+     * Returns the {@link SortingCheckboxList} of aggregation properties.
+     *
+     * @return
+     */
     private SortingCheckboxList<String> createAggregationList() {
-	final DefaultListModel listModel = new DefaultListModel();
+	final DefaultListModel<String> listModel = new DefaultListModel<String>();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
 	final IAnalysisAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
@@ -317,9 +338,14 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 	    private static final long serialVersionUID = -6751336113879821723L;
 
+	    private final EntityDescriptor ed = new EntityDescriptor(getModel().getCriteria().getManagedType(), secondTick.checkedProperties(root));
+
 	    @Override
-	    public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+	    public Component getListCellRendererComponent(final JList<? extends String> list, final String value, final int index, final boolean isSelected, final boolean cellHasFocus) {
 		final Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+		final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value);
+		defaultRenderer.setText(titleAndDesc.getKey());
+		setToolTipText(titleAndDesc.getValue());
 		if (!isSelected) {
 		    if (getModel().getChartAnalysisDataProvider().aggregatedProperties().contains(value)) {
 			rendererComponent.setBackground(new Color(175, 240, 208));
@@ -329,7 +355,6 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		}
 		return rendererComponent;
 	    }
-
 	});
 	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
@@ -551,10 +576,18 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     }
 
     private void layoutComponents() {
+
 	removeAll();
 	setLayout(new MigLayout("fill, insets 0", "[fill,grow]", "[fill,grow]"));
 	final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 	final JSplitPane leftPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+	addLoadListener(new ILoadListener() {
+
+	    @Override
+	    public void viewWasLoaded(final LoadEvent event) {
+		leftPane.setDividerLocation(0.5);
+	    }
+	});
 
 	//Configuring controls those allows to choose distribution properties.
 	final JPanel leftTopPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));

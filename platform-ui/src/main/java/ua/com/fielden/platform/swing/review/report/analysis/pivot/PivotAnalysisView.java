@@ -7,7 +7,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -40,6 +39,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManage
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
@@ -59,7 +59,9 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
 import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListCheckingModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListSortingModel;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTableModel;
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTablePanel;
@@ -173,7 +175,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
      * @return
      */
     private CheckboxList<String> createDistributionList() {
-	final DefaultListModel listModel = new DefaultListModel();
+	final DefaultListModel<String> listModel = new DefaultListModel<String>();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
 	final IPivotAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
@@ -186,11 +188,16 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 	    private static final long serialVersionUID = 7712966992046861840L;
 
+	    private final EntityDescriptor ed = new EntityDescriptor(getModel().getCriteria().getManagedType(), firstTick.checkedProperties(root));
 
 	    @Override
-	    public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+	    public Component getListCellRendererComponent(final JList<? extends String> list, final String value, final int index, final boolean isSelected, final boolean cellHasFocus) {
 
 		final Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+		final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value.toString());
+		defaultRenderer.setText(titleAndDesc.getKey());
+		setToolTipText(titleAndDesc.getValue());
 		if (!isSelected) {
 		    if (getModel().getPivotModel().categoryProperties().contains(value)) {
 			rendererComponent.setBackground(new Color(175, 240, 208));
@@ -200,7 +207,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		}
 		return rendererComponent;
 	    }
-
 	});
 	distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	final ListCheckingModel<String> checkingModel = new DomainTreeListCheckingModel<T>(root, firstTick);
@@ -221,7 +227,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
      * @return
      */
     private SortingCheckboxList<String> createAggregationList() {
-	final DefaultListModel listModel = new DefaultListModel();
+	final DefaultListModel<String> listModel = new DefaultListModel<String>();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
 	final IPivotAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
@@ -234,9 +240,16 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 	    private static final long serialVersionUID = -6751336113879821723L;
 
+	    private final EntityDescriptor ed = new EntityDescriptor(getModel().getCriteria().getManagedType(), secondTick.checkedProperties(root));
+
 	    @Override
-	    public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+	    public Component getListCellRendererComponent(final JList<? extends String> list, final String value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+
 		final Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+		final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value);
+		defaultRenderer.setText(titleAndDesc.getKey());
+		setToolTipText(titleAndDesc.getValue());
 		if (!isSelected) {
 		    if (getModel().getPivotModel().aggregatedProperties().contains(value)) {
 			rendererComponent.setBackground(new Color(175, 240, 208));
@@ -246,7 +259,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		}
 		return rendererComponent;
 	    }
-
 	});
 	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	final ListCheckingModel<String> checkingModel= new DomainTreeListCheckingModel<T>(root, secondTick);
@@ -391,17 +403,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		    }
 		}
 	    }
-
-	    private List<Pair<String, Object>> createChoosenProperty(final TreePath newPath) {
-		final List<Pair<String, Object>> choosenItems = new ArrayList<Pair<String, Object>>();
-		final List<String> categoryProperties = getModel().getPivotModel().categoryProperties();
-		for (int index = 0; index < newPath.getPathCount(); index++) {
-		    final PivotTreeTableNode node = (PivotTreeTableNode) newPath.getPathComponent(index);
-		    final String distributionProperty = categoryProperties.get(index);
-		    choosenItems.add(new Pair<String, Object>(distributionProperty, node.getUserObject()));
-		}
-		return choosenItems;
-	    }
 	};
     }
 
@@ -429,6 +430,13 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	setLayout(new MigLayout("fill, insets 0", "[fill,grow]", "[fill,grow]"));
 	final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 	final JSplitPane leftPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+	addLoadListener(new ILoadListener() {
+
+	    @Override
+	    public void viewWasLoaded(final LoadEvent event) {
+		leftPane.setDividerLocation(0.5);
+	    }
+	});
 
 	//Configuring controls those allows to choose distribution properties.
 	final JPanel leftTopPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));

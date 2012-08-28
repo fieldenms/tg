@@ -9,7 +9,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JList;
 import javax.swing.ListModel;
 
-public class CheckboxList<T> extends JList {
+public class CheckboxList<T> extends JList<T> {
 
     private static final long serialVersionUID = -8861596050387769319L;
 
@@ -28,7 +28,7 @@ public class CheckboxList<T> extends JList {
      * @param model
      *            - specified {@link DefaultListModel}.
      */
-    public CheckboxList(final DefaultListModel model) {
+    public CheckboxList(final DefaultListModel<T> model) {
 	super(model);
 	this.defaultCheckingListener = new ListCheckingListener<T>() {
 
@@ -116,7 +116,7 @@ public class CheckboxList<T> extends JList {
 		    if (rect != null && getCellRenderer() instanceof CheckingListCellRenderer) {
 			// click on a value's hot spot
 			if (((CheckingListCellRenderer<T>) getCellRenderer()).isOnHotSpot(x - rect.x, y - rect.y)) {
-			    checkingModel.toggleCheckingValue((T) getModel().getElementAt(row));
+			    checkingModel.toggleCheckingValue(getModel().getElementAt(row));
 			    if (!isSelectsByChecking()) {
 				return;
 			    }
@@ -140,7 +140,7 @@ public class CheckboxList<T> extends JList {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void setModel(final ListModel newModel) {
+    public void setModel(final ListModel<T> newModel) {
 	if(!(newModel instanceof DefaultListModel)){
 	    throw new IllegalArgumentException("It's impossible to set different then default list model");
 	}
@@ -155,8 +155,8 @@ public class CheckboxList<T> extends JList {
     }
 
     @Override
-    public DefaultListModel getModel() {
-        return (DefaultListModel)super.getModel();
+    public DefaultListModel<T> getModel() {
+        return (DefaultListModel<T>)super.getModel();
     }
 
     /**
@@ -170,7 +170,7 @@ public class CheckboxList<T> extends JList {
 	    return;
 	}
 	if (newCheckingModel != null) {
-	    final DefaultListModel listModel = getModel();
+	    final DefaultListModel<T> listModel = getModel();
 	    for (final Object item : newCheckingModel.getCheckingValues()) {
 		if (!listModel.contains(item)) {
 		    newCheckingModel.checkValue((T) item, false);
@@ -203,11 +203,10 @@ public class CheckboxList<T> extends JList {
      *
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Vector<T> getVectorListData() {
 	final Vector<T> listData = new Vector<T>();
 	for (int index = 0; index < getModel().getSize(); index++) {
-	    listData.add((T) getModel().getElementAt(index));
+	    listData.add(getModel().getElementAt(index));
 	}
 	return listData;
     }
@@ -217,11 +216,10 @@ public class CheckboxList<T> extends JList {
      *
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Vector<T> getSelectedValuesInOrder() {
 	final Vector<T> selectedValues = new Vector<T>();
 	for (int index = 0; index < getModel().getSize(); index++) {
-	    final T value = (T) getModel().getElementAt(index);
+	    final T value = getModel().getElementAt(index);
 	    if (isValueChecked(value)) {
 		selectedValues.add(value);
 	    }

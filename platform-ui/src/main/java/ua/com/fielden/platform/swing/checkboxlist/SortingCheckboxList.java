@@ -19,7 +19,7 @@ public class SortingCheckboxList<T> extends CheckboxList<T> {
 
     private SorterEventListener<T> defaultSortingListener;
 
-    public SortingCheckboxList(final DefaultListModel model) {
+    public SortingCheckboxList(final DefaultListModel<T> model) {
 	super(model);
 	this.defaultSortingListener = new SorterEventListener<T>() {
 
@@ -39,7 +39,7 @@ public class SortingCheckboxList<T> extends CheckboxList<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void setModel(final ListModel newModel) {
+    public void setModel(final ListModel<T> newModel) {
 	super.setModel(newModel);
 	if (getCellRenderer() instanceof SortingCheckboxListCellRenderer) {
 	    ((SortingCheckboxListCellRenderer<T>) getCellRenderer()).updateCellWidth(this);
@@ -63,7 +63,7 @@ public class SortingCheckboxList<T> extends CheckboxList<T> {
 	    return;
 	}
 	if (newSortingModel != null) {
-	    final DefaultListModel listModel = getModel();
+	    final DefaultListModel<T> listModel = getModel();
 	    for (final Pair<T, Ordering> orderItem : newSortingModel.getSortObjects()) {
 		if (!listModel.contains(orderItem.getKey())) {
 		    resetSortOrder(orderItem.getKey(), orderItem.getValue());
@@ -114,12 +114,12 @@ public class SortingCheckboxList<T> extends CheckboxList<T> {
 	    final int actualX = rect != null ? x - rect.x : 0;
 	    final int actualY = rect != null ? y - rect.y : 0;
 	    if (getCellRenderer() instanceof SortingCheckingListCellRenderer) {
-		if (row >= 0 && isValueChecked((T) getModel().getElementAt(row)) && //
+		if (row >= 0 && isValueChecked(getModel().getElementAt(row)) && //
 			((SortingCheckingListCellRenderer<T>) getCellRenderer()).isOnOrderingArrow(actualX, actualY)) {
 		    if(!e.isControlDown()){
-			resetAllSortOrderExcept((T) getModel().getElementAt(row));
+			resetAllSortOrderExcept(getModel().getElementAt(row));
 		    }
-		    sortingModel.toggleSorter((T) getModel().getElementAt(row));
+		    sortingModel.toggleSorter(getModel().getElementAt(row));
 		    if (!isSelectsByChecking()) {
 			return;
 		    }

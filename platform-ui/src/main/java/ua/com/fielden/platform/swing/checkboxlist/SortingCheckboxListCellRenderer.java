@@ -46,10 +46,10 @@ public class SortingCheckboxListCellRenderer<T> extends CheckboxListCellRenderer
 
     @SuppressWarnings("unchecked")
     @Override
-    public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+    public Component getListCellRendererComponent(final JList<? extends T> list, final T value, final int index, final boolean isSelected, final boolean cellHasFocus) {
 	if (list instanceof SortingCheckboxList) {
 	    final SortingCheckboxList<T> sortingList = (SortingCheckboxList<T>) list;
-	    if (sortingList.isValueChecked((T) value) && sortingList.getSortingModel().isSortable((T) value)) {
+	    if (sortingList.isValueChecked(value) && sortingList.getSortingModel().isSortable(value)) {
 		arrow.setVisible(true);
 		arrow.setOrder(0);
 		arrow.setSortOrder(SortOrder.UNSORTED);
