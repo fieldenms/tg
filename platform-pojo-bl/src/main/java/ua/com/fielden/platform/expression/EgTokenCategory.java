@@ -25,7 +25,7 @@ public enum EgTokenCategory implements ILexemeCategory {
     YEAR(15),
     UPPER(16),
     LOWER(17),
-    DAY_DIFF(18),
+    DAY_DIFF(18), // TODO remove deprecated function from lexer, parser, AST visitors and unit tests
     COMMA(19),
     NAME(20), // property name, which includes dot notation for nested properties
     INT(21),

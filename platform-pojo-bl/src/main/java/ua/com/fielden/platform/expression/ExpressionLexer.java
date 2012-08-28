@@ -66,9 +66,9 @@ public class ExpressionLexer {
 	new PlusTokenAutomata(), new MinusTokenAutomata(), new MultTokenAutomata(), new DivTokenAutomata(), //
 	///////////////////// functions ////////////////////
 	new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), new MaxTokenAutomata(),//
+	new DaysTokenAutomata(), new MonthsTokenAutomata(), new YearsTokenAutomata(), // should be before DAY, MONTH and YEAR token lexers
 	new CountTokenAutomata(), new DayTokenAutomata(), new MonthTokenAutomata(), new YearTokenAutomata(), //
 	new UpperTokenAutomata(), new LowerTokenAutomata(), new DayDiffTokenAutomata(), //
-	new DaysTokenAutomata(), new MonthsTokenAutomata(), new YearsTokenAutomata(), //
 	////////////////////////////////////////////////////
 	new CaseTokenAutomata(), // this block of lexers should go begore the name lexer
 	new WhenTokenAutomata(),

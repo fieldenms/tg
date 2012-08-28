@@ -64,6 +64,9 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	case SELF:
 	    node.setType(getContextPropertyType());
 	    break;
+	case NOW:
+	    node.setType(Date.class);
+	    break;
 	// property types
 	case NAME:
 	    node.setType(identifyPropertyType(node));
@@ -87,8 +90,11 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	    processStringFunction(node);
 	    break;
 	// bi-operand date type functions
-	case DAY_DIFF:
-	    processDayDiffFunction(node);
+	case DAY_DIFF: // TODO deprecated function
+	case DAYS:
+	case MONTHS:
+	case YEARS:
+	    processDateDiffFunctions(node);
 	    break;
 	// uno-operand aggregation functions
 	case AVG:
@@ -143,15 +149,22 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	}
 
 	// check compatibility of operand types
-	if (String.class.isAssignableFrom(leftOperandType) && !leftOperandType.isAssignableFrom(rightOperandType)) {
-	    throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());
-	} else if (Money.class.isAssignableFrom(leftOperandType) && !leftOperandType.isAssignableFrom(rightOperandType) && !Number.class.isAssignableFrom(rightOperandType)) {
-	    throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());
-	} else if (Number.class.isAssignableFrom(leftOperandType) && !Number.class.isAssignableFrom(rightOperandType) && !Money.class.isAssignableFrom(rightOperandType)) {
+	if ((String.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) || // strings are comparable
+	    (Money.class.isAssignableFrom(leftOperandType) && (leftOperandType.isAssignableFrom(rightOperandType) || Number.class.isAssignableFrom(rightOperandType)))	 || // money are comparable with each other and numbers
+	    (Number.class.isAssignableFrom(leftOperandType) && (Number.class.isAssignableFrom(rightOperandType) || Money.class.isAssignableFrom(rightOperandType))) || // the same, but in reverse order
+	    ((Date.class.isAssignableFrom(leftOperandType) || DateTime.class.isAssignableFrom(leftOperandType)) && (Date.class.isAssignableFrom(rightOperandType) || DateTime.class.isAssignableFrom(rightOperandType))) || // dates are comparable
+	    (Day.class.isAssignableFrom(leftOperandType) && rightOperand.getToken().category == EgTokenCategory.DAYS) || // day literal is comparable only with DAYS function
+	    (leftOperand.getToken().category == EgTokenCategory.DAYS && Day.class.isAssignableFrom(rightOperandType) ) || // the same, but in reverse
+	    (Month.class.isAssignableFrom(leftOperandType) && rightOperand.getToken().category == EgTokenCategory.MONTHS) || // month literal is comparable only with MONTHS function
+	    (leftOperand.getToken().category == EgTokenCategory.MONTHS && Month.class.isAssignableFrom(rightOperandType)) || // the same, but in reverse
+	    (Year.class.isAssignableFrom(leftOperandType) && rightOperand.getToken().category == EgTokenCategory.YEARS) || // year literal is comparable only with YEARS function
+	    (leftOperand.getToken().category == EgTokenCategory.YEARS && Year.class.isAssignableFrom(rightOperandType))) { // the same, but in reverse
+	    // the type of the operation should be the lease restrictive type of its operands
+	    node.setType(boolean.class);
+	} else {
 	    throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());
 	}
-	// the type of the operation should be the lease restrictive type of its operands
-	node.setType(boolean.class);
+
     }
 
     private void processLogicalOperator(final AstNode node) throws SemanticException {
@@ -320,12 +333,12 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
     }
 
     /**
-     * Validates correctness of operands for the DAY_DIFF function and determines the type of the node.
+     * Validates correctness of operands for functions DAYS, MONTHS, YEARS and determines the type of the node.
      *
      * @param node
      * @throws SemanticException
      */
-    private void processDayDiffFunction(final AstNode node) throws SemanticException {
+    private void processDateDiffFunctions(final AstNode node) throws SemanticException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
 	if (node.getChildren().size() != 2) {
 	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 2 operands, found " + node.getChildren().size(), node.getToken());
