@@ -28,6 +28,7 @@ import ua.com.fielden.platform.expression.lexer.function.max.MaxTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.min.MinTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.month.MonthTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.months.MonthsTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.now.NowTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.self.SelfTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.sum.SumTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.upper.UpperTokenAutomata;
@@ -75,6 +76,7 @@ public class ExpressionLexer {
 	new ElseTokenAutomata(),
 	new EndTokenAutomata(),
 	////////////////////////////////////////////////////
+	new NowTokenAutomata(), // should go before the name token
 	new SelfTokenAutomata(), // should go before the name token
 	new NameTokenAutomata(),//
 	new StringTokenAutomata(),//

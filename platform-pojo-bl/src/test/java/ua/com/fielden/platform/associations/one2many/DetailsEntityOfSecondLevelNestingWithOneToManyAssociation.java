@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.associations.one2many;
 
+import java.util.Date;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -35,6 +37,11 @@ public class DetailsEntityOfSecondLevelNestingWithOneToManyAssociation extends A
     @Title(value = "Key 2", desc = "Desc")
     @CompositeKeyMember(2)
     private Integer key2;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Date", desc = "Date")
+    private Date dateProp;
 
     @Observable
     public DetailsEntityOfSecondLevelNestingWithOneToManyAssociation setKey2(final Integer key2) {
@@ -102,6 +109,16 @@ public class DetailsEntityOfSecondLevelNestingWithOneToManyAssociation extends A
 
     public String getStrProp() {
 	return strProp;
+    }
+
+    @Observable
+    public DetailsEntityOfSecondLevelNestingWithOneToManyAssociation setDateProp(final Date dateProp) {
+	this.dateProp = dateProp;
+	return this;
+    }
+
+    public Date getDateProp() {
+	return dateProp;
     }
 
 }

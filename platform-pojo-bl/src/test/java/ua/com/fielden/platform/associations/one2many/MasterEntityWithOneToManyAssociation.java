@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.associations.one2many;
 
+import java.util.Date;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -28,6 +29,16 @@ public class MasterEntityWithOneToManyAssociation extends AbstractEntity<String>
     @MapTo
     @Title(value = "Property 1", desc = "Desc")
     private Money moneyProp;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Date", desc = "Date")
+    private Date dateProp;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Another Date", desc = "Date")
+    private Date anotherDateProp;
 
     @IsProperty(linkProperty="key1") //
     @MapTo
@@ -67,5 +78,26 @@ public class MasterEntityWithOneToManyAssociation extends AbstractEntity<String>
     public Money getMoneyProp() {
 	return moneyProp;
     }
+
+    @Observable
+    public MasterEntityWithOneToManyAssociation setDateProp(final Date dateProp) {
+	this.dateProp = dateProp;
+	return this;
+    }
+
+    public Date getDateProp() {
+	return dateProp;
+    }
+
+    @Observable
+    public MasterEntityWithOneToManyAssociation setAnotherDateProp(final Date dateProp) {
+	this.anotherDateProp = dateProp;
+	return this;
+    }
+
+    public Date getAnotherDateProp() {
+	return anotherDateProp;
+    }
+
 
 }

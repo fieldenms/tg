@@ -175,6 +175,36 @@ public class LevelAllocatingVisitorIntegratedTest {
     }
 
     @Test
+    public void test_expression_level_for_DAYS_function() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("AVG(days(dateProp, now))").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToManyAssociation.class);
+	new AstWalker(ast, visitor).walk();
+	assertEquals("Incorrect level for expression", new Integer(0), ast.getLevel());
+    }
+
+    @Test
+    public void test_expression_level_for_MONTHS_function() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("months(dateProp, anotherDateProp)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToManyAssociation.class);
+	new AstWalker(ast, visitor).walk();
+	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+    }
+
+    @Test
+    public void test_expression_level_for_YEARS_function() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("Years(NOW, dateProp) <= 1y").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationCollectional");
+	new AstWalker(ast, visitor).walk();
+	assertEquals("Incorrect level for expression", new Integer(2), ast.getLevel());
+    }
+
+    @Test
     public void test_expression_level_calc_with_level_compatible_nodes_case_7() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("AVG(2) + SUM(selfProperty.selfProperty.collectional.intProperty)").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);

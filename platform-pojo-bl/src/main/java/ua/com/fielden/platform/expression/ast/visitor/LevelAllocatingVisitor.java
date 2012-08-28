@@ -75,6 +75,7 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 	case DECIMAL:
 	case STRING:
 	case DATE_CONST:
+	case NOW:
 	    node.setLevel(null);
 	    break;
 	// collectional property dependent level
@@ -94,7 +95,6 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 	case YEAR:
 	case UPPER:
 	case LOWER:
-	case DAY_DIFF:
 	case LT:
 	case GT:
 	case LE:
@@ -105,6 +105,10 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 	case OR:
 	case CASE:
 	case WHEN:
+	case DAY_DIFF:
+	case DAYS:
+	case MONTHS:
+	case YEARS:
 	    node.setLevel(determineLevelBasedOnOperands(node));
 	    break;
 	// operand dependent and decreasing level operations

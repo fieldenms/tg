@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.associations.one2many;
 
+import java.util.Date;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -37,6 +38,12 @@ public class DetailsEntityForOneToManyAssociation extends AbstractEntity<Dynamic
     @Title(value = "Key 2", desc = "Desc")
     @CompositeKeyMember(2)
     private Integer key2;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Date", desc = "Date")
+    private Date dateProp;
+
 
     @IsProperty(value = DetailsEntityOfSecondLevelNestingWithOneToManyAssociation.class) // linkProperty="key1" is missing on purpose
     @MapTo
@@ -119,4 +126,15 @@ public class DetailsEntityForOneToManyAssociation extends AbstractEntity<Dynamic
     public List<DetailsEntityOfSecondLevelNestingWithOneToManyAssociation> getOne2manyAssociationCollectional() {
         return one2manyAssociationCollectional;
     }
+
+    @Observable
+    public DetailsEntityForOneToManyAssociation setDateProp(final Date dateProp) {
+	this.dateProp = dateProp;
+	return this;
+    }
+
+    public Date getDateProp() {
+	return dateProp;
+    }
 }
+
