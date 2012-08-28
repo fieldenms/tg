@@ -8,8 +8,12 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -19,6 +23,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresentation implements ISentinelDomainTreeRepresentation {
+    public final static String countOfSelfName = "countOfSelfDashboard";
+
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      *
@@ -44,6 +50,27 @@ public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresen
     @Override
     public ISentinelAddToAggregationTickRepresentation getSecondTick() {
 	return (ISentinelAddToAggregationTickRepresentation) super.getSecondTick();
+    }
+
+    @Override
+    public boolean isExcludedImmutably(final Class<?> root, final String property) {
+	// inject an enhanced type into method implementation
+	final Class<?> managedType = managedType(root);
+
+	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	// overridden to exclude non-sentinel properties
+	return (super.isExcludedImmutably(managedType, property)) || // base TG analysis domain representation usage
+	!(isSentinel(root, managedType, property) || isEntityItself || countOfSelfName.equals(property)); // exclude crit-only properties
+    }
+
+    private boolean isSentinel(final Class<?> root, final Class<?> managedType, final String property) {
+	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
+	final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, managedType, property);
+	final String expr = calculatedAnnotation != null ? calculatedAnnotation.value().trim() : null;
+	return calculatedAnnotation != null && EntityUtils.isString(propertyType) && //
+		expr.startsWith("CASE WHEN ") && expr.endsWith(" END") && expr.contains(" \"GREEN\" ") && expr.contains(" \"RED\" ");
+		// expr.startsWith("\"1 + 7");
     }
 
     public static class SentinelAddToDistributionTickRepresentation extends AnalysisAddToDistributionTickRepresentation implements ISentinelAddToDistributionTickRepresentation {

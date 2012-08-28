@@ -59,6 +59,17 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
 	 */
 	public SentinelAddToDistributionTickManager() {
 	}
+
+	@Override
+	public void check(final Class<?> root, final String property, final boolean check) {
+	    if (check) {
+		// remove previously checked property. It should be the only one, but remove them all to be sure:
+		while (!checkedPropertiesMutable(root).isEmpty()) {
+		    check(root, checkedPropertiesMutable(root).get(0), false);
+		}
+	    }
+	    super.check(root, property, check);
+	}
     }
 
     public static class SentinelAddToAggregationTickManager extends AnalysisAddToAggregationTickManager implements ISentinelAddToAggregationTickManager {
