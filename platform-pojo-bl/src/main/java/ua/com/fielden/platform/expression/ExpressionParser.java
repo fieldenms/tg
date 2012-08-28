@@ -16,6 +16,7 @@ import ua.com.fielden.platform.expression.exception.UnwantedTokenException;
  * <p>
  * Here is a short-hand grammar rules for Expression Language, where only parsing rules are outlined, omitting lexer rules for brevity.
  * <p>
+ *
  * <pre>
  * sentence : case-expression | logical-expression | arithmetic-expression
  * case-expression : CASE (WHEN logical-expression THEN STRING)+ ELSE STRING END
@@ -354,13 +355,13 @@ public class ExpressionParser {
     /** Matches keyword THEN. Returns an AST node with a string literal that suppose to follow THEN. */
     private AstNode then_keyword() throws RecognitionException {
 	match(EgTokenCategory.THEN);
-	return literal(EgTokenCategory.STRING);
+	return match_literal(EgTokenCategory.STRING);
     }
 
     /** Matches keyword ELSE. Returns an AST node with a string literal that suppose to follow ELSE. */
     private AstNode else_keyword() throws RecognitionException {
 	match(EgTokenCategory.ELSE);
-	return literal(EgTokenCategory.STRING);
+	return match_literal(EgTokenCategory.STRING);
     }
 
     /**
@@ -424,13 +425,15 @@ public class ExpressionParser {
 	case DECIMAL:
 	case STRING:
 	case DATE_CONST:
-	    return literal(cat);
+	    return match_literal(cat);
 	    // trying to match property rule
 	case SELF:
-	    return self();
+	    return match_self();
 	    // trying to match sub-sentence
 	case NAME:
-	    return property();
+	    return match_property();
+	case NOW:
+	    return match_now();
 	    // trying to match SELF rule
 	case LPAREN:
 	    return match_arithmetic_expression_with_paren(); //new AstNode(tokens[position]); // does not move position forward
@@ -445,8 +448,12 @@ public class ExpressionParser {
 	case YEAR:
 	case UPPER:
 	case LOWER:
+	    return match_function_with_one_argument(cat);
 	case DAY_DIFF:
-	    return function(cat);
+	case DAYS:
+	case MONTHS:
+	case YEARS:
+	    return match_function_with_two_arguments(cat);
 	default:
 	    throw new NoViableAltException("Unexpected token " + tokens[position], tokens[position]);
 	}
@@ -503,7 +510,7 @@ public class ExpressionParser {
 	return EgTokenCategory.byIndex(tokens[position].category.getIndex());
     }
 
-    private AstNode literal(final EgTokenCategory cat) throws RecognitionException {
+    private AstNode match_literal(final EgTokenCategory cat) throws RecognitionException {
 	return new AstNode(match(cat));
     }
 
@@ -513,12 +520,16 @@ public class ExpressionParser {
      * @return
      * @throws RecognitionException
      */
-    private AstNode property() throws RecognitionException {
+    private AstNode match_property() throws RecognitionException {
 	final Token propToken = match(EgTokenCategory.NAME);
 	if (EgTokenCategory.SELF.name().equalsIgnoreCase(propToken.text)) {
 	    throw new ReservedNameException("SELF is a keyword, should not be used as some property name.", propToken);
 	}
 	return new AstNode(propToken);
+    }
+
+    private AstNode match_now() throws RecognitionException {
+	return new AstNode(match(EgTokenCategory.NOW));
     }
 
     /**
@@ -527,7 +538,7 @@ public class ExpressionParser {
      * @return
      * @throws RecognitionException
      */
-    private AstNode self() throws RecognitionException {
+    private AstNode match_self() throws RecognitionException {
 	return new AstNode(match(EgTokenCategory.SELF)) {
 	    @Override
 	    protected boolean canBeAddedTo(final AstNode intendedParentNode, final StringBuilder reason) {
@@ -542,40 +553,33 @@ public class ExpressionParser {
     }
 
     /**
-     * Produces an AST node based on the token category, which is expected to be one of the supported functions. The resultant AST node has all its relevant children determined
-     * recursively.
+     * Produces an AST node based on the token category, which is expected to be one of the supported functions with a single argument. The resultant AST node has all its relevant
+     * children determined recursively.
      *
      * @param cat
      * @return
      * @throws RecognitionException
      */
-    private AstNode function(final EgTokenCategory cat) throws RecognitionException {
-	switch (cat) {
-	// trying to match single argument function
-	case AVG:
-	case SUM:
-	case MIN:
-	case MAX:
-	case COUNT:
-	case DAY:
-	case MONTH:
-	case YEAR:
-	case UPPER:
-	case LOWER:
-	    return new AstNode(match(cat)).addChild(match_arithmetic_expression_with_paren());
-	    // trying to match two argument function
-	case DAY_DIFF:
-	    final AstNode node = new AstNode(match(EgTokenCategory.DAY_DIFF));
-	    match(EgTokenCategory.LPAREN);
-	    final AstNode leftArgNode = match_arithmetic_expression();// has to be a date property
-	    match(EgTokenCategory.COMMA);
-	    final AstNode rightArgNode = match_arithmetic_expression(); // has to be a date property
-	    match(EgTokenCategory.RPAREN);
-	    return node.addChild(leftArgNode).addChild(rightArgNode);
-	default:
-	    throw new NoViableAltException("Could not parse starting from token " + tokens[position] + " at position " + position, tokens[position]);
-	}
+    private AstNode match_function_with_one_argument(final EgTokenCategory cat) throws RecognitionException {
+	return new AstNode(match(cat)).addChild(match_arithmetic_expression_with_paren());
+    }
 
+    /**
+     * Produces an AST node based on the token category, which is expected to be one of the supported functions with two arguments. The resultant AST node has all its relevant
+     * children determined recursively.
+     *
+     * @param cat
+     * @return
+     * @throws RecognitionException
+     */
+    private AstNode match_function_with_two_arguments(final EgTokenCategory cat) throws RecognitionException {
+	final AstNode node = new AstNode(match(cat));
+	match(EgTokenCategory.LPAREN);
+	final AstNode leftArgNode = match_arithmetic_expression();// has to be of date type
+	match(EgTokenCategory.COMMA);
+	final AstNode rightArgNode = match_arithmetic_expression(); // has to be of date type
+	match(EgTokenCategory.RPAREN);
+	return node.addChild(leftArgNode).addChild(rightArgNode);
     }
 
     /**
