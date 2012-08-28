@@ -2,7 +2,7 @@ package ua.com.fielden.platform.expression;
 
 
 /**
- * Enumeration of taken categories used by the expression grammar.
+ * Enumeration of token categories used by the expression language grammar.
  *
  * @author TG Team
  *
@@ -48,7 +48,12 @@ public enum EgTokenCategory implements ILexemeCategory {
     WHEN(35),
     THEN(36),
     ELSE(37),
-    END(38);
+    END(38),
+    ////////////// date difference functions ////////////////////////
+    DAYS(39),
+    MONTHS(40),
+    YEARS(41),
+    NOW(42);
 
     public final int index;
 

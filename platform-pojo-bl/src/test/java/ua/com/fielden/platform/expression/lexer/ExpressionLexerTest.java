@@ -110,14 +110,6 @@ public class ExpressionLexerTest {
     }
 
     @Test
-    public void test_lexing_rule_for_text_with_property_and_decimal_value() throws SequenceRecognitionFailed {
-	final ExpressionLexer el = new ExpressionLexer("property.999.36");
-	assertEquals(new Token(EgTokenCategory.NAME, "property"), el.nextToken());
-	assertEquals(new Token(EgTokenCategory.DECIMAL, ".999"), el.nextToken());
-	assertEquals(new Token(EgTokenCategory.DECIMAL, ".36"), el.nextToken());
-    }
-
-    @Test
     public void test_token_positions() throws RecognitionException {
 	final String expression = "1 + (2.3 + (property + 1) / (23.6 * AVG (property. p)))";
 	final Token[] tokens = new ExpressionLexer(expression).tokenize();

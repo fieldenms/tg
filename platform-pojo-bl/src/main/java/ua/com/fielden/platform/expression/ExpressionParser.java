@@ -567,9 +567,9 @@ public class ExpressionParser {
 	case DAY_DIFF:
 	    final AstNode node = new AstNode(match(EgTokenCategory.DAY_DIFF));
 	    match(EgTokenCategory.LPAREN);
-	    final AstNode leftArgNode = match_arithmetic_expression();
+	    final AstNode leftArgNode = match_arithmetic_expression();// has to be a date property
 	    match(EgTokenCategory.COMMA);
-	    final AstNode rightArgNode = match_arithmetic_expression();
+	    final AstNode rightArgNode = match_arithmetic_expression(); // has to be a date property
 	    match(EgTokenCategory.RPAREN);
 	    return node.addChild(leftArgNode).addChild(rightArgNode);
 	default:

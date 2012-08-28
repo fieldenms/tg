@@ -1,19 +1,19 @@
-package ua.com.fielden.platform.expression.lexer.case_when.end;
+package ua.com.fielden.platform.expression.lexer.function.now;
 
 import ua.com.fielden.platform.expression.EgTokenCategory;
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
 import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;
 
 /**
- * NDA for recognising END token of the expression language.
+ * NDA for recognising NOW token of the expression language.
  *
  * @author TG Team
  *
  */
-public class EndTokenAutomata extends BaseNonDeterministicAutomata {
+public class NowTokenAutomata extends BaseNonDeterministicAutomata {
 
-    public EndTokenAutomata() {
-	super(EgTokenCategory.END, TEXT_POST_PROCESSING.REMOVE_WS, new State0(), new State1(), new State2(), new State3(), new State4DeadEnd());
+    public NowTokenAutomata() {
+	super(EgTokenCategory.NOW, TEXT_POST_PROCESSING.REMOVE_WS, new State0(), new State1(), new State2(), new State3(), new State4DeadEnd());
     }
 
     @Override
@@ -24,7 +24,7 @@ public class EndTokenAutomata extends BaseNonDeterministicAutomata {
 
     @Override
     public String toString() {
-	return "END token automata";
+	return "NOW token automata";
     }
 
 }

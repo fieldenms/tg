@@ -86,7 +86,8 @@ public class NonDeterministicAutomata {
     }
 
     public final String getRecognisedSequence() {
-	if (lastFinalState != null) {
+	//if (lastFinalState != null) {
+	if (currState != null && currState.isFinal) {
 	    return recognised.toString();
 	}
 	return null;

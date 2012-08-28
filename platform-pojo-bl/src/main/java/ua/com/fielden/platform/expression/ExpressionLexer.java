@@ -22,14 +22,17 @@ import ua.com.fielden.platform.expression.lexer.function.avg.AvgTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.count.CountTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.day.DayTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.day_diff.DayDiffTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.days.DaysTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.lower.LowerTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.max.MaxTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.min.MinTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.month.MonthTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.months.MonthsTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.self.SelfTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.sum.SumTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.upper.UpperTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.year.YearTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.years.YearsTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.greater.GreaterTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.greater_or_eq.GreaterOrEqualTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.integer.IntegerTokenAutomata;
@@ -64,6 +67,7 @@ public class ExpressionLexer {
 	new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), new MaxTokenAutomata(),//
 	new CountTokenAutomata(), new DayTokenAutomata(), new MonthTokenAutomata(), new YearTokenAutomata(), //
 	new UpperTokenAutomata(), new LowerTokenAutomata(), new DayDiffTokenAutomata(), //
+	new DaysTokenAutomata(), new MonthsTokenAutomata(), new YearsTokenAutomata(), //
 	////////////////////////////////////////////////////
 	new CaseTokenAutomata(), // this block of lexers should go begore the name lexer
 	new WhenTokenAutomata(),

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.expression.lexer.name;
+package ua.com.fielden.platform.expression.lexer.function.days;
 
 import ua.com.fielden.platform.expression.automata.AbstractState;
 import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
@@ -11,12 +11,10 @@ public class State3 extends AbstractState {
 
     @Override
     protected AbstractState transition(final char symbol) throws NoTransitionAvailable {
-	if (isWhiteSpace(symbol)) {
-	    return this;
-	} else if ((symbol >= 'a' && symbol <= 'z') || (symbol >= 'A' && symbol <= 'Z') || symbol == '_') {
-	    return getAutomata().getState("S2");
+	if (symbol == 's' || symbol == 'S') {
+	    return getAutomata().getState("S4");
 	}
-	throw new NoTransitionAvailable("Invalid character '" + symbol + "' in property name.", this, symbol);
+	throw new NoTransitionAvailable("Invalid symbol '" + symbol + "'" , this, symbol);
     }
 
 }
