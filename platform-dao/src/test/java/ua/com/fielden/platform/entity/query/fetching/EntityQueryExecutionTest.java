@@ -96,18 +96,24 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
 
-//    @Test
-//    public void text() {
-//	final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().logicalExpr(null).and().expr(expr().countAll().model()).eq().val(0).and().logicalExpr(null)..model();
-//    }
-    @Ignore
     @Test
-    public void test_query_query_with_grouping_and_aggregation() {
-	final AggregatedResultQueryModel qry = select(TgVehicleModel.class).as("AAA").groupBy().prop("make.key").yield().countOf().prop("make").as("dmakes").modelAsAggregate();
-	final AggregatedResultQueryModel qryCount = select(qry).yield().countAll().as("KOUNT").modelAsAggregate();
-	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qryCount).model());
+    public void test_query_query_with_grouping_and_subproperties() {
+	final AggregatedResultQueryModel qry1 = select(TgVehicleModel.class).where().condition(1).or().allOfProps("1","@").ge().val(222).and(). //
+		condition(11).and().begin().condition("aaa").end().and().beginExpr().caseWhen().condition("a").then().now().when().condition("2").then().val(1).end().endExpr().isNotNull().modelAsAggregate();
+
+	final AggregatedResultQueryModel qry = select(TgVehicleModel.class).
+		groupBy().prop("make"). //
+		yield().countOf().prop("make").as("dmakes"). //
+		yield().prop("make.key").as("key").modelAsAggregate();
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).model());
     }
 
+    @Ignore
+    @Test
+    public void test_query_query_with_grouping_and_aggregation1() {
+	final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).as("AAA").where().prop("make.key").eq().val("AA").model();
+	final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(qry).model());
+    }
 
     ////////////////////////////////////////////////////////////////   UNION ENTITIES ////////////////////////////////////////////////////////////
     @Test

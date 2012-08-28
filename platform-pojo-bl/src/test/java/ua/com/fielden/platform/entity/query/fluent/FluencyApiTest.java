@@ -44,6 +44,7 @@ public class FluencyApiTest extends TestCase {
     private static String notBegin = "notBegin";
     private static String beginExpr = "beginExpr";
     private static String expr = "expr";
+    private static String condition = "condition";
     private static String join = "join";
     private static String as = "as";
     private static String modelAsEntity = "modelAsEntity";
@@ -118,25 +119,25 @@ public class FluencyApiTest extends TestCase {
     public void test_IWhere0(){
 	checkFluency( //
 		select(TgVehicle.class).where(), //
-		array(model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(condition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IWhere1(){
 	checkFluency( //
 		select(TgVehicle.class).where().begin(), //
-		array(model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(condition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IWhere2(){
 	checkFluency( //
 		select(TgVehicle.class).where().begin().begin(), //
-		array(model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(condition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IWhere3(){
 	checkFluency( //
 		select(TgVehicle.class).where().begin().begin().begin(), //
-		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(/*condition, */model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IFunctionLastArgument_with_ICompleted(){

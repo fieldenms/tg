@@ -103,7 +103,6 @@ public interface EntityQueryProgressiveInterfaces {
         IFunctionWhere0<T, ET> caseWhen();
         IRoundFunctionArgument<T, ET> round();
         IConcatFunctionArgument<T, ET> concat();
-        //IFunctionCompoundCondition0<T, ET> logicalExpr(ExpressionModel expr);
     }
 
     interface IMultipleOperand<T, ET extends AbstractEntity<?>> extends ISingleOperand<T, ET> {
@@ -120,7 +119,6 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     interface IComparisonOperand<T, ET extends AbstractEntity<?>> extends IMultipleOperand<T, ET>, IBeginExpression<IExprOperand0<T, ET>> /*another entry point*/{
-	//ICompoundCondition0<ET> logicalExpr(ExpressionModel expr);
     }
 
     interface IExistenceOperator<T extends ILogicalOperator<?>>  {
@@ -293,7 +291,7 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     interface IWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, T3, ET extends AbstractEntity<?>> extends IComparisonOperand<T1, ET>, IExistenceOperator<T2>, IBeginCondition<T3> {
-    //    T2 condition(Object condition);
+        T2 condition(Object condition);
     }
 
     interface ICompoundCondition<T1, T2> extends ILogicalOperator<T1>, IEndCondition<T2> {

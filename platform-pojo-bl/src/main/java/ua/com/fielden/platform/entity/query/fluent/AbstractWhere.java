@@ -31,4 +31,8 @@ abstract class AbstractWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends 
     public T3 notBegin() {
 	return getBeginCondition().notBegin();
     }
+
+    public T2 condition(final Object condition) {
+	return getParent2();
+    }
 }
