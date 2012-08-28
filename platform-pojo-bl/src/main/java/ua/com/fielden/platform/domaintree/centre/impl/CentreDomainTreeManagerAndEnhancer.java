@@ -11,7 +11,9 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -20,11 +22,13 @@ import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILoca
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
@@ -235,8 +239,21 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	} if (AnalysisType.SIMPLE.equals(analysisType)) {
 	    currentAnalyses.put(name, new AnalysisDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
 	} if (AnalysisType.SENTINEL.equals(analysisType)) {
-	    throw new UnsupportedOperationException("Currently SENTINELs are not supported. Analysis [" + name + "] has not been created.");
-	    // currentAnalyses.put(name, new SentinelDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
+	    // add "count of self" calculated property that is essential for "sentinel" analyses
+	    final Class<?> rootType = getRepresentation().rootTypes().iterator().next(); // TODO this is slightly INCORRECT!!
+	    final String counOfSelfName = "countOfSelfDashboard";
+	    try {
+		getEnhancer().getCalculatedProperty(rootType, counOfSelfName);
+	    } catch (final IncorrectCalcPropertyException e) {
+		getEnhancer().addCalculatedProperty(rootType, "", "COUNT(SELF)", "Count of self", "This calculated proerty is used for sentinels as aggregation function that calculates a number of entities by each status.", CalculatedPropertyAttribute.NO_ATTR, "SELF");
+		getEnhancer().apply();
+	    }
+	    final ISentinelDomainTreeManager sdtm = new SentinelDomainTreeManager(getSerialiser(), getRepresentation().rootTypes());
+	    // TODO sdtm.getRepresentation().getFirstTick().disableImmutably(rootType, counOfSelfName);
+	    // TODO sdtm.getFirstTick().check(rootType, counOfSelfName, true);
+	    // TODO sdtm.getRepresentation().getFirstTick().disableImmutably(rootType, counOfSelfName);
+	    currentAnalyses.put(name, sdtm);
+
 	} if (AnalysisType.LIFECYCLE.equals(analysisType)) {
 	    currentAnalyses.put(name, new LifecycleDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
 	}
