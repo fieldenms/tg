@@ -31,6 +31,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -190,6 +191,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	final JToolBar toolBar = panelBuilder//
 		.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")))//
 		.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
+		.addButton(new AddAnalysisAction(AnalysisType.SENTINEL, "Add sentinel analysis", "Add sentinel analysis report", ResourceLoader.getIcon("images/sentinel-add.png"), ResourceLoader.getIcon("images/sentinel-add.png")))//
 		.addButton(createRemoveAnalysisAction())
 		.buildActionPanel();
 	toolBar.setFloatable(false);
@@ -300,9 +302,11 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @return
      */
     private AnalysisType determineAnalysisType(final IAbstractAnalysisDomainTreeManager analysisManager) {
-	if(analysisManager instanceof IAnalysisDomainTreeManager){
+	if (analysisManager instanceof ISentinelDomainTreeManager) {
+	    return AnalysisType.SENTINEL;
+	} else if (analysisManager instanceof IAnalysisDomainTreeManager) {
 	    return AnalysisType.SIMPLE;
-	}else if(analysisManager instanceof IPivotDomainTreeManager){
+	} else if(analysisManager instanceof IPivotDomainTreeManager) {
 	    return AnalysisType.PIVOT;
 	}
 	return null;
@@ -437,6 +441,8 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	switch(type){
 	case SIMPLE:
 	    return createChartAnalysis(name);
+	case SENTINEL:
+	    return createSentinelChartAnalysis(name);
 	case PIVOT:
 	    return createPivotAnalysis(name);
 	default: return null;
@@ -596,6 +602,18 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     private ChartAnalysisConfigurationView<T> createChartAnalysis(final String name) {
 	return (ChartAnalysisConfigurationView<T>) getModel().getAnalysisBuilder()//
 		.createAnalysis(AnalysisType.SIMPLE, name, this, getModel().getCriteria(), getReviewProgressLayer());
+    }
+
+    /**
+     * Creates sentinel chart analysis configuration view with specified name.
+     *
+     * @param name
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private ChartAnalysisConfigurationView<T> createSentinelChartAnalysis(final String name) {
+	return (ChartAnalysisConfigurationView<T>) getModel().getAnalysisBuilder()//
+		.createAnalysis(AnalysisType.SENTINEL, name, this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     /**

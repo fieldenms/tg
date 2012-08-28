@@ -10,7 +10,6 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
 
 public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractConfigurationModel {
-
     private final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria;
 
     /**

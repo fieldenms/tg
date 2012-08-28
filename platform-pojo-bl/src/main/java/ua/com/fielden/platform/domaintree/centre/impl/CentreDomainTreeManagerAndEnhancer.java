@@ -234,6 +234,9 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    currentAnalyses.put(name, new PivotDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
 	} if (AnalysisType.SIMPLE.equals(analysisType)) {
 	    currentAnalyses.put(name, new AnalysisDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
+	} if (AnalysisType.SENTINEL.equals(analysisType)) {
+	    throw new UnsupportedOperationException("Currently SENTINELs are not supported. Analysis [" + name + "] has not been created.");
+	    // currentAnalyses.put(name, new SentinelDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
 	} if (AnalysisType.LIFECYCLE.equals(analysisType)) {
 	    currentAnalyses.put(name, new LifecycleDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
 	}

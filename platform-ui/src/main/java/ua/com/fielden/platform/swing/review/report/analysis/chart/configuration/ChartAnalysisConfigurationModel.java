@@ -11,9 +11,14 @@ import ua.com.fielden.platform.swing.review.report.analysis.chart.ChartAnalysisM
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 
 public class ChartAnalysisConfigurationModel<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
+    /**
+     * Indicates whether analysis represents special "sentinel" analysis.
+     */
+    private final boolean isSentinel;
 
-    public ChartAnalysisConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final String name) {
+    public ChartAnalysisConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final String name, final boolean isSentinel) {
 	super(criteria, name);
+	this.isSentinel = isSentinel;
     }
 
     @Override
@@ -34,5 +39,14 @@ public class ChartAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
 	final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
 	final IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager)cdtme.getAnalysisManager(getName());
 	return new ChartAnalysisModel<T>(getCriteria(), adtme, getPageHolder());
+    }
+
+    /**
+     * Indicates whether analysis represents special "sentinel" analysis.
+     *
+     * @return
+     */
+    public boolean isSentinel() {
+        return isSentinel;
     }
 }

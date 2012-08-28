@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
-public class DefaultChartAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, ChartAnalysisConfigurationView<T>> {
+public class SentinelChartAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, ChartAnalysisConfigurationView<T>> {
 
     @Override
     public ChartAnalysisConfigurationView<T> createAnalysis(//
@@ -17,7 +17,7 @@ public class DefaultChartAnalysisFactory<T extends AbstractEntity<?>> implements
 	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
 	    final String name, //
 	    final BlockingIndefiniteProgressLayer progressLayer) {
-	final ChartAnalysisConfigurationModel<T> analysisModel = new ChartAnalysisConfigurationModel<T>(criteria, name, false);
+	final ChartAnalysisConfigurationModel<T> analysisModel = new ChartAnalysisConfigurationModel<T>(criteria, name, true);
 	return new ChartAnalysisConfigurationView<T>(analysisModel, owner, progressLayer);
     }
 

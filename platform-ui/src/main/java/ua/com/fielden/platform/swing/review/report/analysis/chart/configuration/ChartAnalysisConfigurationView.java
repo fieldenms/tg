@@ -41,7 +41,7 @@ public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends
 		case OPEN:
 		    IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager)getModel().getAnalysisManager();
 		    if(adtme == null){
-			getModel().initAnalysisManager(AnalysisType.SIMPLE);
+			getModel().initAnalysisManager(getModel().isSentinel() ? AnalysisType.SENTINEL : AnalysisType.SIMPLE);
 			getModel().save();
 			adtme = (IAnalysisDomainTreeManager)getModel().getAnalysisManager();
 		    }
