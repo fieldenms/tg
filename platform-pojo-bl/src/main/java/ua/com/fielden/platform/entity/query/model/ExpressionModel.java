@@ -14,7 +14,6 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class ExpressionModel {
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<>();
-    private boolean contextPrefixNeeded = true;
 
     protected ExpressionModel() {}
 
@@ -31,19 +30,10 @@ public class ExpressionModel {
 	return tokens.toString();
     }
 
-    public boolean isContextPrefixNeeded() {
-        return contextPrefixNeeded;
-    }
-
-    public void setContextPrefixNeeded(final boolean contextPrefixNeeded) {
-        this.contextPrefixNeeded = contextPrefixNeeded;
-    }
-
     @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + (contextPrefixNeeded ? 1231 : 1237);
 	result = prime * result + ((tokens == null) ? 0 : tokens.hashCode());
 	return result;
     }
@@ -60,9 +50,6 @@ public class ExpressionModel {
 	    return false;
 	}
 	final ExpressionModel other = (ExpressionModel) obj;
-	if (contextPrefixNeeded != other.contextPrefixNeeded) {
-	    return false;
-	}
 	if (tokens == null) {
 	    if (other.tokens != null) {
 		return false;

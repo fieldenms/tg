@@ -172,11 +172,9 @@ public class EntProp implements ISingleOperand {
         this.source = source;
     }
 
-    public void setExpression(final Expression expression, final boolean needsContextPrefix) {
+    public void setExpression(final Expression expression) {
         this.expression = expression;
-        if (needsContextPrefix) {
-            prefixExpressionProps();
-        }
+        prefixExpressionProps();
     }
 
     private String getContextPrefix() {
