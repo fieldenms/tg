@@ -106,6 +106,9 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 		yield().countOf().prop("make").as("dmakes"). //
 		yield().prop("make.key").as("key").modelAsAggregate();
 	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).model());
+
+//	final IStandAloneConditionOperand a = null;
+//	a.beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model();
     }
 
     @Ignore
