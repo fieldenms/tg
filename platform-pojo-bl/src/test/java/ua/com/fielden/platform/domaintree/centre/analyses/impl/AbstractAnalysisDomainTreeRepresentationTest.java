@@ -174,23 +174,23 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     }
 
     @Test
-    public void test_that_first_tick_for_properties_of_non_entity_or_non_boolean_are_disabled() {
+    public void test_that_first_tick_for_properties_of_non_entity_or_non_boolean_or_non_string_are_disabled() {
 	// range types (except dates)
 	// integer
 	allLevels(new IAction() {
 	    public void action(final String name) {
 		assertTrue("Property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
 	    }
-	}, "integerProp", "doubleProp", "bigDecimalProp", "moneyProp", "stringProp", "dateProp");
+	}, "integerProp", "doubleProp", "bigDecimalProp", "moneyProp", "dateProp");
     }
 
     @Test
-    public void test_that_first_tick_for_properties_of_entity_or_date_or_boolean_are_NOT_disabled() {
+    public void test_that_first_tick_for_properties_of_entity_or_date_or_boolean_or_string_are_NOT_disabled() {
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
 		assertFalse("Property should be not disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
 	    }
-	}, "simpleEntityProp", "booleanProp");
+	}, "simpleEntityProp", "booleanProp", "stringProp");
     }
 
     @Test

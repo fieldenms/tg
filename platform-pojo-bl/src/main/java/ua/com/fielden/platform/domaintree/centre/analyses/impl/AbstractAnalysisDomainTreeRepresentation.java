@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -157,6 +158,7 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	    final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
 	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(KeyType.class, propertyType);
 	    final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, managedType, property);
+	    final String origination = calculatedAnnotation != null ? Reflector.fromRelative2AbsotulePath(calculatedAnnotation.contextPath(), calculatedAnnotation.origination()) : null;
 
 	    return (super.isDisabledImmutably(managedType, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
 	    // TODO (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
@@ -165,8 +167,8 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	    (!isEntityItself && EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))) || // disable properties of "entity with AE or composite key" type
 
 	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation == null) || // disable non-calc integer props
-	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !StringUtils.isEmpty(calculatedAnnotation.origination()) && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(managedType, calculatedAnnotation.origination()))) || // disable integer calculated properties which were originated not from Date property
-	    (!isEntityItself && !Integer.class.isAssignableFrom(propertyType) && !EntityUtils.isEntityType(propertyType) && !EntityUtils.isBoolean(propertyType)); // disable properties of non-"entity or boolean" type
+	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !StringUtils.isEmpty(origination) && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(managedType, origination))) || // disable integer calculated properties which were originated not from Date property
+	    (!isEntityItself && !Integer.class.isAssignableFrom(propertyType) && !EntityUtils.isEntityType(propertyType) && !EntityUtils.isBoolean(propertyType) && !EntityUtils.isString(propertyType)); // disable properties of non-"entity or boolean or string" type
 	    //		    Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination())));// disable integer calculated properties which were originated not from Date property
 	    //(!isEntityItself && !EntityUtils.isEntityType(propertyType) && !EntityUtils.isDate(propertyType) && !EntityUtils.isBoolean(propertyType)); // disable properties of "entity with AE or composite key" type
 	}
