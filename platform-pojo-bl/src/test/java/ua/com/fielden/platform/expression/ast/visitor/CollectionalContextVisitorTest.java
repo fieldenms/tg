@@ -44,6 +44,39 @@ public class CollectionalContextVisitorTest {
     }
 
     @Test
+    public void test_expression_tag_for_DAYS_function() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("days(dateProperty, now) > 3d").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
+
+	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
+    }
+
+    @Test
+    public void test_expression_tag_for_MONTHS_function() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("months(dateProperty, anotherDateProperty)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
+
+	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
+    }
+
+    @Test
+    public void test_expression_tag_for_YEARS_function() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("Years(NOW, anotherDateProperty) <= 1y").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
+
+	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
+    }
+
+    @Test
     public void test_expression_tag_calc_with_tag_compatible_nodes_case_2() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("(2 + entityProperty.intProperty) / 3").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);

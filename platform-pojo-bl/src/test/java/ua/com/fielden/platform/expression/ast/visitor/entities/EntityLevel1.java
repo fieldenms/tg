@@ -40,6 +40,9 @@ public class EntityLevel1 extends AbstractEntity<String> {
     private Date dateProperty;
 
     @IsProperty
+    private Date anotherDateProperty;
+
+    @IsProperty
     private BigDecimal decimalProperty;
 
     public String getStrProperty() {
@@ -102,9 +105,18 @@ public class EntityLevel1 extends AbstractEntity<String> {
         return dateProperty;
     }
     @Observable
-    public void setDateProperty(final Date dateProperty) {
-        this.dateProperty = dateProperty;
+    public void setDateProperty(final Date date) {
+        this.dateProperty = date;
     }
+
+    public Date getAnotherDateProperty() {
+        return anotherDateProperty;
+    }
+    @Observable
+    public void setAnotherDateProperty(final Date date) {
+        this.anotherDateProperty = date;
+    }
+
 
     public Money getCalcuatedProperty() {
         return calcuatedProperty;
