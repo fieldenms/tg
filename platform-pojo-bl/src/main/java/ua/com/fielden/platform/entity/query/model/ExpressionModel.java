@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.model;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,10 @@ public class ExpressionModel {
 
     public ExpressionModel(final List<Pair<TokenCategory, Object>> tokens) {
 	this.tokens.addAll(tokens);
+    }
+
+    public boolean containsSingleValueToken() {
+	return tokens.size() == 1 && tokens.get(0).getKey() == TokenCategory.VAL;
     }
 
     public List<Pair<TokenCategory, Object>> getTokens() {
