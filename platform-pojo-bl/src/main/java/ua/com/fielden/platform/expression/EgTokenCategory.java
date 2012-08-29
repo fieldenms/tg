@@ -32,6 +32,7 @@ public enum EgTokenCategory implements ILexemeCategory {
     DECIMAL(22),
     STRING(23),
     DATE_CONST(24), // here it means xd (for x days), xm (for x month) or xy (for x years)
+    DATE(43), // represents a date literal such as '2001-02-31' or '2012-06-30 23:59'
     SELF(25), // a key word indicating an entity itself, which gets translated to its id property; used four things like COUNT(self) etc.
     ///////////// comparison operators ////////////////////
     LT(26),

@@ -14,6 +14,7 @@ import ua.com.fielden.platform.expression.lexer.case_when.end.EndTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.case_when.then_.ThenTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.case_when.when.WhenTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.comma.CommaTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.date.DateTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.date_constant.DateConstantTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.decimal.DecimalTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.div.DivTokenAutomata;
@@ -83,6 +84,7 @@ public class ExpressionLexer {
 	new DateConstantTokenAutomata(), //
 	new DecimalTokenAutomata(), //
 	new IntegerTokenAutomata(),//
+	new DateTokenAutomata(),//
 	/////////////////////////////////////////////////////
 	new NotEqualTokenAutomata(), // should go before the less token
 	new EqualTokenAutomata(),//
