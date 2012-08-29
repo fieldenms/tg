@@ -12,6 +12,9 @@ import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
+import ua.com.fielden.platform.expression.type.Day;
+import ua.com.fielden.platform.expression.type.Month;
+import ua.com.fielden.platform.expression.type.Year;
 
 public class ExpressionText2ModelConverter4LiteralsTest {
 
@@ -52,6 +55,36 @@ public class ExpressionText2ModelConverter4LiteralsTest {
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
 	final ExpressionModel model = expr().val(new BigDecimal("22.2")).model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void expression_should_be_recognised_as_valmodel_for_day() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "2d");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Day.class, root.getType());
+
+	final ExpressionModel model = expr().val(2).model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void expression_should_be_recognised_as_valmodel_for_month() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "2m");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Month.class, root.getType());
+
+	final ExpressionModel model = expr().val(2).model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void expression_should_be_recognised_as_valmodel_for_year() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "23y");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Year.class, root.getType());
+
+	final ExpressionModel model = expr().val(23).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
 
