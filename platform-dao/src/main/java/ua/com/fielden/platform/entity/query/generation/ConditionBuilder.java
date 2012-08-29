@@ -62,6 +62,10 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	return getSize() == 1 && TokenCategory.GROUPED_CONDITIONS.equals(firstCat());
     }
 
+    private boolean isExternalConditions() {
+	return getSize() == 1 && TokenCategory.COND_TOKENS.equals(firstCat());
+    }
+
     private boolean isPlainNullTest() {
 	return getSize() == 2 && singleOperands.contains(firstCat()) && TokenCategory.NULL_OPERATOR.equals(secondCat());
     }
@@ -140,7 +144,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     @Override
     public boolean isClosing() {
-	return isPlainExistenceTest() || isMultipleExistenceTest() || isGroupOfConditions() || //
+	return isPlainExistenceTest() || isMultipleExistenceTest() || isGroupOfConditions() || isExternalConditions() || //
 		isPlainNullTest() || isMultipleNullTest() || //
 		isPlainComparisonTest() || isMultipleVsSingleComparisonTest() || isMultipleVsMultipleComparisonTest() || isSingleVsMultiplePlainComparisonTest() || //
 		isPlainLikeTest() || isMultipleVsSingleLikeTest() || isMultipleVsMultipleLikeTest() || isSingleVsMultipleLikeTest() || //
@@ -157,6 +161,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	    return handleIgnore(getMultipleNullTest());
 	} else if (isGroupOfConditions()) {
 	    return getResultForGroupOfConditions();
+	} else if (isExternalConditions()) {
+	    return getResultForExternalConditions();
 	} else if (isPlainExistenceTest()) {
 	    return handleIgnore(getPlainExistenceTest());
 	} else if (isMultipleExistenceTest()) {
@@ -241,6 +247,10 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private Pair<TokenCategory, Object> getResultForGroupOfConditions() {
+	return getTokens().get(0);
+    }
+
+    private Pair<TokenCategory, Object> getResultForExternalConditions() {
 	return getTokens().get(0);
     }
 

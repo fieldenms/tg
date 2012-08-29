@@ -123,6 +123,11 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	    case BEGIN_COND: //eats token
 		setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value));
 		break;
+	    case COND_TOKENS: //
+		break;
+		//setChild(new ConditionsBuilder(this, queryBuilder, getParamValues()));
+		//return (ISingleOperand) new StandAloneExpressionBuilder(queryBuilder, getParamValues(), (ExpressionModel) value).getResult().getValue();
+
 	    case LOGICAL_OPERATOR:
 		setChild(new CompoundConditionBuilder(this, queryBuilder, getParamValues(), cat, value));
 		break;
