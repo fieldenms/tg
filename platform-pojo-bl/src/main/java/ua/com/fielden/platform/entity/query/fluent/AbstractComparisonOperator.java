@@ -8,7 +8,9 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
 
 
-abstract class AbstractComparisonOperator<T extends ILogicalOperator<?>, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IComparisonOperator<T, ET> {
+abstract class AbstractComparisonOperator<T extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
+extends AbstractQueryLink //
+implements IComparisonOperator<T, ET> {
     abstract T getParent1();
 
     IComparisonOperand<T, ET> getParent2() {
