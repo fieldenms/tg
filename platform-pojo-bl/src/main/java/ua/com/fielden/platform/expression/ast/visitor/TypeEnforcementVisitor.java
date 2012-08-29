@@ -58,7 +58,9 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	    break;
 	case STRING:
 	    node.setType(String.class);
-	    node.setValue(node.getToken().text);
+	    final String origValue = node.getToken().text;
+	    final String value = origValue.substring(1, origValue.length() - 1); // removes double quotes from token
+	    node.setValue(value); // value with removed double quotes
 	    break;
 	case DATE_CONST:
 	    processDateConstantToken(node);
@@ -72,36 +74,36 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	case NOW:
 	    node.setType(Date.class);
 	    break;
-	// property types
+	    // property types
 	case NAME:
 	    node.setType(identifyPropertyType(node));
 	    break;
-	// bi-operand operation types
+	    // bi-operand operation types
 	case PLUS:
 	case MINUS:
 	case MULT:
 	case DIV:
 	    processOperation(node);
 	    break;
-	// uno-operand date type functions
+	    // uno-operand date type functions
 	case DAY:
 	case MONTH:
 	case YEAR:
 	    processDatePartExtractionFunction(node);
 	    break;
-	// uno-operand string type functions
+	    // uno-operand string type functions
 	case UPPER:
 	case LOWER:
 	    processStringFunction(node);
 	    break;
-	// bi-operand date type functions
+	    // bi-operand date type functions
 	case DAY_DIFF: // TODO deprecated function
 	case DAYS:
 	case MONTHS:
 	case YEARS:
 	    processDateDiffFunctions(node);
 	    break;
-	// uno-operand aggregation functions
+	    // uno-operand aggregation functions
 	case AVG:
 	case SUM:
 	    processAvgSum(node);
@@ -154,16 +156,16 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	}
 
 	// check compatibility of operand types
-	if ((String.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) || // strings are comparable
-	    (Money.class.isAssignableFrom(leftOperandType) && (leftOperandType.isAssignableFrom(rightOperandType) || Number.class.isAssignableFrom(rightOperandType)))	 || // money are comparable with each other and numbers
-	    (Number.class.isAssignableFrom(leftOperandType) && (Number.class.isAssignableFrom(rightOperandType) || Money.class.isAssignableFrom(rightOperandType))) || // the same, but in reverse order
-	    ((Date.class.isAssignableFrom(leftOperandType) || DateTime.class.isAssignableFrom(leftOperandType)) && (Date.class.isAssignableFrom(rightOperandType) || DateTime.class.isAssignableFrom(rightOperandType))) || // dates are comparable
-	    (Day.class.isAssignableFrom(leftOperandType) && rightOperand.getToken().category == EgTokenCategory.DAYS) || // day literal is comparable only with DAYS function
-	    (leftOperand.getToken().category == EgTokenCategory.DAYS && Day.class.isAssignableFrom(rightOperandType) ) || // the same, but in reverse
-	    (Month.class.isAssignableFrom(leftOperandType) && rightOperand.getToken().category == EgTokenCategory.MONTHS) || // month literal is comparable only with MONTHS function
-	    (leftOperand.getToken().category == EgTokenCategory.MONTHS && Month.class.isAssignableFrom(rightOperandType)) || // the same, but in reverse
-	    (Year.class.isAssignableFrom(leftOperandType) && rightOperand.getToken().category == EgTokenCategory.YEARS) || // year literal is comparable only with YEARS function
-	    (leftOperand.getToken().category == EgTokenCategory.YEARS && Year.class.isAssignableFrom(rightOperandType))) { // the same, but in reverse
+	if (String.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType) || // strings are comparable
+		Money.class.isAssignableFrom(leftOperandType) && (leftOperandType.isAssignableFrom(rightOperandType) || Number.class.isAssignableFrom(rightOperandType))	 || // money are comparable with each other and numbers
+		Number.class.isAssignableFrom(leftOperandType) && (Number.class.isAssignableFrom(rightOperandType) || Money.class.isAssignableFrom(rightOperandType)) || // the same, but in reverse order
+		(Date.class.isAssignableFrom(leftOperandType) || DateTime.class.isAssignableFrom(leftOperandType)) && (Date.class.isAssignableFrom(rightOperandType) || DateTime.class.isAssignableFrom(rightOperandType)) || // dates are comparable
+		Day.class.isAssignableFrom(leftOperandType) && rightOperand.getToken().category == EgTokenCategory.DAYS || // day literal is comparable only with DAYS function
+		leftOperand.getToken().category == EgTokenCategory.DAYS && Day.class.isAssignableFrom(rightOperandType) || // the same, but in reverse
+		Month.class.isAssignableFrom(leftOperandType) && rightOperand.getToken().category == EgTokenCategory.MONTHS || // month literal is comparable only with MONTHS function
+		leftOperand.getToken().category == EgTokenCategory.MONTHS && Month.class.isAssignableFrom(rightOperandType) || // the same, but in reverse
+		Year.class.isAssignableFrom(leftOperandType) && rightOperand.getToken().category == EgTokenCategory.YEARS || // year literal is comparable only with YEARS function
+		leftOperand.getToken().category == EgTokenCategory.YEARS && Year.class.isAssignableFrom(rightOperandType)) { // the same, but in reverse
 	    // the type of the comparison operation is always boolean
 	    node.setType(boolean.class);
 	} else if ((cat == EgTokenCategory.EQ || cat == EgTokenCategory.NE) && leftOperandType.isAssignableFrom(rightOperandType)) { // this basically checks whether some other types such as entities are being compared
@@ -708,7 +710,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 		    final BigDecimal value = new BigDecimal(leftOperand.getValue().toString()).add(new BigDecimal(rightOperand.getValue().toString()));
 		    return value;
 		} else if (Integer.class.isAssignableFrom(node.getType())) {
-		    final Integer value = new Integer(leftOperand.getValue().toString()) + (new Integer(rightOperand.getValue().toString()));
+		    final Integer value = new Integer(leftOperand.getValue().toString()) + new Integer(rightOperand.getValue().toString());
 		    return value;
 		} else if (String.class.isAssignableFrom(node.getType())) {
 		    final String value = "\"" + leftOperand.getValue().toString().replaceAll("\"", "") + rightOperand.getValue().toString().replaceAll("\"", "") + "\"";
@@ -729,7 +731,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 		    final BigDecimal value = new BigDecimal(leftOperand.getValue().toString()).subtract(new BigDecimal(rightOperand.getValue().toString()));
 		    return value;
 		} else if (Integer.class.isAssignableFrom(node.getType())) {
-		    final Integer value = new Integer(leftOperand.getValue().toString()) - (new Integer(rightOperand.getValue().toString()));
+		    final Integer value = new Integer(leftOperand.getValue().toString()) - new Integer(rightOperand.getValue().toString());
 		    return value;
 		} else if (Day.class.isAssignableFrom(node.getType())) {
 		    final Day value = new Day(((Day) leftOperand.getValue()).getValue() - ((Day) rightOperand.getValue()).getValue());
@@ -748,7 +750,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 		    final BigDecimal value = new BigDecimal(leftOperand.getValue().toString()).multiply(new BigDecimal(rightOperand.getValue().toString()));
 		    return value;
 		} else if (Integer.class.isAssignableFrom(node.getType())) {
-		    final Integer value = new Integer(leftOperand.getValue().toString()) * (new Integer(rightOperand.getValue().toString()));
+		    final Integer value = new Integer(leftOperand.getValue().toString()) * new Integer(rightOperand.getValue().toString());
 		    return value;
 		}
 		break;

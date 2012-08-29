@@ -67,8 +67,13 @@ public class ExpressionText2ModelConverter {
 	final CollectionalContextVisitor tv = new CollectionalContextVisitor(higherOrderType, contextProperty);
 	final TypeEnforcementVisitor tev = new TypeEnforcementVisitor(higherOrderType, contextProperty);
 	final ModelGeneratingVisitor mgv = new ModelGeneratingVisitor(higherOrderType, contextProperty);
-	// TODO
 	final AstNode node = new AstWalker(ast, epvv, lav, tv, tev, mgv).walk();
+	// if a root node has a condition model then it should be used for building an expression model for the root
+	// the expression model is used in query building -- not the condition model
+	if (node.getConditionModel() != null) {
+	    node.setModel(mgv.toExpressionModel(node.getConditionModel()));
+	}
+	// return the root node to the processed AST, which should now contain a complete computational model for the expression
 	return node;
     }
 }

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.expression.ast.visitor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionBetween;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
@@ -98,7 +99,12 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	case OR:
 	    node.setConditionModel(createLogicalModel(node));
 	    break;
-	case CASE: // no need to process WHEN as it will be consumed as part of CASE processing
+	case WHEN: // no need to process WHEN, ELSE and END nodes for model generation as it will be consumed as part of CASE processing
+	case ELSE:
+	case END:
+	    break;
+	case CASE:
+	    node.setModel(createCaseModel(node));
 	    break;
 	    // uno-operand aggregation functions
 	case AVG:
@@ -111,6 +117,25 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	default:
 	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
 	}
+    }
+
+    private ExpressionModel createCaseModel(final AstNode node) {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (cat != EgTokenCategory.CASE) {
+	    throw new IllegalArgumentException("CASE node is expected.");
+	}
+
+	// the case node should have n children where (n-1) represent WHEN clause, and the last n-th child is the ELSE result
+	// there should be at least one WHERE clause
+	final AstNode firstWhere = node.getChildren().get(0);
+	ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().caseWhen().condition(firstWhere.getChildren().get(0).getConditionModel()).then().val(firstWhere.getChildren().get(1).getValue());
+	for (int index = 1 /* exclude the first node */; index < node.getChildren().size() - 1 /* exclude the last node */; index++) {
+	    final AstNode where = node.getChildren().get(index);
+	    expr = expr.when().condition(where.getChildren().get(0).getConditionModel()).then().val(where.getChildren().get(1).getValue());
+	}
+	final AstNode elseNode = node.getChildren().get(node.getChildren().size() - 1);
+	final ExpressionModel model = expr.otherwise().val(elseNode.getValue()).end().model();
+	return model;
     }
 
     private ConditionModel createLogicalModel(final AstNode node) throws TypeCompatibilityException {
@@ -251,11 +276,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
      * @return
      */
     private ExpressionModel createLiteralModel(final AstNode node) {
-	if (node.getToken().category == EgTokenCategory.STRING) {
-	    final String origValue = node.getValue().toString();
-	    final String value = origValue.substring(1, origValue.length() - 1);
-	    return expr().val(value).model();
-	} else if (node.getToken().category == EgTokenCategory.DATE_CONST) {
+	if (node.getToken().category == EgTokenCategory.DATE_CONST) {
 	    return expr().val(((AbstractDateLiteral) node.getValue()).getValue()).model();
 	}
 	return expr().val(node.getValue()).model();
@@ -562,6 +583,16 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	}
 
 	return unoOperandModel(expr, node.getChildren().get(0)).model();
+    }
+
+    /**
+     * Produces an expression model for the passed in condition model.
+     * 
+     * @param conditionModel
+     * @return
+     */
+    public ExpressionModel toExpressionModel(final ConditionModel conditionModel) {
+	return expr().caseWhen().condition(conditionModel).then().val(true).otherwise().val(false).end().model();
     }
 
 }

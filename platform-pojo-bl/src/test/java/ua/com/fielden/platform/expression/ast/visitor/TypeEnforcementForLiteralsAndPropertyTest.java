@@ -53,7 +53,7 @@ public class TypeEnforcementForLiteralsAndPropertyTest {
 	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
 	new AstWalker(ast, visitor).walk();
 	assertEquals("Incorrect type.", String.class, ast.getType());
-	assertEquals("Incorrect value.", "\"word\"", ast.getValue());
+	assertEquals("Incorrect value.", "word", ast.getValue());
     }
 
     @Test

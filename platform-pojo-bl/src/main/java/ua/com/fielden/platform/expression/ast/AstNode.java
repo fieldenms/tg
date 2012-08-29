@@ -94,11 +94,11 @@ public class AstNode {
      * @return
      */
     public Class<?> getType() {
-        return type;
+	return type;
     }
 
     public void setType(final Class<?> type) {
-        this.type = type;
+	this.type = type;
     }
 
     /**
@@ -108,31 +108,31 @@ public class AstNode {
      * @return
      */
     public Object getValue() {
-        return value;
+	return value;
     }
 
     public void setValue(final Object value) {
-        this.value = value;
+	this.value = value;
     }
 
     public List<AstNode> getChildren() {
-        return Collections.unmodifiableList(children);
+	return Collections.unmodifiableList(children);
     }
 
     public Integer getLevel() {
-        return level;
+	return level;
     }
 
     public void setLevel(final Integer level) {
-        this.level = level;
+	this.level = level;
     }
 
     public String getTag() {
-        return tag;
+	return tag;
     }
 
     public void setTag(final String tag) {
-        this.tag = tag;
+	this.tag = tag;
     }
 
     public boolean hasValue() {
@@ -140,18 +140,19 @@ public class AstNode {
     }
 
     public ExpressionModel getModel() {
-        return model;
+	return model;
     }
 
-    public void setModel(final ExpressionModel model) {
-        this.model = model;
+    public AstNode setModel(final ExpressionModel model) {
+	this.model = model;
+	return this;
     }
 
     public ConditionModel getConditionModel() {
-        return conditionModel;
+	return conditionModel;
     }
 
     public void setConditionModel(final ConditionModel conditionModel) {
-        this.conditionModel = conditionModel;
+	this.conditionModel = conditionModel;
     }
 }
