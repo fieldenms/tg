@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionArgument;
@@ -7,6 +8,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.EgTokenCategory;
 import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
@@ -84,6 +86,20 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	case YEARS:
 	    node.setModel(createYearsFunctionModel(node));
 	    break;
+	case GT:
+	case LT:
+	case GE:
+	case LE:
+	case EQ:
+	case NE:
+	    node.setConditionModel(createComparisonModel(node));
+	    break;
+	case AND:
+	case OR:
+	    node.setConditionModel(createLogicalModel(node));
+	    break;
+	case CASE: // no need to process WHEN as it will be consumed as part of CASE processing
+	    break;
 	    // uno-operand aggregation functions
 	case AVG:
 	case SUM:
@@ -96,6 +112,121 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
 	}
     }
+
+    private ConditionModel createLogicalModel(final AstNode node) throws TypeCompatibilityException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+
+	final AstNode left = node.getChildren().get(0);
+	final AstNode right = node.getChildren().get(1);
+
+	switch (cat) {
+	case AND:
+	    return cond().condition(left.getConditionModel()).and().condition(right.getConditionModel()).model();
+	case OR:
+	    return cond().condition(left.getConditionModel()).or().condition(right.getConditionModel()).model();
+	default:
+	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
+	}
+    }
+
+    private ConditionModel createComparisonModel(final AstNode node) throws TypeCompatibilityException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+
+	final AstNode left = node.getChildren().get(0);
+	final AstNode right = node.getChildren().get(1);
+
+	switch (cat) {
+	case GT:
+	    if (left.getModel() != null && !left.getModel().containsSingleValueToken()) {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().expr(left.getModel()).gt().expr(right.getModel()).model();
+		} else {
+		    return cond().expr(left.getModel()).gt().val(right.getValue()).model();
+		}
+	    } else {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().val(left.getValue()).gt().expr(right.getModel()).model();
+		} else {
+		    return cond().val(left.getValue()).gt().val(right.getValue()).model();
+		}
+	    }
+	case LT:
+	    if (left.getModel() != null && !left.getModel().containsSingleValueToken()) {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().expr(left.getModel()).lt().expr(right.getModel()).model();
+		} else {
+		    return cond().expr(left.getModel()).lt().val(right.getValue()).model();
+		}
+	    } else {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().val(left.getValue()).lt().expr(right.getModel()).model();
+		} else {
+		    return cond().val(left.getValue()).lt().val(right.getValue()).model();
+		}
+	    }
+	case GE:
+	    if (left.getModel() != null && !left.getModel().containsSingleValueToken()) {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().expr(left.getModel()).ge().expr(right.getModel()).model();
+		} else {
+		    return cond().expr(left.getModel()).ge().val(right.getValue()).model();
+		}
+	    } else {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().val(left.getValue()).ge().expr(right.getModel()).model();
+		} else {
+		    return cond().val(left.getValue()).ge().val(right.getValue()).model();
+		}
+	    }
+	case LE:
+	    if (left.getModel() != null && !left.getModel().containsSingleValueToken()) {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().expr(left.getModel()).le().expr(right.getModel()).model();
+		} else {
+		    return cond().expr(left.getModel()).le().val(right.getValue()).model();
+		}
+	    } else {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().val(left.getValue()).le().expr(right.getModel()).model();
+		} else {
+		    return cond().val(left.getValue()).le().val(right.getValue()).model();
+		}
+	    }
+	case EQ:
+	    if (left.getModel() != null && !left.getModel().containsSingleValueToken()) {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().expr(left.getModel()).eq().expr(right.getModel()).model();
+		} else {
+		    return cond().expr(left.getModel()).eq().val(right.getValue()).model();
+		}
+	    } else {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().val(left.getValue()).eq().expr(right.getModel()).model();
+		} else {
+		    return cond().val(left.getValue()).eq().val(right.getValue()).model();
+		}
+	    }
+	case NE:
+	    if (left.getModel() != null && !left.getModel().containsSingleValueToken()) {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().expr(left.getModel()).ne().expr(right.getModel()).model();
+		} else {
+		    return cond().expr(left.getModel()).ne().val(right.getValue()).model();
+		}
+	    } else {
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().val(left.getValue()).ne().expr(right.getModel()).model();
+		} else {
+		    return cond().val(left.getValue()).ne().val(right.getValue()).model();
+		}
+	    }
+	default:
+	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
+	}
+    }
+
+
+
 
     private ExpressionModel createNowModel(final AstNode node) {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());

@@ -166,10 +166,11 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	    (leftOperand.getToken().category == EgTokenCategory.YEARS && Year.class.isAssignableFrom(rightOperandType))) { // the same, but in reverse
 	    // the type of the comparison operation is always boolean
 	    node.setType(boolean.class);
+	} else if ((cat == EgTokenCategory.EQ || cat == EgTokenCategory.NE) && leftOperandType.isAssignableFrom(rightOperandType)) { // this basically checks whether some other types such as entities are being compared
+	    node.setType(boolean.class);
 	} else {
 	    throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());
 	}
-
     }
 
     private void processLogicalOperator(final AstNode node) throws SemanticException {

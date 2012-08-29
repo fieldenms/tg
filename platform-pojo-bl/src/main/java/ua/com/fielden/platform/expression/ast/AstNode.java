@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.Token;
 import ua.com.fielden.platform.expression.exception.MisplacedTokenException;
@@ -23,6 +24,7 @@ public class AstNode {
     private Integer level;
     private String tag;
     private ExpressionModel model;
+    private ConditionModel conditionModel;
 
     public AstNode(final Token token) {
 	if (token == null) {
@@ -143,5 +145,13 @@ public class AstNode {
 
     public void setModel(final ExpressionModel model) {
         this.model = model;
+    }
+
+    public ConditionModel getConditionModel() {
+        return conditionModel;
+    }
+
+    public void setConditionModel(final ConditionModel conditionModel) {
+        this.conditionModel = conditionModel;
     }
 }

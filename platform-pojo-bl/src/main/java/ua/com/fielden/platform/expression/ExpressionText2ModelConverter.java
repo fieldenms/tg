@@ -67,6 +67,7 @@ public class ExpressionText2ModelConverter {
 	final CollectionalContextVisitor tv = new CollectionalContextVisitor(higherOrderType, contextProperty);
 	final TypeEnforcementVisitor tev = new TypeEnforcementVisitor(higherOrderType, contextProperty);
 	final ModelGeneratingVisitor mgv = new ModelGeneratingVisitor(higherOrderType, contextProperty);
+	// TODO
 	final AstNode node = new AstWalker(ast, epvv, lav, tv, tev, mgv).walk();
 	return node;
     }
