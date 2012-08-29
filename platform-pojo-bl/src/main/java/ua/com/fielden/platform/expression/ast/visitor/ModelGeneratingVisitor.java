@@ -42,6 +42,9 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	case DATE:
 	    node.setModel(createLiteralModel(node));
 	    break;
+	case NOW:
+	    node.setModel(createNowModel(node));
+	    break;
 	    // property types
 	case NAME:
 	    node.setModel(createPropertyModel(node));
@@ -63,14 +66,23 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	case YEAR:
 	    node.setModel(createDateFunctionModel(node));
 	    break;
-	    // uno-operand string type functions
+	    // uno-operand date type functions
 	case UPPER:
 	case LOWER:
 	    node.setModel(createStringFunctionModel(node));
 	    break;
 	    // bi-operand date type functions
-	case DAY_DIFF:
+	case DAY_DIFF: // TODO to be removed as deprecated
 	    node.setModel(createDayDiffFunctionModel(node));
+	    break;
+	case DAYS:
+	    node.setModel(createDaysFunctionModel(node));
+	    break;
+	case MONTHS:
+	    node.setModel(createMonthsFunctionModel(node));
+	    break;
+	case YEARS:
+	    node.setModel(createYearsFunctionModel(node));
 	    break;
 	    // uno-operand aggregation functions
 	case AVG:
@@ -83,6 +95,14 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	default:
 	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
 	}
+    }
+
+    private ExpressionModel createNowModel(final AstNode node) {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (cat != EgTokenCategory.NOW) {
+	    throw new IllegalArgumentException("Only NOW nodes are permitted.");
+	}
+	return expr().now().model();
     }
 
     private ExpressionModel createPropertyModel(final AstNode node) {
@@ -272,7 +292,110 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	    exprWithOperand1 = leftOperand.getModel() != null ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
 	}
 
+	return exprWithOperand1.model();
+    }
 
+    private ExpressionModel createDaysFunctionModel(final AstNode node) throws TypeCompatibilityException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (cat != EgTokenCategory.DAYS) {
+	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
+	}
+
+	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().count().days().between();
+
+	// identify left operand expression model
+	final AstNode leftOperand = node.getChildren().get(0);
+	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose, AbstractEntity<?>> exprWithOperand;
+
+	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
+	if (cat1 == EgTokenCategory.NAME) {
+	    exprWithOperand =  expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
+	} else {
+	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
+	}
+
+	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
+
+	// identify right operand expression model
+	final AstNode rightOperand = node.getChildren().get(1);
+	final IStandAloneExprOperationAndClose exprWithOperand1;
+
+	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
+	if (cat2 == EgTokenCategory.NAME) {
+	    exprWithOperand1 =  andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
+	} else {
+	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
+	}
+
+	return exprWithOperand1.model();
+    }
+
+    private ExpressionModel createMonthsFunctionModel(final AstNode node) throws TypeCompatibilityException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (cat != EgTokenCategory.MONTHS) {
+	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
+	}
+
+	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().count().months().between();
+
+	// identify left operand expression model
+	final AstNode leftOperand = node.getChildren().get(0);
+	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose, AbstractEntity<?>> exprWithOperand;
+
+	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
+	if (cat1 == EgTokenCategory.NAME) {
+	    exprWithOperand =  expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
+	} else {
+	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
+	}
+
+	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
+
+	// identify right operand expression model
+	final AstNode rightOperand = node.getChildren().get(1);
+	final IStandAloneExprOperationAndClose exprWithOperand1;
+
+	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
+	if (cat2 == EgTokenCategory.NAME) {
+	    exprWithOperand1 =  andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
+	} else {
+	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
+	}
+
+	return exprWithOperand1.model();
+    }
+
+    private ExpressionModel createYearsFunctionModel(final AstNode node) throws TypeCompatibilityException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (cat != EgTokenCategory.YEARS) {
+	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
+	}
+
+	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().count().years().between();
+
+	// identify left operand expression model
+	final AstNode leftOperand = node.getChildren().get(0);
+	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose, AbstractEntity<?>> exprWithOperand;
+
+	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
+	if (cat1 == EgTokenCategory.NAME) {
+	    exprWithOperand =  expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
+	} else {
+	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
+	}
+
+	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
+
+	// identify right operand expression model
+	final AstNode rightOperand = node.getChildren().get(1);
+	final IStandAloneExprOperationAndClose exprWithOperand1;
+
+	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
+	if (cat2 == EgTokenCategory.NAME) {
+	    exprWithOperand1 =  andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
+	} else {
+	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
+	}
 
 	return exprWithOperand1.model();
     }
