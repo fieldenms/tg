@@ -6,7 +6,7 @@ import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
 public class State13_Day extends AbstractState {
 
     public State13_Day() {
-	super("S12", false);
+	super("S13", false);
     }
 
     @Override

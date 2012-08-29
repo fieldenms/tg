@@ -197,4 +197,25 @@ public class TypeEnforcementForLogicalExpressionsAndCaseWhenWithDateFunctionsTes
 	}
     }
 
+    @Test
+    public void test_type_determination_for_logical_expression_with_date_literal() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("dateProperty > '2012-02-28'").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+	new AstWalker(ast, visitor).walk();
+	assertEquals("Incorrect type.", boolean.class, ast.getType());
+	assertNull("Incorrect value.", ast.getValue());
+    }
+
+    @Test
+    public void test_type_determination_for_logical_expression_with_date_literal_and_function() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("days(dateProperty, '2012-02-28') < 2d").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+	new AstWalker(ast, visitor).walk();
+	assertEquals("Incorrect type.", boolean.class, ast.getType());
+	assertNull("Incorrect value.", ast.getValue());
+    }
 }

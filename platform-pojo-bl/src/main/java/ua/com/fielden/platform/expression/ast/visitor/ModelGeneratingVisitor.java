@@ -39,6 +39,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	case DECIMAL:
 	case STRING:
 	case DATE_CONST:
+	case DATE:
 	    node.setModel(createLiteralModel(node));
 	    break;
 	    // property types
@@ -104,7 +105,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	    final String value = origValue.substring(1, origValue.length() - 1);
 	    return expr().val(value).model();
 	} else if (node.getToken().category == EgTokenCategory.DATE_CONST) {
-	    return expr().val(((AbstractDateLiteral)node.getValue()).getValue()).model();
+	    return expr().val(((AbstractDateLiteral) node.getValue()).getValue()).model();
 	}
 	return expr().val(node.getValue()).model();
     }

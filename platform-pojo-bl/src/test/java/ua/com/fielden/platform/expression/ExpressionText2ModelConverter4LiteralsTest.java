@@ -4,7 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
+import org.joda.time.format.DateTimeFormat;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -85,6 +87,26 @@ public class ExpressionText2ModelConverter4LiteralsTest {
 	assertEquals("Incorrect expression type", Year.class, root.getType());
 
 	final ExpressionModel model = expr().val(23).model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void expression_should_be_recognised_as_valmodel_for_date() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "'2012-08-29'");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Date.class, root.getType());
+
+	final ExpressionModel model = expr().val(DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime("2012-08-29").toDate()).model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void expression_should_be_recognised_as_valmodel_for_date_time() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "'2012-08-29 10:00:00'");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Date.class, root.getType());
+
+	final ExpressionModel model = expr().val(DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss").parseDateTime("2012-08-29 10:00:00").toDate()).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
 

@@ -425,6 +425,7 @@ public class ExpressionParser {
 	case DECIMAL:
 	case STRING:
 	case DATE_CONST:
+	case DATE:
 	    return match_literal(cat);
 	    // trying to match property rule
 	case SELF:

@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.expression.EgTokenCategory;
@@ -59,6 +61,9 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	    node.setValue(node.getToken().text);
 	    break;
 	case DATE_CONST:
+	    processDateConstantToken(node);
+	    break;
+	case DATE:
 	    processDateLiteralToken(node);
 	    break;
 	case SELF:
@@ -758,12 +763,12 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
     }
 
     /**
-     * Processes date literal token in order to update the node with correct type and value.
+     * Processes DATE_CONST token in order to update the node with correct type and value.
      *
      * @param node
      * @throws TypeCompatibilityException
      */
-    private void processDateLiteralToken(final AstNode node) throws TypeCompatibilityException {
+    private void processDateConstantToken(final AstNode node) throws TypeCompatibilityException {
 	final String text = node.getToken().text;
 	final String valueText = text.substring(0, text.length() - 1);
 	if (text.endsWith(DateLiteral.DAY.discriminator)) {
@@ -778,6 +783,29 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	} else {
 	    throw new TypeCompatibilityException("Value " + node.getToken().text + " could not be type casted to any of the date literal types.", node.getToken());
 	}
+    }
+
+
+    /**
+     * Processes DATE token in order to update the node with correct type and value.
+     *
+     * @param node
+     * @throws TypeCompatibilityException
+     */
+    private void processDateLiteralToken(final AstNode node) {
+	final String pureDateStr = node.getToken().text.replace("'", "");
+	final DateTime date;
+	// let's now check if we can covert recognised sequence to date
+	if (pureDateStr.split(" ").length == 2) { // has time portion
+	    final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+	    date = formatter.parseDateTime(pureDateStr);
+	} else { // has only the date portion
+	    final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd");
+	    date = formatter.parseDateTime(pureDateStr);
+	}
+
+	node.setType(Date.class);
+	node.setValue(date.toDate());
     }
 
 }
