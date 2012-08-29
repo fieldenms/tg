@@ -56,7 +56,7 @@ public class TypeEnforcementForLogicalExpressionsAndCaseWhenWithDateFunctionsTes
     }
 
     @Test
-    public void test_type_determination_for_comparison_expression_with_DAYS_function_and_day_literal() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+    public void it_should_be_possible_to_compare_DAYS_with_a_day_literal() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("days(dateProp, now) > 10d").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
@@ -67,7 +67,7 @@ public class TypeEnforcementForLogicalExpressionsAndCaseWhenWithDateFunctionsTes
     }
 
     @Test
-    public void test_type_determination_for_comparison_expression_with_DAYS_function_and_month_literal() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+    public void it_should_not_be_possible_to_compare_DAYS_with_a_month_literal() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("days(dateProp, now) > 10m").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
@@ -78,6 +78,18 @@ public class TypeEnforcementForLogicalExpressionsAndCaseWhenWithDateFunctionsTes
 	} catch (final UnsupportedTypeException ex) {
 	}
     }
+
+    @Test
+    public void it_should_be_possible_to_compare_DAYS_with_a_number() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("days(dateProp, now) > 10.5").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(MasterEntityWithOneToManyAssociation.class);
+	new AstWalker(ast, visitor).walk();
+	assertEquals("Incorrect type.", boolean.class, ast.getType());
+	assertNull("Incorrect value.", ast.getValue());
+    }
+
 
     @Test
     public void test_type_determination_for_AVG_DAYS_function() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
