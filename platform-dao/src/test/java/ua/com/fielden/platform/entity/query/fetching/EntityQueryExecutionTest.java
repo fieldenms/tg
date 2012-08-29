@@ -16,8 +16,10 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -113,20 +115,25 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).model());
 
 
-	final ConditionModel c1 = cond().prop("aaa").isNull().model();
+	final ConditionModel c1 = cond().prop("aaa").eq().val(111).or().prop("bbb").isNotNull().model();
 	final List<Pair<TokenCategory, Object>> expected = new ArrayList<>();
 	expected.add(new Pair(TokenCategory.PROP, "aaa"));
-	expected.add(new Pair(TokenCategory.NULL_OPERATOR, false));
-
-
+	expected.add(new Pair(TokenCategory.COMPARISON_OPERATOR, ComparisonOperator.EQ));
+	expected.add(new Pair(TokenCategory.VAL, 111));
+	expected.add(new Pair(TokenCategory.LOGICAL_OPERATOR, LogicalOperator.OR));
+	expected.add(new Pair(TokenCategory.PROP, "bbb"));
+	expected.add(new Pair(TokenCategory.NULL_OPERATOR, true));
 	assertEquals(expected, c1.getTokens());
-
-//	cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model();
+	System.out.println(
+		cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model().getTokens()
+);
     }
 
     @Ignore
     @Test
     public void test_query_query_with_grouping_and_aggregation1() {
+	cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model();
+
 	final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).as("AAA").where().prop("make.key").eq().val("AA").model();
 	final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(qry).model());
     }

@@ -4,10 +4,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
 
 abstract class AbstractWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<? extends IWhere<T1, T2, T3, ET>>, T3, ET extends AbstractEntity<?>> //
-extends AbstractConditionalOperand<T1, T2, ET> //
+extends AbstractWhereWithoutNesting<T1, T2, ET> //
 implements IWhere<T1, T2, T3, ET> {
 
     AbstractWhere(final Tokens queryTokens) {
@@ -33,9 +32,5 @@ implements IWhere<T1, T2, T3, ET> {
     @Override
     public T3 notBegin() {
 	return getBeginCondition().notBegin();
-    }
-
-    public T2 condition(final ConditionModel condition) {
-	return copy(getParent2(), getTokens().cond(condition));
     }
 }

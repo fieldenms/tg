@@ -307,10 +307,20 @@ public interface EntityQueryProgressiveInterfaces {
         AggregatedResultQueryModel modelAsAggregate();
     }
 
+//    interface IWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, T3, ET extends AbstractEntity<?>> //
+//    extends IComparisonOperand<T1, ET>, //
+//    /*    */IExistenceOperator<T2>, //
+//    /*    */IBeginCondition<T3> {
+//        T2 condition(ConditionModel condition);
+//    }
     interface IWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, T3, ET extends AbstractEntity<?>> //
-    extends IComparisonOperand<T1, ET>, //
-    /*    */IExistenceOperator<T2>, //
+    extends IWhereWithoutNesting<T1, T2, ET>, //
     /*    */IBeginCondition<T3> {
+    }
+
+    interface IWhereWithoutNesting<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
+    extends IComparisonOperand<T1, ET>, //
+    /*    */IExistenceOperator<T2> {
         T2 condition(ConditionModel condition);
     }
 
@@ -593,7 +603,7 @@ public interface EntityQueryProgressiveInterfaces {
     extends IExprOperand<IConcatFunctionWith<T, ET>, IExprOperand0<IConcatFunctionWith<T, ET>, ET>, ET> {
     }
 
-    //----------------------------------------------------------------------------------------------------------------------------------------------
+    /////////////////////////////////////////////////////---STAND-ALONE EXPRESSION ---///////////////////////////////////////////////////
     interface IStandAloneExprOperationAndClose //
     extends IArithmeticalOperator<IStandAloneExprOperand> {
 	ExpressionModel model();
@@ -603,11 +613,9 @@ public interface EntityQueryProgressiveInterfaces {
     extends IYieldOperand<IStandAloneExprOperationAndClose, AbstractEntity<?>> {
     }
 
-    //----------------------------------------------------------------------------------------------------------------------------------------------
+    /////////////////////////////////////////////////////---STAND-ALONE CONDITION ---///////////////////////////////////////////////////
     interface IStandAloneConditionOperand<ET extends AbstractEntity<?>> //
-    extends IComparisonOperand<IStandAloneConditionComparisonOperator<ET>, ET>, //
-    /*    */IExistenceOperator<IStandAloneConditionCompoundCondition<ET>>{
-	IStandAloneConditionCompoundCondition<ET> condition(ConditionModel condition);
+    extends IWhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET>{
     }
 
     interface IStandAloneConditionCompoundCondition<ET extends AbstractEntity<?>> //
@@ -619,7 +627,7 @@ public interface EntityQueryProgressiveInterfaces {
     extends IComparisonOperator<IStandAloneConditionCompoundCondition<ET>, ET> {
     }
 
-    //----------------------------------------------------------------------------------------------------------------------------------------------
+    /////////////////////////////////////////////////////---ORDER BY ---///////////////////////////////////////////////////
     interface ISingleOperandOrderable //
     extends IOrder<IOrderingItemCloseable> {
     }
