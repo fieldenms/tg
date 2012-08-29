@@ -159,7 +159,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	    (leftOperand.getToken().category == EgTokenCategory.MONTHS && Month.class.isAssignableFrom(rightOperandType)) || // the same, but in reverse
 	    (Year.class.isAssignableFrom(leftOperandType) && rightOperand.getToken().category == EgTokenCategory.YEARS) || // year literal is comparable only with YEARS function
 	    (leftOperand.getToken().category == EgTokenCategory.YEARS && Year.class.isAssignableFrom(rightOperandType))) { // the same, but in reverse
-	    // the type of the operation should be the lease restrictive type of its operands
+	    // the type of the comparison operation is always boolean
 	    node.setType(boolean.class);
 	} else {
 	    throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());

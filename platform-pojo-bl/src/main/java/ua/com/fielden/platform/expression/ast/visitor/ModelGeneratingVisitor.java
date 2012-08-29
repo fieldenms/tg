@@ -38,6 +38,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	case DECIMAL:
 	case STRING:
 	case DATE_CONST:
+	    node.setModel(createLiteralModel(node));
 	    break;
 	    // property types
 	case NAME:
@@ -89,6 +90,22 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	}
 	return expr().prop(relative2AbsoluteInverted(node.getToken().text)).model();
     }
+
+    /**
+     * Creates value model for literals. Has special processing for STRING to remove leading and trailing double quote.
+     *
+     * @param node
+     * @return
+     */
+    private ExpressionModel createLiteralModel(final AstNode node) {
+	if (node.getToken().category == EgTokenCategory.STRING) {
+	    final String origValue = node.getValue().toString();
+	    final String value = origValue.substring(1, origValue.length() - 1);
+	    return expr().val(value).model();
+	}
+	return expr().val(node.getValue()).model();
+    }
+
 
     /**
      * The model for keyword SELF is not really needed as it can be used only in the context of function COUNT that
@@ -188,7 +205,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	if (cat == EgTokenCategory.NAME) {
 	    return expr.prop(relative2AbsoluteInverted(operand.getToken().text));
 	} else {
-	    return operand.getModel() != null ? expr.expr(operand.getModel()) : expr.val(operand.getValue());
+	    return operand.getModel() != null && !operand.getModel().containsSingleValueToken() ? expr.expr(operand.getModel()) : expr.val(operand.getValue());
 	}
     }
 
