@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,8 +18,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -62,11 +65,13 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.Pair;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
@@ -98,8 +103,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_query_query_with_grouping_and_subproperties() {
-	final AggregatedResultQueryModel qry1 = select(TgVehicleModel.class).where().condition(1).or().allOfProps("1","@").ge().val(222).and(). //
-		condition(11).and().begin().condition("aaa").end().and().beginExpr().caseWhen().condition("a").then().now().when().condition("2").then().val(1).end().endExpr().isNotNull().modelAsAggregate();
+	final AggregatedResultQueryModel qry1 = select(TgVehicleModel.class).where().condition(null).or().allOfProps("1","@").ge().val(222).and(). //
+		condition(null).and().begin().condition(null).end().and().beginExpr().caseWhen().condition(null).then().now().when().condition(null).then().val(1).end().endExpr().isNotNull().modelAsAggregate();
 
 	final AggregatedResultQueryModel qry = select(TgVehicleModel.class).
 		groupBy().prop("make"). //
@@ -107,8 +112,16 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 		yield().prop("make.key").as("key").modelAsAggregate();
 	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).model());
 
-//	final IStandAloneConditionOperand a = null;
-//	a.beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model();
+
+	final ConditionModel c1 = cond().prop("aaa").isNull().model();
+	final List<Pair<TokenCategory, Object>> expected = new ArrayList<>();
+	expected.add(new Pair(TokenCategory.PROP, "aaa"));
+	expected.add(new Pair(TokenCategory.NULL_OPERATOR, false));
+
+
+	assertEquals(expected, c1.getTokens());
+
+//	cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model();
     }
 
     @Ignore

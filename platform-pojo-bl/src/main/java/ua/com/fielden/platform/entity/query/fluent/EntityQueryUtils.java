@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -28,6 +29,10 @@ public class EntityQueryUtils {
 
     public static IStandAloneExprOperand expr() {
 	return new StandAloneExpOperand(new Tokens());
+    }
+
+    public static IStandAloneConditionOperand cond() {
+	return new StandAloneConditionOperand(new Tokens());
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

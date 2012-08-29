@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
@@ -181,6 +182,10 @@ final class Tokens {
 
     public Tokens expr(final ExpressionModel exprModel) {
 	return add(TokenCategory.EXPR_TOKENS, exprModel);
+    }
+
+    public Tokens cond(final ConditionModel conditionModel) {
+	return add(TokenCategory.COND_TOKENS, conditionModel);
     }
 
     public Tokens entity(final String entityAlias) {

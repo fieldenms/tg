@@ -117,7 +117,7 @@ public interface EntityQueryProgressiveInterfaces {
         T allOfValues(Object... values);
         T allOfParams(String... paramNames);
         T allOfModels(PrimitiveResultQueryModel... models);
-        T allOfExpressions(ExpressionModel... Expressions);
+        T allOfExpressions(ExpressionModel... expressions);
     }
 
     interface IComparisonOperand<T, ET extends AbstractEntity<?>> //
@@ -311,7 +311,7 @@ public interface EntityQueryProgressiveInterfaces {
     extends IComparisonOperand<T1, ET>, //
     /*    */IExistenceOperator<T2>, //
     /*    */IBeginCondition<T3> {
-        T2 condition(Object condition);
+        T2 condition(ConditionModel condition);
     }
 
     interface ICompoundCondition<T1, T2> //
@@ -438,7 +438,8 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     interface IFunctionWhere3<T, ET extends AbstractEntity<?>> //
-    extends IComparisonOperand<IFunctionComparisonOperator3<T, ET>, ET>, IExistenceOperator<IFunctionCompoundCondition3<T, ET>> {
+    extends IComparisonOperand<IFunctionComparisonOperator3<T, ET>, ET>, //
+    /*    */IExistenceOperator<IFunctionCompoundCondition3<T, ET>> {
     }
 
     //-------------------------------------------
@@ -594,36 +595,28 @@ public interface EntityQueryProgressiveInterfaces {
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
     interface IStandAloneExprOperationAndClose //
-    extends IArithmeticalOperator<IStandAloneExprOperand>, //
-    /*    */IStandAloneExprCompleted {
+    extends IArithmeticalOperator<IStandAloneExprOperand> {
+	ExpressionModel model();
     }
 
     interface IStandAloneExprOperand //
     extends IYieldOperand<IStandAloneExprOperationAndClose, AbstractEntity<?>> {
     }
 
-    interface IStandAloneExprCompleted {
-        ExpressionModel model();
+    //----------------------------------------------------------------------------------------------------------------------------------------------
+    interface IStandAloneConditionOperand //
+    extends IComparisonOperand<IStandAloneConditionComparisonOperator, AbstractEntity<?>>, //
+    /*    */IExistenceOperator<IStandAloneConditionCompoundCondition>{
+	IStandAloneConditionCompoundCondition condition(ConditionModel condition);
     }
 
-    //----------------------------------------------------------------------------------------------------------------------------------------------
-    interface IStandAloneConditionCompleted {
+    interface IStandAloneConditionCompoundCondition //
+    extends ILogicalOperator<IStandAloneConditionOperand> {
 	ConditionModel model();
     }
 
-    interface IStandAloneConditionOperand //
-    extends IComparisonOperand<IComparisonOperatorA0, AbstractEntity<?>>, //
-    /*    */IExistenceOperator<ICompoundConditionA0>{
-	ICompoundConditionA0 condition(Object condition);
-    }
-
-    interface ICompoundConditionA0 //
-    extends ILogicalOperator<IStandAloneConditionOperand>, //
-    /*    */IStandAloneConditionCompleted {
-    }
-
-    interface IComparisonOperatorA0 //
-    extends IComparisonOperator<ICompoundConditionA0, AbstractEntity<?>> {
+    interface IStandAloneConditionComparisonOperator //
+    extends IComparisonOperator<IStandAloneConditionCompoundCondition, AbstractEntity<?>> {
     }
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
