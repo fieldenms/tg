@@ -330,6 +330,16 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    public void test_calculated_entity_props_in_condition2a() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).leftJoin(TgFuelUsage.class).as("lastFuelUsage").on().condition(cond().prop("lastFuelUsage").eq().prop("lastFuelUsage.id").model()).where().condition(cond().prop("lastFuelUsage.qty").gt().val(100).model()).model();
+	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).model());
+	assertEquals("Incorrect count", 1, vehicles.size());
+	final TgVehicle vehicle = vehicles.get(0);
+	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+
+    }
+
+    @Test
     public void test0_0() {
 	final AggregatedResultQueryModel model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").yield().prop("lastFuelUsageQty").as("lq").modelAsAggregate();
 	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).model());

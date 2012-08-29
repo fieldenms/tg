@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.Now;
 import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSet;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.utils.Pair;
@@ -124,10 +125,8 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 		setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value));
 		break;
 	    case COND_TOKENS: //
+		tokens.add(new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value).getModel()));
 		break;
-		//setChild(new ConditionsBuilder(this, queryBuilder, getParamValues()));
-		//return (ISingleOperand) new StandAloneExpressionBuilder(queryBuilder, getParamValues(), (ExpressionModel) value).getResult().getValue();
-
 	    case LOGICAL_OPERATOR:
 		setChild(new CompoundConditionBuilder(this, queryBuilder, getParamValues(), cat, value));
 		break;
