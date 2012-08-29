@@ -604,19 +604,19 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
-    interface IStandAloneConditionOperand //
-    extends IComparisonOperand<IStandAloneConditionComparisonOperator, AbstractEntity<?>>, //
-    /*    */IExistenceOperator<IStandAloneConditionCompoundCondition>{
-	IStandAloneConditionCompoundCondition condition(ConditionModel condition);
+    interface IStandAloneConditionOperand<ET extends AbstractEntity<?>> //
+    extends IComparisonOperand<IStandAloneConditionComparisonOperator<ET>, ET>, //
+    /*    */IExistenceOperator<IStandAloneConditionCompoundCondition<ET>>{
+	IStandAloneConditionCompoundCondition<ET> condition(ConditionModel condition);
     }
 
-    interface IStandAloneConditionCompoundCondition //
-    extends ILogicalOperator<IStandAloneConditionOperand> {
+    interface IStandAloneConditionCompoundCondition<ET extends AbstractEntity<?>> //
+    extends ILogicalOperator<IStandAloneConditionOperand<ET>> {
 	ConditionModel model();
     }
 
-    interface IStandAloneConditionComparisonOperator //
-    extends IComparisonOperator<IStandAloneConditionCompoundCondition, AbstractEntity<?>> {
+    interface IStandAloneConditionComparisonOperator<ET extends AbstractEntity<?>> //
+    extends IComparisonOperator<IStandAloneConditionCompoundCondition<ET>, ET> {
     }
 
     //----------------------------------------------------------------------------------------------------------------------------------------------

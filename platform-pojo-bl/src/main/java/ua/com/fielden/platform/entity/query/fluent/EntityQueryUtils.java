@@ -31,8 +31,8 @@ public class EntityQueryUtils {
 	return new StandAloneExpOperand(new Tokens());
     }
 
-    public static IStandAloneConditionOperand cond() {
-	return new StandAloneConditionOperand(new Tokens());
+    public static <ET extends AbstractEntity<?>> IStandAloneConditionOperand<ET> cond() {
+	return new StandAloneConditionOperand<ET>(new Tokens());
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
