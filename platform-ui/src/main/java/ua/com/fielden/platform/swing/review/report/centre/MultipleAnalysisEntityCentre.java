@@ -552,6 +552,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)tabPanel.getComponentAt(index);
 	analysis.getModel().setAnalysisVisible(false);
 	tabPanel.removeTabAt(index);
+	analysis.close();
 	return analysis;
     }
 
@@ -589,7 +590,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     @SuppressWarnings("unchecked")
     private GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createGridAnalysis(){
 	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>)getModel().getAnalysisBuilder()//
-		.createAnalysis(null, null, this, getModel().getCriteria(), getReviewProgressLayer());
+		.createAnalysis(null, null, getOwner().getDetailsCache(null), this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     /**
@@ -601,7 +602,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     @SuppressWarnings("unchecked")
     private ChartAnalysisConfigurationView<T> createChartAnalysis(final String name) {
 	return (ChartAnalysisConfigurationView<T>) getModel().getAnalysisBuilder()//
-		.createAnalysis(AnalysisType.SIMPLE, name, this, getModel().getCriteria(), getReviewProgressLayer());
+		.createAnalysis(AnalysisType.SIMPLE, name, getOwner().getDetailsCache(name), this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     /**
@@ -613,7 +614,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     @SuppressWarnings("unchecked")
     private ChartAnalysisConfigurationView<T> createSentinelChartAnalysis(final String name) {
 	return (ChartAnalysisConfigurationView<T>) getModel().getAnalysisBuilder()//
-		.createAnalysis(AnalysisType.SENTINEL, name, this, getModel().getCriteria(), getReviewProgressLayer());
+		.createAnalysis(AnalysisType.SENTINEL, name, getOwner().getDetailsCache(name), this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     /**
@@ -625,7 +626,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     @SuppressWarnings("unchecked")
     private PivotAnalysisConfigurationView<T> createPivotAnalysis(final String name){
 	return (PivotAnalysisConfigurationView<T>) getModel().getAnalysisBuilder()//
-		.createAnalysis(AnalysisType.PIVOT, name, this, getModel().getCriteria(), getReviewProgressLayer());
+		.createAnalysis(AnalysisType.PIVOT, name, getOwner().getDetailsCache(name), this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     /**

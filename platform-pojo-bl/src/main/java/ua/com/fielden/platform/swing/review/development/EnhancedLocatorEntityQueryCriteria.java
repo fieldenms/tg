@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.utils.Pair;
@@ -29,9 +31,10 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 
     private static final long serialVersionUID = -9199540944743417928L;
 
+    @SuppressWarnings("rawtypes")
     @Inject
-    public EnhancedLocatorEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory) {
-	super(valueMatcherFactory);
+    public EnhancedLocatorEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory,final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser) {
+	super(valueMatcherFactory,generatedEntityController, serialiser);
     }
 
     @SuppressWarnings("unchecked")

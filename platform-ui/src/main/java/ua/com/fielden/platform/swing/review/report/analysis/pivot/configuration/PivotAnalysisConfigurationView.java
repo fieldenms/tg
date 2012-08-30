@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
@@ -17,8 +20,8 @@ public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends
 
     private static final long serialVersionUID = -1464413279095086886L;
 
-    public PivotAnalysisConfigurationView(final PivotAnalysisConfigurationModel<T> model, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, owner, progressLayer);
+    public PivotAnalysisConfigurationView(final PivotAnalysisConfigurationModel<T> model, final Map<Object, DetailsFrame> detailsCache, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, final BlockingIndefiniteProgressLayer progressLayer) {
+	super(model, detailsCache, owner, progressLayer);
 	addOpenEventListener(createOpenAnalysisEventListener());
     }
 

@@ -11,6 +11,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
@@ -140,10 +141,11 @@ public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> implements I
     public AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?, ?> createAnalysis(//
 	    final AnalysisType analysisType, //
 	    final String name, //
+	    final Map<Object, DetailsFrame> detailsCache,//
 	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
 	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
 	    final BlockingIndefiniteProgressLayer progressLayer) {
-	return getAnalysisFactoryFor(analysisType).createAnalysis(owner, criteria, name, progressLayer);
+	return getAnalysisFactoryFor(analysisType).createAnalysis(owner, criteria, name, detailsCache, progressLayer);
     }
 
     @Override

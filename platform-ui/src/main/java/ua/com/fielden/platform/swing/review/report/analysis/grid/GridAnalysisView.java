@@ -36,6 +36,7 @@ import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.OpenMasterClickAction;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
+import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
@@ -103,7 +104,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     /**
      * A convenient method for accessing selected in EGI not enhanced entity.
-     * 
+     *
      */
     @SuppressWarnings("unchecked")
     public T getSelectedEntity() {
@@ -113,7 +114,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     /**
      * A convenient method for accessing selected in EGI entity.
-     * 
+     *
      * @return
      */
     public T getEnhancedSelectedEntity() {
@@ -127,7 +128,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     /**
      * Updates the specified entity in the grid inspector.
-     * 
+     *
      * @param entity
      */
     public void updateEntry(final T entity) {
@@ -186,9 +187,15 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     }
 
+    //TODO it should be supported later!
+    @Override
+    protected void performCustomAction(final AnalysisDataEvent<?> clickedData) {
+	throw new UnsupportedOperationException("This functionality is not supported yet!");
+    }
+
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	if (getModel().getCriteria().isDefaultEnabled()) {
+	if (getCentre().getCriteriaPanel() != null) {
 	    getCentre().getDefaultAction().setEnabled(enable);
 	}
 	if (!navigate) {
@@ -218,7 +225,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     /**
      * A command that creates and opens an entity master frame for the new entity.
-     * 
+     *
      * @return
      */
     protected Command<T> createOpenMasterWithNewCommand() {
@@ -260,7 +267,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     /**
      * A command that creates and opens an entity master frame for the selected in the EGI entity.
-     * 
+     *
      * @return
      */
     protected Command<T> createOpenMasterCommand() {
@@ -299,7 +306,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     /**
      * A command that removes the selected in the EGI entity.
-     * 
+     *
      * @return
      */
     protected Command<T> createDeleteCommand() {
@@ -350,7 +357,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     /**
      * A convenient method for accessing entity master manager.
-     * 
+     *
      * @return
      */
     protected IEntityMasterManager getMasterManager() {
@@ -360,7 +367,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     /**
      * Determines the number of rows in the table those must be shown on the page using the size of the content panel as the basis. If the calculated size is zero then value of 25
      * is returned. This is done to handle cases where calculation happens prior to panel resizing takes place.
-     * 
+     *
      * @return
      */
     final int getPageSize() {
@@ -392,7 +399,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
-     * 
+     *
      * @return
      */
     private ISelectionEventListener createGridAnalysisSelectionListener() {
@@ -401,7 +408,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    @Override
 	    public void viewWasSelected(final SelectionEvent event) {
 		//Managing the default, design and custom action changer button enablements.
-		getCentre().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
+		getCentre().getDefaultAction().setEnabled(getCentre().getCriteriaPanel() != null);
 		if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {
 		    getCentre().getCriteriaPanel().getSwitchAction().setEnabled(true);
 		}
@@ -415,9 +422,5 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 		getCentre().getRunAction().setEnabled(true);
 	    }
 	};
-    }
-
-    private AbstractEntityCentre<T, CDTME> getCentre() {
-	return getOwner().getOwner();
     }
 }

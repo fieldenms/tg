@@ -15,7 +15,7 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
     private static final long serialVersionUID = -7385497832761082274L;
 
     public GridConfigurationView(final GridConfigurationModel<T, CDTME> model, final AbstractEntityCentre<T, CDTME> owner, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, owner, progressLayer);
+	super(model, null, owner, progressLayer);
     }
 
     @Override

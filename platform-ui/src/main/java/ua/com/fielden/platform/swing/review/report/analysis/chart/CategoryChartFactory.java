@@ -52,6 +52,10 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 
     private static final CommonCategoryRenderer commonRenderer = new CommonCategoryRenderer();
 
+//    private final Class<T> managedType;
+//
+//    private final EntityDescriptor aggregationEntityDescriptor, distributionEntityDescriptor;
+
     private final String valueAxisLabel = "values";
 
     private final CategoryDataModel<T> chartEntryModel;
@@ -64,7 +68,9 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 
     private DefaultCategoryDataset dataSet;
 
-    public CategoryChartFactory(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> dataProvider, final CategoryDataModel<T> chartEntryModel, final boolean all, final int... indexes) {
+    public CategoryChartFactory(/*final Class<T> managedType,*/ final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> dataProvider, final CategoryDataModel<T> chartEntryModel, final boolean all, final int... indexes) {
+//	this.managedType = managedType;
+//	this.ed = new EntityDescriptor(managedType, dataProvider.aggregatedProperties());
 	this.chartEntryModel = chartEntryModel;
 	this.dataProvider = dataProvider;
 	this.numberFormat = new DecimalFormat("#,##0.00");
@@ -113,6 +119,7 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 	plot.setDomainAxisLocation(AxisLocation.BOTTOM_OR_RIGHT);
 	initToolTips(plot);
 	initItemLabels(plot);
+//	initLegendItemText(plot);
 	return plot;
     }
 
@@ -128,6 +135,8 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 		public Paint lookupSeriesPaint(final int series) {
 		    return commonRenderer.lookupSeriesPaint(Collections.unmodifiableList(seriesIndexes), series);
 		}
+
+
 	    };
 	    break;
 	case STACKED_BAR_CHART:
@@ -189,6 +198,19 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
     private void initItemLabels(final CategoryPlot categoryPlot){
 	categoryPlot.getRenderer().setBaseItemLabelGenerator(new AnalysisChartLabelGenerator(numberFormat));
     }
+
+//    private void initLegendItemText(final CategoryPlot categoryPlot) {
+//	final AbstractCategoryItemRenderer renderer = (AbstractCategoryItemRenderer) categoryPlot.getRenderer();
+//	renderer.setLegendItemLabelGenerator(new CategorySeriesLabelGenerator() {
+//
+//	    @Override
+//	    public String generateLabel(final CategoryDataset categoryDataset, final int row) {
+//
+//		final String rowKey = categoryDataset.getRowKey(row).toString();
+//		return null;
+//	    }
+//	});
+//    }
 
     private static class AnalysisChartLabelGenerator extends AbstractCategoryItemLabelGenerator implements CategoryItemLabelGenerator{
 

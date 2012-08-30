@@ -33,26 +33,40 @@ import javax.swing.event.ListSelectionListener;
 
 import net.miginfocom.swing.MigLayout;
 
+import org.apache.commons.lang.StringUtils;
 import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.entity.CategoryItemEntity;
+import org.jfree.chart.entity.CategoryLabelEntity;
+import org.jfree.chart.entity.ChartEntity;
 
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.reportquery.AnalysisModelChangedEvent;
 import ua.com.fielden.platform.reportquery.AnalysisModelChangedListener;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
+import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
+import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.categorychart.ActionChartPanel;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
 import ua.com.fielden.platform.swing.categorychart.ChartAnalysisAggregationListDragToSupport;
 import ua.com.fielden.platform.swing.categorychart.ChartPanelChangedEventObject;
+import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
 import ua.com.fielden.platform.swing.categorychart.IChartPanelChangeListener;
 import ua.com.fielden.platform.swing.categorychart.MultipleChartPanel;
 import ua.com.fielden.platform.swing.categorychart.SwitchChartsModel;
@@ -65,16 +79,22 @@ import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRendere
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
+import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.analysis.details.configuration.AnalysisDetailsConfigurationModel;
+import ua.com.fielden.platform.swing.review.report.analysis.details.configuration.AnalysisDetailsConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
+import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
 import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListCheckingModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListSortingModel;
-import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.MultipleAnalysisEntityCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
+import ua.com.fielden.platform.swing.view.ICloseHook;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -156,7 +176,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	if(getModel().getCriteria().isDefaultEnabled()){
+	if(getCentre().getCriteriaPanel() != null){
 	    getCentre().getDefaultAction().setEnabled(enable);
 	}
 	if(!navigate){
@@ -208,10 +228,6 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	return size > 0 ? size : 1;
     }
 
-    private AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> getCentre(){
-	return getOwner().getOwner();
-    }
-
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
      *
@@ -223,7 +239,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public void viewWasSelected(final SelectionEvent event) {
 		//Managing the default, design and custom action changer button enablements.
-		getCentre().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
+		getCentre().getDefaultAction().setEnabled(getCentre().getCriteriaPanel() != null);
 		if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {
 		    getCentre().getCriteriaPanel().getSwitchAction().setEnabled(true);
 		}
@@ -543,8 +559,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 	    @Override
 	    public void mouseDoubleClicked(final ChartMouseEvent chartEvent) {
-		//TODO implement double click action that loads detail view for choosen category.
-		//reportView.getModel().runDoubleClickAction(new AnalysisDoubleClickEvent(this, chartEvent));
+		performCustomAction(new AnalysisDataEvent<>(ChartAnalysisView.this, chartEvent));
 	    }
 	};
 	chartPanel.addChartPanelChangedListener(new IChartPanelChangeListener() {
@@ -620,5 +635,153 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	invalidate();
 	validate();
 	repaint();
+    }
+
+    @Override
+    protected void performCustomAction(final AnalysisDataEvent<?> clickedData) {
+	final ChartEntity entity = ((ChartMouseEvent)clickedData.getData()).getEntity();
+	if (entity instanceof CategoryItemEntity) {
+	    createDoubleClickAction(createChoosenItem(((CategoryItemEntity) entity).getColumnKey())).actionPerformed(null);
+	} else if (entity instanceof CategoryLabelEntity) {
+	    createDoubleClickAction(createChoosenItem(((CategoryLabelEntity) entity).getKey())).actionPerformed(null);
+	}
+    }
+
+    private Pair<String, Object> createChoosenItem(final Comparable<?> columnKey) {
+	final EntityWrapper entityWrapper = (EntityWrapper) columnKey;
+	final List<String> categories = getModel().getChartAnalysisDataProvider().categoryProperties();
+	if(categories.size() == 1){
+	    return new Pair<String, Object>(categories.get(0), entityWrapper.getEntity());
+	}
+	return null;
+    }
+
+    protected final Action createDoubleClickAction(final Pair<String, Object> choosenItem) {
+	return new BlockingLayerCommand<Void>("Details", getOwner().getProgressLayer()) {
+
+	    private static final long serialVersionUID = 1986658954874008023L;
+
+	    @Override
+	    protected final Void action(final ActionEvent e) throws Exception {
+		return null;
+	    }
+
+	    @SuppressWarnings("unchecked")
+	    @Override
+	    protected void postAction(final Void value) {
+		super.postAction(value);
+		DetailsFrame detailsFrame = getOwner().getDetailsFrame(choosenItem.getValue());
+		if (detailsFrame == null) {
+		    final Class<T> root = getModel().getCriteria().getEntityClass();
+
+		    final EntityFactory entityFactory = getModel().getCriteria().getEntityFactory();
+
+		    final ICriteriaGenerator criteriaGenerator = ((MultipleAnalysisEntityCentreConfigurationView<T>)getOwner().getOwner().getOwner()).getModel().getCriteriaGenerator();
+
+		    final IEntityMasterManager masterManager = getOwner().getOwner().getModel().getMasterManager();
+
+		    final ICentreDomainTreeManagerAndEnhancer cdtme = getModel().getCriteria().getCentreDomainTreeManagerAndEnhnacerCopy();
+		    cdtme.setRunAutomatically(true);
+		    setValueFor(root, cdtme, choosenItem);
+
+		    final String frameTitle = createFrameTitle(choosenItem);
+
+		    final AnalysisDetailsConfigurationModel<T> detailsConfigModel = new AnalysisDetailsConfigurationModel<>(//
+			    getModel().getCriteria().getEntityClass(),//
+			    frameTitle,//
+			    entityFactory,//
+			    criteriaGenerator, masterManager, cdtme);
+		    final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "Loading");
+		    final AnalysisDetailsConfigurationView<T> detailsConfigView = new AnalysisDetailsConfigurationView<>(detailsConfigModel, progressLayer);
+		    progressLayer.setView(detailsConfigView);
+		    detailsFrame = new DetailsFrame(choosenItem.getValue(),//
+			    frameTitle,//
+			    progressLayer, new ICloseHook<DetailsFrame>() {
+
+			@Override
+			public void closed(final DetailsFrame frame) {
+			    getOwner().removeDetailsFrame(frame);
+			}
+
+		    });
+		    getOwner().addDetailsFrame(detailsFrame);
+		    detailsConfigView.open();
+		}
+		detailsFrame.setVisible(true);
+
+	    }
+
+	    @SuppressWarnings("unchecked")
+	    private void setValueFor(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer newCdtme, final Pair<String, Object> choosenItem){
+		final Class<T> managedType = (Class<T>)newCdtme.getEnhancer().getManagedType(root);
+		final boolean isEntityItself = "".equals(choosenItem.getKey()); // empty property means "entity itself"
+		final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, choosenItem.getKey());
+		final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, choosenItem.getKey());
+		final boolean isEntity = EntityUtils.isEntityType(propertyType);
+		final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
+		final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType);
+
+		Object value = choosenItem.getValue();
+		if (List.class.isAssignableFrom(newPropertyType) && choosenItem.getValue() != null) {
+		    final List<Object> values = new ArrayList<>();
+		    values.add(choosenItem.getValue().toString());
+		    value = values;
+		}
+
+		if(choosenItem.getValue() == null){
+		    newCdtme.getFirstTick().setOrNull(root, choosenItem.getKey(), true);
+		}
+
+		newCdtme.getFirstTick().setValue(root, choosenItem.getKey(), value);
+
+		if(AbstractDomainTree.isDoubleCriterion(managedType, choosenItem.getKey())){
+		    newCdtme.getFirstTick().setValue2(root, choosenItem.getKey(), value);
+		}
+
+		if(EntityUtils.isBoolean(propertyType)){
+		    if(choosenItem.getValue() != null){
+			newCdtme.getFirstTick().setValue2(root, choosenItem.getKey(), !(Boolean)value);
+		    }else{
+			newCdtme.getFirstTick().setValue2(root, choosenItem.getKey(), null);
+		    }
+		}
+
+
+	    }
+
+	    private String createFrameTitle(final Pair<String, Object> choosenItems) {
+		final String reportName = getReportName();
+		return "Details for " + createDistributionPropertyTitle(choosenItems) + " " + createDistributionEntitiesTitle(choosenItems) + " (" + (StringUtils.isEmpty(reportName) ?
+			"" :reportName + ": ") + getOwner().getModel().getName() + ")";
+	    }
+
+	    private String getReportName() {
+		final String name = getOwner().getOwner().getModel().getName();
+		return StringUtils.isEmpty(name) ? "" : name;
+	    }
+
+	    private String createDistributionEntitiesTitle(final Pair<String, Object> choosenItem) {
+		final String titles = createPairString(choosenItem.getValue());
+		return titles;
+	    }
+
+	    private String createPairString(final Object value) {
+		if (value instanceof AbstractEntity) {
+		    return ((AbstractEntity<?>) value).getKey().toString() + " \u2012 " + ((AbstractEntity<?>) value).getDesc();
+		} else if (value != null) {
+		    return value.toString() + " \u2012 " + value.toString();
+		} else {
+		    return "UNKNOWN \u2012 UNKNOWN";
+		}
+	    }
+
+	    private String createDistributionPropertyTitle(final Pair<String, Object> choosenItem) {
+		final Class<T> managedType = getModel().getCriteria().getManagedType();
+		final EntityDescriptor ed = new EntityDescriptor(managedType, getModel().getChartAnalysisDataProvider().categoryProperties());
+		final String name = ed.getTitle(choosenItem.getKey());
+		return name;
+
+	    }
+	};
     }
 }

@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.swing.review.report.analysis.configuration;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.Action;
 
@@ -8,6 +12,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
+import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
@@ -42,6 +47,11 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
     private final AbstractEntityCentre<T, CDTME> owner;
 
     /**
+     * Holds all details frame associated with entity and details report.
+     */
+    private final Map<Object, DetailsFrame> detailsCache;
+
+    /**
      * Analysis related actions:
      * <ul>
      * <li> save - saves the analysis configuration.</li>
@@ -51,13 +61,23 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      */
     private final Action save, remove;
 
-    public AbstractAnalysisConfigurationView(final AbstractAnalysisConfigurationModel<T, CDTME> model, final AbstractEntityCentre<T, CDTME> owner, final BlockingIndefiniteProgressLayer progressLayer) {
+    public AbstractAnalysisConfigurationView(final AbstractAnalysisConfigurationModel<T, CDTME> model, final Map<Object, DetailsFrame> detailsCache, final AbstractEntityCentre<T, CDTME> owner, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
+	this.detailsCache = detailsCache;
 	this.owner = owner;
 	this.save = createSaveAction();
 	this.remove = createRemoveAction();
 	addSelectionEventListener(createSelectionListener());
 	owner.getPageHolderManager().addPageHolder(getModel().getPageHolder());
+    }
+
+    /**
+     * Returns the details cache.
+     *
+     * @return
+     */
+    public Map<Object, DetailsFrame> getDetailsCache() {
+	return detailsCache;
     }
 
     /**
@@ -124,6 +144,58 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
     public String whyCannotClose() {
         return "Please save or cancel changes for " + getModel().getName() + " analysis";
     }
+
+    @Override
+    public void close() {
+        super.close();
+        for(final DetailsFrame frame : getDetailsFrames()){
+            removeDetailsFrame(frame);
+            frame.close();
+        }
+    }
+
+
+    /**
+     * Adds new pop up window specified with {@code frame} to this analysis report.
+     *
+     * @param frame
+     */
+    public final void addDetailsFrame(final DetailsFrame frame) {
+	if(frame != null){
+	    getDetailsCache().put(frame.getAssociatedEntity(), frame);
+	}
+    }
+
+    /**
+     * Removes specified pop up window.
+     *
+     * @param frame
+     */
+    public final void removeDetailsFrame(final DetailsFrame frame) {
+	if (frame != null) {
+	    detailsCache.remove(frame.getAssociatedEntity());
+	}
+    }
+
+    /**
+     * Returns list of pop up windows associated with this analysis report.
+     *
+     * @return
+     */
+    public final List<DetailsFrame> getDetailsFrames() {
+	return Collections.unmodifiableList(new ArrayList<DetailsFrame>(getDetailsCache().values()));
+    }
+
+    /**
+     * Returns pop up window associated with this analysis report and specified object
+     *
+     * @param associatedObject
+     * @return
+     */
+    public final DetailsFrame getDetailsFrame(final Object associatedObject) {
+	return getDetailsCache().get(associatedObject);
+    }
+
 
     @Override
     protected AnalysisWizardView<T, CDTME> createWizardView() {

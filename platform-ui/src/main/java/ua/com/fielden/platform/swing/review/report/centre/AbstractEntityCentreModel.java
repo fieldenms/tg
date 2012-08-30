@@ -3,7 +3,6 @@ package ua.com.fielden.platform.swing.review.report.centre;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
@@ -49,15 +48,4 @@ public class AbstractEntityCentreModel<T extends AbstractEntity<?>, CDTME extend
     public IEntityMasterManager getMasterManager() {
 	return masterManager;
     }
-
-    /**
-     * Determines whether this entity centre's model is valid or not.
-     *
-     * @return
-     */
-    public Result validate() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
 }

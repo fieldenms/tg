@@ -358,7 +358,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	    private static final long serialVersionUID = -1287083156047119434L;
 
 	    {
-		setEnabled(getModel().getCriteria().isDefaultEnabled());
+		setEnabled(getCriteriaPanel() != null);
 		putValue(MNEMONIC_KEY, KeyEvent.VK_D);
 		putValue(SHORT_DESCRIPTION, "Loads default selection criteria");
 	    }
@@ -368,7 +368,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 		if(ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()){
 		    throw new IllegalStateException("This action shouldn't be invoked when analysis is in WIZARD or not specified mode.");
 		}
-		return super.preAction() && getModel().getCriteria().isDefaultEnabled();
+		return super.preAction() && getCriteriaPanel() != null;
 	    }
 
 	    @Override

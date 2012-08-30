@@ -19,7 +19,6 @@ import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -62,14 +61,11 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final IDaoFactory daoFactory;
 
-    private final IGeneratedEntityController<? extends AbstractEntity<?>> generatedEntityController;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Inject
-    public CriteriaGenerator(final EntityFactory entityFactory, final IDaoFactory daoFactory, final IGeneratedEntityController generatedEntityController){
+    public CriteriaGenerator(final EntityFactory entityFactory, final IDaoFactory daoFactory){
 	this.entityFactory = entityFactory;
 	this.daoFactory = daoFactory;
-	this.generatedEntityController = generatedEntityController;
     }
 
     @Override
@@ -102,13 +98,6 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	    daoField.setAccessible(true);
 	    daoField.set(entity, daoFactory.newDao(root));
 	    daoField.setAccessible(isDaoAccessable);
-
-	    //Set generated entity controller.
-	    final Field generatedEntityControllerField = Finder.findFieldByName(EntityQueryCriteria.class, "generatedEntityController");
-	    final boolean isControllerAccessable = generatedEntityControllerField.isAccessible();
-	    generatedEntityControllerField.setAccessible(true);
-	    generatedEntityControllerField.set(entity, generatedEntityController);
-	    daoField.setAccessible(isControllerAccessable);
 
 	    //Set domain tree manager for entity query criteria.
 	    final Field dtmField = Finder.findFieldByName(EntityQueryCriteria.class, "cdtme");

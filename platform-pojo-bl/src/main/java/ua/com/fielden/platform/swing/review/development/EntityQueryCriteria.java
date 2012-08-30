@@ -36,6 +36,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.swing.review.DynamicParamBuilder;
@@ -58,20 +59,39 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private final DAO dao;
     private final IGeneratedEntityController<T> generatedEntityController;
 
+    private final ISerialiser serialiser;
+
     private final C cdtme;
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
-    public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory){
+    public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser){
 	this.valueMatcherFactory = valueMatcherFactory;
+	this.generatedEntityController = generatedEntityController;
+	this.serialiser = serialiser;
 
 	//This values should be initialized through reflection.
 	this.dao = null;
-	this.generatedEntityController = null;
 	this.cdtme = null;
     }
 
+    /**
+     * Returns the centre domain tree manager.
+     *
+     * @return
+     */
     public C getCentreDomainTreeMangerAndEnhancer(){
 	return cdtme;
+    }
+
+    /**
+     * Returns the copy of centre domain tree manager
+     *
+     * @return
+     */
+    //TODO remove this later after details will be implemented using
+    public C getCentreDomainTreeManagerAndEnhnacerCopy() {
+	return EntityUtils.deepCopy(cdtme, serialiser);
     }
 
     /**
@@ -104,15 +124,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	    final Class<T> root = getEntityClass();
 	    set(propertyField.getName(), secondParam == null ? ftr.getValueByDefault(root, critProperty.propertyName()) : ftr.getValue2ByDefault(root, critProperty.propertyName()));
 	}
-    }
-
-    /**
-     * Determines whether default values can be set or not.
-     *
-     * @return
-     */
-    public boolean isDefaultEnabled(){
-	return !CriteriaReflector.getCriteriaProperties(getType()).isEmpty();
     }
 
     @SuppressWarnings("unchecked")

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.report.centre.factory;
+package ua.com.fielden.platform.swing.review.report.analysis.details.factory;
 
 import java.util.Map;
 
@@ -12,30 +12,25 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.centre.factory.DefaultGridAnalysisFactory;
+import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuilder;
 
-/**
- * A contract that allows one to build different analysis.
- *
- * @author TG Team
- *
- * @param <T>
- */
-public interface IAnalysisBuilder<T extends AbstractEntity<?>> {
+public class DefaultAnalysisBuilder<T extends AbstractEntity<?>> implements IAnalysisBuilder<T> {
 
-    /**
-     * Creates an analysis configuration view.
-     *
-     * @param owner
-     * @param criteria
-     * @param name
-     * @param progressLayer
-     * @return
-     */
-    AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?, ?> createAnalysis(//
+    private final DefaultGridAnalysisFactory<T> gridAnalysisFactory = new DefaultGridAnalysisFactory<>();
+
+    @Override
+    public AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?, ?> createAnalysis(//
 	    final AnalysisType analysisType, //
 	    final String name, //
-	    final Map<Object, DetailsFrame> detailsCache,//
+	    final Map<Object, DetailsFrame> detailsCache, //
 	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
 	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
-	    final BlockingIndefiniteProgressLayer progressLayer);
+	    final BlockingIndefiniteProgressLayer progressLayer) {
+	if(analysisType == null){
+	    return gridAnalysisFactory.createAnalysis(owner, criteria, name, detailsCache, progressLayer);
+	}
+	return null;
+    }
+
 }

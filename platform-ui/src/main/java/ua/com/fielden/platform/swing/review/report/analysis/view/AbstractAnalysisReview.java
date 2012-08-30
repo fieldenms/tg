@@ -27,6 +27,7 @@ import ua.com.fielden.platform.swing.pagination.model.development.IPageNavigatio
 import ua.com.fielden.platform.swing.pagination.model.development.PageNavigationEvent;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.utils.Pair;
@@ -82,6 +83,8 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	exportAction.actionPerformed(null);
     }
 
+
+
     @Override
     protected ConfigureAction createConfigureAction() {
 	return new ConfigureAction(getOwner()) {
@@ -117,6 +120,22 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
      * @param navigate
      */
     abstract protected void enableRelatedActions(final boolean enable, final boolean navigate);
+
+    /**
+     * Override this to provide custom functionality on different kind of actions.
+     *
+     * @param clickedData
+     */
+    abstract protected void performCustomAction(AnalysisDataEvent<?> clickedData);
+
+    /**
+     * Returns the {@link AbstractEntityCentre} that owns this analysis.
+     *
+     * @return
+     */
+    protected AbstractEntityCentre<T, CDTME> getCentre() {
+	return getOwner().getOwner();
+    }
 
     private Action createLoadAction() {
 	return new BlockingLayerCommand<Pair<Result, LDT>>("Run", getOwner().getProgressLayer()) {
@@ -302,6 +321,10 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 		case POST_NAVIGATE:
 		case PAGE_NAVIGATION_EXCEPTION:
 		    enableRelatedActions(true, true);
+		case NAVIGATE:
+		    break;
+		default:
+		    break;
 		}
 	    }
 	};

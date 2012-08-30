@@ -43,7 +43,7 @@ public class SingleAnalysisEntityCentre<T extends AbstractEntity<?>> extends Abs
     @Override
     protected GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createGridAnalysis() {
 	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>)getModel().getAnalysisBuilder()//
-		.createAnalysis(null, null, this, getModel().getCriteria(), getReviewProgressLayer());
+		.createAnalysis(null, null, null, this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     @Override
