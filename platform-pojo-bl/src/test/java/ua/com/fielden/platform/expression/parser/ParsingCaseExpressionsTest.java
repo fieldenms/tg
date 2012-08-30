@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.expression.EgTokenCategory;
 import ua.com.fielden.platform.expression.ExpressionLexer;
 import ua.com.fielden.platform.expression.ExpressionParser;
 import ua.com.fielden.platform.expression.Token;
@@ -30,6 +31,18 @@ public class ParsingCaseExpressionsTest {
 	final AstNode ast = parser.parse();
 	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
 	assertEquals("Incorrectly formed AST", "(CASE (WHEN (&& (> 1 2) (<= (SUM prop) 5)) \"Red\") \"Green\")", ast.treeToString());
+    }
+
+    @Test
+    public void parsing_expression_with_single_WHEN_and_logical_condition_with_now() throws RecognitionException, SequenceRecognitionFailed {
+	final Token[] tokens = new ExpressionLexer("CASE WHEN dateProp <= NOW THEN \"Red\" ELSE \"Green\" END").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+	assertEquals("Incorrectly formed AST", "(CASE (WHEN (<= dateProp NOW) \"Red\") \"Green\")", ast.treeToString());
+	// let's also check that NOW is not recognised as NAME
+	final AstNode now = ast.getChildren().get(0).getChildren().get(0).getChildren().get(1);
+	assertEquals(EgTokenCategory.NOW, now.getToken().category);
     }
 
     @Test

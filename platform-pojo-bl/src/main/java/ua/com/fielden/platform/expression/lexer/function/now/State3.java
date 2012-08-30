@@ -18,9 +18,7 @@ public class State3 extends AbstractState {
 
     @Override
     protected AbstractState transition(final char symbol) throws NoTransitionAvailable {
-	if (isWhiteSpace(symbol)) {
-	    return this;
-	} else	if (String.valueOf(symbol).matches("[^\\p{L}^\\d^.]") || symbol == ExpressionLexer.EOF) {
+	if (isWhiteSpace(symbol) || String.valueOf(symbol).matches("[^\\p{L}^\\d^.]") || symbol == ExpressionLexer.EOF) {
 	    throw new NoTransitionAvailable("Invalid symbol '" + symbol + "'", this, symbol);
 	} else {
 	    // this would happen only if string NOW would continue with some characters that is valid for name token e.g. NOWed, making it a valid name rather than keyword NOW

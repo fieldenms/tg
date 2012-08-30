@@ -58,11 +58,6 @@ public class NowTokenAutomataTest {
 	} catch (final SequenceRecognitionFailed e) {
 	}
 	try {
-	    automata().recognisePartiallyFromStart("NOW  . la", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
 	    automata().recognisePartiallyFromStart("NOW.lala", 0);
 	    fail("Should have failed");
 	} catch (final SequenceRecognitionFailed e) {

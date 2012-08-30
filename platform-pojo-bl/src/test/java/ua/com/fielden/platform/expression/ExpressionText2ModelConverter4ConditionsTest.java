@@ -71,6 +71,18 @@ public class ExpressionText2ModelConverter4ConditionsTest {
     }
 
     @Test
+    public void model_generation_for_now_based_comparison_failed() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "dateProperty > NOW");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", boolean.class, root.getType());
+
+	final ExpressionModel func = expr().prop("dateProperty").model();
+	final ConditionModel condition = cond().expr(func).gt().expr(expr().now().model()).model();
+	final ExpressionModel model = expr().caseWhen().condition(condition).then().val(true).otherwise().val(false).end().model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
     public void model_generation_for_dashboard_case_when_failed() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
 		"CASE\n" +
@@ -90,6 +102,23 @@ public class ExpressionText2ModelConverter4ConditionsTest {
 	final ExpressionModel model = expr().
 		caseWhen().condition(cond1).then().val("Green").
 		when().condition(andCond).then().val("Yellow").
+		otherwise().val("Red").end().model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void model_generation_for_simple_dashboard_case_when_ans_now_failed() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
+		"CASE\n" +
+		"WHEN dateProperty > NOW THEN \"Green\"\n" +
+		"ELSE \"Red\" END");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", String.class, root.getType());
+
+	final ExpressionModel prop = expr().prop("dateProperty").model();
+	final ConditionModel cond = cond().expr(prop).gt().expr(expr().now().model()).model();
+	final ExpressionModel model = expr().
+		caseWhen().condition(cond).then().val("Green").
 		otherwise().val("Red").end().model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
