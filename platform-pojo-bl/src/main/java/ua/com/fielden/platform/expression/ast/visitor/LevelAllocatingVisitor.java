@@ -77,6 +77,7 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 	case DATE_CONST:
 	case NOW:
 	case DATE:
+	case NULL:
 	    node.setLevel(null);
 	    break;
 	// collectional property dependent level

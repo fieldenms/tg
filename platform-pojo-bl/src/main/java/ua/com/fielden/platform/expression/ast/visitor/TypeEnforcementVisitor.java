@@ -23,6 +23,7 @@ import ua.com.fielden.platform.expression.type.AbstractDateLiteral;
 import ua.com.fielden.platform.expression.type.DateLiteral;
 import ua.com.fielden.platform.expression.type.Day;
 import ua.com.fielden.platform.expression.type.Month;
+import ua.com.fielden.platform.expression.type.Null;
 import ua.com.fielden.platform.expression.type.Year;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
@@ -73,6 +74,9 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	    break;
 	case NOW:
 	    node.setType(Date.class);
+	    break;
+	case NULL:
+	    node.setType(Null.class);
 	    break;
 	    // property types
 	case NAME:
@@ -156,6 +160,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	}
 
 	// check compatibility of operand types
+	// TODO more precise error reporting can be achieved here
 	if (String.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType) || // strings are comparable
 		Money.class.isAssignableFrom(leftOperandType) && (leftOperandType.isAssignableFrom(rightOperandType) || Number.class.isAssignableFrom(rightOperandType))	 || // money are comparable with each other and numbers
 		Number.class.isAssignableFrom(leftOperandType) && (Number.class.isAssignableFrom(rightOperandType) || Money.class.isAssignableFrom(rightOperandType)) || // the same, but in reverse order
@@ -168,8 +173,28 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 		leftOperand.getToken().category == EgTokenCategory.YEARS && Year.class.isAssignableFrom(rightOperandType)) { // the same, but in reverse
 	    // the type of the comparison operation is always boolean
 	    node.setType(boolean.class);
-	} else if ((cat == EgTokenCategory.EQ || cat == EgTokenCategory.NE) && leftOperandType.isAssignableFrom(rightOperandType)) { // this basically checks whether some other types such as entities are being compared
+	} else if ((cat == EgTokenCategory.EQ || cat == EgTokenCategory.NE) && leftOperandType.isAssignableFrom(rightOperandType) && Null.class != leftOperandType && Null.class != rightOperandType) { // this basically checks whether some other types such as entities are being compared
 	    node.setType(boolean.class);
+	} else if ((cat == EgTokenCategory.EQ || cat == EgTokenCategory.NE) && (Null.class == leftOperandType || Null.class == rightOperandType)) { // = and <> with NULL is possible, and needs to be validated further
+	    if (Null.class == leftOperandType &&
+		    (String.class.isAssignableFrom(rightOperandType) || //
+		     Money.class.isAssignableFrom(rightOperandType) || //
+		     Number.class.isAssignableFrom(rightOperandType) || //
+		     Date.class.isAssignableFrom(rightOperandType) || //
+		     DateTime.class.isAssignableFrom(rightOperandType) //
+		    )
+		){
+		// the type of the comparison operation is always boolean
+		node.setType(boolean.class);
+	    } else if (
+		     String.class.isAssignableFrom(leftOperandType) || //
+		     Money.class.isAssignableFrom(leftOperandType) || //
+		     Number.class.isAssignableFrom(leftOperandType) || //
+		     Date.class.isAssignableFrom(leftOperandType) || //
+		     DateTime.class.isAssignableFrom(leftOperandType)) {
+		// the type of the comparison operation is always boolean
+		node.setType(boolean.class);
+	    }
 	} else {
 	    throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());
 	}

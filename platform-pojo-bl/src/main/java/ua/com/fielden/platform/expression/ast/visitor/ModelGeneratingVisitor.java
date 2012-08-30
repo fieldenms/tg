@@ -47,34 +47,35 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	    break;
 	case NOW:
 	    node.setModel(createNowModel(node));
+	case NULL: // skip as it is processed as part of comparison operation model generation
 	    break;
-	    // property types
+	// property types
 	case NAME:
 	    node.setModel(createPropertyModel(node));
 	    break;
-	    // self types
+	// self types
 	case SELF:
 	    node.setModel(createSelfModel(node));
 	    break;
-	    // bi-operand operation types
+	// bi-operand operation types
 	case PLUS:
 	case MINUS:
 	case MULT:
 	case DIV:
 	    node.setModel(createOperationModel(node));
 	    break;
-	    // uno-operand date type functions
+	// uno-operand date type functions
 	case DAY:
 	case MONTH:
 	case YEAR:
 	    node.setModel(createDateFunctionModel(node));
 	    break;
-	    // uno-operand date type functions
+	// uno-operand date type functions
 	case UPPER:
 	case LOWER:
 	    node.setModel(createStringFunctionModel(node));
 	    break;
-	    // bi-operand date type functions
+	// bi-operand date type functions
 	case DAY_DIFF: // TODO to be removed as deprecated
 	    node.setModel(createDayDiffFunctionModel(node));
 	    break;
@@ -106,7 +107,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	case CASE:
 	    node.setModel(createCaseModel(node));
 	    break;
-	    // uno-operand aggregation functions
+	// uno-operand aggregation functions
 	case AVG:
 	case SUM:
 	case MIN:
@@ -218,6 +219,24 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 		}
 	    }
 	case EQ:
+	    // let's first handle equality to NULL
+	    if (left.getToken().category == EgTokenCategory.NULL) {
+		// it only makes sense to compare NULL with expression
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().expr(right.getModel()).isNull().model();
+		}
+		throw new TypeCompatibilityException("Literal value should not be checked for NULL.", node.getToken());
+		//return cond().expr(left.getModel()).isNull().model();
+
+	    } else if (right.getToken().category == EgTokenCategory.NULL) {
+		// it only makes sense to compare NULL with expression
+		if (left.getModel() != null && !left.getModel().containsSingleValueToken()) {
+		    return cond().expr(left.getModel()).isNull().model();
+		}
+		throw new TypeCompatibilityException("Literal value should not be checked for NULL.", node.getToken());
+	    }
+
+	    // now, if equality to NULL was not required, we can do alternative processing
 	    if (left.getModel() != null && !left.getModel().containsSingleValueToken()) {
 		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
 		    return cond().expr(left.getModel()).eq().expr(right.getModel()).model();
@@ -232,6 +251,24 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 		}
 	    }
 	case NE:
+	    // let's first handle equality to NULL
+	    if (left.getToken().category == EgTokenCategory.NULL) {
+		// it only makes sense to compare NULL with expression
+		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
+		    return cond().expr(right.getModel()).isNotNull().model();
+		}
+		throw new TypeCompatibilityException("Literal value should not be checked for NULL.", node.getToken());
+		//return cond().expr(left.getModel()).isNull().model();
+
+	    } else if (right.getToken().category == EgTokenCategory.NULL) {
+		// it only makes sense to compare NULL with expression
+		if (left.getModel() != null && !left.getModel().containsSingleValueToken()) {
+		    return cond().expr(left.getModel()).isNotNull().model();
+		}
+		throw new TypeCompatibilityException("Literal value should not be checked for NULL.", node.getToken());
+	    }
+
+	    // now, if equality to NULL was not required, we can do alternative processing
 	    if (left.getModel() != null && !left.getModel().containsSingleValueToken()) {
 		if (right.getModel() != null && !right.getModel().containsSingleValueToken()) {
 		    return cond().expr(left.getModel()).ne().expr(right.getModel()).model();
@@ -249,9 +286,6 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
 	}
     }
-
-
-
 
     private ExpressionModel createNowModel(final AstNode node) {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
@@ -282,10 +316,10 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	return expr().val(node.getValue()).model();
     }
 
-
     /**
-     * The model for keyword SELF is not really needed as it can be used only in the context of function COUNT that
-     * is provided with <code>countAll()</code> model (no arguments that would depend on the model for SELF).
+     * The model for keyword SELF is not really needed as it can be used only in the context of function COUNT that is provided with <code>countAll()</code> model (no arguments
+     * that would depend on the model for SELF).
+     *
      * @param node
      * @return
      */
@@ -385,7 +419,6 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	}
     }
 
-
     private ExpressionModel createDateFunctionModel(final AstNode node) throws TypeCompatibilityException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
 	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr;
@@ -425,11 +458,10 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
 	if (cat1 == EgTokenCategory.NAME) {
-	    exprWithOperand =  expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
+	    exprWithOperand = expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
 	} else {
 	    exprWithOperand = leftOperand.getModel() != null ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
 	}
-
 
 	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
 
@@ -439,7 +471,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
 	if (cat2 == EgTokenCategory.NAME) {
-	    exprWithOperand1 =  andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
+	    exprWithOperand1 = andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
 	} else {
 	    exprWithOperand1 = leftOperand.getModel() != null ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
 	}
@@ -461,9 +493,10 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
 	if (cat1 == EgTokenCategory.NAME) {
-	    exprWithOperand =  expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
+	    exprWithOperand = expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
 	} else {
-	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
+	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel())
+		    : expr.val(leftOperand.getValue());
 	}
 
 	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
@@ -474,9 +507,10 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
 	if (cat2 == EgTokenCategory.NAME) {
-	    exprWithOperand1 =  andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
+	    exprWithOperand1 = andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
 	} else {
-	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
+	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel())
+		    : andExpr.val(rightOperand.getValue());
 	}
 
 	return exprWithOperand1.model();
@@ -496,9 +530,10 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
 	if (cat1 == EgTokenCategory.NAME) {
-	    exprWithOperand =  expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
+	    exprWithOperand = expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
 	} else {
-	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
+	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel())
+		    : expr.val(leftOperand.getValue());
 	}
 
 	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
@@ -509,9 +544,10 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
 	if (cat2 == EgTokenCategory.NAME) {
-	    exprWithOperand1 =  andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
+	    exprWithOperand1 = andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
 	} else {
-	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
+	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel())
+		    : andExpr.val(rightOperand.getValue());
 	}
 
 	return exprWithOperand1.model();
@@ -531,9 +567,10 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
 	if (cat1 == EgTokenCategory.NAME) {
-	    exprWithOperand =  expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
+	    exprWithOperand = expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
 	} else {
-	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
+	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel())
+		    : expr.val(leftOperand.getValue());
 	}
 
 	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
@@ -544,9 +581,10 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
 	if (cat2 == EgTokenCategory.NAME) {
-	    exprWithOperand1 =  andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
+	    exprWithOperand1 = andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
 	} else {
-	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
+	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel())
+		    : andExpr.val(rightOperand.getValue());
 	}
 
 	return exprWithOperand1.model();
@@ -587,7 +625,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
     /**
      * Produces an expression model for the passed in condition model.
-     * 
+     *
      * @param conditionModel
      * @return
      */

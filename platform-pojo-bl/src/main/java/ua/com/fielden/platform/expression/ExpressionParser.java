@@ -435,6 +435,8 @@ public class ExpressionParser {
 	    return match_property();
 	case NOW:
 	    return match_now();
+	case NULL:
+	    return match_null();
 	    // trying to match SELF rule
 	case LPAREN:
 	    return match_arithmetic_expression_with_paren(); //new AstNode(tokens[position]); // does not move position forward
@@ -531,6 +533,10 @@ public class ExpressionParser {
 
     private AstNode match_now() throws RecognitionException {
 	return new AstNode(match(EgTokenCategory.NOW));
+    }
+
+    private AstNode match_null() throws RecognitionException {
+	return new AstNode(match(EgTokenCategory.NULL));
     }
 
     /**

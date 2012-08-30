@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.expression;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
@@ -123,4 +124,50 @@ public class ExpressionText2ModelConverter4ConditionsTest {
 	assertEquals("Incorrect model.", model, root.getModel());
     }
 
+    @Test
+    public void model_generation_for_simple_is_NULL() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "dateProperty = null");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", boolean.class, root.getType());
+
+	final ConditionModel condition = cond().expr(expr().prop("dateProperty").model()).isNull().model();
+	final ExpressionModel model = expr().caseWhen().condition(condition).then().val(true).otherwise().val(false).end().model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void model_generation_for_simple_is_not_NULL() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "null <> dateProperty");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", boolean.class, root.getType());
+
+	final ConditionModel condition = cond().expr(expr().prop("dateProperty").model()).isNotNull().model();
+	final ExpressionModel model = expr().caseWhen().condition(condition).then().val(true).otherwise().val(false).end().model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void model_generation_for_complex_expression_with_NULL() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
+		"null <> dateProperty && null = (intProperty + 2)");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", boolean.class, root.getType());
+
+	final ConditionModel cond1 = cond().expr(expr().prop("dateProperty").model()).isNotNull().model();
+	final ExpressionModel add = expr().prop("intProperty").add().val(2).model();
+	final ConditionModel cond2 = cond().expr(add).isNull().model();
+	final ConditionModel condition = cond().condition(cond1).and().condition(cond2).model();
+	final ExpressionModel model = expr().caseWhen().condition(condition).then().val(true).otherwise().val(false).end().model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void model_generation_for_invalid_value_comparison_with_NULL() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "2 <> null");
+	try {
+	    ev.convert();
+	    fail("Should have failed.");
+	} catch (final Exception ex) {
+	}
+    }
 }

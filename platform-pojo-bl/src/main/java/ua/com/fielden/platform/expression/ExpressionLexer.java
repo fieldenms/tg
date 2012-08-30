@@ -45,6 +45,7 @@ import ua.com.fielden.platform.expression.lexer.minus.MinusTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.mult.MultTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.name.NameTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.not_eq.NotEqualTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.null_.NullTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.or.OrTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.plus.PlusTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.rparen.RparenTokenAutomata;
@@ -77,6 +78,7 @@ public class ExpressionLexer {
 	new ElseTokenAutomata(),
 	new EndTokenAutomata(),
 	////////////////////////////////////////////////////
+	new NullTokenAutomata(), // should go before the name token
 	new NowTokenAutomata(), // should go before the name token
 	new SelfTokenAutomata(), // should go before the name token
 	new NameTokenAutomata(),//

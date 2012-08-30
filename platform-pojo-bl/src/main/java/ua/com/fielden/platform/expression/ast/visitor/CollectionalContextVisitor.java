@@ -77,6 +77,7 @@ public class CollectionalContextVisitor extends AbstractAstVisitor {
 	case DATE_CONST:
 	case NOW:
 	case DATE:
+	case NULL:
 	    node.setTag(null);
 	    break;
 	case SELF:
