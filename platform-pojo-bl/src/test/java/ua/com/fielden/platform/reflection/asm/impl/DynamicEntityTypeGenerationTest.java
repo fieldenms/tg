@@ -55,13 +55,15 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings("unchecked")
 public class DynamicEntityTypeGenerationTest {
     private static final String NEW_PROPERTY_DESC = "Description  for new money property";
     private static final String NEW_PROPERTY_TITLE = "New money property";
     private static final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";
     private static final String NEW_PROPERTY_1 = "newProperty_1";
     private static final String NEW_PROPERTY_2 = "newProperty_2";
+    private static final String NEW_PROPERTY_BOOL = "newProperty_BOOL";
+    private static final String NEW_PROPERTY_EXPRESSION_BOOL = "2 < 3";
     private boolean observed = false;
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
@@ -69,10 +71,11 @@ public class DynamicEntityTypeGenerationTest {
     private DynamicEntityClassLoader cl;
 
     private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
+    private final Calculated boolCalculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION_BOOL).newInstance();
 
     private final NewProperty pd1 = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
     private final NewProperty pd2 = new NewProperty(NEW_PROPERTY_2, Money.class, false,  NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
-
+    private final NewProperty pdBool = new NewProperty(NEW_PROPERTY_BOOL, boolean.class, false,  NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, boolCalculated);
 
     @Before
     public void setUp() {
@@ -129,6 +132,20 @@ public class DynamicEntityTypeGenerationTest {
 	    fail("An exception should have been thrown due to omitted startModification call.");
 	} catch (final Exception e) {
 	}
+    }
+
+    @Test
+    public void test_to_ensure_primitive_boolean_new_property_can_be_added() throws Exception {
+	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>)
+		cl.startModification(Entity.class.getName()).addProperties(pdBool).endModification();
+	assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 1, Finder.getPropertyDescriptors(newType).size());
+
+	final Field field = Finder.findFieldByName(newType, NEW_PROPERTY_BOOL);
+	assertNotNull("The field should exist.", field);
+	assertEquals("Incorrect type.", boolean.class, field.getType());
+	final Calculated calcAnno = field.getAnnotation(Calculated.class);
+	assertNotNull("The annotation Calculated should exist.", calcAnno);
+	assertEquals("Incorrect expression.", NEW_PROPERTY_EXPRESSION_BOOL, calcAnno.value());
     }
 
     @Test

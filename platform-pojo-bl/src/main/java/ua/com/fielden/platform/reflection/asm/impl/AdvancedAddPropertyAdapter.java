@@ -97,7 +97,8 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
     }
 
     /**
-     * Constructs a signature based on the new property annotation descriptor information. Its primary use if to correctly construct collectional properties based on the type
+     * Constructs a signature based on the new property annotation descriptor information.
+     * Its primary use is to correctly construct collectional properties based on the type
      * parameter as specified in the IsProperty annotation descriptor.
      *
      * @param pd
@@ -106,15 +107,15 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
      */
     private String constructSignature(final NewProperty pd, final String propertyType) {
 	final IsProperty adIsProperty = (IsProperty) pd.getAnnotationByType(IsProperty.class);
-	final String signature = adIsProperty != null && adIsProperty.value() != null ? Type.getDescriptor(adIsProperty.value()) : null;
-	final String signatureMode = signature == null ? null : propertyType.substring(0, propertyType.length() - 1) + "<" + signature + ">;";
+	final String signature = adIsProperty != null && adIsProperty.value() != Void.class ? Type.getDescriptor(adIsProperty.value()) : null;
+	final String signatureMode = signature == null ? propertyType : propertyType.substring(0, propertyType.length() - 1) + "<" + signature + ">;";
 	return signatureMode;
     }
 
     private void addPropertyField(final NewProperty pd, final ClassVisitor cv) {
 	final String propertyType = Type.getDescriptor(pd.type);
 	final String signatureMode = constructSignature(pd, propertyType);
-	final FieldVisitor fvProperty = cv.visitField(ACC_PRIVATE, pd.name, propertyType, signatureMode, null);
+	final FieldVisitor fvProperty = cv.visitField(ACC_PRIVATE, pd.name, propertyType, "Z".equals(signatureMode) ? null : signatureMode, null);
 
 	addRequiredAnnotations(pd);
 
@@ -215,11 +216,16 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 	final String signature = signatureMode != null ? "()" + signatureMode : null;
 
 	final String getterName = "get" + pd.name.substring(0, 1).toUpperCase() + pd.name.substring(1);
-	final MethodVisitor mvGetProperty = cv.visitMethod(ACC_PUBLIC, getterName, "()" + propertyType, signature, null);
+	final MethodVisitor mvGetProperty = cv.visitMethod(ACC_PUBLIC, getterName, "()" + propertyType,
+		"Z".equals(propertyType) ? null : signature, null);
 	mvGetProperty.visitCode();
 	mvGetProperty.visitVarInsn(ALOAD, 0);
 	mvGetProperty.visitFieldInsn(GETFIELD, enhancedName, pd.name, propertyType);
-	mvGetProperty.visitInsn(ARETURN);
+	if ("Z".equals(propertyType)) {
+	    mvGetProperty.visitInsn(IRETURN);
+	} else {
+	    mvGetProperty.visitInsn(ARETURN);
+	}
 	mvGetProperty.visitMaxs(1, 1);
 	mvGetProperty.visitEnd();
     }
@@ -230,12 +236,17 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 	final String signature = signatureMode != null ? "(" + signatureMode + ")V" : null;
 
 	final String setterName = "set" + pd.name.substring(0, 1).toUpperCase() + pd.name.substring(1);
-	final MethodVisitor mvSetProperty = cv.visitMethod(ACC_PUBLIC, setterName, "(" + propertyType + ")V", signature, null);
+	final MethodVisitor mvSetProperty = cv.visitMethod(ACC_PUBLIC, setterName, "(" + propertyType + ")V",
+		"Z".equals(propertyType) ? null : signature, null);
 	final AnnotationVisitor avObservable = mvSetProperty.visitAnnotation(Type.getDescriptor(Observable.class), true);
 	avObservable.visitEnd();
 	mvSetProperty.visitCode();
 	mvSetProperty.visitVarInsn(ALOAD, 0);
-	mvSetProperty.visitVarInsn(ALOAD, 1);
+	if ("Z".equals(propertyType)) {
+	    mvSetProperty.visitVarInsn(ILOAD, 1);
+	} else {
+	    mvSetProperty.visitVarInsn(ALOAD, 1);
+	}
 	mvSetProperty.visitFieldInsn(PUTFIELD, enhancedName, pd.name, propertyType);
 	mvSetProperty.visitInsn(RETURN);
 	mvSetProperty.visitMaxs(2, 2);
@@ -337,10 +348,17 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
     }
 
     public static void main(final String[] args) {
-	final Object intar = new Integer[] { 1, 3 };
-	final Object[] ar = (Object[]) intar;
-	for (final Object obj : ar) {
-	    System.out.println(obj);
-	}
+	System.out.println(Type.getDescriptor(float.class));
     }
+
+    private boolean bool;
+
+    public boolean getBool() {
+	return bool;
+    }
+
+    public void setBool(final boolean value) {
+	bool = value;
+    }
+
 }
