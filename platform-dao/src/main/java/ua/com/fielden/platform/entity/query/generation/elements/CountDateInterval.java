@@ -20,13 +20,32 @@ public class CountDateInterval extends TwoOperandsFunction {
 	    return sqlForH2();
 	case MSSQL:
 	    return sqlForMsSql();
+	case POSTGRESQL:
+	    return sqlForPostgres();
 	default:
 	    throw new IllegalStateException("Function [" + getClass().getSimpleName() +"] is not yet implemented for RDBMS [" + getDbVersion() + "]!");
 	}
     }
 
+    private String sqlForPostgres() {
+	switch (intervalUnit) {
+	case HOUR:
+	    return "EXTRACT(HOUR FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+	case DAY:
+	    return "EXTRACT(DAY FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+	case MONTH:
+	    return "EXTRACT(MONTH FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+	case YEAR:
+	    return "EXTRACT(YEAR FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+	default:
+	    throw new IllegalStateException("Unexpected interval unit: " + intervalUnit);
+	}
+    }
+
     private String sqlForH2() {
 	switch (intervalUnit) {
+	case HOUR:
+	    return "DATEDIFF('HOUR', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
 	case DAY:
 	    return "DATEDIFF('DAY', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
 	case MONTH:
@@ -40,6 +59,8 @@ public class CountDateInterval extends TwoOperandsFunction {
 
     private String sqlForMsSql() {
 	switch (intervalUnit) {
+	case HOUR:
+	    return "DATEDIFF(HOUR, " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
 	case DAY:
 	    return "DATEDIFF(DAY, " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
 	case MONTH:
