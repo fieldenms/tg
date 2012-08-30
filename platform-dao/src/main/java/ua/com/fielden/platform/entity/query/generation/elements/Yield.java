@@ -13,7 +13,7 @@ public class Yield {
 
     @Override
     public String toString() {
-	return sql();
+	return alias;//sql();
     }
 
     public String sql() {

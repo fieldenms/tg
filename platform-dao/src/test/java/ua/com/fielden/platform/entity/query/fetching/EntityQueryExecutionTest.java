@@ -79,6 +79,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -103,6 +104,23 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgMakeCount makeCountDao = getInstance(ITgMakeCount.class);
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
+
+    @Test
+    public void test_query_for_correct_fetching_adjustment() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).
+		where().prop("key").eq().val("CAR1").
+		yield().prop("key").as("key").
+		yield().prop("desc").as("desc").
+		yield().prop("model").as("model").
+		yield().prop("model.make").as("model.make").
+		yield().prop("model.make.key").as("model.make.key").
+		modelAsEntity(TgVehicle.class);
+	final TgVehicle vehicle1 = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
+		with("key"). //
+		with("desc"). //
+		with("model", fetchOnly(TgVehicleModel.class).with("key").with("make", fetchOnly(TgVehicleMake.class).with("key")))).model());
+	assertNotNull(vehicle1.getModel().getMake().getKey());
+    }
 
 
     @Test

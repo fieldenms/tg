@@ -155,6 +155,48 @@ public class EntQuery implements ISingleOperand {
 	}
     }
 
+    private void enhanceGroupBysModelFromYields() {
+	final Set<EntProp> toBeAdded = new HashSet<>();
+	for (final Yield yield : yields.getYields()) {
+	    if (yield.getOperand() instanceof EntProp) {
+		final String propName = ((EntProp) yield.getOperand()).getName();
+		for (final GroupBy groupBy : groups.getGroups()) {
+		    if (groupBy.getOperand() instanceof EntProp) {
+			final String groupPropName = ((EntProp) groupBy.getOperand()).getName();
+			if (propName.startsWith(groupPropName + ".")) {
+			    toBeAdded.add((EntProp) yield.getOperand());
+			}
+		    }
+		}
+	    }
+	}
+
+	for (final EntProp entProp : toBeAdded) {
+	    groups.getGroups().add(new GroupBy(entProp));
+	}
+    }
+
+    private void enhanceGroupBysModelFromOrderBys() {
+	final Set<EntProp> toBeAdded = new HashSet<>();
+	for (final OrderBy orderBy : orderings.getModels()) {
+	    if (orderBy.getOperand() instanceof EntProp) {
+		final String propName = ((EntProp) orderBy.getOperand()).getName();
+		for (final GroupBy groupBy : groups.getGroups()) {
+		    if (groupBy.getOperand() instanceof EntProp) {
+			final String groupPropName = ((EntProp) groupBy.getOperand()).getName();
+			if (propName.startsWith(groupPropName + ".")) {
+			    toBeAdded.add((EntProp) orderBy.getOperand());
+			}
+		    }
+		}
+	    }
+	}
+
+	for (final EntProp entProp : toBeAdded) {
+	    groups.getGroups().add(new GroupBy(entProp));
+	}
+    }
+
     private void adjustYieldsModelAccordingToFetchModel(final FetchModel fetchModel) {
 	if (fetchModel != null) {
 	    final Set<Yield> toBeRemoved = new HashSet<Yield>();
@@ -307,7 +349,11 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	enhanceYieldsModel(); //!! adds new properties in yield section
+	//System.out.println("                         1------------------ " + yields.getYields());
 	adjustYieldsModelAccordingToFetchModel(fetchModel);
+	//System.out.println("                         2------------------ " + yields.getYields());
+	enhanceGroupBysModelFromYields();
+	enhanceGroupBysModelFromOrderBys();
 
 	int countOfUnprocessed = 1;
 
