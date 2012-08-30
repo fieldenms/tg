@@ -23,6 +23,9 @@ public enum EgTokenCategory implements ILexemeCategory {
     DAY(13),
     MONTH(14),
     YEAR(15),
+    HOUR(48),
+    MINUTE(49),
+    SECOND(50),
     UPPER(16),
     LOWER(17),
     DAY_DIFF(18), // TODO remove deprecated function from lexer, parser, AST visitors and unit tests
@@ -55,7 +58,11 @@ public enum EgTokenCategory implements ILexemeCategory {
     DAYS(39),
     MONTHS(40),
     YEARS(41),
+    HOURS(45),
+    MINUTES(46),
+    SECONDS(47),
     NOW(42);
+
 
     public final int index;
 

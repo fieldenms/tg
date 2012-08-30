@@ -24,12 +24,18 @@ import ua.com.fielden.platform.expression.lexer.function.count.CountTokenAutomat
 import ua.com.fielden.platform.expression.lexer.function.day.DayTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.day_diff.DayDiffTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.days.DaysTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.hour.HourTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.hours.HoursTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.lower.LowerTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.max.MaxTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.min.MinTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.minute.MinuteTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.minutes.MinutesTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.month.MonthTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.months.MonthsTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.now.NowTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.second.SecondTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.seconds.SecondsTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.self.SelfTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.sum.SumTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.upper.UpperTokenAutomata;
@@ -68,8 +74,10 @@ public class ExpressionLexer {
 	new PlusTokenAutomata(), new MinusTokenAutomata(), new MultTokenAutomata(), new DivTokenAutomata(), //
 	///////////////////// functions ////////////////////
 	new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), new MaxTokenAutomata(),//
-	new DaysTokenAutomata(), new MonthsTokenAutomata(), new YearsTokenAutomata(), // should be before DAY, MONTH and YEAR token lexers
+	new DaysTokenAutomata(), new MonthsTokenAutomata(), new YearsTokenAutomata(), //
 	new CountTokenAutomata(), new DayTokenAutomata(), new MonthTokenAutomata(), new YearTokenAutomata(), //
+	new HoursTokenAutomata(), new MinutesTokenAutomata(), new SecondsTokenAutomata(), //
+	new HourTokenAutomata(), new MinuteTokenAutomata(), new SecondTokenAutomata(), //
 	new UpperTokenAutomata(), new LowerTokenAutomata(), new DayDiffTokenAutomata(), //
 	////////////////////////////////////////////////////
 	new CaseTokenAutomata(), // this block of lexers should go begore the name lexer
