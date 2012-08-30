@@ -5,6 +5,7 @@ import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
 import com.google.inject.Scopes;
@@ -18,6 +19,7 @@ public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory
 	bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class).in(Scopes.SINGLETON);
 	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
 	bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
+	bind(ISerialiser.class).to(StubSerialiser.class).in(Scopes.SINGLETON);
     }
 
 }
