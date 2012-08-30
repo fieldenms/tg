@@ -21,7 +21,6 @@ public class StandAloneConditionBuilder extends AbstractTokensBuilder {
 	for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
 	    add(tokenPair.getKey(), tokenPair.getValue());
 	}
-
     }
 
     @Override
@@ -34,25 +33,11 @@ public class StandAloneConditionBuilder extends AbstractTokensBuilder {
 	return getChild() == null;
     }
 
-
     public GroupedConditions getModel() {
 	if (getChild() != null) {
 	    throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
 
-//	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-//	final Pair<TokenCategory, Object> firstOperandPair = iterator.next();
-//	final ISingleOperand firstOperand = getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue());
-//	final List<CompoundSingleOperand> items = new ArrayList<CompoundSingleOperand>();
-//	for (; iterator.hasNext();) {
-//	    final ArithmeticalOperator operator = (ArithmeticalOperator) iterator.next().getValue();
-//	    final Pair<TokenCategory, Object> subsequentOperandPair = iterator.next();
-//	    final ISingleOperand subsequentOperand = getModelForSingleOperand(subsequentOperandPair.getKey(), subsequentOperandPair.getValue());
-//
-//	    items.add(new CompoundSingleOperand(subsequentOperand, operator));
-//	}
-//
-//	return new Pair<TokenCategory, Object>(TokenCategory.EXPR, new Expression(firstOperand, items));    }
 	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
 	final ICondition firstCondition = (ICondition) iterator.next().getValue();
 	final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
@@ -67,5 +52,4 @@ public class StandAloneConditionBuilder extends AbstractTokensBuilder {
     public Pair<TokenCategory, Object> getResult() {
 	throw new RuntimeException("Not applicable!");
     }
-
 }
