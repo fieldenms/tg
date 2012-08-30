@@ -264,6 +264,18 @@ final class Tokens {
 	return add(TokenCategory.FUNCTION, Functions.COUNT_DATE_INTERVAL);
     }
 
+    public Tokens secondsInterval() {
+	return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.SECOND);
+    }
+
+    public Tokens minutesInterval() {
+	return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.MINUTE);
+    }
+
+    public Tokens hoursInterval() {
+	return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.HOUR);
+    }
+
     public Tokens daysInterval() {
 	return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.DAY);
     }

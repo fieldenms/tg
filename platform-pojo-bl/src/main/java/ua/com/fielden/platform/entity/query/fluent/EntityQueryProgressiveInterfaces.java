@@ -177,6 +177,9 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     interface IDateDiffIntervalFunction<T, ET extends AbstractEntity<?>> {
+	IDateDiffFunction<T, ET> seconds();
+	IDateDiffFunction<T, ET> minutes();
+	IDateDiffFunction<T, ET> hours();
 	IDateDiffFunction<T, ET> days();
 	IDateDiffFunction<T, ET> months();
 	IDateDiffFunction<T, ET> years();

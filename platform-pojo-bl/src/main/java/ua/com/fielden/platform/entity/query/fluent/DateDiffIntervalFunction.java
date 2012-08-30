@@ -14,6 +14,21 @@ public class DateDiffIntervalFunction<T, ET extends AbstractEntity<?>> extends A
     }
 
     @Override
+    public IDateDiffFunction<T, ET> seconds() {
+	return new DateDiffFunction<T, ET>(getTokens().secondsInterval(), parent);
+    }
+
+    @Override
+    public IDateDiffFunction<T, ET> minutes() {
+	return new DateDiffFunction<T, ET>(getTokens().minutesInterval(), parent);
+    }
+
+    @Override
+    public IDateDiffFunction<T, ET> hours() {
+	return new DateDiffFunction<T, ET>(getTokens().hoursInterval(), parent);
+    }
+
+    @Override
     public IDateDiffFunction<T, ET> days() {
 	return new DateDiffFunction<T, ET>(getTokens().daysInterval(), parent);
     }
