@@ -90,9 +90,12 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	    processOperation(node);
 	    break;
 	    // uno-operand date type functions
-	case DAY:
-	case MONTH:
 	case YEAR:
+	case MONTH:
+	case DAY:
+	case HOUR:
+	case MINUTE:
+	case SECOND:
 	    processDatePartExtractionFunction(node);
 	    break;
 	    // uno-operand string type functions
@@ -102,9 +105,12 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	    break;
 	    // bi-operand date type functions
 	case DAY_DIFF: // TODO deprecated function
-	case DAYS:
-	case MONTHS:
 	case YEARS:
+	case MONTHS:
+	case DAYS:
+	case HOURS:
+	case MINUTES:
+	case SECONDS:
 	    processDateDiffFunctions(node);
 	    break;
 	    // uno-operand aggregation functions
@@ -181,9 +187,10 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 		     Money.class.isAssignableFrom(rightOperandType) || //
 		     Number.class.isAssignableFrom(rightOperandType) || //
 		     Date.class.isAssignableFrom(rightOperandType) || //
-		     DateTime.class.isAssignableFrom(rightOperandType) //
+		     DateTime.class.isAssignableFrom(rightOperandType) || //
+		     AbstractEntity.class.isAssignableFrom(rightOperandType) //
 		    )
-		){
+		) {
 		// the type of the comparison operation is always boolean
 		node.setType(boolean.class);
 	    } else if (
@@ -191,7 +198,9 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 		     Money.class.isAssignableFrom(leftOperandType) || //
 		     Number.class.isAssignableFrom(leftOperandType) || //
 		     Date.class.isAssignableFrom(leftOperandType) || //
-		     DateTime.class.isAssignableFrom(leftOperandType)) {
+		     DateTime.class.isAssignableFrom(leftOperandType) || //
+		     AbstractEntity.class.isAssignableFrom(rightOperandType)
+		   ) {  //
 		// the type of the comparison operation is always boolean
 		node.setType(boolean.class);
 	    }

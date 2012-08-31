@@ -446,16 +446,22 @@ public class ExpressionParser {
 	case MIN:
 	case MAX:
 	case COUNT:
-	case DAY:
-	case MONTH:
 	case YEAR:
+	case MONTH:
+	case DAY:
+	case HOUR:
+	case MINUTE:
+	case SECOND:
 	case UPPER:
 	case LOWER:
 	    return match_function_with_one_argument(cat);
 	case DAY_DIFF:
-	case DAYS:
-	case MONTHS:
 	case YEARS:
+	case MONTHS:
+	case DAYS:
+	case HOURS:
+	case MINUTES:
+	case SECONDS:
 	    return match_function_with_two_arguments(cat);
 	default:
 	    throw new NoViableAltException("Unexpected token " + tokens[position], tokens[position]);

@@ -65,9 +65,12 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	    node.setModel(createOperationModel(node));
 	    break;
 	// uno-operand date type functions
-	case DAY:
-	case MONTH:
 	case YEAR:
+	case MONTH:
+	case DAY:
+	case HOUR:
+	case MINUTE:
+	case SECOND:
 	    node.setModel(createDateFunctionModel(node));
 	    break;
 	// uno-operand date type functions
@@ -79,14 +82,23 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	case DAY_DIFF: // TODO to be removed as deprecated
 	    node.setModel(createDayDiffFunctionModel(node));
 	    break;
-	case DAYS:
-	    node.setModel(createDaysFunctionModel(node));
+	case YEARS:
+	    node.setModel(createYearsFunctionModel(node));
 	    break;
 	case MONTHS:
 	    node.setModel(createMonthsFunctionModel(node));
 	    break;
-	case YEARS:
-	    node.setModel(createYearsFunctionModel(node));
+	case DAYS:
+	    node.setModel(createDaysFunctionModel(node));
+	    break;
+	case HOURS:
+	    node.setModel(createHoursFunctionModel(node));
+	    break;
+	case MINUTES:
+	    node.setModel(createMinutesFunctionModel(node));
+	    break;
+	case SECONDS:
+	    node.setModel(createSecondsFunctionModel(node));
 	    break;
 	case GT:
 	case LT:
@@ -423,14 +435,23 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
 	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr;
 	switch (cat) {
-	case DAY:
-	    expr = expr().dayOf();
+	case YEAR:
+	    expr = expr().yearOf();
 	    break;
 	case MONTH:
 	    expr = expr().monthOf();
 	    break;
-	case YEAR:
-	    expr = expr().yearOf();
+	case DAY:
+	    expr = expr().dayOf();
+	    break;
+	case HOUR:
+	    expr = expr().hourOf();
+	    break;
+	case MINUTE:
+	    expr = expr().minuteOf();
+	    break;
+	case SECOND:
+	    expr = expr().secondOf();
 	    break;
 	default:
 	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
@@ -452,31 +473,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().count().days().between();
 
-	// identify left operand expression model
-	final AstNode leftOperand = node.getChildren().get(0);
-	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose, AbstractEntity<?>> exprWithOperand;
-
-	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
-	if (cat1 == EgTokenCategory.NAME) {
-	    exprWithOperand = expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
-	} else {
-	    exprWithOperand = leftOperand.getModel() != null ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getValue());
-	}
-
-	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
-
-	// identify right operand expression model
-	final AstNode rightOperand = node.getChildren().get(1);
-	final IStandAloneExprOperationAndClose exprWithOperand1;
-
-	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
-	if (cat2 == EgTokenCategory.NAME) {
-	    exprWithOperand1 = andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
-	} else {
-	    exprWithOperand1 = leftOperand.getModel() != null ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getValue());
-	}
-
-	return exprWithOperand1.model();
+	return produceDateDiffModel(node, expr);
     }
 
     private ExpressionModel createDaysFunctionModel(final AstNode node) throws TypeCompatibilityException {
@@ -487,33 +484,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().count().days().between();
 
-	// identify left operand expression model
-	final AstNode leftOperand = node.getChildren().get(0);
-	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose, AbstractEntity<?>> exprWithOperand;
-
-	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
-	if (cat1 == EgTokenCategory.NAME) {
-	    exprWithOperand = expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
-	} else {
-	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel())
-		    : expr.val(leftOperand.getValue());
-	}
-
-	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
-
-	// identify right operand expression model
-	final AstNode rightOperand = node.getChildren().get(1);
-	final IStandAloneExprOperationAndClose exprWithOperand1;
-
-	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
-	if (cat2 == EgTokenCategory.NAME) {
-	    exprWithOperand1 = andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
-	} else {
-	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel())
-		    : andExpr.val(rightOperand.getValue());
-	}
-
-	return exprWithOperand1.model();
+	return produceDateDiffModel(node, expr);
     }
 
     private ExpressionModel createMonthsFunctionModel(final AstNode node) throws TypeCompatibilityException {
@@ -524,33 +495,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().count().months().between();
 
-	// identify left operand expression model
-	final AstNode leftOperand = node.getChildren().get(0);
-	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose, AbstractEntity<?>> exprWithOperand;
-
-	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
-	if (cat1 == EgTokenCategory.NAME) {
-	    exprWithOperand = expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
-	} else {
-	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel())
-		    : expr.val(leftOperand.getValue());
-	}
-
-	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
-
-	// identify right operand expression model
-	final AstNode rightOperand = node.getChildren().get(1);
-	final IStandAloneExprOperationAndClose exprWithOperand1;
-
-	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
-	if (cat2 == EgTokenCategory.NAME) {
-	    exprWithOperand1 = andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
-	} else {
-	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel())
-		    : andExpr.val(rightOperand.getValue());
-	}
-
-	return exprWithOperand1.model();
+	return produceDateDiffModel(node, expr);
     }
 
     private ExpressionModel createYearsFunctionModel(final AstNode node) throws TypeCompatibilityException {
@@ -561,34 +506,79 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
 	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().count().years().between();
 
-	// identify left operand expression model
-	final AstNode leftOperand = node.getChildren().get(0);
-	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose, AbstractEntity<?>> exprWithOperand;
-
-	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
-	if (cat1 == EgTokenCategory.NAME) {
-	    exprWithOperand = expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
-	} else {
-	    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel())
-		    : expr.val(leftOperand.getValue());
-	}
-
-	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
-
-	// identify right operand expression model
-	final AstNode rightOperand = node.getChildren().get(1);
-	final IStandAloneExprOperationAndClose exprWithOperand1;
-
-	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
-	if (cat2 == EgTokenCategory.NAME) {
-	    exprWithOperand1 = andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
-	} else {
-	    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel())
-		    : andExpr.val(rightOperand.getValue());
-	}
-
-	return exprWithOperand1.model();
+	return produceDateDiffModel(node, expr);
     }
+
+    private ExpressionModel createHoursFunctionModel(final AstNode node) throws TypeCompatibilityException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (cat != EgTokenCategory.HOURS) {
+	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
+	}
+
+	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().count().hours().between();
+
+	return produceDateDiffModel(node, expr);
+    }
+
+    private ExpressionModel createMinutesFunctionModel(final AstNode node) throws TypeCompatibilityException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (cat != EgTokenCategory.MINUTES) {
+	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
+	}
+
+	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().count().minutes().between();
+
+	return produceDateDiffModel(node, expr);
+    }
+
+    private ExpressionModel createSecondsFunctionModel(final AstNode node) throws TypeCompatibilityException {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (cat != EgTokenCategory.SECONDS) {
+	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
+	}
+
+	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().count().seconds().between();
+
+	return produceDateDiffModel(node, expr);
+    }
+
+    /**
+     * Common routine for day diff functions that produces the final model based on the node and the a specific function contract.
+     *
+     * @param node
+     * @param expr
+     * @return
+     */
+    private ExpressionModel produceDateDiffModel(final AstNode node, final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr) {
+	// identify left operand expression model
+		final AstNode leftOperand = node.getChildren().get(0);
+		final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose, AbstractEntity<?>> exprWithOperand;
+
+		final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
+		if (cat1 == EgTokenCategory.NAME) {
+		    exprWithOperand = expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
+		} else {
+		    exprWithOperand = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? expr.expr(leftOperand.getModel())
+			    : expr.val(leftOperand.getValue());
+		}
+
+		final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
+
+		// identify right operand expression model
+		final AstNode rightOperand = node.getChildren().get(1);
+		final IStandAloneExprOperationAndClose exprWithOperand1;
+
+		final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
+		if (cat2 == EgTokenCategory.NAME) {
+		    exprWithOperand1 = andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
+		} else {
+		    exprWithOperand1 = leftOperand.getModel() != null && !leftOperand.getModel().containsSingleValueToken() ? andExpr.expr(rightOperand.getModel())
+			    : andExpr.val(rightOperand.getValue());
+		}
+
+		return exprWithOperand1.model();
+    }
+
 
     private ExpressionModel createAggregateFunctionModel(final AstNode node) throws TypeCompatibilityException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());

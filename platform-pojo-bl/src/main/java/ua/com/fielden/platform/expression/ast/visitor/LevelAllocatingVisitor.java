@@ -92,9 +92,12 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 	case MINUS:
 	case MULT:
 	case DIV:
-	case DAY:
-	case MONTH:
 	case YEAR:
+	case MONTH:
+	case DAY:
+	case HOUR:
+	case MINUTE:
+	case SECOND:
 	case UPPER:
 	case LOWER:
 	case LT:
@@ -108,9 +111,12 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 	case CASE:
 	case WHEN:
 	case DAY_DIFF:
-	case DAYS:
-	case MONTHS:
 	case YEARS:
+	case MONTHS:
+	case DAYS:
+	case HOURS:
+	case MINUTES:
+	case SECONDS:
 	    node.setLevel(determineLevelBasedOnOperands(node));
 	    break;
 	// operand dependent and decreasing level operations
