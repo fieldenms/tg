@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
+import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
@@ -79,6 +81,26 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
 	this.persistentMasters = createRootsMap();
 	this.currentMasters = createRootsMap();
+    }
+
+    @Override
+    public List<Class<?>> entityCentreMenuItemTypes() {
+	final List<MainMenuItem> mmItems = this.mainMenuItemController.getAllEntities(from(select(MainMenuItem.class).model()).model());
+	final List<Class<?>> res = new ArrayList<Class<?>>();
+	for (final MainMenuItem mmi : mmItems) {
+	    try {
+		final Class<?> mmiType = ClassLoader.getSystemClassLoader().loadClass(mmi.getKey());
+		try {
+		    validateMenuItemType(mmiType);
+		    validateMenuItemTypeRootType(mmiType);
+		    res.add(mmiType);
+		} catch (final IllegalArgumentException e) {
+		}
+	    } catch (final ClassNotFoundException e) {
+		throw new IllegalStateException(e);
+	    }
+	}
+	return res;
     }
 
     @Override

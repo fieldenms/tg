@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree;
 
+import java.util.List;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -16,6 +17,8 @@ import ua.com.fielden.platform.security.user.IUserProvider;
  *
  */
 public interface IGlobalDomainTreeManager {
+    List<Class<?>> entityCentreMenuItemTypes();
+
     /**
      * Returns a user provider. The user is a part of domain tree context. Some domain tree actions is permitted only for base users.
      * Some behaviour also can differ for different types of users.
