@@ -30,20 +30,36 @@ public class CountDateInterval extends TwoOperandsFunction {
     private String sqlForPostgres() {
 	switch (intervalUnit) {
 	case SECOND:
-	    return "EXTRACT(SECOND FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+	    return "24 * 60 * 60 * " + sqlForPostgresExtractDay() + " + 60 * 60 * " + sqlForPostgresExtractHour() + " + 60 * " + sqlForPostgresExtractMinute() + " + " + sqlForPostgresExtractSecond();
 	case MINUTE:
-	    return "EXTRACT(MINUTE FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+	    return "24 * 60 * " + sqlForPostgresExtractDay() + " + 60 * " + sqlForPostgresExtractHour() + " + " + sqlForPostgresExtractMinute();
 	case HOUR:
-	    return "EXTRACT(HOUR FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+	    return "24 * " + sqlForPostgresExtractDay() + " + " + sqlForPostgresExtractHour();
 	case DAY:
-	    return "EXTRACT(DAY FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
-	case MONTH:
-	    return "EXTRACT(MONTH FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
-	case YEAR:
-	    return "EXTRACT(YEAR FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+	    return sqlForPostgresExtractDay();
+//	case MONTH:
+//	    return "EXTRACT(MONTH FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+//	case YEAR:
+//	    return "EXTRACT(YEAR FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
 	default:
 	    throw new IllegalStateException("Unexpected interval unit: " + intervalUnit);
 	}
+    }
+
+    private String sqlForPostgresExtractDay() {
+	    return "EXTRACT(DAY FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+    }
+
+    private String sqlForPostgresExtractHour() {
+	    return "EXTRACT(HOUR FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+    }
+
+    private String sqlForPostgresExtractMinute() {
+	    return "EXTRACT(MINUTE FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
+    }
+
+    private String sqlForPostgresExtractSecond() {
+	    return "EXTRACT(SECOND FROM (" + getOperand1().sql() + " - " + getOperand2().sql() + "))";
     }
 
     private String sqlForH2() {
