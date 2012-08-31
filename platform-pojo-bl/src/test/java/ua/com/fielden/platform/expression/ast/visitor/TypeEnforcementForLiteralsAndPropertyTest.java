@@ -64,7 +64,7 @@ public class TypeEnforcementForLiteralsAndPropertyTest {
 	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
 	new AstWalker(ast, visitor).walk();
 	assertEquals("Incorrect type.", Day.class, ast.getType());
-	assertEquals("Incorrect value.", new Day(23), ast.getValue());
+	assertEquals("Incorrect value.", Integer.valueOf(23), ast.getValue());
     }
 
     @Test
@@ -75,7 +75,7 @@ public class TypeEnforcementForLiteralsAndPropertyTest {
 	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
 	new AstWalker(ast, visitor).walk();
 	assertEquals("Incorrect type.", Month.class, ast.getType());
-	assertEquals("Incorrect value.", new Month(3), ast.getValue());
+	assertEquals("Incorrect value.", Integer.valueOf(3), ast.getValue());
     }
 
     @Test
@@ -86,7 +86,7 @@ public class TypeEnforcementForLiteralsAndPropertyTest {
 	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
 	new AstWalker(ast, visitor).walk();
 	assertEquals("Incorrect type.", Year.class, ast.getType());
-	assertEquals("Incorrect value.", new Year(30), ast.getValue());
+	assertEquals("Incorrect value.", Integer.valueOf(30), ast.getValue());
     }
 
     @Test

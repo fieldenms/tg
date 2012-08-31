@@ -89,7 +89,7 @@ public class TypeEnforcementForPlusOperationTest {
 	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
 	new AstWalker(ast, visitor).walk();
 	assertEquals("Incorrect type.", Day.class, ast.getType());
-	assertEquals("Incorrect value.", new Day(4), ast.getValue());
+	assertEquals("Incorrect value.", Integer.valueOf(4), ast.getValue());
     }
 
     @Test
@@ -100,7 +100,7 @@ public class TypeEnforcementForPlusOperationTest {
 	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
 	new AstWalker(ast, visitor).walk();
 	assertEquals("Incorrect type.", Month.class, ast.getType());
-	assertEquals("Incorrect value.", new Month(5), ast.getValue());
+	assertEquals("Incorrect value.", Integer.valueOf(5), ast.getValue());
     }
 
     @Test
@@ -111,7 +111,7 @@ public class TypeEnforcementForPlusOperationTest {
 	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
 	new AstWalker(ast, visitor).walk();
 	assertEquals("Incorrect type.", Year.class, ast.getType());
-	assertEquals("Incorrect value.", new Year(5), ast.getValue());
+	assertEquals("Incorrect value.", Integer.valueOf(5), ast.getValue());
     }
 
     @Test

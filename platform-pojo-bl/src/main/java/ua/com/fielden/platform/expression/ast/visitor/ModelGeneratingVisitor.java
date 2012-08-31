@@ -16,7 +16,6 @@ import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
-import ua.com.fielden.platform.expression.type.AbstractDateLiteral;
 
 /**
  * A visitor, which generates a computational model for AST.
@@ -323,7 +322,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
      */
     private ExpressionModel createLiteralModel(final AstNode node) {
 	if (node.getToken().category == EgTokenCategory.DATE_CONST) {
-	    return expr().val(((AbstractDateLiteral) node.getValue()).getValue()).model();
+	    return expr().val(node.getValue()).model();
 	}
 	return expr().val(node.getValue()).model();
     }

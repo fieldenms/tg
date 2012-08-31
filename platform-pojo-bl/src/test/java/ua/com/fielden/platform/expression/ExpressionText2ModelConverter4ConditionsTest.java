@@ -13,7 +13,6 @@ import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
-import ua.com.fielden.platform.expression.type.Month;
 
 public class ExpressionText2ModelConverter4ConditionsTest {
 
@@ -94,11 +93,11 @@ public class ExpressionText2ModelConverter4ConditionsTest {
 	assertEquals("Incorrect expression type", String.class, root.getType());
 
 	final ExpressionModel months1 = expr().count().months().between().prop("dateProperty").and().expr(expr().now().model()).model();
-	final ConditionModel cond1 = cond().expr(months1).gt().val(new Month(2)).model();
+	final ConditionModel cond1 = cond().expr(months1).gt().val(2).model();
 	final ExpressionModel months2 = expr().count().months().between().prop("dateProperty").and().expr(expr().now().model()).model();
 	final ExpressionModel months3 = expr().count().months().between().prop("dateProperty").and().expr(expr().now().model()).model();
-	final ConditionModel cond2 = cond().expr(months2).le().val(new Month(2)).model();
-	final ConditionModel cond3 = cond().expr(months3).gt().val(new Month(1)).model();
+	final ConditionModel cond2 = cond().expr(months2).le().val(2).model();
+	final ConditionModel cond3 = cond().expr(months3).gt().val(1).model();
 	final ConditionModel andCond = cond().condition(cond2).and().condition(cond3).model();
 	final ExpressionModel model = expr().
 		caseWhen().condition(cond1).then().val("Green").

@@ -750,14 +750,11 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 		    final String value = "\"" + leftOperand.getValue().toString().replaceAll("\"", "") + rightOperand.getValue().toString().replaceAll("\"", "") + "\"";
 		    return value;
 		} else if (Day.class.isAssignableFrom(node.getType())) {
-		    final Day value = new Day(((Day) leftOperand.getValue()).getValue() + ((Day) rightOperand.getValue()).getValue());
-		    return value;
+		    return ((Integer) leftOperand.getValue()) + ((Integer) rightOperand.getValue());
 		} else if (Month.class.isAssignableFrom(node.getType())) {
-		    final Month value = new Month(((Month) leftOperand.getValue()).getValue() + ((Month) rightOperand.getValue()).getValue());
-		    return value;
+		    return ((Integer) leftOperand.getValue()) + ((Integer) rightOperand.getValue());
 		} else if (Year.class.isAssignableFrom(node.getType())) {
-		    final Year value = new Year(((Year) leftOperand.getValue()).getValue() + ((Year) rightOperand.getValue()).getValue());
-		    return value;
+		    return ((Integer) leftOperand.getValue()) + ((Integer) rightOperand.getValue());
 		}
 		break;
 	    case MINUS:
@@ -768,14 +765,11 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 		    final Integer value = new Integer(leftOperand.getValue().toString()) - new Integer(rightOperand.getValue().toString());
 		    return value;
 		} else if (Day.class.isAssignableFrom(node.getType())) {
-		    final Day value = new Day(((Day) leftOperand.getValue()).getValue() - ((Day) rightOperand.getValue()).getValue());
-		    return value;
+		    return ((Integer)leftOperand.getValue()) - ((Integer)rightOperand.getValue());
 		} else if (Month.class.isAssignableFrom(node.getType())) {
-		    final Month value = new Month(((Month) leftOperand.getValue()).getValue() - ((Month) rightOperand.getValue()).getValue());
-		    return value;
+		    return ((Integer) leftOperand.getValue()) - ((Integer) rightOperand.getValue());
 		} else if (Year.class.isAssignableFrom(node.getType())) {
-		    final Year value = new Year(((Year) leftOperand.getValue()).getValue() - ((Year) rightOperand.getValue()).getValue());
-		    return value;
+		    return ((Integer) leftOperand.getValue()) - ((Integer) rightOperand.getValue());
 		}
 
 		break;
@@ -810,13 +804,13 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	final String valueText = text.substring(0, text.length() - 1);
 	if (text.endsWith(DateLiteral.DAY.discriminator)) {
 	    node.setType(Day.class);
-	    node.setValue(new Day(Integer.parseInt(valueText)));
+	    node.setValue(Integer.parseInt(valueText));
 	} else if (text.endsWith(DateLiteral.MONTH.discriminator)) {
 	    node.setType(Month.class);
-	    node.setValue(new Month(Integer.parseInt(valueText)));
+	    node.setValue(Integer.parseInt(valueText));
 	} else if (text.endsWith(DateLiteral.YEAR.discriminator)) {
 	    node.setType(Year.class);
-	    node.setValue(new Year(Integer.parseInt(valueText)));
+	    node.setValue(Integer.parseInt(valueText));
 	} else {
 	    throw new TypeCompatibilityException("Value " + node.getToken().text + " could not be type casted to any of the date literal types.", node.getToken());
 	}
