@@ -162,6 +162,17 @@ public class ExpressionText2ModelConverter4ConditionsTest {
     }
 
     @Test
+    public void model_generation_for_comparing_entity_with_NULL() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty = null");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", boolean.class, root.getType());
+
+	final ConditionModel condition = cond().expr(expr().prop("entityProperty").model()).isNull().model();
+	final ExpressionModel model = expr().caseWhen().condition(condition).then().val(true).otherwise().val(false).end().model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
     public void model_generation_for_invalid_value_comparison_with_NULL() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "2 <> null");
 	try {

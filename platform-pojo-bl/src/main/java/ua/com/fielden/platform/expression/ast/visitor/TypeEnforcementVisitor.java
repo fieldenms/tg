@@ -199,7 +199,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 		     Number.class.isAssignableFrom(leftOperandType) || //
 		     Date.class.isAssignableFrom(leftOperandType) || //
 		     DateTime.class.isAssignableFrom(leftOperandType) || //
-		     AbstractEntity.class.isAssignableFrom(rightOperandType)
+		     AbstractEntity.class.isAssignableFrom(leftOperandType)
 		   ) {  //
 		// the type of the comparison operation is always boolean
 		node.setType(boolean.class);
