@@ -34,7 +34,7 @@ public class SimpleMoneyType extends AbstractCompositeUserType implements ISimpl
 	if (resultSet.wasNull()) {
 	    return null;
 	}
-	return new Money(amount, Currency.getInstance(Locale.getDefault()));
+	return new Money(amount);
     }
 
     @Override

@@ -49,6 +49,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
 	actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(VEHICLE));
 	assertTrue(actual.containsAll(expected));
+	System.out.println(actual);
     }
 
     @Test

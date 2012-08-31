@@ -65,6 +65,18 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	return hibType instanceof ICompositeUserTypeInstantiate ? (ICompositeUserTypeInstantiate) hibType : null;
     }
 
+    public String getSinglePropertyOfCompositeUserType() {
+	final ICompositeUserTypeInstantiate compositeUserTypeInstance = getHibTypeAsCompositeUserType();
+	if (compositeUserTypeInstance != null) {
+	    final String[] propNames = compositeUserTypeInstance.getPropertyNames();
+	    if (propNames.length == 1) {
+		return propNames[0];
+	    }
+	}
+	return null;
+    }
+
+
     @Override
     public String toString() {
 	return "\nname = " + name + " javaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + " hibType = "
