@@ -728,6 +728,8 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		    value = values;
 		}
 
+		newCdtme.getFirstTick().check(root, choosenItem.getKey(), true);
+
 		if(choosenItem.getValue() == null){
 		    newCdtme.getFirstTick().setOrNull(root, choosenItem.getKey(), true);
 		}
