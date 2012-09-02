@@ -10,17 +10,20 @@ import javafx.embed.swing.JFXPanel;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Font;
+import javafx.util.Callback;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
@@ -102,6 +105,17 @@ public class DashboardView extends JFXPanel {
 	return data;
     }
 
+    public static class TrafficLightsCell extends TableCell<Sentinel, IPage> {
+	@Override
+	protected void updateItem(final IPage arg0, final boolean arg1) {
+	    super.updateItem(arg0, arg1);
+
+	    //if (arg0 != null) {
+		setGraphic(TrafficLightControl.createTrafficLight(arg0));
+	    //}
+	}
+    }
+
     private Scene createScene() {
 //      final VBox vbox = new VBox();
 //      vbox.setSpacing(5);
@@ -120,15 +134,21 @@ public class DashboardView extends JFXPanel {
 //        table.setPrefHeight(Double.MAX_VALUE);
 //        table.setPrefWidth(Double.MAX_VALUE);
 
-        final TableColumn firstNameCol = new TableColumn("Sentinel");
+        final TableColumn<Sentinel, String> firstNameCol = new TableColumn<>("Sentinel");
         firstNameCol.setMinWidth(100);
         firstNameCol.setCellValueFactory(
                 new PropertyValueFactory<Sentinel, String>("sentinelTitle"));
 
-        final TableColumn lastNameCol = new TableColumn("Last Name");
-        lastNameCol.setMinWidth(100);
+        final TableColumn<Sentinel, IPage> lastNameCol = new TableColumn<>("Result");
+        lastNameCol.setMinWidth(400);
+        lastNameCol.setCellFactory(new Callback<TableColumn<Sentinel, IPage>, TableCell<Sentinel, IPage>>()  {
+            @Override
+            public TableCell<Sentinel, IPage> call(final TableColumn<Sentinel, IPage> arg0) {
+        	return new TrafficLightsCell();
+            }
+        });
         lastNameCol.setCellValueFactory(
-                new PropertyValueFactory<Sentinel, String>("lastName"));
+                new PropertyValueFactory<Sentinel, IPage>("result"));
 
 //        firstNameCol.prefWidthProperty().bind(table.widthProperty().divide(4)); // w * 1/4
 //        lastNameCol.prefWidthProperty().bind(table.widthProperty().divide(2)); // w * 2/4

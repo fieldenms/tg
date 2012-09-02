@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 import javax.swing.Action;
@@ -64,6 +65,7 @@ public class Sentinel<T extends AbstractEntity<?>> {
     private final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria;
 
     private final SimpleStringProperty sentinelTitle;
+    private final SimpleObjectProperty<IPage> result;
 
     @SuppressWarnings("unchecked")
     public Sentinel(final DashboardView dashboardView, final ICriteriaGenerator criteriaGenerator, final IGlobalDomainTreeManager gdtm, final IEntityMasterManager masterManager, final Class<?> menuItemType, final String centreName, final String analysisName) {
@@ -81,6 +83,7 @@ public class Sentinel<T extends AbstractEntity<?>> {
 	sentinelManager = (ISentinelDomainTreeManager) gdtm.getEntityCentreManager(menuItemType, centreName).getAnalysisManager(analysisName);
 
         this.sentinelTitle = new SimpleStringProperty(centreName + " <= " + analysisName);
+        this.result = new SimpleObjectProperty<IPage>(null);
     }
 
     private TreeMenuItemWrapper getMenuItem() {
@@ -117,8 +120,14 @@ public class Sentinel<T extends AbstractEntity<?>> {
 //	final TreeMenuItemWrapper item = getMenuItem();
 //	dashboardView.getTreeMenu().activateOrOpenItem(item);
 
-	System.err.println("=====================countOfSelfDashboard == " + run().data().get(0).get("countOfSelfDashboard"));
-	invokeDetails("GREEN");
+	//System.err.println("=====================countOfSelfDashboard == " + run().data().get(0).get("countOfSelfDashboard"));
+	// invokeDetails("GREEN");
+	runQuery();
+    }
+
+    public void runQuery() {
+	result.set(run()); // .data().get(0).get("countOfSelfDashboard"))
+	// invokeDetails("GREEN");
     }
 
     public String getSentinelTitle() {
@@ -128,7 +137,7 @@ public class Sentinel<T extends AbstractEntity<?>> {
         this.sentinelTitle.set(sentinelTitle);
     }
 
-    private void invokeDetails(final String status) { // "RED", "GREEN" or "YELLOW" -- the value for the only distribution property in sentinel manager.
+    public void invokeDetails(final String status) { // "RED", "GREEN" or "YELLOW" -- the value for the only distribution property in sentinel manager.
 	final String distrProperty = sentinelManager.getFirstTick().usedProperties(root).get(0);
 	createDoubleClickAction(new Pair<String, Object>(distrProperty, status)).actionPerformed(null);
     }
