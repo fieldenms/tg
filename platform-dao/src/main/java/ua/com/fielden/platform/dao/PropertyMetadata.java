@@ -46,7 +46,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public boolean isCalculated() {
-	return expressionModel != null;
+	return expressionModel != null && type != COMPONENT_HEADER;
     }
 
     public boolean affectsMapping() {
@@ -141,16 +141,22 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public Set<PropertyMetadata> getCompositeTypeSubprops() {
 	final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
-	if (COMPONENT_HEADER.equals(type)) {
+	if (COMPONENT_HEADER.equals(type) || getHibTypeAsCompositeUserType() != null) {
 	    final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
 	    final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
-	    int index = 0;
-	    for (final String subpropName : subprops) {
-		final PropertyColumn column = columns.get(index);
-		final Object hibType = subpropsTypes.get(index);
-		result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(COMPONENT_DETAILS).hibType(hibType).build());
-		index = index + 1;
+	    if (subprops.size() == 1 && expressionModel != null) {
+		final Object hibType = subpropsTypes.get(0);
+		result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(getExpressionModel()).aggregatedExpression(aggregatedExpression).type(COMPONENT_DETAILS).hibType(hibType).build());
+	    } else {
+		    int index = 0;
+		    for (final String subpropName : subprops) {
+			final PropertyColumn column = columns.get(index);
+			final Object hibType = subpropsTypes.get(index);
+			result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(COMPONENT_DETAILS).hibType(hibType).build());
+			index = index + 1;
+		    }
 	    }
+
 	}
 	return result;
     }

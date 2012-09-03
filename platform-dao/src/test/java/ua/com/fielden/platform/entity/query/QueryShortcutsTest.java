@@ -122,6 +122,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("lastMeterReading").as("lastMeterReading"). //
 		yield().prop("calc0").as("calc0"). //
 		yield().prop("sumOfPrices").as("sumOfPrices"). //
+		yield().prop("sumOfPrices.amount").as("sumOfPrices.amount"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //
 		yield().prop("calc4").as("calc4"). //
@@ -173,6 +174,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("finDetails").as("finDetails"). //
 		yield().prop("lastMeterReading").as("lastMeterReading"). //
 		yield().prop("sumOfPrices").as("sumOfPrices"). //
+		yield().prop("sumOfPrices.amount").as("sumOfPrices.amount"). //
 		yield().prop("calc0").as("calc0"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //

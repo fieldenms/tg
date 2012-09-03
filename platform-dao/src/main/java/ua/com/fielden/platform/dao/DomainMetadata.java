@@ -236,14 +236,18 @@ public class DomainMetadata {
 	if (addedItem != null) {
 	    map.put(addedItem.getName(), addedItem);
 
+	    for (final PropertyMetadata propMetadata : addedItem.getCompositeTypeSubprops()) {
+		map.put(propMetadata.getName(), propMetadata);
+	    }
+
 	    if (!addedItem.isCalculated()) {
 		for (final PropertyMetadata propMetadata : addedItem.getComponentTypeSubprops()) {
 		    map.put(propMetadata.getName(), propMetadata);
 		}
 
-		for (final PropertyMetadata propMetadata : addedItem.getCompositeTypeSubprops()) {
-		    map.put(propMetadata.getName(), propMetadata);
-		}
+//		for (final PropertyMetadata propMetadata : addedItem.getCompositeTypeSubprops()) {
+//		    map.put(propMetadata.getName(), propMetadata);
+//		}
 	    }
 	}
     }
@@ -365,7 +369,8 @@ public class DomainMetadata {
 	final Object hibernateType = getHibernateType(javaType, persistedType, false);
 
 	final ExpressionModel expressionModel = dmeg.extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
-	return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(EXPRESSION).aggregatedExpression(aggregatedExpression).build();
+	final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? COMPONENT_HEADER : EXPRESSION;
+	return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(propCat).aggregatedExpression(aggregatedExpression).build();
     }
 
     private PropertyMetadata getOneToOnePropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {

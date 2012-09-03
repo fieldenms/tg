@@ -412,11 +412,11 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test0_1() {
-	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("sumOfPrices").ge().val("100").model();
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("sumOfPrices.amount").ge().val("100").model();
 	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).model());
     	final TgVehicle vehicle = models.get(0);
 	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
-	assertTrue("Values of props sumOfPrices [" + vehicle.getSumOfPrices() + "] and calc0 [" + vehicle.getCalc0() + "] should be equal", vehicle.getSumOfPrices().equals(vehicle.getCalc0()));
+	assertTrue("Values of props sumOfPrices [" + vehicle.getSumOfPrices().getAmount() + "] and calc0 [" + vehicle.getCalc0() + "] should be equal", vehicle.getSumOfPrices().getAmount().equals(vehicle.getCalc0()));
 	assertEquals("Incorrect key", new Integer(30), vehicle.getConstValueProp());
     }
 

@@ -84,8 +84,8 @@ public class TgVehicle extends AbstractEntity<String> {
 	      select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(
 	      select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
 
-    @IsProperty @Calculated @Title(value = "Sum of prices", desc = "Sum of price.amount and purchasePrice.amount")
-    private BigDecimal sumOfPrices;
+    @IsProperty @Calculated @Title(value = "Sum of prices", desc = "Sum of price.amount and purchasePrice.amount") @PersistedType(userType = ISimpleMoneyType.class)
+    private Money sumOfPrices;
     private static final ExpressionModel sumOfPrices_ = expr().prop("price.amount").add().prop("purchasePrice.amount").model();
 
     @IsProperty @Calculated @Title("Calc2")
@@ -152,7 +152,7 @@ public class TgVehicle extends AbstractEntity<String> {
 	return calcModel;
     }
 
-    public BigDecimal getSumOfPrices() {
+    public Money getSumOfPrices() {
 	return sumOfPrices;
     }
 

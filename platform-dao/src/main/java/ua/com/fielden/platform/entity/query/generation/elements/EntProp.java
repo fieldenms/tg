@@ -178,9 +178,11 @@ public class EntProp implements ISingleOperand {
     }
 
     private String getContextPrefix() {
-        final int lastDotIndex = name.lastIndexOf(".");
+        // FIX
+	final String nameWithoutAmount = name.endsWith(".amount") ? name.substring(0, name.length() - 7) : name;
+	final int lastDotIndex = nameWithoutAmount.lastIndexOf(".");
         if (lastDotIndex > 0) {
-            return name.substring(0, lastDotIndex);
+            return nameWithoutAmount.substring(0, lastDotIndex);
         }
         return null;
     }
