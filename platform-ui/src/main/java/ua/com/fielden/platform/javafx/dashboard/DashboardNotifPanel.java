@@ -16,7 +16,7 @@ public class DashboardNotifPanel extends BaseNotifPanel<StubUiModel> {
 	    final IGlobalDomainTreeManager globalManager, //
 	    final ICriteriaGenerator criteriaGenerator, //
 	    final IEntityMasterManager masterManager) {
-	super("Dashbord report", new StubUiModel(true));
+	super("Dashboard", new StubUiModel(true));
 
 	this.dashboardView = new DashboardView(globalManager, criteriaGenerator, masterManager);
 	add(dashboardView);
@@ -26,7 +26,9 @@ public class DashboardNotifPanel extends BaseNotifPanel<StubUiModel> {
 
     @Override
     public String getInfo() {
-	return "Dashboard notif panel";
+	return "<html>" + "<h3>Dashboard</h3>"//
+		+ "A facility for managing and running user-centric sentinels." //
+		+ "</html>";
     }
 
     public DashboardView getDashboardView() {

@@ -7,23 +7,23 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.JFXPanel;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.text.Font;
 import javafx.util.Callback;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
@@ -95,6 +95,7 @@ public class DashboardView extends JFXPanel {
 		final ICentreDomainTreeManagerAndEnhancer centreManager = globalManager.getEntityCentreManager(mmiType, centreName);
 		final List<String> analysisKeys = centreManager.analysisKeys();
 		for (final String analysisName : analysisKeys) {
+		    System.out.println("====================+++++++++++++ analysisName == " +  analysisName);
 		    final IAbstractAnalysisDomainTreeManager analysis = centreManager.getAnalysisManager(analysisName);
 		    if (analysis instanceof ISentinelDomainTreeManager) {
 			data.add(new Sentinel(this, criteriaGenerator, globalManager, masterManager, mmiType, centreName, analysisName));
@@ -105,14 +106,39 @@ public class DashboardView extends JFXPanel {
 	return data;
     }
 
-    public static class TrafficLightsCell extends TableCell<Sentinel, IPage> {
+    public class TrafficLightsCell extends TableCell<Sentinel, Integer> {
 	@Override
-	protected void updateItem(final IPage arg0, final boolean arg1) {
+	protected void updateItem(final Integer arg0, final boolean arg1) {
 	    super.updateItem(arg0, arg1);
 
-	    //if (arg0 != null) {
-		setGraphic(TrafficLightControl.createTrafficLight(arg0));
-	    //}
+	    if (getIndex() <= table.getItems().size() - 1) {
+		final Sentinel sentinel = table.getItems().get(getIndex());
+		//if (arg0 != null) {
+		setGraphic(new TrafficLights(sentinel.getModel(),
+			new IAction() { @Override public void action() { sentinel.invokeDetails("RED"); }}, //
+			new IAction() { @Override public void action() { sentinel.invokeDetails("YELLOW"); }}, //
+			new IAction() { @Override public void action() { sentinel.invokeDetails("GREEN"); }} //
+			));
+		//}
+	    }
+	}
+    }
+
+    public class RefreshCell extends TableCell<Sentinel, Void> {
+	@Override
+	protected void updateItem(final Void arg0, final boolean arg1) {
+	    super.updateItem(arg0, arg1);
+
+	    if (getIndex() <= table.getItems().size() - 1) {
+		final Sentinel sentinel = table.getItems().get(getIndex());
+		final Button button = new Button("Refresh");
+		button.setOnAction(new EventHandler<ActionEvent>() {
+		    public void handle(final ActionEvent arg0) {
+			sentinel.runQuery();
+		    };
+		});
+		setGraphic(button);
+	    }
 	}
     }
 
@@ -125,8 +151,8 @@ public class DashboardView extends JFXPanel {
 
 	final Scene scene = new Scene(borderPane);
 
-        final Label label = new Label("Dashboard");
-        label.setFont(new Font("Arial", 20));
+        // final Label label = new Label("Dashboard");
+        // label.setFont(new Font("Arial", 20));
 
         table.setEditable(true);
         table.setMaxWidth(Double.MAX_VALUE);
@@ -134,41 +160,84 @@ public class DashboardView extends JFXPanel {
 //        table.setPrefHeight(Double.MAX_VALUE);
 //        table.setPrefWidth(Double.MAX_VALUE);
 
-        final TableColumn<Sentinel, String> firstNameCol = new TableColumn<>("Sentinel");
-        firstNameCol.setMinWidth(100);
-        firstNameCol.setCellValueFactory(
+        final TableColumn<Sentinel, String> sentinelCol = new TableColumn<>("Sentinel");
+        sentinelCol.setMinWidth(100);
+        sentinelCol.setCellValueFactory(
                 new PropertyValueFactory<Sentinel, String>("sentinelTitle"));
 
-        final TableColumn<Sentinel, IPage> lastNameCol = new TableColumn<>("Result");
-        lastNameCol.setMinWidth(400);
-        lastNameCol.setCellFactory(new Callback<TableColumn<Sentinel, IPage>, TableCell<Sentinel, IPage>>()  {
+        final TableColumn<Sentinel, Integer> resultCol = new TableColumn<>("Result");
+        resultCol.setCellFactory(new Callback<TableColumn<Sentinel, Integer>, TableCell<Sentinel, Integer>>()  {
             @Override
-            public TableCell<Sentinel, IPage> call(final TableColumn<Sentinel, IPage> arg0) {
+            public TableCell<Sentinel, Integer> call(final TableColumn<Sentinel, Integer> arg0) {
         	return new TrafficLightsCell();
             }
         });
-        lastNameCol.setCellValueFactory(
-                new PropertyValueFactory<Sentinel, IPage>("result"));
+        resultCol.setCellValueFactory(
+                new PropertyValueFactory<Sentinel, Integer>("countOfBad"));
+        final double resultColWidth = 97;
+        resultCol.setMinWidth(resultColWidth);
+        resultCol.setPrefWidth(resultColWidth);
+        resultCol.setMaxWidth(resultColWidth);
+
+        final TableColumn<Sentinel, Void> refreshCol = new TableColumn<>("Refresh");
+        refreshCol.setCellFactory(new Callback<TableColumn<Sentinel, Void>, TableCell<Sentinel, Void>>()  {
+            @Override
+            public TableCell<Sentinel, Void> call(final TableColumn<Sentinel, Void> arg0) {
+        	return new RefreshCell();
+            }
+        });
+        final double refreshColWidth = 79;
+        refreshCol.setMinWidth(refreshColWidth);
+        refreshCol.setPrefWidth(refreshColWidth);
+        refreshCol.setMaxWidth(refreshColWidth);
+
+
 
 //        firstNameCol.prefWidthProperty().bind(table.widthProperty().divide(4)); // w * 1/4
 //        lastNameCol.prefWidthProperty().bind(table.widthProperty().divide(2)); // w * 2/4
 //        emailCol.prefWidthProperty().bind(table.widthProperty().divide(4)); // w * 1/4
 
-        table.setItems(data);
-        table.getColumns().addAll(firstNameCol, lastNameCol);
-
         table.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(final MouseEvent event) {
-        	if (event.getClickCount() == 2) {
+        	if (event.getClickCount() == 2 && table.getSelectionModel().getSelectedItem() != null) {
         	    table.getSelectionModel().getSelectedItem().openAnalysis();
         	}
             }
         });
+        table.getColumns().addAll(sentinelCol, resultCol, refreshCol);
+        table.setItems(data);
 
+        for (final Sentinel sentinel : data) {
+            sentinel.runQuery();
+        }
+        sort();
 
-        borderPane.setTop(label);
+        final Button refreshAll = new Button("Refresh all");
+        refreshAll.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(final ActionEvent arg0) {
+        	refreshAll();
+            }
+        });
+        borderPane.setTop(refreshAll);
         borderPane.setCenter(table);
         return (scene);
+    }
+
+    public void refreshAll() {
+	table.getSortOrder().clear();
+	table.getItems().clear();
+	table.getItems().addAll(createData());
+        for (final Sentinel sentinel : table.getItems()) {
+            sentinel.runQuery();
+        }
+        sort();
+    }
+
+    private void sort() {
+	table.getSortOrder().add(table.getColumns().get(1));
+        table.getColumns().get(1).setSortType(TableColumn.SortType.DESCENDING);
+        table.getColumns().get(1).setSortable(true); // This performs a sort
     }
 }

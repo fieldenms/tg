@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -56,16 +57,18 @@ public class Sentinel<T extends AbstractEntity<?>> {
     private final ICriteriaGenerator criteriaGenerator;
     private final IEntityMasterManager masterManager;
     private final DashboardView dashboardView;
-    private final ISentinelDomainTreeManager sentinelManager;
+    // private final ISentinelDomainTreeManager sentinelManager;
     private final Class<?> menuItemType;
     private final String centreName, analysisName;
 
     private final Class<T> root;
-    private final ICentreDomainTreeManagerAndEnhancer cdtme;
-    private final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria;
+    // private final ICentreDomainTreeManagerAndEnhancer cdtme;
+    // private final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria = criteriaGenerator.generateCentreQueryCriteria(root, cdtme);
 
     private final SimpleStringProperty sentinelTitle;
     private final SimpleObjectProperty<IPage> result;
+    private final TrafficLightsModel model;
+    private final SimpleIntegerProperty countOfBad = new SimpleIntegerProperty();
 
     @SuppressWarnings("unchecked")
     public Sentinel(final DashboardView dashboardView, final ICriteriaGenerator criteriaGenerator, final IGlobalDomainTreeManager gdtm, final IEntityMasterManager masterManager, final Class<?> menuItemType, final String centreName, final String analysisName) {
@@ -75,15 +78,18 @@ public class Sentinel<T extends AbstractEntity<?>> {
 	this.dashboardView = dashboardView;
 	this.menuItemType = menuItemType;
 	root = (Class<T>)AnnotationReflector.getAnnotation(EntityType.class, menuItemType).value();
-	cdtme = gdtm.getEntityCentreManager(menuItemType, centreName);
-	criteria = criteriaGenerator.generateCentreQueryCriteria(root, cdtme);
+	// cdtme = gdtm.getEntityCentreManager(menuItemType, centreName);
+	//criteria = criteriaGenerator.generateCentreQueryCriteria(root, cdtme);
 	this.centreName = centreName;
 	this.analysisName = analysisName;
 
-	sentinelManager = (ISentinelDomainTreeManager) gdtm.getEntityCentreManager(menuItemType, centreName).getAnalysisManager(analysisName);
-
         this.sentinelTitle = new SimpleStringProperty(centreName + " <= " + analysisName);
         this.result = new SimpleObjectProperty<IPage>(null);
+        model = new TrafficLightsModel();
+    }
+
+    private ISentinelDomainTreeManager sentinelManager() {
+	return (ISentinelDomainTreeManager) gdtm.getEntityCentreManager(menuItemType, centreName).getAnalysisManager(analysisName);
     }
 
     private TreeMenuItemWrapper getMenuItem() {
@@ -117,8 +123,8 @@ public class Sentinel<T extends AbstractEntity<?>> {
 //    }
 
     public void openAnalysis() {
-//	final TreeMenuItemWrapper item = getMenuItem();
-//	dashboardView.getTreeMenu().activateOrOpenItem(item);
+	final TreeMenuItemWrapper item = getMenuItem();
+	dashboardView.getTreeMenu().activateOrOpenItem(item);
 
 	//System.err.println("=====================countOfSelfDashboard == " + run().data().get(0).get("countOfSelfDashboard"));
 	// invokeDetails("GREEN");
@@ -126,8 +132,33 @@ public class Sentinel<T extends AbstractEntity<?>> {
     }
 
     public void runQuery() {
-	result.set(run()); // .data().get(0).get("countOfSelfDashboard"))
-	// invokeDetails("GREEN");
+	result.set(run()); // )
+
+	final IPage resultPage = result.get();
+	if (resultPage == null) {
+	    model.getRedLightingModel().setLighting(false);
+	    model.getYellowLightingModel().setLighting(false);
+	    model.getGreenLightingModel().setLighting(false);
+	}
+	final String distrProperty = sentinelManager().getFirstTick().usedProperties(root).get(0);
+	countOfBad.set(0);
+
+	for (final Object o : resultPage.data()) {
+	    final AbstractEntity entity = (AbstractEntity) o;
+	    if ("RED".equals(entity.get(distrProperty))) {
+		model.getRedLightingModel().setLighting(((Integer) entity.get("countOfSelfDashboard")) > 0);
+		countOfBad.set(countOfBad.get() + (Integer) entity.get("countOfSelfDashboard") * 1000);
+	    } else if ("YELLOW".equals(entity.get(distrProperty))) {
+		model.getYellowLightingModel().setLighting(((Integer) entity.get("countOfSelfDashboard")) > 0);
+		countOfBad.set(countOfBad.get() + (Integer) entity.get("countOfSelfDashboard"));
+	    } else if ("GREEN".equals(entity.get(distrProperty))) {
+		model.getGreenLightingModel().setLighting(((Integer) entity.get("countOfSelfDashboard")) > 0);
+	    }
+	}
+	System.err.println("=====================Countof bad == " + countOfBad);
+	if (model.getRedLightingModel().isLighting() || model.getYellowLightingModel().isLighting()) {
+	    model.getGreenLightingModel().setLighting(false);
+	}
     }
 
     public String getSentinelTitle() {
@@ -138,7 +169,7 @@ public class Sentinel<T extends AbstractEntity<?>> {
     }
 
     public void invokeDetails(final String status) { // "RED", "GREEN" or "YELLOW" -- the value for the only distribution property in sentinel manager.
-	final String distrProperty = sentinelManager.getFirstTick().usedProperties(root).get(0);
+	final String distrProperty = sentinelManager().getFirstTick().usedProperties(root).get(0);
 	createDoubleClickAction(new Pair<String, Object>(distrProperty, status)).actionPerformed(null);
     }
 
@@ -155,6 +186,8 @@ public class Sentinel<T extends AbstractEntity<?>> {
 	    @Override
 	    protected void postAction(final Void value) {
 		super.postAction(value);
+
+		final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria = criteriaGenerator.generateCentreQueryCriteria(root, gdtm.getEntityCentreManager(menuItemType, centreName));
 
 		final EntityFactory entityFactory = criteria.getEntityFactory();
 
@@ -234,9 +267,12 @@ public class Sentinel<T extends AbstractEntity<?>> {
     }
 
     private IPage<T> run(){
+	final ICentreDomainTreeManagerAndEnhancer cdtme = gdtm.getEntityCentreManager(menuItemType, centreName);
 	final IDomainTreeEnhancer enhancer = cdtme.getEnhancer();
-	final List<String> distributionProperties = sentinelManager.getFirstTick().usedProperties(root);
-	final List<String> aggregationProperties = sentinelManager.getSecondTick().usedProperties(root);
+	final List<String> distributionProperties = sentinelManager().getFirstTick().usedProperties(root);
+	final List<String> aggregationProperties = sentinelManager().getSecondTick().usedProperties(root);
+
+	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria = criteriaGenerator.generateCentreQueryCriteria(root, cdtme);
 
 	final List<Pair<String, ExpressionModel>> distribution = getPropertyExpressionPair(distributionProperties, criteria);
 	final List<Pair<String, ExpressionModel>> aggregation = getPropertyExpressionPair(aggregationProperties, criteria);
@@ -247,7 +283,7 @@ public class Sentinel<T extends AbstractEntity<?>> {
 
 	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery((Class<T>)enhancer.getManagedType(root), criteria.createQueryProperties(), distribution, aggregation).modelAsEntity(criteria.getManagedType());
 
-	final List<Pair<String, Ordering>> orderingProperties = new ArrayList<Pair<String,Ordering>>(sentinelManager.getSecondTick().orderedProperties(root));
+	final List<Pair<String, Ordering>> orderingProperties = new ArrayList<Pair<String,Ordering>>(sentinelManager().getSecondTick().orderedProperties(root));
 	if(orderingProperties.isEmpty()){
 	    for(final String groupOrder : distributionProperties){
 		orderingProperties.add(new Pair<String, Ordering>(groupOrder, Ordering.ASCENDING));
@@ -278,5 +314,17 @@ public class Sentinel<T extends AbstractEntity<?>> {
             propertyExpressionPair.add(new Pair<>(property, expression));
         }
         return propertyExpressionPair;
+    }
+
+    public TrafficLightsModel getModel() {
+	return model;
+    }
+
+    public Integer getCountOfBad() {
+	return countOfBad.get();
+    }
+
+    public void setCountOfBad(final Integer countOfBad) {
+	this.countOfBad.set(countOfBad);
     }
 }

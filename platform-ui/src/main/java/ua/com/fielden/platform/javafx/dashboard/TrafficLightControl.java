@@ -20,6 +20,7 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 
 public class TrafficLightControl extends Application {
 
@@ -34,6 +35,7 @@ public class TrafficLightControl extends Application {
 	//group.getStylesheets().add(this.getClass().getResource("trafficlight.css").toExternalForm());
 	return group;
     }
+
 
     private static Node createNode(final String textureImageFileName, final boolean isLighting) {
 	final Circle background = new Circle(0, 0, 27);
@@ -78,13 +80,23 @@ public class TrafficLightControl extends Application {
 	final Circle background = new Circle(200, 200, 40);
 	background.setFill(new ImagePattern(new Image("yellow-texture.jpg"), 0, 0, 9, 10, false));
 
-	final Group trafficLight = createTrafficLight(null);
-	trafficLight.setTranslateX(0);
-	trafficLight.setTranslateY(0);
+//	final Group trafficLight = createTrafficLight(null);
+//	trafficLight.setTranslateX(0);
+//	trafficLight.setTranslateY(0);
+	final IAction a = new IAction() {
+	    @Override
+	    public void action() {
+	    }
+	};
 
-	final Group group = new Group(trafficLight, /*redButton, yellowButton, greenButton, */redLightButton, yellowLightButton, greenLightButton);
+	final TrafficLights trafficLights = new TrafficLights(new TrafficLightsModel(), a, a, a);
+	trafficLights.setTranslateX(0);
+	trafficLights.setTranslateY(0);
+
+	final Group group = new Group(/*trafficLight, redButton, yellowButton, greenButton, */redLightButton, yellowLightButton, greenLightButton, trafficLights);
 	//group.getStylesheets().add(this.getClass().getResource("trafficlight.css").toExternalForm());
-        final Scene scene = new Scene(group, 600, 450);scene.setFill(Color.DARKSLATEBLUE);
+        final Scene scene = new Scene(group, 600, 450);
+        //scene.setFill(Color.DARKSLATEBLUE);
 
         stage.setTitle("Welcome to JavaFX!");
         stage.setScene(scene);
