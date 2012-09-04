@@ -38,6 +38,10 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 	return userDao.findByKeyAndFetch(fetchAll(User.class), "B-USER");
     }
 
+    private User getBaseUserOther() {
+	return userDao.findByKeyAndFetch(fetchAll(User.class), "B-USER-OTHER");
+    }
+
     private User getDescendantUser() {
 	return userDao.findByKeyAndFetch(fetchAll(User.class), "D-USER");
     }
@@ -169,6 +173,43 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 	mixin.setUser(baseUser);
 	assertTrue("Incorrect menu before updating.", itemsEquals(new OriginalCheckingBuilder(factory).build(), mixin.loadMenuSkeletonStructure()));
 	mixin.updateMenuItemsWithDevelopmentOnes(new UpdatingBuilder1(factory));
+	assertTrue("Incorrect menu after updating.", itemsEquals(new OriginalCheckingBuilder(factory).build(), mixin.loadMenuSkeletonStructure()));
+    }
+
+    /**
+     * A builder that is fully synchronised with original testing menu items / entity centres.
+     *
+     * @author TG Team
+     *
+     */
+    private static class OriginalCheckingBuilderOther extends MainMenu {
+	protected OriginalCheckingBuilderOther(final EntityFactory factory) {
+	    super(factory);
+	}
+
+	@Override
+	public List<MainMenuItem> build() {
+	    structureFactory()
+		.push("type1")
+			.push("type2")
+				.push("type3").pop().pop()
+			.push("type4")
+				.push("type5").pop().pop().pop()
+		.push("type6")
+			.push("type7").pop().pop();
+		return super.build();
+	}
+    }
+
+    @Test
+    public void test_update_with_exactly_the_same_menu_hierarchy_for_menu_items_that_contain_centres_for_different_base_users() {
+	final User baseUserOther = getBaseUserOther();
+	mixin.setUser(baseUserOther);
+	assertTrue("Incorrect menu before updating.", itemsEquals(new OriginalCheckingBuilderOther(factory).build(), mixin.loadMenuSkeletonStructure()));
+	mixin.updateMenuItemsWithDevelopmentOnes(new UpdatingBuilder1(factory));
+	assertTrue("Incorrect menu after updating.", itemsEquals(new OriginalCheckingBuilderOther(factory).build(), mixin.loadMenuSkeletonStructure()));
+	final User baseUser = getBaseUser();
+	mixin.setUser(baseUser);
 	assertTrue("Incorrect menu after updating.", itemsEquals(new OriginalCheckingBuilder(factory).build(), mixin.loadMenuSkeletonStructure()));
     }
 
@@ -1109,6 +1150,7 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
     @Override
     protected void populateDomain() {
 	final User baseUser = save(new_(User.class, "B-USER").setBase(true)); // base user
+	final User baseUserOther = save(new_(User.class, "B-USER-OTHER").setBase(true)); // base user
 	save(new_(User.class, "D-USER").setBase(false).setBasedOnUser(baseUser)); // descendant user
 
 	// populate main menu items
@@ -1125,6 +1167,9 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 	/**/final MainMenuItem item_2_1 = save(new_(MainMenuItem.class, "type7").setParent(root_2).setTitle("Item 2-1").setOrder(1)); // should be recognized as invisible
 	/**/save(new_composite(EntityCentreConfig.class, baseUser, "principal for item 2-1", item_2_1).setPrincipal(true));
 	/*    */save(new_composite(EntityCentreConfig.class, baseUser, "save as for item 2-1", item_2_1).setPrincipal(false));
+
+//	// entity-centre for different base user!
+//	/*    */save(new_composite(EntityCentreConfig.class, baseUserOther, "principal for item 1-1-1 (for OTHER base user)", item_1_1_1).setPrincipal(true));
 
 	// populate invisibility
 	save(new_composite(MainMenuItemInvisibility.class, baseUser, root_2)); // should make principal items 5, 6 and "save as" item 0 not visible

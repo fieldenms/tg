@@ -291,7 +291,7 @@ public final class MainMenuItemMixin {
 	final List<MainMenuItem> updatedMainMenuItems = new ArrayList<MainMenuItem>();
 
 	// retrieve all EntityCentreConfig's, locally keep meta-info, and then purge them all
-	final EntityResultQueryModel<EntityCentreConfig> modelEcc = select(EntityCentreConfig.class).where().prop("owner.key").eq().val(user.getKey()).model();
+	final EntityResultQueryModel<EntityCentreConfig> modelEcc = select(EntityCentreConfig.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
 	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(modelEcc).model());
 	final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = new HashMap<EntityCentreConfigKey, EntityCentreConfigBody>();
 	for (final EntityCentreConfig ecc : eccs) {
@@ -299,7 +299,7 @@ public final class MainMenuItemMixin {
 	}
 	eccController.delete(modelEcc);
 	// retrieve all MainMenuItemInvisibility's, locally keep meta-info, and then purge them all
-	final EntityResultQueryModel<MainMenuItemInvisibility> modelMmii = select(MainMenuItemInvisibility.class).where().prop("owner.key").eq().val(user.getKey()).model();
+	final EntityResultQueryModel<MainMenuItemInvisibility> modelMmii = select(MainMenuItemInvisibility.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
 	final List<MainMenuItemInvisibility> mmiis = mmiiController.getAllEntities(from(modelMmii).model());
 	final Set<MainMenuItemInvisibilityKey> invisibilitiesKeys = new HashSet<MainMenuItemInvisibilityKey>();
 	for (final MainMenuItemInvisibility mmii : mmiis) {
