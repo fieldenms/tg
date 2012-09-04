@@ -9,9 +9,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public class LifecycleChartFactory<T extends AbstractEntity<?>>
+public class LifecycleChartFactory<T extends AbstractEntity<?>> {
 //implements IChartFactory<LifecycleModel<T>, CategoryChartTypes>
-{
+//{
 //    protected static final String timelineAxisLabel = "Timeline", entitiesAxisLabel = "Entities", avalabilityCountAxisLabel = "Count", fractionsAxisLabel = "fractions";
 //    protected static final Shape calcValueShape = new Ellipse2D.Double(0, 0, 10, 10), categoryShape = new Rectangle(10, 10);
 //

@@ -22,6 +22,13 @@ public interface ListSortingModel<T> {
     void toggleSorter(T item);
 
     /**
+     * Toggles {@link Ordering} for specified item and resets others.
+     *
+     * @param item
+     */
+    void toggleSorterSingle(T item);
+
+    /**
      * Returns the list of ordered items with their {@link Ordering}s.
      *
      * @return

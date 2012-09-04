@@ -476,6 +476,10 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return (T) new ArrayList();
 	} else if (Map.class.isAssignableFrom(type) && type.isInterface()) {
 	    return (T) new HashMap();
+	} else if (type.getName().contains("java.util.Arrays$ArrayList")) {
+	    // using Arrays.asList produces instance of List of type Arrays$ArrayList, which do not have a default constructor;
+	    // thus, need to instantiate ArrayList instead.
+	    return (T) new ArrayList();
 	}
 	return super.newInstance(type);
     }

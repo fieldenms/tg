@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.checkboxlist;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -53,25 +54,46 @@ public class DefaultSortingModel<T> implements ListSortingModel<T> {
 
     @Override
     public void toggleSorter(final T item) {
-	    for (final Pair<T, Ordering> pair : sortObjects) {
-		if (pair.getKey().equals(item)) {
-		    final int index = sortObjects.indexOf(pair);
-		    if (Ordering.ASCENDING.equals(pair.getValue())) {
-			sortObjects.get(index).setValue(Ordering.DESCENDING);
-		    } else { // Ordering.DESCENDING
-			sortObjects.remove(index);
-		    }
-		   fireListSorterEvent(new SorterChangedEvent<T>(this, Collections.unmodifiableList(sortObjects), null));
-		   return;
-		}
-	    } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
-	    sortObjects.add(new Pair<T, Ordering>(item, Ordering.ASCENDING));
+	toggleSortingItem(item, false);
+    }
 
-	    fireListSorterEvent(new SorterChangedEvent<T>(this, Collections.unmodifiableList(sortObjects), null));
+    @Override
+    public void toggleSorterSingle(final T item) {
+	toggleSortingItem(item, true);
     }
 
     @Override
     public List<Pair<T, Ordering>> getSortObjects() {
 	return new ArrayList<Pair<T, Ordering>>(sortObjects);
+    }
+
+    /**
+     * Toggles the {@link Ordering} for the specified item (multiple or single)
+     *
+     * @param item
+     * @param single
+     */
+    private void toggleSortingItem(final T item, final boolean single){
+	final Iterator<Pair<T, Ordering>> iterator = sortObjects.iterator();
+	boolean wasToggled = false;
+	while(iterator.hasNext()){
+	    final Pair<T, Ordering> pair = iterator.next();
+	    if (!pair.getKey().equals(item)) {
+		if (single) {
+		    iterator.remove();
+		}
+	    }else{
+		if (Ordering.ASCENDING.equals(pair.getValue())) {
+		    pair.setValue(Ordering.DESCENDING);
+		} else { // Ordering.DESCENDING
+		    iterator.remove();
+		}
+		wasToggled = true;
+	    }
+	}
+	if(!wasToggled){
+	    sortObjects.add(new Pair<T, Ordering>(item, Ordering.ASCENDING));
+	}
+	fireListSorterEvent(new SorterChangedEvent<T>(this, Collections.unmodifiableList(sortObjects), null));
     }
 }

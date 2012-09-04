@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +13,6 @@ import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -25,15 +21,12 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManage
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
+import ua.com.fielden.platform.report.query.generation.PivotAnalysisQueryGgenerator;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
-import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
-import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
@@ -53,16 +46,19 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     @Override
     protected Void executeAnalysisQuery() {
-
 	final Class<T> root = getCriteria().getEntityClass();
+
+	final IReportQueryGeneration<T> pivotQueryGenerator = new PivotAnalysisQueryGgenerator<>(root,//
+		getCriteria().getCentreDomainTreeManagerAndEnhnacerCopy(), //
+		adtme());
+	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queryModelList = pivotQueryGenerator.generateQueryModel();
+
 	final List<String> distributionProperties = adtme().getFirstTick().usedProperties(root);
 
-	final List<String> groups = new ArrayList<String>();
 	final Map<String, List<T>> resultMap = new HashMap<String, List<T>>();
-	resultMap.put("Grand total", getGroupList(groups));
-	for(final String groupProperty : distributionProperties){
-	    groups.add(groupProperty);
-	    resultMap.put(groupProperty, getGroupList(groups));
+	resultMap.put("Grand total", getGroupList(queryModelList.get(0)));
+	for(int index = 0; index < distributionProperties.size(); index++){
+	    resultMap.put(distributionProperties.get(0), getGroupList(queryModelList.get(index+1)));
 	}
 	pivotModel.loadData(resultMap, distributionProperties, adtme().getSecondTick().usedProperties(root));
 	return null;
@@ -104,51 +100,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
      * @return
      */
     @SuppressWarnings("unchecked")
-    private List<T> getGroupList(final List<String> groups){
-	final Class<T> root = getCriteria().getEntityClass();
-	final IDomainTreeEnhancer enhancer = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-	final List<String> aggregationProperties = adtme().getSecondTick().usedProperties(root);
-
-	final List<Pair<String, ExpressionModel>> distribution = getPropertyExpressionPair(groups);
-	final List<Pair<String, ExpressionModel>> aggregation = getPropertyExpressionPair(aggregationProperties);
-
-	final List<String> yieldProperties = new ArrayList<String>();
-	yieldProperties.addAll(groups);
-	yieldProperties.addAll(aggregationProperties);
-
-	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery((Class<T>)enhancer.getManagedType(root), getCriteria().createQueryProperties(), distribution, aggregation).modelAsEntity(getCriteria().getManagedType());
-
-	final List<Pair<String, Ordering>> orderingProperties = new ArrayList<Pair<String,Ordering>>(adtme().getSecondTick().orderedProperties(root));
-	if(orderingProperties.isEmpty()){
-	    for(final String groupOrder : groups){
-		orderingProperties.add(new Pair<String, Ordering>(groupOrder, Ordering.ASCENDING));
-	    }
-	}
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, //
-		orderingProperties, //
-		getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer());
-	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(queryModel)
-	.with(DynamicOrderingBuilder.createOrderingModel(getCriteria().getManagedType(), orderingPairs))//
-	.with(DynamicFetchBuilder.createFetchModel(getCriteria().getManagedType(), new HashSet<String>(yieldProperties))).model();
-
-	return getCriteria().run(resultQuery);
-    }
-
-    /**
-     * Returns the list of property name and it's expression model pairs.
-     *
-     * @param propertyForExpression
-     * @return
-     */
-    private List<Pair<String, ExpressionModel>> getPropertyExpressionPair(final List<String> propertyForExpression){
-        final Class<T> root = getCriteria().getEntityClass();
-        final IDomainTreeEnhancer enhancer = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final List<Pair<String, ExpressionModel>> propertyExpressionPair = new ArrayList<>();
-        for (final String property : propertyForExpression) {
-            final ExpressionModel expression = EntityQueryCriteriaUtils.getExpressionForProp(root, property, enhancer);
-            propertyExpressionPair.add(new Pair<>(property, expression));
-        }
-        return propertyExpressionPair;
+    private List<T> getGroupList(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel){
+	return getCriteria().run(queryModel);
     }
 
     private class PivotTreeTableModelEx extends PivotTreeTableModel {

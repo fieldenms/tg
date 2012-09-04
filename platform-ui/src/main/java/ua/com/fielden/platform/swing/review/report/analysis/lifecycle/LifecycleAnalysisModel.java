@@ -20,11 +20,10 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
 
     @Override
     protected Void executeAnalysisQuery() {
-//	final ILifecycleDao<T> entityLifecycleDao = getBaseCriteria().getDao() instanceof ILifecycleDao ? (ILifecycleDao<T>) getBaseCriteria().getDao() : null;
-//	return entityLifecycleDao == null ? null
-//		: entityLifecycleDao.getLifecycleInformation(getLifecycleQuery(), getLifecycleProperty().getActualProperty(), new DateTime(getFrom()), new DateTime(getTo()));
-//
-//	return null;
+	//	final ILifecycleDao<T> entityLifecycleDao = getBaseCriteria().getDao() instanceof ILifecycleDao ? (ILifecycleDao<T>) getBaseCriteria().getDao() : null;
+	//	return entityLifecycleDao == null ? null
+	//		: entityLifecycleDao.getLifecycleInformation(getLifecycleQuery(), getLifecycleProperty().getActualProperty(), new DateTime(getFrom()), new DateTime(getTo()));
+	//
 	return null;
     }
 
@@ -35,11 +34,7 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
 
     @Override
     protected Result canLoadData() {
-	final Result result = getCriteria().isValid();
-	if(!result.isSuccessful()){
-	    return result;
-	}
-	return Result.successful(this);
+	return getCriteria().isValid();
     }
 
     @Override

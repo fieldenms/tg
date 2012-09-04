@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.javafx.dashboard;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import javafx.beans.property.SimpleIntegerProperty;
@@ -18,34 +15,27 @@ import ua.com.fielden.platform.algorithm.search.ITreeNodePredicate;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
+import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.menu.TreeMenuItemWrapper;
-import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
-import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.swing.review.report.analysis.details.configuration.AnalysisDetailsConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.details.configuration.AnalysisDetailsConfigurationView;
 import ua.com.fielden.platform.swing.view.ICloseHook;
@@ -268,52 +258,9 @@ public class Sentinel<T extends AbstractEntity<?>> {
 
     private IPage<T> run(){
 	final ICentreDomainTreeManagerAndEnhancer cdtme = gdtm.getEntityCentreManager(menuItemType, centreName);
-	final IDomainTreeEnhancer enhancer = cdtme.getEnhancer();
-	final List<String> distributionProperties = sentinelManager().getFirstTick().usedProperties(root);
-	final List<String> aggregationProperties = sentinelManager().getSecondTick().usedProperties(root);
-
+	final IReportQueryGeneration<T> analysisQueryGenerator = new ChartAnalysisQueryGenerator<>(root, cdtme, sentinelManager());
 	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria = criteriaGenerator.generateCentreQueryCriteria(root, cdtme);
-
-	final List<Pair<String, ExpressionModel>> distribution = getPropertyExpressionPair(distributionProperties, criteria);
-	final List<Pair<String, ExpressionModel>> aggregation = getPropertyExpressionPair(aggregationProperties, criteria);
-
-	final List<String> yieldProperties = new ArrayList<String>();
-	yieldProperties.addAll(distributionProperties);
-	yieldProperties.addAll(aggregationProperties);
-
-	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery((Class<T>)enhancer.getManagedType(root), criteria.createQueryProperties(), distribution, aggregation).modelAsEntity(criteria.getManagedType());
-
-	final List<Pair<String, Ordering>> orderingProperties = new ArrayList<Pair<String,Ordering>>(sentinelManager().getSecondTick().orderedProperties(root));
-	if(orderingProperties.isEmpty()){
-	    for(final String groupOrder : distributionProperties){
-		orderingProperties.add(new Pair<String, Ordering>(groupOrder, Ordering.ASCENDING));
-	    }
-	}
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, //
-		orderingProperties, //
-		criteria.getCentreDomainTreeMangerAndEnhancer().getEnhancer());
-	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(queryModel)
-	.with(DynamicOrderingBuilder.createOrderingModel(criteria.getManagedType(), orderingPairs))//
-	.with(DynamicFetchBuilder.createFetchModel(criteria.getManagedType(), new HashSet<String>(yieldProperties))).model();
-
-	return criteria.run(resultQuery, Integer.MAX_VALUE);
-    }
-
-    /**
-     * Returns the list of property name and it's expression model pairs.
-     *
-     * @param propertyForExpression
-     * @return
-     */
-    private List<Pair<String, ExpressionModel>> getPropertyExpressionPair(final List<String> propertyForExpression, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria){
-        final Class<T> root = criteria.getEntityClass();
-        final IDomainTreeEnhancer enhancer = criteria.getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final List<Pair<String, ExpressionModel>> propertyExpressionPair = new ArrayList<>();
-        for (final String property : propertyForExpression) {
-            final ExpressionModel expression = EntityQueryCriteriaUtils.getExpressionForProp(root, property, enhancer);
-            propertyExpressionPair.add(new Pair<>(property, expression));
-        }
-        return propertyExpressionPair;
+	return criteria.run(analysisQueryGenerator.generateQueryModel().get(0), Integer.MAX_VALUE);
     }
 
     public TrafficLightsModel getModel() {

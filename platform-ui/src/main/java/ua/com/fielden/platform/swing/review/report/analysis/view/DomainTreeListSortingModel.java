@@ -45,6 +45,11 @@ public class DomainTreeListSortingModel<T extends AbstractEntity<?>> implements 
     private final EventListenerList listeners = new EventListenerList();
 
     /**
+     * The default listener that listens the ordering model changes.
+     */
+    private final IPropertyOrderingListener defaultPropertyOrderingListener;
+
+    /**
      * Initialises this {@link DomainTreeListSortingModel} with {@link IOrderingManager} and {@link IOrderingRepresentation} to wrap.
      *
      * @param root
@@ -55,13 +60,14 @@ public class DomainTreeListSortingModel<T extends AbstractEntity<?>> implements 
 	this.root = root;
 	this.orderingManager = orderingManager;
 	this.orderingRepresentation = orderingRepresentation;
-	orderingManager.addPropertyOrderingListener(new IPropertyOrderingListener() {
+	this.defaultPropertyOrderingListener = new IPropertyOrderingListener() {
 
 	    @Override
 	    public void propertyStateChanged(final Class<?> root, final String property, final List<Pair<String, Ordering>> newOrderedProperties, final List<Pair<String, Ordering>> oldState) {
 		fireSortingModelChanged(new SorterChangedEvent<String>(DomainTreeListSortingModel.this, newOrderedProperties, oldState));
 	    }
-	});
+	};
+	orderingManager.addPropertyOrderingListener(defaultPropertyOrderingListener);
     }
 
     @Override
@@ -94,6 +100,14 @@ public class DomainTreeListSortingModel<T extends AbstractEntity<?>> implements 
 	listeners.remove(SorterEventListener.class, listener);
     }
 
+    @Override
+    public void toggleSorterSingle(final String item) {
+	orderingManager.removePropertyOrderingListener(defaultPropertyOrderingListener);
+	resetAllSortOrderExcept(item);
+	orderingManager.addPropertyOrderingListener(defaultPropertyOrderingListener);
+	toggleSorter(item);
+    }
+
     /**
      * Fires the sorting model change event.
      *
@@ -103,6 +117,31 @@ public class DomainTreeListSortingModel<T extends AbstractEntity<?>> implements 
     private void fireSortingModelChanged(final SorterChangedEvent<String> sorterEvent){
 	for(final SorterEventListener<String> listener : listeners.getListeners(SorterEventListener.class)){
 	    listener.valueChanged(sorterEvent);
+	}
+    }
+
+    /**
+     * Rests the sort order for the specified pair of sorting value and it's ordering.
+     *
+     * @param sortObject
+     */
+    private void resetSortOrder(final String item, final Ordering ordering) {
+	toggleSorter(item);
+	if(ordering == Ordering.ASCENDING){
+	    toggleSorter(item);
+	}
+    }
+
+    /**
+     * Resets all sort orders except the specified one.
+     *
+     * @param item
+     */
+    private void resetAllSortOrderExcept(final String item){
+	for(final Pair<String, Ordering> sortOrder : getSortObjects()){
+	    if(!sortOrder.getKey().equals(item)){
+		resetSortOrder(sortOrder.getKey(), sortOrder.getValue());
+	    }
 	}
     }
 }

@@ -767,22 +767,25 @@ public class DynamicQueryBuilder {
      * @param aggregationProperties
      * @return
      */
-    public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final Class<E> managedType, final List<QueryProperty> queryProperties, final List<Pair<String, ExpressionModel>> distributionProperties, final List<Pair<String, ExpressionModel>> aggregationProperties){
+    @SuppressWarnings("unchecked")
+    public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final EntityResultQueryModel<E> sourceQueryModel, final List<QueryProperty> queryProperties, final List<String> distributionProperties, final List<Pair<String, ExpressionModel>> aggregationProperties){
 
-	ICompleted<E> baseQuery = DynamicQueryBuilder.createQuery(managedType, queryProperties);
-	for (final Pair<String, ExpressionModel> groupProperty : distributionProperties) {
+	ICompleted<E> baseQuery = select(sourceQueryModel).as(ALIAS);
+	for (final String groupProperty : distributionProperties) {
 	    baseQuery = groupBy(groupProperty, baseQuery);
 	}
 	final List<Pair<String, ExpressionModel>> yieldProperties = new ArrayList<>();
-	yieldProperties.addAll(distributionProperties);
+	for (final String distributionProperty : distributionProperties) {
+	    yieldProperties.add(new Pair<String, ExpressionModel>(distributionProperty, null));
+	}
 	yieldProperties.addAll(aggregationProperties);
 	ISubsequentCompletedAndYielded<E> yieldedQuery = null;
-	for (final Pair<String, ExpressionModel> yieldProperty : yieldProperties){
+	for (final Pair<String, ExpressionModel> yieldProperty : yieldProperties) {
 	    yieldedQuery = yieldedQuery == null //
-			? yield(yieldProperty, baseQuery) //
-			: yield(yieldProperty, yieldedQuery);
+	    ? yield(yieldProperty, baseQuery) //
+		    : yield(yieldProperty, yieldedQuery);
 	}
-	if(yieldedQuery == null){
+	if (yieldedQuery == null) {
 	    throw new IllegalStateException("The query was compound incorrectly!");
 	}
 
@@ -796,10 +799,8 @@ public class DynamicQueryBuilder {
      * @param query
      * @return
      */
-    private static <E extends AbstractEntity<?>> ICompleted<E> groupBy(final Pair<String, ExpressionModel> distribution, final ICompleted<E> query){
-	return distribution.getValue() == null
-		? query.groupBy().prop(distribution.getKey().isEmpty() ? ALIAS : ALIAS + "." + distribution.getKey())//
-		: query.groupBy().expr(distribution.getValue());
+    private static <E extends AbstractEntity<?>> ICompleted<E> groupBy(final String distribution, final ICompleted<E> query){
+	return query.groupBy().prop(distribution.isEmpty() ? ALIAS : ALIAS + "." + distribution);
     }
 
     /**

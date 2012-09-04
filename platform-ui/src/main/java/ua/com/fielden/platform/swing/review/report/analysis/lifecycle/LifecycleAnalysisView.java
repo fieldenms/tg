@@ -3,21 +3,20 @@ package ua.com.fielden.platform.swing.review.report.analysis.lifecycle;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.configuration.LifecycleAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
+import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
-import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
-import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 
 
 public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager, Void> {
 
     private static final long serialVersionUID = -4883473612285722738L;
-
-
-
-    //TODO re-factor below
-
+//
+//
+//
+//    //TODO re-factor below
+//
 //    /**
 //     * List for selecting lifecycle property to monitor its lifecycle.
 //     */
@@ -38,7 +37,7 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 //
 //    private final JPanel configurePanel;
 //
-//    private final LifecycleChartFactory<T, DAO> chartFactory;
+//    private final LifecycleChartFactory<T> chartFactory;
 //    /**
 //     * Label for "categories" box.
 //     */
@@ -58,16 +57,11 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 //
 //    private final MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> multipleChartPanel;
 //
-//    public LifecycleReportViewModel(final LifecycleChartReview<T, DAO> lifecycleView, final BlockingIndefiniteProgressLayer tabPaneLayer) {
-//	this(lifecycleView.getModel(), tabPaneLayer, null);
+//    public LifecycleAnalysisView(final LifecycleAnalysisModel<T> model, final LifecycleAnalysisConfigurationView<T> owner) {
+//	super(model, owner);
+//	this.addSelectionEventListener(createLifecycleAnalysisSelectionListener());
 //
-//	lifecycleView.setLayout(new MigLayout("fill, insets 0"));
-//	lifecycleView.add(mainPanel, "grow");
-//    }
-//
-//    public LifecycleReportViewModel(final LifecycleChartReviewModel<T, DAO> lifecycleViewModel, final BlockingIndefiniteProgressLayer tabPaneLayer, final LifecycleChartFactory<T, DAO> chartFactory) {
-//	this.lifecycleViewModel = lifecycleViewModel;
-//	this.chartFactory = chartFactory;
+//	this.chartFactory = new LifecycleChartFactory<T>(this);
 //	this.tabPaneLayer = tabPaneLayer;
 //	this.categoriesBoxPanel = createCategoryCheckBoxes();
 //
@@ -141,6 +135,9 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 //	    fromEditor.setEditable(false);
 //	    toEditor.setEditable(false);
 //	}
+//
+//	lifecycleView.setLayout(new MigLayout("fill, insets 0"));
+//	lifecycleView.add(mainPanel, "grow");
 //    }
 //
 //    private JCheckBox createTotalCheckBox(final LifecycleChartReviewModel<T, DAO> lifecycleViewModel, final BlockingIndefiniteProgressLayer tabPaneLayer) {
@@ -490,63 +487,76 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 //    public LifecycleChartReviewModel<T, DAO> getLifecycleViewModel() {
 //	return lifecycleViewModel;
 //    }
+//
+//    //TODO re-factor above
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//    @Override
+//    protected void enableRelatedActions(final boolean enable, final boolean navigate) {
+//	if(getCentre().getCriteriaPanel() != null){
+//	    getCentre().getDefaultAction().setEnabled(enable);
+//	}
+//	getCentre().getRunAction().setEnabled(enable);
+//    }
+//
+//    /**
+//     * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
+//     *
+//     * @return
+//     */
+//    private ISelectionEventListener createLifecycleAnalysisSelectionListener() {
+//	return new ISelectionEventListener() {
+//
+//	    @Override
+//	    public void viewWasSelected(final SelectionEvent event) {
+//		//Managing the default, design and custom action changer button enablements.
+//		getCentre().getDefaultAction().setEnabled(getCentre().getCriteriaPanel() != null);
+//		if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {
+//		    getCentre().getCriteriaPanel().getSwitchAction().setEnabled(true);
+//		}
+//		if (getCentre().getCustomActionChanger() != null) {
+//		    getCentre().getCustomActionChanger().setEnabled(true);
+//		}
+//		//Managing the paginator's enablements.
+//		getCentre().getPaginator().setEnableActions(false, false);
+//		//Managing load and export enablements.
+//		getCentre().getExportAction().setEnabled(false);
+//		getCentre().getRunAction().setEnabled(true);
+//	    }
+//	};
+//    }
+//
+//    @Override
+//    protected void performCustomAction(final AnalysisDataEvent<?> clickedData) {
+//	// TODO Auto-generated method stub
+//
+//    }
 
-    //TODO re-factor above
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public LifecycleAnalysisView(final LifecycleAnalysisModel<T> model, final LifecycleAnalysisConfigurationView<T> owner) {
+    public LifecycleAnalysisView(final AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager, Void> model, final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager, Void, ? extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager, Void>> owner) {
 	super(model, owner);
-	this.addSelectionEventListener(createLifecycleAnalysisSelectionListener());
+	// TODO Auto-generated constructor stub
     }
 
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	if(getCentre().getCriteriaPanel() != null){
-	    getCentre().getDefaultAction().setEnabled(enable);
-	}
-	getCentre().getRunAction().setEnabled(enable);
-    }
+	// TODO Auto-generated method stub
 
-    /**
-     * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
-     *
-     * @return
-     */
-    private ISelectionEventListener createLifecycleAnalysisSelectionListener() {
-	return new ISelectionEventListener() {
-
-	    @Override
-	    public void viewWasSelected(final SelectionEvent event) {
-		//Managing the default, design and custom action changer button enablements.
-		getCentre().getDefaultAction().setEnabled(getCentre().getCriteriaPanel() != null);
-		if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {
-		    getCentre().getCriteriaPanel().getSwitchAction().setEnabled(true);
-		}
-		if (getCentre().getCustomActionChanger() != null) {
-		    getCentre().getCustomActionChanger().setEnabled(true);
-		}
-		//Managing the paginator's enablements.
-		getCentre().getPaginator().setEnableActions(false, false);
-		//Managing load and export enablements.
-		getCentre().getExportAction().setEnabled(false);
-		getCentre().getRunAction().setEnabled(true);
-	    }
-	};
     }
 
     @Override

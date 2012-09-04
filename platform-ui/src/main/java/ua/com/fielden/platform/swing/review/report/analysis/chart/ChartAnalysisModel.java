@@ -1,31 +1,24 @@
 package ua.com.fielden.platform.swing.review.report.analysis.chart;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
+import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
 import ua.com.fielden.platform.reportquery.AnalysisModelChangedEvent;
 import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
 import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
-import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
-import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
@@ -68,37 +61,19 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	return Result.successful(this);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Void executeAnalysisQuery() {
 	final Class<T> root = getCriteria().getEntityClass();
-	final IDomainTreeEnhancer enhancer = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer();
+
+	final IReportQueryGeneration<T> chartAnalysisQueryGenerator = new ChartAnalysisQueryGenerator<>(//
+		root, //
+		getCriteria().getCentreDomainTreeMangerAndEnhancer(), //
+		adtme());
+
 	final List<String> distributionProperties = adtme().getFirstTick().usedProperties(root);
 	final List<String> aggregationProperties = adtme().getSecondTick().usedProperties(root);
 
-	final List<Pair<String, ExpressionModel>> distribution = getPropertyExpressionPair(distributionProperties);
-	final List<Pair<String, ExpressionModel>> aggregation = getPropertyExpressionPair(aggregationProperties);
-
-	final List<String> yieldProperties = new ArrayList<String>();
-	yieldProperties.addAll(distributionProperties);
-	yieldProperties.addAll(aggregationProperties);
-
-	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery((Class<T>)enhancer.getManagedType(root), getCriteria().createQueryProperties(), distribution, aggregation).modelAsEntity(getCriteria().getManagedType());
-
-	final List<Pair<String, Ordering>> orderingProperties = new ArrayList<Pair<String,Ordering>>(adtme().getSecondTick().orderedProperties(root));
-	if(orderingProperties.isEmpty()){
-	    for(final String groupOrder : distributionProperties){
-		orderingProperties.add(new Pair<String, Ordering>(groupOrder, Ordering.ASCENDING));
-	    }
-	}
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, //
-		orderingProperties, //
-		getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer());
-	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(queryModel)
-	.with(DynamicOrderingBuilder.createOrderingModel(getCriteria().getManagedType(), orderingPairs))//
-	.with(DynamicFetchBuilder.createFetchModel(getCriteria().getManagedType(), new HashSet<String>(yieldProperties))).model();
-
-	final IPage<T> result = getCriteria().run(resultQuery, analysisView.getPageSize());
+	final IPage<T> result = getCriteria().run(chartAnalysisQueryGenerator.generateQueryModel().get(0), analysisView.getPageSize());
 	chartAnalysisDataProvider.setUsedProperties(distributionProperties, aggregationProperties);
 	getPageHolder().newPage(result);
 	return null;

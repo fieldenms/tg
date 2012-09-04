@@ -90,19 +90,6 @@ public class SortingCheckboxList<T> extends CheckboxList<T> {
 	}
     }
 
-    /**
-     * Resets all sort orders except the specified one.
-     *
-     * @param item
-     */
-    private void resetAllSortOrderExcept(final T item){
-	for(final Pair<T, Ordering> sortOrder : sortingModel.getSortObjects()){
-	    if(!sortOrder.getKey().equals(item)){
-		resetSortOrder(sortOrder.getKey(), sortOrder.getValue());
-	    }
-	}
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     protected void processMouseEvent(final MouseEvent e) {
@@ -116,10 +103,11 @@ public class SortingCheckboxList<T> extends CheckboxList<T> {
 	    if (getCellRenderer() instanceof SortingCheckingListCellRenderer) {
 		if (row >= 0 && isValueChecked(getModel().getElementAt(row)) && //
 			((SortingCheckingListCellRenderer<T>) getCellRenderer()).isOnOrderingArrow(actualX, actualY)) {
-		    if(!e.isControlDown()){
-			resetAllSortOrderExcept(getModel().getElementAt(row));
+		    if (!e.isControlDown()) {
+			sortingModel.toggleSorterSingle(getModel().getElementAt(row));
+		    } else {
+			sortingModel.toggleSorter(getModel().getElementAt(row));
 		    }
-		    sortingModel.toggleSorter(getModel().getElementAt(row));
 		    if (!isSelectsByChecking()) {
 			return;
 		    }
