@@ -126,16 +126,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		if (EntityUtils.isEntityType(propertyType)) {
 		    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
 
-		     final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
+		    // final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
+		    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+		    final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType, property);
+		    final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
+		    final String lastPropertyName = transformed.getValue();
+		    final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
 
-//		    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-//		    final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(rootType, property);
-//		    final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
-//		    final String lastPropertyName = transformed.getValue();
-//		    final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(rootType, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) rootType, penultPropertyName)); // exclude link properties in one2many and one2one associations
-
-		    // TODO
-		    if (propertyTypeWasInHierarchyBefore && /* !isLinkProperty */ !isKeyPart) {
+		    if (propertyTypeWasInHierarchyBefore && !isLinkProperty/*!isKeyPart*/) {
 			newIncludedProps.add(createDummyMarker(property));
 		    } else if (EntityUtils.isUnionEntityType(propertyType)) { // "union entity" property
 			final Pair<List<Field>, List<Field>> commonAndUnion = commonAndUnion((Class<? extends AbstractUnionEntity>) propertyType);
