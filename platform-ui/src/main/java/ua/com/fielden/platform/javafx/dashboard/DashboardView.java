@@ -9,6 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.embed.swing.JFXPanel;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
@@ -17,6 +18,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.util.Callback;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -44,6 +47,9 @@ public class DashboardView extends JFXPanel {
     private TreeMenuItem miMyProfile = null;
     private ObservableList<Sentinel> data;
     private TreeMenuWithTabs<?> treeMenu;
+
+    private final String webLightGrey = "d6d9df";
+    private final Color lightGrey = Color.web(webLightGrey);
 
     public void setTreeMenu(final TreeMenuWithTabs<?> treeMenu) {
 	this.treeMenu = treeMenu;
@@ -149,7 +155,10 @@ public class DashboardView extends JFXPanel {
 //      vbox.getChildren().addAll(label, table);
 	final BorderPane borderPane = new BorderPane();
 
-	final Scene scene = new Scene(borderPane);
+	borderPane.setStyle("-fx-base: #" + webLightGrey + "; -fx-background: #" + webLightGrey + ";");
+
+
+	final Scene scene = new Scene(borderPane, lightGrey);
 
         // final Label label = new Label("Dashboard");
         // label.setFont(new Font("Arial", 20));
@@ -157,15 +166,16 @@ public class DashboardView extends JFXPanel {
         table.setEditable(true);
         table.setMaxWidth(Double.MAX_VALUE);
         table.setMaxHeight(Double.MAX_VALUE);
-//        table.setPrefHeight(Double.MAX_VALUE);
+
+        //        table.setPrefHeight(Double.MAX_VALUE);
 //        table.setPrefWidth(Double.MAX_VALUE);
 
-        final TableColumn<Sentinel, String> sentinelCol = new TableColumn<>("Sentinel");
+        final TableColumn<Sentinel, String> sentinelCol = new TableColumn<>("Sentinel rule");
         sentinelCol.setMinWidth(100);
         sentinelCol.setCellValueFactory(
                 new PropertyValueFactory<Sentinel, String>("sentinelTitle"));
 
-        final TableColumn<Sentinel, Integer> resultCol = new TableColumn<>("Result");
+        final TableColumn<Sentinel, Integer> resultCol = new TableColumn<>("Status");
         resultCol.setCellFactory(new Callback<TableColumn<Sentinel, Integer>, TableCell<Sentinel, Integer>>()  {
             @Override
             public TableCell<Sentinel, Integer> call(final TableColumn<Sentinel, Integer> arg0) {
@@ -179,7 +189,7 @@ public class DashboardView extends JFXPanel {
         resultCol.setPrefWidth(resultColWidth);
         resultCol.setMaxWidth(resultColWidth);
 
-        final TableColumn<Sentinel, Void> refreshCol = new TableColumn<>("Refresh");
+        final TableColumn<Sentinel, Void> refreshCol = new TableColumn<>("Action");
         refreshCol.setCellFactory(new Callback<TableColumn<Sentinel, Void>, TableCell<Sentinel, Void>>()  {
             @Override
             public TableCell<Sentinel, Void> call(final TableColumn<Sentinel, Void> arg0) {
@@ -191,7 +201,8 @@ public class DashboardView extends JFXPanel {
         refreshCol.setPrefWidth(refreshColWidth);
         refreshCol.setMaxWidth(refreshColWidth);
 
-
+        // table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        sentinelCol.prefWidthProperty().bind(table.widthProperty().subtract(resultColWidth + refreshColWidth + 2));
 
 //        firstNameCol.prefWidthProperty().bind(table.widthProperty().divide(4)); // w * 1/4
 //        lastNameCol.prefWidthProperty().bind(table.widthProperty().divide(2)); // w * 2/4
@@ -205,7 +216,7 @@ public class DashboardView extends JFXPanel {
         	}
             }
         });
-        table.getColumns().addAll(sentinelCol, resultCol, refreshCol);
+        table.getColumns().addAll(resultCol, sentinelCol, refreshCol);
         table.setItems(data);
 
         for (final Sentinel sentinel : data) {
@@ -213,15 +224,22 @@ public class DashboardView extends JFXPanel {
         }
         sort();
 
-        final Button refreshAll = new Button("Refresh all");
+        borderPane.setCenter(table);
+
+        final VBox vbButtons = new VBox();
+        // vbButtons.setSpacing(10);
+        vbButtons.setPadding(new Insets(4, 0, 4, 0));
+
+        final Button refreshAll = new Button("Refresh");
         refreshAll.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(final ActionEvent arg0) {
         	refreshAll();
             }
         });
-        borderPane.setTop(refreshAll);
-        borderPane.setCenter(table);
+        vbButtons.getChildren().add(refreshAll);
+        borderPane.setBottom(vbButtons);
+        refreshAll.translateXProperty().bind(table.widthProperty().subtract(refreshAll.widthProperty().add(5.0)));
         return (scene);
     }
 
@@ -236,8 +254,9 @@ public class DashboardView extends JFXPanel {
     }
 
     private void sort() {
-	table.getSortOrder().add(table.getColumns().get(1));
-        table.getColumns().get(1).setSortType(TableColumn.SortType.DESCENDING);
-        table.getColumns().get(1).setSortable(true); // This performs a sort
+	final int index = 0;
+	table.getSortOrder().add(table.getColumns().get(index));
+        table.getColumns().get(index).setSortType(TableColumn.SortType.DESCENDING);
+        table.getColumns().get(index).setSortable(true); // This performs a sort
     }
 }

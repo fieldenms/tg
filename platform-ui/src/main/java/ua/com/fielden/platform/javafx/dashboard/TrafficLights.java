@@ -102,7 +102,7 @@ public class TrafficLights extends Group {
 		@Override
 		public void handle(final MouseEvent event) {
 		    if (isLighting()) {
-			setRadius(getRadius() - 1);
+			setEffect(new InnerShadow(BlurType.GAUSSIAN, realColor(), 15, 0, 0, 0));
 		    }
 		}
 	    });
@@ -110,17 +110,20 @@ public class TrafficLights extends Group {
 		@Override
 		public void handle(final MouseEvent event) {
 		    if (isLighting()) {
-			setRadius(getRadius() + 1);
+			setEffect(null);
 			TrafficLight.this.action.action();
 		    }
 		}
 	    });
 
+	    setStrokeWidth(0.0);
+	    setStroke(lightingColor.darker());
 	    setOnMouseEntered(new EventHandler<MouseEvent>() {
 		@Override
 		public void handle(final MouseEvent event) {
 		    if (isLighting()) {
-			setEffect(new InnerShadow(BlurType.GAUSSIAN, realColor(), 15, 0, 0, 0));
+			setRadius(getRadius() - 0.5);
+			setStrokeWidth(1.0);
 		    }
 		}
 	    });
@@ -128,7 +131,8 @@ public class TrafficLights extends Group {
 		@Override
 		public void handle(final MouseEvent event) {
 		    if (isLighting()) {
-			setEffect(null);
+			setRadius(getRadius() + 0.5);
+			setStrokeWidth(0.0);
 		    }
 		}
 	    });

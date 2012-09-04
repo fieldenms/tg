@@ -89,7 +89,9 @@ public class TrafficLightControl extends Application {
 	    }
 	};
 
-	final TrafficLights trafficLights = new TrafficLights(new TrafficLightsModel(), a, a, a);
+	final TrafficLightsModel model = new TrafficLightsModel();
+	model.getGreenLightingModel().setLighting(true);
+	final TrafficLights trafficLights = new TrafficLights(model, a, a, a);
 	trafficLights.setTranslateX(0);
 	trafficLights.setTranslateY(0);
 
