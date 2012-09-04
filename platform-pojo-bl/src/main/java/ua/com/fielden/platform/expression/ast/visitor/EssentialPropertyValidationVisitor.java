@@ -13,7 +13,7 @@ import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.reflection.Finder;
 
 /**
- * Ensures that a visited AST node representing a property reference is  reachable from the context property.
+ * Ensures that a visited AST node representing a property reference is reachable from the context property.
  *
  * @author TG Team
  *
@@ -49,7 +49,11 @@ public class EssentialPropertyValidationVisitor extends AbstractAstVisitor {
 	    }
 
 	    if (field.isAnnotationPresent(Calculated.class)) {
-		throw new InvalidPropertyException("Calculated properties cannot be used as part of expressions at this stage. Property " + absolutePropertyPath + " is calculated.", node.getToken());
+		final Calculated anno = field.getAnnotation(Calculated.class);
+		if (Calculated.EMPTY.equals(anno.value())) {
+		    throw new InvalidPropertyException("Calculated properties cannot be used as part of expressions at this stage. Property " + absolutePropertyPath
+			    + " is calculated.", node.getToken());
+		}
 	    }
 	}
     }

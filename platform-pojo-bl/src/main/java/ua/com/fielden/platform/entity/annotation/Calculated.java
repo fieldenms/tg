@@ -30,13 +30,14 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 @Target({ ElementType.FIELD })
 public @interface Calculated {
     public static final String NOTHING = "-%-> NOTHING <-%-";
+    public static String EMPTY = "";
 
     /**
      * Returns an expression string that defines the calculated property.
      *
      * @return
      */
-    String value() default "";
+    String value() default EMPTY;
 
     /**
      * Class indicating a root type name for calculated property.

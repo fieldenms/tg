@@ -110,16 +110,15 @@ public class EssentialPropertyValidationVisitorTest {
     }
 
     @Test
-    public void calculated_properties_should_not_be_permitted_as_part_of_expressions_at_this_stage() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+    public void calculated_properties_as_part_of_entity_definition_should_be_permitted_as_part_of_expressions_at_this_stage() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("selfProperty.entityProperty.intProperty * selfProperty.calcuatedProperty").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 	final EssentialPropertyValidationVisitor visitor = new EssentialPropertyValidationVisitor(EntityLevel1.class);
 	try {
 	    new AstWalker(ast, visitor).walk();
-	    fail("There should have been an exception during AST walking.");
 	} catch (final InvalidPropertyException ex) {
-	    assertEquals("Incorrect error message.", "Calculated properties cannot be used as part of expressions at this stage. Property selfProperty.calcuatedProperty is calculated.", ex.getMessage());
+	    fail("There should have been no exception during AST walking.");
 	}
     }
 
