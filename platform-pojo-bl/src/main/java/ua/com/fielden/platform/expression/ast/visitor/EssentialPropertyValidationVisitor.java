@@ -50,7 +50,7 @@ public class EssentialPropertyValidationVisitor extends AbstractAstVisitor {
 
 	    if (field.isAnnotationPresent(Calculated.class)) {
 		final Calculated anno = field.getAnnotation(Calculated.class);
-		if (Calculated.EMPTY.equals(anno.value())) {
+		if (!Calculated.EMPTY.equals(anno.value())) {
 		    throw new InvalidPropertyException("Calculated properties cannot be used as part of expressions at this stage. Property " + absolutePropertyPath
 			    + " is calculated.", node.getToken());
 		}
