@@ -106,6 +106,26 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
 
+//    @Test
+//    public void test_query_111() {
+//	final EntityResultQueryModel<TgVehicle> qry = select(select(TgVehicle.class).model()).
+//		where().prop("key").eq().val("CAR1").
+//		model();
+//	final TgVehicle vehicle1 = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
+//		with("key"). //
+//		with("purchasePrice")).model());
+//	assertEquals(new Money(new BigDecimal(10)), vehicle1.getPurchasePrice());
+//
+//	final TgVehicle vehicle2 = vehicleDao.getEntity(from(qry). //
+//		with(fetchOnly(TgVehicle.class). //
+//			with("aggregated"). //
+//			without("id"). //
+//			without("version")). //
+//		model());
+//	assertEquals(new BigDecimal("10.0000"), vehicle2.getAggregated());
+//    }
+
+
     @Test
     public void test_query_for_correct_fetch_model_autoenhancement_in_case_of_composite_user_type_with_single_subproperty() {
 	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).

@@ -116,6 +116,14 @@ public class TgVehicle extends AbstractEntity<String> {
     @Title(value = "Financial details", desc = "Fin Details")
     private TgVehicleFinDetails finDetails;
 
+//    @IsProperty @Calculated(category = CalculatedPropertyCategory.AGGREGATED_EXPRESSION) @Title("Aggregated prop")
+//    private BigDecimal aggregated;
+//    private static final ExpressionModel aggregated_ = expr().sumOf().prop("purchasePrice.amount").model();
+//  public BigDecimal getAggregated() {
+//	return aggregated;
+//  }
+
+
     /**
      * Constructor for (@link EntityFactory}.
      */

@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.security;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.util.List;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -15,6 +11,10 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * RAO implementation of the {@link IUserRoleDao}.
@@ -39,7 +39,7 @@ public class UserRoleRao extends CommonEntityRao<UserRole> implements IUserRoleD
 
     @Override
     public List<UserRole> findByIds(final Long... ids) {
-	final EntityResultQueryModel<UserRole> model = select(UserRole.class).where().prop("id").in().values(ids).model();
+	final EntityResultQueryModel<UserRole> model = ids.length > 0 ? select(UserRole.class).where().prop("id").in().values(ids).model() : select(UserRole.class).model();
 	final OrderingModel orderBy = orderBy().prop("key").asc().model();
 	return getAllEntities(from(model).with(orderBy).model());
     }
