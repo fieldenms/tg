@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.ioc;
 
+import static com.google.inject.matcher.Matchers.annotatedWith;
+import static com.google.inject.matcher.Matchers.any;
+import static com.google.inject.matcher.Matchers.subclassesOf;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +24,6 @@ import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
-import static com.google.inject.matcher.Matchers.annotatedWith;
-import static com.google.inject.matcher.Matchers.any;
-import static com.google.inject.matcher.Matchers.subclassesOf;
 
 /**
  * Guice injector module for platform-wide Hibernate related injections such as transaction support and domain level validation configurations.
@@ -65,8 +66,10 @@ public abstract class TransactionalModule extends EntityModule {
 	    return DbVersion.H2;
 	} else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
 	    return DbVersion.POSTGRESQL;
+	} else if (dialect.equals("org.hibernate.dialect.SQLServerDialect")) {
+	    return DbVersion.MSSQL;
 	}
-	return null;
+	throw new IllegalStateException("Could not determine DB version based on the provided Hibernate dialect \"" + dialect + "\".");
     }
 
     public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
