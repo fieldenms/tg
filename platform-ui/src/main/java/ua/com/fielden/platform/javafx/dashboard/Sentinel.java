@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -73,7 +74,7 @@ public class Sentinel<T extends AbstractEntity<?>> {
 	this.centreName = centreName;
 	this.analysisName = analysisName;
 
-        this.sentinelTitle = new SimpleStringProperty(centreName + " <= " + analysisName);
+        this.sentinelTitle = new SimpleStringProperty(centreName + " " + TitlesDescsGetter.LEFT_ARROW + " " + analysisName);
         this.result = new SimpleObjectProperty<IPage>(null);
         model = new TrafficLightsModel();
     }
