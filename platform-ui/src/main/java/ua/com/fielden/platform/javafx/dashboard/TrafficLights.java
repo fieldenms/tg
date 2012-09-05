@@ -5,6 +5,7 @@ import java.util.List;
 
 import javafx.event.EventHandler;
 import javafx.scene.Group;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.InnerShadow;
 import javafx.scene.input.MouseEvent;
@@ -63,33 +64,49 @@ public class TrafficLights extends Group {
     }
 
     public static class TrafficLightModel {
-	private boolean isLighting = false;
+	// private boolean isLighting = false;
+	private Integer count = 0;
 	private final List<IAction> afterChangeActions = new ArrayList<>();
 
 	public boolean isLighting() {
-	    return isLighting;
+	    return count > 0;
 	}
 
 	public void addAfterChangeAction(final IAction action) {
 	    afterChangeActions.add(action);
 	}
 
-	public void setLighting(final boolean isLighting) {
-	    this.isLighting = isLighting;
+	public void setCount(final Integer count) {
+	    this.count = count;
 
 	    for (final IAction afterChange : afterChangeActions) {
 		afterChange.action();
 	    }
 	}
+
+	public Integer getCount() {
+	    return count;
+	}
+
+//	public void setLighting(final boolean isLighting) {
+//	    this.isLighting = isLighting;
+//
+//	    for (final IAction afterChange : afterChangeActions) {
+//		afterChange.action();
+//	    }
+//	}
     }
 
     private static class TrafficLight extends Circle {
 	private final TrafficLightModel model;
 	private final Color lightingColor;
 	private final IAction action;
+	private final Tooltip tooltip;
 
 	public TrafficLight(final TrafficLightModel model, final double radius, final Color lightingColor, final IAction action) {
 	    super(0, 0, radius);
+
+	    tooltip = new Tooltip();
 
 	    this.model = model;
 
@@ -140,6 +157,14 @@ public class TrafficLights extends Group {
 
 	public void updateColor() {
 	    setFill(new RadialGradient(225, 0.5, 0, 0, getRadius(), false, CycleMethod.NO_CYCLE, new Stop(0.0, Color.WHITE), new Stop(1.0, realColor())));
+
+	    if (model.getCount() > 0) {
+		tooltip.setText(model.getCount() + " items");
+		Tooltip.install(this, tooltip);
+	    } else {
+		tooltip.setText("");
+		Tooltip.uninstall(this, tooltip);
+	    }
 	}
 
 	private Color realColor() {

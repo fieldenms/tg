@@ -127,28 +127,30 @@ public class Sentinel<T extends AbstractEntity<?>> {
 
 	final IPage resultPage = result.get();
 	if (resultPage == null) {
-	    model.getRedLightingModel().setLighting(false);
-	    model.getYellowLightingModel().setLighting(false);
-	    model.getGreenLightingModel().setLighting(false);
+	    model.getRedLightingModel().setCount(0);
+	    model.getYellowLightingModel().setCount(0);
+	    model.getGreenLightingModel().setCount(0);
 	}
 	final String distrProperty = sentinelManager().getFirstTick().usedProperties(root).get(0);
 	countOfBad.set(0);
 
 	for (final Object o : resultPage.data()) {
 	    final AbstractEntity entity = (AbstractEntity) o;
-	    if ("RED".equalsIgnoreCase((String) entity.get(distrProperty))) {
-		model.getRedLightingModel().setLighting(((Integer) entity.get("countOfSelfDashboard")) > 0);
-		countOfBad.set(countOfBad.get() + (Integer) entity.get("countOfSelfDashboard") * 1000);
-	    } else if ("YELLOW".equalsIgnoreCase((String) entity.get(distrProperty))) {
-		model.getYellowLightingModel().setLighting(((Integer) entity.get("countOfSelfDashboard")) > 0);
-		countOfBad.set(countOfBad.get() + (Integer) entity.get("countOfSelfDashboard"));
-	    } else if ("GREEN".equalsIgnoreCase((String) entity.get(distrProperty))) {
-		model.getGreenLightingModel().setLighting(((Integer) entity.get("countOfSelfDashboard")) > 0);
+	    final Integer count = (Integer) entity.get("countOfSelfDashboard");
+	    final String distrPropValue = (String) entity.get(distrProperty);
+	    if ("RED".equalsIgnoreCase(distrPropValue)) {
+		model.getRedLightingModel().setCount(count);
+		countOfBad.set(countOfBad.get() + count * 1000);
+	    } else if ("YELLOW".equalsIgnoreCase(distrPropValue)) {
+		model.getYellowLightingModel().setCount(count);
+		countOfBad.set(countOfBad.get() + count);
+	    } else if ("GREEN".equalsIgnoreCase(distrPropValue)) {
+		model.getGreenLightingModel().setCount(count);
 	    }
 	}
 	System.err.println("=====================Countof bad == " + countOfBad);
 	if (model.getRedLightingModel().isLighting() || model.getYellowLightingModel().isLighting()) {
-	    model.getGreenLightingModel().setLighting(false);
+	    model.getGreenLightingModel().setCount(0);
 	}
     }
 
