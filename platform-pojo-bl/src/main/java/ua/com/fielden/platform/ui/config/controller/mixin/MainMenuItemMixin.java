@@ -126,10 +126,9 @@ public final class MainMenuItemMixin {
 	final Long[] ids = user.isBase() ? new Long[] { user.getId() } : new Long[] { user.getId(), user.getBasedOnUser().getId() };
 
 	// retrieve entity centre configurations, which do not correspond to principle menu items and belong to the users identified by ids
-	final EntityResultQueryModel<EntityCentreConfig> model = ids.length > 0 ? select(EntityCentreConfig.class).where()//
+	final EntityResultQueryModel<EntityCentreConfig> model = select(EntityCentreConfig.class).where()//
 	.prop("owner").in().values(ids)//
-	.and().prop("principal").eq().val(false).model() :
-	    select(EntityCentreConfig.class).where().prop("principal").eq().val(false).model(); // TODO may be it is better to order by title
+	.and().prop("principal").eq().val(false).model(); // TODO may be it is better to order by title
 
 	final OrderingModel orderBy = orderBy().prop("menuItem.order").asc().model();
 
