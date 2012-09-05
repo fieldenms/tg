@@ -207,7 +207,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case COUNT_ALL:
 	    return new CountAll();
 	case NOW:
-	    return new Now();
+	    return new Now(getDbVersion());
 
 	default:
 	    throw new RuntimeException("Unrecognised zero agrument function: " + function);

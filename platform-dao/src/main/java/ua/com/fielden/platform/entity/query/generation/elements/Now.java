@@ -3,17 +3,28 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.query.generation.DbVersion;
+
 
 public class Now implements ISingleOperand {
-
-    private final String sql = "NOW()";
+    private final DbVersion dbVersion;
 
     @Override
     public String sql() {
-	return sql;
+	switch (dbVersion) {
+	case H2:
+	    return "NOW()";
+	case MSSQL:
+	    return "GETDATE()";
+	case POSTGRESQL:
+	    return "CURRENT_TIMESTAMP";
+	default:
+	    throw new IllegalStateException("Function [" + getClass().getSimpleName() +"] is not yet implemented for RDBMS [" + dbVersion + "]!");
+	}
     }
 
-    public Now() {
+    public Now(final DbVersion dbVersion) {
+	this.dbVersion = dbVersion;
     }
 
     @Override
@@ -55,7 +66,7 @@ public class Now implements ISingleOperand {
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + ((sql == null) ? 0 : sql.hashCode());
+	result = prime * result + ((dbVersion == null) ? 0 : dbVersion.hashCode());
 	return result;
     }
 
@@ -71,13 +82,10 @@ public class Now implements ISingleOperand {
 	    return false;
 	}
 	final Now other = (Now) obj;
-	if (sql == null) {
-	    if (other.sql != null) {
-		return false;
-	    }
-	} else if (!sql.equals(other.sql)) {
+	if (dbVersion != other.dbVersion) {
 	    return false;
 	}
 	return true;
     }
+
 }
