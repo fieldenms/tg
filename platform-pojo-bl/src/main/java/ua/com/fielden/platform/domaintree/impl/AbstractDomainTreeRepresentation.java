@@ -45,6 +45,10 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentationWithMutability {
+    /**
+     * 0 -- to load only first level properties, Integer.MAX_VALUE -- to load all properties (obviously without cross-references ones);
+     */
+    private static Integer LOADING_LEVEL = 0;
     private final EnhancementLinkedRootsSet rootTypes;
     private final EnhancementSet manuallyExcludedProperties;
     private final AbstractTickRepresentation firstTick;
@@ -101,6 +105,10 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
     }
 
+    private int level(final String path) {
+	return !PropertyTypeDeterminator.isDotNotation(path) ? 0 : 1 + level(PropertyTypeDeterminator.penultAndLast(path).getKey());
+    }
+
     /**
      * Constructs recursively the list of properties using given list of fields.
      *
@@ -133,7 +141,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		    final String lastPropertyName = transformed.getValue();
 		    final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
 
-		    if (propertyTypeWasInHierarchyBefore && !isLinkProperty/*!isKeyPart*/) {
+		    if (level(property) >= LOADING_LEVEL || propertyTypeWasInHierarchyBefore && !isLinkProperty/*!isKeyPart*/) {
 			newIncludedProps.add(createDummyMarker(property));
 		    } else if (EntityUtils.isUnionEntityType(propertyType)) { // "union entity" property
 			final Pair<List<Field>, List<Field>> commonAndUnion = commonAndUnion((Class<? extends AbstractUnionEntity>) propertyType);

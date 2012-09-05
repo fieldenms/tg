@@ -66,7 +66,7 @@ public abstract class AbstractDomainTreeTest {
     private static final String PERFORM_AFTER_DESERIALISATION_PROCESS_FOR = "performAfterDeserialisationProcess_for_";
     private static final String MANAGE_TESTING_DTM_FOR = "manageTestingDTM_for_";
     private static final String ASSERT_INNER_CROSS_REFERENCES_FOR = "assertInnerCrossReferences_for_";
-    
+
     /** A base types to be checked for its non-emptiness and non-emptiness of their children. */
     private static final List<Class<?>> DOMAIN_TREE_TYPES = new ArrayList<Class<?>>() {{
 	add(AbstractEntity.class); //
@@ -156,6 +156,13 @@ public abstract class AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     protected static final void initialiseDomainTreeTest(final Class<? extends AbstractDomainTreeTest> testCaseClass) throws Exception {
 	try {
+	    // !!!!!!!!!!!!
+	    final Field loadingLevelField = AbstractDomainTreeRepresentation.class.getDeclaredField("LOADING_LEVEL");
+	    final boolean isAccessible = loadingLevelField.isAccessible();
+	    loadingLevelField.setAccessible(true);
+	    loadingLevelField.set(null, Integer.MAX_VALUE);
+	    loadingLevelField.setAccessible(isAccessible);
+
 	    irrelevantDtm = Reflector.getMethod(testCaseClass, CREATE_IRRELEVANT_DTM_FOR + testCaseClass.getSimpleName()).invoke(null);
 
 	    final Object dtm = Reflector.getMethod(testCaseClass, CREATE_DTM_FOR + testCaseClass.getSimpleName()).invoke(null);
