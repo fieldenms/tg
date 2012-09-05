@@ -135,13 +135,13 @@ public class Sentinel<T extends AbstractEntity<?>> {
 
 	for (final Object o : resultPage.data()) {
 	    final AbstractEntity entity = (AbstractEntity) o;
-	    if ("RED".equals(entity.get(distrProperty))) {
+	    if ("RED".equalsIgnoreCase((String) entity.get(distrProperty))) {
 		model.getRedLightingModel().setLighting(((Integer) entity.get("countOfSelfDashboard")) > 0);
 		countOfBad.set(countOfBad.get() + (Integer) entity.get("countOfSelfDashboard") * 1000);
-	    } else if ("YELLOW".equals(entity.get(distrProperty))) {
+	    } else if ("YELLOW".equalsIgnoreCase((String) entity.get(distrProperty))) {
 		model.getYellowLightingModel().setLighting(((Integer) entity.get("countOfSelfDashboard")) > 0);
 		countOfBad.set(countOfBad.get() + (Integer) entity.get("countOfSelfDashboard"));
-	    } else if ("GREEN".equals(entity.get(distrProperty))) {
+	    } else if ("GREEN".equalsIgnoreCase((String) entity.get(distrProperty))) {
 		model.getGreenLightingModel().setLighting(((Integer) entity.get("countOfSelfDashboard")) > 0);
 	    }
 	}

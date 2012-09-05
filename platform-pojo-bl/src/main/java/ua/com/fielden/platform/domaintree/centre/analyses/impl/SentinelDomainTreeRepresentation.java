@@ -67,9 +67,9 @@ public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresen
 	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
 	final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, managedType, property);
-	final String expr = calculatedAnnotation != null ? calculatedAnnotation.value().trim() : null;
+	final String upperCasedAndTrimmedExpr = calculatedAnnotation != null ? calculatedAnnotation.value().trim().toUpperCase() : null;
 	return calculatedAnnotation != null && EntityUtils.isString(propertyType) && //
-		expr.startsWith("CASE WHEN ") && expr.endsWith(" END") && expr.contains(" \"GREEN\" ") && expr.contains(" \"RED\" ");
+		upperCasedAndTrimmedExpr.startsWith("CASE WHEN ") && upperCasedAndTrimmedExpr.endsWith(" END") && upperCasedAndTrimmedExpr.contains(" \"GREEN\" ") && upperCasedAndTrimmedExpr.contains(" \"RED\" ");
 		// expr.startsWith("\"1 + 7");
     }
 
