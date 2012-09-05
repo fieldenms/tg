@@ -58,7 +58,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	final Map<String, List<T>> resultMap = new HashMap<String, List<T>>();
 	resultMap.put("Grand total", getGroupList(queryModelList.get(0)));
 	for(int index = 0; index < distributionProperties.size(); index++){
-	    resultMap.put(distributionProperties.get(0), getGroupList(queryModelList.get(index+1)));
+	    resultMap.put(distributionProperties.get(index), getGroupList(queryModelList.get(index+1)));
 	}
 	pivotModel.loadData(resultMap, distributionProperties, adtme().getSecondTick().usedProperties(root));
 	return null;
