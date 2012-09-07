@@ -6,10 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
 import javax.swing.Action;
@@ -23,19 +20,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.TableColumnModelEvent;
-import javax.swing.event.TableColumnModelListener;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableColumn;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.commons.lang.StringUtils;
-import org.jdesktop.swingx.treetable.TreeTableNode;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -56,25 +48,18 @@ import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxListCellRenderer;
-import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
-import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
-import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel;
-import ua.com.fielden.platform.swing.checkboxlist.ListSortingModel;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
-import ua.com.fielden.platform.swing.pivot.analysis.dnd.PivotListDragToSupport;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.report.analysis.details.configuration.AnalysisDetailsConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.details.configuration.AnalysisDetailsConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
-import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListCheckingModel;
-import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListSortingModel;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.MultipleAnalysisEntityCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
@@ -219,15 +204,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    }
 	});
 	distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	final ListCheckingModel<String> checkingModel = new DomainTreeListCheckingModel<T>(root, firstTick);
-	checkingModel.addListCheckingListener(new ListCheckingListener<String>() {
-
-	    @Override
-	    public void valueChanged(final ListCheckingEvent<String> e) {
-		refreshPivotTable(pivotTablePanel.getTreeTable());
-	    }
-	});
-	distributionList.setCheckingModel(checkingModel);
+	distributionList.setCheckingModel(getModel().getDistributionCheckingModel());
 	return distributionList;
     }
 
@@ -271,118 +248,31 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    }
 	});
 	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	final ListCheckingModel<String> checkingModel= new DomainTreeListCheckingModel<T>(root, secondTick);
-	checkingModel.addListCheckingListener(new ListCheckingListener<String>() {
+	aggregationList.setCheckingModel(getModel().getAggregationCheckingModel());
+	aggregationList.setSortingModel(getModel().getAggregationSortingModel());
 
-	    @Override
-	    public void valueChanged(final ListCheckingEvent<String> e) {
-		refreshPivotTable(pivotTablePanel.getTreeTable());
-	    }
-	});
-	aggregationList.setCheckingModel(checkingModel);
-	final ListSortingModel<String> sortingModel = new DomainTreeListSortingModel<T>(root, secondTick, getModel().adtme().getRepresentation().getSecondTick());
-	aggregationList.setSortingModel(sortingModel);
-
-	getModel().getPivotModel().addSorterChangeListener(new PivotTableSorterListener() {
-
-	    @Override
-	    public void sorterChanged(final PivotSorterChangeEvent event) {
-		final PivotTreeTable pivotTable = pivotTablePanel.getTreeTable();
-		final FilterableTreeTableModel filterableModel = pivotTable.getFilterableModel();
-		final TreeTableNode rootNode = filterableModel.getOriginModel().getRoot();
-		final TreePath selectedPath = pivotTable.getPathForRow(pivotTable.getSelectedRow());
-		if (rootNode != null) {
-		    final Enumeration<?> expandedPaths = pivotTable.getExpandedDescendants(new TreePath(rootNode));
-		    filterableModel.reload();
-		    while (expandedPaths != null && expandedPaths.hasMoreElements()) {
-			final TreePath path = (TreePath) expandedPaths.nextElement();
-			pivotTable.expandPath(path);
-		    }
-		}
-		pivotTable.scrollPathToVisible(selectedPath);
-		pivotTable.getSelectionModel().setSelectionInterval(0, pivotTable.getRowForPath(selectedPath));
-	    }
-	});
 	return aggregationList;
     }
 
     private FilterableTreeTablePanel<PivotTreeTable> createPivotTreeTablePanel() {
 	final PivotTreeTable treeTable = new PivotTreeTable(new FilterableTreeTableModel(getModel().getPivotModel()));
 	final FilterableTreeTablePanel<PivotTreeTable> pivotTablePanel = new FilterableTreeTablePanel<PivotTreeTable>(treeTable, createPivotFilter(), "find item");
+	getModel().getPivotModel().addPivotDataLoadedListener(new PivotDataLoadedListener() {
+
+	    @Override
+	    public void pivotDataLoaded(final PivotDataLoadedEvent event) {
+		SwingUtilities.invokeLater(new Runnable() {
+
+		    @Override
+		    public void run() {
+			pivotTablePanel.getFilterControl().refresh();
+		    }
+		});
+	    }
+	});
 	treeTable.addMouseListener(createDoubleClickListener(treeTable));
-	treeTable.getColumnModel().addColumnModelListener(createColumnModelListener(treeTable, createColumnWidthChangeListener(treeTable)));
 	refreshPivotTable(treeTable);
 	return pivotTablePanel;
-    }
-
-    /**
-     * Creates the table column listener for the tree table model that updates the column's width.
-     *
-     * @param columnWidthChangeListener
-     * @return
-     */
-    private TableColumnModelListener createColumnModelListener(final PivotTreeTable treeTable, final PropertyChangeListener columnWidthChangeListener) {
-	return new TableColumnModelListener() {
-
-	    @Override
-	    public void columnSelectionChanged(final ListSelectionEvent e) {}
-
-	    @Override
-	    public void columnRemoved(final TableColumnModelEvent e) {}
-
-	    @Override
-	    public void columnMoved(final TableColumnModelEvent e) {}
-
-	    @Override
-	    public void columnMarginChanged(final ChangeEvent e) {}
-
-	    @Override
-	    public void columnAdded(final TableColumnModelEvent e) {
-		final int columnIndex = e.getToIndex();
-		final TableColumn column = treeTable.getColumnModel().getColumn(columnIndex);
-		final Class<T> root = getModel().getCriteria().getEntityClass();
-		final IPivotAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
-		final IPivotAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
-		final List<String> firstTickUsed = firstTick.usedProperties(root);
-		int width = 0;
-		if(treeTable.isHierarchical(columnIndex) && firstTickUsed.size() > 0){
-		    width = firstTick.getWidth(root, firstTick.usedProperties(root).get(0));
-		}else if(columnIndex > 0){
-		    width = secondTick.getWidth(root, secondTick.usedProperties(root).get(columnIndex - 1));
-		}
-		if(width > 0){
-		    column.setPreferredWidth(width);
-		}
-		column.addPropertyChangeListener(columnWidthChangeListener);
-	    }
-	};
-    }
-
-    /**
-     * Creates the column's width property change listener. Updates model property's width.
-     *
-     * @param pivotTable
-     * @return
-     */
-    private PropertyChangeListener createColumnWidthChangeListener(final PivotTreeTable pivotTable) {
-	return new PropertyChangeListener() {
-
-	    @Override
-	    public void propertyChange(final PropertyChangeEvent evt) {
-		if (evt.getPropertyName().equals("width")) {
-		    final Class<T> root = getModel().getCriteria().getEntityClass();
-		    final IPivotAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
-		    final IPivotAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
-		    final List<String> usedDistributionProperties = firstTick.usedProperties(root);
-		    final int columnIndex = pivotTable.getColumnModel().getColumnIndex(((TableColumn)evt.getSource()).getIdentifier());
-		    if (pivotTable.isHierarchical(columnIndex) && !usedDistributionProperties.isEmpty()) {
-			firstTick.setWidth(root, firstTick.usedProperties(root).get(0), ((Integer) evt.getNewValue()).intValue());
-		    } else if (!pivotTable.isHierarchical(columnIndex)) {
-			secondTick.setWidth(root, secondTick.usedProperties(root).get(columnIndex - 1), ((Integer) evt.getNewValue()).intValue());
-		    }
-		}
-	    }
-	};
     }
 
     private IFilter createPivotFilter() {

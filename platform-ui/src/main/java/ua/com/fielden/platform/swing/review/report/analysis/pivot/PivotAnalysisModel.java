@@ -14,7 +14,6 @@ import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
@@ -25,23 +24,103 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
 import ua.com.fielden.platform.report.query.generation.PivotAnalysisQueryGgenerator;
+import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
+import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
+import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel;
+import ua.com.fielden.platform.swing.checkboxlist.ListSortingModel;
+import ua.com.fielden.platform.swing.checkboxlist.SorterChangedEvent;
+import ua.com.fielden.platform.swing.checkboxlist.SorterEventListener;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
+import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListCheckingModel;
+import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListSortingModel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 
 public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void> {
 
     private final PivotTreeTableModelEx pivotModel;
+    private final ListCheckingModel<String> distributionCheckingModel;
+    private final ListCheckingModel<String> aggregationCheckingModel;
+    private final ListSortingModel<String> aggregationSortingModel;
 
     public PivotAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManager adtme, final PageHolder pageHolder) {
 	super(criteria, adtme, pageHolder);
+	final Class<T> root = getCriteria().getEntityClass();
+	final IPivotAddToDistributionTickManager firstTick = adtme().getFirstTick();
+	final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
+
 	pivotModel = new PivotTreeTableModelEx();
+	pivotModel.addTableHeaderChangedListener(new PivotTableHeaderChanged() {
+
+	    @Override
+	    public void tableHeaderChanged(final PivotTableHeaderChangedEvent event) {
+		//This is stub implementation.
+	    }
+
+	    @Override
+	    public void columnOrderChanged(final PivotColumnOrderChangedEvent event) {
+		if (pivotModel.aggregationProperties.contains(event.getProperty())) {
+		    final List<String> usedProperties = secondTick.usedProperties(root);
+		    reorderList(usedProperties, pivotModel.aggregationProperties, event.getProperty(), false);
+		    reorderList(usedProperties, pivotModel.aggregationProperties, event.getProperty(), true);
+		}
+		if (pivotModel.visibleAggregationProperties.contains(event.getProperty())) {
+		    reorderList(pivotModel.aggregationProperties, pivotModel.visibleAggregationProperties, event.getProperty(), false);
+		    reorderList(pivotModel.aggregationProperties, pivotModel.visibleAggregationProperties, event.getProperty(), true);
+		}
+	    }
+	});
+
+	distributionCheckingModel = new DomainTreeListCheckingModel<T>(root, firstTick);
+	distributionCheckingModel.addListCheckingListener(new ListCheckingListener<String>() {
+
+	    @Override
+	    public void valueChanged(final ListCheckingEvent<String> e) {
+		pivotModel.fireTableHierarchyChangedEvent(new PivotHierarchyChangedEvent(pivotModel, e.getItem(), e.getNewCheck()));
+	    }
+	});
+
+	aggregationCheckingModel = new DomainTreeListCheckingModel<T>(root, secondTick);
+	aggregationCheckingModel.addListCheckingListener(new ListCheckingListener<String>() {
+
+	    @Override
+	    public void valueChanged(final ListCheckingEvent<String> e) {
+		if (pivotModel.aggregationProperties.contains(e.getItem())) {
+		    reorderList(pivotModel.aggregationProperties, pivotModel.visibleAggregationProperties, e.getItem(), e.getNewCheck());
+		}
+		pivotModel.fireTableHeaderChangedEvent(new PivotTableHeaderChangedEvent(pivotModel, e.getItem(), e.getNewCheck()));
+	    }
+	});
+	aggregationSortingModel = new DomainTreeListSortingModel<T>(root, secondTick, adtme().getRepresentation().getSecondTick());
+	aggregationSortingModel.addSorterEventListener(new SorterEventListener<String>() {
+
+	    @SuppressWarnings("unchecked")
+	    @Override
+	    public void valueChanged(final SorterChangedEvent<String> e) {
+		if (pivotModel.getRoot() != null) {
+		    ((PivotTreeTableModelEx.PivotTreeTableNodeEx) pivotModel.getRoot()).sort();
+		    pivotModel.fireSorterChageEvent(new PivotSorterChangeEvent(pivotModel, e.getNewSortObjectes()));
+		}
+	    }
+	});
     }
 
     public PivotTreeTableModel getPivotModel() {
         return pivotModel;
+    }
+
+    public ListCheckingModel<String> getDistributionCheckingModel() {
+	return distributionCheckingModel;
+    }
+
+    public ListCheckingModel<String> getAggregationCheckingModel() {
+	return aggregationCheckingModel;
+    }
+
+    public ListSortingModel<String> getAggregationSortingModel() {
+	return aggregationSortingModel;
     }
 
     @Override
@@ -94,12 +173,40 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
     }
 
     /**
+     * (Adds/removes) specified item (in to/from) the destination list in order that elements of the destination corresponds the order of source list.
+     *
+     * @param sourceList
+     * @param destinationList
+     * @param item
+     * @param newCheck - determines whether to add or remove item from/to destination list.
+     */
+    private void reorderList(final List<String> sourceList, final List<String> destinationList, final String item, final Boolean newCheck) {
+	if (!newCheck) {
+	    destinationList.remove(item);
+	} else {
+	    int visibleIndex = 0;
+	    for(int index = 0; index < sourceList.size(); index++){
+		if(visibleIndex >= destinationList.size()){
+		    destinationList.add(item);
+		    return;
+		}else{
+		    if(sourceList.get(index).equals(destinationList.get(visibleIndex))){
+			visibleIndex++;
+		    }else if(sourceList.get(index).equals(item)){
+			destinationList.add(visibleIndex, item);
+			return;
+		    }
+		}
+	    }
+	}
+    }
+
+    /**
      * Returns the page for the pivot analysis query grouped by specified list of properties.
      *
      * @param groups
      * @return
      */
-    @SuppressWarnings("unchecked")
     private List<T> getGroupList(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel){
 	return getCriteria().run(queryModel);
     }
@@ -108,33 +215,19 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	private static final char RIGHT_ARROW = '\u2192';
 
-	private final List<String> distributionProperties = new ArrayList<String>();
-	private final List<String> aggregationProperties = new ArrayList<String>();
+	private final List<String> distributionProperties = new ArrayList<>();
+	private final List<String> aggregationProperties = new ArrayList<>();
+
+	private final List<String> visibleAggregationProperties = new ArrayList<>();
 
 	private final Comparator<MutableTreeTableNode> sorter = new AggregationSorter();
 
-	public PivotTreeTableModelEx() {
-	    adtme().getSecondTick().addPropertyOrderingListener(new IPropertyOrderingListener() {
-
-		    @SuppressWarnings("unchecked")
-		    @Override
-		    public void propertyStateChanged(final Class<?> root, final String property, final List<Pair<String, Ordering>> newOrderedProperties, final List<Pair<String, Ordering>> oldState) {
-			if (pivotModel.getRoot() != null) {
-			    ((PivotTreeTableNodeEx) pivotModel.getRoot()).sort();
-			    fireSorterChageEvent(new PivotSorterChangeEvent(PivotTreeTableModelEx.this));
-			}
-		    }
-		});
-	}
-
 	@Override
 	public int getColumnCount() {
-	    final Class<T> root = getCriteria().getEntityClass();
-	    final List<String> usedProperties = adtme().getSecondTick().usedProperties(root);
-	    if(!usedProperties.isEmpty()){
-		return 1 + usedProperties.size();
+	    if(!visibleAggregationProperties.isEmpty()){
+		return 1 + visibleAggregationProperties.size();
 	    }
-	    return adtme().getFirstTick().usedProperties(root).isEmpty() ? 0 : 1;
+	    return distributionProperties.isEmpty() ? 0 : 1;
 	}
 
 	@Override
@@ -142,10 +235,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    if (column == 0) {
 		return String.class;
 	    }
-	    final Class<T> root = getCriteria().getEntityClass();
 	    final Class<?> managedType = getCriteria().getManagedType();
-	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
-	    final String property = secondTick.usedProperties(root).get(column - 1);
+	    final String property = visibleAggregationProperties.get(column - 1);
 	    return PropertyTypeDeterminator.determineClass(managedType, property, true, true);
 	}
 
@@ -158,10 +249,20 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		}
 		return name.isEmpty() ? "<html><i>(Distribution properties)</i></html>" : name.substring(1);
 	    }
-	    final Class<T> root = getCriteria().getEntityClass();
-	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
-	    final String property = secondTick.usedProperties(root).get(column - 1);
+	    final String property = visibleAggregationProperties.get(column - 1);
 	    return property;
+	}
+
+	@Override
+	void setColumnWidth(final int column, final int width) {
+	    final Class<T> root = getCriteria().getEntityClass();
+	    final IPivotAddToDistributionTickManager firstTick = adtme().getFirstTick();
+	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
+	    if(column == 0 && !distributionProperties.isEmpty()){
+		firstTick.setWidth(root, distributionProperties.get(0), width);
+	    } else if(column > 0) {
+		secondTick.setWidth(root, visibleAggregationProperties.get(column-1), width);
+	    }
 	}
 
 	@Override
@@ -169,12 +270,10 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    final Class<T> root = getCriteria().getEntityClass();
 	    final IPivotAddToDistributionTickManager firstTick = adtme().getFirstTick();
 	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
-	    final List<String> distributionUsedProperties = firstTick.usedProperties(root);
-	    final List<String> aggregationUsedProperties = secondTick.usedProperties(root);
-	    if(column == 0 && !distributionUsedProperties.isEmpty()){
-		return firstTick.getWidth(root, distributionUsedProperties.get(0));
+	    if(column == 0 && !distributionProperties.isEmpty()){
+		return firstTick.getWidth(root, distributionProperties.get(0));
 	    } else if(column > 0) {
-		return secondTick.getWidth(root, aggregationUsedProperties.get(column-1));
+		return secondTick.getWidth(root, visibleAggregationProperties.get(column-1));
 	    }
 	    return 0;
 	}
@@ -205,6 +304,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    this.distributionProperties.addAll(distributionProperties);
 	    this.aggregationProperties.clear();
 	    this.aggregationProperties.addAll(aggregationProperties);
+	    this.visibleAggregationProperties.clear();
+	    this.visibleAggregationProperties.addAll(aggregationProperties);
 
 	    final PivotTreeTableNodeEx root = new PivotTreeTableNodeEx("root", null);
 	    final PivotTreeTableNodeEx grand = new PivotTreeTableNodeEx("Grand total", loadedData.get("Grand total").get(0));
@@ -237,6 +338,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		@Override
 		public void run() {
 		    setRoot(root);
+		    firePivotDataLoaded(new PivotDataLoadedEvent(PivotTreeTableModelEx.this));
 		}
 	    });
 	}
@@ -254,12 +356,10 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	    @Override
 	    public int getColumnCount() {
-		final Class<T> root = getCriteria().getEntityClass();
-		final List<String> usedProperties = adtme().getSecondTick().usedProperties(root);
-		if(!usedProperties.isEmpty()){
-		    return 1 + usedProperties.size();
+		if(!visibleAggregationProperties.isEmpty()){
+		    return 1 + visibleAggregationProperties.size();
 		}
-		return adtme().getFirstTick().usedProperties(root).isEmpty() ? 0 : 1;
+		return distributionProperties.isEmpty() ? 0 : 1;
 	    }
 
 	    @Override
@@ -271,13 +371,9 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		    }
 		    return getUserObject();
 		}
-		final Class<T> root = getCriteria().getEntityClass();
-		final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
-		final String property = secondTick.usedProperties(root).get(column - 1);
+		final String property = visibleAggregationProperties.get(column - 1);
 		return aggregatedData.get(property);
 	    }
-
-
 
 	    /**
 	     * Sort children of this node, using comparator defined in the model.
@@ -320,11 +416,11 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		    return defaultCompare(o1, o2);
 		}
 		final List<Pair<Integer, Ordering>> sortOrders = new ArrayList<Pair<Integer, Ordering>>();
-		final List<String> columns = secondTick.usedProperties(root);
-		for (final Pair<String, Ordering> aggreagationProperty : sortObjects) {
-		    final int sortOrder = getIndex(aggreagationProperty.getKey(), columns);
+		final List<String> columns = visibleAggregationProperties;
+		for (final Pair<String, Ordering> aggregationProperty : sortObjects) {
+		    final int sortOrder = getIndex(aggregationProperty.getKey(), columns);
 		    if (sortOrder >= 0) {
-			sortOrders.add(new Pair<Integer, Ordering>(Integer.valueOf(sortOrder), aggreagationProperty.getValue()));
+			sortOrders.add(new Pair<Integer, Ordering>(Integer.valueOf(sortOrder), aggregationProperty.getValue()));
 		    }
 		}
 		if (sortOrders.isEmpty()) {

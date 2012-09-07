@@ -3,19 +3,25 @@ package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Enumeration;
 
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableColumnModelEvent;
 import javax.swing.event.TableColumnModelListener;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.swing.tree.TreePath;
 
 import org.jdesktop.swingx.JXTable;
 import org.jdesktop.swingx.table.ColumnFactory;
 import org.jdesktop.swingx.table.TableColumnExt;
+import org.jdesktop.swingx.treetable.TreeTableNode;
 
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTable;
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTableModel;
@@ -40,12 +46,35 @@ public class PivotTreeTable extends FilterableTreeTable {
 	setAutoResizeMode(JXTable.AUTO_RESIZE_OFF);
 	setColumnFactory(createPivotColumnFactory());
 
+	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
+	getColumnModel().addColumnModelListener(createColumnModelListener(pivotModel, createColumnWidthChangeListener(pivotModel)));
+
+	pivotModel.addTableHeaderChangedListener(new PivotTableHeaderChanged() {
+
+	    @Override
+	    public void tableHeaderChanged(final PivotTableHeaderChangedEvent event) {
+		refreshPivotTable();
+	    }
+
+	    @Override
+	    public void columnOrderChanged(final PivotColumnOrderChangedEvent event) {
+		//This is stub implementation.
+	    }
+	});
+
+	pivotModel.addSorterChangeListener(new PivotTableSorterListener() {
+
+	    @Override
+	    public void sorterChanged(final PivotSorterChangeEvent event) {
+		reloadWithoutCollapsing();
+	    }
+	});
+
 	getColumnModel().addColumnModelListener(new TableColumnModelListener() {
 
 	    @Override
 	    public void columnAdded(final TableColumnModelEvent e) {
 		final TableColumn column = getColumnModel().getColumn(e.getToIndex());
-		final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
 		final Class<?> columnClass = pivotModel.getColumnClass(e.getToIndex());
 		column.setCellRenderer(createCellRenderer(columnClass));
 	    }
@@ -72,6 +101,60 @@ public class PivotTreeTable extends FilterableTreeTable {
 
 	});
     }
+
+    /**
+     * Creates the table column listener for the tree table model that updates the column's width.
+     *
+     * @param columnWidthChangeListener
+     * @return
+     */
+    private TableColumnModelListener createColumnModelListener(final PivotTreeTableModel pivotTableModel, final PropertyChangeListener columnWidthChangeListener) {
+	return new TableColumnModelListener() {
+
+	    @Override
+	    public void columnSelectionChanged(final ListSelectionEvent e) {}
+
+	    @Override
+	    public void columnRemoved(final TableColumnModelEvent e) {}
+
+	    @Override
+	    public void columnMoved(final TableColumnModelEvent e) {}
+
+	    @Override
+	    public void columnMarginChanged(final ChangeEvent e) {}
+
+	    @Override
+	    public void columnAdded(final TableColumnModelEvent e) {
+		final int columnIndex = e.getToIndex();
+		final TableColumn column = getColumnModel().getColumn(columnIndex);
+		final int width = pivotTableModel.getColumnWidth(columnIndex);
+		if(width > 0){
+		    column.setPreferredWidth(width);
+		}
+		column.addPropertyChangeListener(columnWidthChangeListener);
+	    }
+	};
+    }
+
+    /**
+     * Creates the column's width property change listener. Updates model property's width.
+     *
+     * @param pivotTable
+     * @return
+     */
+    private PropertyChangeListener createColumnWidthChangeListener(final PivotTreeTableModel pivotTableModel) {
+	return new PropertyChangeListener() {
+
+	    @Override
+	    public void propertyChange(final PropertyChangeEvent evt) {
+		if (evt.getPropertyName().equals("width")) {
+		    final int columnIndex = getColumnModel().getColumnIndex(((TableColumn)evt.getSource()).getIdentifier());
+		    pivotTableModel.setColumnWidth(columnIndex, ((Integer) evt.getNewValue()).intValue());
+		}
+	    }
+	};
+    }
+
 
     /**
      *
@@ -122,6 +205,32 @@ public class PivotTreeTable extends FilterableTreeTable {
 		}
 	    }
 	});
+    }
+
+    /**
+     * Refreshes the pivot tree table.
+     * @param treeTable
+     */
+    private void refreshPivotTable(){
+	final TreePath selectedPath = getPathForRow(getSelectedRow());
+	((AbstractTableModel) getModel()).fireTableStructureChanged();
+	getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
+    }
+
+    private void reloadWithoutCollapsing() {
+	final FilterableTreeTableModel filterableModel = getFilterableModel();
+	final TreeTableNode rootNode = filterableModel.getOriginModel().getRoot();
+	final TreePath selectedPath = getPathForRow(getSelectedRow());
+	if (rootNode != null) {
+	    final Enumeration<?> expandedPaths = getExpandedDescendants(new TreePath(rootNode));
+	    filterableModel.reload();
+	    while (expandedPaths != null && expandedPaths.hasMoreElements()) {
+		final TreePath path = (TreePath) expandedPaths.nextElement();
+		expandPath(path);
+	    }
+	}
+	scrollPathToVisible(selectedPath);
+	getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
     }
     //
     //    @Override
@@ -188,18 +297,6 @@ public class PivotTreeTable extends FilterableTreeTable {
     //	reloadWithoutCollapsing();
     //    }
     //
-    //    private void reloadWithoutCollapsing() {
-    //	final FilterableTreeTableModel filterableModel = (FilterableTreeTableModel) getTreeTableModel();
-    //	final TreeTableNode rootNode = filterableModel.getOriginModel().getRoot();
-    //	final TreePath selectedPath = getPathForRow(getSelectedRow());
-    //	if(rootNode!=null){
-    //	    final Enumeration<?> expandedPaths = getExpandedDescendants(new TreePath(rootNode));
-    //	    filterableModel.reload();
-    //	    while(expandedPaths != null && expandedPaths.hasMoreElements()){
-    //		final TreePath path = (TreePath)expandedPaths.nextElement();
-    //		expandPath(path);
-    //	    }
-    //	}
     //	scrollPathToVisible(selectedPath);
     //	getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
     //    }
