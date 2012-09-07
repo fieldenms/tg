@@ -72,7 +72,7 @@ public class EntityMetadata<ET extends AbstractEntity<?>> {
 
     public static enum EntityCategory {
 	PERSISTED, //
-	CALCULATED, //
+	QUERY_BASED, //
 	UNION, //
 	PURE;
     }

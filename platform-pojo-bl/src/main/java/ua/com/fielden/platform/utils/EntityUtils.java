@@ -738,7 +738,7 @@ public class EntityUtils {
      * @param entityType
      * @return
      */
-    public static List<Field> getPersistedProperties(final Class entityType) {
+    public static List<Field> getRealProperties(final Class entityType) {
 	final List<Field> result = new ArrayList<Field>();
 	final boolean noDesc = !AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType);
 

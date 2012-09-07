@@ -106,6 +106,12 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
 
+    @Test
+    public void test_query_based_entities_with_composite_props() {
+	final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).model();
+	makeCountDao.getAllEntities(from(qry).model());
+    }
+
 //    @Test
 //    public void test_query_111() {
 //	final EntityResultQueryModel<TgVehicle> qry = select(select(TgVehicle.class).model()).
@@ -315,7 +321,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_retrieval_of_synthetic_entity3() {
 	final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("key.key").in().values("MERC", "BMW").model();
-	final List<TgMakeCount> models = makeCountDao.getAllEntities(from(qry).model());
+	final List<TgMakeCount> models = makeCountDao.getAllEntities(from(qry).with(fetchOnly(TgMakeCount.class).with("key").with("count")).model());
 	assertEquals("Incorrect key", 2, models.size());
     }
 

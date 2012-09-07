@@ -47,7 +47,7 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @MapTo @Required @Title("Model")
     private TgVehicleModel model;
 
-    @IsProperty @MapTo @Title("Price")
+    @IsProperty @MapTo @Title("Price") @PersistedType(userType = ISimpleMoneyType.class)
     private Money price;
 
     @IsProperty @MapTo @PersistedType(userType = ISimpleMoneyType.class)

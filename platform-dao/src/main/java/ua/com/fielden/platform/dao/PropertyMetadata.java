@@ -39,14 +39,19 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final ExpressionModel expressionModel;
     private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
 
-
+    private PropertyMetadata(final Builder builder) {
+	type = builder.type;
+	name = builder.name;
+	javaType = builder.javaType;
+	hibType = builder.hibType;
+	columns = builder.columns;
+	nullable = builder.nullable;
+	expressionModel = builder.expressionModel;
+	aggregatedExpression = builder.aggregatedExpression;
+    }
 
     public YieldDetailsType getYieldDetailType() {
 	return isCompositeProperty() ? YieldDetailsType.COMPOSITE_TYPE_HEADER : (isUnionEntity() ? YieldDetailsType.UNION_ENTITY_HEADER : YieldDetailsType.USUAL_PROP);
-    }
-
-    public boolean isCalculated() {
-	return expressionModel != null && type != COMPONENT_HEADER;
     }
 
     public boolean affectsMapping() {
@@ -76,11 +81,8 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	return null;
     }
 
-
-    @Override
-    public String toString() {
-	return "\nname = " + name + " javaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + " hibType = "
-		+ (hibType != null ? hibType/*.getClass().getSimpleName()*/ : hibType) + " type = " + type + "\ncolumn(s) = " + columns + " nullable = " + nullable;
+    public boolean isCalculated() {
+	return expressionModel != null && type != COMPONENT_HEADER;
     }
 
     public boolean isCompositeProperty() {
@@ -123,7 +125,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	return type.equals(SYNTHETIC);
     }
 
-
     public String getTypeString() {
 	if (hibType != null) {
 	    return hibType.getClass().getName();
@@ -132,29 +133,28 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	}
     }
 
-    @Override
-    public int compareTo(final PropertyMetadata o) {
-	final boolean areEqual = this.equals(o);
-	final int nameComp = name.compareTo(o.name);
-	return nameComp != 0 ? nameComp : (areEqual ? 0 : 1);
-    }
-
     public Set<PropertyMetadata> getCompositeTypeSubprops() {
 	final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
 	if (COMPONENT_HEADER.equals(type) || getHibTypeAsCompositeUserType() != null) {
 	    final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
 	    final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
-	    if (subprops.size() == 1 && expressionModel != null) {
+	    if (subprops.size() == 1) {
 		final Object hibType = subpropsTypes.get(0);
-		result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(getExpressionModel()).aggregatedExpression(aggregatedExpression).type(COMPONENT_DETAILS).hibType(hibType).build());
+		if (expressionModel != null) {
+		    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(getExpressionModel()).aggregatedExpression(aggregatedExpression).type(COMPONENT_DETAILS).hibType(hibType).build());
+		} else if (columns.size() == 0) {
+		    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).aggregatedExpression(aggregatedExpression).type(COMPONENT_DETAILS).hibType(hibType).build());
+		} else {
+		    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) subpropsTypes.get(0)).getReturnedClass(), nullable).column(columns.get(0)).type(COMPONENT_DETAILS).hibType(subpropsTypes.get(0)).build());
+		}
 	    } else {
-		    int index = 0;
-		    for (final String subpropName : subprops) {
-			final PropertyColumn column = columns.get(index);
-			final Object hibType = subpropsTypes.get(index);
-			result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(COMPONENT_DETAILS).hibType(hibType).build());
-			index = index + 1;
-		    }
+		int index = 0;
+		for (final String subpropName : subprops) {
+		    final PropertyColumn column = columns.get(index);
+		    final Object hibType = subpropsTypes.get(index);
+		    result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(COMPONENT_DETAILS).hibType(hibType).build());
+		    index = index + 1;
+		}
 	    }
 
 	}
@@ -177,95 +177,8 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	return result;
     }
 
-    private PropertyMetadata(final Builder builder) {
-	type = builder.type;
-	name = builder.name;
-	javaType = builder.javaType;
-	hibType = builder.hibType;
-	columns = builder.columns;
-	nullable = builder.nullable;
-	expressionModel = builder.expressionModel;
-	aggregatedExpression = builder.aggregatedExpression;
-    }
-
-    public String getName() {
-	return name;
-    }
-
-    public Class getJavaType() {
-	return javaType;
-    }
-
-    public Object getHibType() {
-	return hibType;
-    }
-
-    public PropertyCategory getType() {
-	return type;
-    }
-
-    public List<PropertyColumn> getColumns() {
-	return columns;
-    }
-
     public PropertyColumn getColumn() {
 	return columns.size() > 0 ? columns.get(0) : null;
-    }
-
-    public static class Builder {
-	private final String name;
-	private final Class javaType;
-	private final boolean nullable;
-
-	private Object hibType;
-	private List<PropertyColumn> columns = new ArrayList<PropertyColumn>();
-	private PropertyCategory type;// = PropertyCategory.PROP;
-	private ExpressionModel expressionModel;
-	private boolean aggregatedExpression = false;
-
-	public PropertyMetadata build() {
-	    return new PropertyMetadata(this);
-	}
-
-	public Builder(final String name, final Class javaType, final boolean nullable) {
-	    this.name = name;
-	    this.javaType = javaType;
-	    this.nullable = nullable;
-	}
-
-	public Builder hibType(final Object val) {
-	    hibType = val;
-	    return this;
-	}
-
-	public Builder expression(final ExpressionModel val) {
-	    expressionModel = val;
-	    return this;
-	}
-
-	public Builder type(final PropertyCategory val) {
-	    type = val;
-	    return this;
-	}
-
-	public Builder column(final PropertyColumn column) {
-	    columns.add(column);
-	    return this;
-	}
-
-	public Builder aggregatedExpression(final boolean val) {
-	    aggregatedExpression = val;
-	    return this;
-	}
-
-	public Builder columns(final List<PropertyColumn> columns) {
-	    this.columns.addAll(columns);
-	    return this;
-	}
-    }
-
-    public boolean isNullable() {
-	return nullable;
     }
 
     public static enum PropertyCategory {
@@ -341,18 +254,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 		return false;
 	    }
 	}, //
-	EXPRESSION {
-	    @Override
-	    boolean affectsMappings() {
-		return false;
-	    }
-	}, //
-	SYNTHETIC {
-	    @Override
-	    boolean affectsMappings() {
-		return false;
-	    }
-	}, //
 	UNION_ENTITY {
 	    @Override
 	    boolean affectsMappings() {
@@ -360,6 +261,18 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	    }
 	}, //
 	UNION_DETAILS {
+	    @Override
+	    boolean affectsMappings() {
+		return false;
+	    }
+	}, //
+	EXPRESSION {
+	    @Override
+	    boolean affectsMappings() {
+		return false;
+	    }
+	}, //
+	SYNTHETIC {
 	    @Override
 	    boolean affectsMappings() {
 		return false;
@@ -376,12 +289,49 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     }
 
+    public String getName() {
+	return name;
+    }
+
+    public Class getJavaType() {
+	return javaType;
+    }
+
+    public Object getHibType() {
+	return hibType;
+    }
+
+    public PropertyCategory getType() {
+	return type;
+    }
+
+    public List<PropertyColumn> getColumns() {
+	return columns;
+    }
+
+    public boolean isNullable() {
+	return nullable;
+    }
+
     public ExpressionModel getExpressionModel() {
         return expressionModel;
     }
 
     public boolean isAggregatedExpression() {
         return aggregatedExpression;
+    }
+
+    @Override
+    public String toString() {
+	return "\nname = " + name + " javaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + " hibType = "
+		+ (hibType != null ? hibType/*.getClass().getSimpleName()*/ : hibType) + " type = " + type + "\ncolumn(s) = " + columns + " nullable = " + nullable;
+    }
+
+    @Override
+    public int compareTo(final PropertyMetadata o) {
+	final boolean areEqual = this.equals(o);
+	final int nameComp = name.compareTo(o.name);
+	return nameComp != 0 ? nameComp : (areEqual ? 0 : 1);
     }
 
     @Override
@@ -456,5 +406,57 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	    return false;
 	}
 	return true;
+    }
+
+    public static class Builder {
+	private final String name;
+	private final Class javaType;
+	private final boolean nullable;
+
+	private Object hibType;
+	private List<PropertyColumn> columns = new ArrayList<PropertyColumn>();
+	private PropertyCategory type;// = PropertyCategory.PROP;
+	private ExpressionModel expressionModel;
+	private boolean aggregatedExpression = false;
+
+	public PropertyMetadata build() {
+	    return new PropertyMetadata(this);
+	}
+
+	public Builder(final String name, final Class javaType, final boolean nullable) {
+	    this.name = name;
+	    this.javaType = javaType;
+	    this.nullable = nullable;
+	}
+
+	public Builder hibType(final Object val) {
+	    hibType = val;
+	    return this;
+	}
+
+	public Builder expression(final ExpressionModel val) {
+	    expressionModel = val;
+	    return this;
+	}
+
+	public Builder type(final PropertyCategory val) {
+	    type = val;
+	    return this;
+	}
+
+	public Builder column(final PropertyColumn column) {
+	    columns.add(column);
+	    return this;
+	}
+
+	public Builder aggregatedExpression(final boolean val) {
+	    aggregatedExpression = val;
+	    return this;
+	}
+
+	public Builder columns(final List<PropertyColumn> columns) {
+	    this.columns.addAll(columns);
+	    return this;
+	}
     }
 }
