@@ -20,4 +20,9 @@ class OrderingItem extends AbstractExprOperand<ISingleOperandOrderable, IExprOpe
     IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> getParent2() {
 	return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>(getTokens(), getParent());
     }
+
+    @Override
+    public ISingleOperandOrderable yield(final String yieldAlias) {
+	return new SingleOperandOrderable(getTokens().yield(yieldAlias));
+    }
 }

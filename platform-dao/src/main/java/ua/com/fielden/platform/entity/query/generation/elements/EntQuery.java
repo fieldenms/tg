@@ -78,7 +78,7 @@ public class EntQuery implements ISingleOperand {
         }
         sb.append(groups.sql());
         sb.append(isSubQuery() ? ")" : "");
-        sb.append(orderings.sql());
+        sb.append(orderings.sql(yields));
         return sb.toString();
     }
 

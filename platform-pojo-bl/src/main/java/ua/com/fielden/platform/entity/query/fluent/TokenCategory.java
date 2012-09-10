@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 public enum TokenCategory {
     PROP, EXT_PROP, VAL, IVAL, PARAM, IPARAM, EXPR, EXPR_TOKENS, COND_TOKENS, EQUERY_TOKENS, //
+    YIELD, //
     ZERO_ARG_FUNCTION, //
     //SINGLE_OPERAND, //
     ANY_OF_PROPS, ANY_OF_VALUES, ANY_OF_PARAMS, ANY_OF_EXPR_TOKENS, ANY_OF_EQUERY_TOKENS,

@@ -160,6 +160,28 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertNotNull(vehicle1.getModel().getMake().getKey());
     }
 
+    @Test
+    public void test_ordering_by_yielded_prop() {
+	final AggregatedResultQueryModel qry = select(TgVehicle.class).groupBy().prop("model.make.key"). //
+									yield().prop("model.make.key").as("makeKey"). //
+									yield().countAll().as("count"). //
+									modelAsAggregate();
+
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).with(orderBy().yield("count").desc().model()).model());
+    }
+
+    @Test
+    public void test_ordering_by_non_yielded_prop() {
+	final AggregatedResultQueryModel qry = select(TgVehicle.class).groupBy().prop("model.make.key"). //
+									yield().prop("model.make.key").as("makeKey"). //
+									yield().countAll().as("count"). //
+									modelAsAggregate();
+	try {
+	    aggregateDao.getAllEntities(from(qry).with(orderBy().yield("count1").desc().model()).model());
+	    fail("Should have failed while trying to order by not yielden property");
+	} catch (final Exception e) {
+	}
+    }
 
     @Test
     public void test_query_query_with_grouping_and_subproperties() {

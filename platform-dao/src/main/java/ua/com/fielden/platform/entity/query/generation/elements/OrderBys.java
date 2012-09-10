@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
 public class OrderBys implements IPropertyCollector {
     private final List<OrderBy> models;
 
@@ -21,7 +20,9 @@ public class OrderBys implements IPropertyCollector {
     public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
 	for (final OrderBy model : models) {
-	    result.addAll(model.getOperand().getAllValues());
+	    if (model.getOperand() != null) {
+		result.addAll(model.getOperand().getAllValues());
+	    }
 	}
 	return result;
     }
@@ -30,7 +31,9 @@ public class OrderBys implements IPropertyCollector {
     public List<EntQuery> getLocalSubQueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	for (final OrderBy model : models) {
-	    result.addAll(model.getOperand().getLocalSubQueries());
+	    if (model.getOperand() != null) {
+		result.addAll(model.getOperand().getLocalSubQueries());
+	    }
 	}
 	return result;
     }
@@ -39,18 +42,21 @@ public class OrderBys implements IPropertyCollector {
     public List<EntProp> getLocalProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
 	for (final OrderBy model : models) {
-	    result.addAll(model.getOperand().getLocalProps());
+	    if (model.getOperand() != null) {
+		result.addAll(model.getOperand().getLocalProps());
+	    }
 	}
 	return result;
     }
 
-    public String sql() {
+    public String sql(final Yields yields) {
 	final StringBuffer sb = new StringBuffer();
 	if (models.size() > 0) {
 	    sb.append("\nORDER BY ");
 	}
 	for (final Iterator<OrderBy> iterator = models.iterator(); iterator.hasNext();) {
-	    sb.append(iterator.next().sql());
+	    final OrderBy orderBy = iterator.next();
+	    sb.append(orderBy.sql(orderBy.getYieldName() == null ? null : yields.getYieldByAlias(orderBy.getYieldName())));
 	    if (iterator.hasNext()) {
 		sb.append(", ");
 	    }
@@ -60,7 +66,7 @@ public class OrderBys implements IPropertyCollector {
     }
 
     public List<OrderBy> getModels() {
-        return models;
+	return models;
     }
 
     @Override

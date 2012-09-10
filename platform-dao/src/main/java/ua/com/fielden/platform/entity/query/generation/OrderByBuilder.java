@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBy;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.YIELD;
 
 public class OrderByBuilder extends AbstractTokensBuilder {
     private boolean descOrder;
@@ -21,8 +22,12 @@ public class OrderByBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-	final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
 	final QueryTokens orderDirection = (QueryTokens) secondValue();
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy(operand, QueryTokens.ASC.equals(orderDirection) ? false : true));
+	if (firstCat() == YIELD) {
+	    return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy((String) firstValue(), QueryTokens.ASC.equals(orderDirection) ? false : true));
+	} else {
+	    final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
+	    return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy(operand, QueryTokens.ASC.equals(orderDirection) ? false : true));
+	}
     }
 }

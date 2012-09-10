@@ -231,11 +231,6 @@ public interface EntityQueryProgressiveInterfaces {
         T as(String alias);
     }
 
-    interface IOrder<T> {
-        T asc();
-        T desc();
-    }
-
     interface IArithmeticalOperator<T> {
         T add();
         T sub();
@@ -631,6 +626,11 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     /////////////////////////////////////////////////////---ORDER BY ---///////////////////////////////////////////////////
+    interface IOrder<T> {
+        T asc();
+        T desc();
+    }
+
     interface ISingleOperandOrderable //
     extends IOrder<IOrderingItemCloseable> {
     }
@@ -642,5 +642,6 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IOrderingItem //
     extends IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> {
+	ISingleOperandOrderable yield(String yieldAlias);
     }
 }

@@ -140,6 +140,10 @@ final class Tokens {
 	return add(TokenCategory.IN_OPERATOR, negated);
     }
 
+    public Tokens yield(final String yieldName) {
+	return add(TokenCategory.YIELD, yieldName);
+    }
+
     public Tokens prop(final String propName) {
 	return add(TokenCategory.PROP, propName);
     }
