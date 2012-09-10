@@ -6,11 +6,9 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
@@ -20,10 +18,8 @@ import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedLi
 import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.Pair;
 
 public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManager, Void> {
 
@@ -102,23 +98,6 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    throw new IllegalStateException("The analysis view can be set only once!");
 	}
 	this.analysisView = analysisView;
-    }
-
-    /**
-     * Returns the list of property name and it's expression model pairs.
-     *
-     * @param propertyForExpression
-     * @return
-     */
-    private List<Pair<String, ExpressionModel>> getPropertyExpressionPair(final List<String> propertyForExpression){
-        final Class<T> root = getCriteria().getEntityClass();
-        final IDomainTreeEnhancer enhancer = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final List<Pair<String, ExpressionModel>> propertyExpressionPair = new ArrayList<>();
-        for (final String property : propertyForExpression) {
-            final ExpressionModel expression = EntityQueryCriteriaUtils.getExpressionForProp(root, property, enhancer);
-            propertyExpressionPair.add(new Pair<>(property, expression));
-        }
-        return propertyExpressionPair;
     }
 
     private static class ChartAnalysisDataProvider<T extends AbstractEntity<?>> extends AbstractCategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> {

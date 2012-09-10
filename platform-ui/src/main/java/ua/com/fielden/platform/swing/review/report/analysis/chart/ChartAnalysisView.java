@@ -40,7 +40,6 @@ import org.jfree.chart.entity.CategoryLabelEntity;
 import org.jfree.chart.entity.ChartEntity;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
@@ -545,11 +544,11 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	chartPanel.revalidate();
 	chartPanel.repaint();
     }
-    /////////////////////////Refactor the code below//////////////////////////////////////////
+    /////////////////////////TODO Refactor the code below//////////////////////////////////////////
 
 
     private ActionChartPanel<List<T>, CategoryChartTypes> createChartPanel(final boolean all, final int... indexes) {
-	final ActionChartPanel<List<T>, CategoryChartTypes> chartPanel = new ActionChartPanel<List<T>, CategoryChartTypes>(new CategoryChartFactory<T, IEntityDao<T>>(getModel().getChartAnalysisDataProvider(), dataModel, all, indexes), new IBlockingLayerProvider() {
+	final ActionChartPanel<List<T>, CategoryChartTypes> chartPanel = new ActionChartPanel<List<T>, CategoryChartTypes>(new CategoryChartFactory<T>(getModel(), all, indexes), new IBlockingLayerProvider() {
 	    @Override
 	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
 		return getOwner().getProgressLayer();

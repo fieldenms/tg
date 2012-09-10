@@ -232,17 +232,17 @@ public class PivotTreeTable extends FilterableTreeTable {
 	scrollPathToVisible(selectedPath);
 	getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
     }
-    //
-    //    @Override
-    //    public String getToolTipText(final MouseEvent event) {
-    //	final int row = rowAtPoint(event.getPoint());
-    //	final int col = columnAtPoint(event.getPoint());
-    //	if (row >= 0 && col >= 0) {
-    //	    final PivotTreeTableNode node = (PivotTreeTableNode) getPathForRow(row).getLastPathComponent();
-    //	    return node.getTooltipAt(col);
-    //	}
-    //	return super.getToolTipText(event);
-    //    }
+
+    @Override
+    public String getToolTipText(final MouseEvent event) {
+	final int row = rowAtPoint(event.getPoint());
+	final int col = columnAtPoint(event.getPoint());
+	if (row >= 0 && col >= 0) {
+	    final PivotTreeTableNode node = (PivotTreeTableNode) getPathForRow(row).getLastPathComponent();
+	    return node.getTooltipAt(col);
+	}
+	return super.getToolTipText(event);
+    }
     //
     //    public void addGroupParameter(final IDistributedProperty group, final int index) {
     //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();

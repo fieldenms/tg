@@ -43,14 +43,16 @@ public class AnalysisListDragToSupport<T extends AbstractEntity<?>> implements D
 
     @Override
     public boolean dropTo(final Point point, final Object what, final JComponent draggedFrom) {
+	final int fromIndex = ((DefaultListModel)getList().getModel()).indexOf(what);
 	final int toIndex = list.locationToIndex(point);
 	if (toIndex < 0) {
 	    return false;
 	}
-	if(toIndex == list.getModel().getSize() - 1){
+	final int increment = fromIndex > toIndex ? 0 : 1;
+	if(toIndex < list.getModel().getSize() - 1){
+	    tickManager.move(root, what.toString(), list.getModel().getElementAt(toIndex + increment).toString());
+	}else if(toIndex == list.getModel().getSize() - 1){
 	    tickManager.moveToTheEnd(root, what.toString());
-	}else{
-	    tickManager.move(root, what.toString(), list.getModel().getElementAt(toIndex).toString());
 	}
 	((DefaultListModel) list.getModel()).removeElement(what);
 	((DefaultListModel) list.getModel()).add(toIndex, what);

@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
 import ua.com.fielden.platform.report.query.generation.PivotAnalysisQueryGgenerator;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
@@ -220,6 +221,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	private final List<String> visibleAggregationProperties = new ArrayList<>();
 
+	private EntityDescriptor aggregationDescriptor, distributionDescriptor;
+
 	private final Comparator<MutableTreeTableNode> sorter = new AggregationSorter();
 
 	@Override
@@ -245,11 +248,11 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    if (column == 0) {
 		String name = "";
 		for (final String columnEntry : distributionProperties) {
-		    name += RIGHT_ARROW + columnEntry;
+		    name += RIGHT_ARROW + "(" + distributionDescriptor.getTitle(columnEntry) + ")";
 		}
 		return name.isEmpty() ? "<html><i>(Distribution properties)</i></html>" : name.substring(1);
 	    }
-	    final String property = visibleAggregationProperties.get(column - 1);
+	    final String property = aggregationDescriptor.getTitle(visibleAggregationProperties.get(column - 1));
 	    return property;
 	}
 
@@ -293,6 +296,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    return Collections.unmodifiableList(aggregationProperties);
 	}
 
+
 	@SuppressWarnings("unchecked")
 	private final void loadData(final Map<String, List<T>> loadedData, final List<String> distributionProperties, final List<String> aggregationProperties){
 
@@ -306,6 +310,12 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    this.aggregationProperties.addAll(aggregationProperties);
 	    this.visibleAggregationProperties.clear();
 	    this.visibleAggregationProperties.addAll(aggregationProperties);
+
+	    final Class<T> entityType = getCriteria().getEntityClass();
+	    final Class<T> managedType = getCriteria().getManagedType();
+
+	    this.distributionDescriptor = new EntityDescriptor(managedType, adtme().getFirstTick().checkedProperties(entityType));
+	    this.aggregationDescriptor = new EntityDescriptor(managedType, adtme().getSecondTick().checkedProperties(entityType));
 
 	    final PivotTreeTableNodeEx root = new PivotTreeTableNodeEx("root", null);
 	    final PivotTreeTableNodeEx grand = new PivotTreeTableNodeEx("Grand total", loadedData.get("Grand total").get(0));

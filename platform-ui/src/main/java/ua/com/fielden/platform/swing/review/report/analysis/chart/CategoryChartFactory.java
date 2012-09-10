@@ -21,6 +21,7 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.labels.AbstractCategoryItemLabelGenerator;
 import org.jfree.chart.labels.CategoryItemLabelGenerator;
+import org.jfree.chart.labels.CategorySeriesLabelGenerator;
 import org.jfree.chart.labels.CategoryToolTipGenerator;
 import org.jfree.chart.labels.ItemLabelAnchor;
 import org.jfree.chart.labels.ItemLabelPosition;
@@ -38,9 +39,9 @@ import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.TextAnchor;
 
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.IProgressUpdater;
+import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
 import ua.com.fielden.platform.swing.categorychart.FixedCategoryAxis;
@@ -48,13 +49,9 @@ import ua.com.fielden.platform.swing.categorychart.IChartFactory;
 import ua.com.fielden.platform.swing.chartscroll.ScrollableCategoryPlot;
 
 //TODO this class should be removed later on.
-class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> implements IChartFactory<List<T>, CategoryChartTypes> {
+class CategoryChartFactory<T extends AbstractEntity<?>> implements IChartFactory<List<T>, CategoryChartTypes> {
 
     private static final CommonCategoryRenderer commonRenderer = new CommonCategoryRenderer();
-
-//    private final Class<T> managedType;
-//
-//    private final EntityDescriptor aggregationEntityDescriptor, distributionEntityDescriptor;
 
     private final String valueAxisLabel = "values";
 
@@ -62,17 +59,15 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 
     private final List<Integer> seriesIndexes = new ArrayList<Integer>();
 
-    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> dataProvider;
+    private final ChartAnalysisModel<T> analysisModel;
 
     private final NumberFormat numberFormat;
 
     private DefaultCategoryDataset dataSet;
 
-    public CategoryChartFactory(/*final Class<T> managedType,*/ final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> dataProvider, final CategoryDataModel<T> chartEntryModel, final boolean all, final int... indexes) {
-//	this.managedType = managedType;
-//	this.ed = new EntityDescriptor(managedType, dataProvider.aggregatedProperties());
-	this.chartEntryModel = chartEntryModel;
-	this.dataProvider = dataProvider;
+    public CategoryChartFactory(final ChartAnalysisModel<T> analysisModel, final boolean all, final int... indexes) {
+	this.chartEntryModel = new CategoryDataModel<T>(analysisModel.getChartAnalysisDataProvider());
+	this.analysisModel = analysisModel;
 	this.numberFormat = new DecimalFormat("#,##0.00");
 	numberFormat.setRoundingMode(RoundingMode.HALF_UP);
 	setModel(null, all, indexes);
@@ -98,9 +93,16 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 
     private CategoryPlot createPlot(final CategoryChartTypes type) {
 	CategoryPlot plot = null;
+	final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> dataProvider = analysisModel.getChartAnalysisDataProvider();
 	final CategoryItemRenderer renderer = createCategoryRenderer(type);
+	final Class<T> root = analysisModel.getCriteria().getEntityClass();
+	final Class<T> managedType = analysisModel.getCriteria().getManagedType();
+	final List<String> aggregationCheckedProperties =  analysisModel.adtme().getSecondTick().checkedProperties(root);
+	final List<String> distributionCheckedProperties = analysisModel.adtme().getFirstTick().checkedProperties(root);
+	final EntityDescriptor distributionDescriptor = new EntityDescriptor(managedType, distributionCheckedProperties);
+	final EntityDescriptor aggregationDescriptor = new EntityDescriptor(managedType, aggregationCheckedProperties);
 	final List<String> distributionProperty = dataProvider.categoryProperties();
-	final FixedCategoryAxis domainAxis = new FixedCategoryAxis(distributionProperty.size() == 1 ? distributionProperty.get(0).toString() : "Categories");
+	final FixedCategoryAxis domainAxis = new FixedCategoryAxis(distributionProperty.size() == 1 ? distributionDescriptor.getTitle(distributionProperty.get(0).toString()) : "Categories");
 	domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
 	if (dataSet != null) {
 	    String rangeAxisName = valueAxisLabel;
@@ -117,9 +119,9 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 	}
 	plot.setDomainAxis(domainAxis);
 	plot.setDomainAxisLocation(AxisLocation.BOTTOM_OR_RIGHT);
-	initToolTips(plot);
+	initToolTips(plot, aggregationDescriptor);
 	initItemLabels(plot);
-//	initLegendItemText(plot);
+	initLegendItemText(plot, aggregationDescriptor);
 	return plot;
     }
 
@@ -182,11 +184,12 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 	return renderer;
     }
 
-    private void initToolTips(final CategoryPlot categoryPlot) {
+    private void initToolTips(final CategoryPlot categoryPlot, final EntityDescriptor aggregationDescriptor) {
 	categoryPlot.getRenderer().setBaseToolTipGenerator(new CategoryToolTipGenerator() {
+
 	    @Override
 	    public String generateToolTip(final CategoryDataset dataset, final int row, final int column) {
-		final String toolTip = "<html>" + numberFormat.format(dataset.getValue(row, column)) + " (" + dataset.getRowKey(row).toString() + ")<br>" //
+		final String toolTip = "<html>" + numberFormat.format(dataset.getValue(row, column)) + " (" + aggregationDescriptor.getTitle(dataset.getRowKey(row).toString()) + ")<br>" //
 			+ "<b>" + getKeyFor(dataset, row, column) + "</b><br>"//
 			+ "<i>" + getDescFor(dataset, row, column) + "</i></html>";
 		return toolTip;
@@ -199,18 +202,16 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 	categoryPlot.getRenderer().setBaseItemLabelGenerator(new AnalysisChartLabelGenerator(numberFormat));
     }
 
-//    private void initLegendItemText(final CategoryPlot categoryPlot) {
-//	final AbstractCategoryItemRenderer renderer = (AbstractCategoryItemRenderer) categoryPlot.getRenderer();
-//	renderer.setLegendItemLabelGenerator(new CategorySeriesLabelGenerator() {
-//
-//	    @Override
-//	    public String generateLabel(final CategoryDataset categoryDataset, final int row) {
-//
-//		final String rowKey = categoryDataset.getRowKey(row).toString();
-//		return null;
-//	    }
-//	});
-//    }
+    private void initLegendItemText(final CategoryPlot categoryPlot, final EntityDescriptor aggregationDescriptor) {
+	final AbstractCategoryItemRenderer renderer = (AbstractCategoryItemRenderer) categoryPlot.getRenderer();
+	renderer.setLegendItemLabelGenerator(new CategorySeriesLabelGenerator() {
+
+	    @Override
+	    public String generateLabel(final CategoryDataset categoryDataset, final int row) {
+		return aggregationDescriptor.getTitle(categoryDataset.getRowKey(row).toString());
+	    }
+	});
+    }
 
     private static class AnalysisChartLabelGenerator extends AbstractCategoryItemLabelGenerator implements CategoryItemLabelGenerator{
 
@@ -272,7 +273,7 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 
     @Override
     public List<T> getModel() {
-	return dataProvider.getLoadedData();
+	return analysisModel.getChartAnalysisDataProvider().getLoadedData();
     }
 
     private static class CommonCategoryRenderer extends AbstractCategoryItemRenderer {
