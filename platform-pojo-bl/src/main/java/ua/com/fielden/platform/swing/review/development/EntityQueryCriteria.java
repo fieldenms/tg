@@ -26,7 +26,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -146,11 +145,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
 	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, resultTickManager.orderedProperties(root), enhancer);
 	final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
-		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs))//
+		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
 		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey()))//
 		.with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
 	if (!separatedFetch.getValue().isEmpty()) {
@@ -196,10 +194,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
 	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
 	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager.orderedProperties(root), enhancer);
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
-		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs))//
+		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
 		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).model();
 	final byte[] content;
 	if(getManagedType().equals(getEntityClass())){

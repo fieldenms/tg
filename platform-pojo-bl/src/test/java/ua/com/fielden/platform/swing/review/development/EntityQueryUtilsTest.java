@@ -2,9 +2,7 @@ package ua.com.fielden.platform.swing.review.development;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
@@ -13,7 +11,6 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
@@ -98,22 +95,6 @@ public class EntityQueryUtilsTest {
  	cdtme.getSecondTick().toggleOrdering(MasterEntity.class, "entityProp.entityProp.simpleEntityProp");
  	cdtme.getSecondTick().toggleOrdering(MasterEntity.class, "entityProp.entityProp.simpleEntityProp.integerProp");
  	cdtme.getSecondTick().toggleOrdering(MasterEntity.class, "entityProp.entityProp.simpleEntityProp.thirdCalc");
-    }
-
-    @Test
-    public void test_that_getOrderingList_works(){
-	final List<Pair<Object, Ordering>> expectedList = new ArrayList<Pair<Object,Ordering>>();
-	expectedList.add(new Pair<Object, Ordering>("", Ordering.DESCENDING));
-	expectedList.add(new Pair<Object, Ordering>("stringProp", Ordering.DESCENDING));
-	expectedList.add(new Pair<Object, Ordering>(firstCalc.getExpressionModel(), Ordering.ASCENDING));
-	expectedList.add(new Pair<Object, Ordering>("entityProp.mutablyCheckedProp", Ordering.ASCENDING));
-	expectedList.add(new Pair<Object, Ordering>("entityProp.mutablyCheckedProp.integerProp", Ordering.DESCENDING));
-	expectedList.add(new Pair<Object, Ordering>(secondCalc.getExpressionModel(), Ordering.DESCENDING));
-	expectedList.add(new Pair<Object, Ordering>("entityProp.entityProp.simpleEntityProp", Ordering.DESCENDING));
-	expectedList.add(new Pair<Object, Ordering>("entityProp.entityProp.simpleEntityProp.integerProp", Ordering.ASCENDING));
-	expectedList.add(new Pair<Object, Ordering>(thirdCalc.getExpressionModel(), Ordering.ASCENDING));
-
-	assertEquals("The getOrderingList() method works incorrect", expectedList, EntityQueryCriteriaUtils.getOrderingList(MasterEntity.class, cdtme.getSecondTick().orderedProperties(MasterEntity.class), cdtme.getEnhancer()));
     }
 
     @Test

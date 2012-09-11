@@ -8,9 +8,7 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Orderin
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItemCloseable;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -26,15 +24,15 @@ public class DynamicOrderingBuilder {
      *
      * @return
      */
-    public static OrderingModel createOrderingModel(final Class<?> root, final List<Pair<Object, Ordering>> orderedPairs){
+    public static OrderingModel createOrderingModel(final Class<?> root, final List<Pair<String, Ordering>> orderedPairs){
 	if(root == null || orderedPairs == null){
 	    throw new NullPointerException("The root or orderedPirs parameters can not be null");
 	}
 	IOrderingItemCloseable closeOrderable = null;
-	for(final Pair<Object, Ordering> orderPair : orderedPairs){
+	for(final Pair<String, Ordering> orderPair : orderedPairs){
 	    final IOrderingItem orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
-	    final ISingleOperandOrderable part = orderPair.getKey() instanceof ExpressionModel ? orderingItem.expr((ExpressionModel)orderPair.getKey()) //
-		    : orderingItem.prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(root, (String)orderPair.getKey()).getConditionBuildingName());
+	    final DynamicPropertyAnalyser analyser = new DynamicPropertyAnalyser(root, orderPair.getKey());
+	    final ISingleOperandOrderable part = orderingItem.yield(analyser.getCriteriaFullName());
 	    closeOrderable = orderPair.getValue().equals(Ordering.ASCENDING) ? part.asc() : part.desc();
 	}
 	return closeOrderable == null ? null : closeOrderable.model();

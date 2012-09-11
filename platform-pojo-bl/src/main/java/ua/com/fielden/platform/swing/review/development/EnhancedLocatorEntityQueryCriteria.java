@@ -11,7 +11,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -42,7 +41,6 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 	final Class<?> root = getEntityClass();
 	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
 	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager.orderedProperties(root), enhancer);
 	final SearchBy searchBy = getCentreDomainTreeMangerAndEnhancer().getSearchBy();
 	ICompoundCondition0<T> compondCondition = null;
 	switch(searchBy){
@@ -65,7 +63,7 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 		    .getConditionBuildingName()).eq().val(conditionPair.getValue());
 	}
 	final Builder<T, EntityResultQueryModel<T>> builderModel = from(compondCondition.model())//
-		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs));
+		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)));
 	return firstPage(fetch == null ? builderModel.model() : builderModel.with((fetch<T>)fetch).model(), resultSize).data();
     }
 

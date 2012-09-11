@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.swing.review.development;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,7 +12,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -27,23 +25,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class EntityQueryCriteriaUtils {
-
-    /**
-     * Returns the ordered pair of object and ordering value for the specified ordering manager and enhancer. Object might be property name or expression model.
-     *
-     * @param root
-     * @param orderingProperties
-     * @param enhancer
-     * @return
-     */
-    public static List<Pair<Object, Ordering>> getOrderingList(final Class<?> root, final List<Pair<String, Ordering>> orderingProperties, final IDomainTreeEnhancer enhancer){
-	final List<Pair<Object, Ordering>> orderingPairs = new ArrayList<Pair<Object,Ordering>>();
-	for(final Pair<String, Ordering> orderPair : orderingProperties){
-	    final ExpressionModel expression = getExpressionForProp(root, orderPair.getKey(), enhancer);
-	    orderingPairs.add(new Pair<Object, Ordering>((expression == null ? orderPair.getKey() : expression), orderPair.getValue()));
-	}
-	return orderingPairs;
-    }
 
     /**
      * Separates total properties from fetch properties. The key of the pair is the list of fetch properties, the value of the pair is the list of totals.

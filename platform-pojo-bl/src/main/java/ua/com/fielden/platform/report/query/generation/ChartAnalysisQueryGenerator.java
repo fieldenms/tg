@@ -51,18 +51,14 @@ public class ChartAnalysisQueryGenerator<T extends AbstractEntity<?>> implements
 	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, ReportQueryGenerationUtils.createQueryProperties(root, cdtme), distributionProperties, aggregation).modelAsEntity(managedType);
 
 	final List<Pair<String, Ordering>> orderingProperties = new ArrayList<>(adtm.getSecondTick().orderedProperties(root));
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, //
-		orderingProperties, //
-		enhancer);
-
-	if(orderingPairs.isEmpty()){
+	if(orderingProperties.isEmpty()){
 	    for(final String groupOrder : distributionProperties){
-		orderingPairs.add(new Pair<Object, Ordering>(groupOrder, Ordering.ASCENDING));
+		orderingProperties.add(new Pair<>(groupOrder, Ordering.ASCENDING));
 	    }
 	}
 
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(queryModel)
-	.with(DynamicOrderingBuilder.createOrderingModel(managedType, orderingPairs))//
+	.with(DynamicOrderingBuilder.createOrderingModel(managedType, orderingProperties))//
 	.with(DynamicFetchBuilder.createFetchModel(managedType, new HashSet<String>(yieldProperties))).model();
 
 	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> result = new ArrayList<>();
