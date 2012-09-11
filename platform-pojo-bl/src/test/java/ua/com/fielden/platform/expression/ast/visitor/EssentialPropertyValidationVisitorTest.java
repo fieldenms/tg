@@ -3,6 +3,7 @@ package ua.com.fielden.platform.expression.ast.visitor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
@@ -110,6 +111,7 @@ public class EssentialPropertyValidationVisitorTest {
     }
 
     @Test
+    @Ignore
     public void calculated_properties_as_part_of_entity_definition_with_expression_should_not_be_permitted_as_part_of_expressions_at_this_stage() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("selfProperty.entityProperty.intProperty * selfProperty.calcuatedProperty").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);

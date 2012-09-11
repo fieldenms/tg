@@ -3,11 +3,9 @@ package ua.com.fielden.platform.expression.ast.visitor;
 import java.lang.reflect.Field;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.expression.EgTokenCategory;
 import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.exception.semantic.InvalidPropertyException;
 import ua.com.fielden.platform.expression.exception.semantic.MissingPropertyException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.reflection.Finder;
@@ -48,13 +46,13 @@ public class EssentialPropertyValidationVisitor extends AbstractAstVisitor {
 		throw new MissingPropertyException("Could not find property " + absolutePropertyPath, ex, node.getToken());
 	    }
 
-	    if (field.isAnnotationPresent(Calculated.class)) {
-		final Calculated anno = field.getAnnotation(Calculated.class);
-		if (!Calculated.EMPTY.equals(anno.value())) {
-		    throw new InvalidPropertyException("Calculated properties cannot be used as part of expressions at this stage. Property " + absolutePropertyPath
-			    + " is calculated.", node.getToken());
-		}
-	    }
+//	    if (field.isAnnotationPresent(Calculated.class)) {
+//		final Calculated anno = field.getAnnotation(Calculated.class);
+//		if (!Calculated.EMPTY.equals(anno.value())) {
+//		    throw new InvalidPropertyException("Calculated properties cannot be used as part of expressions at this stage. Property " + absolutePropertyPath
+//			    + " is calculated.", node.getToken());
+//		}
+//	    }
 	}
     }
 
