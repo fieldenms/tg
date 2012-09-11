@@ -4,17 +4,14 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 public class OrderBy {
     private final ISingleOperand operand;
     private final String yieldName;
+    private Yield yield;
     private final boolean desc;
 
-    public String sql(final Yield yield) {
+    public String sql() {
 	if (yieldName == null) {
 	    return operand.sql() + (desc ? " DESC" : " ASC");
 	} else {
-	    if (yield != null) {
-		return yield.getInfo().getColumn() + (desc ? " DESC" : " ASC");
-	    } else {
-		throw new IllegalStateException("Ordering is made by non-existing yielded property [" + yieldName + "]!");
-	    }
+	    return yield.getInfo().getColumn() + (desc ? " DESC" : " ASC");
 	}
     }
 
@@ -30,10 +27,10 @@ public class OrderBy {
 	this.desc = desc;
     }
 
-    public OrderBy(final String yield, final boolean desc) {
+    public OrderBy(final String yieldName, final boolean desc) {
 	super();
 	this.operand = null;
-	this.yieldName = yield;
+	this.yieldName = yieldName;
 	this.desc = desc;
     }
 
@@ -85,5 +82,17 @@ public class OrderBy {
 	    return false;
 	}
 	return true;
+    }
+
+    public Yield getYield() {
+        return yield;
+    }
+
+    public void setYield(final Yield yield) {
+        this.yield = yield;
+    }
+
+    public boolean isDesc() {
+        return desc;
     }
 }

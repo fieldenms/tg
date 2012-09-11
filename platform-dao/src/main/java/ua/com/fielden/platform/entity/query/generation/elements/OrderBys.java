@@ -49,14 +49,14 @@ public class OrderBys implements IPropertyCollector {
 	return result;
     }
 
-    public String sql(final Yields yields) {
+    public String sql() {
 	final StringBuffer sb = new StringBuffer();
 	if (models.size() > 0) {
 	    sb.append("\nORDER BY ");
 	}
 	for (final Iterator<OrderBy> iterator = models.iterator(); iterator.hasNext();) {
 	    final OrderBy orderBy = iterator.next();
-	    sb.append(orderBy.sql(orderBy.getYieldName() == null ? null : yields.getYieldByAlias(orderBy.getYieldName())));
+	    sb.append(orderBy.sql());
 	    if (iterator.hasNext()) {
 		sb.append(", ");
 	    }

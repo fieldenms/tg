@@ -78,7 +78,7 @@ public class EntQuery implements ISingleOperand {
         }
         sb.append(groups.sql());
         sb.append(isSubQuery() ? ")" : "");
-        sb.append(orderings.sql(yields));
+        sb.append(orderings.sql());
         return sb.toString();
     }
 
@@ -207,6 +207,33 @@ public class EntQuery implements ISingleOperand {
 	    }
 	    yields.removeYields(toBeRemoved);
 	}
+    }
+
+    private void adjustOrderBys() {
+	//
+	final Set<OrderBy> toBeRemoved = new HashSet<>();
+	final Set<OrderBy> toBeAdded = new HashSet<>();
+	for (final OrderBy orderBy : orderings.getModels()) {
+	    if (orderBy.getYieldName() != null) {
+		final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
+		if (correspondingYield != null) {
+		    orderBy.setYield(correspondingYield);
+		} else {
+		    toBeRemoved.add(orderBy);
+		    toBeAdded.add(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
+		}
+	    }
+	}
+	orderings.getModels().removeAll(toBeRemoved);
+	orderings.getModels().addAll(toBeAdded);
+    }
+
+    private OrderBy transformOrderByFromYieldIntoOrderByFromProp(final Yield bestYield, final OrderBy original) {
+	if (bestYield == null) {
+	    throw new IllegalStateException("Could not find best yield match for order by yield [" + original.getYieldName() + "]");
+	}
+	final String propName = ((EntProp) bestYield.getOperand()).getName() + original.getYieldName().substring(bestYield.getAlias().length());
+	return new OrderBy(new EntProp(propName), original.isDesc());
     }
 
     private void assignPropertyPersistenceInfoToYields() {
@@ -352,8 +379,10 @@ public class EntQuery implements ISingleOperand {
 	//System.out.println("                         1------------------ " + yields.getYields());
 	adjustYieldsModelAccordingToFetchModel(fetchModel);
 	//System.out.println("                         2------------------ " + yields.getYields());
+	adjustOrderBys(); 	// enahnce order by model with yields and transforming unrecognised yieldedName into prop(..) calls
 	enhanceGroupBysModelFromYields();
 	enhanceGroupBysModelFromOrderBys();
+
 
 	int countOfUnprocessed = 1;
 

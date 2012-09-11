@@ -56,6 +56,16 @@ public class Yields implements IPropertyCollector {
 	return yields.get(alias);
     }
 
+    public Yield findMostMatchingYield(final String orderByYieldName) {
+	String bestMatch = null;
+	for (final String yieldName : yields.keySet()) {
+	    if (orderByYieldName.startsWith(yieldName) && (bestMatch == null || (bestMatch != null && bestMatch.length() < yieldName.length()))) {
+		bestMatch = yieldName;
+	    }
+ 	}
+	return bestMatch != null ? yields.get(bestMatch) : null;
+    }
+
     @Override
     public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
