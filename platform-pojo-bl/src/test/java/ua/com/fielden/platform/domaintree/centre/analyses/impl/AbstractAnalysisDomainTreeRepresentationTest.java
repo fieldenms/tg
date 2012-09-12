@@ -168,7 +168,9 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_first_tick_for_properties_of_entity_with_AE_or_composite_key_type_are_disabled() {
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		}
 	    }
 	}, "entityPropWithAEKeyType", "entityWithCompositeKeyProp");
     }
@@ -179,7 +181,9 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 	// integer
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertTrue("Property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    assertTrue("Property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		}
 	    }
 	}, "integerProp", "doubleProp", "bigDecimalProp", "moneyProp", "dateProp");
     }
@@ -188,7 +192,9 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_first_tick_for_properties_of_entity_or_date_or_boolean_or_string_are_NOT_disabled() {
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		assertFalse("Property should be not disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    assertFalse("Property should be not disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		}
 	    }
 	}, "simpleEntityProp", "booleanProp", "stringProp");
     }
@@ -199,7 +205,9 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 	    public void action(final String name) {
 		((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Calc date prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
 		((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().apply();
-		assertFalse("EXPRESSION calculated properties of integer type based on date property should be enabled for first tick.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name(name, "calcDateProp")));
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name(name, "calcDateProp"))) {
+		    assertFalse("EXPRESSION calculated properties of integer type based on date property should be enabled for first tick.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name(name, "calcDateProp")));
+		}
 	    }
 	}, ""); // calcDateProp
     }
@@ -237,7 +245,9 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 	// TODO check whether it's correct
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertTrue("Property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    assertTrue("Property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
+		}
 	    }
 	}, "integerProp", "doubleProp", "bigDecimalProp", "moneyProp", "stringProp", "simpleEntityProp", "entityPropWithAEKeyType", "entityWithCompositeKeyProp", "dateProp", "booleanProp");
     }
@@ -245,7 +255,10 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     protected void checkSecTickEnablementForAGGR_EXPRessions(final String originationProperty, final int i, final String contextPath) {
 	((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, contextPath, "MAX(" + originationProperty + ")", originationProperty + " aggr expr " + i, "Desc", CalculatedPropertyAttribute.NO_ATTR, originationProperty);
 	((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().apply();
-	assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, originationProperty + "AggrExpr" + i));
+	final String name = originationProperty + "AggrExpr" + i;
+	if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+	    assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
+	}
     }
 
     @Test
@@ -276,9 +289,15 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     @Override
     @Test
     public void test_that_other_properties_are_not_disabled() {
-	assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "simpleEntityProp"));
-	assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.simpleEntityProp"));
-	assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.simpleEntityProp"));
+	if (!dtm().isExcludedImmutably(MasterEntity.class, "simpleEntityProp")) {
+	    assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "simpleEntityProp"));
+	}
+	if (!dtm().isExcludedImmutably(MasterEntity.class, "entityProp.simpleEntityProp")) {
+	    assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.simpleEntityProp"));
+	}
+	if (!dtm().isExcludedImmutably(MasterEntity.class, "entityProp.entityProp.simpleEntityProp")) {
+	    assertTrue("All second tick properties including simple entity properties should be disabled", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.simpleEntityProp"));
+	}
     }
 
     @Override
@@ -326,16 +345,24 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_ordering_disablements_for_second_tick_are_desired_and_can_be_altered() {
 	// DEFAULT CONTRACT //
 	// none of the properties should have ordering disabled by default.
-	checkOrSetMethodValues(false, "dateProp", dtm().getSecondTick(), "isOrderingDisabledImmutably");
-	checkOrSetMethodValues(false, "integerProp", dtm().getSecondTick(), "isOrderingDisabledImmutably");
+	if (!dtm().isExcludedImmutably(MasterEntity.class, "dateProp")) {
+	    checkOrSetMethodValues(false, "dateProp", dtm().getSecondTick(), "isOrderingDisabledImmutably");
+	}
+	if (!dtm().isExcludedImmutably(MasterEntity.class, "integerProp")) {
+	    checkOrSetMethodValues(false, "integerProp", dtm().getSecondTick(), "isOrderingDisabledImmutably");
+	}
 
 	// Alter DEFAULT and check //
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		dtm().getSecondTick().disableOrderingImmutably(MasterEntity.class, name);
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    dtm().getSecondTick().disableOrderingImmutably(MasterEntity.class, name);
+		}
 	    }
 	}, "dateProp");
-	checkOrSetMethodValues(true, "dateProp", dtm().getSecondTick(), "isOrderingDisabledImmutably");
+	if (!dtm().isExcludedImmutably(MasterEntity.class, "dateProp")) {
+	    checkOrSetMethodValues(true, "dateProp", dtm().getSecondTick(), "isOrderingDisabledImmutably");
+	}
     }
 
     @Test
@@ -402,7 +429,9 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_checked_properties_first_tick_are_actually_disabled() {
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertTrue("By contract of 'disabled' it should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    assertTrue("By contract of 'disabled' it should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		}
 	    }
 	}, "checkedManuallyProp");
     }

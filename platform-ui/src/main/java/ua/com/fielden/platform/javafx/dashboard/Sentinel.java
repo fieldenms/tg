@@ -18,6 +18,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -117,7 +118,6 @@ public class Sentinel<T extends AbstractEntity<?>> {
 	final TreeMenuItemWrapper item = getMenuItem();
 	dashboardView.getTreeMenu().activateOrOpenItem(item);
 
-	//System.err.println("=====================countOfSelfDashboard == " + run().data().get(0).get("countOfSelfDashboard"));
 	// invokeDetails("GREEN");
 	runQuery();
     }
@@ -136,7 +136,7 @@ public class Sentinel<T extends AbstractEntity<?>> {
 
 	for (final Object o : resultPage.data()) {
 	    final AbstractEntity entity = (AbstractEntity) o;
-	    final Integer count = (Integer) entity.get("countOfSelfDashboard");
+	    final Integer count = (Integer) entity.get(SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD);
 	    final String distrPropValue = (String) entity.get(distrProperty);
 	    if ("RED".equalsIgnoreCase(distrPropValue)) {
 		model.getRedLightingModel().setCount(count);

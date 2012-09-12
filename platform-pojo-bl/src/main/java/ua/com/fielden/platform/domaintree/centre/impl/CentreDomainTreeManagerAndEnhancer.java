@@ -22,7 +22,6 @@ import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILoca
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
@@ -234,25 +233,18 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	if (getAnalysisManager(name) != null) {
 	    throw new IllegalArgumentException("The analysis with name [" + name + "] already exists.");
 	}
-	final Class<?> rootType = getRepresentation().rootTypes().iterator().next(); // TODO this is slightly INCORRECT!!
 	// create a new instance and put to "current" map
 	if (AnalysisType.PIVOT.equals(analysisType)) {
-	    currentAnalyses.put(name, new PivotDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
+	    currentAnalyses.put(name, initAnalysisManagerReferencesOn(new PivotDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()), this));
 	} if (AnalysisType.SIMPLE.equals(analysisType)) {
-	    currentAnalyses.put(name, new AnalysisDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
+	    currentAnalyses.put(name, initAnalysisManagerReferencesOn(new AnalysisDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()), this));
 	} if (AnalysisType.SENTINEL.equals(analysisType)) {
-	    // add "count of self" calculated property that is essential for "sentinel" analyses
-	    try {
-		getEnhancer().getCalculatedProperty(rootType, SentinelDomainTreeRepresentation.countOfSelfName);
-	    } catch (final IncorrectCalcPropertyException e) {
-		getEnhancer().addCalculatedProperty(rootType, "", "COUNT(SELF)", "Count of self (Dashboard)", "This calculated property is used for sentinels as aggregation function that calculates a number of entities by each status.", CalculatedPropertyAttribute.NO_ATTR, "SELF");
-		getEnhancer().apply();
-	    }
-	    final ISentinelDomainTreeManager sdtm = new SentinelDomainTreeManager(getSerialiser(), getRepresentation().rootTypes());
-	    currentAnalyses.put(name, sdtm);
-
+	    provideSentinelAnalysesAggregationProperty(getRepresentation().rootTypes());
+	    currentAnalyses.put(name, initAnalysisManagerReferencesOn(new SentinelDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()), this));
+	    final SentinelDomainTreeManager sdtm = (SentinelDomainTreeManager) getAnalysisManager(name);
+	    sdtm.provideMetaStateForCountOfSelfDashboardProperty();
 	} if (AnalysisType.LIFECYCLE.equals(analysisType)) {
-	    currentAnalyses.put(name, new LifecycleDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()));
+	    currentAnalyses.put(name, initAnalysisManagerReferencesOn(new LifecycleDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()), this));
 	}
 	// fire "initialised" event
 	if (getAnalysisManager(name) != null) {
@@ -260,12 +252,22 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 		listener.propertyStateChanged(null, name, true, null);
 	    }
 	}
-	initAnalysisManagerReferencesOn(getAnalysisManager(name), this);
-	if (AnalysisType.SENTINEL.equals(analysisType)) {
-	    final ISentinelDomainTreeManager sdtm = (ISentinelDomainTreeManager) getAnalysisManager(name);
-	    sdtm.getRepresentation().getFirstTick().disableImmutably(rootType, SentinelDomainTreeRepresentation.countOfSelfName);
-	    sdtm.getSecondTick().check(rootType, SentinelDomainTreeRepresentation.countOfSelfName, true);
-	    sdtm.getRepresentation().getSecondTick().disableImmutably(rootType, SentinelDomainTreeRepresentation.countOfSelfName);
+    }
+
+    /**
+     * Enhances centre manager domain to include COUNT_OF_SELF_DASHBOARD property, which will be used for sentinel analyses.
+     *
+     * @param rootType
+     */
+    public void provideSentinelAnalysesAggregationProperty(final Set<Class<?>> rootTypes) {
+	for (final Class<?> rootType : rootTypes) {
+	    // add "count of self" calculated property that is essential for "sentinel" analyses
+	    try {
+		getEnhancer().getCalculatedProperty(rootType, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD);
+	    } catch (final IncorrectCalcPropertyException e) {
+		getEnhancer().addCalculatedProperty(rootType, "", "COUNT(SELF)", "Count of self (Dashboard)", "This calculated property is used for sentinels as aggregation function that calculates a number of entities by each status.", CalculatedPropertyAttribute.NO_ATTR, "SELF");
+		getEnhancer().apply();
+	    }
 	}
     }
 

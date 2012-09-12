@@ -226,6 +226,10 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 	assertTrue("Link property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "collection.masterEntityProp"));
 	assertTrue("Link property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.entityProp.slaveEntityLinkProp"));
 	assertTrue("Link property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.collection.slaveEntityLinkProp"));
+    }
+
+    @Test
+    public void test_that_NOT_link_properties_are_NOT_excluded() {
 	assertFalse("NOT Link property should NOT be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.entityProp.slaveEntityProp"));
 	assertFalse("NOT Link property should NOT be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp"));
     }
@@ -400,7 +404,9 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_specifically_disabled_properties_first_tick_are_actually_disabled() {
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertTrue("Specifically disabled property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    assertTrue("Specifically disabled property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		}
 	    }
 	}, "disabledManuallyProp");
     }
@@ -467,7 +473,9 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_specifically_disabled_properties_second_tick_are_actually_disabled() {
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertTrue("Specifically disabled property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    assertTrue("Specifically disabled property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
+		}
 	    }
 	}, "disabledManuallyProp");
     }
@@ -537,7 +545,9 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_specifically_checked_properties_first_tick_are_actually_checked() {
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertFalse("By contract should be unchecked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, name));
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    assertFalse("By contract should be unchecked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, name));
+		}
 	    }
 	}, "checkedManuallyProp");
     }
@@ -609,7 +619,9 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_specifically_checked_properties_second_tick_are_actually_checked() {
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		assertFalse("By the contract all the properties should not be be 'checked immutably'.", dtm().getSecondTick().isCheckedImmutably(MasterEntity.class, name));
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    assertFalse("By the contract all the properties should not be be 'checked immutably'.", dtm().getSecondTick().isCheckedImmutably(MasterEntity.class, name));
+		}
 	    }
 	}, "checkedManuallyProp");
     }

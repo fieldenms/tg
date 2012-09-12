@@ -189,7 +189,9 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	final String message = "Not disabled and not excluded property should NOT cause any exception while changing its state.";
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		uncheckLegally(name, message);
+		if (!dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, name)) {
+		    uncheckLegally(name, message);
+		}
 	    }
 	}, "mutablyCheckedProp");
     }
@@ -211,8 +213,10 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
     public void test_that_CHECK_state_for_disabled_properties_is_correct() { // (disabled == immutably checked or unchecked)
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		final String message = "Immutably unchecked (disabled) property [" + name + "] should return 'false' CHECK state.";
-		isCheck_equals_to_state(name, message, false);
+		if (!dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, name)) {
+		    final String message = "Immutably unchecked (disabled) property [" + name + "] should return 'false' CHECK state.";
+		    isCheck_equals_to_state(name, message, false);
+		}
 	    }
 	}, "disabledManuallyProp");
     }
@@ -222,7 +226,9 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	final String message = "Untouched property (also not muted in representation) should return 'false' CHECK state.";
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		isCheck_equals_to_state(name, message, false);
+		if (!dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, name)) {
+		    isCheck_equals_to_state(name, message, false);
+		}
 	    }
 	}, "bigDecimalProp");
     }

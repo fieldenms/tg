@@ -83,18 +83,30 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 
     public static void manageTestingDTM_for_AbstractAnalysisDomainTreeManagerTest(final Object obj) {
 	final IAbstractAnalysisDomainTreeManager dtm = (IAbstractAnalysisDomainTreeManager) obj;
- 
+
 	manageTestingDTM_for_AbstractDomainTreeTest(dtm.getRepresentation());
 
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
 	dtm.getSecondTick().checkedProperties(MasterEntity.class);
 
-	dtm.getSecondTick().check(MasterEntity.class, "intAggExprProp", true);
-	dtm.getSecondTick().check(MasterEntity.class, "bigDecimalAggExprProp", true);
-	dtm.getSecondTick().check(MasterEntity.class, "moneyAggExprProp", true);
-	dtm.getFirstTick().check(MasterEntity.class, "dateExprProp", true);
-	dtm.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
-	dtm.getFirstTick().check(MasterEntity.class, "booleanProp", true);
+	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "intAggExprProp")) {
+	    dtm.getSecondTick().check(MasterEntity.class, "intAggExprProp", true);
+	}
+	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "bigDecimalAggExprProp")) {
+	    dtm.getSecondTick().check(MasterEntity.class, "bigDecimalAggExprProp", true);
+	}
+	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "moneyAggExprProp")) {
+	    dtm.getSecondTick().check(MasterEntity.class, "moneyAggExprProp", true);
+	}
+	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "dateExprProp")) {
+	    dtm.getFirstTick().check(MasterEntity.class, "dateExprProp", true);
+	}
+	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "simpleEntityProp")) {
+	    dtm.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	}
+	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "booleanProp")) {
+	    dtm.getFirstTick().check(MasterEntity.class, "booleanProp", true);
+	}
     }
 
     public static void performAfterDeserialisationProcess_for_AbstractAnalysisDomainTreeManagerTest(final Object obj) {
@@ -126,10 +138,12 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 	final String message = "Checked property, defined in isChecked() contract, should return 'true' CHECK state, and after manual mutation its state should be desired.";
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		dtm().getFirstTick().check(MasterEntity.class, name, false);
-		isCheck_equals_to_state(name, message, false);
-		dtm().getFirstTick().check(MasterEntity.class, name, true);
-		isCheck_equals_to_state(name, message, true);
+		if (!dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, name)) {
+		    dtm().getFirstTick().check(MasterEntity.class, name, false);
+		    isCheck_equals_to_state(name, message, false);
+		    dtm().getFirstTick().check(MasterEntity.class, name, true);
+		    isCheck_equals_to_state(name, message, true);
+		}
 	    }
 	}, "mutablyCheckedProp");
     }

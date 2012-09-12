@@ -64,6 +64,7 @@ public abstract class AbstractDomainTreeTest {
     private static final String CREATE_DTM_FOR = "createDtm_for_";
     private static final String CREATE_IRRELEVANT_DTM_FOR = "createIrrelevantDtm_for_";
     private static final String PERFORM_AFTER_DESERIALISATION_PROCESS_FOR = "performAfterDeserialisationProcess_for_";
+    private static final String PERFORM_ADDITIONAL_INITIALISATION_PROCESS_FOR = "performAdditionalInitialisationProcess_for_";
     private static final String MANAGE_TESTING_DTM_FOR = "manageTestingDTM_for_";
     private static final String ASSERT_INNER_CROSS_REFERENCES_FOR = "assertInnerCrossReferences_for_";
 
@@ -167,6 +168,10 @@ public abstract class AbstractDomainTreeTest {
 
 	    final Object dtm = Reflector.getMethod(testCaseClass, CREATE_DTM_FOR + testCaseClass.getSimpleName()).invoke(null);
 	    Reflector.getMethod(testCaseClass, PERFORM_AFTER_DESERIALISATION_PROCESS_FOR + testCaseClass.getSimpleName(), Object.class).invoke(null, dtm);
+	    try {
+		Reflector.getMethod(testCaseClass, PERFORM_ADDITIONAL_INITIALISATION_PROCESS_FOR + testCaseClass.getSimpleName(), Object.class).invoke(null, dtm);
+	    } catch (final NoSuchMethodException ex) { // legal situation -- the method can be not present
+	    }
 	    Reflector.getMethod(testCaseClass, MANAGE_TESTING_DTM_FOR + testCaseClass.getSimpleName(), Object.class).invoke(null, dtm);
 	    managerArray = serialiser().serialise(dtm);
 	} catch (final Exception e) {
@@ -215,8 +220,10 @@ public abstract class AbstractDomainTreeTest {
 	dtr.getSecondTick().disableImmutably(EntityWithNormalNature.class, "");
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		dtr.getFirstTick().disableImmutably(MasterEntity.class, name);
-		dtr.getSecondTick().disableImmutably(MasterEntity.class, name);
+		if (!dtr.isExcludedImmutably(MasterEntity.class, name)) {
+		    dtr.getFirstTick().disableImmutably(MasterEntity.class, name);
+		    dtr.getSecondTick().disableImmutably(MasterEntity.class, name);
+		}
 	    }
 	}, "disabledManuallyProp");
     }
