@@ -612,7 +612,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     //    }
     //
     //    private int traceTree(final TreePath path, final HSSFSheet sheet, final HSSFCellStyle dataCellStyle, final int columnShift, final int rowNum) {
-    //	//TODO after modifying pivot tree table change this implementation.
+    //	//TODO after modifying pivot tree table, change this implementation.
     //
     //	//Exporting current node.
     //	final PivotTreeTableNode node = (PivotTreeTableNode) path.getLastPathComponent();

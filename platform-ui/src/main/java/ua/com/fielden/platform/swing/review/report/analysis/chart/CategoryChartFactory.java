@@ -107,7 +107,7 @@ class CategoryChartFactory<T extends AbstractEntity<?>> implements IChartFactory
 	if (dataSet != null) {
 	    String rangeAxisName = valueAxisLabel;
 	    if (seriesIndexes.size() == 1 && dataProvider.aggregatedProperties().size() > 0) {
-		rangeAxisName = dataProvider.aggregatedProperties().get(seriesIndexes.get(0)).toString();
+		rangeAxisName = aggregationDescriptor.getTitle(dataProvider.aggregatedProperties().get(seriesIndexes.get(0)).toString());
 	    }
 	    final NumberAxis valueAxis = new NumberAxis(rangeAxisName);
 	    valueAxis.setUpperMargin(0.1);

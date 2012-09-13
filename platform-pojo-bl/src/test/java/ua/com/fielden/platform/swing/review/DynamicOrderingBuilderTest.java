@@ -35,8 +35,6 @@ public class DynamicOrderingBuilderTest {
 
     private final static ISerialiser serialiser = createSerialiser(createFactory());
 
-    private final static String alias = "alias_for_main_criteria_type";
-
     private static EntityFactory createFactory() {
 	final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
 	final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();

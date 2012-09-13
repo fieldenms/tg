@@ -60,7 +60,7 @@ public class PivotAnalysisQueryGgenerator<T extends AbstractEntity<?>> implement
 	yieldProperties.addAll(distributionProperties);
 	yieldProperties.addAll(aggregationProperties);
 
-	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, ReportQueryGenerationUtils.createQueryProperties(root, cdtme), distributionProperties, aggregation).modelAsEntity(managedType);
+	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, distributionProperties, aggregation).modelAsEntity(managedType);
 
 	final List<Pair<String, Ordering>> orderingProperties = new ArrayList<>(pdtm.getSecondTick().orderedProperties(root));
 	if(orderingProperties.isEmpty()){

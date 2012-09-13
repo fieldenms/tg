@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -15,7 +14,6 @@ import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAnd
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -25,7 +23,6 @@ import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
 
-@SuppressWarnings("unchecked")
 public class EntityQueryUtilsTest {
 
     @SuppressWarnings("serial")
@@ -41,10 +38,6 @@ public class EntityQueryUtilsTest {
 	return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
     }
 
-    private static final Class<? extends AbstractEntity<?>> masterKlass;
-    private static final ICalculatedProperty firstCalc, secondCalc, thirdCalc;
-
-
     static {
 	final IDomainTreeEnhancer dte = cdtme.getEnhancer();
 	dte.addCalculatedProperty(MasterEntity.class, "", "3 + integerProp", "firstCalcWithoutOrigin", "firstCalcWithoutOrigin", CalculatedPropertyAttribute.NO_ATTR, null);
@@ -58,12 +51,6 @@ public class EntityQueryUtilsTest {
  	dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "AVG(integerProp)", "propIntAvg", "Property Int average", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
  	dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "MIN(integerProp)", "propIntMin", "Property Int minimum", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
  	dte.apply();
-
- 	masterKlass = (Class<? extends AbstractEntity<?>>) dte.getManagedType(MasterEntity.class);
-
- 	firstCalc = dte.getCalculatedProperty(MasterEntity.class, "firstCalc");
- 	secondCalc = dte.getCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp.secondCalc");
- 	thirdCalc = dte.getCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp.thirdCalc");
 
  	cdtme.getSecondTick().check(MasterEntity.class, "", true);
  	cdtme.getSecondTick().check(MasterEntity.class, "stringProp", true);

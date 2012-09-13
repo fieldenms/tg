@@ -48,7 +48,7 @@ public class ChartAnalysisQueryGenerator<T extends AbstractEntity<?>> implements
 	yieldProperties.addAll(distributionProperties);
 	yieldProperties.addAll(aggregationProperties);
 
-	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, ReportQueryGenerationUtils.createQueryProperties(root, cdtme), distributionProperties, aggregation).modelAsEntity(managedType);
+	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, distributionProperties, aggregation).modelAsEntity(managedType);
 
 	final List<Pair<String, Ordering>> orderingProperties = new ArrayList<>(adtm.getSecondTick().orderedProperties(root));
 	if(orderingProperties.isEmpty()){

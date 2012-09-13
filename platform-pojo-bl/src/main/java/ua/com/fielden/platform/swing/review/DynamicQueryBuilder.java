@@ -768,7 +768,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final EntityResultQueryModel<E> sourceQueryModel, final List<QueryProperty> queryProperties, final List<String> distributionProperties, final List<Pair<String, ExpressionModel>> aggregationProperties){
+    public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final EntityResultQueryModel<E> sourceQueryModel, final List<String> distributionProperties, final List<Pair<String, ExpressionModel>> aggregationProperties){
 
 	ICompleted<E> baseQuery = select(sourceQueryModel).as(ALIAS);
 	for (final String groupProperty : distributionProperties) {
