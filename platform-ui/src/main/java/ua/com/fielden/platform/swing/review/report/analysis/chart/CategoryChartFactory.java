@@ -39,8 +39,10 @@ import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.TextAnchor;
 
+import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.IProgressUpdater;
+import ua.com.fielden.platform.javafx.dashboard.DashboardRow;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
@@ -138,6 +140,13 @@ class CategoryChartFactory<T extends AbstractEntity<?>> implements IChartFactory
 		    return commonRenderer.lookupSeriesPaint(Collections.unmodifiableList(seriesIndexes), series);
 		}
 
+		@Override
+		public Paint getItemPaint(final int row, final int column) {
+		    if (analysisModel.adtme() instanceof ISentinelDomainTreeManager) {
+			return getSentinelBarsColour(column);
+		    }
+		    return super.getItemPaint(row, column);
+		}
 
 	    };
 	    break;
@@ -149,6 +158,14 @@ class CategoryChartFactory<T extends AbstractEntity<?>> implements IChartFactory
 		@Override
 		public Paint lookupSeriesPaint(final int series) {
 		    return commonRenderer.lookupSeriesPaint(Collections.unmodifiableList(seriesIndexes), series);
+		}
+
+		@Override
+		public Paint getItemPaint(final int row, final int column) {
+		    if (analysisModel.adtme() instanceof ISentinelDomainTreeManager) {
+			return getSentinelBarsColour(column);
+		    }
+		    return super.getItemPaint(row, column);
 		}
 
 	    };
@@ -274,6 +291,12 @@ class CategoryChartFactory<T extends AbstractEntity<?>> implements IChartFactory
     @Override
     public List<T> getModel() {
 	return analysisModel.getChartAnalysisDataProvider().getLoadedData();
+    }
+
+    private Color getSentinelBarsColour(final int column) {
+	final String status = ((EntityWrapper) dataSet.getColumnKey(column)).toString();
+	final javafx.scene.paint.Color javafxColor = DashboardRow.getColour(status);
+	return new java.awt.Color((float) javafxColor.getRed(), (float) javafxColor.getGreen(), (float) javafxColor.getBlue(), (float) javafxColor.getOpacity());
     }
 
     private static class CommonCategoryRenderer extends AbstractCategoryItemRenderer {

@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.swing.menu;
 
-import ua.com.fielden.platform.javafx.dashboard.DashboardNotifPanel;
+import ua.com.fielden.platform.javafx.dashboard.DashboardView;
 
-public class MiDashboard extends MiWithVisibilityProvider<DashboardNotifPanel> {
+public class MiDashboard extends MiWithVisibilityProvider<DashboardView> {
 
-    public MiDashboard(final DashboardNotifPanel view, final ITreeMenuItemVisibilityProvider visibilityProvider) {
+    public MiDashboard(final DashboardView view, final ITreeMenuItemVisibilityProvider visibilityProvider) {
 	super(view, visibilityProvider);
     }
 

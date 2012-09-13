@@ -33,6 +33,7 @@ import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.ei.editors.development.LabelAndTooltipExtractor;
 import ua.com.fielden.platform.swing.model.UModel;
 import ua.com.fielden.platform.swing.model.UmState;
+import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel.UserNoRemovePropertyException;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -334,7 +335,9 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	    @Override
 	    protected void handlePreAndPostActionException(final Throwable ex) {
-		super.handlePreAndPostActionException(ex);
+		if (!(ex instanceof UserNoRemovePropertyException)) {
+		    super.handlePreAndPostActionException(ex);
+		}
 		setState(UmState.VIEW);
 	    }
 

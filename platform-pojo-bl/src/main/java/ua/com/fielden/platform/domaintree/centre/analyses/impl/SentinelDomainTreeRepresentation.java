@@ -23,7 +23,10 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresentation implements ISentinelDomainTreeRepresentation {
-    public final static String COUNT_OF_SELF_DASHBOARD = "countOfSelfDashboard";
+    public static final String COUNT_OF_SELF_DASHBOARD = "countOfSelfDashboard";
+    public static final String RED = "RED";
+    public static final String YELLOW = "YELLOW";
+    public static final String GREEN = "GREEN";
 
     /**
      * A <i>representation</i> constructor for the first time instantiation.
@@ -89,7 +92,7 @@ public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresen
 	final String upperCasedAndTrimmedExpr = calculatedAnnotation != null ? calculatedAnnotation.value().trim().toUpperCase() : null;
 	return calculatedAnnotation != null && EntityUtils.isString(propertyType) && //
 		upperCasedAndTrimmedExpr.startsWith("CASE WHEN ") && upperCasedAndTrimmedExpr.endsWith(" END") && //
-		upperCasedAndTrimmedExpr.contains(" \"GREEN\" ") && upperCasedAndTrimmedExpr.contains(" \"RED\" ");
+		upperCasedAndTrimmedExpr.contains(" \"" + GREEN + "\" ") && upperCasedAndTrimmedExpr.contains(" \"" + RED + "\" ");
     }
 
     public static class SentinelAddToDistributionTickRepresentation extends AnalysisAddToDistributionTickRepresentation implements ISentinelAddToDistributionTickRepresentation {

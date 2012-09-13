@@ -16,7 +16,16 @@ import javafx.scene.paint.Stop;
 import javafx.scene.shape.Circle;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 
+/**
+ * A traffic lights control.
+ *
+ * @author TG Team
+ *
+ */
 public class TrafficLights extends Group {
+    public static final Color GREEN_COLOUR = Color.GREEN;
+    public static final Color GOLD_COLOUR = Color.GOLD;
+    public static final Color RED_COLOUR = Color.RED;
     private final TrafficLightsModel model;
     private final TrafficLight redLight, goldLight, greenLight;
 
@@ -26,7 +35,7 @@ public class TrafficLights extends Group {
 	final int radius = 13;
 	final int gap = 3;
 
-	redLight = new TrafficLight(model.getRedLightingModel(), radius, Color.RED, redAction);
+	redLight = new TrafficLight(model.getRedLightingModel(), radius, RED_COLOUR, redAction);
 	redLight.getModel().addAfterChangeAction(new IAction() {
 	    @Override
 	    public void action() {
@@ -35,7 +44,7 @@ public class TrafficLights extends Group {
 	});
 	redLight.setTranslateX(2 * gap + radius);
 	redLight.setTranslateY(gap + radius);
-	goldLight = new TrafficLight(model.getYellowLightingModel(), radius, Color.GOLD, goldAction);
+	goldLight = new TrafficLight(model.getYellowLightingModel(), radius, GOLD_COLOUR, goldAction);
 	goldLight.getModel().addAfterChangeAction(new IAction() {
 	    @Override
 	    public void action() {
@@ -44,7 +53,7 @@ public class TrafficLights extends Group {
 	});
 	goldLight.setTranslateX(2 * gap + radius + gap * 2 + radius * 2);
 	goldLight.setTranslateY(gap + radius);
-	greenLight = new TrafficLight(model.getGreenLightingModel(), radius, Color.GREEN, greenAction);
+	greenLight = new TrafficLight(model.getGreenLightingModel(), radius, GREEN_COLOUR, greenAction);
 	greenLight.getModel().addAfterChangeAction(new IAction() {
 	    @Override
 	    public void action() {
@@ -87,14 +96,6 @@ public class TrafficLights extends Group {
 	public Integer getCount() {
 	    return count;
 	}
-
-//	public void setLighting(final boolean isLighting) {
-//	    this.isLighting = isLighting;
-//
-//	    for (final IAction afterChange : afterChangeActions) {
-//		afterChange.action();
-//	    }
-//	}
     }
 
     private static class TrafficLight extends Circle {

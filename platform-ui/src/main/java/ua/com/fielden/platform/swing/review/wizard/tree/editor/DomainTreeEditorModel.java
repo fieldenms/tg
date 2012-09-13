@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.review.wizard.tree.editor;
 import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 import javax.swing.event.EventListenerList;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
@@ -208,6 +209,11 @@ public class DomainTreeEditorModel<T extends AbstractEntity<?>> {
 		    throw new IllegalStateException("Please select generated property first to edit it");
 		}
 		break;
+	    case DELETE_PRE_ACTION:
+		if (JOptionPane.NO_OPTION == JOptionPane.showConfirmDialog(getView(), "Are you sure you want to delete this property", "Delete property", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)) {
+		    throw new UserNoRemovePropertyException();
+		}
+		break;
 	    case DELETE_ACTION:
 		if (propertySelectionModel != null && propertySelectionModel.isPropertySelected()) {
 		    dtme.getEnhancer().removeCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty());
@@ -305,6 +311,10 @@ public class DomainTreeEditorModel<T extends AbstractEntity<?>> {
 
 	    };
 	}
+
+    }
+
+    public static class UserNoRemovePropertyException extends RuntimeException{
 
     }
 

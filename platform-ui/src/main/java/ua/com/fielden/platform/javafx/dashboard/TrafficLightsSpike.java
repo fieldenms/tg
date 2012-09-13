@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.javafx.dashboard;
 
+import java.io.File;
+import java.net.MalformedURLException;
+
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
@@ -22,11 +25,14 @@ import javafx.stage.Stage;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 
-public class TrafficLightControl extends Application {
+public class TrafficLightsSpike extends Application {
+    private final static String packageName = "trafficlights";
 
-    public static Group createTrafficLight(final IPage page) {
-	final Image image = new Image("trafficlight.jpg");
+    private static Group createTrafficLight(final IPage page) throws MalformedURLException {
+
+	final Image image = new Image(createUrl("trafficlight.jpg"));
 	final ImageView imageView = new ImageView(image);
+
 
 	final Button redButton = createButton("red-texture.jpg", true, 34, 36, Color.RED);
 	final Button yellowButton = createButton("yellow-texture.jpg", false, 104, 36, Color.YELLOW);
@@ -36,10 +42,18 @@ public class TrafficLightControl extends Application {
 	return group;
     }
 
+    private static String createUrl(final String imageFileName) {
+	try {
+	    return new File("src/main/resources/" + packageName + "/" + imageFileName).toURI().toURL().toString();
+	} catch (final MalformedURLException e) {
+	    e.printStackTrace();
+	    throw new RuntimeException(e);
+	}
+    }
 
-    private static Node createNode(final String textureImageFileName, final boolean isLighting) {
+    private static Node createNode(final String textureImageFileName, final boolean isLighting) throws MalformedURLException {
 	final Circle background = new Circle(0, 0, 27);
-	background.setFill(new ImagePattern(new Image(textureImageFileName), 0, 0, 9, 10, false));
+	background.setFill(new ImagePattern(new Image(createUrl(textureImageFileName)), 0, 0, 9, 10, false));
 
 	final Distant light = new Distant();
 	light.setAzimuth(-315.0f);// -135.0f);
@@ -68,7 +82,7 @@ public class TrafficLightControl extends Application {
     }
 
     @Override
-    public void start(final Stage stage) {
+    public void start(final Stage stage) throws MalformedURLException {
 //	final Button redButton = createButton("red-texture.jpg", false, 50, 60);
 //	final Button yellowButton = createButton("yellow-texture.jpg", false, 150, 60);
 //	final Button greenButton = createButton("green-texture.jpg", false, 250, 60);
@@ -78,11 +92,11 @@ public class TrafficLightControl extends Application {
 
 
 	final Circle background = new Circle(200, 200, 40);
-	background.setFill(new ImagePattern(new Image("yellow-texture.jpg"), 0, 0, 9, 10, false));
+	background.setFill(new ImagePattern(new Image(createUrl("yellow-texture.jpg")), 0, 0, 9, 10, false));
 
-//	final Group trafficLight = createTrafficLight(null);
-//	trafficLight.setTranslateX(0);
-//	trafficLight.setTranslateY(0);
+	final Group trafficLight = createTrafficLight(null);
+	trafficLight.setTranslateX(150);
+	trafficLight.setTranslateY(50);
 	final IAction a = new IAction() {
 	    @Override
 	    public void action() {
@@ -95,7 +109,7 @@ public class TrafficLightControl extends Application {
 	trafficLights.setTranslateX(0);
 	trafficLights.setTranslateY(0);
 
-	final Group group = new Group(/*trafficLight, redButton, yellowButton, greenButton, */redLightButton, yellowLightButton, greenLightButton, trafficLights);
+	final Group group = new Group(/*trafficLight, redButton, yellowButton, greenButton, */redLightButton, yellowLightButton, greenLightButton, trafficLights, trafficLight);
 	//group.getStylesheets().add(this.getClass().getResource("trafficlight.css").toExternalForm());
         final Scene scene = new Scene(group, 600, 450);
         //scene.setFill(Color.DARKSLATEBLUE);
@@ -145,7 +159,12 @@ public class TrafficLightControl extends Application {
 
 	    @Override
 	    public Node getNode() {
-		return createNode(textureImageFileName, isLighting);
+		try {
+		    return createNode(textureImageFileName, isLighting);
+		} catch (final MalformedURLException e) {
+		    e.printStackTrace();
+		    return null;
+		}
 	    }
 
 	    @Override
