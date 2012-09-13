@@ -77,6 +77,35 @@ JComponent actualComponent = myPropertyEditor.getEditor();
   \end{description}
   
 
+  The \textbf{model} is the central component of the master structure. 
+  All other components revolve around it.
+  The following list specifies the major pieces required for model construction.
+  These pieces are passed into the model's class constructor.
+  \begin{description}
+   \item[\textbf{Entity producer.}] An instance of a class implementing contract \texttt{IEntityProducer<EntityObjectType>}.
+   It is responsible for creation of new entity object instances, which happens when user chooses action \emph{New}.
+   This contract provides a convenient way to abstract specific details of entity instantiation away from UI code.
+   Each entity object type should have its own producer implementation, which gets registered with \texttt{EntityMasterManager}.
+   If custom instantiation is not required then a default producer provided automatically without the need to register it.
+   \item[\textbf{Cache.}] An instance of a class implementing contract \texttt{IEntityMasterCache} that represents a global cache for all master instances for different entity objects.
+   A default cache implementation is provided automatically and requires no action from developers to use it.
+   It could be argued in such case there is no need to expose it, but we felt that it is always good to provide extension points with reasonable defaults.
+   Thus, a custom case implementation can be provided in case the default is not sufficient.
+   The client-side application IoC module controls the biding of the \texttt{IEntityMasterCache} contract.
+   \item[\textbf{Entity Object.}] An instance of an entity object for which the master is being created.
+   \item[\textbf{Companion Object.}] An instance of a companion object of the entity for which the master is being created.
+   \item[\textbf{Value matcher factory.}] An instance implementing contract \texttt{IValueMatcherFactory} used for instantiating property editors.
+   A default implementation is provided automatically.
+   \item[\textbf{View owner.}] All entity masters are created as a user action on an entity centre.
+   This makes entity centres act like the owners of the produced from them masters.
+   Theoretically there could be other kinds of master owners.
+   Therefore, the master ownership is abstracted into contract \texttt{IUmViewOwner}.
+   Naturally entity centres implement this contract.
+   It has only one method \texttt{notifyEntityChange}, which is invoked when entity is modified on the master.
+   This provides a convenient way for the owner to react to the entity modification (e.g. entity centres update the row in the resultant grid corresponding to the entity instance).
+  \end{description}
+  
+  
   \textbf{TODO}..............................
   
 \subsection{Compound Masters}
