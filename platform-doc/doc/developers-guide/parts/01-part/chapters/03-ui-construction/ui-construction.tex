@@ -77,8 +77,12 @@ JComponent actualComponent = myPropertyEditor.getEditor();
   \end{description}
   
 
+  \subsubsection{Model}
+  
   The \textbf{model} is the central component of the master structure. 
   All other components revolve around it.
+  Here we specifically discuss the model base class \texttt{UmMasterWithCrudAndUpdater}.
+  
   The following list specifies the major pieces required for model construction.
   These pieces are passed into the model's class constructor.
   \begin{description}
@@ -92,10 +96,14 @@ JComponent actualComponent = myPropertyEditor.getEditor();
    It could be argued in such case there is no need to expose it, but we felt that it is always good to provide extension points with reasonable defaults.
    Thus, a custom case implementation can be provided in case the default is not sufficient.
    The client-side application IoC module controls the biding of the \texttt{IEntityMasterCache} contract.
-   \item[\textbf{Entity Object.}] An instance of an entity object for which the master is being created.
-   \item[\textbf{Companion Object.}] An instance of a companion object of the entity for which the master is being created.
-   \item[\textbf{Value matcher factory.}] An instance implementing contract \texttt{IValueMatcherFactory} used for instantiating property editors.
-   A default implementation is provided automatically.
+   \item[\textbf{Entity object.}] An instance of an entity object for which the master is being created.
+   For the very least entity id should be present in this instance.
+   \item[\textbf{Companion object.}] An instance of a companion object of the entity for which the master is being created.   
+   \item[\textbf{Entity object fetch model.}] An instance of \texttt{fetch<EntityObjectType>} that defines what entity properties and subproperties should be fetched when obtaining entity instance from the database.
+   \item[\textbf{Property binder.}] An instance of class \texttt{MasterPropertyBinder<EntityObjectType>} responsible for binding logic between property editors and properties.
+   The platform provide convenient factory methods to streamline creation of binders.
+   \item[\textbf{Lazy initialisation.}] A boolean argument that specifies whether property editors should be created and bound at the time of model instantiation (value \emph{true}) or at some later stage (value \emph{false}).
+   For relatively simple masters this value can safely be set to \emph{false}.
    \item[\textbf{View owner.}] All entity masters are created as a user action on an entity centre.
    This makes entity centres act like the owners of the produced from them masters.
    Theoretically there could be other kinds of master owners.
@@ -103,7 +111,81 @@ JComponent actualComponent = myPropertyEditor.getEditor();
    Naturally entity centres implement this contract.
    It has only one method \texttt{notifyEntityChange}, which is invoked when entity is modified on the master.
    This provides a convenient way for the owner to react to the entity modification (e.g. entity centres update the row in the resultant grid corresponding to the entity instance).
+   \item[\textbf{Frame title updater.}] A frame title bar is a convenient place for providing information about the master's state or related events.
+   Neither model nor view has any knowledge of the intended parent where it would be placed such as another view or a frame.
+   Therefore, there is a need to have a mechanism that could update a title bar.
+   This need is realised by providing an instance of \texttt{FrameTitleUpdater}, which takes frame as its construction argument.
+   This way, the logic in the model can invoke method \texttt{update(String)} any time frame's title needs to be update.
+   Method \texttt{update(String)} runs on Event Dispatch Thread (EDT) and thus can be invoked from any other thread that might be performing some business logic.   
   \end{description}
+  
+  Property binder depends on \emph{value matcher factory} (\texttt{IValueMatcherFactory}) to provide value matcher for autocompleters, \emph{master manager} (\texttt{IMasterDomainTreeManager}) to persist user-defined autocompleter configuration and \emph{criteria generator} (\texttt{ICriteriaGenerator}) to handle  user-defined autocompleter configuration queries.
+  All these dependencies have default IoC bindings and can be easily obtained when creating property binders.
+  
+  The model provides actions (as in \texttt{javax.swing.Action} implementation) \texttt{newAction}, \texttt{editAction}, \texttt{saveAction}, \texttt{cancelAction}, \texttt{deleteAction} and \texttt{refreshAction} to support CRUD operations.
+  Respective getters should be used when composing an action panel with buttons in a corresponding view.
+  Custom action can be provided by developers.
+  
+  An essential part of the model concept is its \emph{state} and \emph{action stage}.
+  The change in state can be caused by user or programmatical calls of CRUD actions.
+  Custom actions should also maintain the state.
+  The sate is represented by enumeration \texttt{UmState} and is set be invoking method \texttt{setSate(UmState)} on the model.
+  The following state are available:
+  \begin{description}
+    \item[\textbf{VIEW}] -- indicates that model is in review state of an existing entity object; this is the default state; no properties can be changed.
+    \item[\textbf{EDIT}] -- indicates that model is in editing state; property editors are enabled and user may change property values.
+    \item[\textbf{NEW}] -- indicates that model is editing state, but for a brand new entity object that gets created as the result of calling \texttt{newAction}.    
+    \item[\textbf{UNDEFINED}] -- indicates that the model is in transition between states and one of the other states will be reached soon.    
+    \item[\textbf{CUSTOM}] -- a state that should be used in conjunction with custom actions; its effect is similar to EDIT or NEW in a way that internally the UI model considers this as \emph{unsaved} mode.
+  \end{description}
+    
+  Due to the fact that change in state is always the result of some action (either CRUD or custom), a mechanism for observing actions' execution stages is provided in order to support handling of state transition at fine grained level.
+  Specifically, each supported out of the box action updates its execution stage during execution.
+  Each action (including custom) has three stages:
+  \begin{description}
+    \item[\textbf{PRE\_ACTION}] -- refers to the stage where action is preparing to execute (e.g. initialises a blocking layer).
+    \item[\textbf{ACTION}] -- refers to the stage where action is executing.
+    \item[\textbf{POST\_ACTION}] -- refers to the stage where action finished its task and performs some post action activities (e.g. releases a blocking layer)
+  \end{description}
+  
+  For example, the three states for action \texttt{newAction} are \texttt{NEW\_PRE\_ACTION}, \texttt{NEW\_ACTION} and \texttt{NEW\_POST\_ACTION}.
+  Custom actions should use stages \texttt{CUSTOM\_PRE\_ACTION}, \texttt{CUSTOM\_ACTION} and \texttt{CUSTOM\_POST\_ACTION}. 
+  For more stages refer enumerations \texttt{UModel.ActionStage}.
+  
+  In order to react to state change, model's method \texttt{notifyActionStageChange(ActionStage)} should be overridden and custom logic provided.
+  An example of this method overridden implementation to focus a property editor when \texttt{editAction} finishes its execution, is provided in listing~\ref{lst:EDIT_POST_ACTION_handling}.
+  
+  \begin{code}{EDIT\_POST\_ACTION handling.}{\label{lst:EDIT_POST_ACTION_handling}}{codebgcolor}
+    \begin{lstlisting}
+...    
+@Override    
+protected void notifyActionStageChange(final ActionStage actionState) {
+  super.notifyActionStageChange(actionState);%\tikzref{lst_EDIT_POST_ACTION_handling_1}{0.1cm}{0.1cm}%
+ 
+  if (actionState == ActionStage.EDIT_POST_ACTION) { %\tikzref{lst_EDIT_POST_ACTION_handling_2}{0.1cm}{0.1cm}%
+    getEditors().get("desc").getEditor().requestFocusInWindow();
+  }
+}
+...
+    \end{lstlisting}
+  \end{code}
+  \tikznote{lst_EDIT_POST_ACTION_handling_1_annotation}{lst_EDIT_POST_ACTION_handling_1}{2cm}{0.8cm}{7cm}
+    {Super}
+    {Inherited handling might do some useful work, thus invoking it.}    
+  \tikznote{lst_EDIT_POST_ACTION_handling_1_annotation}{lst_EDIT_POST_ACTION_handling_2}{3cm}{-1.1cm}{5cm}
+    {EDIT\_POST\_ACTION}
+    {Check if the this is the stage that needs to be handled. If so then obtain editor for property \emph{desc} and focus it.}
+  
+  The last important item to conclude UI model discussion, is the notion of \emph{managed entity}.
+  Basically, an entity object instance that is associated with master is considered to be managed by the model.
+  It can be obtained by calling method \texttt{getManagedEntity()}.
+  From the developer perspective, the managed entity is fully controlled from within the model and there is no way to set it into the model except at the time of model creation.  
+  
+  \subsubsection{View}
+  
+  \subsubsection{Frame}
+  
+  \subsubsection{Factory}  
   
   
   \textbf{TODO}..............................
