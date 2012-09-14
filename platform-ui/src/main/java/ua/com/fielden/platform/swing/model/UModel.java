@@ -368,7 +368,7 @@ public abstract class UModel<M extends AbstractEntity<?>, D extends AbstractEnti
     /**
      * Ensures that master entity is set and the model is reinitialised if required by triggering the refresh action.
      */
-    public void setEntity(final M entity) {
+    protected void setEntity(final M entity) {
 	this.entity = entity;
     }
 
