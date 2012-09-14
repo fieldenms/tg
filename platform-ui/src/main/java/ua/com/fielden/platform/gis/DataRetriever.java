@@ -11,11 +11,8 @@ import java.util.StringTokenizer;
 
 public class DataRetriever {
 
-    public static List<PathElement> getData() {
+    public static List<PathElement> getData(final String strFile) {
 	try {
-	    //csv file containing data
-	    final String strFile = "src/main/resources/gis/gis-data-sample.csv";
-
 	    //create BufferedReader to read csv file
 	    final BufferedReader br = new BufferedReader(new FileReader(strFile));
 	    String strLine = "";
@@ -48,6 +45,7 @@ public class DataRetriever {
 	    }
 	    return list;
 	} catch (final Exception e) {
+	    e.printStackTrace();
 	    System.out.println("Exception while reading csv file: " + e);
 	    return null;
 	}

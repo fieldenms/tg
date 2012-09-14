@@ -382,7 +382,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     /**
      * Layouts the components of this analysis.
      */
-    private void layoutView() {
+    protected void layoutView() {
 	final List<JComponent> components = new ArrayList<JComponent>();
 	final StringBuffer rowConstraints = new StringBuffer("");
 
@@ -402,7 +402,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      *
      * @return
      */
-    private ISelectionEventListener createGridAnalysisSelectionListener() {
+    protected ISelectionEventListener createGridAnalysisSelectionListener() {
 	return new ISelectionEventListener() {
 
 	    @Override

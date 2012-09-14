@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.gis;
+package ua.com.fielden.platform.javafx.gis;
 
 import java.util.Collections;
 import java.util.List;
@@ -6,8 +6,10 @@ import java.util.List;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.embed.swing.JFXPanel;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
@@ -40,20 +42,49 @@ import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import netscape.javascript.JSObject;
+import ua.com.fielden.platform.gis.DataRetriever;
+import ua.com.fielden.platform.gis.PathElement;
 
-public class WebMap extends Application {
+/**
+ * A swing container to contain javaFx dashboard.
+ *
+ * @author TG Team
+ *
+ */
+public class GisViewPanel extends JFXPanel {
+    private static final long serialVersionUID = 9202827128855362320L;
+
+    /**s
+     * Creates a swing container with javaFx dashboard.
+     *
+     * @return
+     */
+    public GisViewPanel() {
+	// this.data = createData();
+
+	Platform.runLater(new Runnable() {
+	    @Override
+	    public void run() {
+	        // This method is invoked on the JavaFX thread
+	        final Scene scene = createScene();
+	        setScene(scene);
+	    }
+	});
+    }
+
     private Timeline locationUpdateTimeline;
     private double xForDragBegin, yForDragBegin;
     private Group path;
     private BorderPane root;
     private BorderPane webViewPanel;
     private Slider startSlider, endSlider;
+    private final static String packageName = "gis";
+
     // load the image
     // TODO uncomment -> private static Image image = new Image("src/main/resources/marker.png", true); // /marker.png
-    private final List<PathElement> pe = DataRetriever.getData("src/main/resources/gis/gis-data-sample.csv");
+    private final List<PathElement> pe = DataRetriever.getData("src/main/resources/gis/gis-data-sample.csv"); //       createUrl("gis-data-sample.csv")         "/home/jhou/workspace/trident-genesis/platform-ui/src/main/resources/gis/gis-data-sample.csv"
 
     {
 	Collections.sort(pe);
@@ -98,9 +129,8 @@ public class WebMap extends Application {
 	return g;
     }
 
-    @Override
-    public void start(final Stage stage) {
-        // create web engine and view
+    public Scene createScene() {
+	// create web engine and view
 	final WebView webView = new WebView();
 	final WebEngine webEngine = webView.getEngine();
 
@@ -302,14 +332,9 @@ public class WebMap extends Application {
 
         path = createSimplePath();
         webViewPanel.getChildren().add(path);
-
-        // create scene
-        stage.setTitle("Web Map");
         final Scene scene = new Scene(root,1100,600, Color.web("#666970"));
-        stage.setScene(scene);
         scene.getStylesheets().add("/webmap/WebMap.css");
-        // show stage
-        stage.show(); // setVisible(true);
+	return scene;
     }
 
     private Node createSpacer() {
@@ -393,4 +418,5 @@ public class WebMap extends Application {
     private int zoom(final WebEngine webEngine) {
 	return (Integer) webEngine.executeScript("document.map.getZoom()");
     }
+
 }
