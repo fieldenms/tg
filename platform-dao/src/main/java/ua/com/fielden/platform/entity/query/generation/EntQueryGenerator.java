@@ -119,7 +119,7 @@ public class EntQueryGenerator {
 	}
 
 	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), orderBy.getModel(), resultType != null ? resultType : qryModel.getResultType(), category, //
-		domainMetadataAnalyser, filter, username, this, fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser));
+		domainMetadataAnalyser, filter, username, this, fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), paramValues);
     }
 
     public DbVersion getDbVersion() {

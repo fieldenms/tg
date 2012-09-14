@@ -37,6 +37,7 @@ public class EntQuery implements ISingleOperand {
     private final Class resultType;
     private final QueryCategory category;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
+    private final Map<String, Object> paramValues;
 
     private EntQuery master;
 
@@ -123,6 +124,9 @@ public class EntQuery implements ISingleOperand {
 	    final Yield idModel = new Yield(yields.getFirstYield().getOperand(), AbstractEntity.ID);
 	    yields.clear();
 	    yields.addYield(idModel);
+	} else if (idPropYieldEnhancementRequired()) {
+	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+	    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
 	} else if (allPropsYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
 	    if (mainSourceIsTypeBased()) {
@@ -142,16 +146,13 @@ public class EntQuery implements ISingleOperand {
 		}
 		if (type() != EntityAggregates.class) {
 		    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
-			    final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
+			final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
 			if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null && !skipProperty) {
 			    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
 			}
 		    }
 		}
 	    }
-	} else if (idPropYieldEnhancementRequired()) {
-	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-	    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
 	}
     }
 
@@ -260,7 +261,6 @@ public class EntQuery implements ISingleOperand {
             return finalPropInfo.getYieldDetailType();
         } else {
             return yield.getInfo() != null ? yield.getInfo().getYieldDetailsType() : YieldDetailsType.USUAL_PROP;
-            //return YieldDetailsType.USUAL_PROP /*TEMP*/;
         }
     }
 
@@ -317,7 +317,7 @@ public class EntQuery implements ISingleOperand {
 
     public EntQuery(final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
             final Class resultType, final QueryCategory category, final DomainMetadataAnalyser domainMetadataAnalyser, //
-            final IFilter filter, final String username, final EntQueryGenerator generator, final FetchModel fetchModel) {
+            final IFilter filter, final String username, final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
@@ -327,6 +327,7 @@ public class EntQuery implements ISingleOperand {
         this.groups = groups;
         this.orderings = orderings;
         this.resultType = resultType != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);
+        this.paramValues = paramValues;
 
         enhanceToFinalState(generator, fetchModel);
 
@@ -471,7 +472,7 @@ public class EntQuery implements ISingleOperand {
                     final PropResolutionInfo pri = propResolutionResult.getKey();
                     propResolutionResult.getValue().addReferencingProp(pri);
                     if (pri.getProp().expressionModel != null && !pri.getEntProp().isExpression()) {
-                        pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, Collections.<String, Object> emptyMap(), pri.getProp().expressionModel).getResult().getValue());
+                        pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, paramValues, pri.getProp().expressionModel).getResult().getValue());
                     }
                 }
 
