@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.javafx.gis;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,7 +46,8 @@ import javafx.scene.web.WebView;
 import javafx.util.Duration;
 import netscape.javascript.JSObject;
 import ua.com.fielden.platform.gis.DataRetriever;
-import ua.com.fielden.platform.gis.PathElement;
+import ua.com.fielden.platform.gis.Point;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A swing container to contain javaFx dashboard.
@@ -53,8 +55,20 @@ import ua.com.fielden.platform.gis.PathElement;
  * @author TG Team
  *
  */
-public class GisViewPanel extends JFXPanel {
+public class GisViewPanel <P extends Point> extends JFXPanel {
     private static final long serialVersionUID = 9202827128855362320L;
+    private Timeline locationUpdateTimeline;
+    private double xForDragBegin, yForDragBegin;
+    private Group path;
+    private BorderPane root;
+    private BorderPane webViewPanel;
+    private Slider startSlider, endSlider;
+    private WebEngine webEngine;
+    private final List<P> points;
+
+    protected Group path() {
+	return path;
+    }
 
     /**s
      * Creates a swing container with javaFx dashboard.
@@ -62,6 +76,7 @@ public class GisViewPanel extends JFXPanel {
      * @return
      */
     public GisViewPanel() {
+	this.points = new ArrayList<>();
 	// this.data = createData();
 
 	Platform.runLater(new Runnable() {
@@ -74,21 +89,15 @@ public class GisViewPanel extends JFXPanel {
 	});
     }
 
-    private Timeline locationUpdateTimeline;
-    private double xForDragBegin, yForDragBegin;
-    private Group path;
-    private BorderPane root;
-    private BorderPane webViewPanel;
-    private Slider startSlider, endSlider;
-    private final static String packageName = "gis";
-
     // load the image
-    // TODO uncomment -> private static Image image = new Image("src/main/resources/marker.png", true); // /marker.png
-    private final List<PathElement> pe = DataRetriever.getData("src/main/resources/gis/gis-data-sample.csv"); //       createUrl("gis-data-sample.csv")         "/home/jhou/workspace/trident-genesis/platform-ui/src/main/resources/gis/gis-data-sample.csv"
+    // private static Image image = new Image("src/main/resources/marker.png", true); // /marker.png
 
-    {
-	Collections.sort(pe);
-    }
+//    private final static String packageName = "gis";
+//    private final List<Point> pe = DataRetriever.getData("src/main/resources/gis/gis-data-sample.csv"); //       createUrl("gis-data-sample.csv")         "/home/jhou/workspace/trident-genesis/platform-ui/src/main/resources/gis/gis-data-sample.csv"
+//
+//    {
+//	Collections.sort(pe);
+//    }
 
     private static Group createSimplePath() {
 	final Group g = new Group();
@@ -132,7 +141,7 @@ public class GisViewPanel extends JFXPanel {
     public Scene createScene() {
 	// create web engine and view
 	final WebView webView = new WebView();
-	final WebEngine webEngine = webView.getEngine();
+	webEngine = webView.getEngine();
 
 	webView.setOnScroll(new EventHandler<ScrollEvent>() {
 	    @Override
@@ -147,7 +156,6 @@ public class GisViewPanel extends JFXPanel {
 		}
 	    }
 	});
-
 
 	webView.setOnDragDetected(new EventHandler<MouseEvent>() {
 	    @Override
@@ -205,13 +213,18 @@ public class GisViewPanel extends JFXPanel {
 	    @Override
 	    public void handle(final MouseEvent event) {
 		if (event.getClickCount() == 2) {
+		    final List<Point> pe = new DataRetriever().getData("src/main/resources/gis/gis-data-sample.csv"); //       createUrl("gis-data-sample.csv")         "/home/jhou/workspace/trident-genesis/platform-ui/src/main/resources/gis/gis-data-sample.csv"
+		    Collections.sort(pe);
+		    GisViewPanel.this.points.clear();
+		    // TODO GisViewPanel.this.points.addAll(pe);
+
 		    webEngine.executeScript("document.setCenter(48.93061,24.96296)"); // -34.028249, 151.157507
 		    removeOldAndAddNew(webEngine, zoom(webEngine));
 		}
 	    }
 	});
 
-	webEngine.load(getClass().getResource("googlemap.html").toString());
+	webEngine.load(GisViewPanel.class.getResource("googlemap.html").toString());
         // create map type buttons
         final ToggleGroup mapTypeGroup = new ToggleGroup();
         final ToggleButton road = new ToggleButton("Road");
@@ -305,7 +318,7 @@ public class GisViewPanel extends JFXPanel {
 	    }
 	});
 
-	endSlider = new Slider(0, 1, 0.08);
+	endSlider = new Slider(0, 1, /* 0.08 */ 1.0);
         endSlider.setBlockIncrement(0.001);
 	endSlider.valueProperty().addListener(new ChangeListener<Number>() {
 	    public void changed(final ObservableValue<? extends Number> ov, final Number old_val, final Number new_val) {
@@ -363,8 +376,11 @@ public class GisViewPanel extends JFXPanel {
 	// addLineTo(webEngine, path, -33.890542, 151.274856);
 	// addLineTo(webEngine, path, -33.80010128657071, 151.28747820854187);
 
-	for (int i = 1 + (int)(startSlider.getValue() * pe.size()); i < (int)(endSlider.getValue() * pe.size()); i++) {
-	    addLine(webEngine, pe.get(i-1), pe.get(i), pe.size(), zoom > 15);
+	if (points.size() > 0) {
+	    addPoint(webEngine, points.get(0), points.size());
+	}
+	for (int i = 1 + (int)(startSlider.getValue() * points.size()); i < (int)(endSlider.getValue() * points.size()); i++) {
+	    addLine(webEngine, points.get(i-1), points.get(i), points.size(), zoom > 15);
 	}
 	webViewPanel.getChildren().add(this.path);
     }
@@ -375,7 +391,15 @@ public class GisViewPanel extends JFXPanel {
 	return Color.hsb(120.0 - (120.0 * speed / maxSpeed), 1.0, 1.0); // 0 (green, hue=120) to 80 (red, hue=0) km/hour
     }
 
-    private void addLine(final WebEngine webEngine, final PathElement start, final PathElement end, final int size, final boolean drawSpeedValues) {
+    protected Pair<Double, Double> addPoint(final WebEngine webEngine, final P start, final int size) {
+	final JSObject point = (JSObject) webEngine.executeScript("document.convertPoint(" + start.getLatitude() + ", " + start.getLongitude() + ")");
+	final Double x0 = (Double) point.getMember("x");
+	final Double y0 = (Double) point.getMember("y");
+	return new Pair<Double, Double>(x0, y0);
+    }
+
+    private Pair<Double, Double> addLine(final WebEngine webEngine, final P start, final P end, final int size, final boolean drawSpeedValues) {
+	System.err.println(" =======++++++++++ adding start " + start + " to end " + end);
 	JSObject point = (JSObject) webEngine.executeScript("document.convertPoint(" + start.getLatitude() + ", " + start.getLongitude() + ")");
 	final Double x0 = (Double) point.getMember("x");
 	final Double y0 = (Double) point.getMember("y");
@@ -383,21 +407,22 @@ public class GisViewPanel extends JFXPanel {
 	final Double x = (Double) point.getMember("x");
 	final Double y = (Double) point.getMember("y");
 
-	final Path p = new Path();
-	p.setStrokeWidth(3.0);
+	if (drawLines()) {
+	    final Path p = new Path();
+	    p.setStrokeWidth(3.0);
 
-	p.getElements().add(new MoveTo(x0, y0));
-	p.getElements().add(new LineTo(x, y));
+	    p.getElements().add(new MoveTo(x0, y0));
+	    p.getElements().add(new LineTo(x, y));
 
-	final Stop[] stops2 = new Stop[] { new Stop(0.0, getColor(start.getSpeed())), new Stop(1.0, getColor(end.getSpeed()))};
-	final LinearGradient lg1 = new LinearGradient(x0, y0, x, y, false, CycleMethod.NO_CYCLE, stops2);
-	p.setStroke(lg1);
+	    final Stop[] stops2 = new Stop[] { new Stop(0.0, getColor(start.getSpeed())), new Stop(1.0, getColor(end.getSpeed())) };
+	    final LinearGradient lg1 = new LinearGradient(x0, y0, x, y, false, CycleMethod.NO_CYCLE, stops2);
+	    p.setStroke(lg1);
 
-	this.path.getChildren().add(p);
+	    this.path.getChildren().add(p);
+	}
 
-	// TODO uncomment to get markers
 //	if (end.getSpeed() < 5) {
-//	    // simple displays ImageView the image as is
+//	    // simply displays ImageView the image as is
 //	    final ImageView iv1 = new ImageView(image);
 //	    iv1.setX(x - 8);
 //	    iv1.setY(y - 8);
@@ -413,10 +438,38 @@ public class GisViewPanel extends JFXPanel {
 	    // text.setStrokeWidth(2);
 	    this.path.getChildren().add(text);
 	}
+
+	addPoint(webEngine, end, size);
+
+	return new Pair<Double, Double>(x, y);
+    }
+
+    protected boolean drawLines() {
+	return true;
     }
 
     private int zoom(final WebEngine webEngine) {
 	return (Integer) webEngine.executeScript("document.map.getZoom()");
     }
 
+    public void providePoints(final List<P> points) {
+	Platform.runLater(new Runnable() {
+	    @Override
+	    public void run() {
+		GisViewPanel.this.points.clear();
+		GisViewPanel.this.points.addAll(points);
+
+		// fit all coordinates to the bounds calculated by existing points
+		webEngine.executeScript("document.viewBounds = new google.maps.LatLngBounds()");
+		for (final P point : GisViewPanel.this.points) {
+		    System.err.println("================== Point == " + point);
+		    webEngine.executeScript("document.viewBounds.extend(new google.maps.LatLng(" + point.getLatitude() + "," + point.getLongitude() + "))");
+		}
+		webEngine.executeScript("document.map.fitBounds(document.viewBounds)");
+
+		// actually add a markers
+		removeOldAndAddNew(webEngine, zoom(webEngine));
+	    }
+	});
+    }
 }

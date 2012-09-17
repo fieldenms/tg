@@ -2,12 +2,12 @@ package ua.com.fielden.platform.gis;
 
 import java.util.Date;
 
-public class PathElement implements Comparable<PathElement> {
+public class Point implements Comparable<Point> {
     private final Date timestamp, gpstime;
     private final int speed;
     private final double latitude, longitude;
-    
-    public PathElement(final Date timestamp, final Date gpstime, final int speed, final double latitude, final double longitude) {
+
+    public Point(final Date timestamp, final Date gpstime, final int speed, final double latitude, final double longitude) {
 	this.timestamp = timestamp;
 	this.gpstime = gpstime;
 	this.speed = speed;
@@ -36,8 +36,13 @@ public class PathElement implements Comparable<PathElement> {
     }
 
     @Override
-    public int compareTo(final PathElement o) {
+    public int compareTo(final Point o) {
 	// return new Long(getTimestamp().getTime()).compareTo(new Long(o.getTimestamp().getTime()));
 	return new Long(getGpstime().getTime()).compareTo(new Long(o.getGpstime().getTime()));
+    }
+
+    @Override
+    public String toString() {
+	return "Point [timestamp=" + timestamp + ", gpstime=" + gpstime + ", speed=" + speed + ", latitude=" + latitude + ", longitude=" + longitude + "]";
     }
 }

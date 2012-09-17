@@ -53,7 +53,7 @@ public class WebMap extends Application {
     private Slider startSlider, endSlider;
     // load the image
     // TODO uncomment -> private static Image image = new Image("src/main/resources/marker.png", true); // /marker.png
-    private final List<PathElement> pe = DataRetriever.getData("src/main/resources/gis/gis-data-sample.csv");
+    private final List<Point> pe = new DataRetriever().getData("src/main/resources/gis/gis-data-sample.csv");
 
     {
 	Collections.sort(pe);
@@ -350,7 +350,7 @@ public class WebMap extends Application {
 	return Color.hsb(120.0 - (120.0 * speed / maxSpeed), 1.0, 1.0); // 0 (green, hue=120) to 80 (red, hue=0) km/hour
     }
 
-    private void addLine(final WebEngine webEngine, final PathElement start, final PathElement end, final int size, final boolean drawSpeedValues) {
+    private void addLine(final WebEngine webEngine, final Point start, final Point end, final int size, final boolean drawSpeedValues) {
 	JSObject point = (JSObject) webEngine.executeScript("document.convertPoint(" + start.getLatitude() + ", " + start.getLongitude() + ")");
 	final Double x0 = (Double) point.getMember("x");
 	final Double y0 = (Double) point.getMember("y");

@@ -370,7 +370,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      *
      * @return
      */
-    final int getPageSize() {
+    protected int getPageSize() {
 	double pageSize = egiPanel.getSize().getHeight() / EgiPanel.ROW_HEIGHT;
 	if (getOwner().getOwner().getCriteriaPanel() != null) {
 	    pageSize += getOwner().getOwner().getCriteriaPanel().getSize().getHeight() / EgiPanel.ROW_HEIGHT;

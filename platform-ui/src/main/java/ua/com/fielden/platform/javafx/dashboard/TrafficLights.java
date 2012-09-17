@@ -85,12 +85,13 @@ public class TrafficLights extends Group {
 	    afterChangeActions.add(action);
 	}
 
-	public void setCount(final Integer count) {
+	public TrafficLightModel setCount(final Integer count) {
 	    this.count = count;
 
 	    for (final IAction afterChange : afterChangeActions) {
 		afterChange.action();
 	    }
+	    return this;
 	}
 
 	public Integer getCount() {
@@ -98,11 +99,15 @@ public class TrafficLights extends Group {
 	}
     }
 
-    private static class TrafficLight extends Circle {
+    public static class TrafficLight extends Circle {
 	private final TrafficLightModel model;
 	private final Color lightingColor;
 	private final IAction action;
 	private final Tooltip tooltip;
+
+	protected Tooltip tooltip() {
+	    return tooltip;
+	}
 
 	public TrafficLight(final TrafficLightModel model, final double radius, final Color lightingColor, final IAction action) {
 	    super(0, 0, radius);
@@ -159,6 +164,10 @@ public class TrafficLights extends Group {
 	public void updateColor() {
 	    setFill(new RadialGradient(225, 0.5, 0, 0, getRadius(), false, CycleMethod.NO_CYCLE, new Stop(0.0, Color.WHITE), new Stop(1.0, realColor())));
 
+	    updateTooltip();
+	}
+
+	protected void updateTooltip() {
 	    if (model.getCount() > 0) {
 		tooltip.setText(model.getCount() + " items");
 		Tooltip.install(this, tooltip);

@@ -11,7 +11,7 @@ import java.util.StringTokenizer;
 
 public class DataRetriever {
 
-    public static List<PathElement> getData(final String strFile) {
+    public List<Point> getData(final String strFile) {
 	try {
 	    //create BufferedReader to read csv file
 	    final BufferedReader br = new BufferedReader(new FileReader(strFile));
@@ -19,7 +19,7 @@ public class DataRetriever {
 	    StringTokenizer st = null;
 	    int lineNumber = 0;
 
-	    final List<PathElement> list = new ArrayList<PathElement>();
+	    final List<Point> list = new ArrayList<Point>();
 
 	    //read comma separated file line by line
 	    while ((strLine = br.readLine()) != null) {
@@ -39,7 +39,7 @@ public class DataRetriever {
 		    final Date d2 = df.parse(st.nextToken());
 		    final int speed = Integer.valueOf(st.nextToken());
 		    final double latitude = Double.valueOf(st.nextToken()), longitude = Double.valueOf(st.nextToken());;
-		    final PathElement pe = new PathElement(d1, d2, speed, latitude, longitude);
+		    final Point pe = new Point(d1, d2, speed, latitude, longitude);
 		    list.add(pe);
 		}
 	    }
