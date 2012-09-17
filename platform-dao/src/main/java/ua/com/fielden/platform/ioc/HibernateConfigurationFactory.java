@@ -9,6 +9,7 @@ import org.hibernate.cfg.Configuration;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.generation.DbVersion;
 
 import com.google.inject.Guice;
 
@@ -43,8 +44,20 @@ public class HibernateConfigurationFactory {
 
     public HibernateConfigurationFactory(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) throws Exception {
 	this.props = props;
-	domainMetadata = new DomainMetadata(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()), applicationEntityTypes);
+	domainMetadata = new DomainMetadata(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()), applicationEntityTypes, determineDbVersion(props));
 	cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
+    }
+
+    private DbVersion determineDbVersion(final Properties props) {
+	final String dialect = props.getProperty("hibernate.dialect");
+	if (dialect.equals("org.hibernate.dialect.H2Dialect")) {
+	    return DbVersion.H2;
+	} else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
+	    return DbVersion.POSTGRESQL;
+	} else if (dialect.equals("org.hibernate.dialect.SQLServerDialect")) {
+	    return DbVersion.MSSQL;
+	}
+	throw new IllegalStateException("Could not determine DB version based on the provided Hibernate dialect \"" + dialect + "\".");
     }
 
     public Configuration build() {

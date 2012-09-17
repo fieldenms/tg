@@ -96,13 +96,13 @@ public class BaseEntQueryTCase {
 	return TypeFactory.basic(name);
     }
 
-    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes);
+    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes, DbVersion.H2);
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2, DOMAIN_METADATA_ANALYSER, null, null);
+    private static final EntQueryGenerator qb = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null);
 
-    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DbVersion.H2, DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
+    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSourceQuery(qryModel);

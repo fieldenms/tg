@@ -18,7 +18,6 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
@@ -31,15 +30,13 @@ public class EntityFetcher {
     private Session session;
     private EntityFactory entityFactory;
     private DomainMetadata domainMetadata;
-    private DbVersion dbVersion;
     private final IFilter filter;
     private final String username;
 
-    public EntityFetcher(final Session session, final EntityFactory entityFactory, final DomainMetadata domainMetadata, final DbVersion dbVersion, final IFilter filter, final String username) {
+    public EntityFetcher(final Session session, final EntityFactory entityFactory, final DomainMetadata domainMetadata, final IFilter filter, final String username) {
 	this.session = session;
 	this.entityFactory = entityFactory;
 	this.domainMetadata = domainMetadata;
-	this.dbVersion = dbVersion;
 	this.filter = filter;
 	this.username = username;
     }
@@ -57,8 +54,8 @@ public class EntityFetcher {
 	return getEntitiesOnPage(queryModel, null, null);
     }
 
-    private <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DbVersion dbVersion, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, domainMetadataAnalyser, filter, username);
+    private <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
+	final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username);
 	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem);
 	final String sql = entQuery.sql();
 	return new QueryModelResult<T>(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
@@ -75,7 +72,7 @@ public class EntityFetcher {
 
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainers(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(getDomainMetadata());
-	final QueryModelResult<E> modelResult = getModelResult(queryModel, getDbVersion(), domainMetadataAnalyser, getFilter(), getUsername());
+	final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser, getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetchAll(modelResult.getResultType());
 	final FetchModel<E> entFetch = fetchModel == null ? null : new FetchModel<E>(fetchModel, domainMetadataAnalyser);
@@ -166,10 +163,6 @@ public class EntityFetcher {
 
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
-    }
-
-    public DbVersion getDbVersion() {
-        return dbVersion;
     }
 
     public IFilter getFilter() {

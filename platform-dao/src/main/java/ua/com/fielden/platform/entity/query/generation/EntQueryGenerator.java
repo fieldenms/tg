@@ -24,8 +24,8 @@ public class EntQueryGenerator {
     private final String username;
 
 
-    public EntQueryGenerator(final DbVersion dbVersion, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-	this.dbVersion = dbVersion;
+    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
+	this.dbVersion = domainMetadataAnalyser.getDomainMetadata().getDbVersion();
 	this.domainMetadataAnalyser = domainMetadataAnalyser;
 	this.filter = filter;
 	this.username = username;

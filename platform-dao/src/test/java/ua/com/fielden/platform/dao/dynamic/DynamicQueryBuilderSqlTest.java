@@ -1,10 +1,5 @@
 package ua.com.fielden.platform.dao.dynamic;
 
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.createQuery;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -30,6 +25,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
+import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
@@ -46,6 +42,11 @@ import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
 
 import com.google.inject.Injector;
+
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.createQuery;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -117,7 +118,7 @@ public class DynamicQueryBuilderSqlTest {
 	domainTypes.add(MasterEntity.class);
 	domainTypes.add(SlaveEntity.class);
 	domainTypes.add(EvenSlaverEntity.class);
-	hibConf.addXML(new HibernateMappingsGenerator().generateMappings(new DomainMetadata(hibTypeMap, null, domainTypes).getEntityMetadatas()));
+	hibConf.addXML(new HibernateMappingsGenerator().generateMappings(new DomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2).getEntityMetadatas()));
 	final List<String> propertyNames = Arrays.asList(new String[] { //
 		"integerProp", //
 		"doubleProp", //

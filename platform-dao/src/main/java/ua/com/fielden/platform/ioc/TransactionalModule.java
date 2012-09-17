@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.ioc;
 
-import static com.google.inject.matcher.Matchers.annotatedWith;
-import static com.google.inject.matcher.Matchers.any;
-import static com.google.inject.matcher.Matchers.subclassesOf;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,10 +16,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Proxy;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
+import static com.google.inject.matcher.Matchers.annotatedWith;
+import static com.google.inject.matcher.Matchers.any;
+import static com.google.inject.matcher.Matchers.subclassesOf;
 
 /**
  * Guice injector module for platform-wide Hibernate related injections such as transaction support and domain level validation configurations.
@@ -39,7 +37,6 @@ public abstract class TransactionalModule extends EntityModule {
     protected final ProxyInterceptor interceptor;
     private final HibernateUtil hibernateUtil;
     private final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes;
-    private final DbVersion dbVersion;
     /**
      * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainMetadata}. All descending classes needs to provide those two
      * parameters.
@@ -57,19 +54,6 @@ public abstract class TransactionalModule extends EntityModule {
 	this.sessionFactory = hibernateUtil.getSessionFactory();
 	this.domainMetadata = hcf.getDomainMetadata();
 	this.applicationEntityTypes = applicationEntityTypes;
-	this.dbVersion = determineDbVersion(hibernateConfig);
-    }
-
-    private DbVersion determineDbVersion(final Configuration hibernateConfig) {
-	final String dialect = hibernateConfig.getProperty("hibernate.dialect");
-	if (dialect.equals("org.hibernate.dialect.H2Dialect")) {
-	    return DbVersion.H2;
-	} else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
-	    return DbVersion.POSTGRESQL;
-	} else if (dialect.equals("org.hibernate.dialect.SQLServerDialect")) {
-	    return DbVersion.MSSQL;
-	}
-	throw new IllegalStateException("Could not determine DB version based on the provided Hibernate dialect \"" + dialect + "\".");
     }
 
     public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
@@ -79,7 +63,6 @@ public abstract class TransactionalModule extends EntityModule {
 
 	this.sessionFactory = sessionFactory;
 	this.domainMetadata = domainMetadata;
-	this.dbVersion = null;
     }
 
     @Override
@@ -92,13 +75,6 @@ public abstract class TransactionalModule extends EntityModule {
 	// hibernate util
 	if (hibernateUtil != null) {
 	    bind(HibernateUtil.class).toInstance(hibernateUtil);
-	}
-
-	// hibernate util
-	if (dbVersion != null) {
-	    bind(DbVersion.class).toInstance(dbVersion);
-	} else {
-	    bind(DbVersion.class).toInstance(DbVersion.H2);
 	}
 
 	// order of intercepter binding is extremely important as it defines the order of their execution if applied to the same method
