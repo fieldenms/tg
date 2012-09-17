@@ -1164,11 +1164,11 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Mercedes", vehicleMakeDao.getAllEntities(from(queryModel).with("makeParam", "MERC").model()).get(0).getDesc());
 	assertEquals("Audi", vehicleMakeDao.getAllEntities(from(queryModel).with("makeParam", "AUDI").model()).get(0).getDesc());
 
-	try {
-	    vehicleMakeDao.getAllEntities(from(queryModel).with("wrongParam", "AUDI").model());
-	    fail("Setting param value with wrong param name should not lead to exception");
-	} catch (final RuntimeException e) {
-	}
+//	try {
+//	    vehicleMakeDao.getAllEntities(from(queryModel).with("wrongParam", "AUDI").model());
+//	    fail("Setting param value with wrong param name should not lead to exception");
+//	} catch (final RuntimeException e) {
+//	}
     }
 
     @Test

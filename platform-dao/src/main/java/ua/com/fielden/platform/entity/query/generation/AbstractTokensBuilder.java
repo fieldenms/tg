@@ -248,7 +248,8 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	if (getParamValues().containsKey(paramName)) {
 	    return preprocessValue(getParamValues().get(paramName));
 	} else {
-	    throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
+	    return null; //TODO think through
+	    //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
 	}
     }
 
