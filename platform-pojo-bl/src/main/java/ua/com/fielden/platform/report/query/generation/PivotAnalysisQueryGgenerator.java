@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
+import ua.com.fielden.platform.swing.review.DynamicParamBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -69,9 +71,13 @@ public class PivotAnalysisQueryGgenerator<T extends AbstractEntity<?>> implement
 	    }
 	}
 
+	//Creating the parameters map.
+	final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(root, managedType, cdtme.getFirstTick());
+
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(queryModel)
 	.with(DynamicOrderingBuilder.createOrderingModel(managedType, orderingProperties))//
-	.with(DynamicFetchBuilder.createFetchModel(managedType, new HashSet<String>(yieldProperties))).model();
+	.with(DynamicFetchBuilder.createFetchModel(managedType, new HashSet<String>(yieldProperties)))//
+	.with(DynamicParamBuilder.buildParametersMap(managedType, paramMap)).model();
 
 	return resultQuery;
     }
