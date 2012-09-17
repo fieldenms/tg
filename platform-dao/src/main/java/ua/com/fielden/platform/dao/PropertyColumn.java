@@ -18,6 +18,10 @@ public class PropertyColumn {
 	this(name, null, null, null);
     }
 
+    public String ddl() {
+	return name.toUpperCase() + " INT";
+    }
+
     public String getName() {
         return name;
     }

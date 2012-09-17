@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.dao;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 
 import org.apache.commons.lang.StringUtils;
@@ -46,6 +48,20 @@ public class EntityMetadata<ET extends AbstractEntity<?>> {
 
     public boolean isPersisted() {
 	return !StringUtils.isEmpty(table);
+    }
+
+    public String ddl() {
+	final StringBuffer sb = new StringBuffer();
+	sb.append("CREATE TABLE " + table + "(\n");
+	for (final Iterator<Map.Entry<String, PropertyMetadata>> iterator = props.entrySet().iterator(); iterator.hasNext();) {
+	    final Map.Entry<String, PropertyMetadata> entry = iterator.next();
+	    if (entry.getValue().affectsMapping()) {
+		sb.append(entry.getValue().ddl() + (iterator.hasNext() ? ",\n" : ""));
+	    }
+	}
+	sb.append(")");
+
+	return sb.toString();
     }
 
     public boolean isSynthetic() {
