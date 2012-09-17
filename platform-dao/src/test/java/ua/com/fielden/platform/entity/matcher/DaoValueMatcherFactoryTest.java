@@ -54,14 +54,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
 	List<TgWagonClass> result = matcher.findMatches("W%");
 	assertEquals("Incorrect number of matching values.", 2, result.size());
 	assertEquals("Incorrect wagon class.", "WA1", result.get(0).getKey());
-
-	assertEquals("Incorrect compatibles for wagon class.", 1, result.get(0).getCompatibles().size());
-
-//	try {
-//	    assertEquals("Incorrect compatibles for wagon class.", 1, result.get(0).getCompatibles().size());
-//	    fail("Suppose to fail -- values are fetched without a query model");
-//	} catch (final Exception e) {
-//	}
+	assertEquals("Incorrect compatibles for wagon class.", 0, result.get(0).getCompatibles().size());
 
 	result = matcher.findMatchesWithModel("W%");
 	assertEquals("Incorrect number of matching values.", 2, result.size());

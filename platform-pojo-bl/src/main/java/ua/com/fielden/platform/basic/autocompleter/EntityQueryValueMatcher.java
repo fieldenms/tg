@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -28,14 +29,20 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
     private final EntityResultQueryModel<T> defaultModel;
     private final OrderingModel defaultOrdering;
     private fetch<T> fetchModel;
-
+    private final fetch<T> defaultFetchModel;
     private final String propertyParamName;
     private final String propertyName;
 
     private int pageSize = 10;
 
+
+    private fetch<T> produceDefaultFetchModel(final Class<T> entityType) {
+	return fetchOnly(dao.getEntityType()).with("key").with("desc");
+    }
+
     public EntityQueryValueMatcher(final IEntityDao<T> dao, final String propertyName) {
 	this.dao = dao;
+	this.defaultFetchModel = produceDefaultFetchModel(dao.getEntityType());
 	this.propertyParamName = "paramNameFor" + propertyName;
 	this.propertyName = propertyName;
 	this.defaultModel = select(dao.getEntityType()).where().prop(propertyName).like().param(propertyParamName).model();
@@ -44,6 +51,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 
     public EntityQueryValueMatcher(final IEntityDao<T> dao, final String propertyName, final String orderBy) {
 	this.dao = dao;
+	this.defaultFetchModel = produceDefaultFetchModel(dao.getEntityType());
 	this.propertyParamName = "paramNameFor" + propertyName.replaceAll("\\.", "_");
 	this.propertyName = propertyName;
 	this.defaultModel = select(dao.getEntityType()).where().prop(propertyName).like().param(propertyParamName).model();
@@ -59,6 +67,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
      */
     public EntityQueryValueMatcher(final IEntityDao<T> dao, final ICompoundCondition0<T> condition, final String propertyName) {
 	this.dao = dao;
+	this.defaultFetchModel = produceDefaultFetchModel(dao.getEntityType());
 	this.propertyParamName = "paramNameFor" + propertyName.replaceAll("\\.", "_");
 	this.propertyName = propertyName;
 	this.defaultModel = condition.and().prop(propertyName).like().param(propertyParamName).model();
@@ -67,7 +76,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 
     @Override
     public List<T> findMatches(final String value) {
-	return dao.getPage(from(defaultModel).with(defaultOrdering).with(propertyParamName, value).model(), 0, pageSize).data();
+	return dao.getPage(from(defaultModel).with(defaultOrdering).with(propertyParamName, value).with(defaultFetchModel).model(), 0, pageSize).data();
     }
 
     @Override
