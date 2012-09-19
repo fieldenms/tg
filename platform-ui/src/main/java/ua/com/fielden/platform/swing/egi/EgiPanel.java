@@ -51,6 +51,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
+import ua.com.fielden.platform.swing.egi.coloring.IColouringScheme;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
 import ua.com.fielden.platform.swing.review.OrderingArrow;
@@ -79,10 +80,14 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
     private final Map<String, JTextField> totalEditors = new HashMap<String, JTextField>();
 
     public EgiPanel(final Class<T> rootType, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+	this(rootType, cdtme, null);
+    }
+
+    public EgiPanel(final Class<T> rootType, final ICentreDomainTreeManagerAndEnhancer cdtme, final IColouringScheme<T> egiColouringScheme) {
 	super();
 	final Pair<List<Pair<String, Integer>>, Map<String, List<String>>> gridDataModel = createGridDataModel(rootType, cdtme);
 	final Class<?> managedType = cdtme.getEnhancer().getManagedType(rootType);
-	this.egi = createEgi(createGridModel(managedType, gridDataModel.getKey()));
+	this.egi = createEgi(egiColouringScheme == null ? createGridModel(managedType, gridDataModel.getKey()) : createGridModelWithColouringScheme(managedType, gridDataModel.getKey(), egiColouringScheme));
 
 	configureEgiWithOrdering(egi, rootType, cdtme);
 
@@ -102,6 +107,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	    add(egiScrollPane = new JScrollPane(egi), "grow");
 	}
     }
+
 
     /**
      * Returns the {@link EntityGridInspector} associated with this panel.
@@ -430,6 +436,24 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	    tableModelBuilder.addReadonly(property.getKey(), property.getValue());
 	}
 	return tableModelBuilder.build(new ArrayList());
+    }
+
+    /**
+     * Creates PropertyTableModel for the specified {@link ICentreDomainTreeManagerAndEnhancer} instance.
+     * @param rootType
+     *
+     * @param properties
+     * @return
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private PropertyTableModel<?> createGridModelWithColouringScheme(final Class<?> managedType, final List<Pair<String, Integer>> properties, final IColouringScheme egiColouringScheme) {
+	final PropertyTableModelBuilder<?> tableModelBuilder = new PropertyTableModelBuilder(managedType);
+	for(final Pair<String, Integer> property : properties){
+	    tableModelBuilder.addReadonly(property.getKey(), property.getValue());
+	}
+	return tableModelBuilder.//
+		setRowColoringScheme(egiColouringScheme).//
+		build(new ArrayList());
     }
 
     /**

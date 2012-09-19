@@ -17,7 +17,6 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
@@ -66,8 +65,12 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     private WebEngine webEngine;
     private final List<P> points;
 
-    protected Group path() {
+    public Group path() {
 	return path;
+    }
+
+    public List<P> points() {
+	return points;
     }
 
     /**s
@@ -332,9 +335,10 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
         toolBar.getItems().addAll(
                 road, satellite, hybrid, terrain,
                 createSpacer(),
-                google, startSlider, endSlider, //yahoo, bing,
-                createSpacer(),
-                new Label("Location:"), searchBox, zoomIn, zoomOut);
+                // google, startSlider, endSlider, //yahoo, bing,
+                // createSpacer(),
+                //new Label("Location:"), searchBox,
+                zoomIn, zoomOut);
         // create root
         root = new BorderPane();
         root.getStyleClass().add("map");
@@ -364,7 +368,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
         Application.launch(args);
     }
 
-    private void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
+    protected void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
 	if (path != null) {
 	    webViewPanel.getChildren().remove(path);
 	}

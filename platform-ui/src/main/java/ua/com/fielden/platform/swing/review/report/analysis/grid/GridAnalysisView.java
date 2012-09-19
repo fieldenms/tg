@@ -59,7 +59,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final GridConfigurationView<T, CDTME> owner) {
 	super(model, owner);
-	this.egiPanel = new EgiPanel<T>(getModel().getCriteria().getEntityClass(), getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer());
+	this.egiPanel = createEgiPanel();
 	this.toolBar = createToolBar();
 	if (getMasterManager() != null) {
 	    OpenMasterClickAction.enhanceWithClickAction(egiPanel.getEgi().getActualModel().getPropertyColumnMappings(),//
@@ -82,6 +82,10 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	model.setAnalysisView(this);
 
 	layoutView();
+    }
+
+    protected EgiPanel<T> createEgiPanel() {
+	return new EgiPanel<T>(getModel().getCriteria().getEntityClass(), getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer());
     }
 
     public final JToolBar getToolBar() {

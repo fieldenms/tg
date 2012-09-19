@@ -104,6 +104,23 @@ public class TrafficLights extends Group {
 	private final Color lightingColor;
 	private final IAction action;
 	private final Tooltip tooltip;
+	private boolean isBlinking = false;
+
+	public void startBlinking() {
+	    if (!isBlinking) {
+		isBlinking = true;
+		setRadius(getRadius() + 2);
+		updateColor();
+	    }
+	}
+
+	public void stopBlinking() {
+	    if (isBlinking) {
+		isBlinking = false;
+		setRadius(getRadius() - 2);
+		updateColor();
+	    }
+	}
 
 	protected Tooltip tooltip() {
 	    return tooltip;
