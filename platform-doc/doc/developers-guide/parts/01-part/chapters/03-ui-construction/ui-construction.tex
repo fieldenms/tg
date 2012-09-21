@@ -80,7 +80,7 @@ JComponent actualComponent = myPropertyEditor.getEditor();
   \subsubsection{Model}
   
   The \textbf{model} is the central component of the master structure. 
-  All other components revolve around it.
+  All other components revolve around it.  
   Here we specifically discuss the model base class \texttt{UmMasterWithCrudAndUpdater}.
   
   The following list specifies the major pieces required for model construction.
@@ -122,6 +122,8 @@ JComponent actualComponent = myPropertyEditor.getEditor();
   Property binder depends on \emph{value matcher factory} (\texttt{IValueMatcherFactory}) to provide value matcher for autocompleters, \emph{master manager} (\texttt{IMasterDomainTreeManager}) to persist user-defined autocompleter configuration and \emph{criteria generator} (\texttt{ICriteriaGenerator}) to handle  user-defined autocompleter configuration queries.
   All these dependencies have default IoC bindings and can be easily obtained when creating property binders.
   
+  It is important to understand that models should not contain any business logic.
+  Basically, the main responsibility of any model is to serve as a glue that binds together UI with the business logic implemented as part of entity companion object.
   The model provides actions (as in \texttt{javax.swing.Action} implementation) \texttt{newAction}, \texttt{editAction}, \texttt{saveAction}, \texttt{cancelAction}, \texttt{deleteAction} and \texttt{refreshAction} to support CRUD operations.
   Respective getters should be used when composing an action panel with buttons in a corresponding view.
   Custom action can be provided by developers.
@@ -182,6 +184,55 @@ protected void notifyActionStageChange(final ActionStage actionState) {
   From the developer perspective, the managed entity is fully controlled from within the model and there is no way to set it into the model except at the time of model creation.  
   
   \subsubsection{View}
+  
+  The \emph{view} concept has a single responsibility -- visualisation of entity state and provide access to actions applicable to that entity.
+  Every view is associated with a model, which is passed into view's class constructor.
+  Views should have neither UI nor business logic in them.
+  All UI logic should be localised in a corresponding model and the view simply taps into it.
+  
+  In its simplest form, which is the case in this context, views are panels responsible only for layouting property editors and buttons linked to appropriated actions.
+  Both property editors and actions can be obtained from the model.
+  
+  It is recommended to subclass \texttt{BaseNotifPanel<UI Model Type>} when creating views.
+  This class provides a number of convenient method for layouting UI controls based on MigLayout manager, which is the recommended and expected layout manager to be used for building view\cite{MigLayout}.
+
+  
+    \begin{code}{View example.}{\label{lst:view_example}}{codebgcolor}
+    \begin{lstlisting}
+public class AView extends BaseNotifPanel<AModel> {    
+
+    public AView(final AModel model) {
+	super(model.toString(), model);
+	final JPanel componentsPanel = new JPanel(new MigLayout("insets 0", 
+	     "[:50:][grow,fill,:250:]", 
+	     "[c]"));
+	final Map<String, IPropertyEditor> editors = model.getEditors();
+
+	addAndWrap(componentsPanel, editors, "key");
+	addAndWrap(componentsPanel, editors, "desc");
+
+	final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 0", 
+	     "[fill,:100:][fill,:100:]20[fill,:100:][fill,:100:]30:push[fill,:100:]", 
+	     "[c]"));
+	actionPanel.add(new JButton(model.getNewAction()));
+	actionPanel.add(new JButton(model.getEditAction()));
+	actionPanel.add(new JButton(model.getSaveAction()));
+	actionPanel.add(new JButton(model.getCancelAction()));
+	actionPanel.add(new JButton(model.getRefreshAction()));
+
+	final JPanel mainPanel = new JPanel(new MigLayout("", 
+	     "[grow, fill]", 
+	     "[fill]20[]"));
+	mainPanel.add(componentsPanel, "wrap");
+	mainPanel.add(actionPanel);
+	add(mainPanel);
+	model.setView(this);
+    }
+
+}
+    \end{lstlisting}
+  \end{code}
+  
   
   \subsubsection{Frame}
   
