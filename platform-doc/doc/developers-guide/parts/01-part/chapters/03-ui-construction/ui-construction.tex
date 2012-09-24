@@ -191,11 +191,12 @@ protected void notifyActionStageChange(final ActionStage actionState) {
   All UI logic should be localised in a corresponding model and the view simply taps into it.
   
   In its simplest form, which is the case in this context, views are panels responsible only for layouting property editors and buttons linked to appropriated actions.
-  Both property editors and actions can be obtained from the model.
-  
+  Both property editors and actions can be obtained from the model.  
   It is recommended to subclass \texttt{BaseNotifPanel<UI Model Type>} when creating views.
-  This class provides a number of convenient method for layouting UI controls based on MigLayout manager, which is the recommended and expected layout manager to be used for building view\cite{MigLayout}.
-
+  This base class provides convenient features, including a number of methods for layouting UI controls based on MigLayout manager.
+  MigLayout is the recommended and expected layout manager to be used for building view~\cite{MigLayout}.
+  Listing~\ref{lst:view_example} provides a view example.
+  Let's discuss it in details.  
   
     \begin{code}{View example.}{\label{lst:view_example}}{codebgcolor}
     \begin{lstlisting}
@@ -228,11 +229,81 @@ public class AView extends BaseNotifPanel<AModel> {
 	add(mainPanel);
 	model.setView(this);
     }
-
 }
     \end{lstlisting}
   \end{code}
   
+  As can be observed the view construction (i.e. creation and layouting of UI controls) happens as part of its class constructor.
+  This requires for a corresponding model to be initialised in a non-lazy manner.
+  Otherwise, property editors would not be created and view construction would fail.
+  Line 4 invokes a super constructor that accepts a title (provided as model's string representation) and a model.
+  Lines~5--7 create a panel that is used as a container for property editors.
+  Its layout settings specify that this panel should not have any insets (e.i. a gap around it when used as part of another container), it should have two columns -- one for label with a preferred width of 50 logical units\footnote{Logical units take into account DPI, but in the most trivial case (i.e. standard DPI of 96 dots per inch) they equate to the numbers of pixels.} width (\texttt{[:50:]}), and another for a corresponding property editor with a preferred width of 250 units and settings to stretch the control in order to fill the actual width of the column (\texttt{[grow,fill,:250:]}).
+  Row specification simply states that all controls in the row should be centred~(\texttt{[c]}).
+  
+  Line~8 obtains a map of property editors.
+  Then two editors -- for property \texttt{key} and \texttt{desc} -- are added to the panel using method \texttt{addAndWrap} on lines~10--11.
+  This method adds property editor, associated with the provided property name in map \texttt{editors}, to container \texttt{componentsPanel} and inserts the \emph{wrap} keyword to ensure that the next property is added to the next row beneath.
+  As mentioned before, every property editor consists of label and UI control.
+  Thus, the label goes into the first column and the UI control goes into the second column of the current row.
+  
+  Lines~13--20 construct container \texttt{actionPanel} to hold buttons for CRUD actions.
+  Please note how buttons as created from respective actions provided by the model.
+  Both containers are placed onto the third container \texttt{mainPanel} that combines them in a single column layout (\texttt{[grow, fill]}) with two rows separated by 20 units (lines~22--17).
+  The top row grows and fills its space with content, while the bottom row takes the size of its content and sticks to the bottom of container (\texttt{[fill]20[]}).
+  The main container is added to the view on line~28.
+  
+  It is important to mention line line~29 -- here the model gets associated with the view.
+  This might be necessary in order to implement some logic as part of the model that requires access to the view and its elements.
+  
+  
+  Figure~\ref{img:ch01:03:simple-master} depicts how a simple master for entity Workshop would look like if the listed construction logic is used.  
+  
+  %
+  \begin{image}{Simple View.}{\label{img:ch01:03:simple-master}}
+    \begin{tikzpicture}[remember picture, >=latex', note/.style={rectangle callout, rounded corners = 1pt, fill=annotationbgcolor, drop shadow}]
+    \pgftext{%
+        \includegraphics[width=0.65\textwidth]{parts/01-part/chapters/03-ui-construction/images/01-simple-master.png}
+    }%
+
+    \node [overlay, note=annotationbgcolor, callout absolute pointer={(4,0.8)}] at (7,0.8) 
+    {
+      \begin{minipage}{3cm}
+       \tiny
+       \textbf{Notification Panel}\newline
+       An area where error and warning messages appear in a non-intrusive way.       
+      \end{minipage}
+    };
+    
+    \node [overlay, note=annotationbgcolor, callout absolute pointer={(4,-0.7)}] at (7,-0.7) 
+    {
+      \begin{minipage}{3cm}
+       \tiny
+       \textbf{Content Panel or Main Panel}\newline
+       An area where UI controls such as property editors and buttons are placed.
+      \end{minipage}
+    };    
+    
+    \node [overlay, note=annotationbgcolor, callout absolute pointer={(-4,0)}] at (-7,0.5) 
+    {
+      \begin{minipage}{3cm}
+       \tiny
+       \textbf{Components Panel}\newline
+       A container where property editors are added.
+      \end{minipage}
+    };
+    
+    \node [overlay, note=annotationbgcolor, callout absolute pointer={(-4,-1.0)}] at (-7,-0.5) 
+    {
+      \begin{minipage}{3cm}
+       \tiny
+       \textbf{Action Panel}\newline
+       A container for CRUD and custom actions.
+      \end{minipage}
+    };    
+    \end{tikzpicture}  
+    
+  \end{image}
   
   \subsubsection{Frame}
   
