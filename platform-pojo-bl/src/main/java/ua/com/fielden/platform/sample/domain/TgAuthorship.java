@@ -13,40 +13,40 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
-@KeyTitle("Author")
+@KeyTitle("Authorship")
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
-@DefaultController(ITgAuthor.class)
-public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
+@DefaultController(ITgAuthorship.class)
+public class TgAuthorship extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo @Title("Name")
+    @IsProperty @MapTo @Title("Author")
     @CompositeKeyMember(1)
-    private TgPersonName name;
+    private TgAuthor author;
 
-    @IsProperty @MapTo @Title("Surname")
+    @IsProperty @MapTo @Title("Book title")
     @CompositeKeyMember(2)
-    private String surname;
+    private String title;
 
 
-    public TgPersonName getName() {
-        return name;
+    public TgAuthor getAuthor() {
+        return author;
     }
 
-    public String getSurname() {
-        return surname;
+    public String getTitle() {
+        return title;
     }
 
     @Observable
-    @EntityExists(TgPersonName.class)
-    public TgAuthor setName(final TgPersonName name) {
-        this.name = name;
+    @EntityExists(TgAuthor.class)
+    public TgAuthorship setAuthor(final TgAuthor author) {
+        this.author = author;
         return this;
     }
 
     @Observable
-    public TgAuthor setSurname(final String surname) {
-        this.surname = surname;
+    public TgAuthorship setTitle(final String title) {
+        this.title = title;
         return this;
     }
 }
