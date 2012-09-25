@@ -183,6 +183,79 @@ protected void notifyActionStageChange(final ActionStage actionState) {
   It can be obtained by calling method \texttt{getManagedEntity()}.
   From the developer perspective, the managed entity is fully controlled from within the model and there is no way to set it into the model except at the time of model creation.  
   
+  \paragraph{Model Example}
+  
+  In order to provide a complete example, let's consider our Rail domain.
+  One of the important business entities in this domain is \emph{Workshop}.
+  This entity has a companion object \emph{IWorkshop}.
+  At this stage it is not important what properties entity object Workshop has, but we can assume that it has at least properties \texttt{key} and \texttt{desc}.
+  
+  One possible way to implement workshop UI model is presented in listing~\ref{lst:workshop-ui-model}.
+  The provided callouts describe each section on the model.
+  
+  
+  \begin{code}{Workshop UI model.}{\label{lst:workshop-ui-model}}{codebgcolor}
+    \begin{lstlisting}
+public class WorkshopMasterModel 
+    extends UmMasterWithCrudAndUpdater<Workshop, IWorkshop> {%\tikzref{lst_workshop-ui-model-1}{-2.5cm}{0.2cm}%
+
+    private final static fetch<Workshop> qm = fetchAll(Workshop.class);%\tikzref{lst_workshop-ui-model-2}{-0.5cm}{0.2cm}%
+    
+    public WorkshopMasterModel(//
+    	final IEntityProducer<Workshop> entityProducer,//
+    	final IEntityMasterCache cache,//
+    	final Workshop entity,//
+    	final IWorkshop controller,//
+    	final IValueMatcherFactory valueMatcherFactory,//%\tikzref{lst_workshop-ui-model-3}{0.1cm}{0.2cm}%
+    	final IUmViewOwner owner,//
+    	final FrameTitleUpdater titleUpdater,//
+    	final IMasterDomainTreeManager masterManager,//
+    	final ICriteriaGenerator criteriaGenerator) {
+        super(entityProducer, cache, entity, controller, //%\tikzref{lst_workshop-ui-model-4}{1.2cm}{-0.1cm}%
+              MasterPropertyBinder.<Workshop> createPropertyBinderWithLocatorSupport(//
+     			valueMatcherFactory, //
+     			masterManager, //
+     			criteriaGenerator),//
+     	     qm, titleUpdater, owner, false);%\tikzref{lst_workshop-ui-model-5}{0.2cm}{0.2cm}%
+        setState(UmState.VIEW);
+    }
+     
+    @Override
+    protected void notifyActionStageChange(final ActionStage actionState) {
+        super.notifyActionStageChange(actionState);
+        if (actionState == ActionStage.EDIT_POST_ACTION) {            
+            getEditors().get("desc").getEditor().requestFocusInWindow();
+         }
+    }
+     
+    @Override
+    public String toString() {
+        return "Workshop Master";
+    }
+     
+    @Override
+    protected String defaultTitle() {
+        return toString();
+    }
+}
+    \end{lstlisting}
+  \end{code}
+  \tikznote{lst_workshop-ui-model_1-annotation}{lst_workshop-ui-model-1}{2cm}{0.8cm}{6.5cm}
+    {Supermodel Parameters}
+    {Type parameters indicate that model is for entity Workshop.}
+  \tikznote{lst_workshop-ui-model_2-annotation}{lst_workshop-ui-model-2}{3cm}{0.2cm}{4cm}
+    {Fetch model}
+    {The fetch model states that all workshop properties should be fetched for the master to function.}
+  \tikznote{lst_workshop-ui-model_3-annotation}{lst_workshop-ui-model-3}{3cm}{0.2cm}{4cm}
+    {Constructor Arguments}
+    {All formal arguments are listed as discussed above.}
+  \tikznote{lst_workshop-ui-model_4-annotation}{lst_workshop-ui-model-4}{2cm}{0.7cm}{5cm}
+    {Property Binder}
+    {Creation of the binder for producing property editors.}
+\tikznote{lst_workshop-ui-model_5-annotation}{lst_workshop-ui-model-5}{3cm}{0.2cm}{4cm}
+    {Non-lazy}
+    {Argument false indicates non-lazy initialisation, and thus all property editors are created as part of model instantiation.}    
+  
   \subsubsection{View}
   
   The \emph{view} concept has a single responsibility -- visualisation of entity state and provide access to actions applicable to that entity.
@@ -258,6 +331,10 @@ public class AView extends BaseNotifPanel<AModel> {
   
   
   Figure~\ref{img:ch01:03:simple-master} depicts how a simple master for entity Workshop would look like if the listed construction logic is used.  
+  The debug option to MigLayout provides a way to make boders of columns and rows visible.
+  The relevant hints on the figure explain corresponding containers and their purpose.
+  This approach again shows that the programming model is such that UI construction and its end result are transparent to the user.
+  And in case of any request to change layout or add additional property editors, users and developers can speak the same language.
   
   %
   \begin{image}{Simple View.}{\label{img:ch01:03:simple-master}}
@@ -304,6 +381,13 @@ public class AView extends BaseNotifPanel<AModel> {
     \end{tikzpicture}  
     
   \end{image}
+  
+  \paragraph{Layouting and Hints}
+  
+  Let's have a look at some layouting capabilities and the ways to provide the platform with additional hints when it comes to determining what kind of property editor should be used for a property.
+  For this purpose, we should use entity Workshop from our Rail domain.
+  It has three properties -- the \emph{key} (serving as workshop's code), the \emph{desc} (its description) and property \emph{initial} that indicates whether workshop is the one where all rotables are collected originally before being fitted onto wagons.
+  And let's walk through the design process of Workshop master.
   
   \subsubsection{Frame}
   
