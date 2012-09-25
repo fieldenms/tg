@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
-import ua.com.fielden.platform.sample.domain.controller.ITgBogieLocation;
 
 @EntityTitle(value = "Bogie location", desc = "Bogie location")
 @DefaultController(ITgBogieLocation.class)

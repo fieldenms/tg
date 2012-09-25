@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
-import ua.com.fielden.platform.sample.domain.controller.ITgWorkshop;
 
 @KeyType(String.class)
 @MapEntityTo

@@ -5,8 +5,8 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.sample.domain.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
-import ua.com.fielden.platform.sample.domain.controller.ITgTimesheet;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.utils.Validators;

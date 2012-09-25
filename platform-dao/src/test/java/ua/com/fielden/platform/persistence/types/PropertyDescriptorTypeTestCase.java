@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.persistence.types;
 
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.ITgWorkorder;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
-import ua.com.fielden.platform.sample.domain.controller.ITgWorkorder;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 
 /**

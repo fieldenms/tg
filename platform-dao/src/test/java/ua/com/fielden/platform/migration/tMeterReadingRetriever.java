@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.migration;
 
+import ua.com.fielden.platform.sample.domain.ITgMeterReading;
 import ua.com.fielden.platform.sample.domain.TgMeterReading;
-import ua.com.fielden.platform.sample.domain.controller.ITgMeterReading;
 
 import com.google.inject.Inject;
 

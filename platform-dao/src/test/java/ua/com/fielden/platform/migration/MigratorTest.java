@@ -7,10 +7,10 @@ import java.util.List;
 import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
+import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
+import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 /**

@@ -21,7 +21,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;

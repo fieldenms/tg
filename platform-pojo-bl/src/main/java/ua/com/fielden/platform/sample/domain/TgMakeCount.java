@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
-import ua.com.fielden.platform.sample.domain.controller.ITgMakeCount;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.migration;
 
+import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 
 import com.google.inject.Inject;
 

@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.util.List;
 
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
+import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 
 

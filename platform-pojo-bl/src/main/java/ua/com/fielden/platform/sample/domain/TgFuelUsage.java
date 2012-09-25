@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 
 @KeyTitle("Fuel Usages")
 @KeyType(DynamicEntityKey.class)

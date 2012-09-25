@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
-import ua.com.fielden.platform.sample.domain.controller.ITgWagonClassCompatibility;
 
 /**
  * Represents the compatibility between certain wagon and bogie classes.

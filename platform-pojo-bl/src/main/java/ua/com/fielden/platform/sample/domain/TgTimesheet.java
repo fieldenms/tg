@@ -19,7 +19,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
-import ua.com.fielden.platform.sample.domain.controller.ITgTimesheet;
 
 @KeyTitle("Timesheet")
 @DescTitle("Description")
