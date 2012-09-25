@@ -32,7 +32,7 @@ public class LifecycleModelTest {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
-    private DateTime date(final int millis) {
+    public DateTime date(final int millis) {
 	return new DateTime(2010, 1, 1, 0, 0, 0, millis);
     }
 
