@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -37,7 +37,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 
 
     private fetch<T> produceDefaultFetchModel(final Class<T> entityType) {
-	return fetchOnly(dao.getEntityType()).with("key").with("desc");
+	return fetch(dao.getEntityType());
     }
 
     public EntityQueryValueMatcher(final IEntityDao<T> dao, final String propertyName) {
