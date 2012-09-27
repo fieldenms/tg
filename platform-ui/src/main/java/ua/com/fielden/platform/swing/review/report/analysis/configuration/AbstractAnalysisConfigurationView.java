@@ -68,7 +68,6 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 	this.save = createSaveAction();
 	this.remove = createRemoveAction();
 	addSelectionEventListener(createSelectionListener());
-	owner.getPageHolderManager().addPageHolder(getModel().getPageHolder());
     }
 
     /**
@@ -216,7 +215,6 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 		case REPORT : getPreviousView().select(); break;
 		case WIZARD : getPreviousWizard().select();break;
 		}
-		owner.getPageHolderManager().selectPageHolder(getModel().getPageHolder());
 	    }
 	};
     }

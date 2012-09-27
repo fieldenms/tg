@@ -11,12 +11,12 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeMan
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
 import ua.com.fielden.platform.reportquery.AnalysisModelChangedEvent;
 import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
 import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
-import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.types.Money;
@@ -27,8 +27,8 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     private ChartAnalysisView<T> analysisView;
 
-    public ChartAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisDomainTreeManager adtme, final PageHolder pageHolder) {
-	super(criteria, adtme, pageHolder);
+    public ChartAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisDomainTreeManager adtme) {
+	super(criteria, adtme);
 	this.analysisView = null;
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
@@ -69,7 +69,9 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	final List<String> distributionProperties = adtme().getFirstTick().usedProperties(root);
 	final List<String> aggregationProperties = adtme().getSecondTick().usedProperties(root);
 
-	final IPage<T> result = getCriteria().run(chartAnalysisQueryGenerator.generateQueryModel().get(0), analysisView.getPageSize());
+	final AnalysisResultClassBundle<T> classBundle = chartAnalysisQueryGenerator.generateQueryModel();
+
+	final IPage<T> result = getCriteria().run(classBundle.getQueries().get(0), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), analysisView.getPageSize());
 	chartAnalysisDataProvider.setUsedProperties(distributionProperties, aggregationProperties);
 	getPageHolder().newPage(result);
 	return null;
@@ -102,9 +104,11 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     private static class ChartAnalysisDataProvider<T extends AbstractEntity<?>> extends AbstractCategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> {
 
-	private final List<String> categoryAliasMap = new ArrayList<String>();
-	private final List<String> aggregatedAliasMap = new ArrayList<String>();
-	private final List<T> loadedData = new ArrayList<T>();
+	//Category properties and it's aliases.
+	private final List<String> categoryList = new ArrayList<>();
+	private final List<String> aggregationList = new ArrayList<>();
+
+	private final List<T> loadedData = new ArrayList<>();
 
 	@Override
 	public int getCategoryDataEntryCount() {
@@ -153,24 +157,24 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	 *
 	 * @param aliasMap
 	 */
-	private void setUsedProperties(final List<String> categoryAliasMap, final List<String> aggregatedAliasMap){
-	    if(categoryAliasMap == null || aggregatedAliasMap == null){
+	private void setUsedProperties(final List<String> categoryList, final List<String> aggregationList){
+	    if(categoryList == null || aggregationList == null){
 		return;
 	    }
-	    this.categoryAliasMap.clear();
-	    this.categoryAliasMap.addAll(categoryAliasMap);
-	    this.aggregatedAliasMap.clear();
-	    this.aggregatedAliasMap.addAll(aggregatedAliasMap);
+	    this.categoryList.clear();
+	    this.categoryList.addAll(categoryList);
+	    this.aggregationList.clear();
+	    this.aggregationList.addAll(aggregationList);
 	}
 
 	@Override
 	public List<String> aggregatedProperties() {
-	    return Collections.unmodifiableList(aggregatedAliasMap);
+	    return Collections.unmodifiableList(aggregationList);
 	}
 
 	@Override
 	public List<String> categoryProperties() {
-	    return Collections.unmodifiableList(categoryAliasMap);
+	    return Collections.unmodifiableList(categoryList);
 	}
     }
 }

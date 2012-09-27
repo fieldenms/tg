@@ -95,6 +95,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.report.query.generation.AnalysisResultClass;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
@@ -277,7 +278,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(ISecurityToken.class);
 	register(Attachment.class);
 	register(EntityAttachmentAssociation.class);
-	// life cycle classes
+	register(AnalysisResultClass.class);
 	register(ICategorizer.class);
 	register(LifecycleModel.class);
 	register(EntityPropertyLifecycle.class);

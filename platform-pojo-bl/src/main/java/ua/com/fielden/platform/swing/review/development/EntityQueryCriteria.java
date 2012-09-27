@@ -183,6 +183,37 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
+     * Runs the specified query model with managed type and its byte representation. Returns the result page of specified size.
+     *
+     * @param queryModel
+     * @param managedType
+     * @param managedTypeArray
+     * @param pageSize
+     * @return
+     */
+    public final IPage<T> run(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final Class<T> managedType, final byte[] managedTypeArray, final int pageSize){
+	generatedEntityController.setEntityType(managedType);
+	final List<byte[]> byteArrayList = getByteArrayForManagedType();
+	byteArrayList.add(managedTypeArray);
+ 	return generatedEntityController.firstPage(queryModel, pageSize, byteArrayList);
+    }
+
+    /**
+     * Runs the specified query model with managed type and its byte representation.
+     *
+     * @param queryModel
+     * @param managedType
+     * @param managedTypeArray
+     * @return
+     */
+    public final List<T> run(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final Class<T> managedType, final byte[] managedTypeArray){
+	generatedEntityController.setEntityType(managedType);
+	final List<byte[]> byteArrayList = getByteArrayForManagedType();
+	byteArrayList.add(managedTypeArray);
+ 	return generatedEntityController.getAllEntities(queryModel, byteArrayList);
+    }
+
+    /**
      * Exports data in to the specified external file.
      *
      * @param fileName

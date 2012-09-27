@@ -48,6 +48,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	this.exportAction = createExportAction();
 	this.wasLoaded = false;
 	this.getModel().getPageHolder().addPageNavigationListener(createPageNavigationListener());
+	owner.getOwner().getPageHolderManager().addPageHolder(getModel().getPageHolder());
 	addComponentListener(createComponentWasResized());
     }
 
@@ -66,6 +67,12 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
     @Override
     public boolean isLoaded() {
         return wasLoaded;
+    }
+
+    @Override
+    public void select() {
+	getOwner().getOwner().getPageHolderManager().selectPageHolder(getModel().getPageHolder());
+	super.select();
     }
 
     @Override
@@ -95,6 +102,16 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 		putValue(Action.NAME, "Configure");
 		putValue(Action.SHORT_DESCRIPTION, "Configure analysis");
 		putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/configure.png"));
+	    }
+
+	    @Override
+	    protected boolean preAction() {
+	        final boolean superRes = super.preAction();
+	        if(!superRes){
+	            return false;
+	        }
+	        getOwner().getOwner().getPageHolderManager().removePageHolder(getModel().getPageHolder());
+	        return true;
 	    }
 
 	    @Override

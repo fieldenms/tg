@@ -15,12 +15,15 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity<?>, C
 
     private final ADTME adtme;
 
+    /**
+     * The page holder for this analysis.
+     */
     private final PageHolder pageHolder;
 
-    public AbstractAnalysisReviewModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final ADTME adtme, final PageHolder pageHolder) {
+    public AbstractAnalysisReviewModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final ADTME adtme) {
 	super(criteria);
 	this.adtme = adtme;
-	this.pageHolder = pageHolder;
+	this.pageHolder = new PageHolder();
     }
 
 

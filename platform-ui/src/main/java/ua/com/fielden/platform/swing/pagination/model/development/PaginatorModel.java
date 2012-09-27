@@ -40,7 +40,7 @@ public class PaginatorModel implements IPaginatorModel, IPageHolderManager{
 
     @Override
     public void selectPageHolder(final PageHolder pageHolder) {
-	if(pageHolderSet.contains(pageHolder)){
+	if(pageHolderSet.contains(pageHolder) || pageHolder == null){
 	    currentPageHolder = pageHolder;
 	    firePageHolderChanged(new PageHolderChangedEvent(this, pageHolder));
 	} else {
@@ -64,6 +64,9 @@ public class PaginatorModel implements IPaginatorModel, IPageHolderManager{
     public void removePageHolder(final PageHolder pageHolder) {
 	if(pageHolder != null && pageHolderSet.remove(pageHolder)){
 	    pageHolder.removePageChangedListener(commonPageChangedListener);
+	    if(pageHolder == currentPageHolder){
+		selectPageHolder(null);
+	    }
 	}
     }
 

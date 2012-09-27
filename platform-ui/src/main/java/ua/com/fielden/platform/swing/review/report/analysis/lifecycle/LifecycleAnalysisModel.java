@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reportquery.DistributionProperty;
 import ua.com.fielden.platform.reportquery.IDistributedProperty;
-import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.types.ICategory;
@@ -18,8 +17,8 @@ import ua.com.fielden.platform.types.Ordering;
 
 public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager, Void>{
 
-    public LifecycleAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final ILifecycleDomainTreeManager adtme, final PageHolder pageHolder) {
-	super(criteria, adtme, pageHolder);
+    public LifecycleAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final ILifecycleDomainTreeManager adtme) {
+	super(criteria, adtme);
 	// TODO Auto-generated constructor stub
     }
 

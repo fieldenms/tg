@@ -97,7 +97,6 @@ public class CriteriaReflector {
      * @param criteriaClass
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static List<Field> getCriteriaProperties(final Class<?> criteriaClass) {
 	return Finder.findProperties(criteriaClass, IsProperty.class, CriteriaProperty.class);
     }

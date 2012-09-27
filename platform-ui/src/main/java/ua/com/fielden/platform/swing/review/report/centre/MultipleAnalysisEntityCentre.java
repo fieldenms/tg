@@ -399,7 +399,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    }
 	} else {
 	    wasAnalysisLoaded = true;
-	    if(getCurrentAnalysisConfigurationView().getModel().getName().equals(previouslySelectedAnalysis)){
+	    if(getCurrentAnalysisConfigurationView() != null && getCurrentAnalysisConfigurationView().getModel().getName().equals(previouslySelectedAnalysis)){
 		analysisSelected = true;
 		fireLoadEvent(new LoadEvent(this));
 	    } else {
@@ -573,7 +573,9 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 		if(!getReviewProgressLayer().isLocked()){
 		    super.setSelectedIndex(index);
 		    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
-		    setCurrentAnalysisConfigurationView(analysis);
+		    if (analysis.isLoaded()) {
+			setCurrentAnalysisConfigurationView(analysis);
+		    }
 		}else{
 		    JOptionPane.showMessageDialog(tabPane, "The " + tabPane.getTitleAt(index) + " analysis can not be selected right now, " +
 			    "because there is another action in progress!", "Information", JOptionPane.INFORMATION_MESSAGE);

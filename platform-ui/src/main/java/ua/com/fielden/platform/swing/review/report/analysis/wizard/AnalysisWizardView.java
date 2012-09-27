@@ -125,6 +125,7 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
 
 	    @Override
 	    public void viewWasSelected(final SelectionEvent event) {
+		getCentre().getPageHolderManager().selectPageHolder(null);
 		//Managing the default, design and custom action changer button enablements.
 		getCentre().getDefaultAction().setEnabled(getCentre().getCriteriaPanel() != null);
 		if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {

@@ -32,6 +32,7 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -253,7 +254,8 @@ public class DashboardRow<T extends AbstractEntity<?>> {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = gdtm.getEntityCentreManager(menuItemType, centreName);
 	final IReportQueryGeneration<T> analysisQueryGenerator = new ChartAnalysisQueryGenerator<>(rootType, cdtme, sentinelManager());
 	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria = criteriaGenerator.generateCentreQueryCriteria(rootType, cdtme);
-	return criteria.run(analysisQueryGenerator.generateQueryModel().get(0), Integer.MAX_VALUE);
+	final AnalysisResultClassBundle<T> classBundle = analysisQueryGenerator.generateQueryModel();
+	return criteria.run(classBundle.getQueries().get(0), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), Integer.MAX_VALUE);
     }
 
     public TrafficLightsModel getModel() {

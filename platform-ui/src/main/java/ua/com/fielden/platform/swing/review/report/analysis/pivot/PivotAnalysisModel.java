@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
+import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
 import ua.com.fielden.platform.report.query.generation.PivotAnalysisQueryGgenerator;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
@@ -31,7 +32,6 @@ import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel;
 import ua.com.fielden.platform.swing.checkboxlist.ListSortingModel;
 import ua.com.fielden.platform.swing.checkboxlist.SorterChangedEvent;
 import ua.com.fielden.platform.swing.checkboxlist.SorterEventListener;
-import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListCheckingModel;
@@ -46,8 +46,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
     private final ListCheckingModel<String> aggregationCheckingModel;
     private final ListSortingModel<String> aggregationSortingModel;
 
-    public PivotAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManager adtme, final PageHolder pageHolder) {
-	super(criteria, adtme, pageHolder);
+    public PivotAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManager adtme) {
+	super(criteria, adtme);
 	final Class<T> root = getCriteria().getEntityClass();
 	final IPivotAddToDistributionTickManager firstTick = adtme().getFirstTick();
 	final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
@@ -131,14 +131,16 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	final IReportQueryGeneration<T> pivotQueryGenerator = new PivotAnalysisQueryGgenerator<>(root,//
 		getCriteria().getCentreDomainTreeManagerAndEnhnacerCopy(), //
 		adtme());
-	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queryModelList = pivotQueryGenerator.generateQueryModel();
+
+	final AnalysisResultClassBundle<T> classBundle = pivotQueryGenerator.generateQueryModel();
+	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queryModelList = classBundle.getQueries();
 
 	final List<String> distributionProperties = adtme().getFirstTick().usedProperties(root);
 
 	final Map<String, List<T>> resultMap = new HashMap<String, List<T>>();
-	resultMap.put("Grand total", getGroupList(queryModelList.get(0)));
+	resultMap.put("Grand total", getGroupList(classBundle, 0));
 	for(int index = 0; index < distributionProperties.size(); index++){
-	    resultMap.put(distributionProperties.get(index), getGroupList(queryModelList.get(index+1)));
+	    resultMap.put(distributionProperties.get(index), getGroupList(classBundle, index+1));
 	}
 	pivotModel.loadData(resultMap, distributionProperties, adtme().getSecondTick().usedProperties(root));
 	return null;
@@ -208,8 +210,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
      * @param groups
      * @return
      */
-    private List<T> getGroupList(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel){
-	return getCriteria().run(queryModel);
+    private List<T> getGroupList(final AnalysisResultClassBundle<T> classBundle, final int index){
+	return getCriteria().run(classBundle.getQueries().get(index), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation());
     }
 
     private class PivotTreeTableModelEx extends PivotTreeTableModel {

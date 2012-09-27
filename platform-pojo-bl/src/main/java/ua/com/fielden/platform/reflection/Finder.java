@@ -191,6 +191,7 @@ public class Finder {
      *
      * @return
      */
+    @SafeVarargs
     public static List<Field> findProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
 	return getFieldsAnnotatedWith(entityType, true, IsProperty.class, annotations);
     }

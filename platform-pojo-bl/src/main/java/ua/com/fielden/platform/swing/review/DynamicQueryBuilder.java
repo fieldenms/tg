@@ -30,7 +30,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere2;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere3;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -768,22 +767,15 @@ public class DynamicQueryBuilder {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final EntityResultQueryModel<E> sourceQueryModel, final List<String> distributionProperties, final List<Pair<String, ExpressionModel>> aggregationProperties){
+    public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final EntityResultQueryModel<E> sourceQueryModel, final List<String> distributionProperties, final Map<String, String> yieldProperties){
 
 	ICompleted<E> baseQuery = select(sourceQueryModel).as(ALIAS);
 	for (final String groupProperty : distributionProperties) {
 	    baseQuery = groupBy(groupProperty, baseQuery);
 	}
-	final List<Pair<String, ExpressionModel>> yieldProperties = new ArrayList<>();
-	for (final String distributionProperty : distributionProperties) {
-	    yieldProperties.add(new Pair<String, ExpressionModel>(distributionProperty, null));
-	}
-	yieldProperties.addAll(aggregationProperties);
 	ISubsequentCompletedAndYielded<E> yieldedQuery = null;
-	for (final Pair<String, ExpressionModel> yieldProperty : yieldProperties) {
-	    yieldedQuery = yieldedQuery == null //
-	    ? yield(yieldProperty, baseQuery) //
-		    : yield(yieldProperty, yieldedQuery);
+	for (final Map.Entry<String, String> yieldProperty : yieldProperties.entrySet()) {
+	    yieldedQuery = yieldedQuery == null ? yield(yieldProperty, baseQuery) : yield(yieldProperty, yieldedQuery);
 	}
 	if (yieldedQuery == null) {
 	    throw new IllegalStateException("The query was compound incorrectly!");
@@ -793,7 +785,7 @@ public class DynamicQueryBuilder {
     }
 
     /**
-     * Groups the given query by specified proerty.
+     * Groups the given query by specified property.
      *
      * @param proeprtyName
      * @param query
@@ -810,10 +802,8 @@ public class DynamicQueryBuilder {
      * @param query
      * @return
      */
-    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Pair<String, ExpressionModel> aggregation, final ICompleted<E> query){
-	return aggregation.getValue() == null ? //
-	/*	*/query.yield().prop(aggregation.getKey().isEmpty() ? ALIAS : ALIAS + "." + aggregation.getKey()).as(aggregation.getKey())//
-	/*    */: query.yield().expr(aggregation.getValue()).as(aggregation.getKey());
+    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Map.Entry<String, String> yield, final ICompleted<E> query){
+	return query.yield().prop(yield.getKey().isEmpty() ? ALIAS : ALIAS + "." + yield.getKey()).as(yield.getValue());
     }
 
     /**
@@ -823,10 +813,8 @@ public class DynamicQueryBuilder {
      * @param query
      * @return
      */
-    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Pair<String, ExpressionModel> aggregation, final ISubsequentCompletedAndYielded<E> query){
-	return aggregation.getValue() == null ? //
-		/*	*/query.yield().prop(aggregation.getKey().isEmpty() ? ALIAS : ALIAS + "." + aggregation.getKey()).as(aggregation.getKey())//
-		/*    */: query.yield().expr(aggregation.getValue()).as(aggregation.getKey());
+    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Map.Entry<String, String> yield, final ISubsequentCompletedAndYielded<E> query){
+	return query.yield().prop(yield.getKey().isEmpty() ? ALIAS : ALIAS + "." + yield.getKey()).as(yield.getValue());
     }
 
     /**

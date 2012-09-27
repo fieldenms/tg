@@ -20,7 +20,6 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeMan
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -30,6 +29,8 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.report.query.generation.AnalysisResultClass;
+import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -55,6 +56,7 @@ public class ChartAnalysisQueryGenerationTest {
 	return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
     }
 
+    @SuppressWarnings("serial")
     private final ICentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>(){{ add(MasterDomainEntity.class); }});;
     private final IReportQueryGeneration<MasterDomainEntity> queryGenerator;
 
@@ -102,6 +104,7 @@ public class ChartAnalysisQueryGenerationTest {
 
     @Test
     public void test_that_analysis_query_for_first_level_props_was_composed_correctly(){
+
 	final IAnalysisDomainTreeManager analysis = (IAnalysisDomainTreeManager)cdtme.getAnalysisManager("simple analysis");
 
 	final IAnalysisAddToDistributionTickManager firstTick = analysis.getFirstTick();
@@ -114,26 +117,27 @@ public class ChartAnalysisQueryGenerationTest {
 	secondTick.toggleOrdering(MasterDomainEntity.class, "sumInt");
 	secondTick.toggleOrdering(MasterDomainEntity.class, "avgInt");
 
-	final CalculatedProperty firstAggregatedProperty = (CalculatedProperty) cdtme.getEnhancer().getCalculatedProperty(MasterDomainEntity.class, "sumInt");
-	final CalculatedProperty secondAggregatedProperty = (CalculatedProperty) cdtme.getEnhancer().getCalculatedProperty(MasterDomainEntity.class, "avgInt");
+	final AnalysisResultClassBundle<MasterDomainEntity> resultBundle = queryGenerator.generateQueryModel();
 
 	final Class<AbstractEntity<?>> managedType = (Class<AbstractEntity<?>>)cdtme.getEnhancer().getManagedType(MasterDomainEntity.class);
 	final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(managedType).as(ALIAS).model();
 
-	final EntityResultQueryModel<AbstractEntity<?>> queryModel = select(subQueryModel).as(ALIAS)//
+	final EntityResultQueryModel<MasterDomainEntity> queryModel = select(subQueryModel).as(ALIAS)//
 		.groupBy().prop(ALIAS + ".firstGroup")//
-		.yield().prop(ALIAS + ".firstGroup").as("firstGroup")//
-		.yield().expr(firstAggregatedProperty.getExpressionModel()).as("sumInt")//
-		.yield().expr(secondAggregatedProperty.getExpressionModel()).as("avgInt").modelAsEntity(managedType);
+		.yield().prop(ALIAS + ".firstGroup").as(AnalysisResultClass.getAnalysisPropertyName("firstGroup"))//
+		.yield().prop(ALIAS + ".sumInt").as(AnalysisResultClass.getAnalysisPropertyName("sumInt"))//
+		.yield().prop(ALIAS + ".avgInt").as(AnalysisResultClass.getAnalysisPropertyName("avgInt")).modelAsEntity(resultBundle.getGeneratedClass());
 
-	final OrderingModel orderingModel = orderBy().yield("sumInt").asc().yield("avgInt").asc().model();
-	final fetch<AbstractEntity<?>> fetchModel = fetchOnly(managedType).with("firstGroup").with("sumInt").with("avgInt");
+	final OrderingModel orderingModel = orderBy().yield(AnalysisResultClass.getAnalysisPropertyName("sumInt")).asc()//
+		.yield(AnalysisResultClass.getAnalysisPropertyName("avgInt")).asc().model();
+	final fetch<MasterDomainEntity> fetchModel = fetchOnly(resultBundle.getGeneratedClass()).with(AnalysisResultClass.getAnalysisPropertyName("firstGroup"))//
+		.with(AnalysisResultClass.getAnalysisPropertyName("sumInt")).with(AnalysisResultClass.getAnalysisPropertyName("avgInt"));
 
-	final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> resultQuery = from(queryModel)
+	final QueryExecutionModel<MasterDomainEntity, EntityResultQueryModel<MasterDomainEntity>> resultQuery = from(queryModel)
 		.with(orderingModel)//
 		.with(fetchModel).model();
 
-	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, queryGenerator.generateQueryModel().get(0));
+	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0));
 
 	firstTick.use(MasterDomainEntity.class, "firstGroup", false);
 
@@ -157,29 +161,26 @@ public class ChartAnalysisQueryGenerationTest {
 	secondTick.use(MasterDomainEntity.class, "propIntSum", true);
 	secondTick.use(MasterDomainEntity.class, "propIntAvg", true);
 
-	final CalculatedProperty firstAggregatedProperty = (CalculatedProperty) cdtme.getEnhancer().getCalculatedProperty(MasterDomainEntity.class, "propIntSum");
-	final CalculatedProperty secondAggregatedProperty = (CalculatedProperty) cdtme.getEnhancer().getCalculatedProperty(MasterDomainEntity.class, "propIntAvg");
+	final AnalysisResultClassBundle<MasterDomainEntity> resultBundle = queryGenerator.generateQueryModel();
 
 	final Class<AbstractEntity<?>> managedType = (Class<AbstractEntity<?>>)cdtme.getEnhancer().getManagedType(MasterDomainEntity.class);
 	final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(managedType).as(ALIAS).model();
 
-	final EntityResultQueryModel<AbstractEntity<?>> queryModel = select(subQueryModel).as(ALIAS)//
+	final EntityResultQueryModel<MasterDomainEntity> queryModel = select(subQueryModel).as(ALIAS)//
 		.groupBy().prop(ALIAS + ".entityProp.entityProp.secondGroup")//
-		.yield().prop(ALIAS + ".entityProp.entityProp.secondGroup").as("entityProp.entityProp.secondGroup")//
-		.yield().expr(firstAggregatedProperty.getExpressionModel()).as("propIntSum")//
-		.yield().expr(secondAggregatedProperty.getExpressionModel()).as("propIntAvg").modelAsEntity(managedType);
+		.yield().prop(ALIAS + ".entityProp.entityProp.secondGroup").as(AnalysisResultClass.getAnalysisPropertyName("entityProp.entityProp.secondGroup"))//
+		.yield().prop(ALIAS + ".propIntSum").as(AnalysisResultClass.getAnalysisPropertyName("propIntSum"))//
+		.yield().prop(ALIAS + ".propIntAvg").as(AnalysisResultClass.getAnalysisPropertyName("propIntAvg")).modelAsEntity(resultBundle.getGeneratedClass());
 
-	final OrderingModel orderingModel = orderBy().yield("entityProp.entityProp.secondGroup").asc().model();
-	final fetch<AbstractEntity<?>> evenSlaveFetch = fetchOnly(evenSlaveKlass).with("secondGroup");
-	final fetch<AbstractEntity<?>> slaveFetch = fetchOnly(slaveKlass).with("entityProp", evenSlaveFetch);
-	final fetch<AbstractEntity<?>> fetchModel = fetchOnly(managedType).with("entityProp", slaveFetch)//
-		.with("propIntSum").with("propIntAvg");
+	final OrderingModel orderingModel = orderBy().yield(AnalysisResultClass.getAnalysisPropertyName("entityProp.entityProp.secondGroup")).asc().model();
+	final fetch<MasterDomainEntity> fetchModel = fetchOnly(resultBundle.getGeneratedClass()).with(AnalysisResultClass.getAnalysisPropertyName("entityProp.entityProp.secondGroup"))//
+		.with(AnalysisResultClass.getAnalysisPropertyName("propIntSum")).with(AnalysisResultClass.getAnalysisPropertyName("propIntAvg"));
 
-	final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> resultQuery = from(queryModel)
+	final QueryExecutionModel<MasterDomainEntity, EntityResultQueryModel<MasterDomainEntity>> resultQuery = from(queryModel)
 		.with(orderingModel)//
 		.with(fetchModel).model();
 
-	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, queryGenerator.generateQueryModel().get(0));
+	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0));
 
 	firstTick.use(MasterDomainEntity.class, "entityProp.entityProp.secondGroup", false);
 
@@ -203,34 +204,30 @@ public class ChartAnalysisQueryGenerationTest {
 	secondTick.toggleOrdering(MasterDomainEntity.class, "propIntAvg");
 	secondTick.toggleOrdering(MasterDomainEntity.class, "propIntAvg");
 
-
-	final CalculatedProperty firstAggregatedProperty = (CalculatedProperty) cdtme.getEnhancer().getCalculatedProperty(MasterDomainEntity.class, "propIntSum");
-	final CalculatedProperty secondAggregatedProperty = (CalculatedProperty) cdtme.getEnhancer().getCalculatedProperty(MasterDomainEntity.class, "propIntAvg");
-	final CalculatedProperty thirdAggregatedProperty = (CalculatedProperty) cdtme.getEnhancer().getCalculatedProperty(MasterDomainEntity.class, "propIntMin");
+	final AnalysisResultClassBundle<MasterDomainEntity> resultBundle = queryGenerator.generateQueryModel();
 
 	final Class<AbstractEntity<?>> managedType = (Class<AbstractEntity<?>>)cdtme.getEnhancer().getManagedType(MasterDomainEntity.class);
 	final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(managedType).as(ALIAS).model();
 
-	final EntityResultQueryModel<AbstractEntity<?>> queryModel = select(subQueryModel).as(ALIAS)//
+	final EntityResultQueryModel<MasterDomainEntity> queryModel = select(subQueryModel).as(ALIAS)//
 		.groupBy().prop(ALIAS + ".entityProp.entityProp.simpleEntityProp")//
-		.yield().prop(ALIAS + ".entityProp.entityProp.simpleEntityProp").as("entityProp.entityProp.simpleEntityProp")//
-		.yield().expr(firstAggregatedProperty.getExpressionModel()).as("propIntSum")//
-		.yield().expr(secondAggregatedProperty.getExpressionModel()).as("propIntAvg")//
-		.yield().expr(thirdAggregatedProperty.getExpressionModel()).as("propIntMin")//
-		.modelAsEntity(managedType);
+		.yield().prop(ALIAS + ".entityProp.entityProp.simpleEntityProp").as(AnalysisResultClass.getAnalysisPropertyName("entityProp.entityProp.simpleEntityProp"))//
+		.yield().prop(ALIAS + ".propIntSum").as(AnalysisResultClass.getAnalysisPropertyName("propIntSum"))//
+		.yield().prop(ALIAS + ".propIntAvg").as(AnalysisResultClass.getAnalysisPropertyName("propIntAvg"))//
+		.yield().prop(ALIAS + ".propIntMin").as(AnalysisResultClass.getAnalysisPropertyName("propIntMin"))//
+		.modelAsEntity(resultBundle.getGeneratedClass());
 
-	final OrderingModel orderingModel = orderBy().yield("propIntSum").asc().yield("propIntAvg").desc().model();
+	final OrderingModel orderingModel = orderBy().yield(AnalysisResultClass.getAnalysisPropertyName("propIntSum")).asc().yield(AnalysisResultClass.getAnalysisPropertyName("propIntAvg")).desc().model();
 	final fetch<AbstractEntity<?>> simpleEntityFetch = fetchOnly(stringKeyKlass).with("key").with("desc");
-	final fetch<AbstractEntity<?>> evenSlaveFetch = fetchOnly(evenSlaveKlass).with("simpleEntityProp", simpleEntityFetch);
-	final fetch<AbstractEntity<?>> slaveFetch = fetchOnly(slaveKlass).with("entityProp", evenSlaveFetch);
-	final fetch<AbstractEntity<?>> fetchModel = fetchOnly(managedType).with("entityProp", slaveFetch)//
-		.with("propIntSum").with("propIntAvg").with("propIntMin");
+	final fetch<MasterDomainEntity> fetchModel = fetchOnly(resultBundle.getGeneratedClass()).with(AnalysisResultClass.getAnalysisPropertyName("entityProp.entityProp.simpleEntityProp"), simpleEntityFetch)//
+		.with(AnalysisResultClass.getAnalysisPropertyName("propIntSum")).with(AnalysisResultClass.getAnalysisPropertyName("propIntAvg"))//
+		.with(AnalysisResultClass.getAnalysisPropertyName("propIntMin"));
 
-	final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> resultQuery = from(queryModel)
+	final QueryExecutionModel<MasterDomainEntity, EntityResultQueryModel<MasterDomainEntity>> resultQuery = from(queryModel)
 		.with(orderingModel)//
 		.with(fetchModel).model();
+	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0));
 
-	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, queryGenerator.generateQueryModel().get(0));
 
 	firstTick.use(MasterDomainEntity.class, "entityProp.entityProp.simpleEntityProp", false);
 

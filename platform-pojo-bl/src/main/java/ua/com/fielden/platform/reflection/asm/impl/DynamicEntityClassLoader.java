@@ -58,7 +58,6 @@ public class DynamicEntityClassLoader extends ClassLoader {
 	} else {
 	    final String resource = typeName.replace('.', '/') + ".class";
 	    final InputStream is = getResourceAsStream(resource);
-
 	    try {
 		final ClassReader cr = new ClassReader(is);
 		final ClassWriter cw = new ClassWriter(0);

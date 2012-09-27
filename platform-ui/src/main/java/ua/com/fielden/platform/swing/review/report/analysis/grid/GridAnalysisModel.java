@@ -12,7 +12,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
-import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.DynamicPropertyAnalyser;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
@@ -22,8 +21,8 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     private GridAnalysisView<T, CDTME> analysisView;
 
-    public GridAnalysisModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final PageHolder pageHolder) {
-	super(criteria, null, pageHolder);
+    public GridAnalysisModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria) {
+	super(criteria, null);
 	this.analysisView = null;
     }
 

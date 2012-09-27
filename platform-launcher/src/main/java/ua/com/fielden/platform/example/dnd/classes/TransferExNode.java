@@ -30,7 +30,7 @@ public class TransferExNode extends TransferNode {
      */
     private static final long serialVersionUID = -1113245304195478914L;
 
-    @SuppressWarnings("unchecked")
+    @Override
     public List<AbstractNode> createRotables() {
 	final List<AbstractBogieWidget> bogieWidgets = new ArrayList<AbstractBogieWidget>();
 	final List<AbstractWheelsetWidget> wheelsetWidgets = new ArrayList<AbstractWheelsetWidget>();

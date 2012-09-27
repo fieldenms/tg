@@ -34,6 +34,6 @@ public class PivotAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
     final PivotAnalysisModel<T> createPivotAnalysisModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
 	final IPivotDomainTreeManager pdtme = (IPivotDomainTreeManager)cdtme.getAnalysisManager(getName());
-	return new PivotAnalysisModel<T>(getCriteria(), pdtme, getPageHolder());
+	return new PivotAnalysisModel<T>(getCriteria(), pdtme);
     }
 }

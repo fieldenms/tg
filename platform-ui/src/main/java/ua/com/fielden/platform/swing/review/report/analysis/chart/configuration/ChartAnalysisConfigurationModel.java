@@ -38,7 +38,7 @@ public class ChartAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
     final ChartAnalysisModel<T> createChartAnalysisModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
 	final IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager)cdtme.getAnalysisManager(getName());
-	return new ChartAnalysisModel<T>(getCriteria(), adtme, getPageHolder());
+	return new ChartAnalysisModel<T>(getCriteria(), adtme);
     }
 
     /**
