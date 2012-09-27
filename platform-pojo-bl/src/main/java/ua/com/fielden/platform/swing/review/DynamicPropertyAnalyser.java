@@ -7,8 +7,6 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -130,7 +128,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
     public String getCriteriaFullName() {
 	Class<?> keyType = getPropertyType();
 	String propertyName = getAnalysingProperty();
-	while (AbstractEntity.class.isAssignableFrom(keyType) && simpleKeyType(keyType)) {
+	while (AbstractEntity.class.isAssignableFrom(keyType)) {
 	    if (isEmpty(propertyName)) {
 		propertyName += "key";
 	    } else {
@@ -151,16 +149,5 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
             return propertyFields[propertyFields.length - 1];
         }
         return null;
-    }
-
-    /**
-     * Determines whether analysing property has simple key or complex key (i.e is key is {@link AbstractEntity} or {@link DynamicEntityKey}).
-     *
-     * @param keyType
-     * @return
-     */
-    private boolean simpleKeyType(final Class<?> keyType) {
-	return AnnotationReflector.isAnnotationPresent(KeyType.class, keyType)
-		&& !DynamicEntityKey.class.isAssignableFrom(AnnotationReflector.getAnnotation(KeyType.class, keyType).value());
     }
 }
