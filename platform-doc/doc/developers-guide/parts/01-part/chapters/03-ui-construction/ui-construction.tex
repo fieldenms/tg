@@ -217,20 +217,20 @@ public class WorkshopMasterModel
      			masterManager, //
      			criteriaGenerator),//
      	     qm, titleUpdater, owner, false);%\tikzref{lst_workshop-ui-model-5}{0.2cm}{0.2cm}%
-        setState(UmState.VIEW);
+        setState(UmState.VIEW);%\tikzref{lst_workshop-ui-model-6}{0.1cm}{0.0cm}%
     }
      
     @Override
     protected void notifyActionStageChange(final ActionStage actionState) {
         super.notifyActionStageChange(actionState);
-        if (actionState == ActionStage.EDIT_POST_ACTION) {            
+        if (actionState == ActionStage.EDIT_POST_ACTION) {%\tikzref{lst_workshop-ui-model-7}{0.1cm}{0.1cm}%            
             getEditors().get("desc").getEditor().requestFocusInWindow();
          }
     }
      
     @Override
     public String toString() {
-        return "Workshop Master";
+        return "Workshop Master";%\tikzref{lst_workshop-ui-model-8}{0.1cm}{0.1cm}%            
     }
      
     @Override
@@ -254,7 +254,17 @@ public class WorkshopMasterModel
     {Creation of the binder for producing property editors.}
 \tikznote{lst_workshop-ui-model_5-annotation}{lst_workshop-ui-model-5}{3cm}{0.2cm}{4cm}
     {Non-lazy}
-    {Argument false indicates non-lazy initialisation, and thus all property editors are created as part of model instantiation.}    
+    {Argument false indicates non-lazy initialisation, and thus all property editors are created as part of model instantiation.}
+\tikznote{lst_workshop-ui-model_6-annotation}{lst_workshop-ui-model-6}{3cm}{-0.4cm}{4cm}
+    {Model state}
+    {The state of the model is set to VIEW.}
+\tikznote{lst_workshop-ui-model_7-annotation}{lst_workshop-ui-model-7}{3cm}{0.5cm}{4cm}
+    {Action stage change handler}
+    {When user invokes the edit action, the editor for property \texttt{desc} gets focused.}
+\tikznote{lst_workshop-ui-model_8-annotation}{lst_workshop-ui-model-8}{3cm}{0.5cm}{4cm}
+    {View title}
+    {The view title should also be driven by model. This way there is always one place too look for UI definitions.}
+    
   
   \subsubsection{View}
   
@@ -268,14 +278,14 @@ public class WorkshopMasterModel
   It is recommended to subclass \texttt{BaseNotifPanel<UI Model Type>} when creating views.
   This base class provides convenient features, including a number of methods for layouting UI controls based on MigLayout manager.
   MigLayout is the recommended and expected layout manager to be used for building view~\cite{MigLayout}.
-  Listing~\ref{lst:view_example} provides a view example.
+  Listing~\ref{lst:view_example} provides a view example for entity \emph{Workshop}, which is based on the earlier introduced model \emph{WorkshopMasterModel}.
   Let's discuss it in details.  
   
     \begin{code}{View example.}{\label{lst:view_example}}{codebgcolor}
     \begin{lstlisting}
-public class AView extends BaseNotifPanel<AModel> {    
+public class WorkshopMasterView extends BaseNotifPanel<WorkshopMasterModel> {    
 
-    public AView(final AModel model) {
+    public WorkshopMasterView(final WorkshopMasterModel model) {
 	super(model.toString(), model);
 	final JPanel componentsPanel = new JPanel(new MigLayout("insets 0", 
 	     "[:50:][grow,fill,:250:]", 
@@ -327,12 +337,12 @@ public class AView extends BaseNotifPanel<AModel> {
   The main container is added to the view on line~28.
   
   It is important to mention line line~29 -- here the model gets associated with the view.
-  This might be necessary in order to implement some logic as part of the model that requires access to the view and its elements.
+  This is necessary for cases where some logic that is implemented as part of the model requires access to the view and its elements.
   
   
-  Figure~\ref{img:ch01:03:simple-master} depicts how a simple master for entity Workshop would look like if the listed construction logic is used.  
-  The debug option to MigLayout provides a way to make boders of columns and rows visible.
-  The relevant hints on the figure explain corresponding containers and their purpose.
+  Figure~\ref{img:ch01:03:simple-master} depicts how the discussed simple master for entity Workshop looks like from the user perspective.  
+  The debug option of MigLayout (the first string argument may have it specified) provides a way to make borders of columns and rows visible, which is extremely convenient to identify any mistakes on the layout logic.
+  The relevant hints in figure~\ref{img:ch01:03:simple-master} explain corresponding containers and their purpose.
   This approach again shows that the programming model is such that UI construction and its end result are transparent to the user.
   And in case of any request to change layout or add additional property editors, users and developers can speak the same language.
   
@@ -385,9 +395,9 @@ public class AView extends BaseNotifPanel<AModel> {
   \paragraph{Layouting and Hints}
   
   Let's have a look at some layouting capabilities and the ways to provide the platform with additional hints when it comes to determining what kind of property editor should be used for a property.
-  For this purpose, we should use entity Workshop from our Rail domain.
-  It has three properties -- the \emph{key} (serving as workshop's code), the \emph{desc} (its description) and property \emph{initial} that indicates whether workshop is the one where all rotables are collected originally before being fitted onto wagons.
-  And let's walk through the design process of Workshop master.
+  For this purpose, we shall continue using entity Workshop from our Rail domain.
+  For out purpose let's consider that it has three properties -- the \emph{key} (serving as workshop's code), the \emph{desc} (its description) and property \emph{initial} that indicates whether workshop is the one where all rotables are collected for the very first time before being fitted onto wagons.
+  %And let's walk through the design process of Workshop master.
   
   \subsubsection{Frame}
   
