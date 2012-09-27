@@ -13,7 +13,6 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomai
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -164,7 +163,7 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	    // TODO (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
 	    (isEntityItself) || // empty property means "entity itself" and it should be disabled for distribution
 	    (isCollectionOrInCollectionHierarchy(managedType, property)) || // disable properties in collectional hierarchy and collections itself
-	    (!isEntityItself && EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))) || // disable properties of "entity with AE or composite key" type
+	    (!isEntityItself && isDisabledImmutablyPropertiesOfEntityType(propertyType, keyTypeAnnotation)) || // disable properties of "entity with AE key" type
 
 	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation == null) || // disable non-calc integer props
 	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !StringUtils.isEmpty(origination) && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(managedType, origination))) || // disable integer calculated properties which were originated not from Date property

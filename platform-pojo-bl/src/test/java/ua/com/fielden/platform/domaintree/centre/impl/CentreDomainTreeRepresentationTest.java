@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -85,7 +86,7 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     @Test
     public void test_entities_itself_first_tick_disabling() {
 	super.test_entities_itself_first_tick_disabling();
-	assertTrue("Entity itself (represented by empty 'property') with composite key type should be disabled.", dtm().getFirstTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
+	assertFalse("Entity itself (represented by empty 'property') with composite key type should be enabled.", dtm().getFirstTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
 	assertTrue("Entity itself (represented by empty 'property') with AE key type should be disabled.", dtm().getFirstTick().isDisabledImmutably(EntityWithKeyTitleAndWithAEKeyType.class, ""));
     }
 
@@ -128,20 +129,13 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 
     ////////////////////// 2.3. Type related logic //////////////////////
     @Test
-    public void test_that_first_tick_for_properties_of_entity_with_AE_or_composite_key_type_are_disabled() {
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityPropWithAEKeyType"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityPropWithAEKeyType"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.entityPropWithAEKeyType"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.entityPropWithAEKeyType"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.entityPropWithAEKeyType"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.entityPropWithAEKeyType"));
-
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityWithCompositeKeyProp"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityWithCompositeKeyProp"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.entityWithCompositeKeyProp"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.entityWithCompositeKeyProp"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.entityWithCompositeKeyProp"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.entityWithCompositeKeyProp"));
+    public void test_that_first_tick_for_properties_of_entity_with_AE_key_type_are_disabled() {
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityPropWithAEKeyType"));
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityPropWithAEKeyType"));
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.entityPropWithAEKeyType"));
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.entityPropWithAEKeyType"));
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.entityPropWithAEKeyType"));
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.entityPropWithAEKeyType"));
     }
 
     ////////////////////////////////////////////////////////////////
@@ -153,7 +147,7 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     @Test
     public void test_entities_itself_second_tick_disabling() {
 	super.test_entities_itself_second_tick_disabling();
-	assertTrue("Entity itself (represented by empty 'property') with composite key type should be disabled.", dtm().getSecondTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
+	assertFalse("Entity itself (represented by empty 'property') with composite key type should be enabled.", dtm().getSecondTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
 	assertTrue("Entity itself (represented by empty 'property') with AE key type should be disabled.", dtm().getSecondTick().isDisabledImmutably(EntityWithKeyTitleAndWithAEKeyType.class, ""));
 	assertTrue("An synthetic entity itself (represented by empty 'property') should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterSyntheticEntity.class, ""));
     }
@@ -190,20 +184,13 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 
     ////////////////////// 3.3. Type related logic //////////////////////
     @Test
-    public void test_that_second_tick_for_properties_of_entity_with_AE_or_composite_key_type_are_disabled() {
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityPropWithAEKeyType"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityPropWithAEKeyType"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.entityPropWithAEKeyType"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.entityPropWithAEKeyType"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.entityPropWithAEKeyType"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.entityPropWithAEKeyType"));
-
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityWithCompositeKeyProp"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityWithCompositeKeyProp"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.entityWithCompositeKeyProp"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.entityWithCompositeKeyProp"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.entityWithCompositeKeyProp"));
-	assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.entityWithCompositeKeyProp"));
+    public void test_that_second_tick_for_properties_of_entity_with_AE_key_type_are_disabled() {
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityPropWithAEKeyType"));
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityPropWithAEKeyType"));
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.entityPropWithAEKeyType"));
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.entityPropWithAEKeyType"));
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.entityPropWithAEKeyType"));
+	assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.entityPropWithAEKeyType"));
     }
 
     ////////////////////// 4.2. Annotation related logic //////////////////////

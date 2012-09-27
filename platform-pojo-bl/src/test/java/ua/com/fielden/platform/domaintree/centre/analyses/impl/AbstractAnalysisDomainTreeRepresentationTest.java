@@ -165,14 +165,14 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 
     ////////////////////// 2.2. Type related logic //////////////////////
     @Test
-    public void test_that_first_tick_for_properties_of_entity_with_AE_or_composite_key_type_are_disabled() {
+    public void test_that_first_tick_for_properties_of_entity_with_AE_key_type_are_disabled() {
 	allLevels(new IAction() {
 	    public void action(final String name) {
 		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
-		    assertTrue("Property of 'entity with AE or composite key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		    assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
 		}
 	    }
-	}, "entityPropWithAEKeyType", "entityWithCompositeKeyProp");
+	}, "entityPropWithAEKeyType");
     }
 
     @Test

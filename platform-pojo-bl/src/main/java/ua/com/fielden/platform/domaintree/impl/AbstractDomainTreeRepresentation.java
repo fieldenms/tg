@@ -591,6 +591,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    fireDisablingEvent(root, property);
 	}
 
+	protected boolean isDisabledImmutablyPropertiesOfEntityType(final Class<?> propertyType, final KeyType keyTypeAnnotation) {
+	    // (EntityUtils.isEntityType(propertyType) && DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value())); // properties of "entity with composite key" type has been enabled
+	    return EntityUtils.isEntityType(propertyType) && EntityUtils.isEntityType(keyTypeAnnotation.value()); // disable properties of "entity with AE key" type
+	}
+
 	@Override
 	public boolean addPropertyDisablementListener(final IPropertyDisablementListener listener) {
 	    return propertyDisablementListeners.add(listener);

@@ -93,7 +93,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	    return (super.isDisabledImmutably(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
 		    (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
 		    (!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION)) || // disable AGGREGATED_EXPRESSION properties for criteria tick
-		    (EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))); // disable properties of "entity with AE or composite key" type
+		    isDisabledImmutablyPropertiesOfEntityType(propertyType, keyTypeAnnotation); // disable properties of "entity with AE key" type
 	}
 
 	@Override
@@ -223,7 +223,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 		    (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself
 		    (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)
 		    (!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION)) || // disable ATTRIBUTED_COLLECTIONAL_EXPRESSION properties for result-set tick
-		    (EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))); // disable properties of "entity with AE or composite key" type
+		    isDisabledImmutablyPropertiesOfEntityType(propertyType, keyTypeAnnotation); // disable properties of "entity with AE key" type
 	}
 
 	@Override
