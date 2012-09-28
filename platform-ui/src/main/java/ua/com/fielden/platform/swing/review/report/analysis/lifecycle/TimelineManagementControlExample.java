@@ -30,26 +30,34 @@ import org.joda.time.DateTime;
 import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.equery.lifecycle.EntityPropertyLifecycle;
 import ua.com.fielden.platform.equery.lifecycle.IGroup;
 import ua.com.fielden.platform.equery.lifecycle.IProperty;
 import ua.com.fielden.platform.equery.lifecycle.IProperty.ITimeProperty;
 import ua.com.fielden.platform.equery.lifecycle.IProperty.IValueProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
-import ua.com.fielden.platform.equery.lifecycle.LifecycleModelTest;
+import ua.com.fielden.platform.equery.lifecycle.ValuedInterval;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.swing.categorychart.ChartPanel;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
+import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
+import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.jidesoft.plaf.LookAndFeelFactory;
 
 public class TimelineManagementControlExample  extends AbstractUiApplication implements ChartMouseListener, MouseListener, MouseMotionListener {
-    private LifecycleModel<Entity> chartEntryModel;
+    private final Module module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+    private final EntityFactory factory = injector.getInstance(EntityFactory.class);
+
+    private LifecycleModel<TimelineEntity> chartEntryModel;
     private TaskSeriesCollection mainDataSet = new TaskSeriesCollection();
 
     ChartPanel localChartPanel = null;
@@ -90,40 +98,67 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
     }
 
     /**
+     * Example {@link EntityPropertyLifecycle} with some "x" offset.
+     *
+     * @param x
+     * @return
+     */
+    public EntityPropertyLifecycle<TimelineEntity> createEPL(final String key, final int x) {
+	final List<ValuedInterval> intervals = new ArrayList<ValuedInterval>();
+	// not sorted:
+	intervals.add(new ValuedInterval(date(36 + x), date(42 + x), "Value 1"));
+	intervals.add(new ValuedInterval(date(2 + x), date(10 + x), "Value 2"));
+	intervals.add(new ValuedInterval(date(42 + x), date(47 + x), "Value 4"));
+	intervals.add(new ValuedInterval(date(10 + x), date(31 + x), "Value 2"));
+	intervals.add(new ValuedInterval(date(31 + x), date(36 + x), "Value 3"));
+	intervals.add(new ValuedInterval(date(47 + x), date(59 + x), "Value 2"));
+	return new EntityPropertyLifecycle<TimelineEntity>(factory.newByKey(TimelineEntity.class, key), TimelineEntity.class, "monitoring", intervals, date(15), date(55));
+    }
+
+    public DateTime date(final int millis) {
+	return new DateTime(2010, 1, 1, 0, 0, 0, millis);
+    }
+
+    public EntityPropertyLifecycle<TimelineEntity> createUnavailableEPL(final String key) {
+	final List<ValuedInterval> intervals = new ArrayList<ValuedInterval>();
+	intervals.add(new ValuedInterval(date(15), date(55), "Value 4"));
+	return new EntityPropertyLifecycle<TimelineEntity>(factory.newByKey(TimelineEntity.class, key), TimelineEntity.class, "monitoring", intervals, date(15), date(55));
+    }
+
+    /**
      * Creates testing lifecycle model.
      *
      * @return
      */
-    private static LifecycleModel<Entity> createLifecycleModel() {
-	final LifecycleModelTest lmt = new LifecycleModelTest();
-	final List<EntityPropertyLifecycle<Entity>> ld = new ArrayList<EntityPropertyLifecycle<Entity>>();
-	ld.add(lmt.createEPL("A0001", 0));
-	ld.add(lmt.createEPL("A0002", 5)); // the same lifecycle just shifted to the right on 5 millis.
-	ld.add(lmt.createEPL("A0003", -2));
-	ld.add(lmt.createEPL("A0004", 2));
-	ld.add(lmt.createEPL("A0005", 1));
-	ld.add(lmt.createEPL("A0006", -1));
+    private LifecycleModel<TimelineEntity> createLifecycleModel() {
+	final List<EntityPropertyLifecycle<TimelineEntity>> ld = new ArrayList<EntityPropertyLifecycle<TimelineEntity>>();
+	ld.add(createEPL("A0001", 0));
+	ld.add(createEPL("A0002", 5)); // the same lifecycle just shifted to the right on 5 millis.
+	ld.add(createEPL("A0003", -2));
+	ld.add(createEPL("A0004", 2));
+	ld.add(createEPL("A0005", 1));
+	ld.add(createEPL("A0006", -1));
 
-	ld.add(lmt.createUnavailableEPL("A0007"));
+	ld.add(createUnavailableEPL("A0007"));
 
-	final LifecycleModel<Entity> lm = new LifecycleModel<Entity>(lmt.date(15), lmt.date(55), ld, new LinkedHashMap<IProperty, Object>(), true){
+	final LifecycleModel<TimelineEntity> lm = new LifecycleModel<TimelineEntity>(date(15), date(55), ld, new LinkedHashMap<IProperty, Object>(), true){
 	    @Override
-	    protected IGroup<Entity> createGroupByValue(final IValueProperty property, final Object value, final LifecycleModel<Entity> parent, final List<Integer> indexes) {
+	    protected IGroup<TimelineEntity> createGroupByValue(final IValueProperty property, final Object value, final LifecycleModel<TimelineEntity> parent, final List<Integer> indexes) {
 		return null;
 	    }
 
 	    @Override
-	    protected IGroup<Entity> createGroupByModelAndPeriod(final ITimeProperty timeProperty, final LifecycleModel<Entity> narrowedModel, final LifecycleModel<Entity> parent) {
+	    protected IGroup<TimelineEntity> createGroupByModelAndPeriod(final ITimeProperty timeProperty, final LifecycleModel<TimelineEntity> narrowedModel, final LifecycleModel<TimelineEntity> parent) {
 		return null;
 	    }
 
 	    @Override
-	    public Pair<? extends LifecycleModel<Entity>, ? extends LifecycleModel<Entity>> split(final DateTime moment, final boolean copy, final boolean full) {
+	    public Pair<? extends LifecycleModel<TimelineEntity>, ? extends LifecycleModel<TimelineEntity>> split(final DateTime moment, final boolean copy, final boolean full) {
 		return null;
 	    }
 
 	    @Override
-	    protected LifecycleModel<Entity> copy(final LinkedHashMap<IProperty, Object> extractedGroupingValues) {
+	    protected LifecycleModel<TimelineEntity> copy(final LinkedHashMap<IProperty, Object> extractedGroupingValues) {
 		return null;
 	    }
 
@@ -135,14 +170,12 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
 	final BaseFrame mainApplicationFrame = new BaseFrame("Timeline management control example", new HashMap<Class<? extends AbstractEntity<?>>, IEntityMasterCache>());
 
-	final JFreeChart chart = LifecycleChartFactory.createAvailabilityChart(chartEntryModel, mainDataSet);
-
 //	final ChartPanel localChartPanel = new ChartPanel(chart);
 //	localChartPanel.addChartMouseListener(this);
 //	localChartPanel.addMouseMotionListener(this);
 //	localChartPanel.addMouseListener(this);
 
-	jfreechart = chart; // ChartFactory.createTimeSeriesChart("Series & Point Dragging Demo", "Date", "Price Per Unit", createDataset(), true, true, false);
+	jfreechart = LifecycleChartFactory.createAvailabilityChart(chartEntryModel, mainDataSet); // ChartFactory.createTimeSeriesChart("Series & Point Dragging Demo", "Date", "Price Per Unit", createDataset(), true, true, false);
 	localChartPanel = new ChartPanel(jfreechart);
 	localChartPanel.addChartMouseListener(this);
 	localChartPanel.addMouseMotionListener(this);
