@@ -421,13 +421,13 @@ public class WorkshopMasterView extends BaseNotifPanel<WorkshopMasterModel> {
   On the other hand, this provide a way to optimise the fetch model in such way that not visible properties are not loaded until necessary, which helps reducing both database and network load.
   
   An important details here is that each master is associated with a particular instance of an entity object.
-  The main view is associated directly with an entity, while other views are associated with complex properties (or set of properties) of the same entity instance.
+  The main view is associated directly with that, what we could call, a main entity, while other views are associated with complex properties (or set of properties) of the same main entity.
   
   Structurally, compound masters are similar to simple masters.
   As the name suggests, instead of one model/view pair there are two and more such pairs.
   Each pair is associated with a tree menu item, which is located on the left side of each compound master view.
   Usually, the master model is associated with both the master view and the default view (aka main view).
-  The master view holds the tree menu and the panel where menu specific views are displayed.
+  The master view holds the tree menu and the panel where menu specific views are displayed when menu items are activated.
   
 
 %\section{Configuration Management}
