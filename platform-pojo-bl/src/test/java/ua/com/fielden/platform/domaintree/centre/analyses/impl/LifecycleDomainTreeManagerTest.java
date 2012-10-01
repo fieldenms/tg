@@ -14,10 +14,11 @@ import java.util.Set;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
+import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -45,13 +46,15 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     }
 
     public static Object createIrrelevantDtm_for_LifecycleDomainTreeManagerTest() {
-	final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_LifecycleDomainTreeManagerTest());
+	final CentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_LifecycleDomainTreeManagerTest());
+	dtm.provideLifecycleAnalysesDatePeriodProperties(createRootTypes_for_LifecycleDomainTreeManagerTest());
 	enhanceManagerWithBasicCalculatedProperties(dtm);
 	return dtm;
     }
 
     protected static Set<Class<?>> createRootTypes_for_LifecycleDomainTreeManagerTest() {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+	rootTypes.remove(EvenSlaverEntity.class); // this entity has been excluded manually in parent tests
 	return rootTypes;
     }
 
@@ -69,6 +72,11 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 
     public static String [] fieldWhichReferenceShouldNotBeDistictButShouldBeEqual_for_LifecycleDomainTreeManagerTest() {
 	return fieldWhichReferenceShouldNotBeDistictButShouldBeEqual_for_AbstractAnalysisDomainTreeManagerTest();
+    }
+
+    public static void performAdditionalInitialisationProcess_for_LifecycleDomainTreeManagerTest(final Object obj) {
+	final LifecycleDomainTreeManager mgr = (LifecycleDomainTreeManager) obj;
+	mgr.provideMetaStateForLifecycleAnalysesDatePeriodProperties();
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
@@ -164,5 +172,20 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 
     @Override
     public void test_that_PropertyOrderingListeners_work() {
+    }
+
+    /////////////////////////
+    @Test
+    public void test_that_date_period_properties_are_checked_for_first_tick() {
+	for (final GroupingPeriods period : GroupingPeriods.values()) {
+	    assertTrue("'" + period.getPropertyName() + "' property should be checked (mutably) for distribution.", dtm().getFirstTick().isChecked(MasterEntity.class, period.getPropertyName()));
+	}
+    }
+
+    @Test
+    public void test_that_date_period_properties_are_unchecked_for_second_tick() {
+	for (final GroupingPeriods period : GroupingPeriods.values()) {
+	    assertFalse("'" + period.getPropertyName() + "' property should be checked (mutably) for categories (aka aggregation).", dtm().getSecondTick().isChecked(MasterEntity.class, period.getPropertyName()));
+	}
     }
 }

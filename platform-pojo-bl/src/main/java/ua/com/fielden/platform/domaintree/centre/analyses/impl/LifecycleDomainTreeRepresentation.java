@@ -19,6 +19,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTreeRepresentation implements ILifecycleDomainTreeRepresentation {
+    public static final String COUNT_OF_SELF_DASHBOARD = "countOfSelfDashboard";
+
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      *
@@ -62,6 +64,18 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
 	 */
 	public LifecycleAddToCategoriesTickRepresentation() {
 	}
+    }
+
+    /**
+     * Provides a meta-state for Date Period distribution properties.
+     */
+    public void provideMetaStateForLifecycleAnalysesDatePeriodProperties() {
+//	for (final Class<?> rootType : rootTypes()) {
+//	    if (!isExcludedImmutably(rootType, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD)) {
+//		getFirstTick().disableImmutably(rootType, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD);
+//		getSecondTick().disableImmutably(rootType, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD);
+//	    }
+//	}
     }
 
     /**

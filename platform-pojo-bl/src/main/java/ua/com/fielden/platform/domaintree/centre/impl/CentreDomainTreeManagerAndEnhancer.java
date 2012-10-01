@@ -37,6 +37,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhan
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
+import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -268,6 +269,29 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 		getEnhancer().addCalculatedProperty(rootType, "", "COUNT(SELF)", "Count of self (Dashboard)", "This calculated property is used for sentinels as aggregation function that calculates a number of entities by each status.", CalculatedPropertyAttribute.NO_ATTR, "SELF");
 		getEnhancer().apply();
 	    }
+	}
+    }
+
+    /**
+     * Enhances centre manager domain to include "Date Period" distribution properties, which will be used for lifecycle analyses.
+     *
+     * @param rootType
+     */
+    public void provideLifecycleAnalysesDatePeriodProperties(final Set<Class<?>> rootTypes) {
+	for (final Class<?> rootType : rootTypes) {
+	    // add "Date Period" distribution calculated properties that are essential for "lifecycle" analyses
+	    for (final GroupingPeriods period : GroupingPeriods.values()) {
+		addDatePeriodProperty(rootType, period);
+	    }
+	}
+    }
+
+    private void addDatePeriodProperty(final Class<?> rootType, final GroupingPeriods period) {
+	try {
+	    getEnhancer().getCalculatedProperty(rootType, period.getPropertyName());
+	} catch (final IncorrectCalcPropertyException e) {
+	    getEnhancer().addCalculatedProperty(rootType, "", "\"This is date period String property, which should be enabled for distribution\"", /* TODO period.getTitle() */period.getPropertyName(), period.getDesc() + "\nThis calculated property is used for lifecycle as distribution property (by time).", CalculatedPropertyAttribute.NO_ATTR, "SELF");
+	    getEnhancer().apply();
 	}
     }
 

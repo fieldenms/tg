@@ -11,6 +11,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRe
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleAddToCategoriesTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleAddToDistributionTickRepresentation;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
+import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -188,6 +189,18 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
     public IAbstractAnalysisDomainTreeManager setTotal(final boolean total) {
 	this.total = total;
 	return this;
+    }
+
+    /**
+     * Makes CountOfSelfDashboard property immutably 'checked' and 'used' (second tick) and also disabled for both ticks.
+     */
+    public void provideMetaStateForLifecycleAnalysesDatePeriodProperties() {
+	for (final Class<?> rootType : getRepresentation().rootTypes()) {
+	    for (final GroupingPeriods period : GroupingPeriods.values()) {
+		getFirstTick().check(rootType, period.getPropertyName(), true);
+	    }
+	}
+	((LifecycleDomainTreeRepresentation) getRepresentation()).provideMetaStateForLifecycleAnalysesDatePeriodProperties();
     }
 
     @Override

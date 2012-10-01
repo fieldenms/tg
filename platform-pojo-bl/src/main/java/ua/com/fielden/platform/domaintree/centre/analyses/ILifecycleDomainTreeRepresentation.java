@@ -13,6 +13,10 @@ public interface ILifecycleDomainTreeRepresentation extends IAbstractAnalysisDom
     ILifecycleAddToDistributionTickRepresentation getFirstTick();
     ILifecycleAddToCategoriesTickRepresentation getSecondTick();
 
+    /** Here the logic should include "date period" properties, like "weeks", "days", etc. */
+    @Override
+    public boolean isExcludedImmutably(Class<?> root, String property);
+
     /**
      * This interface defines how domain tree can be represented for <b>lifecycle analyses</b> specific ("add to distribution").
      *
