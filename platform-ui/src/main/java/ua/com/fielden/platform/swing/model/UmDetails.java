@@ -19,6 +19,8 @@ public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractE
     /** Represents an entity model used for details entity fetching and initialisation. */
     private final fetch<D> fm;
 
+    private boolean ignoreRefresh = false;
+
     /**
      * Primary constructor.
      *
@@ -52,6 +54,7 @@ public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractE
 	if (shouldRefresh) {
 	    getRefreshAction().actionPerformed(null);
 	}
+	ignoreRefresh = false;
     };
 
     /**
@@ -63,7 +66,7 @@ public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractE
      * @return
      */
     protected boolean shouldRefreshWhenSettingEntity(final M entity) {
-	return (getEntity().getId() != entity.getId()) && isInitialised();
+	return !ignoreRefresh && (getEntity().getId() != entity.getId()) && isInitialised();
     }
 
     @Override
@@ -74,6 +77,14 @@ public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractE
     @Override
     public String whyCannotOpen() {
 	return "No details can be added before the master entity is saved.";
+    }
+
+    public boolean isIgnoreRefresh() {
+        return ignoreRefresh;
+    }
+
+    public void setIgnoreRefresh(final boolean enforceRefresh) {
+        this.ignoreRefresh = enforceRefresh;
     }
 
 }
