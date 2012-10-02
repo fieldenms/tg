@@ -8,8 +8,13 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.Monitoring;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -19,8 +24,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTreeRepresentation implements ILifecycleDomainTreeRepresentation {
-    public static final String COUNT_OF_SELF_DASHBOARD = "countOfSelfDashboard";
-
+    public static final String CATEGORY_PROPERTY_MARKER = "\"This is a marker expression, that indicates that this is a 'category' property to be used in lifecycle analyses.\"";
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      *
@@ -64,18 +68,52 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
 	 */
 	public LifecycleAddToCategoriesTickRepresentation() {
 	}
+
+	/**
+	 * A contract for reverse "enabling" of the properties. For e.g. in base analyses second tick we should enable only AGGREGATED_EXPRESSION properties.
+	 * But here the following properties should be enabled:<p>
+	 * 1) Lifecycle properties (with @Monitoring) <br>
+	 * 2) "category" properties (they will appear after appropriate Lifecycle property will be chosen)
+	 *
+	 * @param root
+	 * @param property
+	 * @return
+	 */
+	@Override
+	protected boolean isEnabledImmutably(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+
+	    final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType /* root */, property);
+	    final Class<?> penultType = transformed.getKey();
+	    final String lastPropertyName = transformed.getValue();
+
+	    return !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Monitoring.class, penultType, lastPropertyName) || // enable "lifecycle" properties (with @Monitoring)
+		    !isEntityItself && isCategoryProperty(managedType, property); // enable "category" properties
+	}
+
+	/**
+	 * Indicates whether the property represents so called "category" property.
+	 *
+	 * @param managedType
+	 * @param property
+	 * @return
+	 */
+	private boolean isCategoryProperty(final Class<?> managedType, final String property) {
+	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	    final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
+	    final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, managedType, property);
+	    final String expr = calculatedAnnotation != null ? calculatedAnnotation.value() : null;
+	    return expr != null && EntityUtils.isString(propertyType) && //
+		    expr.equals(CATEGORY_PROPERTY_MARKER);
+	}
     }
 
     /**
      * Provides a meta-state for Date Period distribution properties.
      */
     public void provideMetaStateForLifecycleAnalysesDatePeriodProperties() {
-//	for (final Class<?> rootType : rootTypes()) {
-//	    if (!isExcludedImmutably(rootType, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD)) {
-//		getFirstTick().disableImmutably(rootType, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD);
-//		getSecondTick().disableImmutably(rootType, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD);
-//	    }
-//	}
     }
 
     /**

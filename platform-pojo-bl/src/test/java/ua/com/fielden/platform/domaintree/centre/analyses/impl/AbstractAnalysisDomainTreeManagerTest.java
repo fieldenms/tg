@@ -90,22 +90,35 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 	manageTestingDTM_for_AbstractDomainTreeTest(dtm.getRepresentation());
 
 	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "intAggExprProp")) {
-	    dtm.getSecondTick().check(MasterEntity.class, "intAggExprProp", true);
+	    if (!dtm.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "intAggExprProp")) {
+		dtm.getSecondTick().check(MasterEntity.class, "intAggExprProp", true);
+	    }
 	}
 	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "bigDecimalAggExprProp")) {
-	    dtm.getSecondTick().check(MasterEntity.class, "bigDecimalAggExprProp", true);
+	    if (!dtm.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "bigDecimalAggExprProp")) {
+		dtm.getSecondTick().check(MasterEntity.class, "bigDecimalAggExprProp", true);
+	    }
 	}
 	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "moneyAggExprProp")) {
-	    dtm.getSecondTick().check(MasterEntity.class, "moneyAggExprProp", true);
+	    if (!dtm.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "moneyAggExprProp")) {
+		dtm.getSecondTick().check(MasterEntity.class, "moneyAggExprProp", true);
+	    }
 	}
+
 	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "dateExprProp")) {
-	    dtm.getFirstTick().check(MasterEntity.class, "dateExprProp", true);
+	    if (!dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "dateExprProp")) {
+		dtm.getFirstTick().check(MasterEntity.class, "dateExprProp", true);
+	    }
 	}
 	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "simpleEntityProp")) {
-	    dtm.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	    if (!dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "simpleEntityProp")) {
+		dtm.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	    }
 	}
 	if (!dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "booleanProp")) {
-	    dtm.getFirstTick().check(MasterEntity.class, "booleanProp", true);
+	    if (!dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "booleanProp")) {
+		dtm.getFirstTick().check(MasterEntity.class, "booleanProp", true);
+	    }
 	}
     }
 

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.domaintree.centre.analyses;
 import java.util.Date;
 import java.util.List;
 
+import ua.com.fielden.platform.types.ICategorizer;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -21,8 +22,6 @@ public interface ILifecycleDomainTreeManager extends IAbstractAnalysisDomainTree
     /**
      * This interface defines how domain tree can be managed for <b>lyfecycle analyses</b> specific ("add to distribution").
      *
-     * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br><br>
-     *
      * @author TG Team
      *
      */
@@ -38,8 +37,8 @@ public interface ILifecycleDomainTreeManager extends IAbstractAnalysisDomainTree
 
     /**
      * This interface defines how domain tree can be managed for <b>lifecycle analyses</b> specific ("add to categories").
-     *
-     * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br><br>
+     * <p>
+     * Note that, there are also enabled @Monitoring properties in this tick, which will adjust a list of categories by its own categories (defined in property {@link ICategorizer}).
      *
      * @author TG Team
      *

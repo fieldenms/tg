@@ -12,6 +12,7 @@ import java.util.Set;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
@@ -83,6 +84,10 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Date Period properties ////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
     @Test
     public void test_that_date_period_properties_exist_and_are_included() {
 	for (final GroupingPeriods period : GroupingPeriods.values()) {
@@ -102,6 +107,42 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
 	for (final GroupingPeriods period : GroupingPeriods.values()) {
 	    assertTrue("'" + period.getPropertyName() + "' property should be disabled for aggregation.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, period.getPropertyName()));
 	}
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Lifecycle @Monitoring properties //////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    @Test
+    public void test_that_Lifecycle_properties_are_NOT_disabled_for_second_tick() {
+	assertFalse("Lifecycle property should be enabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "simpleEntityProp"));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Category properties ///////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    @Test
+    public void test_that_Category_properties_are_NOT_disabled_for_second_tick() {
+	final LifecycleDomainTreeRepresentation repr = (LifecycleDomainTreeRepresentation) dtm();
+	repr.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, "Category 1", "Category 1 desc", CalculatedPropertyAttribute.NO_ATTR, "SELF");
+	repr.parentCentreDomainTreeManager().getEnhancer().apply();
+
+	assertFalse("Category property should be enabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "category1"));
+    }
+
+    /// all others ///
+    @Override
+    @Test
+    public void test_that_second_tick_for_all_properties_is_disabled() {
+    }
+
+    @Override
+    @Test
+    public void test_that_second_tick_for_calculated_properties_of_AGGREGATED_EXPRESSION_type_are_NOT_disabled() {
+    }
+
+    @Override
+    @Test
+    public void test_that_other_properties_are_not_disabled() {
     }
 
     ///////////////// overridden in order to reflect new included properties -- Date period properties /////////////////

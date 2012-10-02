@@ -221,21 +221,32 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	}
 
 	@Override
-	public boolean isDisabledImmutably(final Class<?> root, final String property) {
+	public final boolean isDisabledImmutably(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    final Class<?> managedType = managedType(root);
-
-	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-	    //final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-	    //final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, root, property);
-
 	    return (super.isDisabledImmutably(managedType, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
-	    !(!isEntityItself && isCalculatedAndOfTypes(managedType, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION));//
+		    !(isEnabledImmutably(root, property)); // provides "reversed" disabling -- disable all properties that is not enabled by "isEnabledImmutably(root, property)" contract
+
 	    //	    (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself
 	    //	    // TODO (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
 	    //	    (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)
 	    //	    // TODO (!isEntityItself && EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))) || // disable properties of "entity with AE or composite key" type
 	    //	    (!isEntityItself && (EntityUtils.isDate(propertyType) || EntityUtils.isBoolean(propertyType))); // disable date and boolean properties
+	}
+
+	/**
+	 * A contract for reverse "enabling" of the properties. For e.g. in base analyses second tick we should enable only AGGREGATED_EXPRESSION properties.
+	 * This contract can be fully overridden to provide a very different functionality.
+	 *
+	 * @param root
+	 * @param property
+	 * @return
+	 */
+	protected boolean isEnabledImmutably(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	    return !isEntityItself && isCalculatedAndOfTypes(managedType, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION);
 	}
 
 	@Override

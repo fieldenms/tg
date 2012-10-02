@@ -188,4 +188,23 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 	    assertFalse("'" + period.getPropertyName() + "' property should be checked (mutably) for categories (aka aggregation).", dtm().getSecondTick().isChecked(MasterEntity.class, period.getPropertyName()));
 	}
     }
+
+    //////////////////////////// TODO ////////////////////////////
+    @Override
+    @Test
+    public void test_that_orderings_for_second_tick_are_default_and_can_be_altered() {
+	////////////////////////////TODO ////////////////////////////
+    }
+
+    @Override
+    @Test
+    public void test_that_Orderings_for_second_tick_can_be_changed_based_on_Usage_changes() {
+	////////////////////////////TODO ////////////////////////////
+    }
+
+    @Override
+    @Test
+    public void test_that_usage_management_works_correctly_for_second_tick() {
+	////////////////////////////TODO ////////////////////////////
+    }
 }
