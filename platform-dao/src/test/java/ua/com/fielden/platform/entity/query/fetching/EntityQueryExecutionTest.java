@@ -106,6 +106,25 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
 
+    /////////////////////////////////////// QUERING KEYS OF ENTITIES WITH COMPOSITE KEYS /////////////////////////////////////////
+
+    @Test
+    public void test_query_with_virtual_property() {
+	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().prop("key").like().val("WAGON%1").model();
+	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).with(orderBy().prop("key").desc().model()).model());
+	assertEquals("Incorrect key", 2, models.size());
+	assertEquals("Incorrect key 1", "WAGON2", models.get(0).getWagon().getKey());
+	assertEquals("Incorrect key 2", "1", models.get(0).getPosition().toString());
+	assertEquals("Incorrect key 2", "WAGON2 1", models.get(0).getKey().toString());
+    }
+
+
+
+
+
+
+
+
     @Test
     public void test_query_based_entities_with_composite_props() {
 	final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).model();
@@ -623,18 +642,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect size", 1, models.size());
 	assertEquals("Incorrect key", "BMW", models.get(0).getCompetitor().getKey());
     }
-
-
-    @Test
-    public void test_query_with_virtual_property() {
-	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().prop("key").like().val("WAGON%1").model();
-	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).with(orderBy().prop("key").desc().model()).model());
-	assertEquals("Incorrect key", 2, models.size());
-	assertEquals("Incorrect key 1", "WAGON2", models.get(0).getWagon().getKey());
-	assertEquals("Incorrect key 2", "1", models.get(0).getPosition().toString());
-	assertEquals("Incorrect key 2", "WAGON2 1", models.get(0).getKey().toString());
-    }
-
 
     @Test
     public void test_fetch_with_sorted_collection() {

@@ -118,6 +118,12 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    final PropertyMetadata ppi = getPropType(propName);
 	    final Class propType = ppi.getJavaType();
 
+//	    if (propName == "key" && ppi.isVirtual()) {
+//
+//
+//		System.out.println("-----------------------------------------------");
+//	    }
+
 	    if (AbstractEntity.class.isAssignableFrom(propType)) {
 		if (!skipEntities) {
 		    entityProps.put(propName, new fetch(propType, FetchCategory.MINIMAL));

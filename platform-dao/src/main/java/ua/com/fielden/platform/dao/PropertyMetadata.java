@@ -22,7 +22,9 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY;
@@ -127,6 +129,14 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public boolean isUnionEntityDetails() {
 	return type.equals(UNION_DETAILS);
+    }
+
+    public boolean isEntityMemberOfCompositeKey() {
+	return type.equals(ENTITY_MEMBER_OF_COMPOSITE_KEY);
+    }
+
+    public boolean isPrimitiveMemberOfCompositeKey() {
+	return type.equals(PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
     }
 
     public boolean isVirtual() {
