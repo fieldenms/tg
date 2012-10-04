@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
+import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
@@ -167,5 +168,16 @@ public class FetchModelTest extends BaseEntQueryTCase {
 	assertTrue(locationFetchModel.getIncludedPropsWithModels().size() == 0);
 	assertTrue(locationFetchModel.getIncudedProps().size() == 0);
 	assertTrue(locationFetchModel.getExcludedProps().size() == 0);
+    }
+
+    @Test
+    public void test_virtual_composite_key_property() {
+	final fetch<TgAuthor> fetch = new fetch<TgAuthor>(TgAuthor.class, FetchCategory.MINIMAL);
+	final FetchModel<TgAuthor> fetchModel = new FetchModel<TgAuthor>(fetch, DOMAIN_METADATA_ANALYSER);
+	assertTrue(fetchModel.containsProp("id"));
+	assertTrue(fetchModel.containsProp("version"));
+	assertFalse(fetchModel.containsProp("key"));
+	assertTrue(fetchModel.containsProp("name"));
+	assertTrue(fetchModel.containsProp("surname"));
     }
 }

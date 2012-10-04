@@ -55,10 +55,20 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	}
     }
 
+    private void includeAllCompositeKeyMembers() {
+	for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType())) {
+	    if (ppi.isEntityMemberOfCompositeKey()) {
+		with(ppi.getName(), false);
+	    } else if (ppi.isPrimitiveMemberOfCompositeKey()) {
+		with(ppi.getName(), true);
+	    }
+	}
+    }
+
     private void includeAllFirstLevelPrimPropsAndKey() {
 	for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType())) {
 	    if (!ppi.isCalculated()) {
-		with(ppi.getName(), (ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || ppi.getType().equals(PropertyCategory.ENTITY_KEY)) ? false : true);
+		with(ppi.getName(), !(ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || ppi.getType().equals(PropertyCategory.ENTITY_KEY)));
 	    }
 	}
     }
@@ -118,23 +128,22 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    final PropertyMetadata ppi = getPropType(propName);
 	    final Class propType = ppi.getJavaType();
 
-//	    if (propName == "key" && ppi.isVirtual()) {
-//
-//
-//		System.out.println("-----------------------------------------------");
-//	    }
-
-	    if (AbstractEntity.class.isAssignableFrom(propType)) {
-		if (!skipEntities) {
-		    entityProps.put(propName, new fetch(propType, FetchCategory.MINIMAL));
-		}
+	    if (propName.equals("key") && ppi.isVirtual()) {
+		includeAllCompositeKeyMembers();
 	    } else {
-		final String singleSubpropertyOfCompositeUserTypeProperty = ppi.getSinglePropertyOfCompositeUserType();
-		if (singleSubpropertyOfCompositeUserTypeProperty != null) {
+		if (AbstractEntity.class.isAssignableFrom(propType)) {
+		    if (!skipEntities) {
+			entityProps.put(propName, new fetch(propType, FetchCategory.MINIMAL));
+		    }
+		} else {
+		    final String singleSubpropertyOfCompositeUserTypeProperty = ppi.getSinglePropertyOfCompositeUserType();
+		    if (singleSubpropertyOfCompositeUserTypeProperty != null) {
 			primProps.add(propName + "." + singleSubpropertyOfCompositeUserTypeProperty);
+		    }
+		    primProps.add(propName);
 		}
-		primProps.add(propName);
 	    }
+
 	}
     }
 
@@ -143,7 +152,8 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    final Class propType = getPropType(propName).getJavaType();
 
 	    if (propType != fetchModel.getEntityType()) {
-		 throw new IllegalArgumentException("Mismatch between actual type [" + propType + "] of property [" + propName + "] in entity type [" + getEntityType() + "] and its fetch model type [" + fetchModel.getEntityType() + "]!");
+		throw new IllegalArgumentException("Mismatch between actual type [" + propType + "] of property [" + propName + "] in entity type [" + getEntityType()
+			+ "] and its fetch model type [" + fetchModel.getEntityType() + "]!");
 	    }
 	}
 
