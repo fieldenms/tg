@@ -54,14 +54,6 @@ public interface ILifecycleDomainTreeManager extends IAbstractAnalysisDomainTree
     Pair<Class<?>, String> getLifecycleProperty();
 
     /**
-     * Sets a property to build lifecycle report.
-     *
-     * @param rootAndProperty -- a value to set
-     * @return -- an lifecycle analysis manager
-     */
-    ILifecycleDomainTreeManager setLifecycleProperty(final Pair<Class<?>, String> rootAndProperty);
-
-    /**
      * Gets a "from" date (left period boundary).
      *
      * @return

@@ -15,6 +15,7 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.types.ICategorizer;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -24,7 +25,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManager implements ILifecycleDomainTreeManager {
-    private Pair<Class<?>, String> lifecycleProperty;
     private Date from, to;
     private Boolean total;
 
@@ -35,7 +35,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
      * @param rootTypes
      */
     public LifecycleDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, new LifecycleDomainTreeRepresentation(serialiser, rootTypes), null, new LifecycleAddToDistributionTickManager(), new LifecycleAddToCategoriesTickManager(), null, null, null, null);
+	this(serialiser, new LifecycleDomainTreeRepresentation(serialiser, rootTypes), null, new LifecycleAddToDistributionTickManager(), new LifecycleAddToCategoriesTickManager(), null, null, null);
     }
 
     /**
@@ -46,10 +46,9 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
      * @param firstTick
      * @param secondTick
      */
-    protected LifecycleDomainTreeManager(final ISerialiser serialiser, final LifecycleDomainTreeRepresentation dtr, final Boolean visible, final LifecycleAddToDistributionTickManager firstTick, final LifecycleAddToCategoriesTickManager secondTick, final Pair<Class<?>, String> lifecycleProperty, final Date from, final Date to, final Boolean total) {
+    protected LifecycleDomainTreeManager(final ISerialiser serialiser, final LifecycleDomainTreeRepresentation dtr, final Boolean visible, final LifecycleAddToDistributionTickManager firstTick, final LifecycleAddToCategoriesTickManager secondTick, final Date from, final Date to, final Boolean total) {
 	super(serialiser, dtr, visible, firstTick, secondTick);
 
-	this.lifecycleProperty = lifecycleProperty;
 	this.from = from;
 	this.to = to;
 	this.total = total;
@@ -126,17 +125,15 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	    final LifecycleAddToDistributionTickManager firstTick = readValue(buffer, LifecycleAddToDistributionTickManager.class);
 	    final LifecycleAddToCategoriesTickManager secondTick = readValue(buffer, LifecycleAddToCategoriesTickManager.class);
 	    final Boolean visible = readValue(buffer, Boolean.class);
-	    final Pair<Class<?>, String> lifecycleProperty = readValue(buffer, Pair.class);
 	    final Date from = readValue(buffer, Date.class);
 	    final Date to = readValue(buffer, Date.class);
 	    final Boolean total = readValue(buffer, Boolean.class);
-	    return new LifecycleDomainTreeManager(kryo(), dtr, visible, firstTick, secondTick, lifecycleProperty, from, to, total);
+	    return new LifecycleDomainTreeManager(kryo(), dtr, visible, firstTick, secondTick, from, to, total);
 	}
 
 	@Override
 	public void write(final ByteBuffer buffer, final LifecycleDomainTreeManager manager) {
 	    super.write(buffer, manager);
-	    writeValue(buffer, manager.lifecycleProperty);
 	    writeValue(buffer, manager.from);
 	    writeValue(buffer, manager.to);
 	    writeValue(buffer, manager.total);
@@ -145,17 +142,38 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
     @Override
     public Pair<Class<?>, String> getLifecycleProperty() {
-	return lifecycleProperty;
+	// here return the first (which should be the only one) lifecycle property in the list of checked properties
+	for (final Class<?> root : getRepresentation().rootTypes()) {
+	    final List<String> checkedProperties = getSecondTick().checkedProperties(root);
+	    for (final String checkedProperty : checkedProperties) {
+		if (categorizer(root, checkedProperty) != null) {
+		    return key(root, checkedProperty);
+		}
+	    }
+	}
+	return null;
     }
 
-    @Override
-    public ILifecycleDomainTreeManager setLifecycleProperty(final Pair<Class<?>, String> lifecycleProperty) {
-	final boolean isEntityItself = "".equals(lifecycleProperty.getValue()); // empty property means "entity itself"
-	if (isEntityItself || !AnnotationReflector.isPropertyAnnotationPresent(Monitoring.class, lifecycleProperty.getKey(), lifecycleProperty.getValue())) { // can not set a property of non-lifecycle nature
-	    throw new IllegalArgumentException("Could not set a property of non-lifecycle nature [" + lifecycleProperty.getValue() + "] in type [" + lifecycleProperty.getKey().getSimpleName() + "].");
+    /**
+     * Returns a categorizer associated with this property (if it is not @Monitoring at all -- returns <code>null</code>).
+     *
+     * @param root
+     * @param checkedProperty
+     * @return
+     */
+    private ICategorizer categorizer(final Class<?> root, final String checkedProperty) {
+	final Monitoring annotation = AnnotationReflector.getPropertyAnnotation(Monitoring.class, root, checkedProperty);
+	try {
+	    return annotation != null ? annotation.value().newInstance() : null;
+	} catch (final InstantiationException e) {
+	    e.printStackTrace();
+	    logger().error(e.getMessage());
+	    throw new RuntimeException(e);
+	} catch (final IllegalAccessException e) {
+	    e.printStackTrace();
+	    logger().error(e.getMessage());
+	    throw new RuntimeException(e);
 	}
-	this.lifecycleProperty = lifecycleProperty;
-	return this;
     }
 
     @Override
@@ -208,7 +226,6 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	final int prime = 31;
 	int result = super.hashCode();
 	result = prime * result + ((from == null) ? 0 : from.hashCode());
-	result = prime * result + ((lifecycleProperty == null) ? 0 : lifecycleProperty.hashCode());
 	result = prime * result + ((to == null) ? 0 : to.hashCode());
 	result = prime * result + ((total == null) ? 0 : total.hashCode());
 	return result;
@@ -227,11 +244,6 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	    if (other.from != null)
 		return false;
 	} else if (!from.equals(other.from))
-	    return false;
-	if (lifecycleProperty == null) {
-	    if (other.lifecycleProperty != null)
-		return false;
-	} else if (!lifecycleProperty.equals(other.lifecycleProperty))
 	    return false;
 	if (to == null) {
 	    if (other.to != null)

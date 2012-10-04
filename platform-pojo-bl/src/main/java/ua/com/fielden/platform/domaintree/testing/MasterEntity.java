@@ -67,6 +67,7 @@ public class MasterEntity extends AbstractEntity<String> {
     @IsProperty
     private Money moneyProp;
     @IsProperty
+    @Monitoring(MasterEntityDatePropCategorizer.class)
     private Date dateProp;
 
     ////////// boolean type //////////

@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -12,13 +11,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
+import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.types.ICategorizer;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -114,23 +117,6 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     }
 
     @Test
-    public void test_that_LifecycleProperty_can_be_set_and_altered() {
-	// THE FIRST TIME -- returns DEFAULT VALUE //
-	// default value should be NULL
-	assertNull("The default LifecycleProperty should be Null.", dtm().getLifecycleProperty());
-
-	// Alter and check //
-	assertTrue("The first tick reference should be the same.", dtm() == dtm().setLifecycleProperty(new Pair<Class<?>, String>(MasterEntity.class, "simpleEntityProp")));
-	assertEquals("The LifecycleProperty should be 'simpleEntityProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "simpleEntityProp"), dtm().getLifecycleProperty());
-
-	try {
-	    dtm().setLifecycleProperty(new Pair<Class<?>, String>(MasterEntity.class, "booleanProp"));
-	    fail("Non-lifecycle property should cause exception when someone is trying to set it as Lifecycle property for the manager.");
-	} catch (final IllegalArgumentException e) {
-	}
-    }
-
-    @Test
     public void test_that_FROM_can_be_set_and_altered() {
 	// THE FIRST TIME -- returns DEFAULT VALUE //
 	// default value should be NULL
@@ -174,7 +160,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     public void test_that_PropertyOrderingListeners_work() {
     }
 
-    /////////////////////////
+    ///////////////////////// Date Period checking /////////////////////////
     @Test
     public void test_that_date_period_properties_are_checked_for_first_tick() {
 	for (final GroupingPeriods period : GroupingPeriods.values()) {
@@ -187,6 +173,41 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 	for (final GroupingPeriods period : GroupingPeriods.values()) {
 	    assertFalse("'" + period.getPropertyName() + "' property should be checked (mutably) for categories (aka aggregation).", dtm().getSecondTick().isChecked(MasterEntity.class, period.getPropertyName()));
 	}
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////// Lifecycle properties checking /////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////
+    @Test @Ignore
+    public void test_that_changing_lifecycle_property_leads_to_tree_expanding_by_category_markers_for_second_tick() throws InstantiationException, IllegalAccessException {
+	final ICategorizer categorizer = Finder.findFieldByName(MasterEntity.class, "simpleEntityProp").getAnnotation(Monitoring.class).value().newInstance();
+	System.out.println("categorizer == " + categorizer);
+
+	// THE FIRST TIME -- returns DEFAULT VALUE //
+	// default value should be NULL
+	assertNull("The default LifecycleProperty should be Null.", dtm().getLifecycleProperty());
+	assertEquals("At the first time, the checked properties should be empty.", Arrays.asList(), dtm().getSecondTick().checkedProperties(MasterEntity.class));
+	assertEquals("At the first time, the used properties should be empty as well as 'checked' properties.", Arrays.asList(), dtm().getSecondTick().usedProperties(MasterEntity.class));
+
+	// Alter LifecycleProperty by checking it in the second tick //
+	dtm().getSecondTick().check(MasterEntity.class, "simpleEntityProp", true);
+	assertEquals("The LifecycleProperty should be 'simpleEntityProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "simpleEntityProp"), dtm().getLifecycleProperty());
+	assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("simpleEntityProp", "available", "broken", "unoperational"), dtm().getSecondTick().checkedProperties(MasterEntity.class));
+	assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("available", "broken"), dtm().getSecondTick().usedProperties(MasterEntity.class));
+
+	// Remove LifecycleProperty by unchecking it in the second tick //
+	dtm().getSecondTick().check(MasterEntity.class, "simpleEntityProp", false);
+	assertNull("LifecycleProperty has become Null.", dtm().getLifecycleProperty());
+	assertEquals("The 'checked' properties became empty.", Arrays.asList(), dtm().getSecondTick().checkedProperties(MasterEntity.class));
+	assertEquals("The 'used' properties became empty.", Arrays.asList(), dtm().getSecondTick().usedProperties(MasterEntity.class));
+
+	// Alter LifecycleProperty by checking it in the second tick and then check another lifecycle property //
+	dtm().getSecondTick().check(MasterEntity.class, "simpleEntityProp", true);
+	dtm().getSecondTick().check(MasterEntity.class, "dateProp", true);
+
+	assertEquals("The LifecycleProperty should be 'dateProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "dateProp"), dtm().getLifecycleProperty());
+	assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("dateProp", "future", "now", "past"), dtm().getSecondTick().checkedProperties(MasterEntity.class));
+	assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("future", "past"), dtm().getSecondTick().usedProperties(MasterEntity.class));
     }
 
     //////////////////////////// TODO ////////////////////////////

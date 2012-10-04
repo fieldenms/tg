@@ -3,38 +3,43 @@ package ua.com.fielden.platform.domaintree.testing;
 import java.awt.Color;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import ua.com.fielden.platform.types.ICategorizer;
 import ua.com.fielden.platform.types.ICategory;
 
 /**
- * Testing categorizer for {@link MasterEntity} "simpleEntityProp" property.
+ * Testing categorizer for {@link MasterEntity} "dateProp" property.
  *
  * @author TG Team
  *
  */
-public class MasterEntitySimpleEntityPropCategorizer implements ICategorizer {
-    public MasterEntitySimpleEntityPropCategorizer() {
+public class MasterEntityDatePropCategorizer implements ICategorizer {
+    public MasterEntityDatePropCategorizer() {
 	super();
     }
 
     @Override
     public ICategory getCategory(final Object value) {
-	return ("Value 1".equals(value) || "Value 2".equals(value)) ? Category.AVAILABLE : //
-		(("Value 3".equals(value)) ? Category.BROKEN : //
-			(("Value 4".equals(value)) ? Category.UNOPERATIONAL : //
-				Category.UNCATEGORIZED));
+	final Date date = (Date) value;
+	final Date now = new Date();
+
+	return (value == null ? Category.UNCATEGORIZED : //
+		((now.getTime() > date.getTime() ? Category.FUTURE : //
+		(((now.getTime() == date.getTime()) ? Category.NOW : //
+			(((now.getTime() < date.getTime()) ? Category.PAST : //
+				Category.UNCATEGORIZED)))))));
     }
 
     @Override
     public List<? extends ICategory> getAllCategories() {
-	return Arrays.asList(Category.AVAILABLE, Category.BROKEN, Category.UNOPERATIONAL);
+	return Arrays.asList(Category.FUTURE, Category.NOW, Category.PAST);
     }
 
     @Override
     public List<? extends ICategory> getMainCategories() {
-	return Arrays.asList(Category.AVAILABLE, Category.BROKEN);
+	return Arrays.asList(Category.FUTURE, Category.PAST);
     }
 
     /**
@@ -44,9 +49,9 @@ public class MasterEntitySimpleEntityPropCategorizer implements ICategorizer {
      *
      */
     private static enum Category implements ICategory {
-	AVAILABLE("Available", "Smth is available (Value 1, Value 2)", Color.BLUE), //
-	BROKEN("Broken", "Smth is broken (Value 3)", Color.YELLOW), //
-	UNOPERATIONAL("Unoperational", "Smth is completely un-operational(Value 4)", Color.RED), //
+	FUTURE("Future", "The date is in future", Color.BLUE), //
+	NOW("Now", "The date is Now", Color.YELLOW), //
+	PAST("Past", "The date is in the past", Color.RED), //
 	UNCATEGORIZED("Non-categorized", "Non-categorized", null);
 
 	private final String title;
@@ -61,7 +66,7 @@ public class MasterEntitySimpleEntityPropCategorizer implements ICategorizer {
 
 	@Override
 	public boolean isNormal() {
-	    return AVAILABLE.equals(this);
+	    return PAST.equals(this);
 	}
 
 	@Override
