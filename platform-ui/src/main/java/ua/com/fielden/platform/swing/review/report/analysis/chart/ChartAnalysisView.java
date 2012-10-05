@@ -101,7 +101,6 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     private static final long serialVersionUID = -6505281133387254406L;
 
-    private final CategoryDataModel<T> dataModel;
     /**
      * The list of available distribution properties.
      */
@@ -140,7 +139,6 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     public ChartAnalysisView(final ChartAnalysisModel<T> model, final ChartAnalysisConfigurationView<T> owner) {
 	super(model, owner);
-	this.dataModel = new CategoryDataModel<T>(getModel().getChartAnalysisDataProvider());
 	this.chartPanel = new MultipleChartPanel<List<T>, CategoryChartTypes>();
 	this.chartScroller = new CategoryChartScrollPanel(chartPanel, getModel().adtme().getVisibleDistributedValuesNumber());
 	this.distributionList = createDistributionList();
@@ -345,8 +343,8 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	final Class<T> root = getModel().getCriteria().getEntityClass();
 	final IAnalysisAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
 
-	for (final String distributionProperty : secondTick.checkedProperties(root)) {
-	    listModel.addElement(distributionProperty);
+	for (final String aggregationProperty : secondTick.checkedProperties(root)) {
+	    listModel.addElement(aggregationProperty);
 	}
 	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel);
 	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList, new JCheckBox()) {
@@ -544,8 +542,6 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	chartPanel.revalidate();
 	chartPanel.repaint();
     }
-    /////////////////////////TODO Refactor the code below//////////////////////////////////////////
-
 
     private ActionChartPanel<List<T>, CategoryChartTypes> createChartPanel(final boolean all, final int... indexes) {
 	final ActionChartPanel<List<T>, CategoryChartTypes> chartPanel = new ActionChartPanel<List<T>, CategoryChartTypes>(new CategoryChartFactory<T>(getModel(), all, indexes), new IBlockingLayerProvider() {
@@ -636,8 +632,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	repaint();
     }
 
-    @Override
-    protected void performCustomAction(final AnalysisDataEvent<?> clickedData) {
+    private void performCustomAction(final AnalysisDataEvent<?> clickedData) {
 	final ChartEntity entity = ((ChartMouseEvent)clickedData.getData()).getEntity();
 	if (entity instanceof CategoryItemEntity) {
 	    createDoubleClickAction(createChoosenItem(((CategoryItemEntity) entity).getColumnKey())).actionPerformed(null);

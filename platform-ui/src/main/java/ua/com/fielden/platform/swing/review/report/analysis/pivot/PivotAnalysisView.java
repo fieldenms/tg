@@ -391,8 +391,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    protected void performCustomAction(final AnalysisDataEvent<?> clickedData) {
+    private void performCustomAction(final AnalysisDataEvent<?> clickedData) {
 	createDoubleClickAction((List<Pair<String, Object>>)clickedData.getData()).actionPerformed(null);
     }
 

@@ -36,7 +36,6 @@ import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.OpenMasterClickAction;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
-import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
@@ -189,12 +188,6 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    });
 	}
 
-    }
-
-    //TODO it should be supported later!
-    @Override
-    protected void performCustomAction(final AnalysisDataEvent<?> clickedData) {
-	throw new UnsupportedOperationException("This functionality is not supported yet!");
     }
 
     @Override

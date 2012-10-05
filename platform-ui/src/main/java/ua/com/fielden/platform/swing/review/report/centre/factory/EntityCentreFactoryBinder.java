@@ -64,6 +64,7 @@ public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> implements I
 	bindEntityCentreTo(new DefaultEntityCentreFactory<T>());
 	bindDefaultAnalysisTo(new DefaultGridAnalysisFactory<T>());
 	bindAnalysisTo(AnalysisType.SIMPLE, new DefaultChartAnalysisFactory<T>());
+	bindAnalysisTo(AnalysisType.LIFECYCLE, new DefaultLifecycleAnalysisFactory<T>());
 	bindAnalysisTo(AnalysisType.PIVOT, new DefaultPivotAnalysisFactory<T>());
 	bindAnalysisTo(AnalysisType.SENTINEL, new SentinelChartAnalysisFactory<T>());
     }

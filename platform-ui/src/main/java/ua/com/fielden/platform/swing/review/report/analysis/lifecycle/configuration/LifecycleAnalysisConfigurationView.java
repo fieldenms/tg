@@ -4,7 +4,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
@@ -33,7 +32,7 @@ public class LifecycleAnalysisConfigurationView<T extends AbstractEntity<?>> ext
 
     @Override
     protected LifecycleAnalysisView<T> createConfigurableView() {
-	return null;/*new ChartAnalysisView<T>(getModel().createChartAnalysisModel(), this);*/
+	return new LifecycleAnalysisView<T>(getModel().createChartAnalysisModel(), this);
     }
 
     private IAbstractConfigurationViewEventListener createOpenAnalysisEventListener() {
@@ -43,11 +42,11 @@ public class LifecycleAnalysisConfigurationView<T extends AbstractEntity<?>> ext
 	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
 		switch (event.getEventAction()) {
 		case OPEN:
-		    IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager)getModel().getAnalysisManager();
+		    ILifecycleDomainTreeManager adtme = (ILifecycleDomainTreeManager)getModel().getAnalysisManager();
 		    if(adtme == null){
 			getModel().initAnalysisManager(AnalysisType.LIFECYCLE);
 			getModel().save();
-			adtme = (IAnalysisDomainTreeManager)getModel().getAnalysisManager();
+			adtme = (ILifecycleDomainTreeManager)getModel().getAnalysisManager();
 		    }
 		    if(adtme == null){
 			return new Result(LifecycleAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));

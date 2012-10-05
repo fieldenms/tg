@@ -12,14 +12,12 @@ import org.apache.commons.lang.StringUtils;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
@@ -133,7 +131,6 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		adtme());
 
 	final AnalysisResultClassBundle<T> classBundle = pivotQueryGenerator.generateQueryModel();
-	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queryModelList = classBundle.getQueries();
 
 	final List<String> distributionProperties = adtme().getFirstTick().usedProperties(root);
 

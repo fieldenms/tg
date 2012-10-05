@@ -30,21 +30,21 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabDialog;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabDialogModel;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabOptions;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
-import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.MultipleAnalysisEntityCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
@@ -188,13 +188,15 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	if(subToolBar != null){
 	    panelBuilder = panelBuilder.addSubToolBar(subToolBar).addSeparator();
 	}
-	final JToolBar toolBar = panelBuilder//
-		.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")))//
-		.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
-		.addButton(new AddAnalysisAction(AnalysisType.SENTINEL, "Add sentinel analysis", "Add sentinel analysis report", ResourceLoader.getIcon("images/sentinel-add.png"), ResourceLoader.getIcon("images/sentinel-add.png")))//
-		.addButton(createRemoveAnalysisAction())
-		.buildActionPanel();
-	toolBar.setFloatable(false);
+	panelBuilder.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")));//
+	if (!Finder.findLifecycleProperties(getModel().getCriteria().getEntityClass()).isEmpty()) {
+	    panelBuilder.addButton(new AddAnalysisAction(AnalysisType.LIFECYCLE, "Add lifecycle analysis", "Add lifecycle report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")));//
+	}
+	panelBuilder.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
+	.addButton(new AddAnalysisAction(AnalysisType.SENTINEL, "Add sentinel analysis", "Add sentinel analysis report", ResourceLoader.getIcon("images/sentinel-add.png"), ResourceLoader.getIcon("images/sentinel-add.png")))//
+	.addButton(createRemoveAnalysisAction());
+	final JToolBar toolBar = panelBuilder.buildActionPanel();
+		toolBar.setFloatable(false);
 	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 	return toolBar;
     }
@@ -223,7 +225,15 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = createAnalysis(name, analysisType);
 	    if(analysis != null){
 		tabPanel.addTab(analysis.getModel().getName(), analysis);
-		tabPanel.setSelectedComponent(analysis);
+		analysis.addLoadListener(new ILoadListener() {
+
+		    @Override
+		    public void viewWasLoaded(final LoadEvent event) {
+			tabPanel.setSelectedComponent(analysis);
+			analysis.removeLoadListener(this);
+		    }
+		});
+
 		analysis.open();
 	    }
 	}
@@ -308,6 +318,8 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    return AnalysisType.SIMPLE;
 	} else if(analysisManager instanceof IPivotDomainTreeManager) {
 	    return AnalysisType.PIVOT;
+	} else if(analysisManager instanceof ILifecycleDomainTreeManager) {
+	    return AnalysisType.LIFECYCLE;
 	}
 	return null;
     }
@@ -438,16 +450,8 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @return
      */
     private AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> createAnalysis(final String name, final AnalysisType type){
-	switch(type){
-	case SIMPLE:
-	    return createChartAnalysis(name);
-	case SENTINEL:
-	    return createSentinelChartAnalysis(name);
-	case PIVOT:
-	    return createPivotAnalysis(name);
-	default: return null;
-	}
-    }
+	return getModel().getAnalysisBuilder()//
+		.createAnalysis(type, name, getOwner().getDetailsCache(name), this, getModel().getCriteria(), getReviewProgressLayer());    }
 
     /**
      * Returns the close tab action.
@@ -593,42 +597,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     private GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createGridAnalysis(){
 	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>)getModel().getAnalysisBuilder()//
 		.createAnalysis(null, null, getOwner().getDetailsCache(null), this, getModel().getCriteria(), getReviewProgressLayer());
-    }
-
-    /**
-     * Creates simple chart analysis configuration view with specified name.
-     *
-     * @param name
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private ChartAnalysisConfigurationView<T> createChartAnalysis(final String name) {
-	return (ChartAnalysisConfigurationView<T>) getModel().getAnalysisBuilder()//
-		.createAnalysis(AnalysisType.SIMPLE, name, getOwner().getDetailsCache(name), this, getModel().getCriteria(), getReviewProgressLayer());
-    }
-
-    /**
-     * Creates sentinel chart analysis configuration view with specified name.
-     *
-     * @param name
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private ChartAnalysisConfigurationView<T> createSentinelChartAnalysis(final String name) {
-	return (ChartAnalysisConfigurationView<T>) getModel().getAnalysisBuilder()//
-		.createAnalysis(AnalysisType.SENTINEL, name, getOwner().getDetailsCache(name), this, getModel().getCriteria(), getReviewProgressLayer());
-    }
-
-    /**
-     * Creates pivot analysis configuration view with specified name.
-     *
-     * @param name
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private PivotAnalysisConfigurationView<T> createPivotAnalysis(final String name){
-	return (PivotAnalysisConfigurationView<T>) getModel().getAnalysisBuilder()//
-		.createAnalysis(AnalysisType.PIVOT, name, getOwner().getDetailsCache(name), this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     /**

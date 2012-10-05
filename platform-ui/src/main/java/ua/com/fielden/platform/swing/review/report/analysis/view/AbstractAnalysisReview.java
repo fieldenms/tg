@@ -139,13 +139,6 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
     abstract protected void enableRelatedActions(final boolean enable, final boolean navigate);
 
     /**
-     * Override this to provide custom functionality on different kind of actions.
-     *
-     * @param clickedData
-     */
-    abstract protected void performCustomAction(AnalysisDataEvent<?> clickedData);
-
-    /**
      * Returns the {@link AbstractEntityCentre} that owns this analysis.
      *
      * @return

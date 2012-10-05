@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.lifecycle;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -84,6 +85,21 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
     }
 
     public Object allCategories(final Object lifecycleProperty) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    public List<String> getLifecycleProperties() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    public Date getFrom() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    public Date getTo() {
 	// TODO Auto-generated method stub
 	return null;
     }
