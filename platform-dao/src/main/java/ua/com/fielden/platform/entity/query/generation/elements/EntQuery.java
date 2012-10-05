@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYield
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 public class EntQuery implements ISingleOperand {
 
@@ -211,17 +212,23 @@ public class EntQuery implements ISingleOperand {
     }
 
     private void adjustOrderBys() {
-	//
 	final Set<OrderBy> toBeRemoved = new HashSet<>();
 	final Set<OrderBy> toBeAdded = new HashSet<>();
 	for (final OrderBy orderBy : orderings.getModels()) {
 	    if (orderBy.getYieldName() != null) {
-		final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
-		if (correspondingYield != null) {
-		    orderBy.setYield(correspondingYield);
-		} else {
+		if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(type()))) {
 		    toBeRemoved.add(orderBy);
-		    toBeAdded.add(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
+		    final String mainSourceAlias = sources.getMain().getAlias();
+		    final String keyPropName = mainSourceAlias != null ? mainSourceAlias + ".key" : "key";
+		    toBeAdded.add(new OrderBy(new EntProp(keyPropName), orderBy.isDesc()));
+		} else {
+		    final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
+		    if (correspondingYield != null) {
+			orderBy.setYield(correspondingYield);
+		    } else {
+			toBeRemoved.add(orderBy);
+			toBeAdded.add(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
+		    }
 		}
 	    }
 	}
