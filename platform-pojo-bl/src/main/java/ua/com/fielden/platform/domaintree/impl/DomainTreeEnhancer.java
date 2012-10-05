@@ -422,6 +422,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     protected static final CalculatedProperty calculatedProperty(final List<CalculatedProperty> calcProperties, final String pathAndName) {
 	if (calcProperties != null) {
 	    for (final CalculatedProperty prop : calcProperties) {
+		System.err.println("prop == " + prop.pathAndName());
 		if (prop.pathAndName().equals(pathAndName)) {
 		    return prop;
 		}
@@ -436,26 +437,26 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param calculatedProperty
      * @param calculatedProperties
      */
-    private static void addCalculatedProperty(final CalculatedProperty calculatedProperty, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties) {
+    private static ICalculatedProperty addCalculatedProperty(final CalculatedProperty calculatedProperty, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties) {
 	final Class<?> root = calculatedProperty.getRoot();
-	final CalculatedProperty cp = calculatedProperty;
-	if (!cp.isValid().isSuccessful()) {
-	    throw cp.isValid();
+	if (!calculatedProperty.isValid().isSuccessful()) {
+	    throw calculatedProperty.isValid();
 	}
 	if (!calculatedProperties.containsKey(root)) {
 	    calculatedProperties.put(root, new ArrayList<CalculatedProperty>());
 	}
 	calculatedProperties.get(root).add(calculatedProperty);
+	return calculatedProperty;
     }
 
     @Override
-    public void addCalculatedProperty(final ICalculatedProperty calculatedProperty) {
-	addCalculatedProperty((CalculatedProperty) calculatedProperty, calculatedProperties);
+    public ICalculatedProperty addCalculatedProperty(final ICalculatedProperty calculatedProperty) {
+	return addCalculatedProperty((CalculatedProperty) calculatedProperty, calculatedProperties);
     }
 
     @Override
-    public void addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this));
+    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+	return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this));
     }
 
     @Override

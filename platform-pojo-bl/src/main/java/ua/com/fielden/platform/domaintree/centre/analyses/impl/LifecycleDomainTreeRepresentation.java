@@ -69,6 +69,11 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
 	public LifecycleAddToCategoriesTickRepresentation() {
 	}
 
+	@Override
+	public LifecycleDomainTreeRepresentation getDtr() {
+	    return (LifecycleDomainTreeRepresentation) super.getDtr();
+	}
+
 	/**
 	 * A contract for reverse "enabling" of the properties. For e.g. in base analyses second tick we should enable only AGGREGATED_EXPRESSION properties.
 	 * But here the following properties should be enabled:<p>
@@ -100,7 +105,7 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
 	 * @param property
 	 * @return
 	 */
-	private boolean isCategoryProperty(final Class<?> managedType, final String property) {
+	protected static boolean isCategoryProperty(final Class<?> managedType, final String property) {
 	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	    final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
 	    final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, managedType, property);

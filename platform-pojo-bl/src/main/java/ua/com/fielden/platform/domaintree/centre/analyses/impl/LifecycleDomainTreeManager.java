@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRepresentation;
@@ -13,9 +15,12 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTr
 import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.types.ICategorizer;
+import ua.com.fielden.platform.types.ICategory;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -106,6 +111,92 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	protected LifecycleAddToCategoriesTickRepresentation tr() {
 	    return (LifecycleAddToCategoriesTickRepresentation) super.tr();
 	}
+
+	@Override
+	protected void insertCheckedProperty(final Class<?> root, final String property, final int index) {
+	    if (isLifecycle(root, property)) {
+		removeCheckingAndUsageAndDestroyCategories(root);
+		super.insertCheckedProperty(root, property, index);
+		addAndCheckAllCategoriesAndUseMainCategories(root, property);
+	    } else {
+		super.insertCheckedProperty(root, property, index);
+	    }
+	}
+
+	protected void addAndCheckAllCategoriesAndUseMainCategories(final Class<?> root, final String lifecycleProperty) {
+	    final ICategorizer categorizer = categorizer(root, lifecycleProperty);
+//	    for (final ICategory category : categorizer.getAllCategories()) {
+//		final ICalculatedProperty calcProp = tr().getDtr().parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(DynamicEntityClassLoader.getOriginalType(root), "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, category.getName(), category.getDesc(), CalculatedPropertyAttribute.NO_ATTR, "SELF");
+//		final String categoryPropertyName = calcProp.pathAndName();
+//		tr().getDtr().parentCentreDomainTreeManager().getEnhancer().apply();
+//
+//
+//		tr().getDtr().parentCentreDomainTreeManager().getEnhancer().getCalculatedProperty(root, categoryPropertyName);
+//
+//
+//		check(root, categoryPropertyName, true); // all categories should be checked by default
+//		if (categorizer.getMainCategories().contains(category)) {
+//		    use(root, categoryPropertyName, true); // only main categories should be used by default
+//		}
+//	    }
+	    for (final ICategory category : categorizer.getAllCategories()) {
+		final ICalculatedProperty calcProp = tr().getDtr().parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(DynamicEntityClassLoader.getOriginalType(root), "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, category.getName(), category.getDesc(), CalculatedPropertyAttribute.NO_ATTR, "SELF");
+		final String categoryPropertyName = calcProp.pathAndName();
+		tr().getDtr().parentCentreDomainTreeManager().getEnhancer().getCalculatedProperty(root, categoryPropertyName);
+	    }
+	    tr().getDtr().parentCentreDomainTreeManager().getEnhancer().apply();
+	    final List<String> includedProperties = tr().getDtr().includedProperties(root);
+	    final Class<?> managedType = managedType(root);
+	    for (final String property : includedProperties) {
+		if (!PropertyTypeDeterminator.isDotNotation(property) && LifecycleAddToCategoriesTickRepresentation.isCategoryProperty(managedType, property)) { // categories at this stage are located in root type
+		    check(root, property, true); // all categories should be checked by default
+//		    if (categorizer.getMainCategories().contains(category)) {
+//			use(root, property, true); // only main categories should be used by default
+//		    }
+		}
+	    }
+	}
+
+	/**
+	 * Removes 'checking' and 'usage' of all properties for this tick. This action includes
+	 * unchecking of 'lifecycle' property and all of its category markers and the destroying of all
+	 * category markers.
+	 *
+	 * @param root
+	 */
+	protected void removeCheckingAndUsageAndDestroyCategories(final Class<?> root) {
+	    // uncheck all previously checked property(ies) (and unuse them first).
+	    // Note: there should be the only one or zero checked Lifecycle property, and, perhaps, some category markers.
+	    while (!checkedPropertiesMutable(root).isEmpty()) {
+		final String propertyToUncheck = checkedPropertiesMutable(root).get(0);
+		if (isUsed(root, propertyToUncheck)) {
+		    use(root, propertyToUncheck, false);
+		}
+		check(root, propertyToUncheck, false);
+	    }
+	    removeAllCategories(root);
+	}
+
+	protected void removeAllCategories(final Class<?> root) {
+	    final List<String> includedProperties = tr().getDtr().includedProperties(root);
+	    final Class<?> managedType = managedType(root);
+	    for (final String property : includedProperties) {
+		if (!PropertyTypeDeterminator.isDotNotation(property) && LifecycleAddToCategoriesTickRepresentation.isCategoryProperty(managedType, property)) { // categories at this stage are located in root type
+		    // tr().getDtr().parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(root, "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, "", desc, attribute, originationProperty);
+		    tr().getDtr().parentCentreDomainTreeManager().getEnhancer().removeCalculatedProperty(root, property);
+		    tr().getDtr().parentCentreDomainTreeManager().getEnhancer().apply();
+		}
+	    }
+	}
+
+	@Override
+	protected void removeCheckedProperty(final Class<?> root, final String property) {
+	    if (isLifecycle(root, property)) {
+		removeCheckingAndUsageAndDestroyCategories(root);
+	    } else {
+		super.removeCheckedProperty(root, property);
+	    }
+	}
     }
 
     /**
@@ -146,12 +237,23 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	for (final Class<?> root : getRepresentation().rootTypes()) {
 	    final List<String> checkedProperties = getSecondTick().checkedProperties(root);
 	    for (final String checkedProperty : checkedProperties) {
-		if (categorizer(root, checkedProperty) != null) {
+		if (isLifecycle(root, checkedProperty)) {
 		    return key(root, checkedProperty);
 		}
 	    }
 	}
 	return null;
+    }
+
+    /**
+     * Determines whether a property represents 'lifecycle' property.
+     *
+     * @param root
+     * @param checkedProperty
+     * @return
+     */
+    private static boolean isLifecycle(final Class<?> root, final String checkedProperty) {
+	return categorizer(root, checkedProperty) != null;
     }
 
     /**
@@ -161,7 +263,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
      * @param checkedProperty
      * @return
      */
-    private ICategorizer categorizer(final Class<?> root, final String checkedProperty) {
+    private static ICategorizer categorizer(final Class<?> root, final String checkedProperty) {
 	final Monitoring annotation = AnnotationReflector.getPropertyAnnotation(Monitoring.class, root, checkedProperty);
 	try {
 	    return annotation != null ? annotation.value().newInstance() : null;

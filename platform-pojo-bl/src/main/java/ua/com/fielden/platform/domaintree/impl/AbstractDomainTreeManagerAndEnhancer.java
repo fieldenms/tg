@@ -243,13 +243,13 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
-	public void addCalculatedProperty(final ICalculatedProperty calculatedProperty) {
-	    baseEnhancer.addCalculatedProperty(calculatedProperty);
+	public ICalculatedProperty addCalculatedProperty(final ICalculatedProperty calculatedProperty) {
+	    return baseEnhancer.addCalculatedProperty(calculatedProperty);
 	}
 
 	@Override
-	public void addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	    baseEnhancer.addCalculatedProperty(root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
+	public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+	    return baseEnhancer.addCalculatedProperty(root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
 	}
 
 	@Override

@@ -62,7 +62,7 @@ public interface IDomainTreeEnhancer extends IRootTyped {
      *
      * @param calculatedProperty -- fully defined calculated property to be added.
      */
-    void addCalculatedProperty(final ICalculatedProperty calculatedProperty);
+    ICalculatedProperty addCalculatedProperty(final ICalculatedProperty calculatedProperty);
 
     /**
      * Creates a new calculated property based on provided meta-information and adds it to the root type's {@link ICalculatedProperty#getRoot()} hierarchy.
@@ -76,7 +76,7 @@ public interface IDomainTreeEnhancer extends IRootTyped {
      * @param attribute
      * @param originationProperty
      */
-    void addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty);
+    ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty);
 
     /**
      * Removes the calculated property with a name <code>calculatedPropertyName</code>(dot-notation expression) from <code>rootType</code> hierarchy.
