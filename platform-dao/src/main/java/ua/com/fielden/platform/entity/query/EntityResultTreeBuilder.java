@@ -8,6 +8,9 @@ import java.util.TreeSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
+import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.types.Money;
 
 final class EntityResultTreeBuilder {
     private ResultIndex index = new ResultIndex();
@@ -33,7 +36,7 @@ final class EntityResultTreeBuilder {
 	COMPOSITE_TYPE_PROP;
     }
 
-    protected <E extends AbstractEntity<?>> Map<String, MetaP> getPropsHierarchy(final SortedSet<ResultQueryYieldDetails> properties) throws Exception {
+    protected <E extends AbstractEntity<?>> Map<String, MetaP> getPropsHierarchy(final Class<E> resultType, final SortedSet<ResultQueryYieldDetails> properties) throws Exception {
 	final Map<String, MetaP> result = new HashMap<String, MetaP>();
 
 	for (final ResultQueryYieldDetails prop : properties) {
@@ -41,7 +44,15 @@ final class EntityResultTreeBuilder {
 		final int firstDotIndex = prop.getName().indexOf(".");
 		final String group = prop.getName().substring(0, firstDotIndex);
 		if (!result.containsKey(group)) {
-		    result.put(group, new MetaP(new ResultQueryYieldDetails(group, EntityAggregates.class, null, null, YieldDetailsType.USUAL_PROP), MetaPType.ENTITY_PROP));
+		    if (resultType == EntityAggregates.class) {
+			result.put(group, new MetaP(new ResultQueryYieldDetails(group, EntityAggregates.class, null, null, YieldDetailsType.USUAL_PROP), MetaPType.ENTITY_PROP));
+		    } else {
+			if (Money.class.equals(PropertyTypeDeterminator.determinePropertyType(resultType, group))) {
+			    result.put(group, new MetaP(new ResultQueryYieldDetails(group, Money.class, new SimpleMoneyType(), null, YieldDetailsType.COMPOSITE_TYPE_HEADER), MetaPType.COMPOSITE_TYPE_PROP));
+			} else {
+			    throw new IllegalStateException("Not implemented yet: " + prop.getName());
+			}
+		    }
 		}
 		result.get(group).items.add(new ResultQueryYieldDetails(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), prop.getHibType(), prop.getColumn(), prop.getYieldDetailsType()));
 	    } else if (prop.isCompositeProperty()) {
@@ -64,7 +75,7 @@ final class EntityResultTreeBuilder {
     protected <E extends AbstractEntity<?>> EntityTree<E> buildEntityTree(final Class<E> resultType, final SortedSet<ResultQueryYieldDetails> properties) throws Exception {
 	final EntityTree<E> result = new EntityTree<E>(resultType);
 
-	final Map<String, MetaP> compositeProps = getPropsHierarchy(properties);
+	final Map<String, MetaP> compositeProps = getPropsHierarchy(resultType, properties);
 
 	for (final MetaP propEntry : compositeProps.values()) {
 	    if (propEntry.metaPType.equals(MetaPType.USUAL_PROP)) {
@@ -84,7 +95,7 @@ final class EntityResultTreeBuilder {
     protected ValueTree buildValueTree(final ICompositeUserTypeInstantiate hibType, final SortedSet<ResultQueryYieldDetails> properties) throws Exception {
 	final ValueTree result = new ValueTree(hibType);
 
-	final Map<String, MetaP> compositeProps = getPropsHierarchy(properties);
+	final Map<String, MetaP> compositeProps = getPropsHierarchy(null, properties);
 
 	for (final MetaP propEntry : compositeProps.values()) {
 	    if (propEntry.metaPType.equals(MetaPType.USUAL_PROP)) {
