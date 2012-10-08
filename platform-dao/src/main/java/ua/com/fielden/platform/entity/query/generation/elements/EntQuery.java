@@ -212,27 +212,32 @@ public class EntQuery implements ISingleOperand {
     }
 
     private void adjustOrderBys() {
-	final Set<OrderBy> toBeRemoved = new HashSet<>();
-	final Set<OrderBy> toBeAdded = new HashSet<>();
+	final List<OrderBy> toBeAdded = new ArrayList<>();
 	for (final OrderBy orderBy : orderings.getModels()) {
 	    if (orderBy.getYieldName() != null) {
 		if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(type()))) {
-		    toBeRemoved.add(orderBy);
 		    final String mainSourceAlias = sources.getMain().getAlias();
 		    final String keyPropName = mainSourceAlias != null ? mainSourceAlias + ".key" : "key";
 		    toBeAdded.add(new OrderBy(new EntProp(keyPropName), orderBy.isDesc()));
 		} else {
 		    final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
-		    if (correspondingYield != null) {
+		    final Yield correspondingYieldWithAmount = yields.getYieldByAlias(orderBy.getYieldName() + ".amount");
+		    if (correspondingYieldWithAmount != null) {
+			orderBy.setYield(correspondingYieldWithAmount);
+			toBeAdded.add(orderBy);
+		    } else if (correspondingYield != null) {
 			orderBy.setYield(correspondingYield);
+			toBeAdded.add(orderBy);
 		    } else {
-			toBeRemoved.add(orderBy);
 			toBeAdded.add(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
 		    }
 		}
+	    } else {
+		toBeAdded.add(orderBy);
 	    }
+
 	}
-	orderings.getModels().removeAll(toBeRemoved);
+	orderings.getModels().clear();
 	orderings.getModels().addAll(toBeAdded);
     }
 
