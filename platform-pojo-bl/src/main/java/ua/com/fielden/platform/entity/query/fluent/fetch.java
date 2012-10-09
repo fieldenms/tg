@@ -44,6 +44,11 @@ public class fetch<T extends AbstractEntity<?>> {
 	return result;
     }
 
+    /**
+     * Should be used to indicate a name of the first level property that should be initialised in the retrieved entity instances.
+     * @param propName - Could be name of the primitive property (e.g. "desc", "numberOfPages"), entity property ("station"), composite type property ("cost", "cost.amount"), union entity property ("location", "location.workshop"), collectional property ("slots"), one-to-one association property ("financialDetails").
+     * @return
+     */
     public fetch<T> with(final String propName) {
 	checkForDuplicate(propName);
 	final fetch<T> result = copy();
@@ -51,6 +56,11 @@ public class fetch<T extends AbstractEntity<?>> {
 	return result;
     }
 
+    /**
+     * Should be used to indicate a name of the first level property that should not be initialised in the retrieved entity instances.
+     * @param propName - Could be name of the primitive property (e.g. "desc", "numberOfPages"), entity property ("station"), composite type property ("cost", "cost.amount"), union entity property ("location", "location.workshop"), collectional property ("slots"), one-to-one association property ("financialDetails").
+     * @return
+     */
     public fetch<T> without(final String propName) {
 	checkForDuplicate(propName);
 	final fetch<T> result = copy();
@@ -58,6 +68,12 @@ public class fetch<T extends AbstractEntity<?>> {
 	return result;
     }
 
+    /**
+     * Should be used to indicate a name of the first level entity property that should be initialised in the retrieved entity instances and the model to indicate which subproperties of the given property should be initialised as well.
+     * @param propName
+     * @param fetchModel
+     * @return
+     */
     public fetch<T> with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
 	checkForDuplicate(propName);
 	final fetch<T> result = copy();
