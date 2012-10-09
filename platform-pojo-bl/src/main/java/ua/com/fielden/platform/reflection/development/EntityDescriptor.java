@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -29,6 +30,10 @@ public class EntityDescriptor {
     private final List<String> properties = new ArrayList<String>();
     private final Map<String, Pair<String, String>> mapByNames = new HashMap<String, Pair<String, String>>(); // [name, (title, desc)]
 
+    private String directPropertyName(final String name) {
+	return name.isEmpty() ? AbstractEntity.KEY : name; // "key" property should be used for empty "" properties
+    }
+
     public EntityDescriptor(final Class<?> rootType, final List<String> properties) {
 	this.rootType = rootType;
 	this.properties.addAll(properties);
@@ -38,7 +43,7 @@ public class EntityDescriptor {
 	for (final String name : properties) {
 	    Pair<String, String> ftad;
 	    try {
-		ftad = TitlesDescsGetter.getFullTitleAndDesc(name, rootType);
+		ftad = TitlesDescsGetter.getFullTitleAndDesc(directPropertyName(name), rootType);
 	    } catch (final Exception e) {
 		ftad = null;
 	    }
@@ -46,13 +51,13 @@ public class EntityDescriptor {
 	    if (name.contains("()") || ftad == null) { //
 		mapByNames.put(name, null);
 	    } else {
-		final String shortTitle = TitlesDescsGetter.getTitleAndDesc(name, rootType).getKey();
+		final String shortTitle = TitlesDescsGetter.getTitleAndDesc(directPropertyName(name), rootType).getKey();
 		final Pair<String, String> neww = new Pair<String, String>(name, ftad.getValue());
 
 		if (mapByTitles.containsKey(shortTitle)) { // this short titled property already exists!
 		    final Pair<String, String> old = mapByTitles.get(shortTitle);
 		    final String fullTitleNew = ftad.getKey();
-		    final String fullTitleOld = TitlesDescsGetter.getFullTitleAndDesc(old.getKey(), rootType).getKey();
+		    final String fullTitleOld = TitlesDescsGetter.getFullTitleAndDesc(directPropertyName(old.getKey()), rootType).getKey();
 		    if (fullTitleNew.length() > fullTitleOld.length()) {
 			mapByTitles.put(fullTitleNew, neww);
 		    } else if (fullTitleNew.length() < fullTitleOld.length()) {
