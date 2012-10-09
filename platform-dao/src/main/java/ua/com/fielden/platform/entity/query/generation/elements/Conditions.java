@@ -6,7 +6,7 @@ import java.util.List;
 
 
 
-public class Conditions implements IPropertyCollector {
+public class Conditions extends AbstractCondition {
     private final ICondition firstCondition;
     private final List<CompoundCondition> otherConditions;
 
@@ -122,5 +122,10 @@ public class Conditions implements IPropertyCollector {
 	    return false;
 	}
 	return true;
+    }
+
+    @Override
+    public boolean ignore() {
+	return false;
     }
 }

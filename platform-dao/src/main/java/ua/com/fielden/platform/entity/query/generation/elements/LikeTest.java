@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class LikeTest implements ICondition {
+public class LikeTest extends AbstractCondition {
     private final ISingleOperand leftOperand;
     private final ISingleOperand rightOperand;
     private final boolean negated;

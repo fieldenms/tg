@@ -4,7 +4,7 @@ import java.util.List;
 
 
 
-public class NullTest implements ICondition {
+public class NullTest extends AbstractCondition {
     private final ISingleOperand operand;
     private final boolean negated;
 

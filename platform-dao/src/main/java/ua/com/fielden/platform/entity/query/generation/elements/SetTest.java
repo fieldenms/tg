@@ -5,7 +5,7 @@ import java.util.List;
 
 
 
-public class SetTest implements ICondition {
+public class SetTest extends AbstractCondition {
     private final ISingleOperand leftOperand;
     private final ISetOperand rightOperand;
     private final boolean negated;

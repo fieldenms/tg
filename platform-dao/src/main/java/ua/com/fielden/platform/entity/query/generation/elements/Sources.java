@@ -56,6 +56,44 @@ public class Sources implements IPropertyCollector {
 	return sb.toString();
     }
 
+    public void reorderSources() {
+	boolean needOneMoreIteration = true;
+
+	while (needOneMoreIteration) {
+	    final List<ISource> availableSources = new ArrayList<>();
+	    availableSources.add(main);
+
+	    int index = 0;
+	    needOneMoreIteration = false;
+	    for (final CompoundSource compoundSource : compounds) {
+
+		boolean allSourcesAvailable = true;
+		for (final ISource involvedSource : compoundSource.getJoinConditions().getInvolvedSources()) {
+		    if (!(compoundSource.getSource() == involvedSource || availableSources.contains(involvedSource))) {
+			allSourcesAvailable = false;
+			break;
+		    }
+		}
+
+		if (allSourcesAvailable) {
+		    availableSources.add(compoundSource.getSource());
+		    index = index + 1;
+		} else {
+		    // swap
+		    if (compounds.size() > index + 1) {
+			final CompoundSource curr = compounds.get(index);
+			final CompoundSource next = compounds.get(index + 1);
+			compounds.set(index, next);
+			compounds.set(index + 1, curr);
+			needOneMoreIteration = true;
+		    }
+
+		    break;
+		}
+	    }
+	}
+    }
+
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer();

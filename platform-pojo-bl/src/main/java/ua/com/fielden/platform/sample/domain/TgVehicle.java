@@ -115,6 +115,10 @@ public class TgVehicle extends AbstractEntity<String> {
     @Title(value = "Financial details", desc = "Fin Details")
     private TgVehicleFinDetails finDetails;
 
+//    @IsProperty @Calculated @Title("Calc Make")
+//    private TgVehicleMake calcMake;
+//    private static final ExpressionModel calcMake_ = expr().prop("model.make").model();
+
 //    @IsProperty @Calculated(category = CalculatedPropertyCategory.AGGREGATED_EXPRESSION) @Title("Aggregated prop")
 //    private BigDecimal aggregated;
 //    private static final ExpressionModel aggregated_ = expr().sumOf().prop("purchasePrice.amount").model();
@@ -158,6 +162,10 @@ public class TgVehicle extends AbstractEntity<String> {
     public TgVehicleModel getCalcModel() {
 	return calcModel;
     }
+
+//    public TgVehicleMake getCalcMake() {
+//	return calcMake;
+//    }
 
     public Money getSumOfPrices() {
 	return sumOfPrices;

@@ -344,6 +344,7 @@ public class EntQuery implements ISingleOperand {
         enhanceToFinalState(generator, fetchModel);
 
         assignPropertyPersistenceInfoToYields();
+        //sources.reorderSources();
 
         if (isResultQuery()) {
             assignSqlParamNames();

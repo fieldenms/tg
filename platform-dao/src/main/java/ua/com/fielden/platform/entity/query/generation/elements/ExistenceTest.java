@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class ExistenceTest implements ICondition {
+public class ExistenceTest extends AbstractCondition {
     private final boolean negated;
     private final EntQuery subQuery;
 

@@ -105,6 +105,30 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
+//    @Test
+//    public void test_query_for_complex_calc_prop() {
+//	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).
+//		where().prop("calcMake.key").eq().val("MERC").
+//		model();
+//	final TgVehicle vehicle1 = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
+//		with("key"). //
+//		with("desc"). //
+//		with("model", fetchOnly(TgVehicleModel.class).with("key").with("make", fetchOnly(TgVehicleMake.class).with("key")))).model());
+//	assertEquals("316", vehicle1.getModel().getKey());
+//    }
+//
+//    @Test
+//    public void test_query_for_complex_calc_prop2() {
+//	final EntityResultQueryModel<TgVehicle> qry = select(select(TgVehicle.class).where().prop("key").notLike().val("A%").model()). //
+//		join(TgVehicleModel.class).as("model").on().prop("model").eq().prop("model.id"). //
+//		join(TgVehicleMake.class).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+//		where().prop("model.make.key").eq().val("MERC").model();
+//	final TgVehicle vehicle1 = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
+//		with("key"). //
+//		with("desc"). //
+//		with("model", fetchOnly(TgVehicleModel.class).with("key").with("make", fetchOnly(TgVehicleMake.class).with("key")))).model());
+//	assertEquals("316", vehicle1.getModel().getKey());
+//    }
 
     /////////////////////////////////////// QUERING KEYS OF ENTITIES WITH COMPOSITE KEYS /////////////////////////////////////////
 

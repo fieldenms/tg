@@ -6,7 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 
 
-public class ComparisonTest implements ICondition {
+public class ComparisonTest extends AbstractCondition {
     private final ISingleOperand leftOperand;
     private final ISingleOperand rightOperand;
     private final ComparisonOperator operator;

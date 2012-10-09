@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.List;
 
-public class GroupedConditions extends Conditions implements ICondition {
+public class GroupedConditions extends Conditions {
     private final boolean negated;
 
     public GroupedConditions(final boolean negated, final ICondition firstCondition, final List<CompoundCondition> otherConditions) {

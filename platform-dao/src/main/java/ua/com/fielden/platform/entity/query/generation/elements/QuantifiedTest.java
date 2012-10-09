@@ -5,7 +5,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 
-public class QuantifiedTest implements ICondition {
+public class QuantifiedTest extends AbstractCondition {
     private final ISingleOperand leftOperand;
     private final EntQuery rightOperand;
     private final Quantifier quantifier;
