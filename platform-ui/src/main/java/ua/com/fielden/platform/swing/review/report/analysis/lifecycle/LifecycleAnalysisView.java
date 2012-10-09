@@ -7,7 +7,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.List;
-import java.util.Locale;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -50,6 +49,7 @@ import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
@@ -64,7 +64,13 @@ import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
-
+/**
+ * View panel for lifecycle analysis.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager, Void> {
 
     private static final long serialVersionUID = -4883473612285722738L;
@@ -177,13 +183,11 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	add(splitPane, "grow");
     }
 
-    //already refactored
     @Override
     public LifecycleAnalysisModel<T> getModel() {
         return (LifecycleAnalysisModel<T>)super.getModel();
     }
 
-    //already refactored
     private JCheckBox createTotalCheckBox(final ActionChartPanel<LifecycleModel<T>,CategoryChartTypes> chartPanel) {
 	final JCheckBox totalCheckBox = new JCheckBox("Bla-bla", getModel().getTotal());
 	totalCheckBox.setAction(new BlockingLayerCommand<Void>("Total", getOwner().getProgressLayer()) {
@@ -242,14 +246,12 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	return totalCheckBox;
     }
 
-    //already refactored
     protected MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> createMultipleChartPanel(final ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> chartPanel) {
 	final MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> multPanel = new MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes>();
 	multPanel.addChartPanel(chartPanel);
 	return multPanel;
     }
 
-    //already refactored
     protected SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes> createSwitchChartModel(final MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> multipleChartPanel) {
 	return new SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes>(multipleChartPanel) {
 	    @Override
@@ -265,7 +267,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	};
     }
 
-    //already refactored.
     /**
      * Shows/hides "fractions" view configuration.
      *
@@ -286,7 +287,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 
 
 
-    //was refactored.
     /**
      * Returns the {@link SortingCheckboxList} of aggregation properties.
      * @param chartPanel
@@ -336,18 +336,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	return aggregationList;
     }
 
-//    public void updateModel() {
-//	lifecycleViewModel.setFrom(fromEditor.getDate());
-//	lifecycleViewModel.setTo(toEditor.getDate());
-//	lifecycleViewModel.setLifecycleProperty(lifecycleProperty);
-//	lifecycleViewModel.setDistributionProperty(distributionProperty);
-//
-//	lifecycleViewModel.setOrdering(categoriesList.getOrdering());
-//	lifecycleViewModel.setCategoriesFor(lifecycleProperty, categoriesList.getSelectedItem());
-//	lifecycleViewModel.setTotal(totalCheckBox.isSelected());
-//    }
-
-    //already refactored.
     protected JToolBar createChartTypeBar(final SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes> switchChartModel) {
 	final JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
 	toolBar.setFloatable(false);
@@ -370,8 +358,10 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 
 	final JLabel fromLabel = new JLabel("Period:");
 	final JLabel toLabel = new JLabel("To");
-	final DatePickerLayer fromEditor = new DatePickerLayer("choose period beginning...", Locale.getDefault(), true, getModel().getFrom(), 0L);
-	final DatePickerLayer toEditor = new DatePickerLayer("choose period ending...", Locale.getDefault(), true, getModel().getTo(), DatePickerLayer.defaultTimePortionMillisForTheEndOfDay());
+	final BoundedValidationLayer<DatePickerLayer> fromEditor = getModel().getFromeEditor();
+	fromEditor.getView().getUi().setCaption("choose period beginning...");
+	final BoundedValidationLayer<DatePickerLayer> toEditor = getModel().getToEditor();
+	toEditor.getView().getUi().setCaption("choose period ending...");
 
 	final JPanel periodPanel = new JPanel(new MigLayout("fill, insets 5", "[:" + fromLabel.getMinimumSize().width + ":]" +
 			"[grow,:" + 175 + ":][:" + toLabel.getMinimumSize().width + ":][grow,:" + 175 + ":]"));
@@ -385,7 +375,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	return toolBar;
     }
 
-    //was refactored
     private JToggleButton createToggleButtonFor(final SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes> switchChartModel, final CategoryChartTypes type, final String toolTip, final Icon icon) {
 	final JToggleButton chartTogle = new JToggleButton(icon);
 	chartTogle.setToolTipText(toolTip);
@@ -393,8 +382,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	return chartTogle;
     }
 
-
-    //was refactored.
     /**
      * Returns the {@link JList} of distribution properties.
      *
@@ -470,9 +457,8 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	return distributionList;
     }
 
-    //already refactored.
     protected ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> createChartPanel(final int indexOfAppropriateChart) {
-	final ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> chartPanel = new ActionChartPanel<LifecycleModel<T>, CategoryChartTypes>(new LifecycleChartFactory<>(getModel()), new IBlockingLayerProvider() {
+	final ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> chartPanel = new ActionChartPanel<LifecycleModel<T>, CategoryChartTypes>(getModel().getChartFactory(), new IBlockingLayerProvider() {
 	    @Override
 	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
 		return getOwner().getProgressLayer();

@@ -18,6 +18,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
+import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -202,6 +203,17 @@ public class RestServerUtil {
      */
     public QueryExecutionModel<?, ?> restoreQueryExecutionModelForGeneratedType(final Representation representation) throws Exception {
 	return serialiser.deserialise(representation.getStream(), DynamicallyTypedQueryContainer.class).getQem();
+    }
+
+    /**
+     * Converts representation to an instance of {@link LifecycleQueryContainer}.
+     *
+     * @param representation
+     * @return
+     * @throws Exception
+     */
+    public LifecycleQueryContainer restoreLifecycleQueryContainer(final Representation representation) throws Exception {
+	return serialiser.deserialise(representation.getStream(), LifecycleQueryContainer.class);
     }
 
     public SnappyQuery restoreSnappyQuery(final Representation representation) throws Exception {

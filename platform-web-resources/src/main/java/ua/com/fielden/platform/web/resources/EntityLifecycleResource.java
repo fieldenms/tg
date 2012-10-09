@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.web.resources;
 
-import java.util.List;
-
-import org.joda.time.DateTime;
 import org.restlet.Context;
 import org.restlet.data.MediaType;
 import org.restlet.data.Request;
@@ -15,8 +12,7 @@ import org.restlet.resource.Variant;
 import ua.com.fielden.platform.dao.ILifecycleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 
 /**
  * Represents a web resource mapped to URI /lifecycle/entity-alias-type. It handles POST requests provided with {@link EntityResultQueryModel} and a "propertyName" with lifecycle "period" to provide the result of the query as lifecycle data.
@@ -68,20 +64,10 @@ public class EntityLifecycleResource<T extends AbstractEntity<?>> extends Resour
     @Override
     public void acceptRepresentation(final Representation envelope) throws ResourceException {
 	try {
-	    final List<?> list = restUtil.restoreList(envelope);
-	    final SingleResultQueryModel<? extends AbstractEntity<?>> model = (SingleResultQueryModel<? extends AbstractEntity<?>>) list.get(0);
-	    final List<byte[]> binaryTypes = (List<byte[]>) list.get(1);
-	    final String propertyName = (String) list.get(2);
-	    final DateTime from = (DateTime) list.get(3);
-	    final DateTime to = (DateTime) list.get(4);
+	    final LifecycleQueryContainer container = restUtil.restoreLifecycleQueryContainer(envelope);
 
-	    //Loading classes for enhanced types.
-	    final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
-	    for (final byte[] binaryType : binaryTypes) {
-		classLoader.defineClass(binaryType);
-	    }
-
-	    getResponse().setEntity(restUtil.lifecycleRepresentation(lifecycleDao.getLifecycleInformation(model, binaryTypes, propertyName, from, to)));
+	    getResponse().setEntity(restUtil.lifecycleRepresentation(lifecycleDao.getLifecycleInformation(container.getModel(), container.getBinaryTypes(), //
+		    container.getPropertyName(), container.getFrom(), container.getTo())));
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
 	    getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));

@@ -63,12 +63,9 @@ import ua.com.fielden.platform.equery.lifecycle.EntityPropertyLifecycle;
 import ua.com.fielden.platform.equery.lifecycle.IGroup;
 import ua.com.fielden.platform.equery.lifecycle.IProgressUpdater;
 import ua.com.fielden.platform.equery.lifecycle.IProperty;
-import ua.com.fielden.platform.equery.lifecycle.IProperty.ValueProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
-import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.equery.lifecycle.ValuedInterval;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.reportquery.DistributionProperty;
 import ua.com.fielden.platform.reportquery.IDistributedProperty;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
@@ -249,16 +246,17 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	}
     }
 
+    //TODO uncoment, and fix errors
     private void updateEntityIndexing() {
-	// create mapping between "entity" and its corresponding number.
-	columnMapping.clear();
-	Integer i = 0;
-	noSorting = model.getOrdering() == null;
-	sortingCategory = noSorting ? null : model.getOrdering().getToken();
-	final List<? extends IGroup<T>> sortedByCategory = noSorting ? groups : sortByCategory(groups, sortingCategory, model.getOrdering().getSortOrder());
-	for (final IGroup<T> group : sortedByCategory) {
-	    columnMapping.put(group.getInfo(), new Info(i++));
-	}
+//	// create mapping between "entity" and its corresponding number.
+//	columnMapping.clear();
+//	Integer i = 0;
+//	noSorting = model.getOrdering() == null;
+//	sortingCategory = noSorting ? null : model.getOrdering().getToken();
+//	final List<? extends IGroup<T>> sortedByCategory = noSorting ? groups : sortByCategory(groups, sortingCategory, model.getOrdering().getSortOrder());
+//	for (final IGroup<T> group : sortedByCategory) {
+//	    columnMapping.put(group.getInfo(), new Info(i++));
+//	}
     }
 
     private void fillSeries(final IProgressUpdater progressUpdater) {
@@ -334,16 +332,19 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	System.out.println(done);
     }
 
+    //TODO Uncoment and fix errors.
     private IProperty getProperty(){
-	final DistributionProperty dp = model.getDistributionProperty();
-	final String propertyName = dp.getActualProperty();
-	for (final GroupingPeriods period : GroupingPeriods.values()) {
-	    if (propertyName.equals(period.getPropertyName())) {
-		// time distribution:
-		return period;
-	    }
-	}
-	return new ValueProperty(dp.getActualProperty(), dp.toString(), dp.getTooltip());
+//	final DistributionProperty dp = model.getDistributionProperty();
+//	final String propertyName = dp.getActualProperty();
+//	for (final GroupingPeriods period : GroupingPeriods.values()) {
+//	    if (propertyName.equals(period.getPropertyName())) {
+//		// time distribution:
+//		return period;
+//	    }
+//	}
+//	return new ValueProperty(dp.getActualProperty(), dp.toString(), dp.getTooltip());
+	//TODO remove this.
+	return null;
     }
 
     /**
@@ -420,8 +421,9 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	    }
 	    // update current "configuration":
 	    currentModel = chartEntryModel;
-	    currentDistributionProperty = model.getDistributionProperty().getActualProperty();
-	    currentOrdering = model.getOrdering();
+	    //TODO uncomment and fix errors
+//	    currentDistributionProperty = model.getDistributionProperty().getActualProperty();
+//	    currentOrdering = model.getOrdering();
 	    currentCategoriesStrings = model.getCurrentCategoriesStrings();
 	    currentTotalIndicator = model.getTotal();
 	    return changed;
@@ -434,16 +436,20 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	return currentModel != chartEntryModel;
     }
 
+    //TODO uncommnet and fix errors.
     private boolean groupingChanged() {
-	return !EntityUtils.equalsEx(currentDistributionProperty, model.getDistributionProperty().getActualProperty());
+//	return !EntityUtils.equalsEx(currentDistributionProperty, model.getDistributionProperty().getActualProperty());
+	return false;
     }
 
     private boolean totalIndicatorChanged() {
 	return !EntityUtils.equalsEx(currentTotalIndicator, model.getTotal());
     }
 
+    //TODO uncomment and fix errors.
     private boolean orderingChanged() {
-	return currentOrdering != model.getOrdering();
+//	return currentOrdering != model.getOrdering();
+	return false;
     }
 
     private boolean currentCategoriesChanged() {
@@ -458,7 +464,7 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
      * @return
      */
     private List<IGroup<T>> sortByCategory(final List<? extends IGroup<T>> unsorted, final ICategory category, final SortOrder sortOrder) {
-	final int index = Arrays.asList(model.allCategories(model.getLifecycleProperty())).indexOf(category);
+	final int index = Arrays.asList(model.allCategories()).indexOf(category);
 	final List<IGroup<T>> sorted = new ArrayList<IGroup<T>>(unsorted);
 	if (SortOrder.UNSORTED != sortOrder) {
 	    Collections.sort(sorted, new Comparator<IGroup<T>>() {
@@ -767,7 +773,6 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
      *
      */
     protected abstract class FractionsItemInformationGenerator implements XYItemLabelGenerator, XYToolTipGenerator {
-	private static final long serialVersionUID = 1L;
 	private final List<? extends IGroup<T>> groups;
 
 	public FractionsItemInformationGenerator(final List<? extends IGroup<T>> groups) {
@@ -840,7 +845,7 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	protected abstract String valueRepresentation(final BigDecimal itemSummary);
     }
 
-//    protected LifecycleChartReviewModel<T, DAO> getLifecycleChartReviewModel() {
-//	return model;
-//    }
+    protected LifecycleAnalysisModel<T> getLifecycleAnalysisModel() {
+	return model;
+    }
 }

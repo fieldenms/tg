@@ -197,6 +197,18 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 		super.removeCheckedProperty(root, property);
 	    }
 	}
+
+	@Override
+	public List<ICategory> allCategories(final Class<?> root) {
+	    // TODO Auto-generated method stub
+	    return null;
+	}
+
+	@Override
+	public List<ICategory> currentCategories(final Class<?> root) {
+	    // TODO Auto-generated method stub
+	    return null;
+	}
     }
 
     /**
@@ -358,5 +370,16 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	} else if (!total.equals(other.total))
 	    return false;
 	return true;
+    }
+
+    /**
+     * TODO implement
+     *
+     * @param root
+     * @param categoryMarker
+     * @return
+     */
+    public static ICategory getCategory(final Class<?> root, final String categoryMarker) {
+	return null;
     }
 }

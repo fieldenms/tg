@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
+import ua.com.fielden.platform.dao.ILifecycleDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
@@ -33,6 +35,8 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -211,6 +215,34 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final List<byte[]> byteArrayList = getByteArrayForManagedType();
 	byteArrayList.add(managedTypeArray);
  	return generatedEntityController.getAllEntities(queryModel, byteArrayList);
+    }
+
+    /**
+     * Returns the {@link LifecycleModel} instance that corresponds to the given query model, lifecycle property and the interval.
+     * If the associated controller isn't lifecycle then it will return null.
+     *
+     * @param model
+     * @param propertyName
+     * @param from
+     * @param to
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public final  LifecycleModel<T> getLifecycleInformation(final SingleResultQueryModel<? extends AbstractEntity<?>> model, final String propertyName, final DateTime from, final DateTime to){
+	if (isLifecycleController()) {
+	    return ((ILifecycleDao<T>) dao).getLifecycleInformation(model, getByteArrayForManagedType(), propertyName, from, to);
+	} else {
+	    return null;
+	}
+    }
+
+    /**
+     * Returns the value that indicates whether companion object associated with this criteria is lifecycle or not.
+     *
+     * @return
+     */
+    public boolean isLifecycleController(){
+	return dao instanceof ILifecycleDao;
     }
 
     /**

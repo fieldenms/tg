@@ -28,6 +28,8 @@ import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
+import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.roa.HttpHeaders;
@@ -429,6 +431,24 @@ public final class RestClientUtil implements IUserProvider {
 	query.setLightweight(true);
 
 	final DynamicallyTypedQueryContainer container = new DynamicallyTypedQueryContainer(dynamicTypes, query);
+
+	final byte[] bytes = serialiser.serialise(container);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    /**
+     * Produces {@link LifecycleQueryContainer} representation, which can be used as a request envelop.
+     *
+     * @param model
+     * @param binaryTypes
+     * @param propertyName
+     * @param from
+     * @param to
+     * @return
+     */
+    public Representation represent(final SingleResultQueryModel<? extends AbstractEntity<?>> model, final List<byte[]> binaryTypes, final String propertyName, final DateTime from, final DateTime to){
+
+	final LifecycleQueryContainer container = new LifecycleQueryContainer(model, binaryTypes, propertyName, from, to);
 
 	final byte[] bytes = serialiser.serialise(container);
 	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);

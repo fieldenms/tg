@@ -36,7 +36,7 @@ public class LifecycleAnalysisConfigurationModel<T extends AbstractEntity<?>> ex
 	return Result.successful(this);
     }
 
-    public final LifecycleAnalysisModel<T> createChartAnalysisModel() {
+    public LifecycleAnalysisModel<T> createChartAnalysisModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
 	final ILifecycleDomainTreeManager ldtme = (ILifecycleDomainTreeManager)cdtme.getAnalysisManager(getName());
 	return new LifecycleAnalysisModel<T>(getCriteria(), ldtme);

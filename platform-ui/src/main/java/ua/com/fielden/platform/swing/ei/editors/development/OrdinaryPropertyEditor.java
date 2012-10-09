@@ -82,7 +82,9 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
      * @return
      */
     public static OrdinaryPropertyEditor createOrdinaryPropertyEditorForMaster(final AbstractEntity<?> entity, final String propertyName){
-	return new OrdinaryPropertyEditor(entity, propertyName, 0L);
+	final MetaProperty metaProp = entity.getProperty(propertyName);
+	final Long defaultTimePortionMillis = (Date.class.isAssignableFrom(metaProp.getType()) && CriteriaReflector.isSecondParam(entity.getType(), propertyName)) ? DatePickerLayer.defaultTimePortionMillisForTheEndOfDay() : 0L;
+	return new OrdinaryPropertyEditor(entity, propertyName, defaultTimePortionMillis);
     }
 
     /**

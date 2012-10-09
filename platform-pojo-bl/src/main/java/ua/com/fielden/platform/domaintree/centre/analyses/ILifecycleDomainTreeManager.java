@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import ua.com.fielden.platform.types.ICategorizer;
+import ua.com.fielden.platform.types.ICategory;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -44,6 +45,11 @@ public interface ILifecycleDomainTreeManager extends IAbstractAnalysisDomainTree
      *
      */
     public interface ILifecycleAddToCategoriesTickManager extends IAbstractAnalysisAddToAggregationTickManager {
+	/** TODO */
+	List<ICategory> allCategories(final Class<?> root);
+
+	/** TODO */
+	List<ICategory> currentCategories(final Class<?> root);
     }
 
     /**
