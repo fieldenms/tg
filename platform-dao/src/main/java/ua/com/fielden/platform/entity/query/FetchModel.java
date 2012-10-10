@@ -92,7 +92,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	return primProps.contains(propName) || entityProps.containsKey(propName);
     }
 
-    private PropertyMetadata getPropType(final String propName) {
+    private PropertyMetadata getPropMetadata(final String propName) {
 	final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(getEntityType(), propName);
 	if (ppi != null) {
 	    if (ppi.getJavaType() != null) {
@@ -106,7 +106,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
     }
 
     private void without(final String propName) {
-	final Class propType = getPropType(propName).getJavaType();
+	final Class propType = getPropMetadata(propName).getJavaType();
 
 	if (AbstractEntity.class.isAssignableFrom(propType)) {
 	    final Object removalResult = entityProps.remove(propName);
@@ -125,7 +125,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	if (EntityAggregates.class.equals(getEntityType())) {
 	    primProps.add(propName);
 	} else {
-	    final PropertyMetadata ppi = getPropType(propName);
+	    final PropertyMetadata ppi = getPropMetadata(propName);
 	    final Class propType = ppi.getJavaType();
 
 	    if (propName.equals("key") && ppi.isVirtual()) {
@@ -149,7 +149,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 
     private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
 	if (getEntityType() != EntityAggregates.class) {
-	    final Class propType = getPropType(propName).getJavaType();
+	    final Class propType = getPropMetadata(propName).getJavaType();
 
 	    if (propType != fetchModel.getEntityType()) {
 		throw new IllegalArgumentException("Mismatch between actual type [" + propType + "] of property [" + propName + "] in entity type [" + getEntityType()

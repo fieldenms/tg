@@ -40,6 +40,11 @@
 		<appender-ref ref="stdout" />
 	</logger>
 	
+	<logger name="ua.com.fielden.platform.dao.QueryExecutionModel" additivity="false">
+		<level value="off" />
+		<appender-ref ref="stdout" />
+	</logger>
+		
 	<!-- 
 		Loggers for Hibernate.
 	 -->

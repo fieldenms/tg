@@ -159,18 +159,27 @@ public class fetch<T extends AbstractEntity<?>> {
 	return true;
     }
 
+    private static String offset = "    ";
+
     @Override
     public String toString() {
-	return getString("     ");
+	return getString(offset);
     }
 
-    private String getString(final String offset) {
+    private String getString(final String currOffset) {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("\n");
-	for (final Map.Entry<String, fetch<?>> fetchModel : includedPropsWithModels.entrySet()) {
-	    sb.append(offset + fetchModel.getKey() + fetchModel.getValue().getString(offset + "   "));
+	sb.append("\n" + currOffset + entityType.getSimpleName() + " [" + fetchCategory + "]");
+	if (incudedProps.size() > 0) {
+	    sb.append("\n" + currOffset + "+ " + incudedProps);
 	}
-
+	if (excludedProps.size() > 0) {
+	    sb.append("\n" + currOffset + "- " + excludedProps);
+	}
+	if (includedPropsWithModels.size() > 0) {
+	    for (final Map.Entry<String, fetch<?>> fetchModel : includedPropsWithModels.entrySet()) {
+		sb.append("\n" + currOffset + "+ " + fetchModel.getKey() + fetchModel.getValue().getString(currOffset + offset));
+	    }
+	}
 	return sb.toString();
     }
 }

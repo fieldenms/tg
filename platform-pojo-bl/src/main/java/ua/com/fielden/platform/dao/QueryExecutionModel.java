@@ -3,6 +3,8 @@ package ua.com.fielden.platform.dao;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.ValuePreprocessor;
@@ -19,6 +21,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     private final Map<String, Object> paramValues;
     private boolean lightweight;
     transient private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
+    transient private final Logger logger = Logger.getLogger(this.getClass());
 
     protected QueryExecutionModel(){
 	queryModel = null;
@@ -34,6 +37,19 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
 	fetchModel = builder.fetchModel;
 	paramValues = preprocessParamValues(builder.paramValues);
 	lightweight = builder.lightweight;
+	logger.debug(this);
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer();
+        sb.append("\nQEM");
+        sb.append("\n  fetch:" + (fetchModel != null ? fetchModel : ""));
+        sb.append("\n  query:" + queryModel);
+        sb.append("\n  order:" + (orderModel != null ? orderModel : ""));
+        sb.append("\n  param:" + (paramValues.size() > 0 ? paramValues : ""));
+        sb.append("\n");
+        return sb.toString();
     }
 
     private Map<String, Object> preprocessParamValues(final Map<String, Object> paramValues) {
