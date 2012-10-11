@@ -73,7 +73,13 @@ public class Concat implements ISingleOperand {
 
 	for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
 	    final ISingleOperand operand = iterator.next();
-	    sb.append(operand.sql());
+	    if (Date.class.equals(operand.type())) {
+		sb.append("FORMATDATETIME(" + operand.sql() + ", 'YYYY-MM-dd hh:mm:ss')");
+	    } else if (String.class.equals(operand.type())) {
+		sb.append(operand.sql());
+	    } else {
+		sb.append("CAST(" + operand.sql() + " AS VARCHAR(255))");
+	    }
 	    if (iterator.hasNext()) {
 		sb.append(", ");
 	    }
