@@ -10,5 +10,5 @@ import java.util.EventListener;
  */
 public interface ILifecycleModelUpdated extends EventListener {
 
-    void lifecycleModelUpdated(final LifecycleModelUpdateEvent event);
+    void lifecycleModelUpdated(final LifecycleModelUpdateEvent<?> event);
 }

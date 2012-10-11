@@ -64,7 +64,7 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
     @Override
     protected Void executeAnalysisQuery() {
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getCriteria().getManagedType(), getCriteria().createQueryProperties()).model();
-	lifecycleModel = getCriteria().getLifecycleInformation(notOrderedQuery, adtme().getLifecycleProperty().getValue(),new DateTime(adtme().getFrom()), new DateTime(adtme().getTo()));
+	lifecycleModel = getCriteria().getLifecycleInformation(notOrderedQuery, adtme().getLifecycleProperty().getValue(), new DateTime(adtme().getFrom()), new DateTime(adtme().getTo()));
 	SwingUtilities.invokeLater(new Runnable() {
 
 	    @Override

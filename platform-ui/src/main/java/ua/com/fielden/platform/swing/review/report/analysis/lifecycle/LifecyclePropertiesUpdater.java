@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
@@ -26,6 +27,7 @@ public class LifecyclePropertiesUpdater extends AbstractEntity<String> {
     @FirstParam(secondParam = "to")
     @Required
     @AfterChange(LifecyclePropertyChange.class)
+    @Title("Begining of the period")
     private Date from;
 
     @IsProperty
@@ -33,6 +35,7 @@ public class LifecyclePropertiesUpdater extends AbstractEntity<String> {
     @SecondParam(firstParam = "from")
     @Required
     @AfterChange(LifecyclePropertyChange.class)
+    @Title("End of the period")
     private Date to;
 
     private ILifecycleDomainTreeManager ldtm;

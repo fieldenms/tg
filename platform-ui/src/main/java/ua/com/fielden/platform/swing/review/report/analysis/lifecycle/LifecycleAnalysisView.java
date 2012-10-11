@@ -87,11 +87,11 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
      */
     private final JList<String> distributionPropertiesList;
     /**
-     * The lifecycle chart panel.
+     * The lifecycle's chart panel.
      */
     private final ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> chartPanel;
     /**
-     * lifecycle multiple chart panel.
+     * The lifecycle's multiple chart panel.
      */
     private final MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> multipleChartPanel;
     /**
@@ -125,6 +125,16 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	this.configurePanel = createConfigPanel(totalCheckBox, distributionPropertiesList, categoriesList);
 	this.splitPane = createSplitPanel(configurePanel, multipleChartPanel);
 	this.toolBar = createChartTypeBar(createSwitchChartModel(multipleChartPanel));
+
+	model.addLifecycleModelUpdatedListener(new ILifecycleModelUpdated() {
+
+	    @SuppressWarnings("unchecked")
+	    @Override
+	    public void lifecycleModelUpdated(final LifecycleModelUpdateEvent<?> event) {
+		updateChart((LifecycleModel<T>)event.getLifecycleModel(), null);
+	    }
+	});
+
 	layoutComponents();
     }
 
