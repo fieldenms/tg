@@ -157,19 +157,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
     @Override
     public Class<?> getManagedType(final Class<?> type) {
-	// TODO
-	// TODO
-	// TODO
-	// TODO
-	// TODO
-	// TODO
-	// TODO
-	// TODO
-	// TODO
-	// TODO
-	// TODO
-	// TODO
-	// TODO CalculatedProperty.validateRootWithoutRootTypeEnforcement(this, type);
+	CalculatedProperty.validateRootWithoutRootTypeEnforcement(this, type);
 	return originalAndEnhancedRootTypesAndArrays.get(type) == null ? type : originalAndEnhancedRootTypesAndArrays.get(type).getKey();
     }
 
@@ -409,7 +397,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @return
      */
     protected final CalculatedProperty calculatedProperty(final Class<?> root, final String pathAndName) {
-	return calculatedProperty(calculatedProperties.get(root), pathAndName);
+	return calculatedProperty(calculatedProperties.get(DynamicEntityClassLoader.getOriginalType(root)), pathAndName);
     }
 
     /**
@@ -422,7 +410,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     protected static final CalculatedProperty calculatedProperty(final List<CalculatedProperty> calcProperties, final String pathAndName) {
 	if (calcProperties != null) {
 	    for (final CalculatedProperty prop : calcProperties) {
-		System.err.println("prop == " + prop.pathAndName());
 		if (prop.pathAndName().equals(pathAndName)) {
 		    return prop;
 		}
@@ -446,7 +433,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	    calculatedProperties.put(root, new ArrayList<CalculatedProperty>());
 	}
 	calculatedProperties.get(root).add(calculatedProperty);
-	return calculatedProperty;
+	return /*calculatedProperty*/ calculatedProperties.get(root).get(calculatedProperties.get(root).size() - 1);
     }
 
     @Override

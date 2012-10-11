@@ -98,6 +98,11 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
     }
 
+    @Override
+    protected IDomainTreeEnhancer enhancer() {
+	return super.enhancer();
+    }
+
     /**
      * Creates a domain tree enhancer wrapper that takes care about population of domain tree changes (calc props) in representation "included properties"
      * (which triggers other population like manager's "checked properties" automatically).

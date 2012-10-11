@@ -11,9 +11,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
@@ -178,36 +178,42 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     /////////////////////////////////////////////////////////////////////////////////
     ///////////////////////// Lifecycle properties checking /////////////////////////
     /////////////////////////////////////////////////////////////////////////////////
-    @Test @Ignore
+    @Test
     public void test_that_changing_lifecycle_property_leads_to_tree_expanding_by_category_markers_for_second_tick() throws InstantiationException, IllegalAccessException {
-	final ICategorizer categorizer = Finder.findFieldByName(MasterEntity.class, "simpleEntityProp").getAnnotation(Monitoring.class).value().newInstance();
-	System.out.println("categorizer == " + categorizer);
+	final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_LifecycleDomainTreeManagerTest());
+	enhanceManagerWithBasicCalculatedProperties(centre);
+	centre.initAnalysisManagerByDefault("Lifecycle report", AnalysisType.LIFECYCLE);
+	final ILifecycleDomainTreeManager dtm = (ILifecycleDomainTreeManager) centre.getAnalysisManager("Lifecycle report");
 
 	// THE FIRST TIME -- returns DEFAULT VALUE //
 	// default value should be NULL
-	assertNull("The default LifecycleProperty should be Null.", dtm().getLifecycleProperty());
-	assertEquals("At the first time, the checked properties should be empty.", Arrays.asList(), dtm().getSecondTick().checkedProperties(MasterEntity.class));
-	assertEquals("At the first time, the used properties should be empty as well as 'checked' properties.", Arrays.asList(), dtm().getSecondTick().usedProperties(MasterEntity.class));
+	assertNull("The default LifecycleProperty should be Null.", dtm.getLifecycleProperty());
+	assertFalse("At the first time, the included properties should not contain any category.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("available"));
+	assertEquals("At the first time, the checked properties should be empty.", Arrays.asList(), dtm.getSecondTick().checkedProperties(MasterEntity.class));
+	assertEquals("At the first time, the used properties should be empty as well as 'checked' properties.", Arrays.asList(), dtm.getSecondTick().usedProperties(MasterEntity.class));
 
 	// Alter LifecycleProperty by checking it in the second tick //
-	dtm().getSecondTick().check(MasterEntity.class, "simpleEntityProp", true);
-	assertEquals("The LifecycleProperty should be 'simpleEntityProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "simpleEntityProp"), dtm().getLifecycleProperty());
-	assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("simpleEntityProp", "available", "broken", "unoperational"), dtm().getSecondTick().checkedProperties(MasterEntity.class));
-	assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("available", "broken"), dtm().getSecondTick().usedProperties(MasterEntity.class));
+	dtm.getSecondTick().check(MasterEntity.class, "simpleEntityProp", true);
+	assertEquals("The LifecycleProperty should be 'simpleEntityProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "simpleEntityProp"), dtm.getLifecycleProperty());
+	assertTrue("The included properties should contain categories.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("available"));
+	assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("simpleEntityProp", "available", "broken", "unoperational"), dtm.getSecondTick().checkedProperties(MasterEntity.class));
+	assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("available", "broken"), dtm.getSecondTick().usedProperties(MasterEntity.class));
 
 	// Remove LifecycleProperty by unchecking it in the second tick //
-	dtm().getSecondTick().check(MasterEntity.class, "simpleEntityProp", false);
-	assertNull("LifecycleProperty has become Null.", dtm().getLifecycleProperty());
-	assertEquals("The 'checked' properties became empty.", Arrays.asList(), dtm().getSecondTick().checkedProperties(MasterEntity.class));
-	assertEquals("The 'used' properties became empty.", Arrays.asList(), dtm().getSecondTick().usedProperties(MasterEntity.class));
+	dtm.getSecondTick().check(MasterEntity.class, "simpleEntityProp", false);
+	assertNull("LifecycleProperty has become Null.", dtm.getLifecycleProperty());
+	assertFalse("The included properties should not contain any category.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("available"));
+	assertEquals("The 'checked' properties became empty.", Arrays.asList(), dtm.getSecondTick().checkedProperties(MasterEntity.class));
+	assertEquals("The 'used' properties became empty.", Arrays.asList(), dtm.getSecondTick().usedProperties(MasterEntity.class));
 
 	// Alter LifecycleProperty by checking it in the second tick and then check another lifecycle property //
-	dtm().getSecondTick().check(MasterEntity.class, "simpleEntityProp", true);
-	dtm().getSecondTick().check(MasterEntity.class, "dateProp", true);
+	dtm.getSecondTick().check(MasterEntity.class, "simpleEntityProp", true);
+	dtm.getSecondTick().check(MasterEntity.class, "dateProp", true);
 
-	assertEquals("The LifecycleProperty should be 'dateProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "dateProp"), dtm().getLifecycleProperty());
-	assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("dateProp", "future", "now", "past"), dtm().getSecondTick().checkedProperties(MasterEntity.class));
-	assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("future", "past"), dtm().getSecondTick().usedProperties(MasterEntity.class));
+	assertEquals("The LifecycleProperty should be 'dateProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "dateProp"), dtm.getLifecycleProperty());
+	assertTrue("The included properties should contain categories.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("future"));
+	assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("dateProp", "future", "now", "past"), dtm.getSecondTick().checkedProperties(MasterEntity.class));
+	assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("future", "past"), dtm.getSecondTick().usedProperties(MasterEntity.class));
     }
 
     //////////////////////////// TODO ////////////////////////////

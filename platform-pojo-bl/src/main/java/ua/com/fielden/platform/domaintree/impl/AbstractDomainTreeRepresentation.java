@@ -383,21 +383,96 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    }
 	}
 
+//	@Override
+//	public boolean add(final String property) {
+//	    final boolean added = super.add(property);
+//	    if (added) {
+//		fireProperty(root, property, true);
+//	    }
+//	    return added;
+//	}
+//
+//	@Override
+//	public void add(final int index, final String property) {
+//	    super.add(index, property);
+//	    fireProperty(root, property, true);
+//	}
+//
+//	@Override
+//	public boolean addAll(final Collection<? extends String> properties) {
+//	    final boolean added = super.addAll(properties);
+//	    if (added) {
+//		for (final String property : properties) {
+//		    fireProperty(root, property, true);
+//		}
+//	    }
+//	    return added;
+//	}
+//
+//	@Override
+//	public boolean addAll(final int index, final Collection<? extends String> properties) {
+//	    final boolean added = super.addAll(index, properties);
+//	    if (added) {
+//		for (final String property : properties) {
+//		    fireProperty(root, property, true);
+//		}
+//	    }
+//	    return added;
+//	}
+
+	private String getElem(final int index) {
+	    try {
+		return get(index);
+	    } catch (final IndexOutOfBoundsException e) {
+		return null;
+	    }
+	}
+
 	@Override
 	public boolean add(final String property) {
-	    final boolean added = super.add(property);
-	    if (added) {
-		fireProperty(root, property, true);
+	    if (property == null) {
+		throw new IllegalArgumentException("'null' properties can not be added into properties set (implemented as natural ordered list).");
+	    } else if (!EntityUtils.equalsEx(getElem(size() - 1), property)) { // when last property is equal to attempted (addition) property -- ignore addition
+		final boolean added = super.add(property);
+		if (added) {
+		    fireProperty(root, property, true);
+		}
+		return added;
 	    }
-	    return added;
+	    return false;
 	}
 
 	@Override
 	public void add(final int index, final String property) {
-	    super.add(index, property);
-	    fireProperty(root, property, true);
+	    if (property == null) {
+		throw new IllegalArgumentException("'null' properties can not be added into properties set (implemented as natural ordered list).");
+	    } else if (!EntityUtils.equalsEx(getElem(index - 1), property)) { // when last property is equal to attempted (addition) property -- ignore addition
+		super.add(index, property);
+		fireProperty(root, property, true);
+	    }
 	}
 
+	@Override
+	public boolean addAll(final Collection<? extends String> properties) {
+	    for (final String property : properties) {
+		final boolean added = add(property);
+		if (!added) {
+		    return added;
+		}
+	    }
+	    return true;
+	}
+
+	@Override
+	public boolean addAll(final int index, final Collection<? extends String> properties) {
+	    int currIndex = index;
+	    for (final String property : properties) {
+		add(currIndex++, property);
+	    }
+	    return true;
+	}
+
+	////////////////////////////////////////////////////////////
 	@Override
 	public boolean remove(final Object obj) {
 	    final boolean removed = super.remove(obj);
@@ -406,28 +481,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		fireProperty(root, property, false);
 	    }
 	    return removed;
-	}
-
-	@Override
-	public boolean addAll(final Collection<? extends String> properties) {
-	    final boolean added = super.addAll(properties);
-	    if (added) {
-		for (final String property : properties) {
-		    fireProperty(root, property, true);
-		}
-	    }
-	    return added;
-	}
-
-	@Override
-	public boolean addAll(final int index, final Collection<? extends String> properties) {
-	    final boolean added = super.addAll(index, properties);
-	    if (added) {
-		for (final String property : properties) {
-		    fireProperty(root, property, true);
-		}
-	    }
-	    return added;
 	}
     }
 

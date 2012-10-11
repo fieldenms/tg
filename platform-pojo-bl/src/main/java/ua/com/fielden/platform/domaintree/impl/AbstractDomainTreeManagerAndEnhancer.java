@@ -24,6 +24,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickMan
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -137,8 +138,8 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
 	@Override
 	public void apply() {
-	    final Map<Class<?>, List<CalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer, false);
-	    final Map<Class<?>, List<CalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<CalculatedProperty>>(baseEnhancer.calculatedProperties());
+	    final Map<Class<?>, List<CalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer(), false);
+	    final Map<Class<?>, List<CalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<CalculatedProperty>>(baseEnhancer().calculatedProperties());
 
 	    final Set<Pair<Class<?>, String>> was = migrateToSet(oldCalculatedProperties);
 	    final Set<Pair<Class<?>, String>> is = migrateToSet(newCalculatedProperties);
@@ -158,7 +159,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    final Set<Pair<Class<?>, String>> removed = subtract(union(was, is), is);
 	    beforeApplyPopulation(retainedAndSignificantlyChanged, removed);
 
-	    baseEnhancer.apply();
+	    baseEnhancer().apply();
 
 	    // add new calc properties to included properties list
 	    final Set<Pair<Class<?>, String>> neew = subtract(union(was, is), was);
@@ -173,7 +174,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
 	protected void afterApplyPopulation(final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged, final Set<Pair<Class<?>, String>> neew) {
 	    for (final Pair<Class<?>, String> rootAndProp : union(neew, retainedAndSignificantlyChanged)) {
-		populateMetaStateForActuallyAddedNewProperty(rootAndProp.getKey(), rootAndProp.getValue(), dtr);
+		populateMetaStateForActuallyAddedNewProperty(DynamicEntityClassLoader.getOriginalType(rootAndProp.getKey()), rootAndProp.getValue(), dtr);
 	    }
 	}
 
@@ -229,47 +230,47 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
 	@Override
 	public void discard() {
-	    baseEnhancer.discard();
+	    baseEnhancer().discard();
 	}
 
 	@Override
 	public Class<?> getManagedType(final Class<?> type) {
-	    return baseEnhancer.getManagedType(type);
+	    return baseEnhancer().getManagedType(type);
 	}
 
 	@Override
 	public List<ByteArray> getManagedTypeArrays(final Class<?> type) {
-	    return baseEnhancer.getManagedTypeArrays(type);
+	    return baseEnhancer().getManagedTypeArrays(type);
 	}
 
 	@Override
 	public ICalculatedProperty addCalculatedProperty(final ICalculatedProperty calculatedProperty) {
-	    return baseEnhancer.addCalculatedProperty(calculatedProperty);
+	    return baseEnhancer().addCalculatedProperty(calculatedProperty);
 	}
 
 	@Override
 	public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	    return baseEnhancer.addCalculatedProperty(root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
+	    return baseEnhancer().addCalculatedProperty(root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
 	}
 
 	@Override
 	public void removeCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-	    baseEnhancer.removeCalculatedProperty(rootType, calculatedPropertyName);
+	    baseEnhancer().removeCalculatedProperty(rootType, calculatedPropertyName);
 	}
 
 	@Override
 	public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-	    return baseEnhancer.getCalculatedProperty(rootType, calculatedPropertyName);
+	    return baseEnhancer().getCalculatedProperty(rootType, calculatedPropertyName);
 	}
 
 	@Override
 	public ICalculatedProperty copyCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-	    return baseEnhancer.copyCalculatedProperty(rootType, calculatedPropertyName);
+	    return baseEnhancer().copyCalculatedProperty(rootType, calculatedPropertyName);
 	}
 
 	@Override
 	public Set<Class<?>> rootTypes() {
-	    return baseEnhancer.rootTypes();
+	    return baseEnhancer().rootTypes();
 	}
 
 	protected DomainTreeEnhancer baseEnhancer() {

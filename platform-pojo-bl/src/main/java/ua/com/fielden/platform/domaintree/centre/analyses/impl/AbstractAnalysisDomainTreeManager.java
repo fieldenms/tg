@@ -12,6 +12,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomai
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.Pair;
@@ -69,7 +70,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
     }
 
     protected Class<?> managedType(final Class<?> root) {
-	return parentCentreDomainTreeManager().getEnhancer().getManagedType(root);
+	return parentCentreDomainTreeManager().getEnhancer().getManagedType(DynamicEntityClassLoader.getOriginalType(root));
     }
 
     @Override
@@ -136,7 +137,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	}
 
 	protected Class<?> managedType(final Class<?> root) {
-	    return parentCentreDomainTreeManager().getEnhancer().getManagedType(root);
+	    return parentCentreDomainTreeManager().getEnhancer().getManagedType(DynamicEntityClassLoader.getOriginalType(root));
 	}
 
 	@Override
@@ -302,7 +303,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	}
 
 	protected Class<?> managedType(final Class<?> root) {
-	    return parentCentreDomainTreeManager().getEnhancer().getManagedType(root);
+	    return parentCentreDomainTreeManager().getEnhancer().getManagedType(DynamicEntityClassLoader.getOriginalType(root));
 	}
 
 	@Override
