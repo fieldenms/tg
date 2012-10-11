@@ -37,6 +37,6 @@ public class ConcatFunctionBuilder extends AbstractTokensBuilder {
 	    items.add(subsequentOperand);
 	}
 
-	return new Pair<TokenCategory, Object>(TokenCategory.FUNCTION_MODEL, new Concat(items));
+	return new Pair<TokenCategory, Object>(TokenCategory.FUNCTION_MODEL, new Concat(items, getDbVersion()));
     }
 }

@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.entity;
 
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
      */
     private transient final List<Expression> propertyExpressions = new ArrayList<Expression>();
     private transient final JexlContext jc = JexlHelper.createContext();
+    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
     private static final String ENTITY = "entity";
     public static final String KEY_MEMBERS_SEPARATOR = " ";
     /** There case where key members do not implement Comparable. In such cases a comparator class should be provided. */
@@ -185,10 +188,18 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
 	for (int index = 0; index < propertyExpressions.size(); index++) {
 	    final Object value = value(index);
 	    if (value != null) {
-		buffer.append(value.toString() + (index+1 <  propertyExpressions.size() ? KEY_MEMBERS_SEPARATOR : ""));
+		buffer.append(convertToString(value) + (index+1 <  propertyExpressions.size() ? KEY_MEMBERS_SEPARATOR : ""));
 	    }
 	}
 	return buffer.toString();
+    }
+
+    private final String convertToString(final Object value) {
+	if (value instanceof Date) {
+	    return dateFormatter.format(value);
+	} else {
+	    return value.toString();
+	}
     }
 
     public final List<Expression> getPropertyExpressions() {
