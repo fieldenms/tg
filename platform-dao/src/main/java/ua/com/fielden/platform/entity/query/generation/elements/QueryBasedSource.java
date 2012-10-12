@@ -104,12 +104,10 @@ public class QueryBasedSource extends AbstractSource {
 		    } else if (!StringUtils.isEmpty(rest)) {
 			    final PropertyMetadata propInfo = getDomainMetadataAnalyser().getInfoForDotNotatedProp(explicitPropMetadata.getJavaType(), rest);
 			    if (propInfo == null) {
-
 				return null;
 			    } else {
 				final boolean propNullability = getDomainMetadataAnalyser().isNullable(explicitPropMetadata.getJavaType(), rest);
 				final boolean explicitPartNullability = explicitPropMetadata.isNullable() || isNullable();
-
 				return new Pair<PurePropInfo, PurePropInfo>(
 					new PurePropInfo(first, explicitPropMetadata.getJavaType(), explicitPropMetadata.getHibType(), explicitPartNullability),
 					new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || explicitPartNullability));
@@ -118,15 +116,21 @@ public class QueryBasedSource extends AbstractSource {
 
 			    final PurePropInfo ppi = new PurePropInfo(first, explicitPropMetadata.getJavaType(), explicitPropMetadata.getHibType(), explicitPropMetadata.isNullable() || isNullable());
 			    ppi.setExpressionModel(explicitPropMetadata.getExpressionModel());
-			    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
+				return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 		    }
 //		    throw new RuntimeException("Implementation pending! Additional info: " + dotNotatedPropName + " " + explicitPropMetadata);
+		} else if (explicitPropMetadata.isCompositeProperty()) {
+		    final String singleSubProp = explicitPropMetadata.getSinglePropertyOfCompositeUserType();
+		    if (singleSubProp != null) {
+			return validateCandidate(dotNotatedPropName, first + "." + singleSubProp, rest);
+		    }
+		    return null;
 		} else {
 		    return null;
 		}
 	    }
 	} else if (firstLevelPropYield.getInfo().getJavaType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
-	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true)) : null;
+		return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true)) : null;
 	} else if (!StringUtils.isEmpty(rest)) {
 	    final PropertyMetadata propInfo = getDomainMetadataAnalyser().getInfoForDotNotatedProp(firstLevelPropYield.getInfo().getJavaType(), rest);
 	    if (propInfo == null) {
@@ -140,7 +144,6 @@ public class QueryBasedSource extends AbstractSource {
 	    }
 	} else {
 	    final PurePropInfo ppi = new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), getYieldNullability(firstLevelPropYield.getAlias())/*firstLevelPropYield.getInfo().isNullable()*/ || isNullable());
-
 	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	}
     }
