@@ -196,7 +196,7 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
      * @param property
      * @return
      */
-    public List<ICategory> getCurrentCategories() {
+    public List<? extends ICategory> getCurrentCategories() {
 	return adtme().getSecondTick().currentCategories(getCriteria().getEntityClass());
     }
 
@@ -213,7 +213,7 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
 	return adtme().getLifecycleProperty().getValue();
     }
 
-    public List<ICategory> allCategories() {
+    public List<? extends ICategory> allCategories() {
 	return adtme().getSecondTick().allCategories(getCriteria().getEntityClass());
     }
 
