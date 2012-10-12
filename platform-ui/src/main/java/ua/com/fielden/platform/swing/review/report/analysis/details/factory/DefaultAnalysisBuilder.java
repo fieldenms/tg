@@ -14,10 +14,23 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.centre.factory.DefaultGridAnalysisFactory;
 import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuilder;
+import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisFactory;
 
 public class DefaultAnalysisBuilder<T extends AbstractEntity<?>> implements IAnalysisBuilder<T> {
 
-    private final DefaultGridAnalysisFactory<T> gridAnalysisFactory = new DefaultGridAnalysisFactory<>();
+    private final IAnalysisFactory<T, ?> defaultAnalysisFactory;
+
+    public DefaultAnalysisBuilder(){
+	this(null);
+    }
+
+    public DefaultAnalysisBuilder(final IAnalysisFactory<T, ?> defaultAnalysisFactory){
+	if (defaultAnalysisFactory == null) {
+	    this.defaultAnalysisFactory = new DefaultGridAnalysisFactory<>();
+	} else {
+	    this.defaultAnalysisFactory = defaultAnalysisFactory;
+	}
+    }
 
     @Override
     public AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?, ?> createAnalysis(//
@@ -28,7 +41,7 @@ public class DefaultAnalysisBuilder<T extends AbstractEntity<?>> implements IAna
 	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	if(analysisType == null){
-	    return gridAnalysisFactory.createAnalysis(owner, criteria, name, detailsCache, progressLayer);
+	    return defaultAnalysisFactory.createAnalysis(owner, criteria, name, detailsCache, progressLayer);
 	}
 	return null;
     }

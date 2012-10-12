@@ -15,6 +15,7 @@ import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
 import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.AbstractCentreConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuilder;
+import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisFactory;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
 public class AnalysisDetailsConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
@@ -29,9 +30,34 @@ public class AnalysisDetailsConfigurationModel<T extends AbstractEntity<?>> exte
      */
     private final ICentreDomainTreeManagerAndEnhancer cdtme;
 
+    /**
+     * Initiates this {@link AnalysisDetailsConfigurationModel} with default {@link IAnalysisBuilder}.
+     *
+     * @param entityType
+     * @param name
+     * @param entityFactory
+     * @param criteriaGenerator
+     * @param masterManager
+     * @param cdtme
+     */
     public AnalysisDetailsConfigurationModel(final Class<T> entityType, final String name, final EntityFactory entityFactory, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+	this(entityType, name, null, entityFactory, criteriaGenerator, masterManager, cdtme);
+    }
+
+    /**
+     * Initiates this {@link AnalysisDetailsConfigurationModel} with specified {@link IAnalysisBuilder}. If the specified {@link IAnalysisBuilder} is null then the default {@link IAnalysisBuilder} will be created.
+     *
+     * @param entityType
+     * @param name
+     * @param analysisBuilder
+     * @param entityFactory
+     * @param criteriaGenerator
+     * @param masterManager
+     * @param cdtme
+     */
+    public AnalysisDetailsConfigurationModel(final Class<T> entityType, final String name, final IAnalysisFactory<T, ?> defaultAnalysisFactory, final EntityFactory entityFactory, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final ICentreDomainTreeManagerAndEnhancer cdtme) {
 	super(entityType, name, entityFactory, masterManager, criteriaGenerator);
-	this.analysisBuilder = new DefaultAnalysisBuilder<>();
+	this.analysisBuilder = new DefaultAnalysisBuilder<>(defaultAnalysisFactory);
 	this.cdtme = cdtme;
     }
 
