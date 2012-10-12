@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -144,11 +145,10 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	protected void addAndCheckAllCategoriesAndUseMainCategories(final Class<?> root, final String lifecycleProperty) {
 	    final ICategorizer categorizer = categorizer(root, lifecycleProperty);
 	    for (final ICategory category : categorizer.getAllCategories()) {
-		final IDomainTreeEnhancer enhancer = tr().getDtr().parentCentreDomainTreeManager().getEnhancer();
 		final Class<?> originalType = DynamicEntityClassLoader.getOriginalType(root);
-		final ICalculatedProperty calcProp = enhancer.addCalculatedProperty(originalType, "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, category.getName(), category.getDesc(), CalculatedPropertyAttribute.NO_ATTR, "SELF");
+		final ICalculatedProperty calcProp = getEnhancerFromCentre().addCalculatedProperty(originalType, "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, category.getName(), category.getDesc(), CalculatedPropertyAttribute.NO_ATTR, "SELF");
+		getEnhancerFromCentre().apply();
 		final String categoryPropertyName = calcProp.pathAndName();
-		enhancer.apply();
 		check(root, categoryPropertyName, true); // all categories should be checked by default
 		if (categorizer.getMainCategories().contains(category)) {
 		    use(root, categoryPropertyName, true); // only main categories should be used by default
@@ -180,14 +180,28 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
 	protected void removeAllCategories(final Class<?> root) {
 	    final Class<?> originalType = DynamicEntityClassLoader.getOriginalType(root);
+	    final List<String> allCategories = allCats(root);
+	    for (final String categoryMarker : allCategories) {
+		getEnhancerFromCentre().removeCalculatedProperty(originalType, categoryMarker);
+		getEnhancerFromCentre().apply();
+	    }
+	}
+
+	protected List<String> allCats(final Class<?> root) {
+	    final Class<?> originalType = DynamicEntityClassLoader.getOriginalType(root);
 	    final List<String> includedProperties = new ArrayList<String>(tr().getDtr().includedProperties(originalType));
 	    final Class<?> managedType = managedType(root);
+	    final List<String> allCats = new ArrayList<String>();
 	    for (final String property : includedProperties) {
 		if (!PropertyTypeDeterminator.isDotNotation(property) && LifecycleAddToCategoriesTickRepresentation.isCategoryProperty(managedType, property)) { // categories at this stage are located in root type
-		    tr().getDtr().parentCentreDomainTreeManager().getEnhancer().removeCalculatedProperty(originalType, property);
-		    tr().getDtr().parentCentreDomainTreeManager().getEnhancer().apply();
+		    allCats.add(property);
 		}
 	    }
+	    return allCats;
+	}
+
+	public IDomainTreeEnhancer getEnhancerFromCentre() {
+	    return tr().getDtr().parentCentreDomainTreeManager().getEnhancer();
 	}
 
 	@Override
@@ -201,15 +215,27 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	}
 
 	@Override
-	public List<ICategory> allCategories(final Class<?> root) {
-	    // TODO Auto-generated method stub
-	    return null;
+	public List<? extends ICategory> allCategories(final Class<?> root) {
+	    final String lifecycleProperty = lifecycleProperty(root);
+	    return lifecycleProperty == null ? new ArrayList<ICategory>() : categorizer(root, lifecycleProperty(root)).getAllCategories();
 	}
 
 	@Override
-	public List<ICategory> currentCategories(final Class<?> root) {
-	    // TODO Auto-generated method stub
-	    return null;
+	public List<? extends ICategory> currentCategories(final Class<?> root) {
+	    final List<? extends ICategory> allCategories = allCategories(root);
+	    final List<ICategory> res = new ArrayList<ICategory>();
+	    final List<String> checkedProperties = checkedProperties(root);
+	    for (final String property : checkedProperties) {
+		if (LifecycleDomainTreeRepresentation.LifecycleAddToCategoriesTickRepresentation.isCategoryProperty(managedType(root), property)) {
+		    for (final ICategory cat : allCategories) {
+			if (cat.getName().equals(TitlesDescsGetter.getTitleAndDesc(property, managedType(root)).getKey()) ) {
+			    res.add(cat);
+			    break;
+			}
+		    }
+		}
+	    }
+	    return res;
 	}
     }
 

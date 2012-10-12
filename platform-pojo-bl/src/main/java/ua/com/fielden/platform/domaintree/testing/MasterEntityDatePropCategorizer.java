@@ -25,21 +25,21 @@ public class MasterEntityDatePropCategorizer implements ICategorizer {
 	final Date date = (Date) value;
 	final Date now = new Date();
 
-	return (value == null ? Category.UNCATEGORIZED : //
-		((now.getTime() > date.getTime() ? Category.FUTURE : //
-		(((now.getTime() == date.getTime()) ? Category.NOW : //
-			(((now.getTime() < date.getTime()) ? Category.PAST : //
-				Category.UNCATEGORIZED)))))));
+	return (value == null ? MasterEntityDatePropCategory.UNCATEGORIZED : //
+		((now.getTime() > date.getTime() ? MasterEntityDatePropCategory.FUTURE : //
+		(((now.getTime() == date.getTime()) ? MasterEntityDatePropCategory.NOW : //
+			(((now.getTime() < date.getTime()) ? MasterEntityDatePropCategory.PAST : //
+				MasterEntityDatePropCategory.UNCATEGORIZED)))))));
     }
 
     @Override
     public List<? extends ICategory> getAllCategories() {
-	return Arrays.asList(Category.FUTURE, Category.NOW, Category.PAST);
+	return Arrays.asList(MasterEntityDatePropCategory.FUTURE, MasterEntityDatePropCategory.NOW, MasterEntityDatePropCategory.PAST);
     }
 
     @Override
     public List<? extends ICategory> getMainCategories() {
-	return Arrays.asList(Category.FUTURE, Category.PAST);
+	return Arrays.asList(MasterEntityDatePropCategory.FUTURE, MasterEntityDatePropCategory.PAST);
     }
 
     /**
@@ -48,7 +48,7 @@ public class MasterEntityDatePropCategorizer implements ICategorizer {
      * @author Tg Team
      *
      */
-    private static enum Category implements ICategory {
+    public static enum MasterEntityDatePropCategory implements ICategory {
 	FUTURE("Future", "The date is in future", Color.BLUE), //
 	NOW("Now", "The date is Now", Color.YELLOW), //
 	PAST("Past", "The date is in the past", Color.RED), //
@@ -58,7 +58,7 @@ public class MasterEntityDatePropCategorizer implements ICategorizer {
 	private final String desc;
 	private final Color color;
 
-	private Category(final String title, final String desc, final Color color) {
+	private MasterEntityDatePropCategory(final String title, final String desc, final Color color) {
 	    this.title = title;
 	    this.desc = desc;
 	    this.color = color;

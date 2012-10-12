@@ -45,11 +45,11 @@ public interface ILifecycleDomainTreeManager extends IAbstractAnalysisDomainTree
      *
      */
     public interface ILifecycleAddToCategoriesTickManager extends IAbstractAnalysisAddToAggregationTickManager {
-	/** TODO */
-	List<ICategory> allCategories(final Class<?> root);
+	/** Returns all categories that conform to the currently selected lifecycle property. */
+	List<? extends ICategory> allCategories(final Class<?> root);
 
-	/** TODO */
-	List<ICategory> currentCategories(final Class<?> root);
+	/** Returns all selected categories that conform to the currently selected lifecycle property. */
+	List<? extends ICategory> currentCategories(final Class<?> root);
     }
 
     /**

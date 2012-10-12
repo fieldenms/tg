@@ -21,20 +21,20 @@ public class MasterEntitySimpleEntityPropCategorizer implements ICategorizer {
 
     @Override
     public ICategory getCategory(final Object value) {
-	return ("Value 1".equals(value) || "Value 2".equals(value)) ? Category.AVAILABLE : //
-		(("Value 3".equals(value)) ? Category.BROKEN : //
-			(("Value 4".equals(value)) ? Category.UNOPERATIONAL : //
-				Category.UNCATEGORIZED));
+	return ("Value 1".equals(value) || "Value 2".equals(value)) ? MasterEntitySimpleEntityPropCategory.AVAILABLE : //
+		(("Value 3".equals(value)) ? MasterEntitySimpleEntityPropCategory.BROKEN : //
+			(("Value 4".equals(value)) ? MasterEntitySimpleEntityPropCategory.UNOPERATIONAL : //
+				MasterEntitySimpleEntityPropCategory.UNCATEGORIZED));
     }
 
     @Override
     public List<? extends ICategory> getAllCategories() {
-	return Arrays.asList(Category.AVAILABLE, Category.BROKEN, Category.UNOPERATIONAL);
+	return Arrays.asList(MasterEntitySimpleEntityPropCategory.AVAILABLE, MasterEntitySimpleEntityPropCategory.BROKEN, MasterEntitySimpleEntityPropCategory.UNOPERATIONAL);
     }
 
     @Override
     public List<? extends ICategory> getMainCategories() {
-	return Arrays.asList(Category.AVAILABLE, Category.BROKEN);
+	return Arrays.asList(MasterEntitySimpleEntityPropCategory.AVAILABLE, MasterEntitySimpleEntityPropCategory.BROKEN);
     }
 
     /**
@@ -43,7 +43,7 @@ public class MasterEntitySimpleEntityPropCategorizer implements ICategorizer {
      * @author Tg Team
      *
      */
-    private static enum Category implements ICategory {
+    public static enum MasterEntitySimpleEntityPropCategory implements ICategory {
 	AVAILABLE("Available", "Smth is available (Value 1, Value 2)", Color.BLUE), //
 	BROKEN("Broken", "Smth is broken (Value 3)", Color.YELLOW), //
 	UNOPERATIONAL("Unoperational", "Smth is completely un-operational(Value 4)", Color.RED), //
@@ -53,7 +53,7 @@ public class MasterEntitySimpleEntityPropCategorizer implements ICategorizer {
 	private final String desc;
 	private final Color color;
 
-	private Category(final String title, final String desc, final Color color) {
+	private MasterEntitySimpleEntityPropCategory(final String title, final String desc, final Color color) {
 	    this.title = title;
 	    this.desc = desc;
 	    this.color = color;
