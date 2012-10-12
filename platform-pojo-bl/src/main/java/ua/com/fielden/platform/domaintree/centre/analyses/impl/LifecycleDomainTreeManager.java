@@ -227,17 +227,14 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	    final List<String> checkedProperties = checkedProperties(root);
 	    for (final String property : checkedProperties) {
 		if (LifecycleDomainTreeRepresentation.LifecycleAddToCategoriesTickRepresentation.isCategoryProperty(managedType(root), property)) {
-		    for (final ICategory cat : allCategories) {
-			if (cat.getName().equals(TitlesDescsGetter.getTitleAndDesc(property, managedType(root)).getKey()) ) {
-			    res.add(cat);
-			    break;
-			}
-		    }
+		    res.add(getCategory(managedType(root), property, allCategories));
 		}
 	    }
 	    return res;
 	}
     }
+
+
 
     /**
      * A specific Kryo serialiser for {@link LifecycleDomainTreeManager}.
@@ -401,13 +398,18 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
     }
 
     /**
-     * TODO implement
+     * Returns a category for a category marker.
      *
      * @param root
      * @param categoryMarker
      * @return
      */
-    public static ICategory getCategory(final Class<?> root, final String categoryMarker) {
-	return null;
+    public static ICategory getCategory(final Class<?> managedType, final String categoryMarker, final List<? extends ICategory> allCategories) {
+	for (final ICategory cat : allCategories) {
+	    if (cat.getName().equals(TitlesDescsGetter.getTitleAndDesc(categoryMarker, managedType).getKey())) {
+		return cat;
+	    }
+	}
+	throw new IllegalArgumentException("Trying to determine a category from a property, which is not 'category marker' -- " + categoryMarker + ", from type " + managedType.getSimpleName() + ".");
     }
 }

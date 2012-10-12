@@ -250,7 +250,10 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    final SentinelDomainTreeManager sdtm = (SentinelDomainTreeManager) getAnalysisManager(name);
 	    sdtm.provideMetaStateForCountOfSelfDashboardProperty();
 	} if (AnalysisType.LIFECYCLE.equals(analysisType)) {
+	    provideLifecycleAnalysesDatePeriodProperties(getRepresentation().rootTypes());
 	    currentAnalyses.put(name, initAnalysisManagerReferencesOn(new LifecycleDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()), this));
+	    final LifecycleDomainTreeManager ldtm = (LifecycleDomainTreeManager) getAnalysisManager(name);
+	    ldtm.provideMetaStateForLifecycleAnalysesDatePeriodProperties();
 	}
 	// fire "initialised" event
 	if (getAnalysisManager(name) != null) {

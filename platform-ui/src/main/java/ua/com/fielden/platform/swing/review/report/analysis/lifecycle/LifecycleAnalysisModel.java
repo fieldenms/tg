@@ -164,7 +164,7 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
 	    return null;
 	}
 	final Pair<String, Ordering> firstOrdering = orderings.get(0);
-	return new Pair<ICategory, Ordering>(LifecycleDomainTreeManager.getCategory(getCriteria().getEntityClass(), firstOrdering.getKey()), firstOrdering.getValue());
+	return new Pair<ICategory, Ordering>(LifecycleDomainTreeManager.getCategory(getCriteria().getEntityClass(), firstOrdering.getKey(), adtme().getSecondTick().allCategories(getCriteria().getEntityClass())), firstOrdering.getValue());
     }
 
     public boolean getTotal() {
