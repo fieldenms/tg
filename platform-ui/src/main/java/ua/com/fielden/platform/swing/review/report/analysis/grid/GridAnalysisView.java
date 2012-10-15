@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -44,6 +42,8 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
+
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage<T>> implements IUmViewOwner, IBlockingLayerProvider {
 
@@ -212,6 +212,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    final JToolBar toolbar = new ActionPanelBuilder()//
 	    .addButton(createOpenMasterWithNewCommand())//
 	    .addButton(createOpenMasterCommand())//
+	    .addButton(createDeleteCommand())//
 	    .buildActionPanel();
 	    toolbar.setFloatable(false);
 	    toolbar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
