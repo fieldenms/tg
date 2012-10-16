@@ -40,6 +40,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IBindingEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -578,7 +579,14 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
 		    } else {
 			for (final Object v : values) {
 			    final AbstractEntity value = (AbstractEntity) v;
-			    if (bufferedValue.equals(value.getKey())) {
+			    final Object that;
+			    if (value.getKeyType() == DynamicEntityKey.class) {
+				that = value.getKey().toString();
+			    } else {
+				that =  value.getKey();
+			    }
+
+			    if (bufferedValue.equals(that)) {
 				return false;
 			    }
 			}
