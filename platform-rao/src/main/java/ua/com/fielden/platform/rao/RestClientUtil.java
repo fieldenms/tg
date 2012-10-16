@@ -416,7 +416,7 @@ public final class RestClientUtil implements IUserProvider {
 	// 2. Conversion of entities into XML (serialisation) is a time consuming operation;
 	query.setLightweight(true);
 	final byte[] bytes = serialiser.serialise(query);
-	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
 
@@ -433,7 +433,7 @@ public final class RestClientUtil implements IUserProvider {
 	final DynamicallyTypedQueryContainer container = new DynamicallyTypedQueryContainer(dynamicTypes, query);
 
 	final byte[] bytes = serialiser.serialise(container);
-	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
     /**
@@ -451,7 +451,7 @@ public final class RestClientUtil implements IUserProvider {
 	final LifecycleQueryContainer container = new LifecycleQueryContainer(model, binaryTypes, propertyName, from, to);
 
 	final byte[] bytes = serialiser.serialise(container);
-	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
 
@@ -465,7 +465,7 @@ public final class RestClientUtil implements IUserProvider {
      */
     public Representation represent(final SnappyQuery query) {
 	final byte[] bytes = serialiser.serialise(query);
-	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
     /**
@@ -476,7 +476,7 @@ public final class RestClientUtil implements IUserProvider {
      */
     public Representation represent(final Map<String, List<Long>> map) {
 	final byte[] bytes = serialiser.serialise(map);
-	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
     /**
@@ -494,7 +494,7 @@ public final class RestClientUtil implements IUserProvider {
 	}
 	// now serialise and make a representation
 	final byte[] bytes = serialiser.serialise(list);
-	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
     /**
@@ -506,7 +506,7 @@ public final class RestClientUtil implements IUserProvider {
      */
     public <T extends AbstractEntity> Representation represent(final T entity) {
 	final byte[] bytes = serialiser.serialise(entity);
-	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
     /**
