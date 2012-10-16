@@ -82,7 +82,7 @@ public class RestServerUtil {
      */
     public Representation errorRepresentation(final String string) {
 	final byte[] bytes = serialiser.serialise(new Result(null, new Exception(string)));
-	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
     /**
@@ -94,7 +94,7 @@ public class RestServerUtil {
      */
     public Representation errorRepresentation(final Exception ex) {
 	final byte[] bytes = serialiser.serialise(new Result(ex));
-	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
     /**
@@ -105,7 +105,7 @@ public class RestServerUtil {
      */
     public Representation resultRepresentation(final Result result) {
 	final byte[] bytes = serialiser.serialise(result);
-	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
     /**
@@ -120,7 +120,7 @@ public class RestServerUtil {
 	    // create a Result enclosing entity list
 	    final byte[] bytes = serialiser.serialise(new Result(new ArrayList(filteredEntities), "Snappy pair is Ok"));
 	    logger.debug("SIZE: " + bytes.length);
-	    return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	    return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
 	} catch (final Exception ex) {
 	    logger.error(ex);
 	    return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
@@ -139,7 +139,7 @@ public class RestServerUtil {
 	    final Result result = new Result(new ArrayList<T>(entities), "All is cool");
 	    final byte[] bytes = serialiser.serialise(result);
 	    logger.debug("SIZE: " + bytes.length);
-	    return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	    return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
 	} catch (final Exception ex) {
 	    logger.error(ex);
 	    return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
@@ -158,7 +158,7 @@ public class RestServerUtil {
 	    final Result result = new Result(lifecycleModel, "All is cool");
 	    final byte[] bytes = serialiser.serialise(result);
 	    logger.debug("SIZE: " + bytes.length);
-	    return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	    return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
 	} catch (final Exception ex) {
 	    logger.error(ex);
 	    return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
@@ -175,7 +175,7 @@ public class RestServerUtil {
 	    // create a Result enclosing entity list
 	    final Result result = entity != null ? new Result(entity, "OK") : new Result(null, new Exception("Could not find entity."));
 	    final byte[] bytes = serialiser.serialise(result);
-	    return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+	    return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
 	} catch (final Exception ex) {
 	    logger.error(ex);
 	    return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
