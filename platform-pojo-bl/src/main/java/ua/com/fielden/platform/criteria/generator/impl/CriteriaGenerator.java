@@ -17,7 +17,6 @@ import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.LocatorEntityQueryCriteriaToEnhance;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
@@ -34,6 +33,7 @@ import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -59,13 +59,13 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final EntityFactory entityFactory;
 
-    private final IDaoFactory daoFactory;
+    private final IDefaultControllerProvider controllerProvider;
 
 
     @Inject
-    public CriteriaGenerator(final EntityFactory entityFactory, final IDaoFactory daoFactory){
+    public CriteriaGenerator(final EntityFactory entityFactory, final IDefaultControllerProvider controllerProvider){
 	this.entityFactory = entityFactory;
-	this.daoFactory = daoFactory;
+	this.controllerProvider = controllerProvider;
     }
 
     @Override
@@ -96,7 +96,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	    final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
 	    final boolean isDaoAccessable = daoField.isAccessible();
 	    daoField.setAccessible(true);
-	    daoField.set(entity, daoFactory.newDao(root));
+	    daoField.set(entity, controllerProvider.findController(root));
 	    daoField.setAccessible(isDaoAccessable);
 
 	    //Set domain tree manager for entity query criteria.

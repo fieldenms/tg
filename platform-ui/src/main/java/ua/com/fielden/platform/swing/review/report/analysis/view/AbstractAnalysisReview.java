@@ -159,7 +159,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 
 	    @Override
 	    protected boolean preAction() {
-		//getProgressLayer().enableIncrementalLocking();
+		getOwner().getProgressLayer().enableIncrementalLocking();
 		setMessage("Loading...");
 		final boolean result = super.preAction();
 		if (!result) {
@@ -222,6 +222,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	    @Override
 	    protected boolean preAction() {
 		setMessage("Exporting...");
+		getOwner().getProgressLayer().enableIncrementalLocking();
 		final boolean result = super.preAction();
 		if (!result) {
 		    return result;

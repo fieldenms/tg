@@ -72,7 +72,7 @@ public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> i
 
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(queryModel)
 	.with(DynamicOrderingBuilder.createOrderingModel(genClass, analysisOrderingProperties))//
-	.with(DynamicFetchBuilder.createFetchModel(genClass, new HashSet<String>(yieldMap.values())))//
+	.with(DynamicFetchBuilder.createFetchOnlyModel(genClass, new HashSet<String>(yieldMap.values())))//
 	.with(DynamicParamBuilder.buildParametersMap(managedType, paramMap)).model();
 
 	return resultQuery;

@@ -28,7 +28,7 @@ import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
-import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
@@ -446,9 +446,9 @@ public final class RestClientUtil implements IUserProvider {
      * @param to
      * @return
      */
-    public Representation represent(final SingleResultQueryModel<? extends AbstractEntity<?>> model, final List<byte[]> binaryTypes, final String propertyName, final DateTime from, final DateTime to){
+    public Representation represent(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final List<byte[]> binaryTypes, final List<String> distributionProperties, final String propertyName, final DateTime from, final DateTime to){
 
-	final LifecycleQueryContainer container = new LifecycleQueryContainer(model, binaryTypes, propertyName, from, to);
+	final LifecycleQueryContainer container = new LifecycleQueryContainer(model, binaryTypes, distributionProperties, propertyName, from, to);
 
 	final byte[] bytes = serialiser.serialise(container);
 	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);

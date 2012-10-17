@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.swing.SortOrder;
-
 import org.apache.log4j.Logger;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.LegendItem;
@@ -58,22 +56,20 @@ import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Period;
 
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.EntityPropertyLifecycle;
 import ua.com.fielden.platform.equery.lifecycle.IGroup;
 import ua.com.fielden.platform.equery.lifecycle.IProgressUpdater;
-import ua.com.fielden.platform.equery.lifecycle.IProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.equery.lifecycle.ValuedInterval;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.reportquery.IDistributedProperty;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
 import ua.com.fielden.platform.swing.categorychart.IChartFactory;
 import ua.com.fielden.platform.swing.timeline.ColoredTask;
 import ua.com.fielden.platform.swing.timeline.TimePeriodValueWithInfo;
 import ua.com.fielden.platform.types.ICategory;
-import ua.com.fielden.platform.types.Ordering;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -84,13 +80,12 @@ import ua.com.fielden.platform.utils.Pair;
  *
  * @param <T>
  */
-public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChartFactory<LifecycleModel<T>, CategoryChartTypes>
-{
+public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChartFactory<LifecycleModel<T>, CategoryChartTypes> {
     protected static final String timelineAxisLabel = "Timeline", entitiesAxisLabel = "Entities", avalabilityCountAxisLabel = "Count", fractionsAxisLabel = "fractions";
     protected static final Shape calcValueShape = new Ellipse2D.Double(0, 0, 10, 10), categoryShape = new Rectangle(10, 10);
 
     protected static final NumberFormat percentageFormat = createPercentageFormat();
-    private final Map<IProperty, List<? extends IGroup<T>>> cache = new HashMap<IProperty, List<? extends IGroup<T>>>();
+    private final Map<String, List<? extends IGroup<T>>> cache = new HashMap<String, List<? extends IGroup<T>>>();
 
     private final Logger logger = Logger.getLogger(getClass());
 
@@ -128,7 +123,7 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
     private final Map<ICategory, XYSeries> seriesFulfilled = new LinkedHashMap<ICategory, XYSeries>();
 
     private LifecycleModel<T> currentModel = null;
-    private Ordering<ICategory, IDistributedProperty> currentOrdering = null;
+    private Pair<ICategory, Ordering> currentOrdering = null;
     private List<String> currentCategoriesStrings = null;
     private String currentDistributionProperty = null;
     private Boolean currentTotalIndicator = null;
@@ -246,17 +241,16 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	}
     }
 
-    //TODO uncoment, and fix errors
     private void updateEntityIndexing() {
-//	// create mapping between "entity" and its corresponding number.
-//	columnMapping.clear();
-//	Integer i = 0;
-//	noSorting = model.getOrdering() == null;
-//	sortingCategory = noSorting ? null : model.getOrdering().getToken();
-//	final List<? extends IGroup<T>> sortedByCategory = noSorting ? groups : sortByCategory(groups, sortingCategory, model.getOrdering().getSortOrder());
-//	for (final IGroup<T> group : sortedByCategory) {
-//	    columnMapping.put(group.getInfo(), new Info(i++));
-//	}
+	// create mapping between "entity" and its corresponding number.
+	columnMapping.clear();
+	Integer i = 0;
+	noSorting = model.getOrdering() == null;
+	sortingCategory = noSorting ? null : model.getOrdering().getKey();
+	final List<? extends IGroup<T>> sortedByCategory = noSorting ? groups : sortByCategory(groups, sortingCategory, model.getOrdering().getValue());
+	for (final IGroup<T> group : sortedByCategory) {
+	    columnMapping.put(group.getInfo(), new Info(i++));
+	}
     }
 
     private void fillSeries(final IProgressUpdater progressUpdater) {
@@ -332,10 +326,9 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	System.out.println(done);
     }
 
-    //TODO Uncoment and fix errors.
-    private IProperty getProperty(){
-//	final DistributionProperty dp = model.getDistributionProperty();
-//	final String propertyName = dp.getActualProperty();
+//    private String getProperty() {
+//	final String dp = model.getDistributionProperty();
+//	// final String propertyName = dp.getActualProperty();
 //	for (final GroupingPeriods period : GroupingPeriods.values()) {
 //	    if (propertyName.equals(period.getPropertyName())) {
 //		// time distribution:
@@ -343,9 +336,7 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 //	    }
 //	}
 //	return new ValueProperty(dp.getActualProperty(), dp.toString(), dp.getTooltip());
-	//TODO remove this.
-	return null;
-    }
+//    }
 
     /**
      * Re-calculates percentage dataset. Returns true if dataset has been changed.
@@ -377,11 +368,11 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 		stage("entities re-grouping...", progressUpdater, new IAction() {
 		    @Override
 		    public void action() {
-			final IProperty p = getProperty();
-			if (!cache.containsKey(p)){
-			    cache.put(p, chartEntryModel.groupBy(p));
+			final String property = model.getDistributionProperty();
+			if (!cache.containsKey(property)){
+			    cache.put(property, chartEntryModel.groupBy(property));
 			}
-			groups = cache.get(p);
+			groups = cache.get(property);
 		    }
 		});
 	    }
@@ -421,9 +412,8 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	    }
 	    // update current "configuration":
 	    currentModel = chartEntryModel;
-	    //TODO uncomment and fix errors
-//	    currentDistributionProperty = model.getDistributionProperty().getActualProperty();
-//	    currentOrdering = model.getOrdering();
+	    currentDistributionProperty = model.getDistributionProperty();
+	    currentOrdering = model.getOrdering();
 	    currentCategoriesStrings = model.getCurrentCategoriesStrings();
 	    currentTotalIndicator = model.getTotal();
 	    return changed;
@@ -436,20 +426,16 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	return currentModel != chartEntryModel;
     }
 
-    //TODO uncommnet and fix errors.
     private boolean groupingChanged() {
-//	return !EntityUtils.equalsEx(currentDistributionProperty, model.getDistributionProperty().getActualProperty());
-	return false;
+	return !EntityUtils.equalsEx(currentDistributionProperty, model.getDistributionProperty());
     }
 
     private boolean totalIndicatorChanged() {
 	return !EntityUtils.equalsEx(currentTotalIndicator, model.getTotal());
     }
 
-    //TODO uncomment and fix errors.
     private boolean orderingChanged() {
-//	return currentOrdering != model.getOrdering();
-	return false;
+	return currentOrdering != model.getOrdering();
     }
 
     private boolean currentCategoriesChanged() {
@@ -463,19 +449,17 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
      * @param category
      * @return
      */
-    private List<IGroup<T>> sortByCategory(final List<? extends IGroup<T>> unsorted, final ICategory category, final SortOrder sortOrder) {
-	final int index = Arrays.asList(model.allCategories()).indexOf(category);
+    private List<IGroup<T>> sortByCategory(final List<? extends IGroup<T>> unsorted, final ICategory category, final Ordering ordering) {
+	final int index = model.allCategories().indexOf(category);
 	final List<IGroup<T>> sorted = new ArrayList<IGroup<T>>(unsorted);
-	if (SortOrder.UNSORTED != sortOrder) {
-	    Collections.sort(sorted, new Comparator<IGroup<T>>() {
-		@Override
-		public int compare(final IGroup<T> group1, final IGroup<T> group2) {
-		    final BigDecimal duration1 = group1.getCategoryDurations(model.getTotal()).get(index).getSummary();
-		    final BigDecimal duration2 = group2.getCategoryDurations(model.getTotal()).get(index).getSummary();
-		    return (SortOrder.ASCENDING == sortOrder ? 1 : (SortOrder.DESCENDING == sortOrder ? -1 : 0)) * duration1.compareTo(duration2);
-		}
-	    });
-	}
+	Collections.sort(sorted, new Comparator<IGroup<T>>() {
+	    @Override
+	    public int compare(final IGroup<T> group1, final IGroup<T> group2) {
+		final BigDecimal duration1 = group1.getCategoryDurations(model.getTotal()).get(index).getSummary();
+		final BigDecimal duration2 = group2.getCategoryDurations(model.getTotal()).get(index).getSummary();
+		return (Ordering.ASCENDING == ordering ? 1 : (Ordering.DESCENDING == ordering ? -1 : 0)) * duration1.compareTo(duration2);
+	    }
+	});
 	return sorted;
     }
 

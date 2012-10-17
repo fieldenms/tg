@@ -15,6 +15,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleAddToCategoriesTickRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
@@ -64,7 +65,13 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
     @Override
     protected Void executeAnalysisQuery() {
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getCriteria().getManagedType(), getCriteria().createQueryProperties()).model();
-	lifecycleModel = getCriteria().getLifecycleInformation(notOrderedQuery, adtme().getLifecycleProperty().getValue(), new DateTime(adtme().getFrom()), new DateTime(adtme().getTo()));
+	final List<String> fetchProperties = new ArrayList<>();
+	for(final String distrProp : adtme().getFirstTick().checkedProperties(getCriteria().getEntityClass())){
+	    if(!LifecycleAddToCategoriesTickRepresentation.isDatePeriodProperty(distrProp)){
+		fetchProperties.add(distrProp);
+	    }
+	}
+	lifecycleModel = getCriteria().getLifecycleInformation(notOrderedQuery, fetchProperties, adtme().getLifecycleProperty().getValue(), new DateTime(adtme().getFrom()), new DateTime(adtme().getTo()));
 	SwingUtilities.invokeLater(new Runnable() {
 
 	    @Override
@@ -164,7 +171,7 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
 	    return null;
 	}
 	final Pair<String, Ordering> firstOrdering = orderings.get(0);
-	return new Pair<ICategory, Ordering>(LifecycleDomainTreeManager.getCategory(getCriteria().getEntityClass(), firstOrdering.getKey(), adtme().getSecondTick().allCategories(getCriteria().getEntityClass())), firstOrdering.getValue());
+	return new Pair<ICategory, Ordering>(LifecycleDomainTreeManager.getCategory(getCriteria().getManagedType(), firstOrdering.getKey(), adtme().getSecondTick().allCategories(getCriteria().getEntityClass())), firstOrdering.getValue());
     }
 
     public boolean getTotal() {
@@ -216,9 +223,4 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
     public List<? extends ICategory> allCategories() {
 	return adtme().getSecondTick().allCategories(getCriteria().getEntityClass());
     }
-
-//    public List<String> getLifecycleProperties() {
-//	// TODO Auto-generated method stub
-//	return null;
-//    }
 }

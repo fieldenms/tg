@@ -67,7 +67,7 @@ public class EntityLifecycleResource<T extends AbstractEntity<?>> extends Resour
 	    final LifecycleQueryContainer container = restUtil.restoreLifecycleQueryContainer(envelope);
 
 	    getResponse().setEntity(restUtil.lifecycleRepresentation(lifecycleDao.getLifecycleInformation(container.getModel(), container.getBinaryTypes(), //
-		    container.getPropertyName(), container.getFrom(), container.getTo())));
+		    container.getDistributionProperties(), container.getPropertyName(), container.getFrom(), container.getTo())));
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
 	    getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));

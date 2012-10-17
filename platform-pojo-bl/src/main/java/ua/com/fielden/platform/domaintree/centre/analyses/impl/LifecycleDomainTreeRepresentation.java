@@ -10,6 +10,7 @@ import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
+import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -112,6 +113,21 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
 	    final String expr = calculatedAnnotation != null ? calculatedAnnotation.value() : null;
 	    return expr != null && EntityUtils.isString(propertyType) && //
 		    expr.equals(CATEGORY_PROPERTY_MARKER);
+	}
+
+	/**
+	 * Indicates whether the property represents so called "date period" marker.
+	 *
+	 * @param property
+	 * @return
+	 */
+	public static boolean isDatePeriodProperty(final String property) {
+	    for (final GroupingPeriods period : GroupingPeriods.values()) {
+		if (period.getPropertyName().equals(property)) {
+		    return true;
+		}
+	    }
+	    return false;
 	}
     }
 

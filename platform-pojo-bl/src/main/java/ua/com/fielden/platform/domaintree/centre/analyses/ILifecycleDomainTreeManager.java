@@ -48,7 +48,7 @@ public interface ILifecycleDomainTreeManager extends IAbstractAnalysisDomainTree
 	/** Returns all categories that conform to the currently selected lifecycle property. */
 	List<? extends ICategory> allCategories(final Class<?> root);
 
-	/** Returns all selected categories that conform to the currently selected lifecycle property. */
+	/** Returns all 'checked' & 'used' categories that conform to the currently selected lifecycle property. */
 	List<? extends ICategory> currentCategories(final Class<?> root);
     }
 

@@ -35,6 +35,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomai
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager.ILifecycleAddToCategoriesTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager.ILifecycleAddToDistributionTickManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
@@ -47,6 +48,9 @@ import ua.com.fielden.platform.swing.categorychart.SwitchChartsModel;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel;
+import ua.com.fielden.platform.swing.checkboxlist.ListSortingModel;
+import ua.com.fielden.platform.swing.checkboxlist.SorterChangedEvent;
+import ua.com.fielden.platform.swing.checkboxlist.SorterEventListener;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
@@ -119,7 +123,7 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 
 	this.chartPanel = createChartPanel(0);
 	this.totalCheckBox = createTotalCheckBox(chartPanel);
-	this.categoriesList = createCategoyPropertiesList(chartPanel);
+	this.categoriesList = createCategoryPropertiesList(chartPanel);
 	this.distributionPropertiesList = createDistributionList();
 	this.multipleChartPanel = createMultipleChartPanel(chartPanel);
 	this.configurePanel = createConfigPanel(totalCheckBox, distributionPropertiesList, categoriesList);
@@ -207,6 +211,9 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	    protected boolean preAction() {
 		totalCheckBox.setEnabled(false);
 		setMessage("Updating...");
+		if (!getOwner().getProgressLayer().isIncrementalLocking()) {
+		    getOwner().getProgressLayer().enableIncrementalLocking();
+		}
 		return super.preAction();
 	    }
 
@@ -303,14 +310,20 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
      *
      * @return
      */
-    private SortingCheckboxList<String> createCategoyPropertiesList(final ActionChartPanel<LifecycleModel<T>,CategoryChartTypes> chartPanel) {
+    private SortingCheckboxList<String> createCategoryPropertiesList(final ActionChartPanel<LifecycleModel<T>,CategoryChartTypes> chartPanel) {
 	final DefaultListModel<String> listModel = new DefaultListModel<String>();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
 	final ILifecycleAddToCategoriesTickManager secondTick = getModel().adtme().getSecondTick();
 
-	for (final String aggregationProperty : secondTick.checkedProperties(root)) {
-	    listModel.addElement(aggregationProperty);
+	for (final String categoryProperty : secondTick.checkedProperties(root)) {
+	    try {
+		if (!LifecycleDomainTreeManager.isLifecycle(root, categoryProperty)) {
+		    listModel.addElement(categoryProperty);
+		}
+	    } catch (final IllegalArgumentException e) {
+		 listModel.addElement(categoryProperty);
+	    }
 	}
 	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel);
 	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList, new JCheckBox()) {
@@ -341,7 +354,18 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	    }
 	});
 	aggregationList.setCheckingModel(checkingModel);
-	aggregationList.setSortingModel(new DomainTreeListSortingModel<T>(root, secondTick, getModel().adtme().getRepresentation().getSecondTick()));
+
+	final ListSortingModel<String> sortingModel = new DomainTreeListSortingModel<T>(root, secondTick, getModel().adtme().getRepresentation().getSecondTick());
+	sortingModel.addSorterEventListener(new SorterEventListener<String>() {
+
+	    @Override
+	    public void valueChanged(final SorterChangedEvent<String> e) {
+		if (CategoryChartTypes.STACKED_BAR_CHART.equals(chartPanel.getChartType())) {
+		    updateChart();
+		}
+	    }
+	});
+	aggregationList.setSortingModel(sortingModel);
 
 	return aggregationList;
     }
@@ -406,6 +430,7 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	for (final String distributionProperty : firstTick.checkedProperties(root)) {
 	    listModel.addElement(distributionProperty);
 	}
+
 	final JList<String> distributionList = new JList<String>(listModel);
 	distributionList.setCellRenderer(new DefaultListCellRenderer() {
 
@@ -427,14 +452,18 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 
 	});
 
+	//Selecting the first element in the distribution properties list.
 	distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	final List<String> usedProperties = firstTick.usedProperties(root);
+	if(usedProperties.isEmpty() && !listModel.isEmpty()){
+	    firstTick.use(root, listModel.get(0), true);
+	    usedProperties.add(listModel.get(0));
+	}
 	if (usedProperties.size() == 1) {
 	    distributionList.setSelectedValue(usedProperties.get(0), true);
 	}
-	/**
-	 * Adds the listener that listens the property usage changes and synchronises them with ui model.
-	 */
+
+	//Adds the listener that listens the property usage changes and synchronises them with ui model.
 	firstTick.addPropertyUsageListener(new IPropertyUsageListener() {
 
 	    @Override

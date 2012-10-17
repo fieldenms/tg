@@ -5,7 +5,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 
 /**
@@ -35,7 +35,7 @@ public interface ILifecycleDao<T extends AbstractEntity<?>> {
      *            - right period boundary.
      * @return
      */
-    LifecycleModel<T> getLifecycleInformation(final SingleResultQueryModel<? extends AbstractEntity<?>> model, final List<byte[]> binaryTypes, final String propertyName, final DateTime from, final DateTime to);
+    LifecycleModel<T> getLifecycleInformation(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final List<byte[]> binaryTypes, final List<String> distributionProperties, final String propertyName, final DateTime from, final DateTime to);
 
     /**
      * Username should be provided for every DAO instance in order to support data filtering and auditing.

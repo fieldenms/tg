@@ -24,11 +24,13 @@ import org.joda.time.ReadablePeriod;
 import org.joda.time.Weeks;
 import org.joda.time.Years;
 
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.IProperty.ITimeProperty;
 import ua.com.fielden.platform.equery.lifecycle.IProperty.IValueProperty;
+import ua.com.fielden.platform.equery.lifecycle.IProperty.ValueProperty;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.ICategorizer;
 import ua.com.fielden.platform.types.ICategory;
 import ua.com.fielden.platform.utils.Pair;
@@ -40,8 +42,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class LifecycleModel<T extends AbstractEntity> {
-    private static final long serialVersionUID = 5536028576239460362L;
 
+    private final Class<T> entityType;
     private final DateTime leftBoundary;
     private final DateTime rightBoundary;
     private final List<? extends EntityPropertyLifecycle<T>> lifecycleData;
@@ -84,6 +86,7 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
      * Mainly used for serialisation.
      */
     protected LifecycleModel() {
+	entityType = null;
 	leftBoundary = null;
 	rightBoundary = null;
 	lifecycleData = null;
@@ -116,7 +119,8 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
      * @param rightBoundary
      * @param lifecycleData
      */
-    public LifecycleModel(final DateTime leftBoundary, final DateTime rightBoundary, final List<? extends EntityPropertyLifecycle<T>> lifecycleData, final LinkedHashMap<IProperty, Object> groupingValues, final boolean calculateSummaryAvailability) {
+    public LifecycleModel(final Class<T> entityType, final DateTime leftBoundary, final DateTime rightBoundary, final List<? extends EntityPropertyLifecycle<T>> lifecycleData, final LinkedHashMap<IProperty, Object> groupingValues, final boolean calculateSummaryAvailability) {
+	this.entityType = entityType;
 	final Long curr = new DateTime().getMillis();
 	//	System.out.println("1. begin => " + new DateTime());
 	this.leftBoundary = leftBoundary;
@@ -244,6 +248,16 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
 	}
     }
 
+    private ValueProperty create(final Class<T> clazz, final String propertyName) {
+	if ("".equals(propertyName)) { // high-level entity:
+	    final Pair<String, String> td = TitlesDescsGetter.getEntityTitleAndDesc(clazz);
+	    return new ValueProperty(td.getKey(), "<html>Distribute by high-level <b><i>" + td.getValue() + "</i></b></html>", propertyName);
+	} else {
+	    return new ValueProperty(TitlesDescsGetter.getTitleAndDesc(propertyName, clazz).getKey(), "<html>Distribute by <i>"
+		    + TitlesDescsGetter.removeHtmlTag(TitlesDescsGetter.getFullTitleAndDesc(propertyName, clazz).getValue()) + "</i></html>", propertyName);
+	}
+    }
+
     /**
      * Makes groups from lifecycles.
      *
@@ -251,22 +265,17 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
      *            - the name of property (dot-notation-expression) by which grouping should be performed. If empty - separate group for each entity.
      * @return
      */
-    public List<IGroup<T>> groupBy(final IProperty property) {
-	System.out.println("\t\tGrouping by [" + property.getTitle() + "]");
-	if (property instanceof ITimeProperty){
-	    return groupBy((ITimeProperty)property);
+    public List<IGroup<T>> groupBy(final String propertyName) {
+	final GroupingPeriods period = LifecycleDomainTreeManager.getGroupingPeriod(propertyName);
+	System.out.println("\t\tGrouping by [" + propertyName + "]");
+	if (period != null) {
+	    return groupBy(period);
 	}
-	final IValueProperty valueProperty = (IValueProperty)property;
-	final String propertyName = valueProperty.getName();
+
+	final ValueProperty vp = create(entityType, propertyName);
 	// maps grouped value and a list of lifecycle numbers:
 	final Map<Object, List<Integer>> groupedData = new HashMap<Object, List<Integer>>();
 	if (getLifecycleData().size() > 0) {
-	    // validate propertyName to correctly define a "dot-notation-expression" pointing for existing property of AE type:
-	    final EntityPropertyLifecycle<T> first = getLifecycleData().get(0);
-	    final Class<?> type = StringUtils.isEmpty(propertyName) ? first.getEntityType() : PropertyTypeDeterminator.determinePropertyType(first.getEntityType(), propertyName);
-	    if (!AbstractEntity.class.isAssignableFrom(type)) {
-		throw new RuntimeException("The type of [" + propertyName + "] in type [" + type + "] is not applicable for grouping (should be AbstractEntity descendant).");
-	    }
 	    // initiate groupedData:
 	    for (int i = 0; i < getLifecycleData().size(); i++) {
 		final EntityPropertyLifecycle<T> lifecycle = getLifecycleData().get(i);
@@ -285,7 +294,7 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
 	    // assemble indexes into full immutable groups:
 	    final List<IGroup<T>> groups = new ArrayList<IGroup<T>>();
 	    for (final Entry<Object, List<Integer>> entry : groupedData.entrySet()){
-		groups.add(createGroupByValue(valueProperty, entry.getKey(), this, entry.getValue()));
+		groups.add(createGroupByValue(vp, entry.getKey(), this, entry.getValue()));
 	    }
 	    return groups;
 	}

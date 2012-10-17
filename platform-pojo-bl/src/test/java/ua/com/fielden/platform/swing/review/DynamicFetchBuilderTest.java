@@ -80,7 +80,7 @@ public class DynamicFetchBuilderTest {
 	}));
 	final fetch<? extends AbstractEntity<?>> fetchModel = fetchOnly(masterKlass).with("integerProp").with("doubleProp")//
 		.with("bigDecimalProp").with("moneyProp").with("dateProp").with("booleanProp").with("stringProp");
-	assertEquals("The fetch for first level property is incorrect", fetchModel, DynamicFetchBuilder.createFetchModel(masterKlass, fetchProperties));
+	assertEquals("The fetch for first level property is incorrect", fetchModel, DynamicFetchBuilder.createFetchOnlyModel(masterKlass, fetchProperties));
     }
 
     @Test
@@ -93,7 +93,7 @@ public class DynamicFetchBuilderTest {
 	final fetch<? extends AbstractEntity<?>> slaveEntityFetch = fetchOnly(slaveKlass).with("key").with("desc");
 	final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchOnly(masterKlass).with("key").with("stringProp").//
 		with("entityProp", slaveEntityFetch);
-	assertEquals("The fetch for entity property is incorrect", masterEntityFetch, DynamicFetchBuilder.createFetchModel(masterKlass, fetchProperties));
+	assertEquals("The fetch for entity property is incorrect", masterEntityFetch, DynamicFetchBuilder.createFetchOnlyModel(masterKlass, fetchProperties));
     }
 
     @Test
@@ -113,7 +113,7 @@ public class DynamicFetchBuilderTest {
 		.with("entityProp", evenSlaveEntityFetch);
 	final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchOnly(masterKlass).with("key").with("stringProp")//
 		.with("entityProp", slaveEntityFetch);
-	assertEquals("The fetch for second and higher level fetch proerties doesn't work", masterEntityFetch, DynamicFetchBuilder.createFetchModel(masterKlass, fetchProperties));
+	assertEquals("The fetch for second and higher level fetch proerties doesn't work", masterEntityFetch, DynamicFetchBuilder.createFetchOnlyModel(masterKlass, fetchProperties));
     }
 
     @Test
@@ -136,7 +136,7 @@ public class DynamicFetchBuilderTest {
 		.with("entityProp", evenSlaveEntityFetch);
 	final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchOnly(masterKlass).with("key").with("stringProp").with("firstCalc")//
 		.with("entityProp", slaveEntityFetch);
-	assertEquals("The fetch for second and higher level fetch proerties doesn't work", masterEntityFetch, DynamicFetchBuilder.createFetchModel(masterKlass, fetchProperties));
+	assertEquals("The fetch for second and higher level fetch proerties doesn't work", masterEntityFetch, DynamicFetchBuilder.createFetchOnlyModel(masterKlass, fetchProperties));
     }
 
     @Test
@@ -160,6 +160,6 @@ public class DynamicFetchBuilderTest {
 		"key", //
 	}));
 	final fetch<? extends AbstractEntity<?>> complexEntityFetch = fetchOnly(EntityWithKeyTitleAndWithAEKeyType.class).with("key", fetchOnly(EntityWithNormalNature.class).with("key"));
-	assertEquals("The fetch for entity with entity key doesn't work", complexEntityFetch, DynamicFetchBuilder.createFetchModel(EntityWithKeyTitleAndWithAEKeyType.class, fetchProperties));
+	assertEquals("The fetch for entity with entity key doesn't work", complexEntityFetch, DynamicFetchBuilder.createFetchOnlyModel(EntityWithKeyTitleAndWithAEKeyType.class, fetchProperties));
     }
 }

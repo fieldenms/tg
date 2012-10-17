@@ -6,6 +6,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
 /**
@@ -17,29 +18,36 @@ import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 */
 public class LifecycleQueryContainer {
 
-    private final SingleResultQueryModel<? extends AbstractEntity<?>> model;
+    private final EntityResultQueryModel<? extends AbstractEntity<?>> model;
     private final List<byte[]> binaryTypes;
+    private final List<String> distributionProperties;
     private final String propertyName;
     private final DateTime from, to;
 
-    public LifecycleQueryContainer(final SingleResultQueryModel<? extends AbstractEntity<?>> model, //
+    public LifecycleQueryContainer(final EntityResultQueryModel<? extends AbstractEntity<?>> model, //
 	    final List<byte[]> binaryTypes,//
+	    final List<String> distributionProperties,//
 	    final String propertyName,//
 	    final DateTime from,//
 	    final DateTime to) {
 	this.model = model;
 	this.binaryTypes = binaryTypes;
+	this.distributionProperties = distributionProperties;
 	this.propertyName = propertyName;
 	this.from = from;
 	this.to = to;
     }
 
-    public SingleResultQueryModel<? extends AbstractEntity<?>> getModel() {
+    public EntityResultQueryModel<? extends AbstractEntity<?>> getModel() {
 	return model;
     }
 
     public List<byte[]> getBinaryTypes() {
 	return binaryTypes;
+    }
+
+    public List<String> getDistributionProperties() {
+	return distributionProperties;
     }
 
     /**
@@ -67,6 +75,7 @@ public class LifecycleQueryContainer {
 	    result = prime * result + Arrays.hashCode(bytes);
 	}
 	result = prime * result + ((model == null) ? 0 : model.hashCode());
+	result = prime * result + ((distributionProperties == null) ? 0 : distributionProperties.hashCode());
 	result = prime * result + ((propertyName == null) ? 0 : propertyName.hashCode());
 	result = prime * result + ((from == null) ? 0 : from.hashCode());
 	result = prime * result + ((to == null) ? 0 : to.hashCode());
@@ -83,8 +92,8 @@ public class LifecycleQueryContainer {
 	}
 
 	final LifecycleQueryContainer that = (LifecycleQueryContainer) obj;
-	if (binaryTypes == null) {
-	    if (that.binaryTypes != null) {
+	if (binaryTypes == null || that.binaryTypes == null) {
+	    if (binaryTypes != that.binaryTypes) {
 		return false;
 	    }
 	} else if (binaryTypes.size() != that.binaryTypes.size()) {
@@ -95,6 +104,13 @@ public class LifecycleQueryContainer {
 		    return false;
 		}
 	    }
+	}
+	if (distributionProperties == null || that.distributionProperties == null) {
+	    if (distributionProperties != that.distributionProperties) {
+		return false;
+	    }
+	} else if (!distributionProperties.equals(that.distributionProperties)) {
+	    return false;
 	}
 	if (model == null) {
 	    if (that.model != null) {

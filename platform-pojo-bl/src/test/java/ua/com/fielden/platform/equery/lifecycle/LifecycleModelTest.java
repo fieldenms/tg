@@ -68,7 +68,7 @@ public class LifecycleModelTest {
 	ld.add(createEPL("A0002", 5)); // the same lifecycle just shifted to the right on 5 millis.
 	ld.add(createUnavailableEPL("A0003")); // non-"main" category defines all lifecycle.
 
-	final LifecycleModel<Entity> lm = new LifecycleModel<Entity>(date(15), date(55), ld, new LinkedHashMap<IProperty, Object>(), true){
+	final LifecycleModel<Entity> lm = new LifecycleModel<Entity>(Entity.class, date(15), date(55), ld, new LinkedHashMap<IProperty, Object>(), true){
 	    @Override
 	    protected IGroup<Entity> createGroupByValue(final IValueProperty property, final Object value, final LifecycleModel<Entity> parent, final List<Integer> indexes) {
 		return null;
@@ -112,7 +112,7 @@ public class LifecycleModelTest {
 
 	ld.add(createUnavailableEPL("A0007"));
 
-	final LifecycleModel<Entity> lm = new LifecycleModel<Entity>(date(15), date(55), ld, new LinkedHashMap<IProperty, Object>(), true){
+	final LifecycleModel<Entity> lm = new LifecycleModel<Entity>(Entity.class, date(15), date(55), ld, new LinkedHashMap<IProperty, Object>(), true){
 	    @Override
 	    protected IGroup<Entity> createGroupByValue(final IValueProperty property, final Object value, final LifecycleModel<Entity> parent, final List<Integer> indexes) {
 		return null;

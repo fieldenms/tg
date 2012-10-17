@@ -6,7 +6,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -21,6 +21,7 @@ public class LifecycleQueryContainerSerialiser extends TgSimpleSerializer<Lifecy
     public void write(final ByteBuffer buffer, final LifecycleQueryContainer data) {
 	writeValue(buffer, data.getBinaryTypes());
 	writeValue(buffer, data.getModel());
+	writeValue(buffer, data.getDistributionProperties());
 	writeValue(buffer, data.getPropertyName());
 	writeValue(buffer, data.getFrom());
 	writeValue(buffer, data.getTo());
@@ -38,11 +39,12 @@ public class LifecycleQueryContainerSerialiser extends TgSimpleSerializer<Lifecy
 	}
 
 	// now we should be able to restore the query model
-	final SingleResultQueryModel<? extends AbstractEntity<?>> model = readValue(buffer, SingleResultQueryModel.class);
+	final EntityResultQueryModel<? extends AbstractEntity<?>> model = readValue(buffer, EntityResultQueryModel.class);
+	final List<String> distributionProperties = readValue(buffer, List.class);
 	final String propertyName = readValue(buffer, String.class);
 	final DateTime from = readValue(buffer, DateTime.class);
 	final DateTime to = readValue(buffer, DateTime.class);
 
-	return new LifecycleQueryContainer(model, binaryTypes, propertyName, from, to);
+	return new LifecycleQueryContainer(model, binaryTypes, distributionProperties, propertyName, from, to);
     }
 }

@@ -18,9 +18,9 @@ import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 
 /**
  * Class the extends the {@link ChartPanel} and adds the {@link ChartMouseListener} that handles double click event on the chart
- * 
+ *
  * @author oleh
- * 
+ *
  */
 public class ActionChartPanel<M, T> extends ChartPanel {
 
@@ -45,7 +45,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
     /**
      * Creates new instance of the {@link ActionChartPanel} and adds the {@link ChartMouseListener} to the panel. See
      * {@link ChartPanel#ChartPanel(JFreeChart, int, int, int, int, int, int, boolean, boolean, boolean, boolean, boolean, boolean)} for more information
-     * 
+     *
      * @param chart
      * @param width
      * @param height
@@ -96,7 +96,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 
     /**
      * Override this method in order to provide custom double click event handler.
-     * 
+     *
      * @param chartEntity
      */
     public void mouseDoubleClicked(final ChartMouseEvent chartMouseEvent) {
@@ -117,7 +117,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
     /**
      * Set new chart to this {@link ChartPanel}. That chart must be of the {@link CategoryChartTypes} type and depicts data specified with {@code model} parameter. If all parameter
      * is true then all series of the Category chart must be visible otherwise one must specify series indexes which must be visible.
-     * 
+     *
      * @param aggregates
      * @param type
      */
@@ -128,7 +128,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 
     /**
      * Set new chart to this {@link ChartPanel}. That chart must be of the {@link CategoryChartTypes} type.
-     * 
+     *
      * @param type
      */
     public void setChart(final T type) {
@@ -146,6 +146,9 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 
 	    @Override
 	    protected boolean preAction() {
+		if (!bipl.isIncrementalLocking()) {
+		    bipl.enableIncrementalLocking();
+		}
 		setMessage("Updating...");
 		final boolean b = super.preAction();
 		if (preAction != null) {
@@ -200,7 +203,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 
     /**
      * Adds new {@link IChartPanelChangeListener} instance.
-     * 
+     *
      * @param listener
      */
     public void addChartPanelChangedListener(final IChartPanelChangeListener listener) {
@@ -209,7 +212,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 
     /**
      * Removes specified {@link IChartPanelChangeListener} from the listeners list.
-     * 
+     *
      * @param listener
      */
     public void removeChartPanelChangedListener(final IChartPanelChangeListener listener) {
@@ -218,7 +221,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 
     /**
      * Fires {@link ChartPanelChangedEventObject} event for all registered {@link IChartPanelChangeListener}.
-     * 
+     *
      * @param event
      */
     protected void fireChartPanelChangedListener(final ChartPanelChangedEventObject event) {

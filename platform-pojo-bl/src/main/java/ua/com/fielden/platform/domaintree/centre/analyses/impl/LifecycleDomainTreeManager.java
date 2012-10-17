@@ -224,8 +224,8 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	public List<? extends ICategory> currentCategories(final Class<?> root) {
 	    final List<? extends ICategory> allCategories = allCategories(root);
 	    final List<ICategory> res = new ArrayList<ICategory>();
-	    final List<String> checkedProperties = checkedProperties(root);
-	    for (final String property : checkedProperties) {
+	    final List<String> usedProperties = usedProperties(root);
+	    for (final String property : usedProperties) {
 		if (LifecycleDomainTreeRepresentation.LifecycleAddToCategoriesTickRepresentation.isCategoryProperty(managedType(root), property)) {
 		    res.add(getCategory(managedType(root), property, allCategories));
 		}
@@ -289,7 +289,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
      * @param checkedProperty
      * @return
      */
-    private static boolean isLifecycle(final Class<?> root, final String checkedProperty) {
+    public static boolean isLifecycle(final Class<?> root, final String checkedProperty) {
 	return categorizer(root, checkedProperty) != null;
     }
 
@@ -411,5 +411,21 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	    }
 	}
 	throw new IllegalArgumentException("Trying to determine a category from a property, which is not 'category marker' -- " + categoryMarker + ", from type " + managedType.getSimpleName() + ".");
+    }
+
+    /**
+     * Returns a {@link GroupingPeriods} for a period marker.
+     *
+     * @param root
+     * @param periodMarker
+     * @return
+     */
+    public static GroupingPeriods getGroupingPeriod(final String periodMarker) {
+	for (final GroupingPeriods period : GroupingPeriods.values()) {
+	    if (period.getPropertyName().equals(periodMarker)) {
+		return period;
+	    }
+	}
+	return null;
     }
 }

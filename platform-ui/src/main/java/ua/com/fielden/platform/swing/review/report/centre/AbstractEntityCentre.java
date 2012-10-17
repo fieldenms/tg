@@ -93,7 +93,6 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	//Initiates the paginator related properties.
 	final PaginatorModel paginatorModel = new PaginatorModel();
 	this.reviewProgressLayer = new BlockingIndefiniteProgressLayer(null, "");
-	reviewProgressLayer.enableIncrementalLocking();
 	this.feedBack = new JLabel("Page 0 of 0");
 	this.pageHolderManager = paginatorModel;
 	this.paginator = new Paginator(paginatorModel, createPaginatorFeedback(), reviewProgressLayer);

@@ -200,7 +200,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 	assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("simpleEntityProp", "available", "broken", "unoperational"), dtm.getSecondTick().checkedProperties(MasterEntity.class));
 	assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("available", "broken"), dtm.getSecondTick().usedProperties(MasterEntity.class));
 	assertEquals("'simpleEntityProp' lifecycle property has been selected -- its categories should be returned.", Arrays.asList(MasterEntitySimpleEntityPropCategory.AVAILABLE, MasterEntitySimpleEntityPropCategory.BROKEN, MasterEntitySimpleEntityPropCategory.UNOPERATIONAL), dtm.getSecondTick().allCategories(MasterEntity.class));
-	assertEquals("'simpleEntityProp' lifecycle property has been selected -- its categories (selected!) should be returned.", Arrays.asList(MasterEntitySimpleEntityPropCategory.AVAILABLE, MasterEntitySimpleEntityPropCategory.BROKEN, MasterEntitySimpleEntityPropCategory.UNOPERATIONAL), dtm.getSecondTick().currentCategories(MasterEntity.class));
+	assertEquals("'simpleEntityProp' lifecycle property has been selected -- its categories (selected!) should be returned.", Arrays.asList(MasterEntitySimpleEntityPropCategory.AVAILABLE, MasterEntitySimpleEntityPropCategory.BROKEN), dtm.getSecondTick().currentCategories(MasterEntity.class));
 
 	// Remove LifecycleProperty by unchecking it in the second tick //
 	dtm.getSecondTick().check(MasterEntity.class, "simpleEntityProp", false);
@@ -220,7 +220,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 	assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("dateProp", "future", "now", "past"), dtm.getSecondTick().checkedProperties(MasterEntity.class));
 	assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("future", "past"), dtm.getSecondTick().usedProperties(MasterEntity.class));
 	assertEquals("'dateProp' lifecycle property has been selected -- its categories should be returned.", Arrays.asList(MasterEntityDatePropCategory.FUTURE, MasterEntityDatePropCategory.NOW, MasterEntityDatePropCategory.PAST), dtm.getSecondTick().allCategories(MasterEntity.class));
-	assertEquals("'dateProp' lifecycle property has been selected -- its categories (selected!) should be returned.", Arrays.asList(MasterEntityDatePropCategory.FUTURE, MasterEntityDatePropCategory.NOW, MasterEntityDatePropCategory.PAST), dtm.getSecondTick().currentCategories(MasterEntity.class));
+	assertEquals("'dateProp' lifecycle property has been selected -- its categories (selected!) should be returned.", Arrays.asList(MasterEntityDatePropCategory.FUTURE, MasterEntityDatePropCategory.PAST), dtm.getSecondTick().currentCategories(MasterEntity.class));
     }
 
     //////////////////////////// TODO ////////////////////////////

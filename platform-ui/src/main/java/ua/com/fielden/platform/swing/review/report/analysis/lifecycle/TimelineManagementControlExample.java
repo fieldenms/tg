@@ -141,7 +141,7 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 
 	ld.add(createUnavailableEPL("A0007"));
 
-	final LifecycleModel<TimelineEntity> lm = new LifecycleModel<TimelineEntity>(date(15), date(55), ld, new LinkedHashMap<IProperty, Object>(), true){
+	final LifecycleModel<TimelineEntity> lm = new LifecycleModel<TimelineEntity>(TimelineEntity.class, date(15), date(55), ld, new LinkedHashMap<IProperty, Object>(), true){
 	    @Override
 	    protected IGroup<TimelineEntity> createGroupByValue(final IValueProperty property, final Object value, final LifecycleModel<TimelineEntity> parent, final List<Integer> indexes) {
 		return null;

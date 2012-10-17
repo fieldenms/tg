@@ -35,7 +35,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -153,7 +152,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
 		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
-		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey()))//
+		.with(DynamicFetchBuilder.createFetchOnlyModel(getManagedType(), separatedFetch.getKey()))//
 		.with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
 	if (!separatedFetch.getValue().isEmpty()) {
 	    final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = from(notOrderedQuery)//
@@ -228,9 +227,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     @SuppressWarnings("unchecked")
-    public final  LifecycleModel<T> getLifecycleInformation(final SingleResultQueryModel<? extends AbstractEntity<?>> model, final String propertyName, final DateTime from, final DateTime to){
+    public final  LifecycleModel<T> getLifecycleInformation(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final List<String> distributionProperties, final String propertyName, final DateTime from, final DateTime to){
 	if (isLifecycleController()) {
-	    return ((ILifecycleDao<T>) dao).getLifecycleInformation(model, getByteArrayForManagedType(), propertyName, from, to);
+	    return ((ILifecycleDao<T>) dao).getLifecycleInformation(model, getByteArrayForManagedType(), distributionProperties, propertyName, from, to);
 	} else {
 	    return null;
 	}
@@ -260,7 +259,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
 		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
-		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).model();
+		.with(DynamicFetchBuilder.createFetchOnlyModel(getManagedType(), separatedFetch.getKey())).model();
 	final byte[] content;
 	if(getManagedType().equals(getEntityClass())){
 	    content = dao.export(resultQuery, propertyNames, propertyTitles);
@@ -285,7 +284,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
 	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
 	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
-	final fetch<T> fetchModel = DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey());
+	final fetch<T> fetchModel = DynamicFetchBuilder.createFetchOnlyModel(getManagedType(), separatedFetch.getKey());
  	if(getManagedType().equals(getEntityClass())){
 	    return dao.findById(id, fetchModel);
 	}else{
