@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -121,9 +122,10 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
 	 * @param property
 	 * @return
 	 */
-	public static boolean isDatePeriodProperty(final String property) {
+	public static boolean isDatePeriodProperty(final Class<?> managedType, final String property) {
 	    for (final GroupingPeriods period : GroupingPeriods.values()) {
-		if (period.getPropertyName().equals(property)) {
+		final String title = TitlesDescsGetter.getTitleAndDesc(property, managedType).getKey();
+		if (period.getTitle().equals(title)) {
 		    return true;
 		}
 	    }

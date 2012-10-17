@@ -672,4 +672,13 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
 	    throw new CalcPropertyWarning("The origination property does not take a part in the expression. Is that correct?");
 	}
     }
+
+    /**
+     * TODO This very tricky setter is used for mutating a property name of calc prop not to match it with 'generateNameFrom(title)'.
+     *
+     * @param name
+     */
+    public void setNameVeryTricky(final String name) {
+	this.name = name;
+    }
 }

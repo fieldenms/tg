@@ -67,7 +67,7 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getCriteria().getManagedType(), getCriteria().createQueryProperties()).model();
 	final List<String> fetchProperties = new ArrayList<>();
 	for(final String distrProp : adtme().getFirstTick().checkedProperties(getCriteria().getEntityClass())){
-	    if(!LifecycleAddToCategoriesTickRepresentation.isDatePeriodProperty(distrProp)){
+	    if(!LifecycleAddToCategoriesTickRepresentation.isDatePeriodProperty(getCriteria().getManagedType(), distrProp)){
 		fetchProperties.add(distrProp);
 	    }
 	}
