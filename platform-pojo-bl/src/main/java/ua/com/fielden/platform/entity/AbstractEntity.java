@@ -1093,16 +1093,36 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Creates a new instance of the given type and copies all properties including ID from this instance into the created one.
-     * <p>
-     * <i>IMPORTANT: the provided type and the type of the instance copy is invoked on does not have to be even on the same branch of hierarchy and may not have the same
-     * properties.</i>
      *
      * @param <COPY>
      * @param type
      * @return
      */
-    public <COPY extends AbstractEntity> COPY copy(final Class<COPY> type) {
-	final COPY copy = createCopyInstance(type);
+    public final <COPY extends AbstractEntity> COPY copy(final Class<COPY> type) {
+	return copyTo(createCopyInstance(type));
+    }
+
+    /**
+     * Creates a new instance of the given type and copies all properties including, but not system properties such as ID and version.
+     *
+     * @param type
+     * @return
+     */
+    public final <COPY extends AbstractEntity> COPY copyWithoutIdentity(final Class<COPY> type) {
+	return copyTo(getEntityFactory().newEntity(type));
+    }
+
+    /**
+     * Copies the content of this instance into the provided instance. Does not touch system properties such as ID and version.
+     * This means that only properties returned from method call <code>getProperties()</code> are copied.
+     * <p>
+     * <i>IMPORTANT: the type of provided instance and the type of this instance do not have to be the same or even be polymorphic; properties are copied on name by name basis.
+     * properties.</i>
+     *
+     * @param copy
+     * @return
+     */
+    public final <COPY extends AbstractEntity> COPY copyTo(final COPY copy) {
 	copy.setInitialising(true);
 	for (final String propName : getProperties().keySet()) {
 	    if (AbstractEntity.KEY.equals(propName) && copy.getKeyType().equals(getKeyType()) && DynamicEntityKey.class.isAssignableFrom(getKeyType())) {
@@ -1126,7 +1146,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    protected <COPY extends AbstractEntity> COPY createCopyInstance(final Class<COPY> type) {
+    protected final <COPY extends AbstractEntity> COPY createCopyInstance(final Class<COPY> type) {
 	return getEntityFactory().newEntity(type, getId());
     }
 
