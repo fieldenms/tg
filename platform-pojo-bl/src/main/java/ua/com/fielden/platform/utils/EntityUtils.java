@@ -17,6 +17,7 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -525,6 +526,10 @@ public class EntityUtils {
      */
     public static boolean isEntityType(final Class<?> type) {
 	return AbstractEntity.class.isAssignableFrom(type);
+    }
+
+    public static boolean isComposite(final Class<?> type) {
+	return DynamicEntityKey.class.isAssignableFrom(type);
     }
 
     /**

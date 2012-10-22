@@ -70,7 +70,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 	    if (isOwnerACriteria(propertyOwnerEntityType)) { // criteria entity
 		createMatcherForCriteriaEntity(propertyOwnerEntityType, propertyName, entityEntry, propField, propType);
 	    } else { // ordinary domain entity
-		createMathcerForDomainEntity(propertyOwnerEntityType, propertyName, entityEntry, propType);
+		createMatcherForDomainEntity(propertyOwnerEntityType, propertyName, entityEntry, propType);
 	    }
 
 	}
@@ -83,7 +83,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 	    if (PropertyDescriptor.class.isAssignableFrom(propType)) {
 		createPropertyDescriptorMatcher(propertyOwnerEntityType, propertyName, entityEntry);
 	    } else {
-		entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao((Class<AbstractEntity<?>>) propType), "key"));
+		entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao((Class<AbstractEntity<?>>) propType)));
 	    }
 	} else if (propField.isAnnotationPresent(EntityType.class)) {
 	    final EntityType elType = propField.getAnnotation(EntityType.class);
@@ -98,11 +98,11 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 		createPropertyDescriptorMatcherForCollection(propertyOwnerEntityType, propertyName, entityEntry);
 	    } else {
 		final Class<?> keyType = AnnotationReflector.getKeyType(elType.value());
-		final Class<? extends AbstractEntity<?>> notEnhancedElType = (Class<AbstractEntity<?>>)DynamicEntityClassLoader.getOriginalType(elType.value());
+		final Class<? extends AbstractEntity<?>> notEnhancedElType = (Class<AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(elType.value());
 		if (keyType != null && AbstractEntity.class.isAssignableFrom(keyType)) {
 		    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao(notEnhancedElType), "key.key", "key.key"));
 		} else {
-		    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao(notEnhancedElType), "key"));
+		    entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao(notEnhancedElType)));
 		}
 	    }
 	} else if (propType.isEnum()) {
@@ -114,7 +114,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
     }
 
     /** Instantiates a matcher for a property of an ordinary domain entity. */
-    private void createMathcerForDomainEntity(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry, final Class<?> propType) {
+    private void createMatcherForDomainEntity(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry, final Class<?> propType) {
 	if (propType.isEnum()) {
 	    entityEntry.put(propertyName, new EnumValueMatcher(propType));
 	} else if (!isPropertyAnEntity(propType)) {
@@ -128,7 +128,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 	} else if (PropertyDescriptor.class.isAssignableFrom(propType)) {
 	    createPropertyDescriptorMatcher(propertyOwnerEntityType, propertyName, entityEntry);
 	} else {
-	    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao((Class<? extends AbstractEntity<?>>) propType), "key"));
+	    entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao((Class<? extends AbstractEntity<?>>) propType)));
 	}
     }
 
