@@ -356,6 +356,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	    for (final GroupingPeriods period : GroupingPeriods.values()) {
 		getFirstTick().check(rootType, period.getPropertyName(), true);
 	    }
+	    getFirstTick().use(rootType, GroupingPeriods.values()[0].getPropertyName(), true);
 	}
 	((LifecycleDomainTreeRepresentation) getRepresentation()).provideMetaStateForLifecycleAnalysesDatePeriodProperties();
     }

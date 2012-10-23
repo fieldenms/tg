@@ -5,9 +5,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.BeforeClass;
@@ -168,10 +170,23 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     }
 
     @Test
+    public void test_that_first_date_period_property_is_used_for_first_tick() {
+	final GroupingPeriods firstPeriod = GroupingPeriods.values()[0];
+	assertTrue("The first '" + firstPeriod.getPropertyName() + "' property should be 'used' (mutably) for distribution.", dtm().getFirstTick().isUsed(MasterEntity.class, firstPeriod.getPropertyName()));
+    }
+
+    @Test
     public void test_that_date_period_properties_are_unchecked_for_second_tick() {
 	for (final GroupingPeriods period : GroupingPeriods.values()) {
 	    assertFalse("'" + period.getPropertyName() + "' property should be checked (mutably) for categories (aka aggregation).", dtm().getSecondTick().isChecked(MasterEntity.class, period.getPropertyName()));
 	}
+    }
+
+    private List<String> lastN(final ILifecycleDomainTreeManager dtm, final int n) {
+	final List<String> all = dtm.getRepresentation().includedProperties(MasterEntity.class);
+	final List<String> some = new ArrayList<String>(all.subList(all.size() - n, all.size()));
+	System.out.println("sublist == " + some);
+	return some;
     }
 
     /////////////////////////////////////////////////////////////////////////////////
@@ -180,14 +195,29 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     @Test
     public void test_that_changing_lifecycle_property_leads_to_tree_expanding_by_category_markers_for_second_tick() throws InstantiationException, IllegalAccessException {
 	final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_LifecycleDomainTreeManagerTest());
-	enhanceManagerWithBasicCalculatedProperties(centre);
+	// enhanceManagerWithBasicCalculatedProperties(centre);
 	centre.initAnalysisManagerByDefault("Lifecycle report", AnalysisType.LIFECYCLE);
 	final ILifecycleDomainTreeManager dtm = (ILifecycleDomainTreeManager) centre.getAnalysisManager("Lifecycle report");
 
+	///////////
+//	// , "__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY"
+//	assertEquals("Not root type -- should return empty list of included properties.", Collections.emptyList(), dtm().includedProperties(EntityWithoutKeyType.class));
+//	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "bigDecimalProp", "__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY"), dtm().includedProperties(EntityWithStringKeyType.class));
+//	assertEquals("Incorrect included properties.", Arrays.asList("", "__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY"), dtm().includedProperties(EntityWithNormalNature.class));
+//	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY"), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+//
+//	// test that heavy-weight entities will be processed correctly
+//	dtm().includedProperties(MasterEntity.class);
+//	dtm().includedProperties(SlaveEntity.class);
+//	dtm().includedProperties(EvenSlaverEntity.class);
+	///////////
+
 	// THE FIRST TIME -- returns DEFAULT VALUE //
 	// default value should be NULL
+
 	assertNull("The default LifecycleProperty should be Null.", dtm.getLifecycleProperty());
-	assertFalse("At the first time, the included properties should not contain any category.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("available"));
+	// assertFalse("At the first time, the included properties should not contain any category.", lastN(dtm, 5).contains("available"));
+	assertEquals("Only date properties are included.", Arrays.asList("__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY"), lastN(dtm, 5));
 	assertEquals("At the first time, the checked properties should be empty.", Arrays.asList(), dtm.getSecondTick().checkedProperties(MasterEntity.class));
 	assertEquals("At the first time, the used properties should be empty as well as 'checked' properties.", Arrays.asList(), dtm.getSecondTick().usedProperties(MasterEntity.class));
 	assertEquals("At the first time, no categories exist in the domain (no lifecycle property has been selected).", Arrays.asList(), dtm.getSecondTick().allCategories(MasterEntity.class));
@@ -196,7 +226,8 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 	// Alter LifecycleProperty by checking it in the second tick //
 	dtm.getSecondTick().check(MasterEntity.class, "simpleEntityProp", true);
 	assertEquals("The LifecycleProperty should be 'simpleEntityProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "simpleEntityProp"), dtm.getLifecycleProperty());
-	assertTrue("The included properties should contain categories.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("available"));
+	// assertTrue("The included properties should contain categories.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("available"));
+	assertEquals("Date properties are included. The included properties should contain categories.", Arrays.asList("__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY", "available", "broken", "unoperational"), lastN(dtm, 8));
 	assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("simpleEntityProp", "available", "broken", "unoperational"), dtm.getSecondTick().checkedProperties(MasterEntity.class));
 	assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("available", "broken"), dtm.getSecondTick().usedProperties(MasterEntity.class));
 	assertEquals("'simpleEntityProp' lifecycle property has been selected -- its categories should be returned.", Arrays.asList(MasterEntitySimpleEntityPropCategory.AVAILABLE, MasterEntitySimpleEntityPropCategory.BROKEN, MasterEntitySimpleEntityPropCategory.UNOPERATIONAL), dtm.getSecondTick().allCategories(MasterEntity.class));
@@ -205,7 +236,8 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 	// Remove LifecycleProperty by unchecking it in the second tick //
 	dtm.getSecondTick().check(MasterEntity.class, "simpleEntityProp", false);
 	assertNull("LifecycleProperty has become Null.", dtm.getLifecycleProperty());
-	assertFalse("The included properties should not contain any category.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("available"));
+	// assertFalse("The included properties should not contain any category.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("available"));
+	assertEquals("Only date properties are included.", Arrays.asList("__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY"), lastN(dtm, 5));
 	assertEquals("The 'checked' properties became empty.", Arrays.asList(), dtm.getSecondTick().checkedProperties(MasterEntity.class));
 	assertEquals("The 'used' properties became empty.", Arrays.asList(), dtm.getSecondTick().usedProperties(MasterEntity.class));
 	assertEquals("No categories exist in the domain (no lifecycle property has been selected).", Arrays.asList(), dtm.getSecondTick().allCategories(MasterEntity.class));
@@ -216,11 +248,19 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 	dtm.getSecondTick().check(MasterEntity.class, "dateProp", true);
 
 	assertEquals("The LifecycleProperty should be 'dateProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "dateProp"), dtm.getLifecycleProperty());
-	assertTrue("The included properties should contain categories.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("future"));
+	// assertTrue("The included properties should contain categories.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("future"));
+	assertEquals("Date properties are included. The included properties should contain categories.", Arrays.asList("__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY", "future", "now", "past"), lastN(dtm, 8));
 	assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("dateProp", "future", "now", "past"), dtm.getSecondTick().checkedProperties(MasterEntity.class));
 	assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("future", "past"), dtm.getSecondTick().usedProperties(MasterEntity.class));
 	assertEquals("'dateProp' lifecycle property has been selected -- its categories should be returned.", Arrays.asList(MasterEntityDatePropCategory.FUTURE, MasterEntityDatePropCategory.NOW, MasterEntityDatePropCategory.PAST), dtm.getSecondTick().allCategories(MasterEntity.class));
 	assertEquals("'dateProp' lifecycle property has been selected -- its categories (selected!) should be returned.", Arrays.asList(MasterEntityDatePropCategory.FUTURE, MasterEntityDatePropCategory.PAST), dtm.getSecondTick().currentCategories(MasterEntity.class));
+
+	centre.initAnalysisManagerByDefault("Lifecycle report (new)", AnalysisType.LIFECYCLE);
+	final ILifecycleDomainTreeManager dtm2 = (ILifecycleDomainTreeManager) centre.getAnalysisManager("Lifecycle report (new)");
+
+	assertNull("The default LifecycleProperty should be Null.", dtm2.getLifecycleProperty());
+	// assertFalse("At the first time, the included properties should not contain any category.", lastN(dtm, 5).contains("available"));
+	// TODO assertEquals("Date properties are included. The included properties should contain categories from previous analysis!.", Arrays.asList("__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY", "future", "now", "past"), lastN(dtm2, 8));
     }
 
     //////////////////////////// TODO ////////////////////////////

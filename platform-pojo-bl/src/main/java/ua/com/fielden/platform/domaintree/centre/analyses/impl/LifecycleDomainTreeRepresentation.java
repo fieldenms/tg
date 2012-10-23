@@ -61,6 +61,15 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
 	 */
 	public LifecycleAddToDistributionTickRepresentation() {
 	}
+
+	@Override
+	public boolean isDisabledImmutably(final Class<?> root, final String property) {
+	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	    if (isEntityItself) { // "entities itself" should be enabled for lifecycle distribution
+		return false;
+	    }
+	    return super.isDisabledImmutably(root, property);
+	}
     }
 
     public static class LifecycleAddToCategoriesTickRepresentation extends AbstractAnalysisAddToAggregationTickRepresentation implements ILifecycleAddToCategoriesTickRepresentation {
@@ -123,6 +132,10 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
 	 * @return
 	 */
 	public static boolean isDatePeriodProperty(final Class<?> managedType, final String property) {
+	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	    if (isEntityItself) {
+		return false;
+	    }
 	    for (final GroupingPeriods period : GroupingPeriods.values()) {
 		final String title = TitlesDescsGetter.getTitleAndDesc(property, managedType).getKey();
 		if (period.getTitle().equals(title)) {

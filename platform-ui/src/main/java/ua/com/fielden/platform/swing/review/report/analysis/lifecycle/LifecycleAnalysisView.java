@@ -455,10 +455,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	//Selecting the first element in the distribution properties list.
 	distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	final List<String> usedProperties = firstTick.usedProperties(root);
-	if(usedProperties.isEmpty() && !listModel.isEmpty()){
-	    firstTick.use(root, listModel.get(0), true);
-	    usedProperties.add(listModel.get(0));
-	}
 	if (usedProperties.size() == 1) {
 	    distributionList.setSelectedValue(usedProperties.get(0), true);
 	}

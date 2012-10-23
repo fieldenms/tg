@@ -89,6 +89,11 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
     /////////////////////////////////////// Date Period properties ////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     @Test
+    public void test_Entity_Itself_properties_are_enabled() {
+	assertFalse("'Entity_Itself' property should be enabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, ""));
+    }
+
+    @Test
     public void test_that_date_period_properties_exist_and_are_included() {
 	for (final GroupingPeriods period : GroupingPeriods.values()) {
 	    assertFalse("'" + period.getPropertyName() + "' property should exist and be included.", dtm().isExcludedImmutably(MasterEntity.class, period.getPropertyName()));
