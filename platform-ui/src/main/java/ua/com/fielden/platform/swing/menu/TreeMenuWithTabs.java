@@ -397,12 +397,12 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
 	}
     }
 
-    /**
-     * Updates view of the selected {@link TreeMenuItem}.
-     */
-    public void updateSelectedMenuItem() {
-	selectMenuItem(getSelectedItem());
-    }
+//    /**
+//     * Updates view of the selected {@link TreeMenuItem}.
+//     */
+//    public void updateSelectedMenuItem() {
+//	selectMenuItem(getSelectedItem());
+//    }
 
     /**
      * Creates a menu item activation action, which reacts to enter key press on the node representing menu item and upon its double clicking.
@@ -423,6 +423,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
 			    // TODO potentially need to notify user of the reason for view opening restriction
 			} else {
 			    tabPane.setSelectedIndex(tabIndex);
+			    selectMenuItem(item);
 			    item.getView().requestFocus();
 			}
 		    } else { // item is not present -- add a new tab with item's view
@@ -433,10 +434,11 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
 			    tabPane.addTab(item.getTitle(), item.getView());
 			    tabPane.setSelectedIndex(tabPane.getTabCount() - 1);
 			    // initialisation must occur after a new tab is selected to ensure correct focus traversal
+			    selectMenuItem(item);
 			    item.getView().getModel().init(getBlockingPane(), item.getView());
 			}
 		    }
-		    selectMenuItem(item);
+
 		}
 	    }
 	};

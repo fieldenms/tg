@@ -13,9 +13,6 @@ import ua.com.fielden.platform.swing.menu.DynamicReportWrapper.CentreClosingList
 import ua.com.fielden.platform.swing.menu.api.IItemSelector;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
-import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationView;
-import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
-import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 
 /**
  * A menu item type for representing save-as menu items with custom configurations of the corresponding principle menu item.
@@ -29,11 +26,6 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
     private static final long serialVersionUID = 1628351742425600699L;
 
     private final IAnalysisListener analysisListener;
-
-    /**
-     * Determines whether associated view should be selected after load or not.
-     */
-    private boolean selectAfterLoad = false;
 
     public MiSaveAsConfiguration(//
 	    //Tree menu item related parameters
@@ -51,7 +43,6 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 
 	this.analysisListener = createAnalysisListener(parentItem.getView().getTreeMenu());
 	getView().getCentreConfigurationView().getModel().addPropertyChangeListener(createCentreModeChangeListener());
-	getView().getCentreConfigurationView().addLoadListener(createAnalysisSelectLoadListener());
 	getView().addCentreClosingListener(new CentreClosingListener() {
 
 	    @Override
@@ -76,7 +67,7 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 		if("mode".equals(evt.getPropertyName())){
 		    if(ReportMode.REPORT.equals(evt.getNewValue())){
 			getView().getEntityCentreManager().addAnalysisListener(analysisListener);
-		    }else{
+		    }else if(getView().getEntityCentreManager() != null){
 			getView().getEntityCentreManager().removeAnalysisListener(analysisListener);
 		    }
 		}
@@ -136,6 +127,9 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
      * @param treeMenu
      */
     private void synchronizeAnalysis(final TreeMenuWithTabs<?> treeMenu) {
+	if(getView().getEntityCentreManager() == null){
+	    return;
+	}
 	final List<String> analysis = getView().getEntityCentreManager().analysisKeys();
 	for (int childIndex = 0; childIndex < getChildCount(); childIndex++) {
 	    if (!analysis.contains(getChildAt(childIndex).toString())) {
@@ -151,6 +145,9 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
      *
      */
     private void addAnalysis() {
+	if(getView().getEntityCentreManager() == null){
+	    return;
+	}
 	for (final String analysisName : getView().getEntityCentreManager().analysisKeys()) {
 	    if (!containAnalysis(analysisName)) {
 		addItem(new TreeMenuItemWrapper<T>(analysisName));
@@ -176,41 +173,6 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 
     @Override
     public void selectTreeMenuItem() {
-	final CentreConfigurationView<T, ?> centre = getView().getCentreConfigurationView();
-	if(!centre.isLoaded()){
-	    selectAfterLoad = true;
-	}else if(!selectAfterLoad){
-	   selectGridAnalysisView();
-	}
+	getView().getCentreConfigurationView().selectAnalysis(GridConfigurationModel.gridAnalysisName);
     }
-
-    /**
-     * Selects the grid analysis view.
-     */
-    private void selectGridAnalysisView(){
-	final CentreConfigurationView<T, ?> centre = getView().getCentreConfigurationView();
-	if (centre.getModel().getMode() == ReportMode.REPORT) {
-	    centre.getPreviousView().selectAnalysis(GridConfigurationModel.gridAnalysisName);
-	}
-    }
-
-    /**
-     * Creates the load listener that selects menu item after the centre was loaded.
-     *
-     * @param centre
-     * @return
-     */
-    private ILoadListener createAnalysisSelectLoadListener() {
-	return new ILoadListener() {
-
-	    @Override
-	    public void viewWasLoaded(final LoadEvent event) {
-		if (selectAfterLoad) {
-		    selectGridAnalysisView();
-		    selectAfterLoad = false;
-		}
-	    }
-	};
-    }
-
 }

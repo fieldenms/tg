@@ -332,6 +332,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
     }
 
     private void openItem(final TreeMenuItem<?> item, final boolean dock) {
+	selectMenuItem(item);
 	if (dock) {
 	    getTabPane().addTab(item.toString(), item.getView());
 	    getTabPane().setSelectedIndex(getTabPane().getTabCount() - 1);
@@ -347,7 +348,6 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 	    undockedItem.setVisible(true);
 	    item.getView().getModel().init(undockedItem.getBlockingPane(), item.getView());
 	}
-	selectMenuItem(item);
     }
 
     private void activateUndockedTreeItem(final TreeMenuItem<?> item, final boolean dock) {

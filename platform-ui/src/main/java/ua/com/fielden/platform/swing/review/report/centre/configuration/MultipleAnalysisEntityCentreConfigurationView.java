@@ -48,7 +48,19 @@ public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEnt
 
     @Override
     protected MultipleAnalysisEntityCentre<T> createConfigurableView() {
+	if(getPreviousView() != null && isPrincipal()){
+	    selectAnalysis(getPreviousView().getCurrentAnalysisConfigurationView().getModel().getName());
+	}
 	return new MultipleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), this);
+    }
+
+    /**
+     * Returns value that indicates whether this entity centre configuration view is principal or not.
+     *
+     * @return
+     */
+    private final boolean isPrincipal(){
+	return getModel().getName() == null;
     }
 
 }

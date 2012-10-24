@@ -16,6 +16,7 @@ import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.centre.wizard.EntityCentreWizard;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
@@ -34,6 +35,8 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
     private final Action save, saveAs, remove;
 
+    private String analysisToSelect;
+
     /**
      * Initialises this {@link CentreConfigurationView} instance with specified model and progress layer.
      *
@@ -43,6 +46,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
     public CentreConfigurationView(final CentreConfigurationModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	addOpenEventListener(createCentreOpenEventListener());
+	this.analysisToSelect = GridConfigurationModel.gridAnalysisName;
 	this.save = createSaveAction();
 	this.saveAs = createSaveAsAction();
 	this.remove = createRemoveAction();
@@ -108,6 +112,28 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	    getModel().discard();
 	}
 	return null;
+    }
+
+    /**
+     * Selects the specified analysis.
+     *
+     * @param analysisToSelect
+     */
+    public void selectAnalysis(final String analysisToSelect){
+	if(ReportMode.REPORT == getModel().getMode() && getPreviousView() != null
+		&& getPreviousView().isVisible() && getPreviousView().isLoaded()){
+	    getPreviousView().selectAnalysis(analysisToSelect);
+	}
+	this.analysisToSelect = analysisToSelect;
+    }
+
+    /**
+     * Returns the analysis to select.
+     *
+     * @return
+     */
+    public String getAnalysisToSelect() {
+	return analysisToSelect;
     }
 
     /**

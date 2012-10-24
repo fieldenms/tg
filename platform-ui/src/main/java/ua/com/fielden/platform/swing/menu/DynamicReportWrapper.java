@@ -6,6 +6,8 @@ import java.util.Set;
 
 import javax.swing.event.EventListenerList;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -26,6 +28,8 @@ import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotifPanel<DefaultUiModel> {
 
     private static final long serialVersionUID = 1655601830703524962L;
+
+    private static final Logger logger = Logger.getLogger(DynamicReportWrapper.class);
 
     private final EventListenerList listenerList = new EventListenerList();
 
@@ -107,11 +111,15 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
      */
     public ICentreDomainTreeManagerAndEnhancer getEntityCentreManager() {
 	final ICentreDomainTreeManagerAndEnhancer cdtm = entityCentreConfigurationView.getModel().getEntityCentreManager();
-	if(cdtm == null){
-	    entityCentreConfigurationView.getModel().initEntityCentreManager();
+	if (cdtm == null) {
+	    try {
+		entityCentreConfigurationView.getModel().initEntityCentreManager();
+	    } catch (final IllegalArgumentException e) {
+		logger.error(e.getMessage(), e);
+	    }
 	}
 	return entityCentreConfigurationView.getModel().getEntityCentreManager();
-    }
+	}
 
     /**
      * Returns the {@link CentreConfigurationView} instance wrapped by this {@link DynamicReportWrapper}.

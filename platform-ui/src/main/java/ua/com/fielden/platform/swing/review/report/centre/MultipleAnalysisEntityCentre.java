@@ -43,7 +43,6 @@ import ua.com.fielden.platform.swing.addtabdialog.AddTabOptions;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.MultipleAnalysisEntityCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
@@ -69,19 +68,16 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     private final Action removeAction;
 
-    private final String previouslySelectedAnalysis;
-
     private boolean wasSizeChanged, wasAnalysisLoaded, analysisSelected;
 
     public MultipleAnalysisEntityCentre(final EntityCentreModel<T> model, final MultipleAnalysisEntityCentreConfigurationView<T> owner) {
 	super(model, owner);
-	this.previouslySelectedAnalysis = owner.getPreviousView() != null ? owner.getPreviousView().getCurrentAnalysisConfigurationView().getModel().getName() : GridConfigurationModel.gridAnalysisName;
 	this.wasSizeChanged = false;
 	this.wasAnalysisLoaded = false;
 	this.analysisSelected = false;
 	this.removeAction = createRemoveAnalysisAction();
 	addComponentListener(createComponentWasResized());
-	addPropertyChangeListener(createAfterLoadSelectListenre());
+	addPropertyChangeListener(createAfterLoadSelectListener());
 	this.tabPanel = createReview();
 	getReviewProgressLayer().setView(createTabPanelWrapper(tabPanel));
 	layoutComponents();
@@ -287,13 +283,13 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      *
      * @return
      */
-    private PropertyChangeListener createAfterLoadSelectListenre() {
+    private PropertyChangeListener createAfterLoadSelectListener() {
 	return new PropertyChangeListener() {
 
 	    @Override
 	    public void propertyChange(final PropertyChangeEvent evt) {
 		synchronized (MultipleAnalysisEntityCentre.this) {
-		    if("currentAnalysisConfigurationView".equals(evt.getPropertyName()) && !analysisSelected && wasAnalysisLoaded && getCurrentAnalysisConfigurationView().getModel().getName().equals(previouslySelectedAnalysis)){
+		    if("currentAnalysisConfigurationView".equals(evt.getPropertyName()) && !analysisSelected && wasAnalysisLoaded && getCurrentAnalysisConfigurationView().getModel().getName().equals(getOwner().getAnalysisToSelect())){
 
 			analysisSelected = true;
 			if(wasAnalysisLoaded && wasSizeChanged){
@@ -411,11 +407,11 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    }
 	} else {
 	    wasAnalysisLoaded = true;
-	    if(getCurrentAnalysisConfigurationView() != null && getCurrentAnalysisConfigurationView().getModel().getName().equals(previouslySelectedAnalysis)){
+	    if(getCurrentAnalysisConfigurationView() != null && getCurrentAnalysisConfigurationView().getModel().getName().equals(getOwner().getAnalysisToSelect())){
 		analysisSelected = true;
 		fireLoadEvent(new LoadEvent(this));
 	    } else {
-		final int tabIndex = tabIndex(tabPane, previouslySelectedAnalysis);
+		final int tabIndex = tabIndex(tabPane, getOwner().getAnalysisToSelect());
 		if(tabIndex >=0 ){
 		    tabPane.setSelectedIndex(tabIndex);
 		}
@@ -574,7 +570,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    @SuppressWarnings({ "unchecked", "rawtypes" })
 	    @Override
 	    public void setSelectedIndex(final int index) {
-		if(!getReviewProgressLayer().isLocked()){
+		if(!isLoaded() || !getReviewProgressLayer().isLocked()){
 		    super.setSelectedIndex(index);
 		    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
 		    if (analysis.isLoaded()) {

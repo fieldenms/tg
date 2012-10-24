@@ -481,7 +481,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	    String message = "";
 	    switch (reportMode) {
 	    case REPORT:
-		message = "Building the report view";
+		message = "Building...";
 		break;
 	    case WIZARD:
 		message = "Loading wizard";
