@@ -47,9 +47,11 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
 	    props.setProperty("hibernate.show_sql", "false");
 	    props.setProperty("hibernate.format_sql", "true");
 
+	    final PlatformTestDomainTypes domainProvider = new PlatformTestDomainTypes();
+
 	    hibernateModule = new PlatformTestServerModule(
 		    PlatformTestHibernateSetup.getHibernateTypes(),
-		    PlatformTestDomainTypes.entityTypes,
+		    domainProvider,
 		    DefaultSerialisationClassProvider.class,
 		    DefaultFilter.class,
 		    props);

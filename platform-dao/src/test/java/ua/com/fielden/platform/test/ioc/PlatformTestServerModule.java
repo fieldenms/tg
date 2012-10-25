@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.test.ioc;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
 import ua.com.fielden.platform.migration.controller.IMigrationErrorDao;
@@ -78,21 +77,21 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
     public PlatformTestServerModule(
 	    final Map<Class, Class> defaultHibernateTypes, //
-	    final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes,//
+	    final IApplicationDomainProvider applicationDomainProvider,//
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
 	    final SecurityTokenProvider tokenProvider,//
 	    final Properties props) throws Exception {
-	super(defaultHibernateTypes, applicationEntityTypes, serialisationClassProviderType, automaticDataFilterType, tokenProvider, props);
+	super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProvider, props);
     }
 
     public PlatformTestServerModule(
 	    final Map<Class, Class> defaultHibernateTypes, //
-	    final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes,//
+	    final IApplicationDomainProvider applicationDomainProvider,//
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
 	    final Properties props) throws Exception {
-	super(defaultHibernateTypes, applicationEntityTypes, serialisationClassProviderType, automaticDataFilterType, null, props);
+	super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
     }
 
     @Override

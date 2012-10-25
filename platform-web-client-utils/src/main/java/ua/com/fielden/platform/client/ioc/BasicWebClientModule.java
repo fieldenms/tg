@@ -3,6 +3,7 @@ package ua.com.fielden.platform.client.ioc;
 import java.util.Properties;
 
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
@@ -67,9 +68,15 @@ import com.google.inject.name.Names;
 public class BasicWebClientModule extends CommonRestFactoryModule {
     protected final Properties props;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
+    private final IApplicationDomainProvider applicationDomainProvider;
 
-    public BasicWebClientModule(final RestClientUtil restUtil, final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, final Properties props) {
+    public BasicWebClientModule(
+	    final RestClientUtil restUtil,
+	    final IApplicationDomainProvider applicationDomainProvider,
+	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
+	    final Properties props) {
 	super(restUtil);
+	this.applicationDomainProvider = applicationDomainProvider;
 	this.serialisationClassProviderType = serialisationClassProviderType;
 	this.props = props;
     }
@@ -87,6 +94,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
 	bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
 	bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
+	bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
 	// bind user provider
 	bind(IUserProvider.class).to(RestClientUtil.class);
 	// bind reference dependency controller required for the application update mechanism

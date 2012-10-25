@@ -3,6 +3,7 @@ package ua.com.fielden.platform.test;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
@@ -43,7 +44,7 @@ import ua.com.fielden.platform.test.entities.CompositeEntityKey;
  * @author TG Team
  *
  */
-public class PlatformTestDomainTypes {
+public class PlatformTestDomainTypes implements IApplicationDomainProvider {
     public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
 
     static void add(final Class<? extends AbstractEntity<?>> domainType) {
@@ -83,5 +84,10 @@ public class PlatformTestDomainTypes {
 	add(EntityWithSimpleTaxMoney.class);
 	add(EntityWithSimpleMoney.class);
 	add(EntityWithDynamicCompositeKey.class);
+    }
+
+    @Override
+    public List<Class<? extends AbstractEntity<?>>> entityTypes() {
+	return entityTypes;
     }
 }

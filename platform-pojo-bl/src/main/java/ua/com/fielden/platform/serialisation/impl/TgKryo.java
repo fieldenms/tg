@@ -266,6 +266,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(List.class);
 	register(HashMap.class);
 	register(HashSet.class);
+	register(ListOrderedMap.class);
 	register(TreeSet.class);
 	register(Set.class);
 	register(Money.class);

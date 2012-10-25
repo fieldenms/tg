@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.ioc;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.EntityAttachmentAssociationDao;
@@ -14,7 +14,6 @@ import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -68,20 +67,22 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
     private final Properties props;
     private final SecurityTokenProvider tokenProvider;
+    private final IApplicationDomainProvider applicationDomainProvider;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
     private final Class<? extends IFilter> automaticDataFilterType;
 
 
     public BasicWebServerModule(
 	    final Map<Class, Class> defaultHibernateTypes, //
-	    final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes,//
+	    final IApplicationDomainProvider applicationDomainProvider,//
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
 	    final SecurityTokenProvider tokenProvider,//
 	    final Properties props) throws Exception {
-	super(props, defaultHibernateTypes, applicationEntityTypes);
+	super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
 	this.props = props;
 	this.tokenProvider = tokenProvider;
+	this.applicationDomainProvider = applicationDomainProvider;
 	this.serialisationClassProviderType = serialisationClassProviderType;
 	this.automaticDataFilterType = automaticDataFilterType;
     }
@@ -99,7 +100,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 	bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
 	bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
 	bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
-
+	bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
 	// serialisation related binding
 	bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON); // FleetSerialisationClassProvider.class
 	bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON); //
