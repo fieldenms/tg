@@ -15,6 +15,8 @@ import org.junit.Test;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
+import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.EntityWithoutKeyType;
@@ -89,7 +91,7 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
     /////////////////////////////////////// Date Period properties ////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     @Test
-    public void test_Entity_Itself_properties_are_enabled() {
+    public void test_Entity_Itself_properties_are_enabled_for_first_tick() {
 	assertFalse("'Entity_Itself' property should be enabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, ""));
     }
 
@@ -191,5 +193,23 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY"), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
 	dtm().excludeImmutably(MasterEntityForIncludedPropertiesLogic.class, "entityPropCollection.integerProp");
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.moneyProp", "__WEEK", "__YEAR", "__MONTH", "__FORTNIGHT", "__DAY"), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+    }
+
+    @Override
+    @Test
+    public void test_entities_itself_first_tick_checking() {
+	assertFalse("An entity itself (represented by empty 'property') should NOT be checked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, ""));
+	assertFalse("By contract should be checked.", dtm().getFirstTick().isCheckedImmutably(EntityWithStringKeyType.class, ""));
+	assertFalse("By contract should be enabled.", dtm().getFirstTick().isDisabledImmutably(EntityWithStringKeyType.class, ""));
+    }
+
+    @Override
+    @Test
+    public void test_entities_itself_first_tick_disabling() {
+	assertFalse("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, ""));
+	assertFalse("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(SlaveEntity.class, ""));
+	assertFalse("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(EntityWithStringKeyType.class, ""));
+	assertFalse("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
+	assertFalse("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(EntityWithKeyTitleAndWithAEKeyType.class, ""));
     }
 }

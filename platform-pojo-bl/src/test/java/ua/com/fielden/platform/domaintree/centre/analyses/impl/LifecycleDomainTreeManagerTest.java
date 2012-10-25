@@ -91,6 +91,8 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
         //////////////////// Overridden to provide "single-selection" logic, instead of "multiple-selection" as in abstract parent class ////////////////////
 
 	// At the beginning the list of used properties should be empty.
+	assertEquals("Value is incorrect.", Arrays.asList("__YEAR"), dtm().getFirstTick().usedProperties(MasterEntity.class));
+	dtm().getFirstTick().use(MasterEntity.class, "__YEAR", false);
 	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getFirstTick().usedProperties(MasterEntity.class));
 
 	// Add "use properties" and see whether list of "used properties" is correctly ordered.
