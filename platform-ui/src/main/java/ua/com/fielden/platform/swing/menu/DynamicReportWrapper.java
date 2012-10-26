@@ -6,6 +6,8 @@ import java.util.Set;
 
 import javax.swing.event.EventListenerList;
 
+import net.miginfocom.swing.MigLayout;
+
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -69,6 +71,8 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	this.entityCentreConfigurationView = centreBuilder.createEntityCentre(menuItemClass, name, progressLayer);
 	this.entityCentreConfigurationView.addCentreConfigurationEventListener(createContreConfigurationListener());
 	progressLayer.setView(entityCentreConfigurationView);
+	getHoldingPanel().removeAll();
+	getHoldingPanel().setLayout(new MigLayout("fill, insets 0", "[fill, grow]", "[c,grow,fill]"));
 	add(progressLayer);
 	getModel().setView(this);
 
