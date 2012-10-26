@@ -77,7 +77,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType())) {
 	    if (ppi.isUnionEntity()) {
 		with(ppi.getName(), new fetch(ppi.getJavaType(), FetchCategory.ALL));
-	    } else {
+	    } else if (!ppi.isCalculated() && !ppi.isCollection()) {
 		with(ppi.getName(), false);
 	    }
 	}
