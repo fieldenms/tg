@@ -62,7 +62,7 @@ public class ExpressionEditorModule extends BasicWebServerModule{
 
     public ExpressionEditorModule()
 	    throws Exception {
-	super(hibTypeDefaults, new ArrayList<Class<? extends AbstractEntity<?>>>(), ClassProviderForTestingPurposes.class, NoFilter.class, null, createProperties());
+	super(hibTypeDefaults, new ExpressionExampleDomain(), ClassProviderForTestingPurposes.class, NoFilter.class, null, createProperties());
     }
 
     public static Properties createProperties(){

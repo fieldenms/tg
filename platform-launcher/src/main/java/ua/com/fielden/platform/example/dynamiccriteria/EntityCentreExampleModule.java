@@ -1,15 +1,14 @@
 package ua.com.fielden.platform.example.dynamiccriteria;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.example.dynamiccriteria.ao.NestedEntityDao;
 import ua.com.fielden.platform.example.dynamiccriteria.ao.SimpleCompositeEntityDao;
@@ -31,11 +30,11 @@ public class EntityCentreExampleModule extends BasicWebServerModule{
     @SuppressWarnings("rawtypes")
     public EntityCentreExampleModule(//
 	    final Map<Class, Class> defaultHibernateTypes, //
-	    final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes, //
+	    final IApplicationDomainProvider applicationDomainProvider,//
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
 	    final Properties props) throws Exception {
-	super(defaultHibernateTypes, applicationEntityTypes, serialisationClassProviderType, automaticDataFilterType, null, props);
+	super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
 
     }
 

@@ -15,18 +15,20 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population.
- * 
+ *
  * It contains the <code>main</code> method and can be executed whenever the target database needs to be (re-)set.
  * <p>
- * 
+ *
  * <b>IMPORTANT: </b><i>One should be careful not to run this code against the deployment or production databases, which would lead to the loss of all data.</i>
- * 
+ *
  * <p>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PopulateDb extends DomainDrivenDataPopulation {
+
+    private final EntityCentreExampleDomain applicationDomainProvider = new EntityCentreExampleDomain();
 
     private PopulateDb(final IDomainDrivenTestCaseConfiguration config) {
 	super(config);
@@ -229,7 +231,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
     @Override
     protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-	return EntityCentreExampleDomain.entityTypes;
+	return applicationDomainProvider.domainTypes();
     }
 
 }

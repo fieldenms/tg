@@ -484,7 +484,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		message = "Building...";
 		break;
 	    case WIZARD:
-		message = "Loading wizard";
+		message = "Loading wizard...";
 		break;
 	    }
 	    setMessage(message);

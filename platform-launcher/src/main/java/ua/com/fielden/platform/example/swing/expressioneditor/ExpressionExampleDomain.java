@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.example.dynamiccriteria;
+package ua.com.fielden.platform.example.swing.expressioneditor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,11 +6,8 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
-import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
-import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleNestedEntity;
 
-public class EntityCentreExampleDomain implements IApplicationDomainProvider{
+public class ExpressionExampleDomain implements IApplicationDomainProvider {
 
     private static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
     private static final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
@@ -22,9 +19,6 @@ public class EntityCentreExampleDomain implements IApplicationDomainProvider{
 
     static {
 	entityTypes.addAll(PlatformDomainTypes.types);
-	add(SimpleECEEntity.class);
-	add(SimpleNestedEntity.class);
-	add(SimpleCompositeEntity.class);
     }
 
     @Override
@@ -35,4 +29,5 @@ public class EntityCentreExampleDomain implements IApplicationDomainProvider{
     public List<Class<? extends AbstractEntity<?>>> domainTypes() {
 	return domainTypes;
     }
+
 }

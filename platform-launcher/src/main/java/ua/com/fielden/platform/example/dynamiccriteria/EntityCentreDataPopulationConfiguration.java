@@ -2,6 +2,7 @@ package ua.com.fielden.platform.example.dynamiccriteria;
 
 import java.util.Properties;
 
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
@@ -31,7 +32,8 @@ public class EntityCentreDataPopulationConfiguration implements IDomainDrivenTes
 	    //	    props.setProperty("tokens.package", "template.security.tokens");
 	    //	    props.setProperty("workflow", "development");
 
-	    module = new EntityCentreExampleModule(EntityCentreExampleHibernateSetup.getHibernateTypes(), EntityCentreExampleDomain.entityTypes, EntityCentreExampleSerialisationClassProvider.class, NoFilter.class, props);
+	    final IApplicationDomainProvider applicationDomainProvider = new EntityCentreExampleDomain();
+	    module = new EntityCentreExampleModule(EntityCentreExampleHibernateSetup.getHibernateTypes(), applicationDomainProvider, EntityCentreExampleSerialisationClassProvider.class, NoFilter.class, props);
 	    injector = new ApplicationInjectorFactory().add(module).getInjector();
 	    entityFactory = injector.getInstance(EntityFactory.class);
 	} catch (final Exception e) {
