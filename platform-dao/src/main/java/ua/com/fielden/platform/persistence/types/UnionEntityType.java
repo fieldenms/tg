@@ -44,8 +44,8 @@ public class UnionEntityType extends AbstractCompositeUserType {
 	    statement.setNull(index + 1,  Hibernate.LONG.sqlType());
 	} else {
 	    final AbstractUnionEntity unionEntity = (AbstractUnionEntity) value;
-	    System.out.println("=================================================== " + unionEntity.activePropertyName());
-	    System.out.println("=================================================== " + unionEntity.get(unionEntity.activePropertyName()));
+//	    System.out.println("=================================================== " + unionEntity.activePropertyName());
+//	    System.out.println("=================================================== " + unionEntity.get(unionEntity.activePropertyName()));
 	    statement.setString(index, unionEntity.activePropertyName());//unionEntity.getKey());
 	    statement.setLong(index + 1, ((AbstractEntity) unionEntity.get(unionEntity.activePropertyName())).getId());//unionEntity.getId());
 	}

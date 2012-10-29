@@ -67,6 +67,12 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
     private Map<Long, List<EntityContainer<E>>> getEntityPropertyIds(final List<EntityContainer<E>> entities, final String propertyName) {
 	final Map<Long, List<EntityContainer<E>>> propValuesMap = new HashMap<Long, List<EntityContainer<E>>>();
 	for (final EntityContainer<E> entity : entities) {
+	    if (entity == null) {
+		throw new IllegalStateException("Entity is null!");
+	    }
+	    if (entity.getEntities() == null) {
+		throw new IllegalStateException("Entity.getEntities() is null!");
+	    }
 	    final EntityContainer<? extends AbstractEntity<?>> propEntity = entity.getEntities().get(propertyName);
 	    if (propEntity != null && propEntity.getId() != null) {
 		if (!propValuesMap.containsKey(propEntity.getId())) {

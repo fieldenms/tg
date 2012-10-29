@@ -260,6 +260,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private void assignTransactionDate(final T entity) throws Exception {
 	final List<Field> transactionDateProperties = Finder.findRealProperties(entity.getType(), TransactionDate.class);
 	final DateTime now = universalConstants.now();
+	if (now == null) {
+	    throw new IllegalArgumentException("The now() constant has not been assigned!");
+	}
 	for (final Field property : transactionDateProperties) {
 	    property.setAccessible(true);
 	    final Object value = property.get(entity);
