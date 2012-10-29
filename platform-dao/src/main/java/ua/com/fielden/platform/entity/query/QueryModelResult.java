@@ -5,6 +5,7 @@ import java.util.SortedSet;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public final class QueryModelResult<T extends AbstractEntity<?>> {
     private Class<T> resultType;
@@ -33,5 +34,9 @@ public final class QueryModelResult<T extends AbstractEntity<?>> {
 
     public SortedSet<ResultQueryYieldDetails> getYieldedPropsInfo() {
 	return yieldedPropsInfo;
+    }
+
+    public boolean idOnlyQuery() {
+	return EntityUtils.isPersistedEntityType(resultType) && yieldedPropsInfo.size() == 1 && "id".equals(yieldedPropsInfo.iterator().next().getName());
     }
 }

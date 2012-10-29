@@ -319,7 +319,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
 
     @Test
-    @Ignore
     public void test_query_with_union_property2() {
 	final EntityResultQueryModel<TgWorkshop> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").yield().prop("location.workshop").modelAsEntity(TgWorkshop.class);
 	final List<TgWorkshop> models = workshopDao.getAllEntities(from(qry).with(fetch(TgWorkshop.class)).model());
@@ -1126,11 +1125,10 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test22a() {
 	final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").yield().prop("model.make").modelAsEntity(TgVehicleMake.class);
 	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(qry).with(fetch(TgVehicleMake.class)).model());
-	assertEquals("Incorrect key", "AUDI", models.get(0).getKey());
+	assertEquals("Incorrect key", "MERC", models.get(0).getKey());
     }
 
     @Test

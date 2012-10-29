@@ -23,7 +23,11 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
+import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 
 
 public class EntityFetcher {
@@ -73,6 +77,13 @@ public class EntityFetcher {
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainers(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(getDomainMetadata());
 	final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser, getFilter(), getUsername());
+	if (modelResult.idOnlyQuery()) {
+	    return listContainers(from(select(modelResult.getResultType()).where().prop("id").in().model((SingleResultQueryModel) queryModel.getQueryModel()).model()). //
+		    lightweight(queryModel.isLightweight()). //
+		    with(queryModel.getOrderModel()). //
+		    with(queryModel.getFetchModel()). //
+		    with(queryModel.getParamValues()).model(), pageNumber, pageCapacity);
+	}
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetchAll(modelResult.getResultType());
 	final FetchModel<E> entFetch = fetchModel == null ? null : new FetchModel<E>(fetchModel, domainMetadataAnalyser);
