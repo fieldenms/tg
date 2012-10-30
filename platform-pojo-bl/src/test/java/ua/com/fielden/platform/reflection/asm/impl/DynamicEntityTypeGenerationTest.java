@@ -155,6 +155,15 @@ public class DynamicEntityTypeGenerationTest {
     }
 
     @Test
+    public void test_to_ensure_that_order_of_new_properties_are_exactly_the_same_as_provided_and_properties_appear_in_the_end_of_class() throws Exception {
+	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd1, pd2, pdBool).endModification();
+	final int size = newType.getDeclaredFields().length;
+	assertEquals("The last field of class should correspond to a last 'freshly added' property.", pdBool.name, newType.getDeclaredFields()[size - 1].getName());
+	assertEquals("The last - 1 field of class should correspond to a last - 1 'freshly added' property.", pd2.name, newType.getDeclaredFields()[size - 2].getName());
+	assertEquals("The last - 2 field of class should correspond to a last - 2 'freshly added' property.", pd1.name, newType.getDeclaredFields()[size - 3].getName());
+    }
+
+    @Test
     public void test_to_ensure_that_conflicting_new_properties_are_not_added() throws Exception {
 	final NewProperty npConflicting = new NewProperty("firstProperty", Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
 	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(npConflicting).endModification();

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection.asm.impl;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -91,7 +92,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
 	    return this;
 	}
 
-	final Map<String, NewProperty> propertiesToAdd = new HashMap<String, NewProperty>();
+	final Map<String, NewProperty> propertiesToAdd = new LinkedHashMap<String, NewProperty>();
 	for (final NewProperty prop : properties) {
 	    propertiesToAdd.put(prop.name, prop);
 	}
