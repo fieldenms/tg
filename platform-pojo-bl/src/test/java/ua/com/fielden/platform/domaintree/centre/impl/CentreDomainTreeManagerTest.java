@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.BeforeClass;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.IPropertyValueListener;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.domaintree.testing.EntityForCentreCheckedProperties;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
@@ -112,7 +114,35 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
     public void test_that_CHECK_state_for_mutated_by_isChecked_method_properties_is_desired_and_after_manual_mutation_is_actually_mutated() {
-	// this test is redundant due to lack of special isChecked logic in CriteriaDomainTreeManager
+	                 // this test is redundant due to lack of special isChecked logic in CriteriaDomainTreeManager
+	// super.test_that_CHECK_state_for_mutated_by_isChecked_method_properties_is_desired_and_after_manual_mutation_is_actually_mutated();
+
+	// checked properties, defined in isChecked() contract
+	allLevels(new IAction() {
+	    public void action(final String name) {
+		final String message = "Checked property [" + name + "], defined in isChecked() contract, should return 'true' CHECK state, and after manual mutation its state should be desired.";
+		isCheck_equals_to_state(name, message, true);
+
+		assertEquals("", 2, dtm().getFirstTick().getColumnsNumber());
+		assertTrue("Should contain placeholder. In this case it means that even 'checked by contract' properties are added interactively" +
+				" using all necessary custom actions (e.g. placeholder management etc.)", containsPlaceHolder(dtm().getFirstTick().checkedProperties(MasterEntity.class)));
+
+		dtm().getFirstTick().check(MasterEntity.class, name, false);
+		isCheck_equals_to_state(name, message, false);
+		dtm().getFirstTick().check(MasterEntity.class, name, true);
+		isCheck_equals_to_state(name, message, true);
+	    }
+	}, "mutablyCheckedProp");
+    }
+
+    private boolean containsPlaceHolder(final List<String> checkedProperties) {
+	System.out.println("\t\t\t" + checkedProperties);
+	for (final String name : checkedProperties) {
+	    if (AbstractDomainTree.isPlaceholder(name)) {
+		return true;
+	    }
+	}
+	return false;
     }
 
     ////////////////////// 6. Specific entity-centre logic //////////////////////

@@ -144,4 +144,9 @@ public class LocatorDomainTreeManagerTest extends CentreDomainTreeManagerTest {
 	assertTrue("The first tick reference should be the same.",dtm().getFirstTick() == dtm().getFirstTick().setColumnsNumber(3));
 	assertEquals("The number of columns should be 3", dtm().getFirstTick().getColumnsNumber(), 3);
     }
+
+    @Override
+    public void test_that_CHECK_state_for_mutated_by_isChecked_method_properties_is_desired_and_after_manual_mutation_is_actually_mutated() {
+	// this test is redundant due to lack of special isChecked logic in CriteriaDomainTreeManager
+    }
 }

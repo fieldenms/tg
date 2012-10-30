@@ -349,15 +349,15 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		// initialise checked properties using isChecked contract and "included properties" cache
 		final List<String> includedProps = dtr.includedProperties(root);
 		final List<String> checkedProps = new ArrayList<String>();
+		checkedProperties.put(root, checkedProps);
 		// the original order of "included properties" will be used for "checked properties" at first
 		for (final String includedProperty : includedProps) {
 		    if (!isDummyMarker(includedProperty) ) {
 			if (isCheckedNaturally(rootPossiblyEnhanced, reflectionProperty(includedProperty))) {
-			    checkedProps.add(includedProperty);
+			    insertCheckedProperty(root, includedProperty, checkedProperties.get(root).size());
 			}
 		    }
 		}
-		checkedProperties.put(root, checkedProps);
 		logger().info("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + checkedProps.size() + " checked properties."); //  => [" + checkedProps + "]
 	    }
 	    return checkedProperties.get(root);
