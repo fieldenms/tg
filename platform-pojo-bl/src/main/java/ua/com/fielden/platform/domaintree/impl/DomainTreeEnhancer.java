@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -267,7 +268,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 		for (final CalculatedProperty prop : props) {
 		    final String path = prop.path();
 		    if (!grouped.get(root).containsKey(path)) {
-			grouped.get(root).put(path, new HashMap<String, CalculatedProperty>());
+			grouped.get(root).put(path, new LinkedHashMap<String, CalculatedProperty>());
 		    }
 		    grouped.get(root).get(path).put(prop.name(), prop);
 		}
