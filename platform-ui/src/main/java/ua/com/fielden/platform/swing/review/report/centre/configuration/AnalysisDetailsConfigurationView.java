@@ -1,8 +1,8 @@
-package ua.com.fielden.platform.swing.review.report.analysis.details.configuration;
+package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
-import ua.com.fielden.platform.swing.review.report.analysis.details.AnalysisDetailsEntityCentre;
+import ua.com.fielden.platform.swing.review.report.centre.AnalysisDetailsEntityCentre;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
 import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardView;
 

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.report.analysis.details.factory;
+package ua.com.fielden.platform.swing.review.report.centre.factory;
 
 import java.util.Map;
 

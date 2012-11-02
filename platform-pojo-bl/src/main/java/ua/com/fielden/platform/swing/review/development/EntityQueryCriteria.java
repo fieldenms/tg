@@ -253,19 +253,35 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public void export(final String fileName, final String[] propertyNames, final String[] propertyTitles) throws IOException {
 	final Class<?> root = getEntityClass();
+	final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
 	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
 	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
+	final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
 		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
-		.with(DynamicFetchBuilder.createFetchOnlyModel(getManagedType(), separatedFetch.getKey())).model();
+		.with(DynamicFetchBuilder.createFetchOnlyModel(getManagedType(), separatedFetch.getKey()))//
+		.with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
+	export(fileName, resultQuery, propertyNames, propertyTitles);
+    }
+
+    /**
+     * Exports data, those were retrieved with query, in to the file specified with appropriate filename.
+     *
+     * @param fileName
+     * @param query
+     * @param propertyNames
+     * @param propertyTitles
+     * @throws IOException
+     */
+    public void export(final String fileName, final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException{
 	final byte[] content;
 	if(getManagedType().equals(getEntityClass())){
-	    content = dao.export(resultQuery, propertyNames, propertyTitles);
+	    content = dao.export(query, propertyNames, propertyTitles);
 	}else{
 	    generatedEntityController.setEntityType(getManagedType());
-	    content = generatedEntityController.export(resultQuery, propertyNames, propertyTitles, getByteArrayForManagedType());
+	    content = generatedEntityController.export(query, propertyNames, propertyTitles, getByteArrayForManagedType());
 	}
 	final FileOutputStream fo = new FileOutputStream(fileName);
 	fo.write(content);
@@ -331,7 +347,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param pageSize - the page size.
      * @return
      */
-    protected final IPage<T> firstPage(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int pageSize){
+    public final IPage<T> firstPage(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int pageSize){
 	if(getManagedType().equals(getEntityClass())){
 	    return dao.firstPage(queryModel, pageSize);
 	}else{
@@ -346,7 +362,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param queryModel - query model for which the first result page must be returned.
      * @return
      */
-    protected final List<T> getAllEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel){
+    public final List<T> getAllEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel){
 	if(getManagedType().equals(getEntityClass())){
 	    return dao.getAllEntities(queryModel);
 	}else{
@@ -362,7 +378,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param pageSize - the page size.
      * @return
      */
-    protected final IPage<T> firstPage(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final QueryExecutionModel<T, EntityResultQueryModel<T>> totalsModel, final int pageSize){
+    public final IPage<T> firstPage(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final QueryExecutionModel<T, EntityResultQueryModel<T>> totalsModel, final int pageSize){
 	if(getManagedType().equals(getEntityClass())){
 	    return dao.firstPage(queryModel, pageSize);
 	}else{

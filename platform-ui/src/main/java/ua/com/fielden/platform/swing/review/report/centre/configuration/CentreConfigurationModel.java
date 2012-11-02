@@ -180,7 +180,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
-    protected final DomainTreeEditorModel<T> createDomainTreeEditorModel() {
+    protected DomainTreeEditorModel<T> createDomainTreeEditorModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtm = getEntityCentreManager();
 	if(cdtm == null){
 	    throw new IllegalStateException("The centre manager is not specified");

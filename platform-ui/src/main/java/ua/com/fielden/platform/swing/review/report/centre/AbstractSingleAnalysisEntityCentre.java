@@ -114,8 +114,7 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
      */
     private void createReview() {
 	final BlockingIndefiniteProgressLayer reviewProgressLayer = getReviewProgressLayer();
-	final GridConfigurationModel<T, CDTME> configModel = new GridConfigurationModel<T, CDTME>(getModel().getCriteria());
-	gridConfigurationView = new GridConfigurationView<T, CDTME>(configModel, this, reviewProgressLayer);
+	gridConfigurationView = createGridAnalysis();
 	addLoadListenerToAnalysis(gridConfigurationView);
 	reviewProgressLayer.setView(gridConfigurationView);
 	setCurrentAnalysisConfigurationView(gridConfigurationView);

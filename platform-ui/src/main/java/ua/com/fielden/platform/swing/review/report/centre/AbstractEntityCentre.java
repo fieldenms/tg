@@ -257,7 +257,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      * @return
      */
     protected JToolBar createToolBar() {
-	return null ;
+	return null;
     }
 
     /**

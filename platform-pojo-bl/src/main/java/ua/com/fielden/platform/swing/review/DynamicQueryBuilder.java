@@ -748,6 +748,16 @@ public class DynamicQueryBuilder {
     private static final String ALIAS = "alias_for_main_criteria_type";
 
     /**
+     * Creates the property name that might be used in query. This condition property is aliased.
+     *
+     * @param property
+     * @return
+     */
+    public static String createConditionProperty(final String property){
+	return property.isEmpty() ? ALIAS : ALIAS + "." + property;
+    }
+
+    /**
      * Creates the query with configured conditions.
      *
      * @return

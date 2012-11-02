@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.report.analysis.details.configuration;
+package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -10,10 +10,9 @@ import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
-import ua.com.fielden.platform.swing.review.report.analysis.details.factory.DefaultAnalysisBuilder;
 import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
 import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder;
-import ua.com.fielden.platform.swing.review.report.centre.configuration.AbstractCentreConfigurationModel;
+import ua.com.fielden.platform.swing.review.report.centre.factory.DefaultAnalysisBuilder;
 import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuilder;
 import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisFactory;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
