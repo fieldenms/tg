@@ -19,19 +19,19 @@ public class GridAnalysisModelForManualEntityCentre<T extends AbstractEntity<?>>
     }
 
     @SuppressWarnings("unchecked")
-    public String getBindingPropertyName(){
-	return ((ManualCentreConfigurationModel<T>)getAnalysisView().getOwner().getOwner().getOwner().getModel()).getBindedPropertyName();
+    public String getLinkProperty(){
+	return ((ManualCentreConfigurationModel<T>)getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkProperty();
     }
 
     @SuppressWarnings("unchecked")
-    public AbstractEntity<?> getBindingEntity(){
-	return ((ManualCentreConfigurationModel<T>)getAnalysisView().getOwner().getOwner().getOwner().getModel()).getBindedEntity();
+    public AbstractEntity<?> getLinkEntity(){
+	return ((ManualCentreConfigurationModel<T>)getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkEntity();
     }
 
     @Override
     protected EntityResultQueryModel<T> createQueryModel() {
-        return where().prop(DynamicQueryBuilder.createConditionProperty(getBindingPropertyName())).//
-        /*  */eq().val(getBindingEntity()).model();
+        return where().prop(DynamicQueryBuilder.createConditionProperty(getLinkProperty())).//
+        /*  */eq().val(getLinkEntity()).model();
     }
 
     private IWhere0<T> where() {

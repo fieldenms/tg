@@ -18,7 +18,7 @@ import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorM
 
 public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
-    private final String bindedPropertyName;
+    private final String linkProperty;
 
     private final IAnalysisBuilder<T> analysisBuilder;
 
@@ -27,7 +27,7 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
      */
     private final ICentreDomainTreeManagerAndEnhancer cdtme;
 
-    private AbstractEntity<?> bindedEntity;
+    private AbstractEntity<?> linkEntity;
 
     public ManualCentreConfigurationModel(final Class<T> entityType, //
 	    final String name,//
@@ -35,11 +35,11 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
 	    final ICentreDomainTreeManagerAndEnhancer cdtme, //
 	    final IEntityMasterManager masterManager, //
 	    final ICriteriaGenerator criteriaGenerator,//
-	    final String bindedPropertyName) {
+	    final String linkProperty) {
 	super(entityType, name, null, masterManager, criteriaGenerator);
 	this.cdtme = cdtme;
 	this.analysisBuilder = new DefaultAnalysisBuilder<>(analysisFactory);
-	this.bindedPropertyName = bindedPropertyName;
+	this.linkProperty = linkProperty;
     }
 
     @Override
@@ -60,8 +60,8 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
      *
      * @param masterEntity
      */
-    public void setBindedEntity(final AbstractEntity<?> bindedEntity) {
-	this.bindedEntity = bindedEntity;
+    public void setLinkEntity(final AbstractEntity<?> linkEntity) {
+	this.linkEntity = linkEntity;
     }
 
     /**
@@ -69,8 +69,8 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
      *
      * @return
      */
-    public AbstractEntity<?> getBindedEntity() {
-	return bindedEntity;
+    public AbstractEntity<?> getLinkEntity() {
+	return linkEntity;
     }
 
     /**
@@ -78,8 +78,8 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
      *
      * @return
      */
-    public String getBindedPropertyName() {
-	return bindedPropertyName;
+    public String getLinkProperty() {
+	return linkProperty;
     }
 
     @Override
