@@ -64,16 +64,23 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
 	this.criteriaGenerator = criteriaGenerator;
 	this.masterManager = masterManager;
 	this.treeMenu = treeMenu;
+    }
 
-	this.data = createData();
-	Platform.runLater(new Runnable() {
-	    @Override
-	    public void run() {
-	        // This method is invoked on the JavaFX thread
-	        final Scene scene = createScene();
-	        setScene(scene);
-	    }
-	});
+    public void initDataAndSceneIfNotInitialised() {
+	if (data == null) {
+	    data = createData();
+	}
+
+	if (getScene() == null) {
+	    Platform.runLater(new Runnable() {
+		@Override
+		public void run() {
+		    // This method is invoked on the JavaFX thread
+		    final Scene scene = createScene();
+		    setScene(scene);
+		}
+	    });
+	}
     }
 
     private ObservableList<DashboardRow<T>> createData() {
@@ -210,6 +217,8 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
     }
 
     public void refreshAll() {
+	initDataAndSceneIfNotInitialised();
+
 	table.getSortOrder().clear();
 	table.getItems().clear();
 	table.getItems().addAll(createData());

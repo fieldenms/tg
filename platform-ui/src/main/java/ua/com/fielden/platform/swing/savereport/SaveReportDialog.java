@@ -29,9 +29,9 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
  * A dialog implementing user interaction for saving copies of ad hoc reports.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class SaveReportDialog extends JPanel {
 
@@ -46,7 +46,7 @@ public class SaveReportDialog extends JPanel {
 
     /**
      * Creates new {@link SaveReportDialog} for the specified {@link SaveReportDialogModel}.
-     * 
+     *
      * @param model
      */
     public SaveReportDialog(final SaveReportDialogModel model) {
@@ -55,7 +55,8 @@ public class SaveReportDialog extends JPanel {
 	add(DummyBuilder.label("Report title"), "wrap");
 	add(newFileName, "wrap");
 	add(DummyBuilder.label("Saved reports"), "wrap");
-	availableItems = new JList(model.getAvailableReports());
+	// TODO is that necessary to load all this stuff? model.getAvailableReports()
+	availableItems = new JList();
 	add(new JScrollPane(availableItems), "wrap");
 	final JPanel buttonControl = new JPanel(new MigLayout("fill, insets 0", "push[:70:,fill][:70:,fill]", "[c,fill]"));
 	buttonControl.add(jbApprove = new JButton(model.getApproveAction(this)));
@@ -65,7 +66,7 @@ public class SaveReportDialog extends JPanel {
 
     /**
      * Shows the {@link SaveReportDialog} and returns value that indicates the chosen action.
-     * 
+     *
      * @return
      */
     public SaveReportOptions showDialog() {
@@ -99,7 +100,7 @@ public class SaveReportDialog extends JPanel {
 
     /**
      * Returns title of the new ad hoc report.
-     * 
+     *
      * @return
      */
     public String getEnteredFileName() {
@@ -108,7 +109,7 @@ public class SaveReportDialog extends JPanel {
 
     /**
      * Selects specified item in the {@link JList} of existing reports.
-     * 
+     *
      * @param item
      */
     public void selectItem(final String item) {
@@ -126,7 +127,7 @@ public class SaveReportDialog extends JPanel {
 
     /**
      * Determines whether specified name of the report can be used or not.
-     * 
+     *
      * @param name
      * @return
      */

@@ -284,14 +284,13 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
 	    private String saveAsName = null;
 
-	    private final SaveReportDialog saveReportDialog = new SaveReportDialog(new SaveReportDialogModel<T>(getModel()));
-
 	    @Override
 	    protected boolean preAction() {
 		setMessage("Saving centre as...");
 		if(!super.preAction() || !canCloseCentre()){
 		    return false;
 		}
+		final SaveReportDialog saveReportDialog = new SaveReportDialog(new SaveReportDialogModel<T>(getModel()));
 		final boolean shouldSave = SaveReportOptions.APPROVE.equals(saveReportDialog.showDialog());
 		if(shouldSave){
 		    saveAsName = saveReportDialog.getEnteredFileName();

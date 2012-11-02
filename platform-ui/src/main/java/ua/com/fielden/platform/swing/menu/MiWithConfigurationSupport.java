@@ -35,7 +35,7 @@ public class MiWithConfigurationSupport<T extends AbstractEntity<?>> extends MiW
 	    final ITreeMenuItemVisibilityProvider visibilityProvider,//
 	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType) {
 	super(new DynamicReportWrapper<T>(caption, description, treeMenu, null, menuItemType, centreBuilder), visibilityProvider);
-	scanForNonPrincipleReports();
+	/* TODO need to optimise!!! */ scanForNonPrincipleReports();
     }
 
     /**

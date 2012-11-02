@@ -392,6 +392,10 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
      * @param treeMenuItem
      */
     protected void selectMenuItem(final TreeMenuItem<?> treeMenuItem) {
+	if (treeMenuItem instanceof MiDashboard) {
+	    final MiDashboard miDashboard = (MiDashboard) treeMenuItem;
+	    miDashboard.getView().getDashboardPanel().initDataAndSceneIfNotInitialised();
+	}
 	if (treeMenuItem instanceof IItemSelector) {
 	    ((IItemSelector) treeMenuItem).selectTreeMenuItem();
 	}
