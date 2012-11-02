@@ -173,7 +173,10 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     interface IDateDiffFunction<T, ET extends AbstractEntity<?>> {
-        IDateDiffFunctionArgument<T, ET> between();
+	/** Indicates difference between more recent date and earlier date.
+	 * @return
+	 */
+	IDateDiffFunctionArgument<T, ET> between();
     }
 
     interface IDateDiffIntervalFunction<T, ET extends AbstractEntity<?>> {
