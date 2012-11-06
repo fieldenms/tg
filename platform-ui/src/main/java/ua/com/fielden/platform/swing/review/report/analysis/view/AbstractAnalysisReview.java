@@ -17,6 +17,7 @@ import javax.swing.JOptionPane;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -97,6 +98,10 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	if (getOwner().getOwner().getCriteriaPanel() != null) {
 	    getOwner().getOwner().getCriteriaPanel().updateModel();
 	}
+    }
+
+    public IEntityDao<T> companionObject() {
+	return getModel().getCriteria().companionObject();
     }
 
     @Override

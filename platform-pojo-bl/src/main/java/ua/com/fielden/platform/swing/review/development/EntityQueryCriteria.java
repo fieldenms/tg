@@ -77,6 +77,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	this.cdtme = null;
     }
 
+    public DAO companionObject() {
+	return dao;
+    }
+
     /**
      * Returns the centre domain tree manager.
      *

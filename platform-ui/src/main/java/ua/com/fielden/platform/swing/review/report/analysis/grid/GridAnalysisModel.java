@@ -106,7 +106,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      *
      * @return
      */
-    protected final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> createQueryExecutionModel(){
+    public final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> createQueryExecutionModel(){
 	final Class<T> root = getCriteria().getEntityClass();
 	final Class<T> managedType = getCriteria().getManagedType();
 	final IAddToResultTickManager resultTickManager = getCriteria().getCentreDomainTreeMangerAndEnhancer().getSecondTick();
