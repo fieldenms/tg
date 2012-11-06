@@ -90,7 +90,14 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	exportAction.actionPerformed(null);
     }
 
-
+    /**
+     * Flushes all the components' value of the selection criteria panel
+     */
+    public void commitComponents(){
+	if (getOwner().getOwner().getCriteriaPanel() != null) {
+	    getOwner().getOwner().getCriteriaPanel().updateModel();
+	}
+    }
 
     @Override
     protected ConfigureAction createConfigureAction() {
@@ -165,9 +172,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 		if (!result) {
 		    return result;
 		}
-		if (getOwner().getOwner().getCriteriaPanel() != null) {
-		    getOwner().getOwner().getCriteriaPanel().updateModel();
-		}
+		commitComponents();
 		enableRelatedActions(false, false);
 		return true;
 	    }
@@ -227,9 +232,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 		if (!result) {
 		    return result;
 		}
-		if (getOwner().getOwner().getCriteriaPanel() != null) {
-		    getOwner().getOwner().getCriteriaPanel().updateModel();
-		}
+		commitComponents();
 
 		// let user choose a file for export
 		final JFileChooser fileChooser = targetFileName == null ? new JFileChooser()
