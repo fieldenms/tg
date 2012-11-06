@@ -3,11 +3,6 @@
  */
 package ua.com.fielden.platform.basic.autocompleter;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -23,6 +18,10 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Value matcher that uses {@link EntityQuery} inside and, thus, it can be provided with already formed queries.
@@ -59,14 +58,14 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 	// In order to support more intuitive autocompletion for such entities, it is necessary to enhance matching query
 	final Pair<Class<?>, String> pair = PropertyTypeDeterminator.transform(dao.getEntityType(), propertyName);
 	if (DynamicEntityKey.class != AnnotationReflector.getKeyType(pair.getKey())) { // the key is not composite
-	    this.queryModel = select(dao.getEntityType()).where().prop(propertyName).like().param(propertyParamName).model();
+	    this.queryModel = select(dao.getEntityType()).where().prop(propertyName).iLike().param(propertyParamName).model();
 	} else { // the key is composite
 	    final String additionalSearchProp = createSearchProp(propertyName, pair.getKey());
 	    // create query model, which is the same for non-composite case, but with an additional criteria for the property representing the last composite key member
 	    this.queryModel = select(dao.getEntityType()).where().//
 		    begin().//
-		    	prop(propertyName).like().param(propertyParamName).or().//
-		    	prop(additionalSearchProp).like().param(propertyParamName).//
+		    	prop(propertyName).iLike().param(propertyParamName).or().//
+		    	prop(additionalSearchProp).iLike().param(propertyParamName).//
 		    end().model();//
 	}
 
@@ -112,7 +111,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 	this.defaultFetchModel = produceDefaultFetchModel(dao.getEntityType());
 	this.propertyParamName = "paramNameFor" + propertyName.replaceAll("\\.", "_");
 	this.propertyName = propertyName;
-	this.queryModel = condition.and().prop(propertyName).like().param(propertyParamName).model();
+	this.queryModel = condition.and().prop(propertyName).iLike().param(propertyParamName).model();
 	this.defaultOrdering = null;
     }
 

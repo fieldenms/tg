@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.review.development;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -31,6 +29,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
 public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, DAO> {
 
     private static final long serialVersionUID = -9199540944743417928L;
@@ -56,22 +56,22 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 	    if (DynamicEntityKey.class != AnnotationReflector.getKeyType(pair.getKey())) { // the key is not composite
 		compondCondition = where().//
 		prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).//
-		like().val(kerOrDescValue); // key matching
+		iLike().val(kerOrDescValue); // key matching
 	    } else { // the key is composite and thus it needs special handling
 		final List<Field> keyMembers = Finder.getKeyMembers(pair.getKey());
 		final String additionalSearchProp = keyMembers.get(keyMembers.size() - 1).getName();
 		compondCondition = where().//
 		begin().//
 		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).//
-		/*  */like().val(kerOrDescValue).or().// key matching
+		/*  */iLike().val(kerOrDescValue).or().// key matching
 		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), additionalSearchProp).getConditionBuildingName()).//
-		/*  */like().val(kerOrDescValue).// last key member matching
+		/*  */iLike().val(kerOrDescValue).// last key member matching
 		end();
 	    }
 	    break;
 	}
 	case DESC:
-	    compondCondition = where().prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.DESC).getConditionBuildingName()).like().val(kerOrDescValue);
+	    compondCondition = where().prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.DESC).getConditionBuildingName()).iLike().val(kerOrDescValue);
 	    break;
 	case DESC_AND_KEY: {
 	    // Entity's key may have a composite nature.
@@ -80,9 +80,9 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 	    if (DynamicEntityKey.class != AnnotationReflector.getKeyType(pair.getKey())) { // the key is not composite
 		compondCondition = where().begin().//
 		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).
-		/*  */like().val(kerOrDescValue).or().// key matching
+		/*  */iLike().val(kerOrDescValue).or().// key matching
 		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.DESC).getConditionBuildingName()).
-		/*  */like().val(kerOrDescValue).// desc matching
+		/*  */iLike().val(kerOrDescValue).// desc matching
 		end();
 	    } else {
 		final List<Field> keyMembers = Finder.getKeyMembers(pair.getKey());
@@ -90,11 +90,11 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 		compondCondition = where().//
 		begin().//
 		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).//
-		/*  */like().val(kerOrDescValue).or().// key matching
+		/*  */iLike().val(kerOrDescValue).or().// key matching
 		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), additionalSearchProp).getConditionBuildingName()).//
-		/*  */like().val(kerOrDescValue).or().// last key member matching
+		/*  */iLike().val(kerOrDescValue).or().// last key member matching
 		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.DESC).getConditionBuildingName()).//
-		/*  */like().val(kerOrDescValue).// desc matching
+		/*  */iLike().val(kerOrDescValue).// desc matching
 		end();
 	    }
 	    break;

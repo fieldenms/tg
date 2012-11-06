@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.devdb_support;
 
-import static java.lang.String.format;
-
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -21,6 +20,8 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.types.Money;
+import static java.lang.String.format;
 
 
 /**
@@ -152,6 +153,14 @@ public abstract class DomainDrivenDataPopulation {
 
     public final Date date(final String dateTime) {
 	return formatter.parseDateTime(dateTime).toDate();
+    }
+
+    public final BigDecimal decimal(final String value) {
+	return new BigDecimal(value);
+    }
+
+    public final Money money(final String value) {
+	return new Money(value);
     }
 
     /**

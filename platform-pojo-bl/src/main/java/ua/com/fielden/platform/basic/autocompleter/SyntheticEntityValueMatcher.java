@@ -61,7 +61,7 @@ public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregat
 	    propertyName += ".key";
 	    propertyType = PropertyTypeDeterminator.determinePropertyType(propertyType, "key");
 	}
-	return select((Class<AbstractEntity>) propertyField.getType()).where().prop(propertyName).like().param(propertyParamName).yield().prop(propertyName).as("key").yield().prop("desc").as("desc").modelAsAggregate();
+	return select((Class<AbstractEntity>) propertyField.getType()).where().prop(propertyName).iLike().param(propertyParamName).yield().prop(propertyName).as("key").yield().prop("desc").as("desc").modelAsAggregate();
     }
 
     private fetch createJoinModel(final Class<? extends AbstractEntity> clazz) {

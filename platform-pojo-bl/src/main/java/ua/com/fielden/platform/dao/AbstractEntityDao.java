@@ -34,7 +34,6 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     private final Class<T> entityType;
     private final QueryExecutionModel<T, EntityResultQueryModel<T>> defaultModel;
 
-
     /**
      * A principle constructor, which requires entity type that should be managed by this DAO instance. Entity's key type is determined automatically.
      *
@@ -128,6 +127,10 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
      * @return
      */
     protected EntityResultQueryModel<T> createQueryByKey(final Object... keyValues) {
+	if (keyValues == null || keyValues.length == 0) {
+	    throw new IllegalArgumentException("No key values provided.");
+	}
+
 	final IPlainJoin<T> qry = select(getEntityType());
 
 	if (getKeyType() == DynamicEntityKey.class) {
@@ -142,19 +145,28 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 			+ ") does not match the number of properties in the entity composite key (" + list.size() + ").");
 	    }
 
-	    ICompoundCondition0<T> cc = qry//
-	    .where().prop(list.get(0).getName())//
-	    .eq().val(realKeyValues[0]);
+	    ICompoundCondition0<T> cc = (list.get(0).getType() == String.class) ? //
+	    qry.where().lowerCase().prop(list.get(0).getName())//
+	    .eq().lowerCase().val(realKeyValues[0])
+		    : //
+		    qry.where().prop(list.get(0).getName())//
+		    .eq().val(realKeyValues[0]);
 
 	    for (int index = 1; index < list.size(); index++) {
-		cc = cc.and().prop(list.get(index).getName()).eq().val(realKeyValues[index]); // all conditions are linked with AND by default
+		cc = (list.get(index).getType() == String.class) ? //
+		cc.and().lowerCase().prop(list.get(index).getName()).eq().lowerCase().val(realKeyValues[index])
+			: // all conditions are linked with AND by default with lower case
+			cc.and().prop(list.get(index).getName()).eq().val(realKeyValues[index]); // all conditions are linked with AND by default
 	    }
 	    return cc.model();
 	} else if (keyValues.length != 1) {
 	    throw new IllegalArgumentException("Only one key value is expected instead of " + keyValues.length + " when looking for an entity by a non-composite key.");
 	} else {
-	    return qry//
-		    .where().prop(AbstractEntity.KEY)//
+	    return (keyValues[0] instanceof String) ? //
+	    qry.where().lowerCase().prop(AbstractEntity.KEY)//
+	    .eq().lowerCase().val(keyValues[0]).model()
+		    : //
+		    qry.where().prop(AbstractEntity.KEY)//
 		    .eq().val(keyValues[0]).model();
 	}
     }
