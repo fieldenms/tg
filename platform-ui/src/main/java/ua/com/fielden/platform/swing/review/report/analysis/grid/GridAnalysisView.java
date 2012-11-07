@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -40,10 +42,6 @@ import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ResourceLoader;
-
-import com.jidesoft.grid.TableModelWrapperUtils;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage<T>> implements IUmViewOwner, IBlockingLayerProvider {
 
@@ -106,13 +104,30 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     }
 
     /**
-     * A convenient method for accessing selected in EGI not enhanced entity.
+     * A convenient method for accessing selected and not enhanced entity in EGI.
      *
      */
-    @SuppressWarnings("unchecked")
     public T getSelectedEntity() {
 	final T selectedEntity = getEnhancedSelectedEntity();
-	return selectedEntity == null ? null : (T) selectedEntity.copy((Class<AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(selectedEntity.getType()));
+	return makeNotEnhnaced(selectedEntity);
+    }
+
+    /**
+     * Returns the list of selected and not enhanced entities in EGI.
+     *
+     * @return
+     */
+    public List<T> getSelectedEntities(){
+	final List<T> selectedAndNotEnhancedEntities = new ArrayList<>();
+	for(final T selectedEntity : getEnhnacedSelectedEntities()){
+	    selectedAndNotEnhancedEntities.add(makeNotEnhnaced(selectedEntity));
+	}
+	return selectedAndNotEnhancedEntities;
+    }
+
+    @SuppressWarnings("unchecked")
+    private T makeNotEnhnaced(final T enhnacedEntity) {
+	return enhnacedEntity == null ? null : (T) enhnacedEntity.copy((Class<AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(enhnacedEntity.getType()));
     }
 
     /**
@@ -122,11 +137,17 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      */
     public T getEnhancedSelectedEntity() {
 	final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
-	int selectedRow = TableModelWrapperUtils.getActualRowAt(tableModel.getEntityGridInspector().getModel(), tableModel.getEntityGridInspector().getSelectedRow());
-	if (selectedRow == -1 && tableModel.instances().size() > 0) {
-	    selectedRow = 0;
-	}
-	return selectedRow < 0 ? null : tableModel.instance(selectedRow);
+	return tableModel.getSelectedEntity();
+    }
+
+    /**
+     * Returns the selected entities in EGI.
+     *
+     * @return
+     */
+    public List<T> getEnhnacedSelectedEntities(){
+	final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
+	return tableModel.getSelectedEntities();
     }
 
     /**
