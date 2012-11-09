@@ -62,6 +62,8 @@ public class EntityUtils {
 	    return new SimpleDateFormat("dd/MM/yyyy").format(date) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
 	} else if (Money.class.isAssignableFrom(valueType)) {
 	    return value instanceof Number ? new Money(value.toString()).toString() : value.toString();
+	} else if (valueType == BigDecimalWithTwoPlaces.class) {
+	    return value instanceof Number ? String.format("%,10.2f", value) : value.toString();
 	} else {
 	    return value.toString();
 	}
@@ -773,4 +775,6 @@ public class EntityUtils {
 
 	return result;
     }
+
+    public static class BigDecimalWithTwoPlaces{};
 }
