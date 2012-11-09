@@ -15,7 +15,6 @@ import javax.swing.JToolBar;
 import javax.swing.border.EtchedBorder;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -49,14 +48,16 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     private final EgiPanel<T> egiPanel;
 
-    /**
-     * Tool bar that contain master related actions.
-     */
     private final JToolBar toolBar;
+
+    private final Action openMasterWithNewEntityCommand, openMasterAndEditEntityCommand, removeEntityCommand;
 
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final GridConfigurationView<T, CDTME> owner) {
 	super(model, owner);
 	this.egiPanel = createEgiPanel();
+	this.openMasterWithNewEntityCommand = createOpenMasterWithNewCommand();
+	this.openMasterAndEditEntityCommand = createOpenMasterCommand();
+	this.removeEntityCommand = createDeleteCommand();
 	this.toolBar = createToolBar();
 	if (getMasterManager() != null) {
 	    OpenMasterClickAction.enhanceWithClickAction(egiPanel.getEgi().getActualModel().getPropertyColumnMappings(),//
@@ -75,7 +76,6 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	getModel().getPageHolder().newPage(null);
 	this.addSelectionEventListener(createGridAnalysisSelectionListener());
 
-	//Set this analysis view for model.
 	model.setAnalysisView(this);
 
 	layoutView();
@@ -83,6 +83,24 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     protected EgiPanel<T> createEgiPanel() {
 	return new EgiPanel<T>(getModel().getCriteria().getEntityClass(), getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public GridConfigurationView<T, CDTME> getOwner() {
+        return (GridConfigurationView<T, CDTME>)super.getOwner();
+    }
+
+    public Action getOpenMasterWithNewEntityCommand() {
+	return openMasterWithNewEntityCommand;
+    }
+
+    public Action getOpenMasterAndEditEntityCommand() {
+	return openMasterAndEditEntityCommand;
+    }
+
+    public Action getRemoveEntityCommand() {
+	return removeEntityCommand;
     }
 
     public final JToolBar getToolBar() {
@@ -229,17 +247,19 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     }
 
     protected JToolBar createToolBar() {
-	if (getMasterManager() != null) {
-	    final JToolBar toolbar = new ActionPanelBuilder()//
-	    .addButton(createOpenMasterWithNewCommand())//
-	    .addButton(createOpenMasterCommand())//
-	    .addButton(createDeleteCommand())//
-	    .buildActionPanel();
-	    toolbar.setFloatable(false);
-	    toolbar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-	    return toolbar;
-	}
-	return null;
+	return configureToolBar(getOwner().getAnalysisCustomiser().createToolBar(this).buildActionPanel());
+    }
+
+    /**
+     * Configures the the specified tool bar (i. e. set the floatable property, specifies the border).
+     *
+     * @param toolBar
+     * @return
+     */
+    private JToolBar configureToolBar(final JToolBar toolBar){
+	toolBar.setFloatable(false);
+	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+	return toolBar;
     }
 
     /**
@@ -379,7 +399,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      *
      * @return
      */
-    protected IEntityMasterManager getMasterManager() {
+    public final IEntityMasterManager getMasterManager() {
 	return getOwner().getOwner().getModel().getMasterManager();
     }
 
@@ -442,4 +462,5 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    }
 	};
     }
+
 }

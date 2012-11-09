@@ -10,6 +10,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisCustomiser;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 public class DefaultChartAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, ChartAnalysisConfigurationView<T>> {
@@ -23,6 +24,11 @@ public class DefaultChartAnalysisFactory<T extends AbstractEntity<?>> implements
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	final ChartAnalysisConfigurationModel<T> analysisModel = new ChartAnalysisConfigurationModel<T>(criteria, name, false);
 	return new ChartAnalysisConfigurationView<T>(analysisModel, detailsCache, owner, progressLayer);
+    }
+
+    @Override
+    public void setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
+	throw new UnsupportedOperationException("The analysis customiser can not be set for chart analysis factory.");
     }
 
 }

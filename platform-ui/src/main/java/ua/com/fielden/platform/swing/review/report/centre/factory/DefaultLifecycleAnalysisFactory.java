@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.configuration.LifecycleAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.configuration.LifecycleAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
@@ -24,4 +25,9 @@ public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implem
 	final LifecycleAnalysisConfigurationModel<T> analysisModel = new LifecycleAnalysisConfigurationModel<T>(criteria, name);
 	return new LifecycleAnalysisConfigurationView<T>(analysisModel, detailsCache, owner, progressLayer);
         }
+
+    @Override
+    public void setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
+	throw new UnsupportedOperationException("The analysis customiser can not be set for lifecycle analysis factory.");
+    }
 }

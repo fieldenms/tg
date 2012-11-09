@@ -74,7 +74,7 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
      */
     protected GridConfigurationView<T, CDTME> createGridAnalysis(){
 	final GridConfigurationModel<T, CDTME> configModel = new GridConfigurationModel<T, CDTME>(getModel().getCriteria());
-	return new GridConfigurationView<T, CDTME>(configModel, this, getReviewProgressLayer());
+	return GridConfigurationView.createMainDetailsWithDefaultCustomiser(configModel, this, getReviewProgressLayer());
     }
 
     /**
