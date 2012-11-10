@@ -70,7 +70,9 @@ public class Yields implements IPropertyCollector {
     public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
 	for (final Yield yield : yields.values()) {
-	    result.addAll(yield.getOperand().getAllValues());
+	    if (!yield.isCompositePropertyHeader()) {
+		result.addAll(yield.getOperand().getAllValues());
+	    }
 	}
 	return result;
     }
@@ -79,7 +81,9 @@ public class Yields implements IPropertyCollector {
     public List<EntQuery> getLocalSubQueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	for (final Yield yield : yields.values()) {
-	    result.addAll(yield.getOperand().getLocalSubQueries());
+	    if (!yield.isCompositePropertyHeader()) {
+		result.addAll(yield.getOperand().getLocalSubQueries());
+	    }
 	}
 	return result;
     }
@@ -88,7 +92,9 @@ public class Yields implements IPropertyCollector {
     public List<EntProp> getLocalProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
 	for (final Yield yield : yields.values()) {
-	    result.addAll(yield.getOperand().getLocalProps());
+	    if (!yield.isCompositePropertyHeader()) {
+		result.addAll(yield.getOperand().getLocalProps());
+	    }
 	}
 	return result;
     }

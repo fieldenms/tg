@@ -85,7 +85,7 @@ public class TgVehicle extends AbstractEntity<String> {
 
     @IsProperty @Calculated @Title(value = "Sum of prices", desc = "Sum of price.amount and purchasePrice.amount") @PersistedType(userType = ISimpleMoneyType.class)
     private Money sumOfPrices;
-    private static final ExpressionModel sumOfPrices_ = expr().prop("price.amount").add().prop("purchasePrice.amount").model();
+    private static final ExpressionModel sumOfPrices_ = expr().val(1).mult().prop("price.amount").add().prop("purchasePrice.amount").model();
 
     @IsProperty @Calculated @Title("Calc2")
     private BigDecimal calc2;

@@ -28,6 +28,10 @@ public class Yield {
 	return alias;
     }
 
+    public boolean isCompositePropertyHeader() {
+	return info != null && info.isCompositeProperty();
+    }
+
     @Override
     public int hashCode() {
 	final int prime = 31;
