@@ -216,9 +216,10 @@ public class EntQuery implements ISingleOperand {
 	for (final OrderBy orderBy : orderings.getModels()) {
 	    if (orderBy.getYieldName() != null) {
 		if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(type()))) {
-		    final String mainSourceAlias = sources.getMain().getAlias();
-		    final String keyPropName = mainSourceAlias != null ? mainSourceAlias + ".key" : "key";
-		    toBeAdded.add(new OrderBy(new EntProp(keyPropName), orderBy.isDesc()));
+		    final List<String> keyOrderProps = EntityUtils.getOrderPropsFromCompositeEntityKey(type(), sources.getMain().getAlias());
+		    for (final String keyMemberProp : keyOrderProps) {
+			toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
+		    }
 		} else {
 		    final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
 		    final Yield correspondingYieldWithAmount = yields.getYieldByAlias(orderBy.getYieldName() + ".amount");
