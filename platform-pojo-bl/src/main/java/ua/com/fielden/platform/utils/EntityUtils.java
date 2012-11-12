@@ -531,7 +531,7 @@ public class EntityUtils {
 	return AbstractEntity.class.isAssignableFrom(type);
     }
 
-    public static boolean isComposite(final Class<?> type) {
+    public static boolean isDynamicEntityKey(final Class<?> type) {
 	return DynamicEntityKey.class.isAssignableFrom(type);
     }
 

@@ -539,7 +539,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static boolean isSupported(final Class<?> type) {
-	return EntityUtils.isEntityType(type) || EntityUtils.isString(type) || EntityUtils.isBoolean(type) || EntityUtils.isRangeType(type) || EntityUtils.isComposite(type);
+	return EntityUtils.isEntityType(type) || EntityUtils.isString(type) || EntityUtils.isBoolean(type) || EntityUtils.isRangeType(type) || EntityUtils.isDynamicEntityKey(type);
     }
 
     /**
