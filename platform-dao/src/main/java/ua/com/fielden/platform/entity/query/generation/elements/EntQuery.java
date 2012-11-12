@@ -230,7 +230,7 @@ public class EntQuery implements ISingleOperand {
 			orderBy.setYield(correspondingYield);
 			toBeAdded.add(orderBy);
 		    } else {
-			toBeAdded.add(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
+			toBeAdded.addAll(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
 		    }
 		}
 	    } else {
@@ -242,12 +242,29 @@ public class EntQuery implements ISingleOperand {
 	orderings.getModels().addAll(toBeAdded);
     }
 
-    private OrderBy transformOrderByFromYieldIntoOrderByFromProp(final Yield bestYield, final OrderBy original) {
+    private List<OrderBy> transformOrderByFromYieldIntoOrderByFromProp(final Yield bestYield, final OrderBy original) {
 	if (bestYield == null) {
 	    throw new IllegalStateException("Could not find best yield match for order by yield [" + original.getYieldName() + "]");
 	}
+
+	final List<OrderBy> result = new ArrayList<OrderBy>();
 	final String propName = ((EntProp) bestYield.getOperand()).getName() + original.getYieldName().substring(bestYield.getAlias().length());
-	return new OrderBy(new EntProp(propName), original.isDesc());
+
+	if (original.getYieldName().endsWith(".key")) {
+	    final String prop = original.getYieldName().substring(0, original.getYieldName().length() - 4);
+	    final PropertyMetadata info = domainMetadataAnalyser.getInfoForDotNotatedProp(type(), prop);
+	    if (DynamicEntityKey.class.equals(getKeyType(info.getJavaType()))) {
+		final List<String> keyOrderProps = EntityUtils.getOrderPropsFromCompositeEntityKey(info.getJavaType(), propName.substring(0, propName.length() - 4));
+		for (final String keyMemberProp : keyOrderProps) {
+		    result.add(new OrderBy(new EntProp(keyMemberProp), original.isDesc()));
+		}
+		return result;
+	    }
+	}
+
+	result.add(new OrderBy(new EntProp(propName), original.isDesc()));
+
+	return result;
     }
 
     private void assignPropertyPersistenceInfoToYields() {
