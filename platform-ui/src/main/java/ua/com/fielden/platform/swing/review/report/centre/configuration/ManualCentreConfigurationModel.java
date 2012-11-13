@@ -16,11 +16,18 @@ import ua.com.fielden.platform.swing.review.report.centre.factory.DefaultGridFor
 import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuilder;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
+/**
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     private final String linkProperty;
 
     private final IAnalysisBuilder<T> analysisBuilder;
+    private final DefaultGridForManualEntityCentreFactory<T> analysisFactory;
 
     /**
      * The {@link ICentreDomainTreeManagerAndEnhancer} instance for this analysis details.
@@ -30,14 +37,14 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
     private AbstractEntity<?> linkEntity;
 
     public ManualCentreConfigurationModel(final Class<T> entityType, //
-	    final String name,//
 	    final DefaultGridForManualEntityCentreFactory<T> analysisFactory,//
 	    final ICentreDomainTreeManagerAndEnhancer cdtme, //
 	    final IEntityMasterManager masterManager, //
 	    final ICriteriaGenerator criteriaGenerator,//
 	    final String linkProperty) {
-	super(entityType, name, null, masterManager, criteriaGenerator);
+	super(entityType, null, null, masterManager, criteriaGenerator);
 	this.cdtme = cdtme;
+	this.analysisFactory = analysisFactory;
 	this.analysisBuilder = new DefaultAnalysisBuilder<>(analysisFactory);
 	this.linkProperty = linkProperty;
     }
@@ -60,8 +67,9 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
      *
      * @param masterEntity
      */
-    public void setLinkEntity(final AbstractEntity<?> linkEntity) {
+    public ManualCentreConfigurationModel<T> setLinkPropertyValue(final AbstractEntity<?> linkEntity) {
 	this.linkEntity = linkEntity;
+	return this;
     }
 
     /**
@@ -69,7 +77,7 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
      *
      * @return
      */
-    public AbstractEntity<?> getLinkEntity() {
+    public AbstractEntity<?> getLinkPropertyValue() {
 	return linkEntity;
     }
 
@@ -96,5 +104,9 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
     private EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria) {
 	return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>(criteria,//
 		CentrePropertyBinder.<T> createLocatorPropertyBinder());
+    }
+
+    public DefaultGridForManualEntityCentreFactory<T> getAnalysisFactory() {
+        return analysisFactory;
     }
 }

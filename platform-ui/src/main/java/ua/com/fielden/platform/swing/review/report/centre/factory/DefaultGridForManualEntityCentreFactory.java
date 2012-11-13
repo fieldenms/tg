@@ -34,8 +34,9 @@ public class DefaultGridForManualEntityCentreFactory<T extends AbstractEntity<?>
 
     @SuppressWarnings("unchecked")
     @Override
-    public void setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
+    public DefaultGridForManualEntityCentreFactory<T> setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
 	this.analysisCustomiser = (IAnalysisCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>>)analysisCustomiser;
+	return this;
     }
 
 }

@@ -25,7 +25,7 @@ public class GridAnalysisModelForManualEntityCentre<T extends AbstractEntity<?>>
 
     @SuppressWarnings("unchecked")
     public AbstractEntity<?> getLinkEntity(){
-	return ((ManualCentreConfigurationModel<T>)getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkEntity();
+	return ((ManualCentreConfigurationModel<T>)getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkPropertyValue();
     }
 
     @Override

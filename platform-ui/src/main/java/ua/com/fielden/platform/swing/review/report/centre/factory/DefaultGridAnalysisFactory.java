@@ -32,8 +32,9 @@ public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements 
 
     @SuppressWarnings("unchecked")
     @Override
-    public void setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
+    public DefaultGridAnalysisFactory<T> setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
 	this.analysisCustomiser = (IAnalysisCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>>)analysisCustomiser;
+	return this;
     }
 
 

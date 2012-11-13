@@ -42,6 +42,7 @@ public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends Abstrac
      * Specifies the {@link IAnalysisCustomiser} instance for this analysis factory.
      *
      * @param analysisCustomiser
+     * @param returns self
      */
-    void setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser);
+    IAnalysisFactory<T, A> setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser);
 }

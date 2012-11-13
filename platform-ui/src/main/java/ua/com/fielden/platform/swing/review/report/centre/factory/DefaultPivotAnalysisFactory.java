@@ -26,7 +26,7 @@ public class DefaultPivotAnalysisFactory<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public void setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
+    public DefaultPivotAnalysisFactory<T> setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
 	throw new UnsupportedOperationException("The analysis customiser can not be set for pivot analysis factory.");
     }
 

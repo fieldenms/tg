@@ -27,7 +27,7 @@ public class SentinelChartAnalysisFactory<T extends AbstractEntity<?>> implement
     }
 
     @Override
-    public void setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
+    public SentinelChartAnalysisFactory<T> setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
 	throw new UnsupportedOperationException("The analysis customiser can not be set for sentinel analysis factory.");
     }
 

@@ -27,7 +27,7 @@ public class DefaultChartAnalysisFactory<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public void setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
+    public DefaultChartAnalysisFactory<T> setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
 	throw new UnsupportedOperationException("The analysis customiser can not be set for chart analysis factory.");
     }
 

@@ -27,7 +27,7 @@ public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implem
         }
 
     @Override
-    public void setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
+    public DefaultLifecycleAnalysisFactory<T> setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
 	throw new UnsupportedOperationException("The analysis customiser can not be set for lifecycle analysis factory.");
     }
 }
