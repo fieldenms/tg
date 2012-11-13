@@ -114,25 +114,12 @@ public class ActionPanelBuilder {
     }
 
     /**
-     * removes the {@link IActionItem} from the list. This operation must be done before {@link #buildActionPanel()} method invoking
+     * Returns true if this tool bar builder is empty or not
      *
-     * @param index
-     *            - the index of {@link IActionItem} instance in the list, that must be removed
-     * @return the removed {@link IActionItem} instance
+     * @return
      */
-    public IActionItem removeActionItem(final int index) {
-	return itemList.remove(index);
-    }
-
-    /**
-     * Retrieves the {@link IActionItem} instance, but doesn't remove it from the list
-     *
-     * @param index
-     *            - the index of {@link IActionItem} instance, that must be retrieved
-     * @return the retrieved {@link IActionItem} instance
-     */
-    public IActionItem getActionItem(final int index) {
-	return itemList.get(index);
+    public boolean isEmpty(){
+	return itemList.isEmpty();
     }
 
     /**
@@ -140,7 +127,7 @@ public class ActionPanelBuilder {
      *
      * @return
      */
-    public List<IActionItem> getItemList() {
+    private List<IActionItem> getItemList() {
 	return Collections.unmodifiableList(itemList);
     }
 

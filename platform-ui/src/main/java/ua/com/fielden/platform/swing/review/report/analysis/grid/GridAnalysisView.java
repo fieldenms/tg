@@ -15,6 +15,7 @@ import javax.swing.JToolBar;
 import javax.swing.border.EtchedBorder;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -247,7 +248,8 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     }
 
     protected JToolBar createToolBar() {
-	return configureToolBar(getOwner().getAnalysisCustomiser().createToolBar(this).buildActionPanel());
+	final ActionPanelBuilder toolBarBuilder = getOwner().getAnalysisCustomiser().createToolBar(this);
+	return toolBarBuilder == null || toolBarBuilder.isEmpty() ? null : configureToolBar(toolBarBuilder.buildActionPanel());
     }
 
     /**
