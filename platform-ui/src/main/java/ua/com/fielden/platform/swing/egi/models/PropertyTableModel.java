@@ -248,6 +248,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 
     /**
      * This method is a list-based version of method {@link #addInstances(AbstractEntity...)}.
+     *
      * @param instances
      */
     public void addInstances(final List<T> instances) {
@@ -286,7 +287,9 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	for (final List<T> group : groups) {
 	    for (final T currElem : group) {
 		// if currElem is equal to the one to be refreshed, then simply adding last one to the instances list
-		if (instance.equals(currElem) || (instance.getId() != null && currElem.getType().equals(instance.getType()) && instance.getId().equals(currElem.getId()))) {
+		// it is considered that entity ID is assigned from the same set for all entity types.
+		// therefore condition currElem.getType().equals(instance.getType()) is not requried
+		if (areEqual(instance, currElem)) {
 		    instances.add(instance);
 		} else {
 		    // otherwise adding currElem
@@ -550,7 +553,26 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      * @return
      */
     public int getIndexOf(final T instance) {
-	return instances().indexOf(instance);
+	final List<T> instances = instances();
+	for (int index = 0; index < instances.size(); index++) {
+	    final T currElem = instances.get(index);
+	    if (areEqual(instance, currElem)) {
+		return index;
+	    }
+	}
+
+	return -1;//instances().indexOf(instance);
+    }
+
+    /**
+     * A method that compares two instances by their ID if present, otherwise uses their equality.
+     *
+     * @param instance
+     * @param currElem
+     * @return
+     */
+    private boolean areEqual(final T instance, final T currElem) {
+	return (instance.getId() != null && instance.getId().equals(currElem.getId())) || (instance.getId() == null && instance.equals(currElem));
     }
 
     /**
