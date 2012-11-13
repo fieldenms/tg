@@ -133,7 +133,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    } else {
 		if (AbstractEntity.class.isAssignableFrom(propType)) {
 		    if (!skipEntities) {
-			entityProps.put(propName, new fetch(propType, FetchCategory.MINIMAL));
+			addEntityPropsModel(propName, new fetch(propType, FetchCategory.MINIMAL));
 		    }
 		} else {
 		    final String singleSubpropertyOfCompositeUserTypeProperty = ppi.getSinglePropertyOfCompositeUserType();
@@ -147,6 +147,12 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	}
     }
 
+    private void addEntityPropsModel(final String propName, final fetch<?> model) {
+	    final fetch<?> existingFetch = entityProps.get(propName);
+	    entityProps.put(propName, existingFetch != null ? existingFetch.unionWith(model) : model);
+
+    }
+
     private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
 	if (getEntityType() != EntityAggregates.class) {
 	    final Class propType = getPropMetadata(propName).getJavaType();
@@ -158,7 +164,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	}
 
 	if (AbstractEntity.class.isAssignableFrom(fetchModel.getEntityType())) {
-	    entityProps.put(propName, fetchModel);
+	    addEntityPropsModel(propName, fetchModel);
 	} else {
 	    throw new IllegalArgumentException(propName + " has fetch model for type " + fetchModel.getEntityType().getName() + ". Fetch model with entity type is required.");
 	}

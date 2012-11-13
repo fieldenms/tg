@@ -7,16 +7,39 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class FetchModelTest extends BaseEntQueryTCase {
+
+    @Test
+    public void test_nested_fetching_of_composite_key() {
+	final fetch<TgAuthorship> fetch = new fetch<TgAuthorship>(TgAuthorship.class, FetchCategory.MINIMAL);
+	final FetchModel<TgAuthorship> fetchModel = new FetchModel<TgAuthorship>(fetch, DOMAIN_METADATA_ANALYSER);
+	assertTrue(fetchModel.containsProp("title"));
+	assertTrue(fetchModel.containsProp("author"));
+	assertTrue(fetchModel.containsProp("id"));
+	assertTrue(fetchModel.containsProp("version"));
+	assertNotNull(fetchModel.getFetchModels().get("author"));
+	final fetch<TgAuthor> exp = new fetch<TgAuthor>(TgAuthor.class, FetchCategory.MINIMAL);
+	assertEquals("Should be equal", exp, fetchModel.getFetchModels().get("author"));
+	final FetchModel<TgAuthor> fetchModelForAuthor = new FetchModel<TgAuthor>(exp, DOMAIN_METADATA_ANALYSER);
+	assertTrue(fetchModelForAuthor.containsProp("name"));
+	assertTrue(fetchModelForAuthor.containsProp("surname"));
+	assertTrue(fetchModelForAuthor.containsProp("id"));
+	assertTrue(fetchModelForAuthor.containsProp("version"));
+	assertNotNull(fetchModelForAuthor.getFetchModels().get("name"));
+    }
+
 
     @Test
     public void test_all_fetching_of_make() {

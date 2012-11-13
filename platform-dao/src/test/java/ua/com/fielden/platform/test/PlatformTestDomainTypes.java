@@ -12,6 +12,8 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
+import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
@@ -23,6 +25,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
@@ -53,6 +56,9 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
 
     static {
 	entityTypes.addAll(PlatformDomainTypes.types);
+	add(TgPersonName.class);
+	add(TgAuthor.class);
+	add(TgAuthorship.class);
 	add(TgBogie.class);
 	add(TgBogieClass.class);
 	add(TgWagon.class);

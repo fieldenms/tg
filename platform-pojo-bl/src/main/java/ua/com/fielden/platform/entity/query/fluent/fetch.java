@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -181,5 +182,30 @@ public class fetch<T extends AbstractEntity<?>> {
 	    }
 	}
 	return sb.toString();
+    }
+
+    public fetch<?> unionWith(final fetch<?> second) {
+	if (second == null) {
+	    return this;
+	}
+
+	final FetchCategory resultCategory = (fetchCategory == FetchCategory.ALL || second.fetchCategory == FetchCategory.ALL) ? FetchCategory.ALL :
+	    ((fetchCategory == FetchCategory.MINIMAL || second.fetchCategory == FetchCategory.MINIMAL) ? FetchCategory.MINIMAL : FetchCategory.NONE);
+	final fetch<T> result = new fetch<>(getEntityType(), resultCategory);
+	result.incudedProps.addAll(incudedProps);
+	result.incudedProps.addAll(second.incudedProps);
+	result.excludedProps.addAll(excludedProps);
+	result.excludedProps.addAll(second.excludedProps);
+	for (final Entry<String, fetch<? extends AbstractEntity<?>>> iterable_element : includedPropsWithModels.entrySet()) {
+	    result.includedPropsWithModels.put(iterable_element.getKey(), iterable_element.getValue().unionWith(second.getIncludedPropsWithModels().get(iterable_element.getKey())));
+	}
+
+	for (final Entry<String, fetch<? extends AbstractEntity<?>>> iterable_element : second.includedPropsWithModels.entrySet()) {
+	    if (!result.includedPropsWithModels.containsKey(iterable_element.getKey())) {
+		result.includedPropsWithModels.put(iterable_element.getKey(), iterable_element.getValue().unionWith(getIncludedPropsWithModels().get(iterable_element.getKey())));
+	    }
+	}
+
+	return result;
     }
 }
