@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="java" deleted="false" description="Generates a stub for the most ordinary entity property." enabled="true" name="tgprop">@IsProperty
+@MapTo
+@Title(value = "${Title}", desc = "${Desc}")
+private ${type} ${name};
+
+@Observable
+public ${enclosing_type} set${cursor}${name}(final ${type} ${name}) {
+	this.${name} = ${name};
+	return this;
+}
+
+public ${type} get${name}() {
+	return ${name};
+}
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.MapTo)}</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a calcualted property" enabled="true" name="tgprop-calculated">@IsProperty
+@Readonly
+@Calculated
+@Title(value = "${Title}", desc = "${Desc}")
+private ${type} ${name};
+private static ExpressionModel ${name}_ = expr().val(null).model();
+
+@Observable
+private ${enclosing_type} set${cursor} ${name}(final ${type} ${name}) {
+	this.${name} = ${name};
+	return this;
+}
+
+public ${type} get${name}() {
+	return ${name};
+}
+
+${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr,
+                    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select)}       
+
+
+${imp:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Readonly,   
+          ua.com.fielden.platform.entity.annotation.Calculated,
+          ua.com.fielden.platform.entity.annotation.Title,
+   	  ua.com.fielden.platform.entity.query.model.ExpressionModel)}
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for collectional one-to-many association" enabled="true" name="tgprop-collectional">@IsProperty(${type}.class)
+@Title(value = "${Title}", desc = "${Desc}")
+private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();
+
+@Observable
+protected ${enclosing_type} set${cursor}${name}(final Set&lt;${type}&gt; ${name}) {
+	this.${name}.clear();
+	this.${name}.addAll(${name});
+	return this;
+}
+
+public Set&lt;${type}&gt; get${name}() {
+	return Collections.unmodifiableSet(${name});
+}
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          java.util.HashSet, java.util.Set, java.util.Collections)}</template><template autoinsert="true" context="java" deleted="false" description="Generates a collectional one-to-many association with mutators addTo and removeFrom" enabled="true" name="tgprop-collectional-with-mutation">@IsProperty(${type}.class)
+@Title(value = "${Title}", desc = "${Desc}")
+private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();
+
+@Observable
+protected ${enclosing_type} set${cursor}${name}(final Set&lt;${type}&gt; ${name}) {
+	this.${name}.clear();
+	this.${name}.addAll(${name});
+	return this;
+}
+
+@Observable
+protected ${enclosing_type} addTo${name}(final ${type} value) {
+	this.${name}.add(value);
+	return this;
+}
+
+@Observable
+protected ${enclosing_type} removeFrom${name}(final ${type} value) {
+	this.${name}.remove(value);
+	return this;
+}
+
+public Set&lt;${type}&gt; get${name}() {
+	return Collections.unmodifiableSet(${name});
+}
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          java.util.HashSet, java.util.Set, java.util.Collections)}</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a propery that should serve as one of composite key members" enabled="true" name="tgprop-composite-key">@IsProperty
+@MapTo
+@Title(value = "${Title}", desc = "${Desc}")
+@CompositeKeyMember(${index})
+private ${type} ${name};
+
+@Observable
+public ${enclosing_type} set${cursor}${name}(final ${type} ${name}) {
+	this.${name} = ${name};
+	return this;
+}
+
+public ${type} get${name}() {
+	return ${name};
+}
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.MapTo,
+	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember)}</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a pairt of comparable and dependent properties such as fromDate and toDate" enabled="true" name="tgprop-from-and-to">@IsProperty
+@MapTo
+@Dependent("${name2}")
+@Title(value = "${Title1}", desc = "${Desc1}")
+private ${type} ${name1};
+
+@IsProperty
+@MapTo
+@Dependent("${name1}")
+@Title(value = "${Title2}", desc = "${Desc2}")
+private ${type} ${name2};
+
+@Observable
+@LeProperty("${name2}")
+public ${enclosing_type} set${cursor}${name1}(final ${type} ${name1}) {
+	this.${name1} = ${name1};
+	return this;
+}
+
+public ${type} get${name1}() {
+	return ${name1};
+}
+
+@Observable
+@GeProperty("${name1}")
+public ${enclosing_type} set${name2}(final ${type} ${name2}) {
+	this.${name2} = ${name2};
+	return this;
+}
+
+public ${type} get${name2}() {
+	return ${name2};
+}
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.MapTo,
+          ua.com.fielden.platform.entity.annotation.Dependent,
+          ua.com.fielden.platform.entity.validation.annotation.GeProperty,
+          ua.com.fielden.platform.entity.validation.annotation.LeProperty)}</template><template autoinsert="true" context="java" deleted="false" description="Static import of EntityQueryUtils methods" enabled="true" name="tgquery">${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr,
+		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond,
+		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from,
+		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy,
+		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch,
+		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll,
+		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly,
+                    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select)}   </template></templates>
