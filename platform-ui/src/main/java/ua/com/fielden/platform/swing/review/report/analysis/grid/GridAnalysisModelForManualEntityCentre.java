@@ -12,7 +12,7 @@ import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.ManualCentreConfigurationModel;
 
-public class GridAnalysisModelForManualEntityCentre<T extends AbstractEntity<?>> extends GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer> {
+public class GridAnalysisModelForManualEntityCentre<T extends AbstractEntity<?>, M extends AbstractEntity<?>> extends GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     public GridAnalysisModelForManualEntityCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria) {
 	super(criteria);
@@ -20,12 +20,12 @@ public class GridAnalysisModelForManualEntityCentre<T extends AbstractEntity<?>>
 
     @SuppressWarnings("unchecked")
     public String getLinkProperty(){
-	return ((ManualCentreConfigurationModel<T>)getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkProperty();
+	return ((ManualCentreConfigurationModel<T, M>) getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkProperty();
     }
 
     @SuppressWarnings("unchecked")
-    public AbstractEntity<?> getLinkEntity(){
-	return ((ManualCentreConfigurationModel<T>)getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkPropertyValue();
+    public M getLinkEntity(){
+	return ((ManualCentreConfigurationModel<T, M>) getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkPropertyValue();
     }
 
     @Override

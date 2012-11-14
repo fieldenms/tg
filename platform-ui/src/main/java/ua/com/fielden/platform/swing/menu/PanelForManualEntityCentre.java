@@ -6,16 +6,16 @@ import ua.com.fielden.platform.swing.model.DefaultUiModel;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.ManualCentreConfigurationView;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 
-public class PanelForManualEntityCentre<T extends AbstractEntity<?>> extends BaseNotifPanel<DefaultUiModel> {
+public class PanelForManualEntityCentre<T extends AbstractEntity<?>, M extends AbstractEntity<?>> extends BaseNotifPanel<DefaultUiModel> {
 
     private static final long serialVersionUID = -4713076113440549853L;
 
-    private final ManualCentreConfigurationView<T> manualEntityCentre;
+    private final ManualCentreConfigurationView<T, M> manualEntityCentre;
 
     private final String description;
 
     @SuppressWarnings("unchecked")
-    public PanelForManualEntityCentre(final String caption, final String description, final ManualCentreConfigurationView<T> manualEntityCentre) {
+    public PanelForManualEntityCentre(final String caption, final String description, final ManualCentreConfigurationView<T, M> manualEntityCentre) {
 	super(caption, new DefaultUiModel(true));
 	this.description = description;
 	this.manualEntityCentre = manualEntityCentre;

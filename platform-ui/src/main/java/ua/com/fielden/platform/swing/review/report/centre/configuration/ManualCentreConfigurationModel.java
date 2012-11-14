@@ -17,12 +17,15 @@ import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuild
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
 /**
+ * A base calass for manual centre-based configuration model.
+ * It is used for building details view for compound masters where the relationship between dependent entity and its master should be represented as an entity centre.
  *
- * @author TG Team
+ * @author TG TM
  *
- * @param <T>
+ * @param <T> -- dependent entity type
+ * @param <M> -- master entity type
  */
-public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
+public class ManualCentreConfigurationModel<T extends AbstractEntity<?>, M extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     private final String linkProperty;
 
@@ -34,7 +37,7 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
      */
     private final ICentreDomainTreeManagerAndEnhancer cdtme;
 
-    private AbstractEntity<?> linkEntity;
+    private M linkEntity;
 
     public ManualCentreConfigurationModel(final Class<T> entityType, //
 	    final DefaultGridForManualEntityCentreFactory<T> analysisFactory,//
@@ -67,7 +70,7 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
      *
      * @param masterEntity
      */
-    public ManualCentreConfigurationModel<T> setLinkPropertyValue(final AbstractEntity<?> linkEntity) {
+    public ManualCentreConfigurationModel<T, M> setLinkPropertyValue(final M linkEntity) {
 	this.linkEntity = linkEntity;
 	return this;
     }
@@ -77,7 +80,7 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
      *
      * @return
      */
-    public AbstractEntity<?> getLinkPropertyValue() {
+    public M getLinkPropertyValue() {
 	return linkEntity;
     }
 

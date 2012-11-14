@@ -10,11 +10,11 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.G
 import ua.com.fielden.platform.swing.review.report.centre.configuration.ManualCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 
-public class ManualEntityCentre<T extends AbstractEntity<?>> extends AbstractSingleAnalysisEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> {
+public class ManualEntityCentre<T extends AbstractEntity<?>, M extends AbstractEntity<?>> extends AbstractSingleAnalysisEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> {
 
     private static final long serialVersionUID = 6117616238278637453L;
 
-    public ManualEntityCentre(final EntityCentreModel<T> model, final ManualCentreConfigurationView<T> owner) {
+    public ManualEntityCentre(final EntityCentreModel<T> model, final ManualCentreConfigurationView<T, M> owner) {
 	super(model, owner);
 	layoutComponents();
     }
@@ -26,8 +26,8 @@ public class ManualEntityCentre<T extends AbstractEntity<?>> extends AbstractSin
 
     @SuppressWarnings("unchecked")
     @Override
-    public ManualCentreConfigurationView<T> getOwner() {
-        return (ManualCentreConfigurationView<T>)super.getOwner();
+    public ManualCentreConfigurationView<T, M> getOwner() {
+        return (ManualCentreConfigurationView<T, M>) super.getOwner();
     }
 
     @Override
