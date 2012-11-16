@@ -3,6 +3,8 @@ package ua.com.fielden.platform.swing.review.report.analysis.customiser;
 import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
+import ua.com.fielden.platform.swing.review.details.IDetails;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
 
 /**
@@ -47,6 +49,20 @@ public class DefaultGridAnalysisCustomiser<T extends AbstractEntity<?>, CDTME ex
      */
     protected final boolean hasMasterManager(final GridAnalysisView<T, CDTME> analysisView){
 	return analysisView.getMasterManager() != null;
+    }
+
+
+    @Override
+    public <DT> IDetails<DT> getDetails(final Class<DT> detailsParamType) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+
+    @Override
+    public <E extends AbstractEntity<?>> IReportQueryGeneration<E> getQueryGenerator(final GridAnalysisView<T, CDTME> analysisView, final Class<E> queryClass) {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 

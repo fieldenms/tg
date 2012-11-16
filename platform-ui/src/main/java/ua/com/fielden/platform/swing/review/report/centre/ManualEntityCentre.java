@@ -42,7 +42,7 @@ public class ManualEntityCentre<T extends AbstractEntity<?>, M extends AbstractE
 
     @SuppressWarnings("unchecked")
     @Override
-    protected GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createGridAnalysis() {
+    protected GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createDefaultAnalysis() {
 	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>)getModel().getAnalysisBuilder()//
 		.createAnalysis(null, null, null, this, getModel().getCriteria(), getReviewProgressLayer());
     }

@@ -15,6 +15,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 public class DefaultChartAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, ChartAnalysisConfigurationView<T>> {
 
+    //TODO Provide appropriate analysis customiser.
     @Override
     public ChartAnalysisConfigurationView<T> createAnalysis(//
 	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
@@ -23,7 +24,7 @@ public class DefaultChartAnalysisFactory<T extends AbstractEntity<?>> implements
 	    final Map<Object, DetailsFrame> detailsCache,//
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	final ChartAnalysisConfigurationModel<T> analysisModel = new ChartAnalysisConfigurationModel<T>(criteria, name, false);
-	return new ChartAnalysisConfigurationView<T>(analysisModel, detailsCache, owner, progressLayer);
+	return new ChartAnalysisConfigurationView<T>(analysisModel, null, detailsCache, owner, progressLayer);
     }
 
     @Override

@@ -16,8 +16,6 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
 
     private static final long serialVersionUID = -7385497832761082274L;
 
-    private final IAnalysisCustomiser<GridAnalysisView<T, CDTME>> analysisCustomiser;
-
     /**
      * Creates and returns main details analysis with default analysis customiser.
      *
@@ -62,19 +60,14 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
 	    final AbstractEntityCentre<T, CDTME> owner, //
 	    final IAnalysisCustomiser<GridAnalysisView<T, CDTME>> analysisCustomiser, //
 	    final BlockingIndefiniteProgressLayer progressLayer){
-	super(model, null, owner, progressLayer);
-	this.analysisCustomiser = analysisCustomiser == null //
-		? new DefaultGridAnalysisCustomiser<T, CDTME>() //
-		: analysisCustomiser;
+	super(model, //
+		analysisCustomiser == null ? new DefaultGridAnalysisCustomiser<T, CDTME>() : analysisCustomiser,//
+		null, owner, progressLayer);
     }
 
     @Override
     public GridConfigurationModel<T, CDTME> getModel() {
 	return (GridConfigurationModel<T, CDTME>)super.getModel();
-    }
-
-    public IAnalysisCustomiser<GridAnalysisView<T, CDTME>> getAnalysisCustomiser() {
-	return analysisCustomiser;
     }
 
     @Override

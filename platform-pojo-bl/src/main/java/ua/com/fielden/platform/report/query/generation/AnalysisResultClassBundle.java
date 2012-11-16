@@ -15,7 +15,7 @@ public class AnalysisResultClassBundle<T extends AbstractEntity<?>> {
 
     public AnalysisResultClassBundle(final Class<T> generatedClass, final byte[] generatedClassRepresentation, final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queries){
 	this.generatedClass = generatedClass;
-	this. generatedClassRepresentation = generatedClassRepresentation;
+	this.generatedClassRepresentation = generatedClassRepresentation;
 	this.queries = new ArrayList<>();
 	if (queries != null) {
 	    this.queries.addAll(queries);

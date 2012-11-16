@@ -11,7 +11,7 @@ import javax.swing.JComponent;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
-import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
@@ -21,14 +21,14 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 
     private static final long serialVersionUID = -7393061848126429375L;
 
-    private GridConfigurationView<T, CDTME> gridConfigurationView;
+    private AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> defaultAnalysis;
 
     private boolean wasResized;
     private boolean wasAnalysisLoaded;
 
     public AbstractSingleAnalysisEntityCentre(final AbstractEntityCentreModel<T, CDTME> model, final AbstractConfigurationView<? extends AbstractEntityCentre<T, CDTME>, ?> owner) {
 	super(model, owner);
-	this.gridConfigurationView = null;
+	this.defaultAnalysis = null;
 	this.wasResized = false;
 	this.wasAnalysisLoaded = false;
 	createReview();
@@ -63,8 +63,8 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
      *
      * @return
      */
-    public GridConfigurationView<T, CDTME> getSingleAnalysis(){
-	return gridConfigurationView;
+    public AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> getSingleAnalysis(){
+	return defaultAnalysis;
     }
 
     /**
@@ -72,10 +72,7 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
      *
      * @return
      */
-    protected GridConfigurationView<T, CDTME> createGridAnalysis(){
-	final GridConfigurationModel<T, CDTME> configModel = new GridConfigurationModel<T, CDTME>(getModel().getCriteria());
-	return GridConfigurationView.createMainDetailsWithDefaultCustomiser(configModel, this, getReviewProgressLayer());
-    }
+    protected abstract AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> createDefaultAnalysis();
 
     /**
      * Adds the {@link ILoadListener} to the specified {@link GridConfigurationView}. That "load listener" determines when the specified component was loaded.
@@ -83,8 +80,8 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
      *
      * @param component
      */
-    private void addLoadListenerToAnalysis(final GridConfigurationView<T, CDTME> configView) {
-        configView.addLoadListener(new ILoadListener() {
+    private void addLoadListenerToAnalysis(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> analysis) {
+        analysis.addLoadListener(new ILoadListener() {
 
             @Override
             public void viewWasLoaded(final LoadEvent event) {
@@ -114,11 +111,11 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
      */
     private void createReview() {
 	final BlockingIndefiniteProgressLayer reviewProgressLayer = getReviewProgressLayer();
-	gridConfigurationView = createGridAnalysis();
-	addLoadListenerToAnalysis(gridConfigurationView);
-	reviewProgressLayer.setView(gridConfigurationView);
-	setCurrentAnalysisConfigurationView(gridConfigurationView);
-	gridConfigurationView.open();
+	defaultAnalysis = createDefaultAnalysis();
+	addLoadListenerToAnalysis(defaultAnalysis);
+	reviewProgressLayer.setView(defaultAnalysis);
+	setCurrentAnalysisConfigurationView(defaultAnalysis);
+	defaultAnalysis.open();
     }
 
     /**

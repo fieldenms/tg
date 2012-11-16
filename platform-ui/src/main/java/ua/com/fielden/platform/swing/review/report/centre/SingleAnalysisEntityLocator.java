@@ -33,6 +33,8 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
@@ -84,6 +86,12 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 	});
 
 	layoutComponents();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public GridConfigurationView<T, ILocatorDomainTreeManagerAndEnhancer> getSingleAnalysis() {
+        return (GridConfigurationView<T, ILocatorDomainTreeManagerAndEnhancer>)super.getSingleAnalysis();
     }
 
     @Override
@@ -143,6 +151,17 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 	customActions.add(getOwner().getSaveAsDefault());
 	customActions.add(getOwner().getLoadDefault());
 	return customActions;
+    }
+
+    /**
+     * Creates single grid analysis view.
+     *
+     * @return
+     */
+    @Override
+    protected GridConfigurationView<T, ILocatorDomainTreeManagerAndEnhancer> createDefaultAnalysis(){
+	final GridConfigurationModel<T, ILocatorDomainTreeManagerAndEnhancer> configModel = new GridConfigurationModel<T, ILocatorDomainTreeManagerAndEnhancer>(getModel().getCriteria());
+	return GridConfigurationView.createMainDetailsWithDefaultCustomiser(configModel, this, getReviewProgressLayer());
     }
 
     @Override

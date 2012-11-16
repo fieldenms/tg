@@ -356,7 +356,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	tabPane.setTabShape(JideTabbedPane.SHAPE_OFFICE2003);
 	tabPane.setBorder(BorderFactory.createLineBorder(new Color(146, 151, 161)));
 	//Initiates first tab with main details (i.e. grid analysis).
-	final GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> mainDetails = createGridAnalysis();
+	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> mainDetails = createAnalysis(null, null);
 	addLoadAnalysisListenerTo(tabPane, mainDetails, getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().analysisKeys(), 0);
 	tabPane.addTab(mainDetails.getModel().getName(), mainDetails);
 	tabPane.setTabClosableAt(0, false);

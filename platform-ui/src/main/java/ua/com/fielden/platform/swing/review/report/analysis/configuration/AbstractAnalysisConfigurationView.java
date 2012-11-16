@@ -16,6 +16,7 @@ import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
@@ -51,6 +52,8 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      */
     private final Map<Object, DetailsFrame> detailsCache;
 
+    private final IAnalysisCustomiser<VT> analysisCustomiser;
+
     /**
      * Analysis related actions:
      * <ul>
@@ -61,13 +64,23 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      */
     private final Action save, remove;
 
-    public AbstractAnalysisConfigurationView(final AbstractAnalysisConfigurationModel<T, CDTME> model, final Map<Object, DetailsFrame> detailsCache, final AbstractEntityCentre<T, CDTME> owner, final BlockingIndefiniteProgressLayer progressLayer) {
+    public AbstractAnalysisConfigurationView(//
+	    final AbstractAnalysisConfigurationModel<T, CDTME> model, //
+	    final IAnalysisCustomiser<VT> analysisCustomiser, //
+	    final Map<Object, DetailsFrame> detailsCache, //
+	    final AbstractEntityCentre<T, CDTME> owner, //
+	    final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	this.detailsCache = detailsCache;
+	this.analysisCustomiser = analysisCustomiser;
 	this.owner = owner;
 	this.save = createSaveAction();
 	this.remove = createRemoveAction();
 	addSelectionEventListener(createSelectionListener());
+    }
+
+    public IAnalysisCustomiser<VT> getAnalysisCustomiser() {
+	return analysisCustomiser;
     }
 
     /**

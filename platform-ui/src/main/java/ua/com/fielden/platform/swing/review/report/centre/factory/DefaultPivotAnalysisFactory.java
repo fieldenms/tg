@@ -15,6 +15,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 public class DefaultPivotAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, PivotAnalysisConfigurationView<T>> {
 
+    //TODO Provide appropriate analysis customiser.
     @Override
     public PivotAnalysisConfigurationView<T> createAnalysis(final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
 	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
@@ -22,7 +23,7 @@ public class DefaultPivotAnalysisFactory<T extends AbstractEntity<?>> implements
 	    final Map<Object, DetailsFrame> detailsCache,//
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	final PivotAnalysisConfigurationModel<T> analysisModel = new PivotAnalysisConfigurationModel<T>(criteria, name);
-	return new PivotAnalysisConfigurationView<T>(analysisModel, detailsCache, owner, progressLayer);
+	return new PivotAnalysisConfigurationView<T>(analysisModel, null, detailsCache, owner, progressLayer);
     }
 
     @Override

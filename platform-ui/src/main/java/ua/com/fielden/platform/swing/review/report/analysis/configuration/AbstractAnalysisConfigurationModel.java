@@ -9,14 +9,13 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
 
 public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractConfigurationModel {
-    private final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria;
 
-    /**
-     * The name of the analysis.
-     */
+    private final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria;
     private final String name;
 
-    public AbstractAnalysisConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final String name){
+    public AbstractAnalysisConfigurationModel(//
+	    final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, //
+	    final String name){
 	this.criteria = criteria;
 	this.name = name;
     }
@@ -105,7 +104,5 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
     public EntityQueryCriteria<CDTME, T, IEntityDao<T>> getCriteria() {
 	return criteria;
     }
-
-
 
 }

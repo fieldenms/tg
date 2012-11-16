@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.swing.review.report.analysis.customiser;
 
 import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
+import ua.com.fielden.platform.swing.review.details.IDetails;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 
 /**
@@ -25,4 +28,20 @@ public interface IAnalysisCustomiser<A extends AbstractAnalysisReview<?, ?, ?, ?
      * @return
      */
     ActionPanelBuilder createToolBar(A analysisView);
+
+    /**
+     *	Returns the details contract provided by this analysis customiser.
+     *
+     * @param detailsParamType
+     * @return
+     */
+    <DT> IDetails<DT> getDetails(Class<DT> detailsParamType);
+
+    /**
+     * Returns the instance of {@link IReportQueryGeneration} provided by this analysis customiser.
+     *
+     * @param queryClass
+     * @return
+     */
+    <T extends AbstractEntity<?>> IReportQueryGeneration<T> getQueryGenerator(A analysisView, Class<T> queryClass);
 }

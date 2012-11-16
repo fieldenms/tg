@@ -15,6 +15,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> {
 
+    //TODO Provide appropriate analysis customiser.
     @Override
         public LifecycleAnalysisConfigurationView<T> createAnalysis(//
             final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
@@ -23,7 +24,7 @@ public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implem
 	    final Map<Object, DetailsFrame> detailsCache,//
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	final LifecycleAnalysisConfigurationModel<T> analysisModel = new LifecycleAnalysisConfigurationModel<T>(criteria, name);
-	return new LifecycleAnalysisConfigurationView<T>(analysisModel, detailsCache, owner, progressLayer);
+	return new LifecycleAnalysisConfigurationView<T>(analysisModel, null, detailsCache, owner, progressLayer);
         }
 
     @Override
