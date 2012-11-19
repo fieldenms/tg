@@ -160,21 +160,22 @@ ${:import(ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel,
 	  ua.com.fielden.platform.entity.query.model.OrderingModel,
 	  ua.com.fielden.platform.entity.query.fluent.fetch,
 	  ua.com.fielden.platform.dao.QueryExecutionModel
-)}</template><template autoinsert="true" context="java-statements" deleted="false" description="Query stub for Entity" enabled="true" name="tgquery-entity">final EntityResultQueryModel&lt;${type}&gt; query = select(${type}.class).model();
+)}</template>
+
+<template autoinsert="true" context="java-statements" deleted="false" description="Query stub for Entity" enabled="true" name="tgquery-entity">final EntityResultQueryModel&lt;${type}&gt; query = select(${type}.class).model();
 final fetch&lt;${type}&gt; fetch = fetch(${type}.class).with("prop1");
 final OrderingModel orderBy = orderBy().prop("prop1").asc().model();
 final QueryExecutionModel&lt;${type}, EntityResultQueryModel&lt;${type}&gt;&gt; qem = from(query).with(fetch).with(orderBy).model();
 
-${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from,
-                    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch,
-                    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy,
-                    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select)}    
+${imst:importStatic('ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*')}    
 
 ${:import(ua.com.fielden.platform.entity.query.model.EntityResultQueryModel,
 	  ua.com.fielden.platform.entity.query.model.OrderingModel,
 	  ua.com.fielden.platform.entity.query.fluent.fetch,
 	  ua.com.fielden.platform.dao.QueryExecutionModel
-)}</template><template autoinsert="true" context="java" deleted="false" description="Import of query related classes and static methods" enabled="true" name="tgquery-import">${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr,
+)}</template>
+
+<template autoinsert="true" context="java" deleted="false" description="Import of query related classes and static methods" enabled="true" name="tgquery-import">${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr,
 		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond,
 		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from,
 		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy,
