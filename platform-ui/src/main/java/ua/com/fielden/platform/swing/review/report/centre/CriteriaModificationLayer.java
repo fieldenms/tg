@@ -29,6 +29,7 @@ import org.jdesktop.jxlayer.plaf.AbstractLayerUI;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.error.Result;
@@ -208,30 +209,14 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	rightValidationLayer = rightPropertyEditor != null ? (BoundedValidationLayer<?>) rightPropertyEditor.getEditor() : null;
 
 	// update an initial state of criteria modification layer:
-	final IAddToCriteriaTickManager ftm = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-	not = ftm.getNot(rootType, propertyName); // update Not state
-	orNull = ftm.getOrNull(rootType, propertyName); // update OrNull state
+	loadInitialState();
+
+	// create popup menu and its items and update their initial state:
+	popup = new JPopupMenu();
 
 	final CritOnly critOnly = StringUtils.isEmpty(propertyName) ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
 	final boolean isCritOnly = critOnly != null;
 	final boolean isCritOnlyAndSingle = isCritOnly && Type.SINGLE.equals(critOnly.value());
-
-	if (EntityUtils.isRangeType(propertyType)) {
-	    if (!isCritOnlyAndSingle) { // no criteria modifications are permitted for Single critOnly properties
-		fromExclusive = ftm.getExclusive(rootType, propertyName); // update left exclusiveness
-		if (rightValidationLayer != null) {
-		    toExclusive = ftm.getExclusive2(rootType, propertyName); // update right exclusiveness
-		}
-	    }
-	    if (Date.class.isAssignableFrom(propertyType)) {
-		dateState.setDatePrefix(ftm.getDatePrefix(rootType, propertyName)); // update date prefix
-		dateState.setDateMnemonic(ftm.getDateMnemonic(rootType, propertyName)); // update date mnemonic
-		dateState.setAndBefore(ftm.getAndBefore(rootType, propertyName)); // update andBefore
-	    }
-	}
-
-	// create popup menu and its items and update their initial state:
-	popup = new JPopupMenu();
 
 	nullMenuItem = new JCheckBoxMenuItem(MISSING_VALUE);
 	nullMenuItem.setMnemonic(KeyEvent.VK_H);
@@ -283,6 +268,24 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	updateState();
     }
 
+    private void loadInitialState() {
+	final IAddToCriteriaTickManager ftm = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+
+	not = ftm.getNot(rootType, propertyName); // update Not state
+	orNull = ftm.getOrNull(rootType, propertyName); // update OrNull state
+
+	if (AbstractDomainTree.isDoubleCriterion(rootType, propertyName)) {
+	    fromExclusive = ftm.getExclusive(rootType, propertyName); // update left exclusiveness
+	    toExclusive = ftm.getExclusive2(rootType, propertyName); // update right exclusiveness
+	}
+
+	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? rootType : PropertyTypeDeterminator.determinePropertyType(rootType, propertyName);
+	if (EntityUtils.isDate(propertyType)) {
+	    dateState.setDatePrefix(ftm.getDatePrefix(rootType, propertyName)); // update date prefix
+	    dateState.setDateMnemonic(ftm.getDateMnemonic(rootType, propertyName)); // update date mnemonic
+	    dateState.setAndBefore(ftm.getAndBefore(rootType, propertyName)); // update andBefore
+	}
+    }
 
     /**
      * Creates and register a menu structure for [Prefix + Mnemonic] with three sub-items: "Full period item", "And before item" and "And after item".
