@@ -97,7 +97,7 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
      */
     @Override
     public List<String> includedPropertiesMutable(final Class<?> root) {
-	return super.includedPropertiesMutable(managedType(root));
+	return parentCentreDomainTreeManager() != null ? super.includedPropertiesMutable(managedType(root)) : null;
     }
 
     @Override

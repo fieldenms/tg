@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -58,6 +59,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     private final transient List<IPropertyListener> propertyListeners, disabledPropertyListeners;
 
+    private final transient Set<Class<?>> includedPropertiesTypes;
+
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
@@ -88,21 +91,17 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
 	// this field unfortunately should be lazy loaded due to heavy-weight nature (deep, circular tree of properties)
 	this.includedProperties = createRootsMap();
-	this.includedProperties.putAll(includedProperties);
+	/* TODO / this.includedProperties.putAll(includedProperties); */
 
-	for (final Entry<Class<?>, ListenedArrayList> entry : this.includedProperties.entrySet()) {
-	    // initialise the references on this instance in "included properties" lists
-	    try {
-		final Field rootField = Finder.findFieldByName(ListenedArrayList.class, "root");
-		final boolean isAccessible = rootField.isAccessible();
-		rootField.setAccessible(true);
-		rootField.set(entry.getValue(), entry.getKey());
-		rootField.setAccessible(isAccessible);
-	    } catch (final Exception e) {
-		e.printStackTrace();
-		throw new IllegalStateException(e);
-	    }
+	includedPropertiesTypes = new LinkedHashSet<>();
+	for (final Entry<Class<?>, ListenedArrayList> entry : includedProperties.entrySet()) {
+	    includedPropertiesTypes.add(entry.getKey());
+	    includedPropertiesMutable(entry.getKey());
 	}
+    }
+
+    public Set<Class<?>> includedPropertiesTypes() {
+	return includedPropertiesTypes;
     }
 
     private int level(final String path) {
@@ -347,11 +346,13 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     @Override
     public void excludeImmutably(final Class<?> root, final String property) {
-	manuallyExcludedProperties.add(key(root, property));
-
-	if (includedProperties.get(root) != null) { // not yet loaded
-	    includedPropertiesMutable(root).remove(property);
+	if (includedPropertiesMutable(root).contains(property)) {
+	    final int index = includedPropertiesMutable(root).indexOf(property);
+	    while (index < includedPropertiesMutable(root).size() && includedPropertiesMutable(root).get(index).startsWith(property)) {
+		includedPropertiesMutable(root).remove(includedPropertiesMutable(root).get(index));
+	    }
 	}
+	manuallyExcludedProperties.add(key(root, property));
     }
 
     /**
@@ -475,10 +476,13 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	////////////////////////////////////////////////////////////
 	@Override
 	public boolean remove(final Object obj) {
+	    final String property = (String) obj;
+	    fireProperty(root, property, false);
+
 	    final boolean removed = super.remove(obj);
-	    if (removed) {
-		final String property = (String) obj;
-		fireProperty(root, property, false);
+	    if (!removed) {
+		throw new IllegalStateException("DANGEROUS: the property [" + property + "] can not be removed, because it does not exist in the list. " +
+				"But the meta-state associated with this property has been removed! Please ensure that property removal is correct!");
 	    }
 	    return removed;
 	}

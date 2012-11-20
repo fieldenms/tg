@@ -204,6 +204,12 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	// initialise the references on THIS instance in AbstractAnalysisDomainTreeManager's representation and its both ticks
 	try {
 	    setValueForLazyField(dtr, parentCentreDomainTreeManager);
+	    
+	    // load analysis property tree! it depends on "parent centre domain type"!
+	    for (final Class<?> type : dtr.includedPropertiesTypes()) {
+		dtr.includedPropertiesMutable(type);
+	    }
+
 	    setValueForLazyField(dtr.getFirstTick(), parentCentreDomainTreeManager);
 	    setValueForLazyField(dtr.getSecondTick(), parentCentreDomainTreeManager);
 	} catch (final Exception e) {

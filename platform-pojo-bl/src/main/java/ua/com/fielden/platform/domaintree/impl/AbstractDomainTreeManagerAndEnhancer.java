@@ -198,7 +198,9 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	protected static void removeMetaStateFromPropertyToBeRemoved(final Class<?> root, final String removedProperty, final IDomainTreeRepresentationWithMutability dtr) {
 	    // this is a removed property. "includedProperties" should be updated (the removed property should be removed in incl properties).
 	    logger.debug("The property to be removed: root == " + root + ", property == " + removedProperty);
-	    dtr.includedPropertiesMutable(root).remove(removedProperty);
+	    if (dtr.includedPropertiesMutable(root).contains(removedProperty)) {
+		dtr.includedPropertiesMutable(root).remove(removedProperty);
+	    }
 	    // the "excludedProperties" set should be updated after the property has been physically removed from domain
 	    if (dtr.excludedPropertiesMutable().contains(AbstractDomainTree.key(root, removedProperty))) {
 	        dtr.excludedPropertiesMutable().remove(AbstractDomainTree.key(root, removedProperty));
