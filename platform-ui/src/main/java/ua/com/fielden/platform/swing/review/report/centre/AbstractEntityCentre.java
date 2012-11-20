@@ -80,7 +80,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     private final Action runAction;
 
     //Holds current operable analysis report.
-    private AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> currentAnalysisConfigurationView;
+    private AbstractAnalysisConfigurationView<T, CDTME, ?, ?> currentAnalysisConfigurationView;
 
     /**
      * Initiates this {@link AbstractEntityCentre}. Creates all parts and components of entity centre.
@@ -152,7 +152,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      *
      * @return
      */
-    public final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> getCurrentAnalysisConfigurationView() {
+    public final AbstractAnalysisConfigurationView<T, CDTME, ?, ?> getCurrentAnalysisConfigurationView() {
 	return currentAnalysisConfigurationView;
     }
 
@@ -288,8 +288,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      *
      * @param currentAnalysisConfigurationView
      */
-    protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> currentAnalysisConfigurationView) {
-	final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> oldAnalysisConfigurationView = this.currentAnalysisConfigurationView;
+    protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?> currentAnalysisConfigurationView) {
+	final AbstractAnalysisConfigurationView<T, CDTME, ?, ?> oldAnalysisConfigurationView = this.currentAnalysisConfigurationView;
 	this.currentAnalysisConfigurationView = currentAnalysisConfigurationView;
 	firePropertyChange("currentAnalysisConfigurationView", oldAnalysisConfigurationView, this.currentAnalysisConfigurationView);
     }

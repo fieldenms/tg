@@ -21,15 +21,12 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.types.Money;
 
-public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManager, Void> {
+public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager> {
 
     private final ChartAnalysisDataProvider<T> chartAnalysisDataProvider = new ChartAnalysisDataProvider<T>();
 
-    private ChartAnalysisView<T> analysisView;
-
     public ChartAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisDomainTreeManager adtme) {
 	super(criteria, adtme);
-	this.analysisView = null;
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
 	    @SuppressWarnings("unchecked")
@@ -45,7 +42,11 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
     }
 
     @Override
-    protected Result canLoadData() {
+    protected ChartAnalysisView<T> getAnalysisView() {
+        return (ChartAnalysisView<T>)super.getAnalysisView();
+    }
+
+    private Result canLoadData() {
 	final Result result = getCriteria().isValid();
 	if(!result.isSuccessful()){
 	    return result;
@@ -58,9 +59,17 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
     }
 
     @Override
-    protected Void executeAnalysisQuery() {
+    protected Result executeAnalysisQuery() {
+	final Result analysisQueryExecutionResult = canLoadData();
+	if(!analysisQueryExecutionResult.isSuccessful()){
+	    return analysisQueryExecutionResult;
+	}
+
 	final Class<T> root = getCriteria().getEntityClass();
 
+//	final IReportQueryGeneration<T> chartAnalysisQueryGenerator = getAnalysisView().getAnalysisCustomiser().getQueryGenerator(getAnalysisView(), root);
+
+	//TODO re- factor this with analysis customiser. Remove the code below and uncomment the code above.
 	final IReportQueryGeneration<T> chartAnalysisQueryGenerator = new ChartAnalysisQueryGenerator<>(//
 		root, //
 		getCriteria().getCentreDomainTreeMangerAndEnhancer(), //
@@ -71,15 +80,15 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	final AnalysisResultClassBundle<T> classBundle = chartAnalysisQueryGenerator.generateQueryModel();
 
-	final IPage<T> result = getCriteria().run(classBundle.getQueries().get(0), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), analysisView.getPageSize());
+	final IPage<T> result = getCriteria().run(classBundle.getQueries().get(0), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), getAnalysisView().getPageSize());
 	chartAnalysisDataProvider.setUsedProperties(distributionProperties, aggregationProperties);
 	getPageHolder().newPage(result);
-	return null;
+	return Result.successful(result);
     }
 
     @Override
-    protected void exportData(final String fileName) throws IOException {
-	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");
+    protected Result exportData(final String fileName) throws IOException {
+	return new Result(new UnsupportedOperationException("Chart analysis doesnt supports data exporting!"));
     }
 
     @Override
@@ -89,18 +98,6 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
     @Override
     protected String getDefaultExportFileExtension() {
 	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");    }
-
-    /**
-     * Set the analysis view for this model. Throws {@link IllegalStateException} if the model was already set.
-     *
-     * @param analysisView
-     */
-    final void setAnalysisView(final ChartAnalysisView<T> analysisView){
-	if(this.analysisView != null){
-	    throw new IllegalStateException("The analysis view can be set only once!");
-	}
-	this.analysisView = analysisView;
-    }
 
     private static class ChartAnalysisDataProvider<T extends AbstractEntity<?>> extends AbstractCategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> {
 

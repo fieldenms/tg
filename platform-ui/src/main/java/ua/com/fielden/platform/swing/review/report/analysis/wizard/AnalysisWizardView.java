@@ -28,7 +28,7 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
 
     private final EntitiesTreePanel<IAbstractAnalysisDomainTreeManager> entitiesTreePanel;
 
-    public AnalysisWizardView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> configurationOwner, final IAbstractAnalysisDomainTreeManager domainTreeManager) {
+    public AnalysisWizardView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?> configurationOwner, final IAbstractAnalysisDomainTreeManager domainTreeManager) {
 	super(configurationOwner, domainTreeManager, "Choose distribution and aggregation properties");
 	this.addSelectionEventListener(createWizardSelectionListener());
 
@@ -42,8 +42,8 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
 
     @SuppressWarnings("unchecked")
     @Override
-    public AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> getOwner() {
-	return (AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?>)super.getOwner();
+    public AbstractAnalysisConfigurationView<T, CDTME, ?, ?> getOwner() {
+	return (AbstractAnalysisConfigurationView<T, CDTME, ?, ?>)super.getOwner();
     }
 
     @Override

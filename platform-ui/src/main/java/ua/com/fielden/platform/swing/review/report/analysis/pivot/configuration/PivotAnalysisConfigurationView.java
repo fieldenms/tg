@@ -17,7 +17,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IAbstractConfigurationViewEventListener;
 
-public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void, PivotAnalysisView<T>> {
+public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, PivotAnalysisView<T>> {
 
     private static final long serialVersionUID = -1464413279095086886L;
 

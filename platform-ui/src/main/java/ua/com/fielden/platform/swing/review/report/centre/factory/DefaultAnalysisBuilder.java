@@ -12,9 +12,6 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
-import ua.com.fielden.platform.swing.review.report.centre.factory.DefaultGridAnalysisFactory;
-import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuilder;
-import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisFactory;
 
 public class DefaultAnalysisBuilder<T extends AbstractEntity<?>> implements IAnalysisBuilder<T> {
 
@@ -33,7 +30,7 @@ public class DefaultAnalysisBuilder<T extends AbstractEntity<?>> implements IAna
     }
 
     @Override
-    public AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?, ?> createAnalysis(//
+    public AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?> createAnalysis(//
 	    final AnalysisType analysisType, //
 	    final String name, //
 	    final Map<Object, DetailsFrame> detailsCache, //

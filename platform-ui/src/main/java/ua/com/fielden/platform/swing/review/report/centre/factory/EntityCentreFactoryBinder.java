@@ -139,7 +139,7 @@ public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> implements I
     }
 
     @Override
-    public AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?, ?> createAnalysis(//
+    public AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?> createAnalysis(//
 	    final AnalysisType analysisType, //
 	    final String name, //
 	    final Map<Object, DetailsFrame> detailsCache,//

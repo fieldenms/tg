@@ -17,7 +17,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IAbstractConfigurationViewEventListener;
 
-public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager, Void, ChartAnalysisView<T>> {
+public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager, ChartAnalysisView<T>> {
 
     private static final long serialVersionUID = -44217633254876740L;
 

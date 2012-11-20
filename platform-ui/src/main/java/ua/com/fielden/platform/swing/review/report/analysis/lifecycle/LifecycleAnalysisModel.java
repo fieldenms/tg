@@ -30,7 +30,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
 import ua.com.fielden.platform.types.ICategory;
 import ua.com.fielden.platform.utils.Pair;
 
-public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager, Void>{
+public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager>{
 
     private final LifecycleChartFactory<T> chartFactory;
 
@@ -63,7 +63,12 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
     }
 
     @Override
-    protected Void executeAnalysisQuery() {
+    protected Result executeAnalysisQuery() {
+	final Result analysisQueryExecutionResult = canLoadData();
+	if(!analysisQueryExecutionResult.isSuccessful()){
+	    return analysisQueryExecutionResult;
+	}
+
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getCriteria().getManagedType(), getCriteria().createQueryProperties()).model();
 	final List<String> fetchProperties = new ArrayList<>();
 	for(final String distrProp : adtme().getFirstTick().checkedProperties(getCriteria().getEntityClass())){
@@ -79,16 +84,15 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
 		fireLifecycleModelUpdated(new LifecycleModelUpdateEvent<>(LifecycleAnalysisModel.this, lifecycleModel));
 	    }
 	});
-	return null;
+	return Result.successful(lifecycleModel);
     }
 
     @Override
-    protected void exportData(final String fileName) throws IOException {
-	throw new UnsupportedOperationException("The data exporting for lifecycle analysis is not supported!");
+    protected Result exportData(final String fileName) throws IOException {
+	return new Result(new UnsupportedOperationException("The data exporting for lifecycle analysis is not supported!"));
     }
 
-    @Override
-    protected Result canLoadData() {
+    private Result canLoadData() {
 	final Result res = getCriteria().isValid();
 	if(!res.isSuccessful()){
 	    return res;

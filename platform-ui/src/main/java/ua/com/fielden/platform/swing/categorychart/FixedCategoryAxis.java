@@ -10,10 +10,10 @@ import org.jfree.ui.RectangleEdge;
 
 /**
  * This temporary class was implemented in order to fix bug that hides CategoryLabelEntity. This class will be removed when JfreeChart 1.0.14 will be released.
- * 
- * 
+ *
+ *
  * @author oleh
- * 
+ *
  */
 public class FixedCategoryAxis extends CategoryAxis {
 
@@ -42,7 +42,7 @@ public class FixedCategoryAxis extends CategoryAxis {
 	    drawTickMarks(g2, cursor, dataArea, edge, state);
 	}
 
-	createAndAddEntity(cursor, state, dataArea, edge, plotState);
+	super.createAndAddEntity(cursor, state, dataArea, edge, plotState);
 	// draw the category labels and axis label
 	state = drawCategoryLabels(g2, plotArea, dataArea, edge, state, plotState);
 	state = drawLabel(getLabel(), g2, plotArea, dataArea, edge, state);

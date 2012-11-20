@@ -11,7 +11,7 @@ import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
-public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTME extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReviewModel<T, CDTME> {
+public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTME extends IAbstractAnalysisDomainTreeManager> extends AbstractEntityReviewModel<T, CDTME> {
 
     private final ADTME adtme;
 
@@ -20,26 +20,28 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity<?>, C
      */
     private final PageHolder pageHolder;
 
+    private AbstractAnalysisReview<T, CDTME, ADTME> analysisView;
+
     public AbstractAnalysisReviewModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final ADTME adtme) {
 	super(criteria);
 	this.adtme = adtme;
 	this.pageHolder = new PageHolder();
+	this.analysisView = null;
     }
 
-
-    //    /**
-    //     * Determines whether this analysis report can be exported to the external file.
-    //     *
-    //     * @return
-    //     */
-    //    public abstract boolean canExport();
-    //
-    //    /**
-    //     * Determines whether this analysis report supports page by page data review.
-    //     *
-    //     * @return
-    //     */
-    //    public abstract boolean isPaginationSupported();
+    /**
+     * Set the analysis view for this model.
+     * Please note that one can set analysis view only once.
+     * Otherwise The {@link IllegalStateException} will be thrown.
+     *
+     * @param analysisView
+     */
+    final void setAnalysisView(final AbstractAnalysisReview<T, CDTME, ADTME> analysisView){
+	if(this.analysisView != null){
+	    throw new IllegalStateException("The analysis view can be set only once!");
+	}
+	this.analysisView = analysisView;
+    }
 
     /**
      * Returns the associated {@link IAbstractAnalysisDomainTreeManager}.
@@ -59,24 +61,30 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity<?>, C
 	return pageHolder;
     }
 
+    protected AbstractAnalysisReview<T, CDTME, ADTME> getAnalysisView() {
+	return analysisView;
+    }
+
+    /**
+     * Runs the last executed query.
+     *
+     * @return
+     */
+    protected Result reExecuteAnalysisQuery() {
+	throw new UnsupportedOperationException();
+    }
+
     /**
      * Executes analysis query, and returns the result set of the query execution.
      *
      * @return
      */
-    abstract protected LDT executeAnalysisQuery();
+    abstract protected Result executeAnalysisQuery();
 
     /**
      * Exports data in to external file.
      */
-    abstract protected void exportData(String fileName) throws IOException;
-
-    /**
-     * Determines whether this analysis can load data, and returns {@link Result} instance with exception, warning, or successful result.
-     *
-     * @return
-     */
-    abstract protected Result canLoadData();
+    abstract protected Result exportData(String fileName) throws IOException;
 
     /**
      * Returns the array of available file extensions to export.

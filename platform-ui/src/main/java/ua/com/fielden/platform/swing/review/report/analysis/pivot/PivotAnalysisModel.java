@@ -37,7 +37,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListS
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 
-public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void> {
+public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager> {
 
     private final PivotTreeTableModelEx pivotModel;
     private final ListCheckingModel<String> distributionCheckingModel;
@@ -123,7 +123,12 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
     }
 
     @Override
-    protected Void executeAnalysisQuery() {
+    protected Result executeAnalysisQuery() {
+	final Result analysisQueryExecutionResult = canLoadData();
+	if(!analysisQueryExecutionResult.isSuccessful()){
+	    return analysisQueryExecutionResult;
+	}
+
 	final Class<T> root = getCriteria().getEntityClass();
 
 	final IReportQueryGeneration<T> pivotQueryGenerator = new PivotAnalysisQueryGgenerator<>(root,//
@@ -140,11 +145,11 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    resultMap.put(distributionProperties.get(index), getGroupList(classBundle, index+1));
 	}
 	pivotModel.loadData(resultMap, distributionProperties, adtme().getSecondTick().usedProperties(root));
-	return null;
+
+	return Result.successful(pivotModel);
     }
 
-    @Override
-    protected Result canLoadData() {
+    private Result canLoadData() {
 	final Result result = getCriteria().isValid();
 	if(!result.isSuccessful()){
 	    return result;
@@ -157,9 +162,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
     }
 
     @Override
-    protected void exportData(final String fileName) throws IOException {
-        // TODO Auto-generated method stub
-
+    protected Result exportData(final String fileName) throws IOException {
+	return new Result(new UnsupportedOperationException("Data exporting in the pivot analysis is not yet implemented!"));
     }
 
     @Override

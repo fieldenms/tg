@@ -31,7 +31,7 @@ public interface IAnalysisBuilder<T extends AbstractEntity<?>> {
      * @param progressLayer
      * @return
      */
-    AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?, ?> createAnalysis(//
+    AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?> createAnalysis(//
 	    final AnalysisType analysisType, //
 	    final String name, //
 	    final Map<Object, DetailsFrame> detailsCache,//

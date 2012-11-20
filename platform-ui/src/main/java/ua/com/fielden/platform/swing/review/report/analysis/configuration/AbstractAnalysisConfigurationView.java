@@ -38,7 +38,7 @@ import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventLis
  * @param <LDT> - The type of data that this analysis returns after it's execution.
  * @param <VT> - The type of {@link AbstractAnalysisReview} that represent the analysis view.
  */
-public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTME extends IAbstractAnalysisDomainTreeManager, LDT, VT extends AbstractAnalysisReview<T, CDTME, ADTME, LDT>> extends AbstractConfigurationView<VT, AnalysisWizardView<T, CDTME>> {
+public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTME extends IAbstractAnalysisDomainTreeManager, VT extends AbstractAnalysisReview<T, CDTME, ADTME>> extends AbstractConfigurationView<VT, AnalysisWizardView<T, CDTME>> {
 
     private static final long serialVersionUID = -7493238859906828458L;
 

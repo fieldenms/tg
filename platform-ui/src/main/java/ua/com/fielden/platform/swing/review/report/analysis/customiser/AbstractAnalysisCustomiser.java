@@ -13,7 +13,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
  *
  * @param <A>
  */
-public class AbstractAnalysisCustomiser<A extends AbstractAnalysisReview<?, ?, ?, ?>> implements IAnalysisCustomiser<A> {
+public class AbstractAnalysisCustomiser<A extends AbstractAnalysisReview<?, ?, ?>> implements IAnalysisCustomiser<A> {
 
     @Override
     public ActionPanelBuilder createToolBar(final A analysisView) {

@@ -75,7 +75,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  *
  * @param <T>
  */
-public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager, Void> {
+public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager> {
 
     private static final long serialVersionUID = -4883473612285722738L;
 

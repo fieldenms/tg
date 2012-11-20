@@ -118,8 +118,8 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     @Override
     public ICloseGuard canClose() {
         for (int analysisIndex = 0; analysisIndex < tabPanel.getTabCount(); analysisIndex++) {
-	    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysisView =//
-		    (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>) tabPanel.getComponentAt(analysisIndex);
+	    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> analysisView =//
+		    (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?>) tabPanel.getComponentAt(analysisIndex);
 	    if (analysisView.canClose() != null) {
 		showAnalysis(analysisView.getModel().getName(), null);
 		return analysisView;
@@ -218,7 +218,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	if(index >=0 ){
 	    tabPanel.setSelectedIndex(index);
 	} else {
-	    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = createAnalysis(name, analysisType);
+	    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> analysis = createAnalysis(name, analysisType);
 	    if(analysis != null){
 		tabPanel.addTab(analysis.getModel().getName(), analysis);
 		analysis.addLoadListener(new ILoadListener() {
@@ -356,7 +356,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	tabPane.setTabShape(JideTabbedPane.SHAPE_OFFICE2003);
 	tabPane.setBorder(BorderFactory.createLineBorder(new Color(146, 151, 161)));
 	//Initiates first tab with main details (i.e. grid analysis).
-	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> mainDetails = createAnalysis(null, null);
+	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> mainDetails = createAnalysis(null, null);
 	addLoadAnalysisListenerTo(tabPane, mainDetails, getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().analysisKeys(), 0);
 	tabPane.addTab(mainDetails.getModel().getName(), mainDetails);
 	tabPane.setTabClosableAt(0, false);
@@ -373,7 +373,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @param analysisKeys
      * @param analysisIndex
      */
-    private void addLoadAnalysisListenerTo(final JideTabbedPane tabPane, final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> configView, final List<String> analysisKeys, final int analysisIndex) {
+    private void addLoadAnalysisListenerTo(final JideTabbedPane tabPane, final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> configView, final List<String> analysisKeys, final int analysisIndex) {
 	if(configView == null){
 	    loadNextAnalysis(tabPane, analysisKeys, analysisIndex);
 	}else{
@@ -399,7 +399,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	if(analysisKeys.size() > visibleAnalysisIndex){
 	    final String name = analysisKeys.get(visibleAnalysisIndex);
 	    final AnalysisType type = determineAnalysisType(getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name));
-	    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> newAnalysis = createAnalysis(name, type);
+	    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> newAnalysis = createAnalysis(name, type);
 	    addLoadAnalysisListenerTo(tabPane, newAnalysis, analysisKeys, visibleAnalysisIndex + 1);
 	    if(newAnalysis != null){
 		tabPane.addTab(newAnalysis.getModel().getName(), newAnalysis);
@@ -445,7 +445,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @param type - the analysis type.
      * @return
      */
-    private AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> createAnalysis(final String name, final AnalysisType type){
+    private AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> createAnalysis(final String name, final AnalysisType type){
 	return getModel().getAnalysisBuilder()//
 		.createAnalysis(type, name, getOwner().getDetailsCache(name), this, getModel().getCriteria(), getReviewProgressLayer());    }
 
@@ -522,7 +522,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	if(index < 0){
 	    throw new IllegalArgumentException("The tab index can not be less then 0");
 	}
-	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)tabPanel.getComponentAt(index);
+	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> analysis = (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?>)tabPanel.getComponentAt(index);
 	if(analysis instanceof GridConfigurationView){
 	    JOptionPane.showMessageDialog(this, "Main details analysis can not be removed", "Informotaion", JOptionPane.WARNING_MESSAGE);
 	    return false;
@@ -545,11 +545,11 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @return
      */
     @SuppressWarnings("unchecked")
-    private AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> removeTabSheet(final int index){
+    private AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> removeTabSheet(final int index){
 	if(index < 0){
 	    throw new IllegalArgumentException("The tab index can not be less then 0");
 	}
-	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)tabPanel.getComponentAt(index);
+	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> analysis = (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?>)tabPanel.getComponentAt(index);
 	analysis.getModel().setAnalysisVisible(false);
 	tabPanel.removeTabAt(index);
 	analysis.close();
@@ -572,7 +572,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    public void setSelectedIndex(final int index) {
 		if(!isLoaded() || !getReviewProgressLayer().isLocked()){
 		    super.setSelectedIndex(index);
-		    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
+		    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
 		    if (analysis.isLoaded()) {
 			setCurrentAnalysisConfigurationView(analysis);
 		    }

@@ -80,7 +80,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  *
  * @param <T>
  */
-public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void> {
+public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager> {
 
     private static final long serialVersionUID = 8295216779213506230L;
 

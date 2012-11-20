@@ -40,7 +40,7 @@ public class SingleAnalysisEntityCentre<T extends AbstractEntity<?>> extends Abs
     }
 
     @Override
-    protected AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> createDefaultAnalysis() {
+    protected AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> createDefaultAnalysis() {
 	return getModel().getAnalysisBuilder().createAnalysis(null, null, null, this, getModel().getCriteria(), getReviewProgressLayer());
     }
 

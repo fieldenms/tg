@@ -15,14 +15,14 @@ public class AnalysisConfigurationEvent extends EventObject{
 
     private final AnalysisConfigurationAction eventAction;
 
-    public AnalysisConfigurationEvent(final AbstractAnalysisConfigurationView<?, ?, ?, ?, ?> source, final AnalysisConfigurationAction eventAction) {
+    public AnalysisConfigurationEvent(final AbstractAnalysisConfigurationView<?, ?, ?, ?> source, final AnalysisConfigurationAction eventAction) {
 	super(source);
 	this.eventAction = eventAction;
     }
 
     @Override
-    public AbstractAnalysisConfigurationView<?, ?, ?, ?, ?> getSource() {
-	return (AbstractAnalysisConfigurationView<?, ?, ?, ?, ?>)super.getSource();
+    public AbstractAnalysisConfigurationView<?, ?, ?, ?> getSource() {
+	return (AbstractAnalysisConfigurationView<?, ?, ?, ?>)super.getSource();
     }
 
     public AnalysisConfigurationAction getEventAction() {

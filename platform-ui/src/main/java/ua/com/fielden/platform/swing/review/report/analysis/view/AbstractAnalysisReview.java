@@ -28,13 +28,13 @@ import ua.com.fielden.platform.swing.pagination.model.development.IPageNavigatio
 import ua.com.fielden.platform.swing.pagination.model.development.PageNavigationEvent;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisCustomiser;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
-public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTME extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReview<T, CDTME> {
+public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTME extends IAbstractAnalysisDomainTreeManager> extends AbstractEntityReview<T, CDTME> {
 
     private static final long serialVersionUID = -1195915524813089236L;
 
@@ -43,26 +43,31 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 
     private boolean wasLoaded;
 
-    public AbstractAnalysisReview(final AbstractAnalysisReviewModel<T, CDTME, ADTME, LDT> model, final AbstractAnalysisConfigurationView<T, CDTME, ADTME, LDT, ? extends AbstractAnalysisReview<T, CDTME, ADTME, LDT>> owner) {
+    public AbstractAnalysisReview(final AbstractAnalysisReviewModel<T, CDTME, ADTME> model, final AbstractAnalysisConfigurationView<T, CDTME, ADTME, ?> owner) {
 	super(model, owner);
 	this.loadAction = createLoadAction();
 	this.exportAction = createExportAction();
 	this.wasLoaded = false;
+	this.getModel().setAnalysisView(this);
 	this.getModel().getPageHolder().addPageNavigationListener(createPageNavigationListener());
 	owner.getOwner().getPageHolderManager().addPageHolder(getModel().getPageHolder());
 	addComponentListener(createComponentWasResized());
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public AbstractAnalysisReviewModel<T, CDTME, ADTME, LDT> getModel() {
-	return (AbstractAnalysisReviewModel<T, CDTME, ADTME, LDT>) super.getModel();
+    public IAnalysisCustomiser<? extends AbstractAnalysisReview<T, CDTME, ADTME>> getAnalysisCustomiser(){
+	return getOwner().getAnalysisCustomiser();
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public AbstractAnalysisConfigurationView<T, CDTME, ADTME, LDT, ? extends AbstractAnalysisReview<T, CDTME, ADTME, LDT>> getOwner() {
-	return (AbstractAnalysisConfigurationView<T, CDTME, ADTME, LDT, ? extends AbstractAnalysisReview<T, CDTME, ADTME, LDT>>) super.getOwner();
+    public AbstractAnalysisReviewModel<T, CDTME, ADTME> getModel() {
+	return (AbstractAnalysisReviewModel<T, CDTME, ADTME>) super.getModel();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public AbstractAnalysisConfigurationView<T, CDTME, ADTME, ? extends AbstractAnalysisReview<T, CDTME, ADTME>> getOwner() {
+	return (AbstractAnalysisConfigurationView<T, CDTME, ADTME, ? extends AbstractAnalysisReview<T, CDTME, ADTME>>) super.getOwner();
     }
 
     @Override
@@ -160,7 +165,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
     }
 
     private Action createLoadAction() {
-	return new BlockingLayerCommand<Pair<Result, LDT>>("Run", getOwner().getProgressLayer()) {
+	return new BlockingLayerCommand<Result>("Run", getOwner().getProgressLayer()) {
 	    private static final long serialVersionUID = 1L;
 
 	    {
@@ -183,18 +188,14 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	    }
 
 	    @Override
-	    protected Pair<Result, LDT> action(final ActionEvent e) throws Exception {
-		final Result result = getModel().canLoadData();
-		if (result.isSuccessful()) {
-		    return new Pair<Result, LDT>(result, getModel().executeAnalysisQuery());
-		}
-		return new Pair<Result, LDT>(result, null);
+	    protected Result action(final ActionEvent e) throws Exception {
+		return getModel().executeAnalysisQuery();
 	    }
 
 	    @Override
-	    protected void postAction(final Pair<Result, LDT> result) {
-		if (!result.getKey().isSuccessful()) {
-		    JOptionPane.showMessageDialog(AbstractAnalysisReview.this, result.getKey().getMessage());
+	    protected void postAction(final Result result) {
+		if (!result.isSuccessful()) {
+		    JOptionPane.showMessageDialog(AbstractAnalysisReview.this, result.getMessage());
 		}
 		enableRelatedActions(true, false);
 		super.postAction(result);
@@ -282,17 +283,11 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 
 	    @Override
 	    protected Result action(final ActionEvent e) throws Exception {
-		final Result result = getModel().canLoadData();
-		if (result.isSuccessful()) {
-		    getModel().exportData(targetFileName);
-		}
-		return result;
+		return getModel().exportData(targetFileName);
 	    }
 
 	    @Override
 	    protected void postAction(final Result result) {
-
-
 		if (!result.isSuccessful()) {
 		    JOptionPane.showMessageDialog(AbstractAnalysisReview.this, result.getMessage());
 		} else {

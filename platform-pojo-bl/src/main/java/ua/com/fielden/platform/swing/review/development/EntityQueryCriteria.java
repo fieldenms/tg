@@ -322,7 +322,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	if(entity.getType().equals(getEntityClass()) || entity.getType().equals(getManagedType())){
 	    final EntityResultQueryModel<T> deleteQuery = select(getEntityClass()).where().prop("id").eq().val(entity.getId()).model();
 	    dao.delete(deleteQuery);
-	}else{
+	} else {
 	    throw new IllegalArgumentException("It's impossible to delete entity that isn't of the entity type or managed type of this criteria!");
 	}
     }

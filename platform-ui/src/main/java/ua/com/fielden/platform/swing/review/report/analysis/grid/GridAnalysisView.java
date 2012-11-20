@@ -43,7 +43,7 @@ import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventLis
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
-public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage<T>> implements IUmViewOwner, IBlockingLayerProvider {
+public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManager> implements IUmViewOwner, IBlockingLayerProvider {
 
     private static final long serialVersionUID = 8538099803371092525L;
 
@@ -78,8 +78,6 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	});
 	getModel().getPageHolder().newPage(null);
 	this.addSelectionEventListener(createGridAnalysisSelectionListener());
-
-	model.setAnalysisView(this);
 
 	layoutView();
     }

@@ -67,6 +67,16 @@
 			<artifactId>jasperreports</artifactId>
 			<version>4.7.1</version>
 			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>jfree</groupId>
+					<artifactId>jcommon</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>jfree</groupId>
+					<artifactId>jfreechart</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>antlr</groupId>

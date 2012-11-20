@@ -31,34 +31,32 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.utils.Pair;
 
-public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReviewModel<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage<T>> {
+public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReviewModel<T, CDTME, IAbstractAnalysisDomainTreeManager> {
 
-
-    private GridAnalysisView<T, CDTME> analysisView;
+    /** holds the last executed query */
+    private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries;
 
     public GridAnalysisModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria) {
 	super(criteria, null);
-	this.analysisView = null;
     }
 
     /**
-     * Set the analysis view for this model.
-     * Please note that one can set analysis view only once.
-     * Otherwise The {@link IllegalStateException} will be thrown.
-     *
-     * @param analysisView
+     * Creates query execution models, validates them and either runs returning the first page or throws {@link Result} to indicate any errors.
      */
-    final void setAnalysisView(final GridAnalysisView<T, CDTME> analysisView){
-	if(this.analysisView != null){
-	    throw new IllegalStateException("The analysis view can be set only once!");
-	}
-	this.analysisView = analysisView;
+    @Override
+    protected Result executeAnalysisQuery() {
+	analysisQueries = createQueryExecutionModel();
+	return runQuery(analysisQueries);
     }
 
-    @Override
-    protected IPage<T> executeAnalysisQuery() {
-	final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries = createQueryExecutionModel();
-	final int pageSize = analysisView.getPageSize();
+
+    private Result runQuery(final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries) {
+	final Result analysisQueryExecutionResult = canLoadData();
+	if(!analysisQueryExecutionResult.isSuccessful()){
+	    return analysisQueryExecutionResult;
+	}
+
+	final int pageSize = getAnalysisView().getPageSize();
 	final IPage<T> newPage;
 	if(analysisQueries.getValue() == null){
 	    newPage = getCriteria().firstPage(analysisQueries.getKey(), pageSize);
@@ -66,21 +64,41 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    newPage = getCriteria().firstPage(analysisQueries.getKey(), analysisQueries.getValue(), pageSize);
 	}
 	getPageHolder().newPage(newPage);
-	return newPage;
+	return Result.successful(newPage);
     }
+
+    @Override
+    protected Result reExecuteAnalysisQuery() {
+	return analysisQueries == null ? executeAnalysisQuery() : runQuery(analysisQueries);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     protected T getEntityById(final Long id) {
         return getCriteria().getEntityById(id);
     }
 
-    @Override
-    protected Result canLoadData() {
+    private Result canLoadData() {
 	return getCriteria().isValid();
     }
 
     @Override
-    protected void exportData(final String fileName) throws IOException {
-	final PropertyTableModel<T> tableModel = analysisView.getEgiPanel().getEgi().getActualModel();
+    protected Result exportData(final String fileName) throws IOException {
+	final Result analysisQueryExecutionResult = canLoadData();
+	if(!analysisQueryExecutionResult.isSuccessful()){
+	    return analysisQueryExecutionResult;
+	}
+	final PropertyTableModel<T> tableModel = getAnalysisView().getEgiPanel().getEgi().getActualModel();
 	final List<String> propertyNames = new ArrayList<String>(tableModel.getPropertyColumnMappings().size());
 	final List<String> propertyTitles = new ArrayList<String>(tableModel.getPropertyColumnMappings().size());
 	for (final AbstractPropertyColumnMapping<T> mapping : tableModel.getPropertyColumnMappings()) {
@@ -89,6 +107,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    propertyTitles.add(mapping.getPropertyTitle());
 	}
 	getCriteria().export(fileName, createQueryExecutionModel().getKey(), propertyNames.toArray(new String[] {}), propertyTitles.toArray(new String[] {}));
+	return Result.successful(this);
     }
 
     @Override
@@ -139,7 +158,8 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	return DynamicQueryBuilder.createQuery(getCriteria().getManagedType(), getCriteria().createQueryProperties()).model();
     }
 
-    protected final GridAnalysisView<T, CDTME> getAnalysisView() {
-	return analysisView;
+    @Override
+    protected GridAnalysisView<T, CDTME> getAnalysisView() {
+	return (GridAnalysisView<T, CDTME>)super.getAnalysisView();
     }
 }

@@ -21,7 +21,7 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 
     private static final long serialVersionUID = -7393061848126429375L;
 
-    private AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> defaultAnalysis;
+    private AbstractAnalysisConfigurationView<T, CDTME, ?, ?> defaultAnalysis;
 
     private boolean wasResized;
     private boolean wasAnalysisLoaded;
@@ -63,7 +63,7 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
      *
      * @return
      */
-    public AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> getSingleAnalysis(){
+    public AbstractAnalysisConfigurationView<T, CDTME, ?, ?> getSingleAnalysis(){
 	return defaultAnalysis;
     }
 
@@ -72,7 +72,7 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
      *
      * @return
      */
-    protected abstract AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> createDefaultAnalysis();
+    protected abstract AbstractAnalysisConfigurationView<T, CDTME, ?, ?> createDefaultAnalysis();
 
     /**
      * Adds the {@link ILoadListener} to the specified {@link GridConfigurationView}. That "load listener" determines when the specified component was loaded.
@@ -80,7 +80,7 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
      *
      * @param component
      */
-    private void addLoadListenerToAnalysis(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> analysis) {
+    private void addLoadListenerToAnalysis(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?> analysis) {
         analysis.addLoadListener(new ILoadListener() {
 
             @Override

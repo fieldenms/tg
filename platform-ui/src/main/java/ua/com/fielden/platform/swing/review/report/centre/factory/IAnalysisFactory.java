@@ -21,7 +21,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
  * @param <T>
  * @param <A>
  */
-public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?, ?>> {
+public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?>> {
 
     /**
      * Creates an analysis configuration view.
