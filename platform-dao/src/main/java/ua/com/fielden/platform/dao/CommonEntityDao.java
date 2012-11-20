@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -26,6 +29,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
+import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -47,9 +51,6 @@ import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
@@ -176,6 +177,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 		} catch (final Exception e) {
 		    throw new IllegalStateException("Could not assign transaction date properties.", e);
 		}
+		// check and assign properties annotated with @TransactionUser
+		try {
+		    assignTransactionUser(entity);
+		} catch (final Exception e) {
+		    throw new IllegalStateException("Could not assign transaction user properties.", e);
+		}
 
 		// save the entity
 		getSession().save(entity);
@@ -278,6 +285,29 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	    }
 	}
     }
+
+    private void assignTransactionUser(final T entity) throws Exception {
+	final List<Field> transactionUserProperties = Finder.findRealProperties(entity.getType(), TransactionUser.class);
+	final User user = getUser();
+	if (user == null) {
+	    throw new IllegalArgumentException("The user could not be determined!");
+	}
+	for (final Field property : transactionUserProperties) {
+	    property.setAccessible(true);
+	    final Object value = property.get(entity);
+	    if (value == null) {
+		if (User.class.isAssignableFrom(property.getType())) {
+		    property.set(entity, user);
+		} else if (String.class.isAssignableFrom(property.getType())) {
+		    property.set(entity, user.getKey());
+		} else {
+		    throw new IllegalArgumentException("The type of property " + entity.getType().getName() + "@" + property.getName()
+			    + " is not valid for annotation TransactionUser.");
+		}
+	    }
+	}
+    }
+
 
     @Override
     @SessionRequired
