@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.zip.Deflater;
 
@@ -302,8 +303,17 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
     }
 
     public void removeInstances(final T... instances) {
+	final List<T> instancesToRemove = asList(instances);
 	final List<T> currInstances = instances();
-	currInstances.removeAll(asList(instances));
+	for (final Iterator<T> iter = currInstances.iterator(); iter.hasNext();) {
+	    final T instance = iter.next();
+	    for (final T instanceToRemove : instancesToRemove) {
+		if (areEqual(instance, instanceToRemove)) {
+		    iter.remove();
+		    break;
+		}
+	    }
+	}
 
 	regroup(currInstances);
     }
