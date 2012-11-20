@@ -6,7 +6,6 @@ import java.util.Set;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
-import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -23,14 +22,14 @@ public class LocatorDomainTreeRepresentation extends CentreDomainTreeRepresentat
      * A <i>representation</i> constructor for the first time instantiation. Initialises also children references on itself.
      */
     public LocatorDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, rootTypes, AbstractDomainTree.createSet(), new AddToCriteriaTick(), new AddToResultSetTick(), AbstractDomainTree.<ListenedArrayList>createRootsMap());
+	this(serialiser, rootTypes, AbstractDomainTree.createSet(), new AddToCriteriaTick(), new AddToResultSetTick());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected LocatorDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AddToCriteriaTick firstTick, final AddToResultSetTick secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
-	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
+    protected LocatorDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AddToCriteriaTick firstTick, final AddToResultSetTick secondTick) {
+	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     /**
@@ -50,8 +49,7 @@ public class LocatorDomainTreeRepresentation extends CentreDomainTreeRepresentat
 	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final AddToCriteriaTick firstTick = readValue(buffer, AddToCriteriaTick.class);
 	    final AddToResultSetTick secondTick = readValue(buffer, AddToResultSetTick.class);
-	    final EnhancementRootsMap<ListenedArrayList> includedProperties = readValue(buffer, EnhancementRootsMap.class);
-	    return new LocatorDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
+	    return new LocatorDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
 	}
     }
 }

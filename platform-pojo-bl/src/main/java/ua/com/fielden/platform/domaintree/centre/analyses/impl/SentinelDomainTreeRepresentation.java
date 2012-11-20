@@ -4,9 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
-import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -35,14 +33,14 @@ public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresen
      * @param rootTypes
      */
     public SentinelDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, rootTypes, createSet(), new SentinelAddToDistributionTickRepresentation(), new SentinelAddToAggregationTickRepresentation(), AbstractDomainTree.<ListenedArrayList>createRootsMap());
+	this(serialiser, rootTypes, createSet(), new SentinelAddToDistributionTickRepresentation(), new SentinelAddToAggregationTickRepresentation());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected SentinelDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final SentinelAddToDistributionTickRepresentation firstTick, final SentinelAddToAggregationTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
-	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
+    protected SentinelDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final SentinelAddToDistributionTickRepresentation firstTick, final SentinelAddToAggregationTickRepresentation secondTick) {
+	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override
@@ -130,8 +128,7 @@ public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresen
 	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final SentinelAddToDistributionTickRepresentation firstTick = readValue(buffer, SentinelAddToDistributionTickRepresentation.class);
 	    final SentinelAddToAggregationTickRepresentation secondTick = readValue(buffer, SentinelAddToAggregationTickRepresentation.class);
-	    final EnhancementRootsMap<ListenedArrayList> includedProperties = readValue(buffer, EnhancementRootsMap.class);
-	    return new SentinelDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
+	    return new SentinelDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
 	}
     }
 }

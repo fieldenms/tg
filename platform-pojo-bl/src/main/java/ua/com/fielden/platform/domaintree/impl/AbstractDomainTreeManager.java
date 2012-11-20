@@ -7,13 +7,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -72,19 +70,20 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    throw new IllegalStateException(e);
 	}
 
-	for (final Entry<Class<?>, ListenedArrayList> entry : this.dtr.includedProperties().entrySet()) {
-	    // initialise the references on this instance in "included properties" lists
-	    try {
-		final Field parentDtrField = Finder.findFieldByName(ListenedArrayList.class, "parentDtr");
-		final boolean isAccessible = parentDtrField.isAccessible();
-		parentDtrField.setAccessible(true);
-		parentDtrField.set(entry.getValue(), this.getRepresentation());
-		parentDtrField.setAccessible(isAccessible);
-	    } catch (final Exception e) {
-		e.printStackTrace();
-		throw new IllegalStateException(e);
-	    }
-	}
+	// TODO
+//	for (final Entry<Class<?>, ListenedArrayList> entry : this.dtr.includedProperties().entrySet()) {
+//	    // initialise the references on this instance in "included properties" lists
+//	    try {
+//		final Field parentDtrField = Finder.findFieldByName(ListenedArrayList.class, "parentDtr");
+//		final boolean isAccessible = parentDtrField.isAccessible();
+//		parentDtrField.setAccessible(true);
+//		parentDtrField.set(entry.getValue(), this.getRepresentation());
+//		parentDtrField.setAccessible(isAccessible);
+//	    } catch (final Exception e) {
+//		e.printStackTrace();
+//		throw new IllegalStateException(e);
+//	    }
+//	}
 
 	// the below listener is intended to update checked properties for both ticks when the skeleton of included properties has been changed
 	includedPropertiesSynchronisationListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick(), dtr);

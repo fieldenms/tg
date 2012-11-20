@@ -5,9 +5,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
-import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -27,14 +25,14 @@ public class AbstractAnalysisDomainTreeRepresentation1 extends AbstractAnalysisD
      * @param rootTypes
      */
     public AbstractAnalysisDomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, rootTypes, createSet(), new AbstractAnalysisAddToDistributionTickRepresentation1(), new AbstractAnalysisAddToAggregationTickRepresentation1(), AbstractDomainTree.<ListenedArrayList>createRootsMap());
+	this(serialiser, rootTypes, createSet(), new AbstractAnalysisAddToDistributionTickRepresentation1(), new AbstractAnalysisAddToAggregationTickRepresentation1());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected AbstractAnalysisDomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractAnalysisAddToDistributionTickRepresentation firstTick, final AbstractAnalysisAddToAggregationTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
-	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
+    protected AbstractAnalysisDomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractAnalysisAddToDistributionTickRepresentation firstTick, final AbstractAnalysisAddToAggregationTickRepresentation secondTick) {
+	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override
@@ -82,8 +80,7 @@ public class AbstractAnalysisDomainTreeRepresentation1 extends AbstractAnalysisD
 	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final AbstractAnalysisAddToDistributionTickRepresentation1 firstTick = readValue(buffer, AbstractAnalysisAddToDistributionTickRepresentation1.class);
 	    final AbstractAnalysisAddToAggregationTickRepresentation1 secondTick = readValue(buffer, AbstractAnalysisAddToAggregationTickRepresentation1.class);
-	    final EnhancementRootsMap<ListenedArrayList> includedProperties = readValue(buffer, EnhancementRootsMap.class);
-	    return new AbstractAnalysisDomainTreeRepresentation1(kryo(), rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
+	    return new AbstractAnalysisDomainTreeRepresentation1(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
 	}
     }
 }

@@ -7,7 +7,6 @@ import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
@@ -41,14 +40,14 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
      * A <i>representation</i> constructor for the first time instantiation. Initialises also children references on itself.
      */
     public CentreDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, rootTypes, createSet(), new AddToCriteriaTick(), new AddToResultSetTick(), AbstractDomainTree.<ListenedArrayList>createRootsMap());
+	this(serialiser, rootTypes, createSet(), new AddToCriteriaTick(), new AddToResultSetTick());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected CentreDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AddToCriteriaTick firstTick, final AddToResultSetTick secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
-	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
+    protected CentreDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AddToCriteriaTick firstTick, final AddToResultSetTick secondTick) {
+	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override
@@ -325,8 +324,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final AddToCriteriaTick firstTick = readValue(buffer, AddToCriteriaTick.class);
 	    final AddToResultSetTick secondTick = readValue(buffer, AddToResultSetTick.class);
-	    final EnhancementRootsMap<ListenedArrayList> includedProperties = readValue(buffer, EnhancementRootsMap.class);
-	    return new CentreDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
+	    return new CentreDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
 	}
     }
 }

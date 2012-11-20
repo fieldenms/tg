@@ -53,14 +53,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private final AbstractTickRepresentation firstTick;
     private final AbstractTickRepresentation secondTick;
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
-    private final EnhancementRootsMap<ListenedArrayList> includedProperties;
+    private final transient EnhancementRootsMap<ListenedArrayList> includedProperties;
 
     private final transient List<IPropertyListener> propertyListeners, disabledPropertyListeners;
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected AbstractDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+    protected AbstractDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick) {
 	super(serialiser);
 	this.rootTypes = new EnhancementLinkedRootsSet();
 	this.rootTypes.addAll(rootTypes);
@@ -85,10 +85,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    throw new IllegalStateException(e);
 	}
 
-	// this field unfortunately should be lazy loaded due to heavy-weight nature (deep, circular tree of properties)
 	this.includedProperties = createRootsMap();
-	/* TODO / this.includedProperties.putAll(includedProperties); */
-
+	// load tree of properties instantly (except analyses, see AADTR for more details)
 	for (final Class<?> rootType : rootTypes()) {
 	    includedPropertiesMutable(rootType);
 	}
@@ -812,7 +810,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    writeValue(buffer, representation.getManuallyExcludedProperties());
 	    writeValue(buffer, representation.getFirstTick());
 	    writeValue(buffer, representation.getSecondTick());
-	    writeValue(buffer, representation.getIncludedProperties());
 	}
     }
 
@@ -822,7 +819,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	int result = 1;
 	result = prime * result + (manuallyExcludedProperties == null ? 0 : manuallyExcludedProperties.hashCode());
 	result = prime * result + (firstTick == null ? 0 : firstTick.hashCode());
-	result = prime * result + (includedProperties == null ? 0 : includedProperties.hashCode());
 	result = prime * result + (rootTypes == null ? 0 : rootTypes.hashCode());
 	result = prime * result + (secondTick == null ? 0 : secondTick.hashCode());
 	return result;
@@ -854,13 +850,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	} else if (!firstTick.equals(other.firstTick)) {
 	    return false;
 	}
-	if (includedProperties == null) {
-	    if (other.includedProperties != null) {
-		return false;
-	    }
-	} else if (!includedProperties.equals(other.includedProperties)) {
-	    return false;
-	}
 	if (rootTypes == null) {
 	    if (other.rootTypes != null) {
 		return false;
@@ -878,10 +867,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	return true;
     }
 
-    /** Please do not use this directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
-    protected EnhancementRootsMap<ListenedArrayList> includedProperties() {
-	return includedProperties;
-    }
+    // TODO
+//    /** Please do not use this directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
+//    protected EnhancementRootsMap<ListenedArrayList> includedProperties() {
+//	return includedProperties;
+//    }
 
     public EnhancementLinkedRootsSet getRootTypes() {
 	return rootTypes;
@@ -891,7 +881,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	return manuallyExcludedProperties;
     }
 
-    public EnhancementRootsMap<ListenedArrayList> getIncludedProperties() {
-	return includedProperties;
-    }
+    // TODO
+//    public EnhancementRootsMap<ListenedArrayList> getIncludedProperties() {
+//	return includedProperties;
+//    }
 }
