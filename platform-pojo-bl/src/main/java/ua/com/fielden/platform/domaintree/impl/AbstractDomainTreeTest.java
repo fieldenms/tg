@@ -157,12 +157,12 @@ public abstract class AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     protected static final void initialiseDomainTreeTest(final Class<? extends AbstractDomainTreeTest> testCaseClass) throws Exception {
 	try {
-	    // !!!!!!!!!!!!
-	    final Field loadingLevelField = AbstractDomainTreeRepresentation.class.getDeclaredField("LOADING_LEVEL");
-	    final boolean isAccessible = loadingLevelField.isAccessible();
-	    loadingLevelField.setAccessible(true);
-	    loadingLevelField.set(null, Integer.MAX_VALUE);
-	    loadingLevelField.setAccessible(isAccessible);
+	    // uncomment following code to enable different LEVEL OF LOADING for all domain tree tests
+//	    final Field loadingLevelField = AbstractDomainTreeRepresentation.class.getDeclaredField("LOADING_LEVEL");
+//	    final boolean isAccessible = loadingLevelField.isAccessible();
+//	    loadingLevelField.setAccessible(true);
+//	    loadingLevelField.set(null, Integer.MAX_VALUE);
+//	    loadingLevelField.setAccessible(isAccessible);
 
 	    irrelevantDtm = Reflector.getMethod(testCaseClass, CREATE_IRRELEVANT_DTM_FOR + testCaseClass.getSimpleName()).invoke(null);
 

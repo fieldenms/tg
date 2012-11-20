@@ -128,7 +128,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		    final String lastPropertyName = transformed.getValue();
 		    final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
 
-		    if (level(property) >= LOADING_LEVEL || propertyTypeWasInHierarchyBefore && !isLinkProperty/*!isKeyPart*/) {
+		    if (level(property) >= LOADING_LEVEL && !EntityUtils.isUnionEntityType(propertyType) //
+			    || propertyTypeWasInHierarchyBefore && !isLinkProperty /*!isKeyPart*/) {
 			newIncludedProps.add(createDummyMarker(property));
 		    } else if (EntityUtils.isUnionEntityType(propertyType)) { // "union entity" property
 			final Pair<List<Field>, List<Field>> commonAndUnion = commonAndUnion((Class<? extends AbstractUnionEntity>) propertyType);
@@ -867,12 +868,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	return true;
     }
 
-    // TODO
-//    /** Please do not use this directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
-//    protected EnhancementRootsMap<ListenedArrayList> includedProperties() {
-//	return includedProperties;
-//    }
-
     public EnhancementLinkedRootsSet getRootTypes() {
 	return rootTypes;
     }
@@ -880,9 +875,4 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     public EnhancementSet getManuallyExcludedProperties() {
 	return manuallyExcludedProperties;
     }
-
-    // TODO
-//    public EnhancementRootsMap<ListenedArrayList> getIncludedProperties() {
-//	return includedProperties;
-//    }
 }

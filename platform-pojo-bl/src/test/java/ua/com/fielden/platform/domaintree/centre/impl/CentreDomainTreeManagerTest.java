@@ -117,13 +117,17 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	                 // this test is redundant due to lack of special isChecked logic in CriteriaDomainTreeManager
 	// super.test_that_CHECK_state_for_mutated_by_isChecked_method_properties_is_desired_and_after_manual_mutation_is_actually_mutated();
 
+	dtm().getFirstTick().setColumnsNumber(3);
 	// checked properties, defined in isChecked() contract
 	allLevels(new IAction() {
 	    public void action(final String name) {
 		final String message = "Checked property [" + name + "], defined in isChecked() contract, should return 'true' CHECK state, and after manual mutation its state should be desired.";
 		isCheck_equals_to_state(name, message, true);
 
-		assertEquals("", 2, dtm().getFirstTick().getColumnsNumber());
+		assertEquals("", 3, dtm().getFirstTick().getColumnsNumber());
+
+		System.out.println("=========== " + dtm().getFirstTick().checkedProperties(MasterEntity.class));
+
 		assertTrue("Should contain placeholder. In this case it means that even 'checked by contract' properties are added interactively" +
 				" using all necessary custom actions (e.g. placeholder management etc.)", containsPlaceHolder(dtm().getFirstTick().checkedProperties(MasterEntity.class)));
 
