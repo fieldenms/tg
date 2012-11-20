@@ -1118,4 +1118,53 @@ public class AbstractEntityTest {
 	assertNotNull(entity.isValid().isSuccessful());
     }
 
+    @Test
+    public void sameAs_for_two_entities_with_same_id_should_return_true() {
+	final Entity thisEntity = factory.newEntity(Entity.class, 1L, "key1", "description");
+	final Entity thatEntity = factory.newEntity(Entity.class, 1L, "key2", "description");
+
+	assertTrue(thisEntity.sameAs(thatEntity));
+    }
+
+    @Test
+    public void sameAs_for_non_persisted_entities_with_the_same_keys_should_return_true() {
+	final Entity thisEntity = factory.newEntity(Entity.class, "key", "description");
+	final Entity thatEntity = factory.newEntity(Entity.class, "key", "description");
+
+	assertTrue(thisEntity.sameAs(thatEntity));
+    }
+
+    @Test
+    public void sameAs_for_non_persisted_entities_with_the_different_keys_should_return_false() {
+	final Entity thisEntity = factory.newEntity(Entity.class, "key1", "description");
+	final Entity thatEntity = factory.newEntity(Entity.class, "key2", "description");
+
+	assertFalse(thisEntity.sameAs(thatEntity));
+    }
+
+    @Test
+    public void sameAs_when_that_entity_is_null_should_return_false() {
+	final Entity thisEntity = factory.newEntity(Entity.class, 1L, "key1", "description");
+
+	assertFalse(thisEntity.sameAs(null));
+    }
+
+    @Test
+    public void sameAs_when_that_entity_is_not_persisted_should_return_false() {
+	final Entity thisEntity = factory.newEntity(Entity.class, 1L, "key", "description");
+	final Entity thatEntity = factory.newEntity(Entity.class, "key", "description");
+
+	assertFalse(thisEntity.sameAs(thatEntity));
+    }
+
+    @Test
+    public void sameAs_for_non_persisted_instance_with_different_keys_should_return_false() {
+	final Entity thisEntity = factory.newEntity(Entity.class, "key1", "description");
+	final Entity thatEntity = factory.newEntity(Entity.class, "key2", "description");
+
+	assertFalse(thisEntity.sameAs(thatEntity));
+    }
+
+
+
 }

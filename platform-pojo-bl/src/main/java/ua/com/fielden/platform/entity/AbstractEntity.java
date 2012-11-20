@@ -1172,4 +1172,27 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	}
 	this.preferredProperty = preferredProperty;
     }
+
+    /**
+     * If this entity is persisted, then ID is used to identify whether this and that entities represent the same thing.
+     * If both entities are not persisted then equality is used, which is based on their keys for comparison.
+     * Otherwise, returns false.
+     *
+     * @param that
+     * @return
+     */
+    public boolean sameAs(final AbstractEntity<K> that) {
+	if (that == null) {
+	    return false;
+	}
+
+	if (this.isPersisted()) {
+	    return this.getId().equals(that.getId());
+	} else if (!this.isPersisted() && !that.isPersisted()){
+	    return this.equals(that);
+	} else {
+	    return false;
+	}
+
+    }
 }
