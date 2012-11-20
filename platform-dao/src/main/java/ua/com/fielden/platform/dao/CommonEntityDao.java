@@ -59,9 +59,9 @@ import com.google.inject.Inject;
  * <p>
  * Property <code>session</code> is used to allocation session whenever is appropriate -- all data access methods should use this session. It is envisaged that the real class usage
  * will include Guice method intercepter that would assign session instance dynamically before executing calls to methods annotated with {@link SessionRequired}.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  *            -- entity type
  * @param <K>
@@ -88,7 +88,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A principle constructor.
-     *
+     * 
      * @param entityType
      */
     @Inject
@@ -98,7 +98,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A setter for injection of entityFactory instance.
-     *
+     * 
      * @param entityFactory
      */
     @Inject
@@ -108,7 +108,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
-     *
+     * 
      * @param mappingExtractor
      */
     @Inject
@@ -188,7 +188,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 		getSession().save(entity);
 	    } else {
 		// check validity of properties
-		for (final MetaProperty prop: entity.getProperties().values()) {
+		for (final MetaProperty prop : entity.getProperties().values()) {
 		    if (!prop.isValid()) {
 			throw prop.getFirstFailure();
 		    }
@@ -266,21 +266,23 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private void assignTransactionDate(final T entity) throws Exception {
 	final List<Field> transactionDateProperties = Finder.findRealProperties(entity.getType(), TransactionDate.class);
-	final DateTime now = universalConstants.now();
-	if (now == null) {
-	    throw new IllegalArgumentException("The now() constant has not been assigned!");
-	}
-	for (final Field property : transactionDateProperties) {
-	    property.setAccessible(true);
-	    final Object value = property.get(entity);
-	    if (value == null) {
-		if (Date.class.isAssignableFrom(property.getType())) {
-		    property.set(entity, now.toDate());
-		} else if (DateTime.class.isAssignableFrom(property.getType())) {
-		    property.set(entity, now);
-		} else {
-		    throw new IllegalArgumentException("The type of property " + entity.getType().getName() + "@" + property.getName()
-			    + " is not valid for annotation TransactionDate.");
+	if (!transactionDateProperties.isEmpty()) {
+	    final DateTime now = universalConstants.now();
+	    if (now == null) {
+		throw new IllegalArgumentException("The now() constant has not been assigned!");
+	    }
+	    for (final Field property : transactionDateProperties) {
+		property.setAccessible(true);
+		final Object value = property.get(entity);
+		if (value == null) {
+		    if (Date.class.isAssignableFrom(property.getType())) {
+			property.set(entity, now.toDate());
+		    } else if (DateTime.class.isAssignableFrom(property.getType())) {
+			property.set(entity, now);
+		    } else {
+			throw new IllegalArgumentException("The type of property " + entity.getType().getName() + "@" + property.getName()
+				+ " is not valid for annotation TransactionDate.");
+		    }
 		}
 	    }
 	}
@@ -288,26 +290,27 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private void assignTransactionUser(final T entity) throws Exception {
 	final List<Field> transactionUserProperties = Finder.findRealProperties(entity.getType(), TransactionUser.class);
-	final User user = getUser();
-	if (user == null) {
-	    throw new IllegalArgumentException("The user could not be determined!");
-	}
-	for (final Field property : transactionUserProperties) {
-	    property.setAccessible(true);
-	    final Object value = property.get(entity);
-	    if (value == null) {
-		if (User.class.isAssignableFrom(property.getType())) {
-		    property.set(entity, user);
-		} else if (String.class.isAssignableFrom(property.getType())) {
-		    property.set(entity, user.getKey());
-		} else {
-		    throw new IllegalArgumentException("The type of property " + entity.getType().getName() + "@" + property.getName()
-			    + " is not valid for annotation TransactionUser.");
+	if (!transactionUserProperties.isEmpty()) {
+	    final User user = getUser();
+	    if (user == null) {
+		throw new IllegalArgumentException("The user could not be determined!");
+	    }
+	    for (final Field property : transactionUserProperties) {
+		property.setAccessible(true);
+		final Object value = property.get(entity);
+		if (value == null) {
+		    if (User.class.isAssignableFrom(property.getType())) {
+			property.set(entity, user);
+		    } else if (String.class.isAssignableFrom(property.getType())) {
+			property.set(entity, user.getKey());
+		    } else {
+			throw new IllegalArgumentException("The type of property " + entity.getType().getName() + "@" + property.getName()
+				+ " is not valid for annotation TransactionUser.");
+		    }
 		}
 	    }
 	}
     }
-
 
     @Override
     @SessionRequired
@@ -317,7 +320,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	}
 
 	final Integer count = ((Number) getSession().createQuery("select count(*) from " + getEntityType().getName() + " where id = :id and version = :version")//
-	.setParameter("id", entityId).setParameter("version", version).uniqueResult()).intValue();
+		.setParameter("id", entityId).setParameter("version", version).uniqueResult()).intValue();
 
 	return count != 1;
     }
@@ -337,17 +340,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	return getSession().createQuery("select id from " + getEntityType().getName() + " where id = :in_id").setLong("in_id", id).uniqueResult() != null;
     }
 
+    @Override
     public int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
 	return evalNumOfPages(model, paramValues, 1);
     }
 
+    @Override
     public int count(final EntityResultQueryModel<T> model) {
 	return count(model, Collections.<String, Object> emptyMap());
     }
 
     /**
      * Fetches the results of the specified page based on the request of the given instance of {@link QueryExecutionModel}.
-     *
+     * 
      * @param queryModel
      * @param pageNumber
      * @param pageCapacity
@@ -407,6 +412,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	return new EntityQueryPage(getDefaultQueryExecutionModel(), pageNumber, pageCapacity, numberOfPages);
     }
 
+    @Override
     public Session getSession() {
 	final Session session = threadLocalSession.get();
 	if (session == null) {
@@ -415,14 +421,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	return session;
     }
 
+    @Override
     public void setSession(final Session session) {
 	threadLocalSession.set(session);
     }
 
     /**
      * Calculates the number of pages of the given size required to fit the whole result set.
-     *
-     *
+     * 
+     * 
      * @param model
      * @param pageCapacity
      * @return
@@ -433,7 +440,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 		: select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
 	final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).lightweight(true).model();
 	final List<EntityAggregates> counts = new EntityFetcher(getSession(), getEntityFactory(), domainMetadata, filter, getUsername()). //
-	getEntities(countModel);
+		getEntities(countModel);
 	final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
 	return resultSize % pageCapacity == 0 ? resultSize / pageCapacity : resultSize / pageCapacity + 1;
@@ -443,7 +450,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
      * <p>
      * For example it could be a byte array of GZipped Excel data.
-     *
+     * 
      * @param query
      *            -- query result of which should be exported.
      * @param propertyNames
@@ -528,7 +535,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
-     *
+     * 
      * @param entity
      */
     @SessionRequired
@@ -548,7 +555,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A convenient default implementation for deletion of entities specified by provided query model.
-     *
+     * 
      * @param entity
      */
     @SessionRequired
@@ -588,9 +595,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Implements pagination based on the provided query.
-     *
+     * 
      * @author TG Team
-     *
+     * 
      */
     public class EntityQueryPage implements IPage<T> {
 	private final int pageNumber; // zero-based
