@@ -38,7 +38,7 @@ public class DefaultGridAnalysisCustomiser<T extends AbstractEntity<?>, CDTME ex
 	return panelBuilder//
 	    .addButton(analysisView.getOpenMasterWithNewEntityCommand())//
 	    .addButton(analysisView.getOpenMasterAndEditEntityCommand())//
-	    .addButton(analysisView.getRemoveEntityCommand());
+	    .addButton(analysisView.getDeleteEntityCommand());
     }
 
     /**

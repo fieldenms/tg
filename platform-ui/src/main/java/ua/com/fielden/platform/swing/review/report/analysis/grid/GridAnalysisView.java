@@ -51,14 +51,16 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     private final JToolBar toolBar;
 
-    private final Action openMasterWithNewEntityCommand, openMasterAndEditEntityCommand, removeEntityCommand;
+    private final Action openMasterWithNewEntityCommand;
+    private final Action openMasterAndEditEntityCommand;
+    private final Action deleteEntityCommand;
 
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final GridConfigurationView<T, CDTME> owner) {
 	super(model, owner);
 	this.egiPanel = createEgiPanel();
 	this.openMasterWithNewEntityCommand = createOpenMasterWithNewCommand();
 	this.openMasterAndEditEntityCommand = createOpenMasterCommand();
-	this.removeEntityCommand = createDeleteCommand();
+	this.deleteEntityCommand = createDeleteCommand();
 	this.toolBar = createToolBar();
 	if (getMasterManager() != null) {
 	    OpenMasterClickAction.enhanceWithClickAction(egiPanel.getEgi().getActualModel().getPropertyColumnMappings(),//
@@ -100,8 +102,8 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	return openMasterAndEditEntityCommand;
     }
 
-    public Action getRemoveEntityCommand() {
-	return removeEntityCommand;
+    public Action getDeleteEntityCommand() {
+	return deleteEntityCommand;
     }
 
     public final JToolBar getToolBar() {
@@ -375,15 +377,13 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    protected T action(final ActionEvent event) throws Exception {
 		final T selectedEntity = getEnhancedSelectedEntity();
 		getModel().getCriteria().delete(selectedEntity);
+		// TODO change to reExecuteAnalysisQuery when implemented
+		getModel().executeAnalysisQuery();
 		return selectedEntity;
 	    }
 
-	    @SuppressWarnings("unchecked")
 	    @Override
 	    protected void postAction(final T entity) {
-		final PropertyTableModel<T> tableModel = egiPanel.getEgi().getActualModel();
-		tableModel.removeInstances(entity);
-		tableModel.fireTableDataChanged();
 		super.postAction(entity);
 	    }
 
