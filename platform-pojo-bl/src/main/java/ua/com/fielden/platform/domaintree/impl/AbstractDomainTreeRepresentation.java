@@ -8,9 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -59,8 +57,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     private final transient List<IPropertyListener> propertyListeners, disabledPropertyListeners;
 
-    private final transient Set<Class<?>> includedPropertiesTypes;
-
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
@@ -93,15 +89,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	this.includedProperties = createRootsMap();
 	/* TODO / this.includedProperties.putAll(includedProperties); */
 
-	includedPropertiesTypes = new LinkedHashSet<>();
-	for (final Entry<Class<?>, ListenedArrayList> entry : includedProperties.entrySet()) {
-	    includedPropertiesTypes.add(entry.getKey());
-	    includedPropertiesMutable(entry.getKey());
+	for (final Class<?> rootType : rootTypes()) {
+	    includedPropertiesMutable(rootType);
 	}
-    }
-
-    public Set<Class<?>> includedPropertiesTypes() {
-	return includedPropertiesTypes;
     }
 
     private int level(final String path) {
