@@ -117,6 +117,9 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	return (GridAnalysisModel<T, CDTME>) super.getModel();
     }
 
+    /**
+     * Return the blocking layer for the area of the grid analysis.
+     */
     @Override
     public BlockingIndefiniteProgressLayer getBlockingLayer() {
 	return getOwner().getProgressLayer();
@@ -375,8 +378,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    protected T action(final ActionEvent event) throws Exception {
 		final T selectedEntity = getEnhancedSelectedEntity();
 		getModel().getCriteria().delete(selectedEntity);
-		// TODO change to reExecuteAnalysisQuery when implemented
-		getModel().executeAnalysisQuery();
+		getModel().reExecuteAnalysisQuery();
 		return selectedEntity;
 	    }
 

@@ -68,21 +68,9 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
     }
 
     @Override
-    protected Result reExecuteAnalysisQuery() {
+    public Result reExecuteAnalysisQuery() {
 	return analysisQueries == null ? executeAnalysisQuery() : runQuery(analysisQueries);
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
     protected T getEntityById(final Long id) {
         return getCriteria().getEntityById(id);
