@@ -16,7 +16,7 @@ import com.google.inject.Inject;
  * @author 01es
  */
 @EntityType(KeyNumber.class)
-public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumberGenerator {
+public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumber {
 
     @Inject
     protected KeyNumberDao(final IFilter filter) {

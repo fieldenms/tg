@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 
 /**
  * An entity representing a concept of a sequential number used for generating key for WONO and some other entities.
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
  */
 @KeyType(String.class)
 @MapEntityTo(value = "NUMBERS", keyColumn = "NUMBKEY")
+@DefaultController(IKeyNumber.class)
 public class KeyNumber extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

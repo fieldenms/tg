@@ -17,7 +17,7 @@ import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.keygen.IKeyNumberGenerator;
+import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.NoAuthorisation;
@@ -109,7 +109,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
 	// bind DAO and any other implementations of the required application controllers
 	bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
-	bind(IKeyNumberGenerator.class).to(KeyNumberDao.class);
+	bind(IKeyNumber.class).to(KeyNumberDao.class);
 
 	bind(IAttachmentController.class).to(AttachmentDao.class);
 	bind(IEntityAttachmentAssociationController.class).to(EntityAttachmentAssociationDao.class);

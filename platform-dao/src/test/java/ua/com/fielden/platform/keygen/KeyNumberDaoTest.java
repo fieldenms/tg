@@ -9,7 +9,7 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
  *
  */
 public class KeyNumberDaoTest extends DbDrivenTestCase {
-    private final IKeyNumberGenerator keyNumberGen = injector.getInstance(IKeyNumberGenerator.class);
+    private final IKeyNumber keyNumberGen = injector.getInstance(IKeyNumber.class);
 
     public void testThatCurrentWoNoIsRetrievedCorrectly() {
 	assertEquals("Incorrect current WONO.", new Integer("500"), keyNumberGen.currNumber("WO"));

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
-import ua.com.fielden.platform.keygen.IKeyNumberGenerator;
+import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
 import ua.com.fielden.platform.migration.controller.IMigrationErrorDao;
 import ua.com.fielden.platform.migration.controller.IMigrationHistoryDao;
@@ -85,7 +85,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 	super.configure();
 	// bind DAO
 	bind(IFilter.class).to(DataFilter.class);
-	bind(IKeyNumberGenerator.class).to(KeyNumberDao.class);
+	bind(IKeyNumber.class).to(KeyNumberDao.class);
 	bind(IBogieDao.class).to(BogieDao.class);
 //	bind(IWheelsetDao.class).to(WheelsetDao.class);
 //	bind(IRotableDao.class).to(RotableDao.class);
