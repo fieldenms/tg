@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.example.dynamiccriteria;
 
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
 import ua.com.fielden.platform.swing.menu.ITreeMenuItemVisibilityProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
@@ -16,7 +17,7 @@ public class MiSimpleECEEntity extends MiWithConfigurationSupport<SimpleECEEntit
 
     @SuppressWarnings("unchecked")
     public MiSimpleECEEntity(final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ITreeMenuItemVisibilityProvider visibilityProvider) {
-	super("Simple entity", "Simple entity description", treeMenu, injector.getInstance(EntityCentreFactoryBinder.class), visibilityProvider, MiSimpleECEEntity.class);
+	super("Simple entity", "Simple entity description", treeMenu, injector.getInstance(EntityCentreFactoryBinder.class), visibilityProvider, MiSimpleECEEntity.class, injector.getInstance(IGlobalDomainTreeManager.class));
     }
 
 }

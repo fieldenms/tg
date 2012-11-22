@@ -32,8 +32,12 @@ public class DefaultTreeMenuItemFactory implements ITreeMenuItemFactory {
 	// if it fails then try group item option
 	try {
 	    final Constructor<?> constructor = Reflector.getConstructorForClass(clazz, TreeMenuWithTabs.class, Injector.class, ITreeMenuItemVisibilityProvider.class);
-	    return (MiWithVisibilityProvider<?>) constructor.newInstance(treeMenu, injector, visibilityProvider);
-	}catch(final Exception ex){
+	    try {
+	        return (MiWithVisibilityProvider<?>) constructor.newInstance(treeMenu, injector, visibilityProvider);
+	    } catch (final Exception ex){
+		ex.printStackTrace();
+	    }
+	} catch(final Exception ex){
 	    logger.error(ex);
 	}
 	try {

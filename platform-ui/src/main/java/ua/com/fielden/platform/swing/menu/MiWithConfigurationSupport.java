@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.swing.menu;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.Map.Entry;
 
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.report.centre.factory.IEntityCentreBuilder;
 
@@ -18,8 +19,8 @@ public class MiWithConfigurationSupport<T extends AbstractEntity<?>> extends MiW
 
     /**
      * Creates new {@link MiWithConfigurationSupport} instance and generates all his children reports. Unlike parent report, Children reports can be remove.
-     *
      * @param visibilityProvider
+     * @param gdtm TODO
      * @param entityType
      * @param gdtm
      * @param entityFactory
@@ -33,20 +34,12 @@ public class MiWithConfigurationSupport<T extends AbstractEntity<?>> extends MiW
 	    //Entity centre related parameters
 	    final IEntityCentreBuilder<T> centreBuilder,//
 	    final ITreeMenuItemVisibilityProvider visibilityProvider,//
-	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType) {
+	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final IGlobalDomainTreeManager gdtm) {
 	super(new DynamicReportWrapper<T>(caption, description, treeMenu, null, menuItemType, centreBuilder), visibilityProvider);
-	/* TODO need to optimise!!! */ scanForNonPrincipleReports();
-    }
 
-    /**
-     * Generates children ad hoc reports.
-     */
-    private void scanForNonPrincipleReports() {
-	final Set<String> names = new HashSet<String>(getView().getNonPrincipleEntityCentreNames());
-	names.remove(null); // remove principle centre key (null), which is returned in case when principle entity centre is persisted
-	for(final String centreName : names){
-	    final MiSaveAsConfiguration<T> newMenuItem = new MiSaveAsConfiguration<T>(this, centreName);
-	    addItem(newMenuItem);
+	// Generates children ad hoc reports.
+	for (final Entry<String, List<String>> entry : gdtm.initialCacheOfNonPrincipleItems(menuItemType).entrySet()) {
+	    addItem(MiSaveAsConfiguration.<T>createWithProvidedAnalyses(this, entry.getKey(), entry.getValue()));
 	}
     }
 }

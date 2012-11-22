@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.domaintree;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
@@ -17,7 +17,25 @@ import ua.com.fielden.platform.security.user.IUserProvider;
  *
  */
 public interface IGlobalDomainTreeManager {
+    /**
+     * Provides a cache of initial Save As items (with appropriate analyses) for "menuItemType".
+     * <p>
+     * IMPORTANT : it should be used only for initial loading of the menu tree!
+     * The cache will not be ever updated after that.
+     *
+     * @param menuItemType
+     * @return
+     */
+    Map<String, List<String>> initialCacheOfNonPrincipleItems(final Class<?> menuItemType);
+
     List<Class<?>> entityCentreMenuItemTypes();
+
+//    /**
+//     * Loads full light-weight skeleton of entity centres with its non-principle items names and analyses names.
+//     *
+//     * @return
+//     */
+//    Map<Class<?>, Map<String, List<String>>> loadEntityCentreSkeleton();
 
     /**
      * Returns a user provider. The user is a part of domain tree context. Some domain tree actions is permitted only for base users.
@@ -211,7 +229,7 @@ public interface IGlobalDomainTreeManager {
     void removeEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Returns unordered names of persisted in the cloud <b>entity-centre managers</b> for menu item type <b>menuItemType</b>.<br><br>
+     * Returns distinct ordered (as in the cloud) names of persisted in the cloud <b>entity-centre managers</b> for menu item type <b>menuItemType</b>.<br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
      * Non-base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but cannot save/remove base user's reports (throws {@link IllegalArgumentException}).
@@ -224,7 +242,7 @@ public interface IGlobalDomainTreeManager {
      * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @return
      */
-    Set<String> entityCentreNames(final Class<?> menuItemType);
+    List<String> entityCentreNames(final Class<?> menuItemType);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////// ENTITY MASTER MANAGERS //////////////////////////////////////////////

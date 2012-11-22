@@ -14,6 +14,8 @@ import javax.swing.ToolTipManager;
 
 import org.apache.log4j.Logger;
 import org.jfree.ui.RefineryUtilities;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 import org.restlet.data.Protocol;
 
 import ua.com.fielden.platform.application.update.ApplicationUpdateFeedback;
@@ -41,6 +43,7 @@ import ua.com.fielden.platform.swing.menu.filter.WordFilter;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BaseFrame;
+import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
@@ -308,25 +311,39 @@ public class WebClientStartupUtility {
 	final IApplicationSettings settings = injector.getInstance(IApplicationSettings.class);
 	final IMainMenuItemController mmiController = injector.getInstance(IMainMenuItemController.class);
 	final IEntityCentreConfigController eccController = injector.getInstance(IEntityCentreConfigController.class);
+	final IEntityCentreAnalysisConfig ecacController = injector.getInstance(IEntityCentreAnalysisConfig.class);
 	final IMainMenuItemInvisibilityController mmiiController = injector.getInstance(IMainMenuItemInvisibilityController.class);
 	final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
 	if (Workflows.development.equals(Workflows.valueOf(settings.workflow()))) {
 	    message("Updating user configurations (development mode)...", splash, loginScreen);
 	    // persist NEW / UPDATED menu items (delete OBSOLETE items) into database
-	    final MainMenuItemMixin mixin = new MainMenuItemMixin(mmiController, eccController, mmiiController, factory);
+	    final MainMenuItemMixin mixin = new MainMenuItemMixin(mmiController, eccController, ecacController, mmiiController, factory);
 	    mixin.setUser(restUtil.getUser());
 	    mixin.updateMenuItemsWithDevelopmentOnes(developmentMainMenuStructureBuilder);
 	}
 
+	Period pd = null;
+	DateTime st = null;
 	message("Building user configurations...", splash, loginScreen);
 	// get menu items using "remote" IMainMenuStructureBuilder (from database)
-	final IMainMenuStructureBuilder persistedMainMenuStructureBuilder = new PersistedMainMenuStructureBuilder(mmiController, eccController, mmiiController, factory, restUtil.getUser());
+	st = new DateTime();
+
+	final IMainMenuStructureBuilder persistedMainMenuStructureBuilder = new PersistedMainMenuStructureBuilder(mmiController, eccController, ecacController, mmiiController, factory, restUtil.getUser());
 	final List<MainMenuItem> itemsFromCloud = persistedMainMenuStructureBuilder.build();
+
+	pd = new Period(st, new DateTime());
+	System.out.println("\t\t" + "PersistedMainMenuStructureBuilder.build()...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+
 	final ITreeMenuFactory menuFactory = new TreeMenuFactory(rootMenuItem, menu, injector);
 	mmBinder.bindMainMenuItemFactories(menuFactory);
+
+	st = new DateTime();
 	menuFactory.build(itemsFromCloud);
 	menu.getModel().getOriginModel().reload();
+
+	pd = new Period(st, new DateTime());
+	System.out.println("\t\t" + "menuFactory.build(itemsFromCloud);...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
     }
 
     /**

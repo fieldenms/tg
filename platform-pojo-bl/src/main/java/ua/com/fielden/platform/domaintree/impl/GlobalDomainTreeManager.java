@@ -9,8 +9,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -28,8 +29,10 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
+import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
@@ -53,6 +56,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final IGlobalDomainTreeRepresentation gdtr;
     private final IMainMenuItemController mainMenuItemController;
     private final IEntityCentreConfigController entityCentreConfigController;
+    private final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController;
     private final IEntityMasterConfigController entityMasterConfigController;
 
     private final EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> persistentCentres;
@@ -63,13 +67,16 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final EnhancementRootsMap<IMasterDomainTreeManager> persistentMasters;
     private final transient EnhancementRootsMap<IMasterDomainTreeManager> currentMasters;
 
+    private Map<Class<?>, Map<String, List<String>>> initialCacheOfNonPrincipleItems = null;
+
     @Inject
-    public GlobalDomainTreeManager(final ISerialiser serialiser, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfigController entityCentreConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
+    public GlobalDomainTreeManager(final ISerialiser serialiser, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfigController entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
 	super(serialiser);
 	this.factory = factory;
 	this.userProvider = userProvider;
 	this.mainMenuItemController = mainMenuItemController;
 	this.entityCentreConfigController = entityCentreConfigController;
+	this.entityCentreAnalysisConfigController = entityCentreAnalysisConfigController;
 	this.entityMasterConfigController = entityMasterConfigController;
 	this.gdtr = new GlobalDomainTreeRepresentation(serialiser, factory, userProvider, entityLocatorConfigController);
 
@@ -84,20 +91,78 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
+    public Map<String, List<String>> initialCacheOfNonPrincipleItems(final Class<?> menuItemType) {
+	if (initialCacheOfNonPrincipleItems == null) {
+	    initialCacheOfNonPrincipleItems = loadEntityCentreSkeleton();
+	}
+
+	if (!initialCacheOfNonPrincipleItems.containsKey(menuItemType)) {
+	    return new LinkedHashMap<String, List<String>>();
+	}
+	return initialCacheOfNonPrincipleItems.get(menuItemType);
+    }
+
+    private Map<Class<?>, Map<String, List<String>>> loadEntityCentreSkeleton() {
+	System.err.println("=====***=============================================");
+	System.err.println("========***==========================================");
+	System.err.println("===========***=======================================");
+	System.err.println("==============***====================================");
+	System.err.println("=================***=================================");
+	System.err.println("====================***==============================");
+	System.err.println("=======================***===========================");
+	System.err.println("==========================***========================");
+	// load all non-principle entity centres for this user
+	final List<EntityCentreConfig> centresFromTheCloud =
+		entityCentreConfigController.getAllEntities(
+			from(nonPrincipleECCmodel()).
+			with(fetchOnly(EntityCentreConfig.class).with("title").with("menuItem", fetchOnly(MainMenuItem.class).with("key"))).model());
+
+	final Map<Class<?>, Map<String, List<String>>> map = new LinkedHashMap<>();
+	for (final EntityCentreConfig ecc : centresFromTheCloud) {
+	    final Class<?> miType = getMiType(ecc.getMenuItem().getKey());
+	    if (!map.containsKey(miType)) {
+		map.put(miType, new LinkedHashMap<String, List<String>>());
+	    }
+	    map.get(miType).put(ecc.getTitle(), new ArrayList<String>());
+	}
+
+	// load all non-principle entity centre analyses for this user
+	final List<EntityCentreAnalysisConfig> centreAnalysesFromTheCloud =
+		entityCentreAnalysisConfigController.getAllEntities(
+			from(analysesForNonPrincipleECCmodel()).
+			with(fetchOnly(EntityCentreAnalysisConfig.class).with("title").
+				with("entityCentreConfig", fetchOnly(EntityCentreConfig.class).with("title").with("menuItem", fetchOnly(MainMenuItem.class).with("key")))).model());
+
+	for (final EntityCentreAnalysisConfig ecac : centreAnalysesFromTheCloud) {
+	    final Class<?> miType = getMiType(ecac.getEntityCentreConfig().getMenuItem().getKey());
+	    map.get(miType).get(ecac.getEntityCentreConfig().getTitle()).add(ecac.getTitle());
+	}
+	return map;
+    }
+
+    private Class<?> getMiType(final String miTypeName) {
+	try {
+	    final Class<?> mmiType = ClassLoader.getSystemClassLoader().loadClass(miTypeName);
+	    try {
+		validateMenuItemType(mmiType);
+		validateMenuItemTypeRootType(mmiType);
+		return mmiType;
+	    } catch (final IllegalArgumentException e) {
+		return null;
+	    }
+	} catch (final ClassNotFoundException e) {
+	    throw new IllegalStateException(e);
+	}
+    }
+
+    @Override
     public List<Class<?>> entityCentreMenuItemTypes() {
 	final List<MainMenuItem> mmItems = this.mainMenuItemController.getAllEntities(from(select(MainMenuItem.class).model()).model());
 	final List<Class<?>> res = new ArrayList<Class<?>>();
 	for (final MainMenuItem mmi : mmItems) {
-	    try {
-		final Class<?> mmiType = ClassLoader.getSystemClassLoader().loadClass(mmi.getKey());
-		try {
-		    validateMenuItemType(mmiType);
-		    validateMenuItemTypeRootType(mmiType);
-		    res.add(mmiType);
-		} catch (final IllegalArgumentException e) {
-		}
-	    } catch (final ClassNotFoundException e) {
-		throw new IllegalStateException(e);
+	    final Class<?> type = getMiType(mmi.getKey());
+	    if (type != null) {
+		res.add(type);
 	    }
 	}
 	return res;
@@ -196,8 +261,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 		// save a new instance of EntityCentreConfig
 		final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(menuItemTypeName));
 		ecc.setPrincipal(true);
-		ecc.setConfigBody(getSerialiser().serialise(getEntityCentreManager(menuItemType, null)));
-		entityCentreConfigController.save(ecc);
+		final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
+		ecc.setConfigBody(getSerialiser().serialise(centre));
+		saveCentre(centre, ecc);
 		return;
 	    } else {
 		error("Unable to initialise a non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
@@ -271,6 +337,49 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    /*    */select(EntityCentreConfig.class).where().//
 	    /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
 	    /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
+	return model;
+    }
+
+    /**
+     * Creates a model to retrieve all {@link EntityCentreConfig} instances for the current user and its base user.
+     *
+     * @param menuItemTypeName
+     * @param title
+     * @return
+     */
+    private EntityResultQueryModel<EntityCentreConfig> nonPrincipleECCmodel() {
+	final EntityResultQueryModel<EntityCentreConfig> model =
+	    /*    */select(EntityCentreConfig.class).where().//
+	    /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
+	    /*    */prop("principal").eq().val(false).model();
+	return model;
+    }
+
+    /**
+     * Creates a model to retrieve all {@link EntityCentreAnalysisConfig} instances for the current user and its base user.
+     *
+     * @param menuItemTypeName
+     * @param title
+     * @return
+     */
+    private EntityResultQueryModel<EntityCentreAnalysisConfig> analysesForNonPrincipleECCmodel() {
+	final EntityResultQueryModel<EntityCentreAnalysisConfig> model =
+	    /*    */select(EntityCentreAnalysisConfig.class).where().//
+	    /*    */prop("entityCentreConfig").in().model(nonPrincipleECCmodel()).model();
+	return model;
+    }
+
+    /**
+     * Creates a model to retrieve all {@link EntityCentreAnalysisConfig} instances for the current user and its base user.
+     *
+     * @param menuItemTypeName
+     * @param title
+     * @return
+     */
+    private EntityResultQueryModel<EntityCentreAnalysisConfig> analysesForConcreteECCmodel(final EntityCentreConfig ecc) {
+	final EntityResultQueryModel<EntityCentreAnalysisConfig> model =
+	    /*    */select(EntityCentreAnalysisConfig.class).where().//
+	    /*    */prop("entityCentreConfig").eq().val(ecc).model();
 	return model;
     }
 
@@ -542,7 +651,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    if (count == 1) { // for current user => 1 entity-centre
 		final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
 		ecc.setConfigBody(getSerialiser().serialise(currentMgr));
-		entityCentreConfigController.save(ecc);
+		saveCentre(currentMgr, ecc);
+		// TODO entityCentreAnalysisConfigController.save(entity)
 
 		persistentCentres.put(key(menuItemType, name), copyCentre(currentMgr));
 	    } else if (count < 1) { // there is no entity-centre
@@ -611,16 +721,26 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final String newTitle = title(menuItemType, newName);
 
 	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, newTitle);
-	entityCentreConfigController.getAllEntities(from(model).model());
+	// entityCentreConfigController.getAllEntities(from(model).model());
 
 	final int count = entityCentreConfigController.count(model);
 	if (count == 0) { // for current user or its base => there are no entity-centres, so persist a copy with a new title
 	    final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, currentUser(), newTitle, mainMenuItemController.findByKey(menuItemTypeName));
 	    ecc.setConfigBody(getSerialiser().serialise(copyMgr));
-	    entityCentreConfigController.save(ecc);
+	    saveCentre(copyMgr, ecc);
 	    init(menuItemType, newName, copyMgr, true);
 	} else { // > 1
 	    error("There are at least one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser() + "] or its base [" + baseOfTheCurrentUser() + "].");
+	}
+    }
+
+    private void saveCentre(final ICentreDomainTreeManagerAndEnhancer copyMgr, final EntityCentreConfig ecc) {
+	entityCentreAnalysisConfigController.delete(analysesForConcreteECCmodel(ecc));
+	final EntityCentreConfig newECC = entityCentreConfigController.save(ecc);
+
+	for (final String analysisName : copyMgr.analysisKeys()) {
+	    final EntityCentreAnalysisConfig ecac = factory.newByKey(EntityCentreAnalysisConfig.class, newECC, analysisName);
+	    entityCentreAnalysisConfigController.save(ecac);
 	}
     }
 
@@ -657,11 +777,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public Set<String> entityCentreNames(final Class<?> menuItemType) {
+    public List<String> entityCentreNames(final Class<?> menuItemType) {
 	validateMenuItemType(menuItemType);
 	validateMenuItemTypeRootType(menuItemType);
 
-	final Set<String> names = new HashSet<String>();
+	final List<String> names = new ArrayList<String>();
 
 	final List<EntityCentreConfig> centresFromTheCloud = entityCentreConfigController.getAllEntities(from(modelForCurrentAndBaseUsers(menuItemType.getName())).with(fetchOnly(EntityCentreConfig.class).with("title").with("principal")).model());
 	for (final EntityCentreConfig ecc : centresFromTheCloud) {
@@ -677,7 +797,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 //	    }
 //	}
 
-	return Collections.unmodifiableSet(names);
+	return Collections.unmodifiableList(names);
     }
 
     /////////////////////////////////////////////////////////////////////////////////

@@ -4,6 +4,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
@@ -23,8 +24,8 @@ public final class PersistedMainMenuStructureBuilder implements IMainMenuStructu
     private final MainMenuItemMixin mixin;
 
     @Inject
-    public PersistedMainMenuStructureBuilder(final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory, final User user) {
-	mixin = new MainMenuItemMixin(mmiController, eccController, mmiiController, factory);
+    public PersistedMainMenuStructureBuilder(final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory, final User user) {
+	mixin = new MainMenuItemMixin(mmiController, eccController, ecacController, mmiiController, factory);
 	mixin.setUser(user);
     }
 

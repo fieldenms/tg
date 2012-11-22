@@ -5,7 +5,6 @@ import static ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDo
 import static ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeRepresentation.YELLOW;
 
 import java.util.List;
-import java.util.Set;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -87,7 +86,7 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
 	final ObservableList<DashboardRow<T>> data = FXCollections.observableArrayList();
 	final List<Class<?>> mmiTypes = globalManager.entityCentreMenuItemTypes();
 	for (final Class<?> mmiType : mmiTypes) {
-	    final Set<String> centreNames = globalManager.entityCentreNames(mmiType);
+	    final List<String> centreNames = globalManager.entityCentreNames(mmiType);
 	    for (final String centreName : centreNames) {
 		if (globalManager.getEntityCentreManager(mmiType, centreName) == null) {
 		    globalManager.initEntityCentreManager(mmiType, centreName); // TODO this operation consumes a lot of time / memory during load

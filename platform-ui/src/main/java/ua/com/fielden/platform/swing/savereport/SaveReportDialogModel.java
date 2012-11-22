@@ -44,7 +44,7 @@ public class SaveReportDialogModel<T extends AbstractEntity<?>> {
      */
     public ListModel getAvailableReports() {
 	final DefaultListModel listModel = new DefaultListModel();
-	for (final String centerName : centreConfigurationModel.getNonPrincipleEntityCentreList()) {
+	for (final String centerName : centreConfigurationModel.loadNonPrincipleEntityCentreNames()) {
 	    listModel.addElement(centerName);
 	}
 	return listModel;

@@ -14,6 +14,7 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
@@ -31,6 +32,7 @@ public class PlatformDomainTypes{
 	types.add(UserAndRoleAssociation.class);
 	types.add(SecurityRoleAssociation.class);
 	types.add(EntityCentreConfig.class);
+	types.add(EntityCentreAnalysisConfig.class);
 	types.add(EntityMasterConfig.class);
 	types.add(EntityLocatorConfig.class);
 	types.add(Attachment.class);

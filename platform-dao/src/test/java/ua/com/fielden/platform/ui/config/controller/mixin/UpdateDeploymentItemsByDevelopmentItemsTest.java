@@ -14,7 +14,9 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
@@ -31,7 +33,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
  */
 public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainDrivenTestCase {
     private final IUserDao userDao = getInstance(IUserDao.class);
-    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IMainMenuItemInvisibilityController.class), getInstance(EntityFactory.class));
+    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibilityController.class), getInstance(EntityFactory.class));
     private final EntityFactory factory = getInstance(EntityFactory.class);
 
     private User getBaseUser() {
@@ -1158,7 +1160,8 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 	/**/final MainMenuItem item_1_1 = save(new_(MainMenuItem.class, "type2").setParent(root_1).setTitle("Item 1-1").setOrder(1));
 	/*    */final MainMenuItem item_1_1_1 = save(new_(MainMenuItem.class, "type3").setParent(item_1_1).setTitle("Item 1-1-1").setOrder(1));
 	/*    */save(new_composite(EntityCentreConfig.class, baseUser, "principal for item 1-1-1", item_1_1_1).setPrincipal(true));
-	/*        */save(new_composite(EntityCentreConfig.class, baseUser, "save as for item 1-1-1", item_1_1_1).setPrincipal(false));
+	/*        */final EntityCentreConfig item_1_1_1_saveAs = save(new_composite(EntityCentreConfig.class, baseUser, "save as for item 1-1-1", item_1_1_1).setPrincipal(false));
+	/*            */save(new_composite(EntityCentreAnalysisConfig.class, item_1_1_1_saveAs, "analysis for save as for item 1-1-1"));
 	/**/final MainMenuItem item_1_2 = save(new_(MainMenuItem.class, "type4").setParent(root_1).setTitle("Item 1-2").setOrder(2));
 	/*    */final MainMenuItem item_1_2_1 = save(new_(MainMenuItem.class, "type5").setParent(item_1_2).setTitle("Item 1-2-1").setOrder(1));
 	/*    */save(new_composite(EntityCentreConfig.class, baseUser, "principal for item 1-2-1", item_1_2_1).setPrincipal(true));

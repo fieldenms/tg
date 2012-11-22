@@ -34,6 +34,8 @@ import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
+import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigRao;
+import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.api.EntityCentreConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityLocatorConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityMasterConfigControllerRao;
@@ -130,6 +132,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
 	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
+	bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigRao.class).in(Scopes.SINGLETON);
 	bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
 	//////////////////////////////////////////////////////////////////////////////
 	bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);

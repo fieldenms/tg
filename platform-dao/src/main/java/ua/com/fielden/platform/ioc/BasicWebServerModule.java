@@ -33,6 +33,8 @@ import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
+import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
@@ -119,6 +121,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
 	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
+	bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
 
 	// user security related bindings
 	bind(IUserRoleDao.class).to(UserRoleDao.class);

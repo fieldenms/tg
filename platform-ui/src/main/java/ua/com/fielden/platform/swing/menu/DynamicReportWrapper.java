@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.menu;
 
 import java.util.EventListener;
 import java.util.EventObject;
-import java.util.Set;
+import java.util.List;
 
 import javax.swing.event.EventListenerList;
 
@@ -104,8 +104,8 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
      *
      * @return
      */
-    public Set<String> getNonPrincipleEntityCentreNames() {
-	return entityCentreConfigurationView.getModel().getNonPrincipleEntityCentreList();
+    public List<String> loadNonPrincipleEntityCentreNames() {
+	return entityCentreConfigurationView.getModel().loadNonPrincipleEntityCentreNames();
     }
 
     /**
@@ -117,7 +117,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	final ICentreDomainTreeManagerAndEnhancer cdtm = entityCentreConfigurationView.getModel().getEntityCentreManager();
 	if (cdtm == null) {
 	    try {
-		entityCentreConfigurationView.getModel().initEntityCentreManager();
+		/* TODO */ entityCentreConfigurationView.getModel().initEntityCentreManager();
 	    } catch (final IllegalArgumentException e) {
 		logger.error(e.getMessage(), e);
 	    }
@@ -159,7 +159,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 		switch (event.getEventAction()) {
 		case POST_SAVE_AS:
 		    final MiWithConfigurationSupport<T> principleEntityCentreMenuItem = getPrincipleEntityCentreMenuItem();
-		    final MiSaveAsConfiguration<T> newTreeMenuItem = new MiSaveAsConfiguration<T>(//
+		    final MiSaveAsConfiguration<T> newTreeMenuItem = MiSaveAsConfiguration.<T>createAndLoadAnalyses(//
 		    principleEntityCentreMenuItem,//
 		    event.getSaveAsName());
 		    principleEntityCentreMenuItem.addItem(newTreeMenuItem);

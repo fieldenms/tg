@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.example.dynamiccriteria;
 
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.swing.menu.ITreeMenuItemVisibilityProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
@@ -16,6 +17,6 @@ public class MiSimpleCompositeEntity extends MiWithConfigurationSupport<SimpleCo
 
     @SuppressWarnings("unchecked")
     public MiSimpleCompositeEntity(final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ITreeMenuItemVisibilityProvider visibilityProvider) {
-	super("Simple composite entity", "Simple composite entity description", treeMenu, injector.getInstance(EntityCentreFactoryBinder.class), visibilityProvider, MiSimpleCompositeEntity.class);
+	super("Simple composite entity", "Simple composite entity description", treeMenu, injector.getInstance(EntityCentreFactoryBinder.class), visibilityProvider, MiSimpleCompositeEntity.class, injector.getInstance(IGlobalDomainTreeManager.class));
     }
 }

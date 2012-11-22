@@ -18,6 +18,7 @@ import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
@@ -32,7 +33,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
  */
 public class MenuAndConfigurationTestCase extends AbstractDomainDrivenTestCase {
     private final IUserDao userDao = getInstance(IUserDao.class);
-    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IMainMenuItemInvisibilityController.class), getInstance(EntityFactory.class));
+    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibilityController.class), getInstance(EntityFactory.class));
 
     private User getBaseUser() {
 	return userDao.findByKeyAndFetch(fetchAll(User.class), "B-USER");

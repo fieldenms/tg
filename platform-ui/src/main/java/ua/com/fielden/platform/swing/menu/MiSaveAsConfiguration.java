@@ -27,7 +27,37 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 
     private final IAnalysisListener analysisListener;
 
-    public MiSaveAsConfiguration(//
+    /**
+     * Creates menu item for Save As. To obtain analyses names, the parent centre will be loaded (if it was not loaded earlier).
+     *
+     * @param parentItem
+     * @param name
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> MiSaveAsConfiguration<T> createAndLoadAnalyses(final MiWithConfigurationSupport<T> parentItem, final String name) {
+	final MiSaveAsConfiguration<T> item =  new MiSaveAsConfiguration<T>(parentItem, name);
+	item.addAnalysis();
+	return item;
+    }
+
+    /**
+     * Creates menu item for Save As. Analyses names should be passed explicitly as parameter.
+     *
+     * @param parentItem
+     * @param name
+     * @param analysisNames
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> MiSaveAsConfiguration<T> createWithProvidedAnalyses(final MiWithConfigurationSupport<T> parentItem, final String name, final List<String> analysisNames) {
+	final MiSaveAsConfiguration<T> item =  new MiSaveAsConfiguration<T>(parentItem, name);
+	// add menu items corresponding to analyses
+	for (final String analysisName : analysisNames) {
+	    item.addItem(new TreeMenuItemWrapper<T>(analysisName));
+	}
+	return item;
+    }
+
+    private MiSaveAsConfiguration(//
 	    //Tree menu item related parameters
 	    final MiWithConfigurationSupport<T> parentItem,
 	    //Entity centre related parameters
@@ -51,7 +81,6 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 	    }
 
 	});
-	addAnalysis();
     }
 
     /**

@@ -1,9 +1,15 @@
 package ua.com.fielden.platform.ui.config.controller.mixin;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,7 +21,9 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
@@ -24,11 +32,6 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 
 /**
@@ -40,15 +43,17 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 public final class MainMenuItemMixin {
     private final IMainMenuItemController mmiController;
     private final IEntityCentreConfigController eccController;
+    private final IEntityCentreAnalysisConfig ecacController;
     private final IMainMenuItemInvisibilityController mmiiController;
     private final EntityFactory factory;
     private User user; // should be set upon user successful login.
     private final Logger logger = Logger.getLogger(getClass());
 
     @Inject
-    public MainMenuItemMixin(final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory) {
+    public MainMenuItemMixin(final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory) {
 	this.mmiController = mmiController;
 	this.eccController = eccController;
+	this.ecacController = ecacController;
 	this.mmiiController = mmiiController;
 	this.factory = factory;
     }
@@ -214,11 +219,14 @@ public final class MainMenuItemMixin {
 	private final User owner;
 	private final String title;
 	private final String mainMenuItemKey;
+	private final List<String> analysesNames;
 
-	protected EntityCentreConfigKey(final User owner, final String title, final String mainMenuItemKey) {
+	protected EntityCentreConfigKey(final User owner, final String title, final String mainMenuItemKey, final List<String> analysesNames) {
 	    this.owner = owner;
 	    this.title = title;
 	    this.mainMenuItemKey = mainMenuItemKey;
+	    this.analysesNames = new ArrayList<String>();
+	    this.analysesNames.addAll(analysesNames);
 	}
 
 	public User getOwner() {
@@ -231,6 +239,10 @@ public final class MainMenuItemMixin {
 
 	public String getMainMenuItemKey() {
 	    return mainMenuItemKey;
+	}
+
+	public List<String> getAnalysesNames() {
+	    return analysesNames;
 	}
     }
 
@@ -290,14 +302,52 @@ public final class MainMenuItemMixin {
 	final List<MainMenuItem> developmentMainMenuItems = developmentMainMenuStructureBuilder.build();
 	final List<MainMenuItem> updatedMainMenuItems = new ArrayList<MainMenuItem>();
 
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==========retrieve all ECC =======================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+
 	// retrieve all EntityCentreConfig's, locally keep meta-info, and then purge them all
+	final Map<Long, List<String>> analysesMap = new LinkedHashMap<Long, List<String>>();
+	final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac = select(EntityCentreAnalysisConfig.class).model();
+	final List<EntityCentreAnalysisConfig> ecacs = ecacController.getAllEntities(from(modelEcac).with(fetchOnly(EntityCentreAnalysisConfig.class).with("entityCentreConfig", fetchOnly(EntityCentreConfig.class).with("id")).with("title")).model());
+	for (final EntityCentreAnalysisConfig ecac : ecacs) {
+	    if (!analysesMap.containsKey(ecac.getEntityCentreConfig().getId())) {
+		analysesMap.put(ecac.getEntityCentreConfig().getId(), new ArrayList<String>());
+	    }
+	    analysesMap.get(ecac.getEntityCentreConfig().getId()).add(ecac.getTitle());
+	}
+
 	final EntityResultQueryModel<EntityCentreConfig> modelEcc = select(EntityCentreConfig.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
 	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(modelEcc).model());
-	final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = new HashMap<EntityCentreConfigKey, EntityCentreConfigBody>();
+	final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = new LinkedHashMap<EntityCentreConfigKey, EntityCentreConfigBody>();
 	for (final EntityCentreConfig ecc : eccs) {
-	    centresKeysAndBodies.put(new EntityCentreConfigKey(ecc.getOwner(), ecc.getTitle(), ecc.getMenuItem().getKey()), new EntityCentreConfigBody(ecc.isPrincipal(), ecc.getConfigBody()));
+	    final List<String> analyseNames = analysesMap.get(ecc.getId()) == null ? new ArrayList<String>() : analysesMap.get(ecc.getId());
+	    centresKeysAndBodies.put(new EntityCentreConfigKey(ecc.getOwner(), ecc.getTitle(), ecc.getMenuItem().getKey(), analyseNames), new EntityCentreConfigBody(ecc.isPrincipal(), ecc.getConfigBody()));
 	}
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==========purge all ECC ==========================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	ecacController.delete(modelEcac);
 	eccController.delete(modelEcc);
+
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==========retrieve all MMII=======================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
 	// retrieve all MainMenuItemInvisibility's, locally keep meta-info, and then purge them all
 	final EntityResultQueryModel<MainMenuItemInvisibility> modelMmii = select(MainMenuItemInvisibility.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
 	final List<MainMenuItemInvisibility> mmiis = mmiiController.getAllEntities(from(modelMmii).model());
@@ -305,16 +355,49 @@ public final class MainMenuItemMixin {
 	for (final MainMenuItemInvisibility mmii : mmiis) {
 	    invisibilitiesKeys.add(new MainMenuItemInvisibilityKey(mmii.getOwner(), mmii.getMenuItem().getKey()));
 	}
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==========purge all MMII =========================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
 	mmiiController.delete(modelMmii);
+
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==========retrieve & purge all Main Menu Items ===");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
 	// purge all old menu items
 	final List<MainMenuItem> mmis = loadMenuSkeletonStructure();
 	for (final MainMenuItem rootItem : mmis) {
 	    purgeAll(rootItem);
 	}
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==========save new Main Menu Items ===============");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
 	// persist new menu items
 	for (final MainMenuItem rootDevelopmentMainMenuItem : developmentMainMenuItems) {
 	    updatedMainMenuItems.add(saveMenuItem(rootDevelopmentMainMenuItem));
 	}
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==========save old ECC ===========================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
 	// persist old EntityCentreConfig's
 	for (final Entry<EntityCentreConfigKey, EntityCentreConfigBody> centresKeyAndBody : centresKeysAndBodies.entrySet()) {
 	    final MainMenuItem mmi = mmiController.findByKey(centresKeyAndBody.getKey().getMainMenuItemKey());
@@ -322,11 +405,23 @@ public final class MainMenuItemMixin {
 		final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, centresKeyAndBody.getKey().getOwner(), centresKeyAndBody.getKey().getTitle(), mmi);
 		ecc.setPrincipal(centresKeyAndBody.getValue().isPrincipal());
 		ecc.setConfigBody(centresKeyAndBody.getValue().getConfigBody());
-		eccController.save(ecc);
+		final EntityCentreConfig newECC = eccController.save(ecc);
+		for (final String analysisName : centresKeyAndBody.getKey().getAnalysesNames()) {
+		    final EntityCentreAnalysisConfig ecac = factory.newByKey(EntityCentreAnalysisConfig.class, newECC, analysisName);
+		    ecacController.save(ecac);
+		}
 	    } else {
 		logger.warn("The Entity Centre Config for owner [" + centresKeyAndBody.getKey().getOwner() + "] and title " + centresKeyAndBody.getKey().getTitle() + " and item [" + centresKeyAndBody.getKey().getMainMenuItemKey() + "] has been purged due to non-existence of item [" + centresKeyAndBody.getKey().getMainMenuItemKey() + "] after update procedure.");
 	    }
 	}
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==========save old MMII ==========================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
 	// persist old MainMenuItemInvisibility's
 	for (final MainMenuItemInvisibilityKey invisibilityKey : invisibilitiesKeys) {
 	    final MainMenuItem mmi = mmiController.findByKey(invisibilityKey.getMainMenuItemKey());
@@ -337,6 +432,14 @@ public final class MainMenuItemMixin {
 		logger.warn("The Main Menu Item Invisibility for owner [" + invisibilityKey.getOwner() + "] and item [" + invisibilityKey.getMainMenuItemKey() + "] has been purged due to non-existence of item [" + invisibilityKey.getMainMenuItemKey() + "] after update procedure.");
 	    }
 	}
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("=================DONE ============================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
+	System.err.println("==================================================");
 	return updatedMainMenuItems;
     }
 
