@@ -111,6 +111,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 	bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
 	bind(IKeyNumber.class).to(KeyNumberDao.class);
 
+	// bind attachment controllers
 	bind(IAttachmentController.class).to(AttachmentDao.class);
 	bind(IEntityAttachmentAssociationController.class).to(EntityAttachmentAssociationDao.class);
 

@@ -10,7 +10,7 @@ import com.google.inject.Scopes;
 /**
  * A convenience class that assists in automation of binding companion object implementations to its declarations.
  * It automatically determines the companion object contract based on the type of an entity object.
- * 
+ *
  * @author TG Team
  *
  */
@@ -18,7 +18,7 @@ public class CompanionObjectAutobinder {
 
     /**
      * Returns companion object type or null if its declaration is missing from the entity object.
-     * 
+     *
      * @param entityType
      * @return
      */
@@ -31,7 +31,7 @@ public class CompanionObjectAutobinder {
 
     /**
      * Uses the provided binder to bind RAO implementation in a singleton scope to entity's companion object contract.
-     * 
+     *
      * @param entityType
      * @param binder
      */
@@ -58,7 +58,7 @@ public class CompanionObjectAutobinder {
 
     /**
      * Uses the provided binder to bind DAO implementation to entity's companion object contract.
-     * 
+     *
      * @param entityType
      * @param binder
      */

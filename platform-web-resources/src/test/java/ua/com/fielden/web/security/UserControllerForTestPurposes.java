@@ -123,11 +123,6 @@ public class UserControllerForTestPurposes implements IUserController {
     }
 
     @Override
-    public void setUsername(final String username) {
-	throw new UnsupportedOperationException("Setting username is not required at the client side, and this fact most likely points to a programming mistake.");
-    }
-
-    @Override
     public String getUsername() {
 	throw new UnsupportedOperationException("Getting username is not required at the client side, and this fact most likely points to a programming mistake.");
     }

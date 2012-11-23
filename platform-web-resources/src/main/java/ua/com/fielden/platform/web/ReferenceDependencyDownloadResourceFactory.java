@@ -13,9 +13,9 @@ import com.google.inject.Injector;
 
 /**
  * A factory for {@link ReferenceDependencyDownloadResource}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ReferenceDependencyDownloadResourceFactory extends Restlet {
     private final String dependencyLocation;

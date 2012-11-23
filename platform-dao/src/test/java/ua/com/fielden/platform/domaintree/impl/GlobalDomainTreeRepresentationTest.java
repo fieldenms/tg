@@ -22,6 +22,7 @@ import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -70,6 +71,10 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
 	    @Override
 	    public User getUser() {
 		return userDao.findByKeyAndFetch(fetchAll(User.class), userName);
+	    }
+
+	    @Override
+	    public void setUsername(final String username, final IUserController controller) {
 	    }
 	};
 	return baseUserProvider;

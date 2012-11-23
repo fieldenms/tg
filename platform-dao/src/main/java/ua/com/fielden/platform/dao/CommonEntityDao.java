@@ -45,7 +45,8 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -59,9 +60,9 @@ import com.google.inject.Inject;
  * <p>
  * Property <code>session</code> is used to allocation session whenever is appropriate -- all data access methods should use this session. It is envisaged that the real class usage
  * will include Guice method intercepter that would assign session instance dynamically before executing calls to methods annotated with {@link SessionRequired}.
- * 
+ *
  * @author TG Team
- * 
+ *
  * @param <T>
  *            -- entity type
  * @param <K>
@@ -77,18 +78,18 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private EntityFactory entityFactory;
 
-    private String username;
-
     private final IFilter filter;
 
     @Inject
-    private IUserDao userDao;
+    private IUserController userController;
     @Inject
     private IUniversalConstants universalConstants;
+    @Inject
+    private IUserProvider up;
 
     /**
      * A principle constructor.
-     * 
+     *
      * @param entityType
      */
     @Inject
@@ -98,7 +99,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A setter for injection of entityFactory instance.
-     * 
+     *
      * @param entityFactory
      */
     @Inject
@@ -108,7 +109,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
-     * 
+     *
      * @param mappingExtractor
      */
     @Inject
@@ -117,17 +118,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
-    public final void setUsername(final String username) {
-	try {
-	    UsernameSetterMixin.setUsername(username, this, Finder.findFieldByName(getClass(), "username"));
-	} catch (final Exception e) {
-	    throw new IllegalStateException(e);
-	}
-    }
-
-    @Override
     public final String getUsername() {
-	return username;
+	final User user = getUser();
+	return user != null ? user.getKey() : null;
     }
 
     @Override
@@ -352,7 +345,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Fetches the results of the specified page based on the request of the given instance of {@link QueryExecutionModel}.
-     * 
+     *
      * @param queryModel
      * @param pageNumber
      * @param pageCapacity
@@ -428,8 +421,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Calculates the number of pages of the given size required to fit the whole result set.
-     * 
-     * 
+     *
+     *
      * @param model
      * @param pageCapacity
      * @return
@@ -450,7 +443,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
      * <p>
      * For example it could be a byte array of GZipped Excel data.
-     * 
+     *
      * @param query
      *            -- query result of which should be exported.
      * @param propertyNames
@@ -535,7 +528,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
-     * 
+     *
      * @param entity
      */
     @SessionRequired
@@ -555,7 +548,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A convenient default implementation for deletion of entities specified by provided query model.
-     * 
+     *
      * @param entity
      */
     @SessionRequired
@@ -586,7 +579,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     public User getUser() {
-	return userDao.findByKey(getUsername());
+	return up.getUser();
     }
 
     public IFilter getFilter() {
@@ -595,9 +588,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Implements pagination based on the provided query.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public class EntityQueryPage implements IPage<T> {
 	private final int pageNumber; // zero-based

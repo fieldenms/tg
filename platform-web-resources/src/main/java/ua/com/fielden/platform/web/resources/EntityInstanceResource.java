@@ -32,7 +32,6 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  */
 public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resource {
     // the following properties are determined from request
-    protected final String username;
     protected final Long entityId;
 
     protected final Long entityVersion; // is initialised with value other than null only in cases where head request came to check entity staleness.
@@ -81,8 +80,6 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
 	this.dao = dao;
 	this.factory = factory;
 	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
-	dao.setUsername(username);
 	this.entityId = Long.parseLong(request.getAttributes().get("entity-id").toString());
 	this.entityVersion = initEntityVersion(request.getResourceRef().getQueryAsForm().getFirstValue("version"));
     }
@@ -191,10 +188,6 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
 
     public Long getEntityId() {
         return entityId;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
 }

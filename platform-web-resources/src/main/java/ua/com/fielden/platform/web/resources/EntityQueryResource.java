@@ -27,7 +27,6 @@ import ua.com.fielden.platform.roa.HttpHeaders;
 public class EntityQueryResource<T extends AbstractEntity<?>> extends Resource {
     private static final int DEFAULT_PAGE_CAPACITY = 25;
     // the following properties are determined from request
-    private final String username;
     private final Integer pageCapacity;
     private final int pageNo;
     private final int pageCount;
@@ -69,8 +68,6 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends Resource {
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
 	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
-	dao.setUsername(username);
 
 	final String param = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
 

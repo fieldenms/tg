@@ -41,6 +41,8 @@ import ua.com.fielden.platform.security.dao.UserRoleDao;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.provider.UserController;
 import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.platform.test.domain.entities.daos.BogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IBogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWagonDao;
@@ -67,7 +69,6 @@ import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStruc
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 
-
 /**
  * Guice injector module for Hibernate related injections for testing purposes.
  *
@@ -87,24 +88,27 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 	bind(IFilter.class).to(DataFilter.class);
 	bind(IKeyNumber.class).to(KeyNumberDao.class);
 	bind(IBogieDao.class).to(BogieDao.class);
-//	bind(IWheelsetDao.class).to(WheelsetDao.class);
-//	bind(IRotableDao.class).to(RotableDao.class);
+	//	bind(IWheelsetDao.class).to(WheelsetDao.class);
+	//	bind(IRotableDao.class).to(RotableDao.class);
 	bind(IWorkshopDao.class).to(WorkshopDao.class);
-//	bind(IWagonClassDao.class).to(WagonClassDao.class);
-//	bind(IBogieClassDao.class).to(BogieClassDao.class);
-//	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);
+	//	bind(IWagonClassDao.class).to(WagonClassDao.class);
+	//	bind(IBogieClassDao.class).to(BogieClassDao.class);
+	//	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);
 	bind(IWagonDao.class).to(WagonDao.class);
 	bind(IWagonSlotDao.class).to(WagonSlotDao.class);
 	bind(ITgWorkorder.class).to(TgWorkorderDao.class);
-//	bind(IWorkorderableDao.class).to(WorkorderableDao.class);
-//	bind(IAdviceDao.class).to(AdviceDao.class);
-//	bind(IRotableClassDao.class).to(RotableClassDao.class);
+	//	bind(IWorkorderableDao.class).to(WorkorderableDao.class);
+	//	bind(IAdviceDao.class).to(AdviceDao.class);
+	//	bind(IRotableClassDao.class).to(RotableClassDao.class);
 	bind(IUserRoleDao.class).to(UserRoleDao.class);
 	bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
 	bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
 
 	bind(IUserDao.class).to(UserController.class);
 	bind(IUserController.class).to(UserController.class);
+	// bind IUserProvider
+	bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
+
 	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
 	bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
 	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);

@@ -26,7 +26,6 @@ import ua.com.fielden.platform.security.user.UserRole;
  * @author TG Team
  */
 public class UserRoleAssociationResource extends Resource {
-    private final String username; // TODO to be used for auditing purposes
 
     private final IUserController controller;
     private final IUserRoleDao userRoleDao;
@@ -62,8 +61,6 @@ public class UserRoleAssociationResource extends Resource {
 	this.controller = controller;
 	this.userRoleDao = userRoleDao;
 	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
-	userRoleDao.setUsername(username);
 
 	userIdToHaveRolesUpdated = Long.parseLong(request.getResourceRef().getQueryAsForm().getFirstValue("userId"));
 	roleIds = parseRoles(request.getResourceRef().getQueryAsForm().getFirstValue("roles"));

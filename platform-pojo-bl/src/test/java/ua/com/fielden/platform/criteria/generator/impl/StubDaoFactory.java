@@ -29,9 +29,6 @@ public class StubDaoFactory implements IDaoFactory {
 	    return new IEntityDao<TopLevelEntity>() {
 
 		@Override
-		public void setUsername(final String username) { }
-
-		@Override
 		public String getUsername() { return null; }
 
 		@Override

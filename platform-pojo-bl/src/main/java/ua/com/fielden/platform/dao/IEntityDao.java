@@ -25,10 +25,10 @@ import ua.com.fielden.platform.security.user.User;
 public interface IEntityDao<T extends AbstractEntity<?>> {
     static final int DEFAULT_PAGE_CAPACITY = 25;
 
-    /**
-     * Username should be provided for every DAO instance in order to support data filtering and auditing.
-     */
-    void setUsername(final String username);
+//    /**
+//     * Username should be provided for every DAO instance in order to support data filtering and auditing.
+//     */
+//    void setUsername(final String username);
 
     /**
      * Returns provided name.

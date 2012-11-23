@@ -7,7 +7,7 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
@@ -17,7 +17,8 @@ public class EntityAggregatesDao implements IEntityAggregatesDao {
 
     private final CommonEntityAggregatesDao dao;
 
-    private String username;
+    @Inject
+    private IUserProvider up;
 
     @Inject
     protected EntityAggregatesDao(final CommonEntityAggregatesDao dao) {
@@ -49,17 +50,8 @@ public class EntityAggregatesDao implements IEntityAggregatesDao {
     }
 
     @Override
-    public final void setUsername(final String username) {
-	try {
-	    UsernameSetterMixin.setUsername(username, this, Finder.findFieldByName(getClass(), "username"));
-	} catch (final Exception e) {
-	    throw new IllegalStateException(e);
-	}
-    }
-
-    @Override
     public final String getUsername() {
-	return username;
+	return up.getUser().getKey();
     }
 
     @Override

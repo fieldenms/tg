@@ -62,8 +62,11 @@ import ua.com.fielden.platform.sample.domain.TgWagonDao;
 import ua.com.fielden.platform.sample.domain.TgWagonSlotDao;
 import ua.com.fielden.platform.sample.domain.TgWorkshopDao;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.test.UserProviderForTesting;
 
+import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 
 
@@ -97,6 +100,9 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     @Override
     protected void configure() {
 	super.configure();
+
+	bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
+
 	// bind DAO
 //	bind(IWheelsetDao.class).to(WheelsetDao.class);
 //	bind(IWorkshopDao2.class).to(WorkshopDao2.class);

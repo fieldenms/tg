@@ -17,11 +17,15 @@ import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
 import ua.com.fielden.platform.security.provider.UserController;
 import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntityDao;
+
+import com.google.inject.Scopes;
 
 /**
  * Guice injector module for Hibernate related injections, which are specific to testing.
@@ -44,6 +48,7 @@ public class WebHibernateModule extends CommonFactoryModule {
     @Override
     protected void configure() {
 	super.configure();
+	bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
 	bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
 	bind(ISerialiser.class).to(TgKryo.class);
 	// bind DAO

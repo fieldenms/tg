@@ -28,7 +28,6 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  */
 public class EntityTypeResource<T extends AbstractEntity<?>> extends Resource {
     // the following properties are determined from request
-    private final String username;
     private final int pageCapacity;
     private final int pageNo;
 
@@ -88,8 +87,6 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends Resource {
 	this.dao = dao;
 	this.factory = factory;
 	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
-	dao.setUsername(username);
 	// Method request.getResourceRef() points to the URI and thus provides facilities to access its parts
 	pageCapacity = initPageCapacity(request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity"));
 	pageNo = initPageNo(request.getResourceRef().getQueryAsForm().getFirstValue("page-no"));

@@ -7,6 +7,8 @@ import org.restlet.data.Response;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.EntityAggregatesQueryExportResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -38,9 +40,12 @@ public class EntityAggregatesQueryExportResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
 	super.handle(request, response);
 
-	final IEntityAggregatesDao dao = injector.getInstance(IEntityAggregatesDao.class);
-
 	if (Method.POST.equals(request.getMethod())) {
+	    final IEntityAggregatesDao dao = injector.getInstance(IEntityAggregatesDao.class);
+
+	    final String username = (String) request.getAttributes().get("username");
+	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+
 	    new EntityAggregatesQueryExportResource(dao, restUtil, getContext(), request, response).handlePost();
 	}
     }

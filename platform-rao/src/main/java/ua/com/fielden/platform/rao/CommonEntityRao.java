@@ -556,11 +556,6 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     }
 
     @Override
-    public void setUsername(final String username) {
-	// can safely be ignored
-    }
-
-    @Override
     public String getUsername() {
 	return restUtil.getUsername();
     }

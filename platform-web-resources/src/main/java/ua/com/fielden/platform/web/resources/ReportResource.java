@@ -30,15 +30,12 @@ public class ReportResource extends Resource {
 
     private final RestServerUtil restUtil;
     private final IReport dao;
-    private final String username;
 
     public ReportResource(final IReport dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
 	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
-	dao.setUsername(username);
     }
 
     // //////////////////////////////////////////////////////////////////

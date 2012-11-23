@@ -27,7 +27,6 @@ import ua.com.fielden.platform.snappy.SnappyQuery;
 public class SnappyQueryResource<T extends AbstractEntity> extends Resource {
     private static final int DEFAULT_PAGE_CAPACITY = 25;
     // the following properties are determined from request
-    private final String userName;
     private final Integer pageCapacity;
     private final int pageNo;
     /** Indicates whether response should return count. */
@@ -69,7 +68,6 @@ public class SnappyQueryResource<T extends AbstractEntity> extends Resource {
 	this.dao = dao;
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.restUtil = restUtil;
-	this.userName = (String) request.getAttributes().get("username");
 
 	final String param = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
 

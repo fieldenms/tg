@@ -22,8 +22,6 @@ import ua.com.fielden.platform.attachment.IAttachmentController;
  * @author TG Team
  */
 public class AttachmentDownloadResource extends Resource {
-    // the following properties are determined from request
-    private final String username;
 
     private final IAttachmentController controller;
     private final RestServerUtil restUtil;
@@ -38,8 +36,6 @@ public class AttachmentDownloadResource extends Resource {
 	this.location = location;
 	this.controller = controller;
 	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
-	controller.setUsername(username);
 
 	attachmentId = Long.parseLong(request.getAttributes().get("entity-id").toString());
     }

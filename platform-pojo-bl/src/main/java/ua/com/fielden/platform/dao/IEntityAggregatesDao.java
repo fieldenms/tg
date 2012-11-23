@@ -13,7 +13,6 @@ public interface IEntityAggregatesDao {
     /**
      * Username should be provided for every DAO instance in order to support data filtering and auditing.
      */
-    void setUsername(final String username);
     String getUsername();
 
     /**

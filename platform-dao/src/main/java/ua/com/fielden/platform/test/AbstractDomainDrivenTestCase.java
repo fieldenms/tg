@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.test;
 
+import static java.lang.String.format;
+
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -25,7 +27,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
-import static java.lang.String.format;
 
 
 /**

@@ -617,4 +617,10 @@ public final class RestClientUtil implements IUserProvider {
 	setUsername(username);
     }
 
+    @Override
+    public void setUsername(final String username, final IUserController controller) {
+	setUserController(controller);
+	setUsername(username);
+    }
+
 }

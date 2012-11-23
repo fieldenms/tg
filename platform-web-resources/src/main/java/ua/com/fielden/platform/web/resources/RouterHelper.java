@@ -113,7 +113,7 @@ public final class RouterHelper {
     }
 
     public void registerReportResource(final Router router,  final RestServerUtil rsu) {
-	router.attach("/users/{username}/report", new ReportResourceFactory(injector.getInstance(IReportDaoFactory.class), rsu));
+	router.attach("/users/{username}/report", new ReportResourceFactory(injector.getInstance(IReportDaoFactory.class), rsu, injector));
     }
 
     public Injector getInjector() {

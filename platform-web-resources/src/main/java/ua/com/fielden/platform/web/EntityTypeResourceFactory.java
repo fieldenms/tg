@@ -8,6 +8,8 @@ import org.restlet.data.Response;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.EntityQueryResource;
 import ua.com.fielden.platform.web.resources.EntityTypeResource;
@@ -43,6 +45,9 @@ public class EntityTypeResourceFactory<T extends AbstractEntity<?>, DAO extends 
 	super.handle(request, response);
 
 	final DAO dao = injector.getInstance(daoType);
+
+	final String username = (String) request.getAttributes().get("username");
+	injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
 	if (Method.GET.equals(request.getMethod())) {
 	    new EntityTypeResource<T>(dao, factory, restUtil, getContext(), request, response).handleGet();

@@ -17,9 +17,6 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 public class TopLevelEntityDaoStub implements ITopLevelEntity {
 
 	@Override
-	public void setUsername(final String username) { }
-
-	@Override
 	public String getUsername() { return null; }
 
 	@Override

@@ -22,8 +22,6 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
  * @author TG Team
  */
 public class EntityLifecycleResource<T extends AbstractEntity<?>> extends Resource {
-    // the following properties are determined from request
-    private final String username;
 
     private final ILifecycleDao<T> lifecycleDao;
     private final RestServerUtil restUtil;
@@ -41,8 +39,6 @@ public class EntityLifecycleResource<T extends AbstractEntity<?>> extends Resour
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.lifecycleDao = lifecycleDao;
 	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
-	lifecycleDao.setUsername(username);
     }
 
     // //////////////////////////////////////////////////////////////////

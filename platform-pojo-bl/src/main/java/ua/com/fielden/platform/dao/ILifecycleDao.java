@@ -40,6 +40,5 @@ public interface ILifecycleDao<T extends AbstractEntity<?>> {
     /**
      * Username should be provided for every DAO instance in order to support data filtering and auditing.
      */
-    void setUsername(final String username);
     String getUsername();
 }

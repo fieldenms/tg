@@ -7,6 +7,8 @@ import org.restlet.data.Response;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.EntityQueryExportResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -40,6 +42,10 @@ public class EntityQueryExportResourceFactory<T extends AbstractEntity<?>, DAO e
 
 	if (Method.POST.equals(request.getMethod())) {
 	    final DAO dao = injector.getInstance(daoType);
+
+	    final String username = (String) request.getAttributes().get("username");
+	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+
 	    new EntityQueryExportResource<T>(dao, restUtil, getContext(), request, response).handlePost();
 	}
     }

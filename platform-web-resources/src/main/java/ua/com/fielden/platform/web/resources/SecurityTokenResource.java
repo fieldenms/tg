@@ -69,7 +69,6 @@ public class SecurityTokenResource extends Resource {
 	this.userRoleDao = userRoleDao;
 	this.restUtil = restUtil;
 	this.username = (String) request.getAttributes().get("username");
-	userRoleDao.setUsername(username);
 
 	final String tokenName = (String) request.getAttributes().get("token");
 	try {

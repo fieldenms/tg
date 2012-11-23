@@ -27,9 +27,6 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
  * @author TG Team
  */
 public class EntityAggregatesQueryExportResource extends Resource {
-    // the following properties are determined from request
-    private final String username;
-
     private final IEntityAggregatesDao dao;
     private final RestServerUtil restUtil;
 
@@ -48,8 +45,6 @@ public class EntityAggregatesQueryExportResource extends Resource {
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
 	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
-	dao.setUsername(username);
     }
 
     // //////////////////////////////////////////////////////////////////

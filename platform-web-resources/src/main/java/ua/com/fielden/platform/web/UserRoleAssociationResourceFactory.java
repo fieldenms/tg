@@ -7,6 +7,7 @@ import org.restlet.data.Response;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.UserRoleAssociationResource;
@@ -38,6 +39,9 @@ public class UserRoleAssociationResourceFactory extends Restlet {
 	if (Method.POST.equals(request.getMethod())) {
 	    final IUserController controller = injector.getInstance(IUserController.class);
 	    final IUserRoleDao userRoleDao = injector.getInstance(IUserRoleDao.class);
+
+	    final String username = (String) request.getAttributes().get("username");
+	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
 	    new UserRoleAssociationResource(controller, userRoleDao, restUtil, getContext(), request, response).handlePost();
 	}

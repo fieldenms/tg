@@ -8,6 +8,8 @@ import org.restlet.data.Response;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.EntityInstanceResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -15,8 +17,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 import com.google.inject.Injector;
 
 /**
- * This is {@link Restlet} implementation that provides logic for correct entity oriented resource instantiation.
- * Specifically, it should be used to instantiate {@link EntityInstanceResource} for specific entity types.
+ * This is {@link Restlet} implementation that provides logic for correct entity oriented resource instantiation. Specifically, it should be used to instantiate
+ * {@link EntityInstanceResource} for specific entity types.
  *
  * @author 01es
  *
@@ -42,6 +44,9 @@ public class EntityInstanceResourceFactory<T extends AbstractEntity<?>, DAO exte
 	super.handle(request, response);
 
 	final DAO dao = injector.getInstance(daoType);
+
+	final String username = (String) request.getAttributes().get("username");
+	injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
 	final EntityInstanceResource<T> resource = new EntityInstanceResource<T>(dao, factory, restUtil, getContext(), request, response);
 	if (Method.GET == request.getMethod()) {

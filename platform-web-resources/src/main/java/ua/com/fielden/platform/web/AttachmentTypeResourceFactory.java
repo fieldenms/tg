@@ -8,6 +8,8 @@ import org.restlet.data.Response;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.AttachmentTypeResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -15,8 +17,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 import com.google.inject.Injector;
 
 /**
- * This is {@link Restlet} implementation that provides logic for correct {@link Attachment} resource instantiation.
- *  *
+ * This is {@link Restlet} implementation that provides logic for correct {@link Attachment} resource instantiation. *
+ *
  * @author TG Team
  *
  */
@@ -44,6 +46,9 @@ public class AttachmentTypeResourceFactory extends Restlet {
 	super.handle(request, response);
 
 	final IAttachmentController dao = injector.getInstance(IAttachmentController.class);
+
+	final String username = (String) request.getAttributes().get("username");
+	injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
 	if (Method.GET.equals(request.getMethod())) {
 	    new AttachmentTypeResource(location, dao, factory, restUtil, getContext(), request, response).handleGet();
