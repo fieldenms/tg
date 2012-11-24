@@ -274,12 +274,12 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	not = ftm.getNot(rootType, propertyName); // update Not state
 	orNull = ftm.getOrNull(rootType, propertyName); // update OrNull state
 
-	if (AbstractDomainTree.isDoubleCriterion(rootType, propertyName)) {
+	if (AbstractDomainTree.isDoubleCriterion(managedType, propertyName)) {
 	    fromExclusive = ftm.getExclusive(rootType, propertyName); // update left exclusiveness
 	    toExclusive = ftm.getExclusive2(rootType, propertyName); // update right exclusiveness
 	}
 
-	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? rootType : PropertyTypeDeterminator.determinePropertyType(rootType, propertyName);
+	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
 	if (EntityUtils.isDate(propertyType)) {
 	    dateState.setDatePrefix(ftm.getDatePrefix(rootType, propertyName)); // update date prefix
 	    dateState.setDateMnemonic(ftm.getDateMnemonic(rootType, propertyName)); // update date mnemonic
