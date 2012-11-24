@@ -6,6 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.Router;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
@@ -62,6 +63,7 @@ public final class SystemResources extends Application {
 	helper.register(routerForResources, IEntityMasterConfigController.class);
 	helper.register(routerForResources, IEntityLocatorConfigController.class);
 	helper.register(routerForResources, IEntityCentreConfigController.class);
+	helper.register(routerForResources, IEntityCentreAnalysisConfig.class);
 
 	// create resource guard and associate it with the resource router
 	final ResourceGuard guard = new ResourceGuard(getContext(), "Fleet Pilot", util, injector);
