@@ -1,13 +1,22 @@
 package ua.com.fielden.platform.web.application;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.Restlet;
 import org.restlet.Router;
 
+import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
+import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.web.ResourceGuard;
 import ua.com.fielden.platform.web.SecurityTokenResourceFactory;
 import ua.com.fielden.platform.web.UserRoleAssociationResourceFactory;
@@ -50,6 +59,14 @@ public abstract class BasicServerApplication extends Application {
     public final Restlet createRoot() {
 	// create resource router and attach all relevant resources to it
 	final Router routerForResources = new Router(getContext());
+
+	// register "platform" type controllers
+	helper.register(routerForResources, IUserRoleDao.class);
+	helper.register(routerForResources, IUserDao.class);
+	helper.register(routerForResources, IEntityAttachmentAssociationController.class);
+	helper.register(routerForResources, IEntityCentreAnalysisConfig.class);
+	// TODO what about IMainMenuItemController or IEntityCentreConfigController? Or any other types?
+
 	// register standard entity resources
 	for (final Class<IEntityDao> daoType : controllerTypes) {
 	    helper.register(routerForResources, daoType);
@@ -91,6 +108,15 @@ public abstract class BasicServerApplication extends Application {
 	return mainRouter;
     }
 
+    public static Class<IEntityDao>[] companionObjectTypes(final List<Class<? extends AbstractEntity<?>>> domainTypes) {
+	final List<Class<? extends IEntityDao>> companionTypes = new ArrayList<Class<? extends IEntityDao>>();
+
+	for (final Class<? extends AbstractEntity<?>> entityType: domainTypes) {
+	    companionTypes.add(CompanionObjectAutobinder.companionObjectType(entityType));
+	}
+
+	return companionTypes.toArray(new Class[]{});
+    }
 
     /**
      * Should be implemented for concrete application web resource management. The provided router should be used to bind application resources.
