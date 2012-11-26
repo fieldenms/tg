@@ -79,6 +79,8 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
      * @return
      */
     public GisViewPanel() {
+	Platform.setImplicitExit(false);
+
 	this.points = new ArrayList<>();
 	// this.data = createData();
 

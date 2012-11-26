@@ -59,6 +59,7 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
      * @return
      */
     public DashboardPanel(final IGlobalDomainTreeManager globalManager, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final TreeMenuWithTabs<?> treeMenu) {
+	Platform.setImplicitExit(false);
 	this.globalManager = globalManager;
 	this.criteriaGenerator = criteriaGenerator;
 	this.masterManager = masterManager;
