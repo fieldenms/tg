@@ -2,8 +2,9 @@ package ua.com.fielden.platform.entity.query.fetching;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.junit.Ignore;
@@ -1247,7 +1248,37 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_that_can_query_with_list_param() {
-	final List<String> modelKeys = Arrays.asList(new String[] { "316", "317", "318", "318" });
+	final List<String> modelKeys = new ArrayList<String>(){{add("316"); add("317"); add("318"); add("318"); }};
+	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
+	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
+    }
+
+    @Test
+    public void test_that_can_query_with_list_param_in_anyOfParams() {
+	final List<String> modelKeys = new ArrayList<String>(){{add("316"); add("317"); add("318"); add("318"); }};
+	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").eq().anyOfParams("param").model();
+	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
+    }
+
+    @Test
+    @Ignore
+    public void test_that_can_query_with_list_param_in_anyOfIParams() {
+	final List<String> modelKeys = new ArrayList<String>(){{add("316"); add("317"); add("318"); add(null); }};
+	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").eq().anyOfIParams("param").model();
+	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
+    }
+
+    @Test
+    @Ignore
+    public void test_that_can_query_with_list_param_in_anyOfIParams2() {
+	final List<String> modelKeys = new ArrayList<String>(){{add(null); add(null); }};
+	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").eq().anyOfIParams("param").model();
+	assertEquals("Incorrect number of retrieved veh models.", 7, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
+    }
+
+    @Test
+    public void test_that_can_query_with_set_param() {
+	final Set<String> modelKeys = new HashSet<String>(){{add("316"); add("317"); add("318"); add("318"); }};
 	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
 	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
     }

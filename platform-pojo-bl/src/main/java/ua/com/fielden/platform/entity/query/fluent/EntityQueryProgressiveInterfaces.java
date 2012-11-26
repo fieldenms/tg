@@ -111,11 +111,13 @@ public interface EntityQueryProgressiveInterfaces {
         T anyOfProps(String... propertyNames);
         T anyOfValues(Object... values);
         T anyOfParams(String... paramNames);
+        T anyOfIParams(String... paramNames);
         T anyOfModels(PrimitiveResultQueryModel... models);
         T anyOfExpressions(ExpressionModel... Expressions);
         T allOfProps(String... propertyNames);
         T allOfValues(Object... values);
         T allOfParams(String... paramNames);
+        T allOfIParams(String... paramNames);
         T allOfModels(PrimitiveResultQueryModel... models);
         T allOfExpressions(ExpressionModel... expressions);
     }
@@ -154,6 +156,7 @@ public interface EntityQueryProgressiveInterfaces {
         <E extends Object> T values(E... values);
         T props(String... properties);
         T params(String... paramNames);
+        T iParams(String... paramNames);
         T model(SingleResultQueryModel model);
         // beginSet();
     }

@@ -208,6 +208,10 @@ final class Tokens {
 	return add(TokenCategory.ANY_OF_PARAMS, getListFromArray(params));
     }
 
+    public Tokens anyOfIParams(final String... params) {
+	return add(TokenCategory.ANY_OF_IPARAMS, getListFromArray(params));
+    }
+
     public Tokens anyOfModels(final PrimitiveResultQueryModel... models) {
 	return add(TokenCategory.ANY_OF_EQUERY_TOKENS, getListFromArray(models));
     }
@@ -226,6 +230,10 @@ final class Tokens {
 
     public Tokens allOfParams(final String... params) {
 	return add(TokenCategory.ALL_OF_PARAMS, getListFromArray(params));
+    }
+
+    public Tokens allOfIParams(final String... params) {
+	return add(TokenCategory.ALL_OF_IPARAMS, getListFromArray(params));
     }
 
     public Tokens allOfModels(final PrimitiveResultQueryModel... models) {
@@ -254,6 +262,10 @@ final class Tokens {
 
     public Tokens setOfParams(final String... params) {
 	return add(TokenCategory.SET_OF_PARAMS, getListFromArray(params));
+    }
+
+    public Tokens setOfIParams(final String... params) {
+	return add(TokenCategory.SET_OF_IPARAMS, getListFromArray(params));
     }
 
     public Tokens setOfValues(final Object... values) {

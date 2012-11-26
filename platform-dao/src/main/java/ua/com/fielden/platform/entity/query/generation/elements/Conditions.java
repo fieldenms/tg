@@ -126,6 +126,16 @@ public class Conditions extends AbstractCondition {
 
     @Override
     public boolean ignore() {
-	return false;
+	if (!firstCondition.ignore()) {
+	    return false;
+	}
+	
+	for (CompoundCondition compoundCondition : otherConditions) {
+	    if (!compoundCondition.getCondition().ignore()) {
+		return false;
+	    }
+	}
+	
+	return true;
     }
 }

@@ -25,6 +25,11 @@ abstract class AbstractSetOfOperands<T, ET extends AbstractEntity<?>> extends Ab
     }
 
     @Override
+    public T iParams(final String... paramNames) {
+	return copy(getParent(), getTokens().setOfIParams(paramNames));
+    }
+
+    @Override
     public T model(final SingleResultQueryModel model) {
 	return copy(getParent(), getTokens().model(model));
     }

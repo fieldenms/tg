@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -244,6 +245,20 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	}
     }
 
+    protected List<ISingleOperand> getModelForArrayParam(final TokenCategory cat, final Object value) {
+	final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
+	final Object paramValue = getParamValue((String) value);
+
+	if (!(paramValue instanceof List)) {
+	    result.add(getModelForSingleOperand(cat, value));
+	} else {
+	    for (final Object singleValue : (List<Object>) paramValue) {
+		result.add(getModelForSingleOperand((cat == TokenCategory.IPARAM ? TokenCategory.IVAL : TokenCategory.VAL), singleValue));
+	    }
+	}
+	return result;
+    }
+
     protected Object getParamValue(final String paramName) {
 	if (getParamValues().containsKey(paramName)) {
 	    return preprocessValue(getParamValues().get(paramName));
@@ -253,13 +268,19 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	}
     }
 
-    private Object preprocessValue (final Object value) {
+    private Object preprocessValue(final Object value) {
 	if (value != null && value.getClass().isArray()) {
 	    final List<Object> values = new ArrayList<Object>();
 	    for (final Object object : (Object[]) value) {
 		values.add(convertValue(object));
 	    }
-	    return values.toArray();
+	    return values;
+	} else if (value instanceof Collection<?>) {
+	    final List<Object> values = new ArrayList<Object>();
+	    for (final Object object : (Collection) value) {
+		values.add(convertValue(object));
+	    }
+	    return values;
 	} else {
 	    return convertValue(value);
 	}
@@ -286,6 +307,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case SET_OF_PARAMS:
 	    singleCat = TokenCategory.PARAM;
 	    break;
+	case SET_OF_IPARAMS:
+	    singleCat = TokenCategory.IPARAM;
+	    break;
 	case SET_OF_EXPR_TOKENS:
 	    singleCat = TokenCategory.EXPR_TOKENS;
 	    break;
@@ -298,7 +322,11 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
 
 	for (final Object singleValue : (List<Object>) value) {
-	    result.add(getModelForSingleOperand(singleCat, singleValue));
+	    if (singleCat == TokenCategory.PARAM || singleCat == TokenCategory.IPARAM) {
+		result.addAll(getModelForArrayParam(singleCat, singleValue));
+	    } else {
+		result.add(getModelForSingleOperand(singleCat, singleValue));
+	    }
 	}
 
 	return new OperandsBasedSet(result);
@@ -322,6 +350,10 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case ALL_OF_PARAMS:
 	    singleCat = TokenCategory.PARAM;
 	    break;
+	case ANY_OF_IPARAMS:
+	case ALL_OF_IPARAMS:
+	    singleCat = TokenCategory.IPARAM;
+	    break;
 	case ANY_OF_VALUES:
 	case ALL_OF_VALUES:
 	    singleCat = TokenCategory.VAL;
@@ -335,7 +367,11 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	}
 
 	for (final Object singleValue : (List<Object>) value) {
-	    result.add(getModelForSingleOperand(singleCat, singleValue));
+	    if (singleCat == TokenCategory.PARAM || singleCat == TokenCategory.IPARAM) {
+		result.addAll(getModelForArrayParam(singleCat, singleValue));
+	    } else {
+		result.add(getModelForSingleOperand(singleCat, singleValue));
+	    }
 	}
 
 	return result;

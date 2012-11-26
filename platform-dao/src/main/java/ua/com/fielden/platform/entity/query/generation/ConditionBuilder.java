@@ -32,12 +32,12 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private final static List<TokenCategory> singleOperands = Arrays.asList(new TokenCategory[] { TokenCategory.PROP, TokenCategory.EXT_PROP, TokenCategory.PARAM, TokenCategory.IPARAM, TokenCategory.VAL,
 	    TokenCategory.IVAL, TokenCategory.EXPR, TokenCategory.FUNCTION_MODEL, TokenCategory.EQUERY_TOKENS, TokenCategory.EXPR_TOKENS });
-    private final static List<TokenCategory> mutlipleAnyOperands = Arrays.asList(new TokenCategory[] { TokenCategory.ANY_OF_PROPS, TokenCategory.ANY_OF_PARAMS,
+    private final static List<TokenCategory> mutlipleAnyOperands = Arrays.asList(new TokenCategory[] { TokenCategory.ANY_OF_PROPS, TokenCategory.ANY_OF_PARAMS, TokenCategory.ANY_OF_IPARAMS,
 	    TokenCategory.ANY_OF_VALUES, TokenCategory.ANY_OF_EQUERY_TOKENS, TokenCategory.ANY_OF_EXPR_TOKENS });
-    private final static List<TokenCategory> mutlipleAllOperands = Arrays.asList(new TokenCategory[] { TokenCategory.ALL_OF_PROPS, TokenCategory.ALL_OF_PARAMS,
+    private final static List<TokenCategory> mutlipleAllOperands = Arrays.asList(new TokenCategory[] { TokenCategory.ALL_OF_PROPS, TokenCategory.ALL_OF_PARAMS, TokenCategory.ALL_OF_IPARAMS,
 	    TokenCategory.ALL_OF_VALUES, TokenCategory.ALL_OF_EQUERY_TOKENS, TokenCategory.ALL_OF_EXPR_TOKENS });
     private final static List<TokenCategory> mutlipleOperands = new ArrayList<TokenCategory>();
-    private final static List<TokenCategory> setOperands = Arrays.asList(new TokenCategory[] { TokenCategory.SET_OF_PROPS, TokenCategory.SET_OF_PARAMS,
+    private final static List<TokenCategory> setOperands = Arrays.asList(new TokenCategory[] { TokenCategory.SET_OF_PROPS, TokenCategory.SET_OF_PARAMS, TokenCategory.SET_OF_IPARAMS,
 	    TokenCategory.SET_OF_VALUES, TokenCategory.EQUERY_TOKENS, TokenCategory.SET_OF_EXPR_TOKENS });
     private final static List<TokenCategory> quantifiers = Arrays.asList(new TokenCategory[] { TokenCategory.ANY_OPERATOR, TokenCategory.ALL_OPERATOR });
     static {
@@ -227,16 +227,17 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private GroupedConditions getGroup(final List<ICondition> conditions, final LogicalOperator logicalOperator) {
 	final Iterator<ICondition> iterator = conditions.iterator();
+	final ICondition trueCondition = (ICondition) getAlwaysTrueCondition().getValue();
 	if (!iterator.hasNext()) {
-	    return new GroupedConditions(false, (ICondition) getAlwaysTrueCondition().getValue(), new ArrayList<CompoundCondition>());
+	    return new GroupedConditions(false, trueCondition, new ArrayList<CompoundCondition>());
 	} else {
 	    final ICondition firstCondition = iterator.next();
 	    final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
 	    for (; iterator.hasNext();) {
 		final CompoundCondition subsequentCompoundCondition = new CompoundCondition(logicalOperator, iterator.next());
-		otherConditions.add(subsequentCompoundCondition);
+		otherConditions.add(subsequentCompoundCondition.getCondition().ignore() ? new CompoundCondition(logicalOperator, trueCondition) : subsequentCompoundCondition);
 	    }
-	    return new GroupedConditions(false, firstCondition, otherConditions);
+	    return new GroupedConditions(false, firstCondition.ignore() ? trueCondition : firstCondition, otherConditions);
 	}
     }
 

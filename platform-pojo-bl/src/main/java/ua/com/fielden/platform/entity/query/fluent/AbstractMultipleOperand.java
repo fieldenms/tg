@@ -27,6 +27,12 @@ abstract class AbstractMultipleOperand<T, ET extends AbstractEntity<?>> extends 
     }
 
     @Override
+    public T anyOfIParams(final String... paramNames) {
+	return copy(getParent(), getTokens().anyOfIParams(paramNames));
+    }
+
+
+    @Override
     public T anyOfModels(final PrimitiveResultQueryModel... models) {
 	return copy(getParent(), getTokens().anyOfModels(models));
     }
@@ -49,6 +55,11 @@ abstract class AbstractMultipleOperand<T, ET extends AbstractEntity<?>> extends 
     @Override
     public T allOfParams(final String... paramNames) {
 	return copy(getParent(), getTokens().allOfParams(paramNames));
+    }
+
+    @Override
+    public T allOfIParams(final String... paramNames) {
+	return copy(getParent(), getTokens().allOfIParams(paramNames));
     }
 
     @Override

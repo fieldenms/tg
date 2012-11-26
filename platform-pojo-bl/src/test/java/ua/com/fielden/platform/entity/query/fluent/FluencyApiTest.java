@@ -26,9 +26,9 @@ public class FluencyApiTest extends TestCase {
 
     private static String[] aggregateFunctions = new String[]{"maxOf", "minOf", "sumOf", "countOf", "avgOf", "sumOfDistinct", "countOfDistinct", "avgOfDistinct", "countAll"};
 
-    private static String[] anyOfs = new String[]{"anyOfProps", "anyOfModels", "anyOfValues", "anyOfParams", "anyOfExpressions"};
+    private static String[] anyOfs = new String[]{"anyOfProps", "anyOfModels", "anyOfValues", "anyOfParams", "anyOfIParams", "anyOfExpressions"};
 
-    private static String[] allOfs = new String[]{"allOfProps", "allOfModels", "allOfValues", "allOfParams", "allOfExpressions"};
+    private static String[] allOfs = new String[]{"allOfProps", "allOfModels", "allOfValues", "allOfParams", "allOfIParams", "allOfExpressions"};
 
     private static String[] exists = new String[]{"exists", "notExists", "existsAnyOf", "notExistsAnyOf", "existsAllOf", "notExistsAllOf"};
 
