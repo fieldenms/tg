@@ -287,6 +287,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	this.base = base;
 	this.enhancer = enhancer;
 
+	// load tree of properties after managedType is known
+	for (final Class<?> rootType : base.getRepresentation().rootTypes()) {
+	    base.getRepresentation().includedProperties(enhancer.getManagedType(rootType));
+	}
+
 	dtr = createRepresentation((AbstractDomainTreeRepresentation) base.getRepresentation());
 	firstTick = createFirstTick((TickManager) base.getFirstTick());
 	secondTick = createSecondTick((TickManager) base.getSecondTick());

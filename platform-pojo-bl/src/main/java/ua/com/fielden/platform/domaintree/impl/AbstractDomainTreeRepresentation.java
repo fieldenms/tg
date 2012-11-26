@@ -86,10 +86,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	this.includedProperties = createRootsMap();
-	// load tree of properties instantly (except analyses, see AADTR for more details)
-	for (final Class<?> rootType : rootTypes()) {
-	    includedPropertiesMutable(rootType);
-	}
+	// managedType is not known at this stage. Included properties tree should be loaded after "enhancer" exists with all managedTypes.
     }
 
     private int level(final String path) {
