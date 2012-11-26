@@ -31,6 +31,7 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>, M exten
 
     private final IAnalysisBuilder<T> analysisBuilder;
     private final DefaultGridForManualEntityCentreFactory<T> analysisFactory;
+    private ManualCentreConfigurationView<T, M> view;
 
     /**
      * The {@link ICentreDomainTreeManagerAndEnhancer} instance for this analysis details.
@@ -111,5 +112,25 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>, M exten
 
     public DefaultGridForManualEntityCentreFactory<T> getAnalysisFactory() {
         return analysisFactory;
+    }
+
+    /**
+     * Builds and executes query.
+     */
+    public void refresh() {
+	if (view != null && view.getPreviousView() != null) {
+	    if (view.getPreviousView().getSingleAnalysis().getModel().getMode() == ReportMode.REPORT) {
+		view.getPreviousView().getSingleAnalysis().getPreviousView().getModel().executeAnalysisQuery();
+	    }
+	}
+    }
+
+
+    public ManualCentreConfigurationView<T, M> getView() {
+        return view;
+    }
+
+    public void setView(final ManualCentreConfigurationView<T, M> view) {
+        this.view = view;
     }
 }

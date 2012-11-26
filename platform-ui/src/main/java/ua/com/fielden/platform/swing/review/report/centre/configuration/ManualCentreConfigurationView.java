@@ -12,6 +12,7 @@ public class ManualCentreConfigurationView<T extends AbstractEntity<?>, M extend
 
     public ManualCentreConfigurationView(final ManualCentreConfigurationModel<T, M> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
+	model.setView(this);
     }
 
     @SuppressWarnings("unchecked")

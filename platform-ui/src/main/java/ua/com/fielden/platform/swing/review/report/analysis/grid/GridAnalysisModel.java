@@ -44,7 +44,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * Creates query execution models, validates them and either runs returning the first page or throws {@link Result} to indicate any errors.
      */
     @Override
-    protected Result executeAnalysisQuery() {
+    public Result executeAnalysisQuery() {
 	analysisQueries = createQueryExecutionModel();
 	return runQuery(analysisQueries);
     }

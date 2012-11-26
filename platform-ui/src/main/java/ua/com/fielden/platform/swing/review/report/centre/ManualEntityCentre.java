@@ -21,13 +21,13 @@ public class ManualEntityCentre<T extends AbstractEntity<?>, M extends AbstractE
 
     @Override
     public EntityCentreModel<T> getModel() {
-        return (EntityCentreModel<T>)super.getModel();
+	return (EntityCentreModel<T>) super.getModel();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public ManualCentreConfigurationView<T, M> getOwner() {
-        return (ManualCentreConfigurationView<T, M>) super.getOwner();
+	return (ManualCentreConfigurationView<T, M>) super.getOwner();
     }
 
     @Override
@@ -40,10 +40,15 @@ public class ManualEntityCentre<T extends AbstractEntity<?>, M extends AbstractE
 	return null;
     }
 
+    @Override
+    public GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> getSingleAnalysis() {
+	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>) super.getSingleAnalysis();
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createDefaultAnalysis() {
-	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>)getModel().getAnalysisBuilder()//
-		.createAnalysis(null, null, null, this, getModel().getCriteria(), getReviewProgressLayer());
+	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>) getModel().getAnalysisBuilder()//
+	.createAnalysis(null, null, null, this, getModel().getCriteria(), getReviewProgressLayer());
     }
 }
