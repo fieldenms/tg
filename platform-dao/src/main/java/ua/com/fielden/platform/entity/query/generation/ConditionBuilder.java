@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.ExistenceTest;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
@@ -26,20 +25,65 @@ import ua.com.fielden.platform.entity.query.generation.elements.Quantifier;
 import ua.com.fielden.platform.entity.query.generation.elements.SetTest;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.entity.query.fluent.LogicalOperator.AND;
+import static ua.com.fielden.platform.entity.query.fluent.LogicalOperator.OR;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_IPARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_PARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_PROPS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_VALUES;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_IPARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_PARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_PROPS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_VALUES;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.COMPARISON_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.CONDITION;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXISTS_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXT_PROP;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.FUNCTION_MODEL;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ILIKE_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IN_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IVAL;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.LIKE_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.NULL_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_IPARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_PARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_PROPS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_VALUES;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity.query.generation.elements.Quantifier.ALL;
+import static ua.com.fielden.platform.entity.query.generation.elements.Quantifier.ANY;
 
 public class ConditionBuilder extends AbstractTokensBuilder {
-    private final static ICondition alwaysTrue = new ComparisonTest(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
 
-    private final static List<TokenCategory> singleOperands = Arrays.asList(new TokenCategory[] { TokenCategory.PROP, TokenCategory.EXT_PROP, TokenCategory.PARAM, TokenCategory.IPARAM, TokenCategory.VAL,
-	    TokenCategory.IVAL, TokenCategory.EXPR, TokenCategory.FUNCTION_MODEL, TokenCategory.EQUERY_TOKENS, TokenCategory.EXPR_TOKENS });
-    private final static List<TokenCategory> mutlipleAnyOperands = Arrays.asList(new TokenCategory[] { TokenCategory.ANY_OF_PROPS, TokenCategory.ANY_OF_PARAMS, TokenCategory.ANY_OF_IPARAMS,
-	    TokenCategory.ANY_OF_VALUES, TokenCategory.ANY_OF_EQUERY_TOKENS, TokenCategory.ANY_OF_EXPR_TOKENS });
-    private final static List<TokenCategory> mutlipleAllOperands = Arrays.asList(new TokenCategory[] { TokenCategory.ALL_OF_PROPS, TokenCategory.ALL_OF_PARAMS, TokenCategory.ALL_OF_IPARAMS,
-	    TokenCategory.ALL_OF_VALUES, TokenCategory.ALL_OF_EQUERY_TOKENS, TokenCategory.ALL_OF_EXPR_TOKENS });
+    private final static List<TokenCategory> singleOperands = Arrays.asList(new TokenCategory[] { //
+	    PROP, EXT_PROP, PARAM, IPARAM, //
+	    VAL, IVAL, EXPR, FUNCTION_MODEL, EQUERY_TOKENS, EXPR_TOKENS });
+    private final static List<TokenCategory> mutlipleAnyOperands = Arrays.asList(new TokenCategory[] { //
+	    ANY_OF_PROPS, ANY_OF_PARAMS, ANY_OF_IPARAMS, //
+	    ANY_OF_VALUES, ANY_OF_EQUERY_TOKENS, ANY_OF_EXPR_TOKENS });
+    private final static List<TokenCategory> mutlipleAllOperands = Arrays.asList(new TokenCategory[] { //
+	    ALL_OF_PROPS, ALL_OF_PARAMS, ALL_OF_IPARAMS, //
+	    ALL_OF_VALUES, ALL_OF_EQUERY_TOKENS, ALL_OF_EXPR_TOKENS });
+    private final static List<TokenCategory> setOperands = Arrays.asList(new TokenCategory[] { //
+	    SET_OF_PROPS, SET_OF_PARAMS, SET_OF_IPARAMS, //
+	    SET_OF_VALUES, EQUERY_TOKENS, SET_OF_EXPR_TOKENS });
+    private final static List<TokenCategory> quantifiers = Arrays.asList(new TokenCategory[] { //
+	    ANY_OPERATOR, ALL_OPERATOR });
     private final static List<TokenCategory> mutlipleOperands = new ArrayList<TokenCategory>();
-    private final static List<TokenCategory> setOperands = Arrays.asList(new TokenCategory[] { TokenCategory.SET_OF_PROPS, TokenCategory.SET_OF_PARAMS, TokenCategory.SET_OF_IPARAMS,
-	    TokenCategory.SET_OF_VALUES, TokenCategory.EQUERY_TOKENS, TokenCategory.SET_OF_EXPR_TOKENS });
-    private final static List<TokenCategory> quantifiers = Arrays.asList(new TokenCategory[] { TokenCategory.ANY_OPERATOR, TokenCategory.ALL_OPERATOR });
     static {
 	mutlipleOperands.addAll(mutlipleAllOperands);
 	mutlipleOperands.addAll(mutlipleAnyOperands);
@@ -50,92 +94,92 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private boolean isPlainExistenceTest() {
-	return getSize() == 2 && TokenCategory.EXISTS_OPERATOR.equals(firstCat()) && TokenCategory.EQUERY_TOKENS.equals(secondCat());
+	return getSize() == 2 && EXISTS_OPERATOR ==firstCat() && EQUERY_TOKENS == secondCat();
     }
 
     private boolean isMultipleExistenceTest() {
-	return getSize() == 2 && TokenCategory.EXISTS_OPERATOR.equals(firstCat())
-		&& (TokenCategory.ANY_OF_EQUERY_TOKENS.equals(secondCat()) || TokenCategory.ALL_OF_EQUERY_TOKENS.equals(secondCat()));
+	return getSize() == 2 && EXISTS_OPERATOR == firstCat()
+		&& (ANY_OF_EQUERY_TOKENS == secondCat() || ALL_OF_EQUERY_TOKENS == secondCat());
     }
 
     private boolean isGroupOfConditions() {
-	return getSize() == 1 && TokenCategory.GROUPED_CONDITIONS.equals(firstCat());
+	return getSize() == 1 && GROUPED_CONDITIONS == firstCat();
     }
 
     private boolean isPlainNullTest() {
-	return getSize() == 2 && singleOperands.contains(firstCat()) && TokenCategory.NULL_OPERATOR.equals(secondCat());
+	return getSize() == 2 && singleOperands.contains(firstCat()) && NULL_OPERATOR == secondCat();
     }
 
     private boolean isMultipleNullTest() {
-	return getSize() == 2 && mutlipleOperands.contains(firstCat()) && TokenCategory.NULL_OPERATOR.equals(secondCat());
+	return getSize() == 2 && mutlipleOperands.contains(firstCat()) && NULL_OPERATOR == secondCat();
     }
 
     private boolean testThreeSome(final List<TokenCategory> leftRange, final TokenCategory operator, final List<TokenCategory> rightRange) {
-	return getSize() == 3 && leftRange.contains(firstCat()) && operator.equals(secondCat()) && rightRange.contains(thirdCat());
+	return getSize() == 3 && leftRange.contains(firstCat()) && operator == secondCat() && rightRange.contains(thirdCat());
     }
 
     private boolean isPlainComparisonTest() {
-	return testThreeSome(singleOperands, TokenCategory.COMPARISON_OPERATOR, singleOperands);
+	return testThreeSome(singleOperands, COMPARISON_OPERATOR, singleOperands);
     }
 
     private boolean isSingleVsMultiplePlainComparisonTest() {
-	return testThreeSome(singleOperands, TokenCategory.COMPARISON_OPERATOR, mutlipleOperands);
+	return testThreeSome(singleOperands, COMPARISON_OPERATOR, mutlipleOperands);
     }
 
     private boolean isMultipleVsSingleComparisonTest() {
-	return testThreeSome(mutlipleOperands, TokenCategory.COMPARISON_OPERATOR, singleOperands);
+	return testThreeSome(mutlipleOperands, COMPARISON_OPERATOR, singleOperands);
     }
 
     private boolean isMultipleVsMultipleComparisonTest() {
-	return testThreeSome(mutlipleOperands, TokenCategory.COMPARISON_OPERATOR, mutlipleOperands);
+	return testThreeSome(mutlipleOperands, COMPARISON_OPERATOR, mutlipleOperands);
     }
 
     private boolean isPlainLikeTest() {
-	return testThreeSome(singleOperands, TokenCategory.LIKE_OPERATOR, singleOperands);
+	return testThreeSome(singleOperands, LIKE_OPERATOR, singleOperands);
     }
 
     private boolean isPlainILikeTest() {
-	return testThreeSome(singleOperands, TokenCategory.ILIKE_OPERATOR, singleOperands);
+	return testThreeSome(singleOperands, ILIKE_OPERATOR, singleOperands);
     }
 
     private boolean isSingleVsMultipleLikeTest() {
-	return testThreeSome(singleOperands, TokenCategory.LIKE_OPERATOR, mutlipleOperands);
+	return testThreeSome(singleOperands, LIKE_OPERATOR, mutlipleOperands);
     }
 
     private boolean isSingleVsMultipleILikeTest() {
-	return testThreeSome(singleOperands, TokenCategory.ILIKE_OPERATOR, mutlipleOperands);
+	return testThreeSome(singleOperands, ILIKE_OPERATOR, mutlipleOperands);
     }
 
     private boolean isMultipleVsSingleLikeTest() {
-	return testThreeSome(mutlipleOperands, TokenCategory.LIKE_OPERATOR, singleOperands);
+	return testThreeSome(mutlipleOperands, LIKE_OPERATOR, singleOperands);
     }
 
     private boolean isMultipleVsSingleILikeTest() {
-	return testThreeSome(mutlipleOperands, TokenCategory.ILIKE_OPERATOR, singleOperands);
+	return testThreeSome(mutlipleOperands, ILIKE_OPERATOR, singleOperands);
     }
 
     private boolean isMultipleVsMultipleLikeTest() {
-	return testThreeSome(mutlipleOperands, TokenCategory.LIKE_OPERATOR, mutlipleOperands);
+	return testThreeSome(mutlipleOperands, LIKE_OPERATOR, mutlipleOperands);
     }
 
     private boolean isMultipleVsMultipleILikeTest() {
-	return testThreeSome(mutlipleOperands, TokenCategory.ILIKE_OPERATOR, mutlipleOperands);
+	return testThreeSome(mutlipleOperands, ILIKE_OPERATOR, mutlipleOperands);
     }
 
     private boolean isPlainSetTest() {
-	return testThreeSome(singleOperands, TokenCategory.IN_OPERATOR, setOperands);
+	return testThreeSome(singleOperands, IN_OPERATOR, setOperands);
     }
 
     private boolean isMultipleSetTest() {
-	return testThreeSome(mutlipleOperands, TokenCategory.IN_OPERATOR, setOperands);
+	return testThreeSome(mutlipleOperands, IN_OPERATOR, setOperands);
     }
 
     private boolean isPlainQuantifiedTest() {
-	return testThreeSome(singleOperands, TokenCategory.COMPARISON_OPERATOR, quantifiers);
+	return testThreeSome(singleOperands, COMPARISON_OPERATOR, quantifiers);
     }
 
     private boolean isMultipleQuantifiedTest() {
-	return testThreeSome(mutlipleOperands, TokenCategory.COMPARISON_OPERATOR, quantifiers);
+	return testThreeSome(mutlipleOperands, COMPARISON_OPERATOR, quantifiers);
     }
 
     @Override
@@ -149,100 +193,70 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	;
     }
 
-    @Override
-    public Pair<TokenCategory, Object> getResult() {
-	if (isPlainNullTest()) {
-	    return handleIgnore(getPlainNullTest());
-	} else if (isMultipleNullTest()) {
-	    return handleIgnore(getMultipleNullTest());
-	} else if (isGroupOfConditions()) {
-	    return getResultForGroupOfConditions();
-	} else if (isPlainExistenceTest()) {
-	    return handleIgnore(getPlainExistenceTest());
-	} else if (isMultipleExistenceTest()) {
-	    return handleIgnore(getMultipleExistenceTest());
-	} else if (isPlainComparisonTest()) {
-	    return handleIgnore(getPlainComparisonTest());
-	} else if (isMultipleVsSingleComparisonTest()) {
-	    return handleIgnore(getMultipleVsSingleComparisonTest());
-	} else if (isMultipleVsMultipleComparisonTest()) {
-	    return handleIgnore(getMultipleVsMultipleComparisonTest());
-	} else if (isSingleVsMultiplePlainComparisonTest()) {
-	    return handleIgnore(getSingleVsMultipleComparisonTest());
-	} else if (isPlainLikeTest()) {
-	    return handleIgnore(getPlainLikeTest());
-	} else if (isMultipleVsSingleLikeTest()) {
-	    return handleIgnore(getMultipleVsSingleLikeTest());
-	} else if (isMultipleVsMultipleLikeTest()) {
-	    return handleIgnore(getMultipleVsMultipleLikeTest());
-	} else if (isSingleVsMultipleLikeTest()) {
-	    return handleIgnore(getSingleVsMultipleLikeTest());
-	} else if (isPlainILikeTest()) {
-	    return handleIgnore(getPlainILikeTest());
-	} else if (isMultipleVsSingleILikeTest()) {
-	    return handleIgnore(getMultipleVsSingleILikeTest());
-	} else if (isMultipleVsMultipleILikeTest()) {
-	    return handleIgnore(getMultipleVsMultipleILikeTest());
-	} else if (isSingleVsMultipleILikeTest()) {
-	    return handleIgnore(getSingleVsMultipleILikeTest());
-	} else if (isPlainSetTest()) {
-	    return handleIgnore(getPlainSetTest());
-	} else if (isMultipleSetTest()) {
-	    return handleIgnore(getMultipleSetTest());
-	} else if (isPlainQuantifiedTest()) {
-	    return handleIgnore(getPlainQuantifiedTest());
-	} else if (isMultipleQuantifiedTest()) {
-	    return handleIgnore(getMultipleQuantifiedTest());
+    private Object getResultantCondition() {
+	if (isPlainNullTest()) { return getPlainNullTest();
+	} else if (isMultipleNullTest()) { return getMultipleNullTest();
+	} else if (isGroupOfConditions()) { return getTokens().get(0).getValue();
+	} else if (isPlainExistenceTest()) { return getPlainExistenceTest();
+	} else if (isMultipleExistenceTest()) { return getMultipleExistenceTest();
+	} else if (isPlainComparisonTest()) { return getPlainComparisonTest();
+	} else if (isMultipleVsSingleComparisonTest()) { return getMultipleVsSingleComparisonTest();
+	} else if (isMultipleVsMultipleComparisonTest()) { return getMultipleVsMultipleComparisonTest();
+	} else if (isSingleVsMultiplePlainComparisonTest()) { return getSingleVsMultipleComparisonTest();
+	} else if (isPlainLikeTest()) { return getPlainLikeTest();
+	} else if (isMultipleVsSingleLikeTest()) { return getMultipleVsSingleLikeTest();
+	} else if (isMultipleVsMultipleLikeTest()) { return getMultipleVsMultipleLikeTest();
+	} else if (isSingleVsMultipleLikeTest()) { return getSingleVsMultipleLikeTest();
+	} else if (isPlainILikeTest()) { return getPlainILikeTest();
+	} else if (isMultipleVsSingleILikeTest()) { return getMultipleVsSingleILikeTest();
+	} else if (isMultipleVsMultipleILikeTest()) { return getMultipleVsMultipleILikeTest();
+	} else if (isSingleVsMultipleILikeTest()) { return getSingleVsMultipleILikeTest();
+	} else if (isPlainSetTest()) { return getPlainSetTest();
+	} else if (isMultipleSetTest()) { return getMultipleSetTest();
+	} else if (isPlainQuantifiedTest()) { return getPlainQuantifiedTest();
+	} else if (isMultipleQuantifiedTest()) { return getMultipleQuantifiedTest();
 	} else {
 	    throw new RuntimeException("Unrecognised result");
 	}
     }
 
-    private Pair<TokenCategory, Object> handleIgnore(final ICondition condition) {
-	if (condition.ignore()) {
-	    return getAlwaysTrueCondition();
-	} else {
-	    return new Pair<TokenCategory, Object>(TokenCategory.CONDITION, condition);
-	}
+    @Override
+    public Pair<TokenCategory, Object> getResult() {
+	return new Pair<TokenCategory, Object>(CONDITION, getResultantCondition());
     }
 
     private ICondition getPlainQuantifiedTest() {
 	final ISingleOperand firstOperand = getModelForSingleOperand(firstCat(), firstValue());
 	final EntQuery secondOperand = (EntQuery) getModelForSingleOperand(thirdCat(), thirdValue());
-	final Quantifier quantifier = TokenCategory.ANY_OPERATOR.equals(thirdCat()) ? Quantifier.ANY : Quantifier.ALL;
+	final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
 	return new QuantifiedTest(firstOperand, (ComparisonOperator) secondValue(), quantifier, secondOperand);
     }
 
     private GroupedConditions getMultipleQuantifiedTest() {
 	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
 	final EntQuery secondOperand = (EntQuery) getModelForSingleOperand(thirdCat(), thirdValue());
-	final Quantifier quantifier = TokenCategory.ANY_OPERATOR.equals(thirdCat()) ? Quantifier.ANY : Quantifier.ALL;
+	final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new QuantifiedTest(operand, (ComparisonOperator) secondValue(), quantifier, secondOperand));
 	}
-	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
 	return getGroup(conditions, logicalOperator);
     }
 
     private GroupedConditions getGroup(final List<ICondition> conditions, final LogicalOperator logicalOperator) {
 	final Iterator<ICondition> iterator = conditions.iterator();
-	final ICondition trueCondition = (ICondition) getAlwaysTrueCondition().getValue();
 	if (!iterator.hasNext()) {
-	    return new GroupedConditions(false, trueCondition, new ArrayList<CompoundCondition>());
+	    return new GroupedConditions(false, null);
 	} else {
 	    final ICondition firstCondition = iterator.next();
 	    final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
 	    for (; iterator.hasNext();) {
 		final CompoundCondition subsequentCompoundCondition = new CompoundCondition(logicalOperator, iterator.next());
-		otherConditions.add(subsequentCompoundCondition.getCondition().ignore() ? new CompoundCondition(logicalOperator, trueCondition) : subsequentCompoundCondition);
+		otherConditions.add(subsequentCompoundCondition);
 	    }
-	    return new GroupedConditions(false, firstCondition.ignore() ? trueCondition : firstCondition, otherConditions);
+	    return new GroupedConditions(false, firstCondition, otherConditions);
 	}
-    }
-
-    private Pair<TokenCategory, Object> getResultForGroupOfConditions() {
-	return getTokens().get(0);
     }
 
     private NullTest getPlainNullTest() {
@@ -256,7 +270,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new NullTest(operand, (Boolean) secondValue()));
 	}
-	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
 	return getGroup(conditions, logicalOperator);
     }
 
@@ -264,8 +278,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	final List<ISingleOperand> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
 	final List<ISingleOperand> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
 
-	final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
-	final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
+	final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
 
 	final ComparisonOperator operator = (ComparisonOperator) secondValue();
 
@@ -290,7 +304,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new ComparisonTest(operand, operator, singleOperand));
 	}
-	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
 	return getGroup(conditions, logicalOperator);
     }
 
@@ -303,7 +317,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new ComparisonTest(singleOperand, operator, operand));
 	}
-	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
 	return getGroup(conditions, logicalOperator);
     }
 
@@ -329,8 +343,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	final List<ISingleOperand> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
 	final List<ISingleOperand> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
 
-	final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
-	final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
+	final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
 
 	final List<ICondition> outerConditions = new ArrayList<ICondition>();
 	for (final ISingleOperand leftOperand : leftOperands) {
@@ -348,8 +362,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	final List<ISingleOperand> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
 	final List<ISingleOperand> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
 
-	final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
-	final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
+	final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
 
 	final List<ICondition> outerConditions = new ArrayList<ICondition>();
 	for (final ISingleOperand leftOperand : leftOperands) {
@@ -370,7 +384,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new LikeTest(operand, singleOperand, (Boolean) secondValue(), false));
 	}
-	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
 	return getGroup(conditions, logicalOperator);
     }
 
@@ -381,7 +395,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new LikeTest(new LowerCaseOf(operand, getDbVersion()), singleOperand, (Boolean) secondValue(), false));
 	}
-	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
 	return getGroup(conditions, logicalOperator);
     }
 
@@ -393,7 +407,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new LikeTest(singleOperand, operand, (Boolean) secondValue(), false));
 	}
-	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
 	return getGroup(conditions, logicalOperator);
     }
 
@@ -404,7 +418,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new LikeTest(singleOperand, new LowerCaseOf(operand, getDbVersion()), (Boolean) secondValue(), false));
 	}
-	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
 	return getGroup(conditions, logicalOperator);
     }
 
@@ -426,7 +440,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new SetTest(operand, (Boolean) secondValue(), setOperand));
 	}
-	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
 	return getGroup(conditions, logicalOperator);
     }
 
@@ -436,11 +450,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new ExistenceTest((Boolean) firstValue(), (EntQuery) operand));
 	}
-	final LogicalOperator logicalOperator = TokenCategory.ANY_OF_EQUERY_TOKENS.equals(secondCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator logicalOperator = ANY_OF_EQUERY_TOKENS == secondCat() ? OR : AND;
 	return getGroup(conditions, logicalOperator);
-    }
-
-    private Pair<TokenCategory, Object> getAlwaysTrueCondition() {
-	return new Pair<TokenCategory, Object>(TokenCategory.CONDITION, alwaysTrue);
     }
 }

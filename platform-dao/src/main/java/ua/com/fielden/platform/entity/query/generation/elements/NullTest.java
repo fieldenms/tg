@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -16,21 +17,6 @@ public class NullTest extends AbstractCondition {
     public NullTest(final ISingleOperand operand, final boolean negated) {
 	this.operand = operand;
 	this.negated = negated;
-    }
-
-    @Override
-    public List<EntProp> getLocalProps() {
-	return operand.getLocalProps();
-    }
-
-    @Override
-    public List<EntQuery> getLocalSubQueries() {
-	return operand.getLocalSubQueries();
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	return operand.getAllValues();
     }
 
     @Override
@@ -70,5 +56,10 @@ public class NullTest extends AbstractCondition {
 	    return false;
 	}
 	return true;
+    }
+
+    @Override
+    protected List<IPropertyCollector> getCollection() {
+	return new ArrayList<IPropertyCollector>(){{add(operand);}};
     }
 }

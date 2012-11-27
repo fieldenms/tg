@@ -229,12 +229,12 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 		conditions(where_veh.prop("model.desc").like().iVal(mercLike)));
     }
 
-    @Test
-    public void test_ignore_of_null_value_in_condition2() {
-	assertModelsEquals(//
-		conditions(alwaysTrueCondition), //
-		conditions(where_veh.prop("model.desc").like().iVal(null)));
-    }
+//    @Test
+//    public void test_ignore_of_null_value_in_condition2() {
+//	assertModelsEquals(//
+//		conditions(alwaysTrueCondition), //
+//		conditions(where_veh.prop("model.desc").like().iVal(null)));
+//    }
 
     @Test
     public void test_ignore_of_null_value_in_condition3() {
@@ -245,21 +245,21 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 		conditions(where_veh.prop("model.desc").like().param("param"), paramValues));
     }
 
-    @Test
-    public void test_ignore_of_null_value_in_condition4() {
-	final Map<String, Object> paramValues = new HashMap<String, Object>();
-	paramValues.put("param", null);
-	assertModelsEquals(//
-		conditions(alwaysTrueCondition), //
-		conditions(where_veh.prop("model.desc").like().iParam("param"), paramValues));
-    }
+//    @Test
+//    public void test_ignore_of_null_value_in_condition4() {
+//	final Map<String, Object> paramValues = new HashMap<String, Object>();
+//	paramValues.put("param", null);
+//	assertModelsEquals(//
+//		conditions(alwaysTrueCondition), //
+//		conditions(where_veh.prop("model.desc").like().iParam("param"), paramValues));
+//    }
 
-    @Test
-    public void test_ignore_of_null_value_in_condition5() {
-	assertModelsEquals(//
-		conditions(group(false, alwaysTrueCondition)), //
-		conditions(where_veh.prop("model.desc").like().anyOfValues()));
-    }
+//    @Test
+//    public void test_ignore_of_null_value_in_condition5() {
+//	assertModelsEquals(//
+//		conditions(group(false, alwaysTrueCondition)), //
+//		conditions(where_veh.prop("model.desc").like().anyOfValues()));
+//    }
 
     @Test
     public void test_expressions1() {

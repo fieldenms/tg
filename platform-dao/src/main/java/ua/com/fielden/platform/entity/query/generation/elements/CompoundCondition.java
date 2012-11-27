@@ -8,9 +8,9 @@ public class CompoundCondition {
     private final LogicalOperator logicalOperator;
     private final ICondition condition;
 
-    public String sql() {
-	return " " + logicalOperator + " " + condition.sql();
-    }
+//    public String sql() {
+//	return " " + logicalOperator + " " + condition.sql();
+//    }
 
     public CompoundCondition(final LogicalOperator logicalOperator, final ICondition condition) {
 	this.logicalOperator = logicalOperator;

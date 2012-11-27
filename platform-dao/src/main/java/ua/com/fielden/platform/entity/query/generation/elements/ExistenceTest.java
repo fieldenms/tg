@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,18 +20,8 @@ public class ExistenceTest extends AbstractCondition {
     }
 
     @Override
-    public List<EntProp> getLocalProps() {
-	return subQuery.getLocalProps();
-    }
-
-    @Override
     public List<EntQuery> getLocalSubQueries() {
 	return Arrays.asList(new EntQuery[]{subQuery});
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	return subQuery.getAllValues();
     }
 
     @Override
@@ -70,5 +61,10 @@ public class ExistenceTest extends AbstractCondition {
 	    return false;
 	}
 	return true;
+    }
+
+    @Override
+    protected List<IPropertyCollector> getCollection() {
+	return new ArrayList<IPropertyCollector>(){{add(subQuery);}};
     }
 }

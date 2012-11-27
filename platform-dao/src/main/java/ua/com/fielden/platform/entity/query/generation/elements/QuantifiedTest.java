@@ -24,30 +24,6 @@ public class QuantifiedTest extends AbstractCondition {
     }
 
     @Override
-    public List<EntProp> getLocalProps() {
-	final List<EntProp> result = new ArrayList<EntProp>();
-	result.addAll(leftOperand.getLocalProps());
-	result.addAll(rightOperand.getLocalProps());
-	return result;
-    }
-
-    @Override
-    public List<EntQuery> getLocalSubQueries() {
-	final List<EntQuery> result = new ArrayList<EntQuery>();
-	result.addAll(leftOperand.getLocalSubQueries());
-	result.addAll(rightOperand.getLocalSubQueries());
-	return result;
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	result.addAll(leftOperand.getAllValues());
-	result.addAll(rightOperand.getAllValues());
-	return result;
-    }
-
-    @Override
     public boolean ignore() {
 	return leftOperand.ignore();
     }
@@ -96,5 +72,10 @@ public class QuantifiedTest extends AbstractCondition {
 	    return false;
 	}
 	return true;
+    }
+
+    @Override
+    protected List<IPropertyCollector> getCollection() {
+	return new ArrayList<IPropertyCollector>(){{add(leftOperand); add(rightOperand);}};
     }
 }

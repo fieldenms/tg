@@ -1286,7 +1286,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test_that_can_query_with_list_param_in_anyOfIParams() {
 	final List<String> modelKeys = new ArrayList<String>(){{add("316"); add("317"); add("318"); add(null); }};
 	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").eq().anyOfIParams("param").model();
@@ -1294,7 +1293,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test_that_can_query_with_list_param_in_anyOfIParams2() {
 	final List<String> modelKeys = new ArrayList<String>(){{add(null); add(null); }};
 	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").eq().anyOfIParams("param").model();

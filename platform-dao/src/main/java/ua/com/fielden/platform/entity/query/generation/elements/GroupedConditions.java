@@ -10,6 +10,11 @@ public class GroupedConditions extends Conditions {
 	this.negated = negated;
     }
 
+    public GroupedConditions(final boolean negated, final ICondition firstCondition) {
+	super(firstCondition);
+	this.negated = negated;
+    }
+
     @Override
     public String sql() {
         return (negated ? " NOT" : "") + "(" + super.sql() + ")";

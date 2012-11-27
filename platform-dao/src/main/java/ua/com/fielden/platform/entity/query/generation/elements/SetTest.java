@@ -90,4 +90,9 @@ public class SetTest extends AbstractCondition {
 	}
 	return true;
     }
+
+    @Override
+    protected List<IPropertyCollector> getCollection() {
+	return new ArrayList<IPropertyCollector>(){{add(leftOperand); add(rightOperand);}};
+    }
 }

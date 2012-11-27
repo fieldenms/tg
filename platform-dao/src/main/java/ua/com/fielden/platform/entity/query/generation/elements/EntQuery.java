@@ -74,7 +74,7 @@ public class EntQuery implements ISingleOperand {
         sb.append(yields.sql());
         sb.append("\nFROM ");
         sb.append(sources.sql());
-        if (conditions != null) {
+        if (conditions != null && !conditions.ignore()) {
             sb.append("\nWHERE ");
             sb.append(conditions.sql());
         }
