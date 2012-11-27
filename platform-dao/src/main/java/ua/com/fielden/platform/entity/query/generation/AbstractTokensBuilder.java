@@ -20,7 +20,14 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.utils.Pair;
-
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IVAL;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
 /**
  * Abstract builder to accumulate tokens until ready for respective model creation.
  *
@@ -126,7 +133,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 		setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value));
 		break;
 	    case COND_TOKENS: //
-		tokens.add(new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value).getModel()));
+		tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value).getModel()));
 		break;
 	    case LOGICAL_OPERATOR:
 		setChild(new CompoundConditionBuilder(this, queryBuilder, getParamValues(), cat, value));
@@ -253,7 +260,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	    result.add(getModelForSingleOperand(cat, value));
 	} else {
 	    for (final Object singleValue : (List<Object>) paramValue) {
-		result.add(getModelForSingleOperand((cat == TokenCategory.IPARAM ? TokenCategory.IVAL : TokenCategory.VAL), singleValue));
+		result.add(getModelForSingleOperand((cat == IPARAM ? IVAL : VAL), singleValue));
 	    }
 	}
 	return result;
@@ -298,19 +305,19 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
 	switch (cat) {
 	case SET_OF_PROPS:
-	    singleCat = TokenCategory.PROP;
+	    singleCat = PROP;
 	    break;
 	case SET_OF_VALUES:
-	    singleCat = TokenCategory.VAL;
+	    singleCat = VAL;
 	    break;
 	case SET_OF_PARAMS:
-	    singleCat = TokenCategory.PARAM;
+	    singleCat = PARAM;
 	    break;
 	case SET_OF_IPARAMS:
-	    singleCat = TokenCategory.IPARAM;
+	    singleCat = IPARAM;
 	    break;
 	case SET_OF_EXPR_TOKENS:
-	    singleCat = TokenCategory.EXPR_TOKENS;
+	    singleCat = EXPR_TOKENS;
 	    break;
 	case EQUERY_TOKENS:
 	    return new QueryBasedSet((EntQuery) getModelForSingleOperand(cat, value));
@@ -321,7 +328,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
 
 	for (final Object singleValue : (List<Object>) value) {
-	    if (singleCat == TokenCategory.PARAM || singleCat == TokenCategory.IPARAM) {
+	    if (singleCat == PARAM || singleCat == IPARAM) {
 		result.addAll(getModelForArrayParam(singleCat, singleValue));
 	    } else {
 		result.add(getModelForSingleOperand(singleCat, singleValue));
@@ -343,30 +350,30 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	switch (cat) {
 	case ANY_OF_PROPS:
 	case ALL_OF_PROPS:
-	    singleCat = TokenCategory.PROP;
+	    singleCat = PROP;
 	    break;
 	case ANY_OF_PARAMS:
 	case ALL_OF_PARAMS:
-	    singleCat = TokenCategory.PARAM;
+	    singleCat = PARAM;
 	    break;
 	case ANY_OF_IPARAMS:
 	case ALL_OF_IPARAMS:
-	    singleCat = TokenCategory.IPARAM;
+	    singleCat = IPARAM;
 	    break;
 	case ANY_OF_VALUES:
 	case ALL_OF_VALUES:
-	    singleCat = TokenCategory.VAL;
+	    singleCat = VAL;
 	    break;
 	case ANY_OF_EQUERY_TOKENS:
 	case ALL_OF_EQUERY_TOKENS:
-	    singleCat = TokenCategory.EQUERY_TOKENS;
+	    singleCat = EQUERY_TOKENS;
 	    break;
 	default:
 	    throw new RuntimeException("Unrecognised token category for MultipleOperand: " + cat);
 	}
 
 	for (final Object singleValue : (List<Object>) value) {
-	    if (singleCat == TokenCategory.PARAM || singleCat == TokenCategory.IPARAM) {
+	    if (singleCat == PARAM || singleCat == IPARAM) {
 		result.addAll(getModelForArrayParam(singleCat, singleValue));
 	    } else {
 		result.add(getModelForSingleOperand(singleCat, singleValue));
