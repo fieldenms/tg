@@ -269,16 +269,15 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     private Object preprocessValue(final Object value) {
-	if (value != null && value.getClass().isArray()) {
+	if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
 	    final List<Object> values = new ArrayList<Object>();
-	    for (final Object object : (Object[]) value) {
-		values.add(convertValue(object));
-	    }
-	    return values;
-	} else if (value instanceof Collection<?>) {
-	    final List<Object> values = new ArrayList<Object>();
-	    for (final Object object : (Collection) value) {
-		values.add(convertValue(object));
+	    for (final Object object : (Iterable) value) {
+		final Object furtherPreprocessed = preprocessValue(object);
+		if (furtherPreprocessed instanceof List) {
+		    values.addAll((List) furtherPreprocessed);
+		} else {
+		    values.add(furtherPreprocessed);
+		}
 	    }
 	    return values;
 	} else {

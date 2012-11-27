@@ -15,11 +15,4 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 @DefaultController(ITgOrgUnit1.class)
 public class TgOrgUnit1 extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
-
-
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgOrgUnit1() {
-    }
 }

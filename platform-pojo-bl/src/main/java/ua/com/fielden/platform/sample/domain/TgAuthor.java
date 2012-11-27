@@ -28,7 +28,6 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(2)
     private String surname;
 
-
     public TgPersonName getName() {
         return name;
     }

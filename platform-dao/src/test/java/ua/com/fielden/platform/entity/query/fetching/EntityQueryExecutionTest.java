@@ -32,18 +32,21 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.ITgAuthor;
 import ua.com.fielden.platform.sample.domain.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgMakeCount;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.ITgPersonName;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.ITgWagon;
 import ua.com.fielden.platform.sample.domain.ITgWagonSlot;
 import ua.com.fielden.platform.sample.domain.ITgWorkshop;
+import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
@@ -55,6 +58,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
@@ -87,6 +91,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
+    private final ITgPersonName personNameDao = getInstance(ITgPersonName.class);
+    private final ITgAuthor authorDao = getInstance(ITgAuthor.class);
     private final ITgBogie bogieDao = getInstance(ITgBogie.class);
     private final ITgBogieLocation bogieLocationDao = getInstance(ITgBogieLocation.class);
     private final ITgWagon wagonDao = getInstance(ITgWagon.class);
@@ -1184,7 +1190,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final AggregatedResultQueryModel model = select(TgFuelUsage.class).yield().prop("vehicle.station").as("station").yield().sumOf().prop("qty").as("totalQty").modelAsAggregate();
 	final fetch<EntityAggregates> fetchModel = fetch(EntityAggregates.class).with("station", fetch(TgOrgUnit5.class));
 	final EntityAggregates value = aggregateDao.getAllEntities(from(model).with(fetchModel).model()).get(0);
-	assertEquals("Incorrect key", "orgunit5", ((TgOrgUnit5) value.get("station")).getKey());
+	assertEquals("Incorrect key", "orgunit1 orgunit2 orgunit3 orgunit4 orgunit5", ((TgOrgUnit5) value.get("station")).getKey().toString());
     }
 
     @Test
@@ -1242,6 +1248,25 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_that_can_query_with_array_param() {
 	final String[] modelKeys = new String[] { "316", "317", "318", "318" };
+	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
+	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
+    }
+
+    @Test
+    public void test_that_can_query_with_nested_list_param() {
+	final List<Object> modelKeysLevel1 = new ArrayList<Object>(){{add("316"); add("317"); add("318"); add("318"); }};
+	final List<Object> modelKeys = new ArrayList<Object>(){{add("316"); add("317"); add("318"); add("318"); add(modelKeysLevel1);}};
+
+	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
+	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
+    }
+
+    @Test
+    public void test_that_can_query_with_deeply_nested_list_param() {
+	final Set<Object> modelKeysLevel2 = new HashSet<Object>(){{add("316"); add("317"); add("318"); add("318"); }};
+	final List<Object> modelKeysLevel1 = new ArrayList<Object>(){{add("316"); add("317"); add("318"); add("318"); add(modelKeysLevel2); }};
+	final List<Object> modelKeys = new ArrayList<Object>(){{add("316"); add("317"); add("318"); add("318"); add(modelKeysLevel1);}};
+
 	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
 	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
     }
@@ -1358,10 +1383,10 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	save(new_composite(TgWagonSlot.class, wagon2, 3).setBogie(bogie7));
 
 	final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "orgunit1", "desc orgunit1"));
-	final TgOrgUnit2 orgUnit2 = save(new_(TgOrgUnit2.class, "orgunit2", "desc orgunit2").setParent(orgUnit1));
-	final TgOrgUnit3 orgUnit3 = save(new_(TgOrgUnit3.class, "orgunit3", "desc orgunit3").setParent(orgUnit2));
-	final TgOrgUnit4 orgUnit4 = save(new_(TgOrgUnit4.class, "orgunit4", "desc orgunit4").setParent(orgUnit3));
-	final TgOrgUnit5 orgUnit5 = save(new_(TgOrgUnit5.class, "orgunit5", "desc orgunit5").setParent(orgUnit4));
+	final TgOrgUnit2 orgUnit2 = save(new_composite(TgOrgUnit2.class, orgUnit1, "orgunit2"));
+	final TgOrgUnit3 orgUnit3 = save(new_composite(TgOrgUnit3.class, orgUnit2, "orgunit3"));
+	final TgOrgUnit4 orgUnit4 = save(new_composite(TgOrgUnit4.class, orgUnit3, "orgunit4"));
+	final TgOrgUnit5 orgUnit5 = save(new_composite(TgOrgUnit5.class, orgUnit4, "orgunit5"));
 
 	final TgVehicleMake merc = save(new_(TgVehicleMake.class, "MERC", "Mercedes"));
 	final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
@@ -1406,6 +1431,9 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	save(new_composite(UserAndRoleAssociation.class, user3, dataEntryRole));
 	save(new_composite(UserAndRoleAssociation.class, user3, fleetOperatorRole));
 	save(new_composite(UserAndRoleAssociation.class, user3, warehouseOperatorRole));
+
+	final TgPersonName chris = save(new_(TgPersonName.class, "Chris", "Chris"));
+	save(new_composite(TgAuthor.class, chris, "Date"));
 
 	System.out.println("\n   DATA POPULATED SUCCESSFULLY\n\n\n\n\n\n\n\n\n");
     }
