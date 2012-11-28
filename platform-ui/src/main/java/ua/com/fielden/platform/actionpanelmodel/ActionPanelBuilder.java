@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.swing.Action;
+import javax.swing.JComponent;
 import javax.swing.JToolBar;
 
 import ua.com.fielden.platform.swing.actions.ActionChanger;
@@ -51,6 +52,17 @@ public class ActionPanelBuilder {
 	if(toolBar != null){
 	    itemList.add(new ToolBarItem(toolBar));
 	}
+	return this;
+    }
+
+    /**
+     * Adds new {@link ComponentItem} to the item list of tool bar.
+     *
+     * @param component
+     * @return
+     */
+    public ActionPanelBuilder addComponent(final JComponent component){
+	itemList.add(new ComponentItem(component));
 	return this;
     }
 

@@ -11,7 +11,6 @@ import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.LifecycleAnalysisView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
@@ -21,8 +20,8 @@ public class LifecycleAnalysisConfigurationView<T extends AbstractEntity<?>> ext
 
     private static final long serialVersionUID = -44217633254876740L;
 
-    public LifecycleAnalysisConfigurationView(final LifecycleAnalysisConfigurationModel<T> model, final IAnalysisCustomiser<LifecycleAnalysisView<T>> analysisCustomiser, final Map<Object, DetailsFrame> detailsCache, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, analysisCustomiser, detailsCache, owner, progressLayer);
+    public LifecycleAnalysisConfigurationView(final LifecycleAnalysisConfigurationModel<T> model, final Map<Object, DetailsFrame> detailsCache, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, final BlockingIndefiniteProgressLayer progressLayer) {
+	super(model, detailsCache, owner, progressLayer);
 	addOpenEventListener(createOpenAnalysisEventListener());
     }
 

@@ -7,6 +7,13 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
+/**
+ * Structure that holds the list of query models and enhanced type that was used for query model generation and binary representation of the generated type.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class AnalysisResultClassBundle<T extends AbstractEntity<?>> {
 
     private final Class<T> generatedClass;

@@ -28,7 +28,7 @@ public class AnalysisDetailsEntityCentre<T extends AbstractEntity<?>> extends Ab
 
     @Override
     protected GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createDefaultAnalysis() {
-	final GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configModel = new GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>(getModel().getCriteria());
+	final GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configModel = GridConfigurationModel.createWithDefaultQueryCustomiser(getModel().getCriteria());
 	return GridConfigurationView.createMainDetailsWithDefaultCustomiser(configModel, this, getReviewProgressLayer());
     }
 }

@@ -80,7 +80,6 @@ import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
 import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListCheckingModel;
@@ -158,12 +157,6 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 	//Add the chart updater.
 	model.getChartAnalysisDataProvider().addAnalysisModelChangedListener(createModelUpdaterListener());
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public IAnalysisCustomiser<ChartAnalysisView<T>> getAnalysisCustomiser() {
-        return (IAnalysisCustomiser<ChartAnalysisView<T>>)super.getAnalysisCustomiser();
     }
 
     @SuppressWarnings("unchecked")

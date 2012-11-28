@@ -67,9 +67,6 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	final Class<T> root = getCriteria().getEntityClass();
 
-//	final IReportQueryGeneration<T> chartAnalysisQueryGenerator = getAnalysisView().getAnalysisCustomiser().getQueryGenerator(getAnalysisView(), root);
-
-	//TODO re- factor this with analysis customiser. Remove the code below and uncomment the code above.
 	final IReportQueryGeneration<T> chartAnalysisQueryGenerator = new ChartAnalysisQueryGenerator<>(//
 		root, //
 		getCriteria().getCentreDomainTreeMangerAndEnhancer(), //

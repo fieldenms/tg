@@ -28,7 +28,6 @@ import ua.com.fielden.platform.swing.pagination.model.development.IPageNavigatio
 import ua.com.fielden.platform.swing.pagination.model.development.PageNavigationEvent;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisCustomiser;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
@@ -52,10 +51,6 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	this.getModel().getPageHolder().addPageNavigationListener(createPageNavigationListener());
 	owner.getOwner().getPageHolderManager().addPageHolder(getModel().getPageHolder());
 	addComponentListener(createComponentWasResized());
-    }
-
-    public IAnalysisCustomiser<? extends AbstractAnalysisReview<T, CDTME, ADTME>> getAnalysisCustomiser(){
-	return getOwner().getAnalysisCustomiser();
     }
 
     @SuppressWarnings("unchecked")

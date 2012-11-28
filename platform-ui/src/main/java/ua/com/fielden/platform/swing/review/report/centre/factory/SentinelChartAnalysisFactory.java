@@ -10,12 +10,12 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolBarCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAnalysisQueryCustomiser;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 public class SentinelChartAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, ChartAnalysisConfigurationView<T>> {
 
-    //TODO Provide appropriate analysis customiser.
     @Override
     public ChartAnalysisConfigurationView<T> createAnalysis(//
 	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
@@ -28,8 +28,14 @@ public class SentinelChartAnalysisFactory<T extends AbstractEntity<?>> implement
     }
 
     @Override
-    public SentinelChartAnalysisFactory<T> setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser) {
-	throw new UnsupportedOperationException("The analysis customiser can not be set for sentinel analysis factory.");
+    public SentinelChartAnalysisFactory<T> setToolBarCustomiser(final IToolBarCustomiser<?> analysisCustomiser) {
+	throw new UnsupportedOperationException("The analysis tool bar customiser can not be set for sentinel analysis factory.");
     }
+
+    @Override
+    public IAnalysisFactory<T, ChartAnalysisConfigurationView<T>> setQueryCustomiser(final IAnalysisQueryCustomiser<T, ?> queryCustomiser) {
+	throw new UnsupportedOperationException("The analysis query customiser can not be set for sentinel analysis factory.");
+    }
+
 
 }

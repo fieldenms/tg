@@ -10,7 +10,8 @@ import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolBarCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAnalysisQueryCustomiser;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 /**
@@ -39,10 +40,18 @@ public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends Abstrac
 	    final BlockingIndefiniteProgressLayer progressLayer);
 
     /**
-     * Specifies the {@link IAnalysisCustomiser} instance for this analysis factory.
+     * Specifies the {@link IToolBarCustomiser} instance for this analysis factory.
      *
      * @param analysisCustomiser
      * @param returns self
      */
-    IAnalysisFactory<T, A> setAnalysisCustomiser(final IAnalysisCustomiser<?> analysisCustomiser);
+    IAnalysisFactory<T, A> setToolBarCustomiser(final IToolBarCustomiser<?> toolBarCustomiser);
+
+    /**
+     * Specifies the {@link IAnalysisQueryCustomiser} instance for this analysis factory.
+     *
+     * @param queryCustomiser
+     * @return
+     */
+    IAnalysisFactory<T, A> setQueryCustomiser(final IAnalysisQueryCustomiser<T, ?> queryCustomiser);
 }

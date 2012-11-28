@@ -8,13 +8,29 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisModel;
+import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.DefaultGridAnalysisQueryCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAnalysisQueryCustomiser;
 
 public class GridConfigurationModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisConfigurationModel<T, CDTME> {
 
     public static final String gridAnalysisName = "Main details";
 
-    public GridConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria){
+    private final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser;
+
+    public static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationModel<T, CDTME> createWithCustomQueryCustomiser(//
+	    final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, //
+	    final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser){
+	return new GridConfigurationModel<>(criteria, queryCustomiser);
+    }
+
+    public static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationModel<T, CDTME> createWithDefaultQueryCustomiser(//
+	    final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria){
+	return new GridConfigurationModel<>(criteria, null);
+    }
+
+    protected GridConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser){
 	super(criteria, gridAnalysisName);
+	this.queryCustomiser = queryCustomiser == null ? new DefaultGridAnalysisQueryCustomiser<T, CDTME>() : queryCustomiser;
     }
 
     @Override
@@ -26,7 +42,11 @@ public class GridConfigurationModel<T extends AbstractEntity<?>, CDTME extends I
     }
 
     public GridAnalysisModel<T, CDTME> createGridAnalysisModel() {
-	return new GridAnalysisModel<T, CDTME>(getCriteria());
+	return new GridAnalysisModel<T, CDTME>(getCriteria(), queryCustomiser);
+    }
+
+    public final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> getQueryCustomiser() {
+	return queryCustomiser;
     }
 
 }
