@@ -1,10 +1,5 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHASE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +37,11 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHASE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * The global domain tree manager implementation.
@@ -735,7 +735,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     private void saveCentre(final ICentreDomainTreeManagerAndEnhancer copyMgr, final EntityCentreConfig ecc) {
-	entityCentreAnalysisConfigController.delete(analysesForConcreteECCmodel(ecc));
+	if (ecc.isPersisted()) {
+	    entityCentreAnalysisConfigController.delete(analysesForConcreteECCmodel(ecc));
+	}
+
 	final EntityCentreConfig newECC = entityCentreConfigController.save(ecc);
 
 	for (final String analysisName : copyMgr.analysisKeys()) {
