@@ -251,7 +251,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     }
 
     protected JToolBar createToolBar() {
-	final ActionPanelBuilder toolBarBuilder = getOwner().getAnalysisCustomiser().createToolBar(this);
+	final ActionPanelBuilder toolBarBuilder = getOwner().getToolbarCustomiser().createToolbar(this);
 	return toolBarBuilder == null || toolBarBuilder.isEmpty() ? null : configureToolBar(toolBarBuilder.buildActionPanel());
     }
 

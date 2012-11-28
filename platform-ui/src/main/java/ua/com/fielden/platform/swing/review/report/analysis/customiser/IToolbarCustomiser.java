@@ -10,7 +10,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
  *
  * @param <A>
  */
-public interface IToolBarCustomiser<A extends AbstractAnalysisReview<?, ?, ?>> {
+public interface IToolbarCustomiser<A extends AbstractAnalysisReview<?, ?, ?>> {
 
     /**
      * Provides the custom tool bar with actions related to the specified analysis view.
@@ -18,5 +18,5 @@ public interface IToolBarCustomiser<A extends AbstractAnalysisReview<?, ?, ?>> {
      * @param analysisView - the analysis view for which tool bar must be created.
      * @return
      */
-    ActionPanelBuilder createToolBar(A analysisView);
+    ActionPanelBuilder createToolbar(A analysisView);
 }

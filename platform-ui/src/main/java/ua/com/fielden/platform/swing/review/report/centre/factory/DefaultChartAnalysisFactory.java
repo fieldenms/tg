@@ -10,7 +10,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolBarCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAnalysisQueryCustomiser;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
@@ -28,7 +28,7 @@ public class DefaultChartAnalysisFactory<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public DefaultChartAnalysisFactory<T> setToolBarCustomiser(final IToolBarCustomiser<?> analysisCustomiser) {
+    public DefaultChartAnalysisFactory<T> setToolbarCustomiser(final IToolbarCustomiser<?> toolbarCustomiser) {
 	throw new UnsupportedOperationException("The analysis tool bar customiser can not be set for chart analysis factory.");
     }
 

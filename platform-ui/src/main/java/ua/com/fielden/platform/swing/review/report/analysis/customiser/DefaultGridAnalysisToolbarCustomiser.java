@@ -11,10 +11,10 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisVie
  * @author TG Team
  *
  */
-public class DefaultGridAnalysisToolBarCustomiser<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> implements IToolBarCustomiser<GridAnalysisView<T, CDTME>> {
+public class DefaultGridAnalysisToolbarCustomiser<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> implements IToolbarCustomiser<GridAnalysisView<T, CDTME>> {
 
     @Override
-    public ActionPanelBuilder createToolBar(final GridAnalysisView<T, CDTME> analysisView) {
+    public ActionPanelBuilder createToolbar(final GridAnalysisView<T, CDTME> analysisView) {
 	if (hasMasterManager(analysisView)) {
 	    final ActionPanelBuilder panelBuilder = new ActionPanelBuilder();
 	    return addMasterRelatedButtons(analysisView, panelBuilder);

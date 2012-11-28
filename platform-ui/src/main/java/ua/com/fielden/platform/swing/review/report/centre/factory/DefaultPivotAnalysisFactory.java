@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolBarCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAnalysisQueryCustomiser;
@@ -27,7 +27,7 @@ public class DefaultPivotAnalysisFactory<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public DefaultPivotAnalysisFactory<T> setToolBarCustomiser(final IToolBarCustomiser<?> analysisCustomiser) {
+    public DefaultPivotAnalysisFactory<T> setToolbarCustomiser(final IToolbarCustomiser<?> toolbarCustomiser) {
 	throw new UnsupportedOperationException("The analysis tool bar customiser can not be set for pivot analysis factory.");
     }
 

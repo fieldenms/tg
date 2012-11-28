@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolBarCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModelForManualEntityCentre;
@@ -18,7 +18,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 public class DefaultGridForManualEntityCentreFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>> {
 
-    private IToolBarCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>> toolBarCustomiser;
+    private IToolbarCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>> toolbarCustomiser;
 
     private IAnalysisQueryCustomiser<T, GridAnalysisModel<T,ICentreDomainTreeManagerAndEnhancer>> queryCustomiser;
 
@@ -33,13 +33,13 @@ public class DefaultGridForManualEntityCentreFactory<T extends AbstractEntity<?>
 	    final String name, //
 	    final Map<Object, DetailsFrame> detailsCache, //
 	    final BlockingIndefiniteProgressLayer progressLayer) {
-	return GridConfigurationView.createMainDetailsWithSpecificCustomiser(createAnalysisModel(criteria), owner, toolBarCustomiser, progressLayer);
+	return GridConfigurationView.createMainDetailsWithSpecificCustomiser(createAnalysisModel(criteria), owner, toolbarCustomiser, progressLayer);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public DefaultGridForManualEntityCentreFactory<T> setToolBarCustomiser(final IToolBarCustomiser<?> analysisCustomiser) {
-	this.toolBarCustomiser = (IToolBarCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>>)analysisCustomiser;
+    public DefaultGridForManualEntityCentreFactory<T> setToolbarCustomiser(final IToolbarCustomiser<?> toolbarCustomiser) {
+	this.toolbarCustomiser = (IToolbarCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>>)toolbarCustomiser;
 	return this;
     }
 

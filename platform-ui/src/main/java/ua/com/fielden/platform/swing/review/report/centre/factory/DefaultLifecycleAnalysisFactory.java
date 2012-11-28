@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolBarCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.configuration.LifecycleAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.configuration.LifecycleAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAnalysisQueryCustomiser;
@@ -28,7 +28,7 @@ public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implem
         }
 
     @Override
-    public DefaultLifecycleAnalysisFactory<T> setToolBarCustomiser(final IToolBarCustomiser<?> analysisCustomiser) {
+    public DefaultLifecycleAnalysisFactory<T> setToolbarCustomiser(final IToolbarCustomiser<?> toolbarCustomiser) {
 	throw new UnsupportedOperationException("The analysis tool bar customiser can not be set for lifecycle analysis factory.");
     }
 

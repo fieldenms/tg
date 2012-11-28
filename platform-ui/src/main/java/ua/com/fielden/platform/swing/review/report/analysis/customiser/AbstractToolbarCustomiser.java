@@ -4,16 +4,16 @@ import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 
 /**
- * Stub implementation of the {@link IToolBarCustomiser} interface.
+ * Stub implementation of the {@link IToolbarCustomiser} interface.
  *
  * @author TG Team
  *
  * @param <A>
  */
-public class AbstractToolBarCustomiser<A extends AbstractAnalysisReview<?, ?, ?>> implements IToolBarCustomiser<A> {
+public class AbstractToolbarCustomiser<A extends AbstractAnalysisReview<?, ?, ?>> implements IToolbarCustomiser<A> {
 
     @Override
-    public ActionPanelBuilder createToolBar(final A analysisView) {
+    public ActionPanelBuilder createToolbar(final A analysisView) {
 	// TODO Auto-generated method stub
 	return null;
     }
