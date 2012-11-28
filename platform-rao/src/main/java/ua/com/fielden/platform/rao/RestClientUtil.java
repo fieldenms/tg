@@ -151,10 +151,10 @@ public final class RestClientUtil implements IUserProvider {
     }
 
     /**
-     * Constructs a URI for EQL requests.
-     * A distinction is made when constructing URI for coded entity types and generated ones.
+     * Constructs a URI for EQL requests. A distinction is made when constructing URI for coded entity types and generated ones.
      *
-     * @param type -- could be a type of either coded or generated entity type
+     * @param type
+     *            -- could be a type of either coded or generated entity type
      * @param rt
      * @return
      */
@@ -167,8 +167,7 @@ public final class RestClientUtil implements IUserProvider {
     }
 
     /**
-     * Constructs a URI for data export requests.
-     * A distinction is made when constructing URI for coded entity types and generated ones.
+     * Constructs a URI for data export requests. A distinction is made when constructing URI for coded entity types and generated ones.
      *
      * @param type
      * @return
@@ -184,7 +183,6 @@ public final class RestClientUtil implements IUserProvider {
     public String getSnappyQueryUri() {
 	return getBaseUri(WebResourceType.VERSIONED) + "/snappyquery";
     }
-
 
     public String getLifecycleUri(final Class<? extends AbstractEntity> type) {
 	return getBaseUri(WebResourceType.VERSIONED) + "/lifecycle/" + type.getSimpleName();
@@ -260,8 +258,9 @@ public final class RestClientUtil implements IUserProvider {
 		throw new Result(e);
 	    }
 	}
-
-	return new Client(getProtocol()).handle(request);
+	final Client client = new Client(getProtocol());
+	client.setConnectTimeout(3000);
+	return client.handle(request);
     }
 
     /**
@@ -274,6 +273,8 @@ public final class RestClientUtil implements IUserProvider {
      */
     public Response send(final Request request, final String token) throws Exception {
 	setChallengeResponse(request, token);
+	final Client client = new Client(getProtocol());
+	client.setConnectTimeout(3000);
 	return new Client(getProtocol()).handle(request);
     }
 
@@ -351,7 +352,7 @@ public final class RestClientUtil implements IUserProvider {
 	    final InputStream stream = response.getEntity().getStream();
 	    final Result res = process(stream);
 	    final Period pd = new Period(st, new DateTime());
-	    logger.debug("Read and deserialising:"  + pd.getMinutes() + ":" + pd.getSeconds() + ":" + pd.getMillis());
+	    logger.debug("Read and deserialising:" + pd.getMinutes() + ":" + pd.getSeconds() + ":" + pd.getMillis());
 	    return res;
 	} catch (final Exception e) {
 	    e.printStackTrace();
@@ -369,7 +370,7 @@ public final class RestClientUtil implements IUserProvider {
      * @param stream
      * @return
      */
-    public Result process(final InputStream stream)  {
+    public Result process(final InputStream stream) {
 	try {
 	    return serialiser.deserialise(stream, Result.class);
 	} catch (final Exception e) {
@@ -419,7 +420,6 @@ public final class RestClientUtil implements IUserProvider {
 	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
-
     /**
      * Produces {@link DynamicallyTypedQueryContainer} representation, which can be used as a request envelope.
      *
@@ -446,14 +446,13 @@ public final class RestClientUtil implements IUserProvider {
      * @param to
      * @return
      */
-    public Representation represent(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final List<byte[]> binaryTypes, final List<String> distributionProperties, final String propertyName, final DateTime from, final DateTime to){
+    public Representation represent(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final List<byte[]> binaryTypes, final List<String> distributionProperties, final String propertyName, final DateTime from, final DateTime to) {
 
 	final LifecycleQueryContainer container = new LifecycleQueryContainer(model, binaryTypes, distributionProperties, propertyName, from, to);
 
 	final byte[] bytes = serialiser.serialise(container);
 	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
-
 
     /**
      * Produces {@link SnappyQuery} representation, which can be used as a request envelope.
@@ -489,7 +488,7 @@ public final class RestClientUtil implements IUserProvider {
 	// need to ensure that elements of type IQueryOrderedModel are provided with additional attributes
 	for (final Object el : list) {
 	    if (el instanceof QueryExecutionModel) {
-		((QueryExecutionModel<?,?>) el).setLightweight(true);
+		((QueryExecutionModel<?, ?>) el).setLightweight(true);
 	    }
 	}
 	// now serialise and make a representation
