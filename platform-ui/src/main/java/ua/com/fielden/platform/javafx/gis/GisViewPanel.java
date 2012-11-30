@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.javafx.gis;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javafx.animation.KeyFrame;
@@ -23,8 +22,6 @@ import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
@@ -44,7 +41,6 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.util.Duration;
 import netscape.javascript.JSObject;
-import ua.com.fielden.platform.gis.DataRetriever;
 import ua.com.fielden.platform.gis.Point;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -148,86 +144,86 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	final WebView webView = new WebView();
 	webEngine = webView.getEngine();
 
-	webView.setOnScroll(new EventHandler<ScrollEvent>() {
-	    @Override
-	    public void handle(final ScrollEvent event) {
-		event.getEventType().equals(ScrollEvent.SCROLL);
-		final double deltaY = event.getDeltaY();
-		final int deltaYDiscrete = (int) (deltaY / 40.0);
-		final String zoomScript = deltaYDiscrete > 0 ? "document.zoomIn()" : "document.zoomOut()";
-		for (int i = 0; i < Math.abs(deltaYDiscrete); i++) {
-		    webEngine.executeScript(zoomScript);
-		    removeOldAndAddNew(webEngine, zoom(webEngine));
-		}
-	    }
-	});
-
-	webView.setOnDragDetected(new EventHandler<MouseEvent>() {
-	    @Override
-	    public void handle(final MouseEvent event) {
-		xForDragBegin = event.getSceneX();
-		yForDragBegin = event.getSceneY();
-		// webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
-		webView.startFullDrag();
-		// webView.startDragAndDrop(TransferMode.ANY);
-		System.out.println("setOnDragDetected " + event);
-	    }
-
-	});
-	// fujhsdfuhsdfuhsdfhisdfjhiosdfsdf
-
-	webView.setOnDragOver(new EventHandler<DragEvent>() {
-	    @Override
-	    public void handle(final DragEvent event) {
-		System.out.println("setOnDragOver " + event);
-	    }
-
-	});
-
-
-	webView.setOnDragDropped(new EventHandler<DragEvent>() {
-	    @Override
-	    public void handle(final DragEvent event) {
-		System.out.println("setOnDragDropped " + event);
-	    }
-
-	});
-
-	webView.setOnDragDone(new EventHandler<DragEvent>() {
-	    @Override
-	    public void handle(final DragEvent event) {
-		System.out.println("setOnDragDone " + event);
-	    }
-
-	});
-
-	webView.setOnMouseDragReleased(new EventHandler<MouseDragEvent>() {
-	    @Override
-	    public void handle(final MouseDragEvent event) {
-		final int deltaXForPan = -(int) (event.getSceneX() - xForDragBegin),
-			  deltaYForPan = -(int) (event.getSceneY() - yForDragBegin);
-		webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
-		System.out.println("deltaXForPan == " + deltaXForPan + ", deltaYForPan == " + deltaYForPan + ", setOnMouseDragReleased " + event);
-
-		path.setTranslateX(path.getTranslateX() - deltaXForPan);
-		path.setTranslateY(path.getTranslateY() - deltaYForPan);
-	    }
-	});
-
-	webView.setOnMouseClicked(new EventHandler<MouseEvent>() {
-	    @Override
-	    public void handle(final MouseEvent event) {
-		if (event.getClickCount() == 2) {
-		    final List<Point> pe = new DataRetriever().getData("src/main/resources/gis/gis-data-sample.csv"); //       createUrl("gis-data-sample.csv")         "/home/jhou/workspace/trident-genesis/platform-ui/src/main/resources/gis/gis-data-sample.csv"
-		    Collections.sort(pe);
-		    GisViewPanel.this.points.clear();
-		    // TODO GisViewPanel.this.points.addAll(pe);
-
-		    webEngine.executeScript("document.setCenter(48.93061,24.96296)"); // -34.028249, 151.157507
-		    removeOldAndAddNew(webEngine, zoom(webEngine));
-		}
-	    }
-	});
+//	webView.setOnScroll(new EventHandler<ScrollEvent>() {
+//	    @Override
+//	    public void handle(final ScrollEvent event) {
+//		event.getEventType().equals(ScrollEvent.SCROLL);
+//		final double deltaY = event.getDeltaY();
+//		final int deltaYDiscrete = (int) (deltaY / 40.0);
+//		final String zoomScript = deltaYDiscrete > 0 ? "document.zoomIn()" : "document.zoomOut()";
+//		for (int i = 0; i < Math.abs(deltaYDiscrete); i++) {
+//		    webEngine.executeScript(zoomScript);
+//		    removeOldAndAddNew(webEngine, zoom(webEngine));
+//		}
+//	    }
+//	});
+//
+//	webView.setOnDragDetected(new EventHandler<MouseEvent>() {
+//	    @Override
+//	    public void handle(final MouseEvent event) {
+//		xForDragBegin = event.getSceneX();
+//		yForDragBegin = event.getSceneY();
+//		// webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
+//		webView.startFullDrag();
+//		// webView.startDragAndDrop(TransferMode.ANY);
+//		System.out.println("setOnDragDetected " + event);
+//	    }
+//
+//	});
+//	// fujhsdfuhsdfuhsdfhisdfjhiosdfsdf
+//
+//	webView.setOnDragOver(new EventHandler<DragEvent>() {
+//	    @Override
+//	    public void handle(final DragEvent event) {
+//		System.out.println("setOnDragOver " + event);
+//	    }
+//
+//	});
+//
+//
+//	webView.setOnDragDropped(new EventHandler<DragEvent>() {
+//	    @Override
+//	    public void handle(final DragEvent event) {
+//		System.out.println("setOnDragDropped " + event);
+//	    }
+//
+//	});
+//
+//	webView.setOnDragDone(new EventHandler<DragEvent>() {
+//	    @Override
+//	    public void handle(final DragEvent event) {
+//		System.out.println("setOnDragDone " + event);
+//	    }
+//
+//	});
+//
+//	webView.setOnMouseDragReleased(new EventHandler<MouseDragEvent>() {
+//	    @Override
+//	    public void handle(final MouseDragEvent event) {
+//		final int deltaXForPan = -(int) (event.getSceneX() - xForDragBegin),
+//			  deltaYForPan = -(int) (event.getSceneY() - yForDragBegin);
+//		webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
+//		System.out.println("deltaXForPan == " + deltaXForPan + ", deltaYForPan == " + deltaYForPan + ", setOnMouseDragReleased " + event);
+//
+//		path.setTranslateX(path.getTranslateX() - deltaXForPan);
+//		path.setTranslateY(path.getTranslateY() - deltaYForPan);
+//	    }
+//	});
+//
+//	webView.setOnMouseClicked(new EventHandler<MouseEvent>() {
+//	    @Override
+//	    public void handle(final MouseEvent event) {
+//		if (event.getClickCount() == 2) {
+//		    final List<Point> pe = new DataRetriever().getData("src/main/resources/gis/gis-data-sample.csv"); //       createUrl("gis-data-sample.csv")         "/home/jhou/workspace/trident-genesis/platform-ui/src/main/resources/gis/gis-data-sample.csv"
+//		    Collections.sort(pe);
+//		    GisViewPanel.this.points.clear();
+//		    // TODO GisViewPanel.this.points.addAll(pe);
+//
+//		    webEngine.executeScript("document.setCenter(48.93061,24.96296)"); // -34.028249, 151.157507
+//		    removeOldAndAddNew(webEngine, zoom(webEngine));
+//		}
+//	    }
+//	});
 
 	webEngine.load(GisViewPanel.class.getResource("googlemap.html").toString());
         // create map type buttons
@@ -286,7 +282,9 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
                     final ObservableValue<? extends String> observableValue,
                     final String s, final String s1) {
                 // delay location updates to we don't go too fast file typing
-                if (locationUpdateTimeline!=null) locationUpdateTimeline.stop();
+                if (locationUpdateTimeline!=null) {
+		    locationUpdateTimeline.stop();
+		}
                 locationUpdateTimeline = new Timeline();
                 locationUpdateTimeline.getKeyFrames().add(
                     new KeyFrame(new Duration(400),
@@ -345,6 +343,63 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
         root = new BorderPane();
         root.getStyleClass().add("map");
         webViewPanel = new BorderPane();
+
+        ///////////////////// Dragging and scrolling logic ////////////
+	webView.setDisable(true); // need to disable web view as it steals mouse events
+
+	webViewPanel.setOnMousePressed(new EventHandler<MouseEvent>() {
+	    @Override
+	    public void handle(final MouseEvent event) {
+		xForDragBegin = event.getSceneX();
+		yForDragBegin = event.getSceneY();
+		//System.out.println("setOnMousePressed: xForDragBegin = " + xForDragBegin + "   yForDragBegin = " + yForDragBegin);
+	    }
+
+	});
+
+	webViewPanel.setOnMouseDragged(new EventHandler<MouseEvent>() {
+	    @Override
+	    public void handle(final MouseEvent event) {
+		final int deltaXForPan = -(int) (event.getSceneX() - xForDragBegin);
+		final int deltaYForPan = -(int) (event.getSceneY() - yForDragBegin);
+		webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
+
+		//System.out.println("deltaXForPan == " + deltaXForPan + ", deltaYForPan == " + deltaYForPan + ", setOnMouseDragReleased " + event);
+
+		path.setTranslateX(path.getTranslateX() - deltaXForPan);
+		path.setTranslateY(path.getTranslateY() - deltaYForPan);
+
+		xForDragBegin = event.getSceneX();
+		yForDragBegin = event.getSceneY();
+		event.consume();
+	    }
+	});
+
+	webViewPanel.setOnMouseReleased(new EventHandler<MouseEvent>() {
+	    @Override
+	    public void handle(final MouseEvent event) {
+		xForDragBegin = event.getSceneX();
+		yForDragBegin = event.getSceneY();
+		//System.out.println("setOnMouseReleased: xForDragBegin = " + xForDragBegin + "   yForDragBegin = " + yForDragBegin);
+	    }
+
+	});
+
+	webViewPanel.setOnScroll(new EventHandler<ScrollEvent>() {
+	    @Override
+	    public void handle(final ScrollEvent event) {
+		final double deltaY = event.getDeltaY();
+		final int deltaYDiscrete = (int) (deltaY / 40.0);
+		final String zoomScript = deltaYDiscrete > 0 ? "document.zoomIn()" : "document.zoomOut()";
+		for (int zoomSteps = 0; zoomSteps < Math.abs(deltaYDiscrete); zoomSteps++) {
+		    webEngine.executeScript(zoomScript);
+		    removeOldAndAddNew(webEngine, zoom(webEngine));
+		}
+	    }
+	});
+
+        ////////////////////////////////
+
         webViewPanel.setCenter(webView);
         root.setCenter(webViewPanel);
         root.setTop(toolBar);
