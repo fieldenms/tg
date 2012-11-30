@@ -53,9 +53,4 @@ abstract class AbstractYieldedItem<T, ET extends AbstractEntity<?>> extends Abst
     public T countAll() {
 	return copy(getParent(), getTokens().countAll());
     }
-
-    @Override
-    public T join(final String joinAlias) {
-	return copy(getParent(), getTokens().entity(joinAlias));
-    }
 }

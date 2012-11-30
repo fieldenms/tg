@@ -172,7 +172,6 @@ public interface EntityQueryProgressiveInterfaces {
         IFunctionLastArgument<T, ET> sumOfDistinct();
         IFunctionLastArgument<T, ET> countOfDistinct();
         IFunctionLastArgument<T, ET> avgOfDistinct();
-        T join(String joinAlias);
     }
 
     interface IDateDiffFunction<T, ET extends AbstractEntity<?>> {

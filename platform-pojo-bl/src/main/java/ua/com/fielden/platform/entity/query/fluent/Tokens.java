@@ -192,10 +192,6 @@ final class Tokens {
 	return add(TokenCategory.COND_TOKENS, conditionModel);
     }
 
-    public Tokens entity(final String entityAlias) {
-	return add(TokenCategory.ENTITY_ALIAS, entityAlias);
-    }
-
     public Tokens as(final String yieldAlias) {
 	return add(TokenCategory.AS_ALIAS, yieldAlias);
     }

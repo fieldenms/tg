@@ -149,7 +149,7 @@ public class FluencyApiTest extends TestCase {
     public void test_IFunctionYieldedLastArgument_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield(), //
-		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions, aggregateFunctions);
     }
 
     public void test_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded() {
@@ -173,24 +173,24 @@ public class FluencyApiTest extends TestCase {
     public void test_IYieldExprItem0_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield().beginExpr(), //
-		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions, aggregateFunctions);
     }
 
     public void test_IYieldExprItem1_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield().beginExpr().beginExpr(), //
-		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions, aggregateFunctions);
     }
 
     public void test_IYieldExprItem2_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield().beginExpr().beginExpr().beginExpr(), //
-		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions, aggregateFunctions);
     }
 
     public void test_IYieldExprItem3_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield().beginExpr().beginExpr().beginExpr().beginExpr(), //
-		array(model, prop, extProp, param, iParam, val, iVal, expr, join), functions, aggregateFunctions);
+		array(model, prop, extProp, param, iParam, val, iVal, expr), functions, aggregateFunctions);
     }
 }
