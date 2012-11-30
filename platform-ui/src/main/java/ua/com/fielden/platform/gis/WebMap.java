@@ -107,7 +107,7 @@ public class WebMap extends Application {
 	webView.setOnScroll(new EventHandler<ScrollEvent>() {
 	    @Override
 	    public void handle(final ScrollEvent event) {
-		event.getEventType().equals(ScrollEvent.SCROLL);
+/*		event.getEventType().equals(ScrollEvent.SCROLL);
 		final double deltaY = event.getDeltaY();
 		final int deltaYDiscrete = (int) (deltaY / 40.0);
 		final String zoomScript = deltaYDiscrete > 0 ? "document.zoomIn()" : "document.zoomOut()";
@@ -115,69 +115,16 @@ public class WebMap extends Application {
 		    webEngine.executeScript(zoomScript);
 		    removeOldAndAddNew(webEngine, zoom(webEngine));
 		}
-	    }
-	});
-
-
-	webView.setOnDragDetected(new EventHandler<MouseEvent>() {
-	    @Override
-	    public void handle(final MouseEvent event) {
-		xForDragBegin = event.getSceneX();
-		yForDragBegin = event.getSceneY();
-		// webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
-		webView.startFullDrag();
-		// webView.startDragAndDrop(TransferMode.ANY);
-		System.out.println("setOnDragDetected " + event);
-	    }
-
-	});
-	// fujhsdfuhsdfuhsdfhisdfjhiosdfsdf
-
-	webView.setOnDragOver(new EventHandler<DragEvent>() {
-	    @Override
-	    public void handle(final DragEvent event) {
-		System.out.println("setOnDragOver " + event);
-	    }
-
-	});
-
-
-	webView.setOnDragDropped(new EventHandler<DragEvent>() {
-	    @Override
-	    public void handle(final DragEvent event) {
-		System.out.println("setOnDragDropped " + event);
-	    }
-
-	});
-
-	webView.setOnDragDone(new EventHandler<DragEvent>() {
-	    @Override
-	    public void handle(final DragEvent event) {
-		System.out.println("setOnDragDone " + event);
-	    }
-
-	});
-
-	webView.setOnMouseDragReleased(new EventHandler<MouseDragEvent>() {
-	    @Override
-	    public void handle(final MouseDragEvent event) {
-		final int deltaXForPan = -(int) (event.getSceneX() - xForDragBegin),
-			  deltaYForPan = -(int) (event.getSceneY() - yForDragBegin);
-		webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
-		System.out.println("deltaXForPan == " + deltaXForPan + ", deltaYForPan == " + deltaYForPan + ", setOnMouseDragReleased " + event);
-
-		path.setTranslateX(path.getTranslateX() - deltaXForPan);
-		path.setTranslateY(path.getTranslateY() - deltaYForPan);
-	    }
+*/	    }
 	});
 
 	webView.setOnMouseClicked(new EventHandler<MouseEvent>() {
 	    @Override
 	    public void handle(final MouseEvent event) {
-		if (event.getClickCount() == 2) {
-		    webEngine.executeScript("document.setCenter(48.93061,24.96296)"); // -34.028249, 151.157507
-		    removeOldAndAddNew(webEngine, zoom(webEngine));
-		}
+//		if (event.getClickCount() == 2) {
+//		    webEngine.executeScript("document.setCenter(48.93061,24.96296)"); // -34.028249, 151.157507
+//		    removeOldAndAddNew(webEngine, zoom(webEngine));
+//		}
 	    }
 	});
 
@@ -296,6 +243,48 @@ public class WebMap extends Application {
         root = new BorderPane();
         root.getStyleClass().add("map");
         webViewPanel = new BorderPane();
+        
+        webView.setDisable(true);
+        
+		webViewPanel.setOnMousePressed(new EventHandler<MouseEvent>() {
+			@Override
+			public void handle(final MouseEvent event) {
+				xForDragBegin = event.getSceneX();
+				yForDragBegin = event.getSceneY();
+				System.out.println("setOnMousePressed: xForDragBegin = " + xForDragBegin + "   yForDragBegin = " + yForDragBegin);
+			}
+
+		});
+		
+		webViewPanel.setOnMouseDragged(new EventHandler<MouseEvent>() {
+			@Override
+			public void handle(final MouseEvent event) {
+				final int deltaXForPan = -(int) (event.getSceneX() - xForDragBegin);
+				final int deltaYForPan = -(int) (event.getSceneY() - yForDragBegin);
+				webEngine.executeScript("document.panBy(" + deltaXForPan + ", "	+ deltaYForPan + ")");
+				
+				System.out.println("deltaXForPan == " + deltaXForPan + ", deltaYForPan == " + deltaYForPan + ", setOnMouseDragReleased " + event);
+
+				path.setTranslateX(path.getTranslateX() - deltaXForPan);
+				path.setTranslateY(path.getTranslateY() - deltaYForPan);
+				
+				xForDragBegin = event.getSceneX();
+				yForDragBegin = event.getSceneY();
+				event.consume();
+			}
+		});
+		
+		webViewPanel.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			@Override
+			public void handle(final MouseEvent event) {
+				xForDragBegin = event.getSceneX();
+				yForDragBegin = event.getSceneY();
+				System.out.println("setOnMouseReleased: xForDragBegin = " + xForDragBegin + "   yForDragBegin = " + yForDragBegin);
+			}
+
+		});
+		
+        
         webViewPanel.setCenter(webView);
         root.setCenter(webViewPanel);
         root.setTop(toolBar);
