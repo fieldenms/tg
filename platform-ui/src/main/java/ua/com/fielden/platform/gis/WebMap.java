@@ -284,6 +284,20 @@ public class WebMap extends Application {
 
 		});
 		
+		
+		webViewPanel.setOnScroll(new EventHandler<ScrollEvent>() {
+			@Override
+			public void handle(final ScrollEvent event) {				
+				final double deltaY = event.getDeltaY();
+				final int deltaYDiscrete = (int) (deltaY / 40.0);
+				final String zoomScript = deltaYDiscrete > 0 ? "document.zoomIn()"
+						: "document.zoomOut()";
+				for (int zoomSteps = 0; zoomSteps < Math.abs(deltaYDiscrete); zoomSteps++) {
+					webEngine.executeScript(zoomScript);
+					removeOldAndAddNew(webEngine, zoom(webEngine));
+				}
+			}
+		});
         
         webViewPanel.setCenter(webView);
         root.setCenter(webViewPanel);
@@ -315,23 +329,24 @@ public class WebMap extends Application {
         Application.launch(args);
     }
 
-    private void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
-	if (path != null) {
-	    webViewPanel.getChildren().remove(path);
-	}
+	private void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
+		if (path != null) {
+			webViewPanel.getChildren().remove(path);
+		}
 
-	this.path = new Group();
-	// addPoint(webEngine, path, -34.028249, 151.157507);
-	// addLineTo(webEngine, path, -33.950198, 151.259302);
-	// addLineTo(webEngine, path, -33.923036, 151.259052);
-	// addLineTo(webEngine, path, -33.890542, 151.274856);
-	// addLineTo(webEngine, path, -33.80010128657071, 151.28747820854187);
+		this.path = new Group();
+		// addPoint(webEngine, path, -34.028249, 151.157507);
+		// addLineTo(webEngine, path, -33.950198, 151.259302);
+		// addLineTo(webEngine, path, -33.923036, 151.259052);
+		// addLineTo(webEngine, path, -33.890542, 151.274856);
+		// addLineTo(webEngine, path, -33.80010128657071, 151.28747820854187);
 
-	for (int i = 1 + (int)(startSlider.getValue() * pe.size()); i < (int)(endSlider.getValue() * pe.size()); i++) {
-	    addLine(webEngine, pe.get(i-1), pe.get(i), pe.size(), zoom > 15);
+		for (int i = 1 + (int) (startSlider.getValue() * pe.size()); i < (int) (endSlider
+				.getValue() * pe.size()); i++) {
+			addLine(webEngine, pe.get(i - 1), pe.get(i), pe.size(), zoom > 15);
+		}
+		webViewPanel.getChildren().add(this.path);
 	}
-	webViewPanel.getChildren().add(this.path);
-    }
 
     private Color getColor(final int speed) {
 	final double maxSpeed = 80.0;
