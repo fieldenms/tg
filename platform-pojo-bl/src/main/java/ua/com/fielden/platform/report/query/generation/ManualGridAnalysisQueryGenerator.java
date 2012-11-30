@@ -2,7 +2,7 @@ package ua.com.fielden.platform.report.query.generation;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 
 public class ManualGridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends GridAnalysisQueryGenerator<T, CDTME> {
 
@@ -16,8 +16,8 @@ public class ManualGridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME
     }
 
     @Override
-    public EntityResultQueryModel<T> createQueryModel() {
-	return where(createBaseQueryModel()).prop(property(linkProperty)).//
-        /*  */eq().val(linkPropertyValue).model();
+    public ICompleted<T> createQuery() {
+	return where(super.createQuery()).prop(property(linkProperty)).//
+        /*  */eq().val(linkPropertyValue);
     }
 }

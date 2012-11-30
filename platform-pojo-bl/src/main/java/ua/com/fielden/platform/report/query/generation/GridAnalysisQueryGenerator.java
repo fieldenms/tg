@@ -56,7 +56,7 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
 	final IDomainTreeEnhancer enhancer = cdtme.getEnhancer();
 	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(entityClass(), resultTickManager, enhancer);
 	final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(entityClass(), enhancedType(), criteriaTickManager);
-	final EntityResultQueryModel<T> notOrderedQuery = createQueryModel();
+	final EntityResultQueryModel<T> notOrderedQuery = createQuery().model();
 	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queryModels = new ArrayList<>();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
 		.with(DynamicOrderingBuilder.createOrderingModel(enhancedType(), resultTickManager.orderedProperties(root)))//
@@ -97,16 +97,7 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
      *
      * @return
      */
-    public EntityResultQueryModel<T> createQueryModel(){
-	return createBaseQueryModel().model();
-    }
-
-    /**
-     * Creates query model based on {@link ICentreDomainTreeManagerAndEnhancer} instance only.
-     *
-     * @return
-     */
-    public final ICompleted<T> createBaseQueryModel(){
+    public ICompleted<T> createQuery(){
 	return DynamicQueryBuilder.createQuery(enhancedType(), createQueryProperties());
     }
 
