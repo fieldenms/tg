@@ -1345,6 +1345,15 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect key", "CAR2", vehicles.get(1).getKey());
     }
 
+    @Test
+    @Ignore
+    public void test_yielding_entity_itself() {
+	final AggregatedResultQueryModel subquery = select(TgVehicle.class).yield().prop("id").as("vehicle").modelAsAggregate();
+	final EntityResultQueryModel<TgVehicle> query = select(subquery).where().prop("vehicle.key").eq().val("CAR1").yield().prop("vehicle").modelAsEntity(TgVehicle.class);
+	;
+	assertEquals("Incorrect key", "CAR1", vehicleDao.getEntity(from(query).model()).getKey());
+    }
+
     @Override
     protected void populateDomain() {
 	final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));

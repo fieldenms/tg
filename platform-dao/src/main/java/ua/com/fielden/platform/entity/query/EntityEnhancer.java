@@ -49,7 +49,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 				enhanceCollectional(entities, propName, field.getType(), linkPropName, propFetchModel);
 			    }
 			}
-		    } else if (ppi.isEntity() || ppi.isOne2OneId() || ppi.isUnionEntity()) {
+		    } else if (ppi.isEntityOfPersistedType() || ppi.isOne2OneId() || ppi.isUnionEntity()) {
 			enhanceProperty(entities, propName, propFetchModel);
 		    } else {
 			// do notshing

@@ -103,8 +103,8 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	return getHibTypeAsCompositeUserType() != null;
     }
 
-    public boolean isEntity() {
-	return EntityUtils.isPersistedEntityType(javaType) && !isCollection();
+    public boolean isEntityOfPersistedType() {
+	return EntityUtils.isPersistedEntityType(javaType) && !isCollection()/* && !isId()*/;
     }
 
     public boolean isCollection() {

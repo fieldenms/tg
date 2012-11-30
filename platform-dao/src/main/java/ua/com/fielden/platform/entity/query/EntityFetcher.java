@@ -106,7 +106,6 @@ public class EntityFetcher {
 	for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
 	    if (paramEntry.getValue() instanceof Collection) {
 		throw new IllegalStateException("Should not have collectional param at this level: [" + paramEntry + "]");
-		//q.setParameterList(paramEntry.getKey(), (Collection<?>) paramEntry.getValue());
 	    } else {
 		q.setParameter(paramEntry.getKey(), paramEntry.getValue());
 	    }

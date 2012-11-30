@@ -23,6 +23,10 @@ public class EntValue implements ISingleOperand {
 	super();
 	this.value = value;
 	this.ignoreNull = ignoreNull;
+	if (!ignoreNull && value == null) {
+	    // TODO Uncomment when yieldNull() operator is implemented and all occurences of yield().val(null) are corrected.
+//	    throw new IllegalStateException("Value can't be null"); //
+	}
     }
 
     @Override

@@ -131,7 +131,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    if (propName.equals("key") && ppi.isVirtual()) {
 		includeAllCompositeKeyMembers();
 	    } else {
-		if (AbstractEntity.class.isAssignableFrom(propType)) {
+		if (AbstractEntity.class.isAssignableFrom(propType)/* && !ppi.isId()*/) {
 		    if (!skipEntities) {
 			addEntityPropsModel(propName, new fetch(propType, FetchCategory.MINIMAL));
 		    }

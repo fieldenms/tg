@@ -82,6 +82,7 @@ public class DomainMetadata {
     private final static PropertyColumn id = new PropertyColumn("_ID");
     private final static PropertyColumn version = new PropertyColumn("_VERSION");
     private final static PropertyColumn key = new PropertyColumn("KEY_");
+//    private final static PropertyMetadata idProperty(final Class<? extends AbstractEntity<?>> entityType) { return new PropertyMetadata.Builder(AbstractEntity.ID, entityType, /*Long.class,*/ false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();}
     private final static PropertyMetadata idProperty = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();
     private final static PropertyMetadata idPropertyInOne2One = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(ONE2ONE_ID).build();
     private final static PropertyMetadata versionProperty = new PropertyMetadata.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(VERSION).build();
@@ -151,13 +152,13 @@ public class DomainMetadata {
     }
 
     private boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
-	return AbstractEntity.class.isAssignableFrom(getKeyType(entityType));
+	return isPersistedEntityType(getKeyType(entityType));
     }
 
     private PropertyMetadata generateIdPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory) {
 	switch (entityCategory) {
 	case PERSISTED:
-	    return isOneToOne(entityType) ? idPropertyInOne2One : idProperty;
+	    return isOneToOne(entityType) ? idPropertyInOne2One : idProperty/*(entityType)*/;
 	case QUERY_BASED:
 	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(expr().prop("key").model()).type(EXPRESSION).build();
 	case UNION:
