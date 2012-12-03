@@ -393,6 +393,12 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 
     @Test
     public void test_that_values_1_and_2_for_first_tick_are_default_for_the_first_time_and_can_be_altered() {
+	allLevels(new IAction() {
+	    public void action(final String name) {
+		dtm().getFirstTick().check(MasterEntity.class, name, true);
+	    }
+	}, "critOnlySingleAEProp", "critOnlyAEProp");
+
 	checkOrSetMethodValues(null, "critOnlySingleAEProp", dtm().getFirstTick(), "getValue");
 	checkOrSetMethodValues(new ArrayList<String>(), "critOnlyAEProp", dtm().getFirstTick(), "getValue");
 	checkOrSetMethodValues("", "stringProp", dtm().getFirstTick(), "getValue");

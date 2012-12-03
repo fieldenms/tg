@@ -93,12 +93,12 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     ////////////////////// 2.2. Annotation related logic //////////////////////
     @Test
     public void test_that_first_tick_for_crit_only_properties_are_disabled() {
-	assertTrue("Crit-only property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "critOnlyProp"));
-	assertTrue("Crit-only property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.critOnlyProp"));
-	assertTrue("Crit-only property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.critOnlyProp"));
-	assertTrue("Crit-only property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.critOnlyProp"));
-	assertTrue("Crit-only property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.critOnlyProp"));
-	assertTrue("Crit-only property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyProp"));
     }
 
     @Test
@@ -196,12 +196,12 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     ////////////////////// 4.2. Annotation related logic //////////////////////
     @Test
     public void test_that_first_tick_for_crit_only_properties_are_checked() {
-	assertTrue("Crit-only property should be checked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "critOnlyProp"));
-	assertTrue("Crit-only property should be checked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "entityProp.critOnlyProp"));
-	assertTrue("Crit-only property should be checked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "entityProp.entityProp.critOnlyProp"));
-	assertTrue("Crit-only property should be checked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "collection.critOnlyProp"));
-	assertTrue("Crit-only property should be checked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "entityProp.collection.critOnlyProp"));
-	assertTrue("Crit-only property should be checked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "entityProp.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "entityProp.entityProp.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "collection.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "entityProp.collection.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyProp"));
     }
 
     ////////////////////// 4.3. Disabling of immutable checked properties //////////////////////
@@ -209,12 +209,12 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     @Test
     public void test_that_checked_properties_first_tick_are_actually_disabled() {
 	super.test_that_checked_properties_first_tick_are_actually_disabled();
-	assertTrue("Checked property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "critOnlyProp"));
-	assertTrue("Checked property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.critOnlyProp"));
-	assertTrue("Checked property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.critOnlyProp"));
-	assertTrue("Checked property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.critOnlyProp"));
-	assertTrue("Checked property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.critOnlyProp"));
-	assertTrue("Checked property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "collection.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.critOnlyProp"));
+	assertFalse("At this stage critOnly props should be enabled and unchecked.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyProp"));
     }
 
     ////////////////////// 6. Specific entity-centre logic //////////////////////

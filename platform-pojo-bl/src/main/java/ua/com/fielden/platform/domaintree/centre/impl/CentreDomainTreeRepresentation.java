@@ -96,11 +96,10 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 
 	@Override
 	public boolean isCheckedImmutably(final Class<?> root, final String property) {
-	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-	    final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
-
-	    return (super.isCheckedImmutably(root, property)) || // check+disable manually checked properties
-		    (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())); // check+disable crit-only properties (the children should be excluded!)
+	    // final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	    // final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
+	    return (super.isCheckedImmutably(root, property)); // check+disable manually checked properties
+		    // there is no need to check and disable a critOnly criteria, leave a decision to the user --> (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())) // check+disable crit-only properties (the children should be excluded!)
 	}
 
 	private Object typeAndSingleRelatedValue(final Class<?> root, final String property) {

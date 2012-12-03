@@ -271,7 +271,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	final String lastPropertyName = transformed.getValue();
 	final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determineClass(penultType, lastPropertyName, true, true);
 	final Class<?> notEnhancedRoot = DynamicEntityClassLoader.getOriginalType(root);
-	final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
+	// final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
 	return 	manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
