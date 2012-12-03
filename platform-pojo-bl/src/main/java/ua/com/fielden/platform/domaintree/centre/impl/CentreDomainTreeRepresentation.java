@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
@@ -220,7 +219,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	    return (super.isDisabledImmutably(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
 		    (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())) || // disable crit-only properties (the children should be excluded!)
 		    (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself
-		    (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)
+		    // no need to disable synthetic stuff --> (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)
 		    (!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION)) || // disable ATTRIBUTED_COLLECTIONAL_EXPRESSION properties for result-set tick
 		    isDisabledImmutablyPropertiesOfEntityType(propertyType, keyTypeAnnotation); // disable properties of "entity with AE key" type
 	}

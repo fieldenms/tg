@@ -149,7 +149,7 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 	super.test_entities_itself_second_tick_disabling();
 	assertFalse("Entity itself (represented by empty 'property') with composite key type should be enabled.", dtm().getSecondTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
 	assertTrue("Entity itself (represented by empty 'property') with AE key type should be disabled.", dtm().getSecondTick().isDisabledImmutably(EntityWithKeyTitleAndWithAEKeyType.class, ""));
-	assertTrue("An synthetic entity itself (represented by empty 'property') should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterSyntheticEntity.class, ""));
+	assertFalse("An synthetic entity itself (represented by empty 'property') should NOT be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterSyntheticEntity.class, ""));
     }
 
     ////////////////////// 3.2. Annotation related logic //////////////////////
