@@ -22,10 +22,17 @@ public class QueryBasedSource extends AbstractSource {
     }
 
     public QueryBasedSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final EntQuery... models) {
-	super(alias, domainMetadataAnalyser);
+	super(alias, domainMetadataAnalyser, checkWhetherResultTypeIsPersisted(models));
 	this.models = Arrays.asList(models);
 	populateYieldMatrixFromQueryModels(models);
 	validateYieldsMatrix();
+    }
+
+    private static boolean checkWhetherResultTypeIsPersisted(final EntQuery... models) {
+	if (models == null || models.length == 0) {
+	    throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
+	}
+	return models[0].isPersistedType();
     }
 
     private void populateYieldMatrixFromQueryModels(final EntQuery... models) {

@@ -26,8 +26,8 @@ import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTI
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_DETAILS;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
 
@@ -124,11 +124,11 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public boolean isUnionEntity() {
-	return type.equals(UNION_ENTITY);
+	return type.equals(UNION_ENTITY_HEADER);
     }
 
     public boolean isUnionEntityDetails() {
-	return type.equals(UNION_DETAILS);
+	return type.equals(UNION_ENTITY_DETAILS);
     }
 
     public boolean isEntityMemberOfCompositeKey() {
@@ -185,7 +185,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public Set<PropertyMetadata> getComponentTypeSubprops() {
 	final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
-	if (UNION_ENTITY.equals(type)) {
+	if (UNION_ENTITY_HEADER.equals(type)) {
 	    final List<Field> propsFields = AbstractUnionEntity.unionProperties(javaType);
 	    for (final Field subpropField : propsFields) {
 		final MapTo mapTo = subpropField.getAnnotation(MapTo.class);
@@ -193,7 +193,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 		    throw new IllegalStateException("Property [" + subpropField.getName() + "] in union entity type [" + javaType + "] is not annotated  no MapTo ");
 		}
 		final PropertyColumn column = new PropertyColumn(getColumn() + "_" + (StringUtils.isEmpty(mapTo.value()) ? subpropField.getName() : mapTo.value()));
-		result.add(new PropertyMetadata.Builder(name + "." + subpropField.getName(), subpropField.getType(), true).column(column).type(PropertyCategory.UNION_DETAILS).hibType(Hibernate.LONG).build());
+		result.add(new PropertyMetadata.Builder(name + "." + subpropField.getName(), subpropField.getType(), true).column(column).type(PropertyCategory.UNION_ENTITY_DETAILS).hibType(Hibernate.LONG).build());
 	    }
 	}
 	return result;
@@ -204,7 +204,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public static enum PropertyCategory {
-	PROP {
+	PRIMITIVE {
 	    @Override
 	    boolean affectsMappings() {
 		return true;
@@ -276,13 +276,13 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 		return false;
 	    }
 	}, //
-	UNION_ENTITY {
+	UNION_ENTITY_HEADER {
 	    @Override
 	    boolean affectsMappings() {
 		return true;
 	    }
 	}, //
-	UNION_DETAILS {
+	UNION_ENTITY_DETAILS {
 	    @Override
 	    boolean affectsMappings() {
 		return false;

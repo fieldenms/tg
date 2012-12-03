@@ -4,7 +4,7 @@ import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
-import ua.com.fielden.platform.utils.EntityUtils;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetails> {
 
@@ -52,7 +52,7 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
     }
 
     public boolean isEntity() {
-	return EntityUtils.isPersistedEntityType(javaType) && yieldDetailsType.equals(YieldDetailsType.USUAL_PROP);
+	return isPersistedEntityType(javaType) && yieldDetailsType.equals(YieldDetailsType.USUAL_PROP);
     }
 
     public boolean isUnionEntity() {

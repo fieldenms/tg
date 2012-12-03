@@ -97,6 +97,6 @@ public class QuerySourcesFinalPropertiesAssociationTest extends BaseEntQueryTCas
 		yield().prop("model").as("model"). //
 		modelAsAggregate();
 	final PrimitiveResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("AA").yield().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entResultQry(qry);
+	final EntQuery entQry = entSubQry(qry);
     }
 }

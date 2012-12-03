@@ -162,7 +162,7 @@ public class HibernateMappingsGenerator {
      */
     private String generatePropertyMappingFromPropertyMetadata(final PropertyMetadata propMetadata) throws Exception {
 	switch (propMetadata.getType()) {
-	case UNION_ENTITY:
+	case UNION_ENTITY_HEADER:
 	    return generateUnionEntityPropertyMapping(propMetadata);
 	case ENTITY_KEY:
 	    return generateOneToOnePropertyMapping(propMetadata.getName(), propMetadata.getJavaType());

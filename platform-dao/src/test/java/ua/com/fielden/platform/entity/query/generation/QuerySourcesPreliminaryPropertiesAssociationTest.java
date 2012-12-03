@@ -305,7 +305,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(ORG2).as("parent.parent.parent").on().prop("parent.parent.parent").eq().prop("parent.parent.parent.id"). //
 	join(ORG1).as("parent.parent.parent.parent").on().prop("parent.parent.parent.parent").eq().prop("parent.parent.parent.parent.id"). //
 	where().prop("parent.parent.parent.parent.key").eq().val("NORTH").yield().prop("parent.parent.parent.parent.key").modelAsPrimitive();
-	final EntQuery entQry = entResultQry(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("parent", null, ppi("parent", ORG4, H_LONG, false)));
 	final List<PropResolutionInfo> src2Props = prepare( propResInf("parent.id", "parent", ppi("id", LONG, H_LONG, false)), //
 		propResInf("parent.parent", "parent", ppi("parent", ORG3, H_LONG, false)));

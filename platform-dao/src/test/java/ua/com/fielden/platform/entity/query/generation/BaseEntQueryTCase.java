@@ -191,6 +191,12 @@ public class BaseEntQueryTCase {
 	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
 
+    public static void assertSubQueryModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
+	final EntQuery shortcutQry = entSubQry(shortcutModel);
+	final EntQuery explicitQry = entSubQry(explicitModel);
+	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
+    }
+
     public static void assertModelsEqualsAccordingUserDataFiltering(final QueryModel shortcutModel, final QueryModel explicitModel) {
 	final EntQuery shortcutQry = entResultQryWithUserFilter(shortcutModel);
 	final EntQuery explicitQry = entResultQry(explicitModel);

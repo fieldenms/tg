@@ -61,9 +61,9 @@ import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PROP;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
@@ -342,11 +342,11 @@ public class DomainMetadata {
 	if (isEntity) {
 	    propertyCategory = isCompositeKeyMember ? ENTITY_MEMBER_OF_COMPOSITE_KEY : ENTITY;
 	} else if (isUnionEntity) {
-	    propertyCategory = UNION_ENTITY;
+	    propertyCategory = UNION_ENTITY_HEADER;
 	} else if (hibernateType instanceof ICompositeUserTypeInstantiate) {
 	    propertyCategory = COMPONENT_HEADER;
 	} else {
-	    propertyCategory = isCompositeKeyMember ? PRIMITIVE_MEMBER_OF_COMPOSITE_KEY : PROP;
+	    propertyCategory = isCompositeKeyMember ? PRIMITIVE_MEMBER_OF_COMPOSITE_KEY : PRIMITIVE;
 	}
 
 	return new PropertyMetadata.Builder(propName, javaType, nullable).type(propertyCategory).hibType(hibernateType).columns(getPropColumns(field, mapTo, hibernateType)).build();

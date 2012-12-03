@@ -190,7 +190,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 
     @Test
     public void test_model_with_subquery() {
-	assertModelsEquals( //
+	assertSubQueryModelsEquals( //
 		select(VEHICLE). //
 		where().exists(
 			select(MAKE). //

@@ -23,13 +23,15 @@ import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.utils.EntityUtils.getOrderPropsFromCompositeEntityKey;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 public class EntQuery implements ISingleOperand {
 
+    private final boolean persistedType;
     private final Sources sources;
     private final Conditions conditions;
     private final Yields yields;
@@ -99,16 +101,16 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean idAliasEnhancementRequired() {
-        return onlyOneYieldAndWithoutAlias() && EntityUtils.isPersistedEntityType(resultType);
+        return onlyOneYieldAndWithoutAlias() && isPersistedEntityType(resultType);
     }
 
     private boolean allPropsYieldEnhancementRequired() {
         return yields.size() == 0 && !isSubQuery() && //
-        ((mainSourceIsTypeBased() && EntityUtils.isPersistedEntityType(resultType)) || mainSourceIsQueryBased());
+        ((mainSourceIsTypeBased() && isPersistedEntityType(resultType)) || mainSourceIsQueryBased());
     }
 
     private boolean idPropYieldEnhancementRequired() {
-        return yields.size() == 0 && EntityUtils.isPersistedEntityType(resultType) && isSubQuery();
+        return yields.size() == 0 && isPersistedEntityType(resultType) && isSubQuery();
     }
 
     private boolean mainSourceIsTypeBased() {
@@ -216,7 +218,7 @@ public class EntQuery implements ISingleOperand {
 	for (final OrderBy orderBy : orderings.getModels()) {
 	    if (orderBy.getYieldName() != null) {
 		if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(type()))) {
-		    final List<String> keyOrderProps = EntityUtils.getOrderPropsFromCompositeEntityKey(type(), sources.getMain().getAlias());
+		    final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(type(), sources.getMain().getAlias());
 		    for (final String keyMemberProp : keyOrderProps) {
 			toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
 		    }
@@ -254,7 +256,7 @@ public class EntQuery implements ISingleOperand {
 	    final String prop = original.getYieldName().substring(0, original.getYieldName().length() - 4);
 	    final PropertyMetadata info = domainMetadataAnalyser.getInfoForDotNotatedProp(type(), prop);
 	    if (DynamicEntityKey.class.equals(getKeyType(info.getJavaType()))) {
-		final List<String> keyOrderProps = EntityUtils.getOrderPropsFromCompositeEntityKey(info.getJavaType(), propName.substring(0, propName.length() - 4));
+		final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(info.getJavaType(), propName.substring(0, propName.length() - 4));
 		for (final String keyMemberProp : keyOrderProps) {
 		    result.add(new OrderBy(new EntProp(keyMemberProp), original.isDesc()));
 		}
@@ -299,26 +301,34 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Class determineYieldJavaType(final Yield yield) {
-        if (EntityUtils.isPersistedEntityType(type())) {
-            final Class yieldTypeAccordingToQuerySources = yield.getOperand().type();
-            final Class yieldTypeAccordingToQueryResultType = PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
 
-            if (yieldTypeAccordingToQuerySources != null && !yieldTypeAccordingToQuerySources.equals(yieldTypeAccordingToQueryResultType)) {
-                if (!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQuerySources) && Long.class.equals(yieldTypeAccordingToQueryResultType)) && //
-                        !(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQueryResultType) && Long.class.equals(yieldTypeAccordingToQuerySources)) && //
-                        !(yieldTypeAccordingToQueryResultType.equals(DynamicEntityKey.class) && yieldTypeAccordingToQuerySources.equals(String.class))) {
-                    throw new IllegalStateException("Different types: from source = " + yieldTypeAccordingToQuerySources.getSimpleName() + " from result type = "
-                            + yieldTypeAccordingToQueryResultType.getSimpleName());
+	if (!isPersistedEntityType(type()) && !isUnionEntityType(type()) ) {
+	    return yield.getOperand().type();
+	}
+
+	final Class qsYt = yield.getOperand().type();
+        final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
+        final Class rtYt = finalPropInfo.getJavaType();//determinePropertyType(type(), yield.getAlias());
+
+	if (isPersistedEntityType(type())) {
+            if (qsYt != null && !qsYt.equals(rtYt)) {
+                if (!(isPersistedEntityType(qsYt) && Long.class.equals(rtYt)) && //
+                        !(isPersistedEntityType(rtYt) && Long.class.equals(qsYt)) && //
+                        !(rtYt.equals(DynamicEntityKey.class) && qsYt.equals(String.class))) {
+                    throw new IllegalStateException("Different types: from source = " + qsYt.getSimpleName() + " from result type = "
+                            + rtYt.getSimpleName());
                 }
-                return yieldTypeAccordingToQueryResultType;
+                return rtYt;
             } else {
-                return yieldTypeAccordingToQueryResultType;
+                return rtYt;
             }
-        } else if (EntityUtils.isUnionEntityType(type())) {
-            return PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
-        } else {
-            return yield.getOperand().type();
         }
+
+	if (isUnionEntityType(type())) {
+            return rtYt;//determinePropertyType(type(), yield.getAlias());
+	}
+
+	throw new IllegalStateException("This is impossible situation");
     }
 
     private void assignSqlParamNames() {
@@ -345,6 +355,8 @@ public class EntQuery implements ISingleOperand {
         return newMain != null ? new Sources(newMain, sources.getCompounds()) : sources;
     }
 
+
+
     public EntQuery(final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
             final Class resultType, final QueryCategory category, final DomainMetadataAnalyser domainMetadataAnalyser, //
             final IFilter filter, final String username, final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
@@ -357,6 +369,12 @@ public class EntQuery implements ISingleOperand {
         this.groups = groups;
         this.orderings = orderings;
         this.resultType = resultType != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);
+        if (this.resultType == null && category != QueryCategory.SUB_QUERY) { // only primitive result queries have result type not assigned
+            throw new IllegalStateException("result type is null:\n " + yields.getFirstYield().getAlias() + " --- ");
+        }
+
+        persistedType = (resultType == null || resultType == EntityAggregates.class) ? false : domainMetadataAnalyser.getEntityMetadata(this.resultType).isPersisted();
+
         this.paramValues = paramValues;
 
         enhanceToFinalState(generator, fetchModel);
@@ -749,5 +767,9 @@ public class EntQuery implements ISingleOperand {
             return false;
         }
         return true;
+    }
+
+    public boolean isPersistedType() {
+        return persistedType;
     }
 }

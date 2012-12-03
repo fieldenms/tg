@@ -404,7 +404,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsPrimitive();
 	final Yields exp = new Yields();
 	exp.addYield(new Yield(new EntProp("v.model"), ""));
-	assertEquals("models are different", exp, entResultQry(qry).getYields());
+	assertEquals("models are different", exp, entSubQry(qry).getYields());
     }
 
     @Test

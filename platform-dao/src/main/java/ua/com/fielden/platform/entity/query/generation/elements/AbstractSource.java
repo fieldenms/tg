@@ -19,6 +19,9 @@ import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 public abstract class AbstractSource implements ISource {
+
+    protected final boolean persistedType;
+
     /**
      * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).
      */
@@ -55,8 +58,9 @@ public abstract class AbstractSource implements ISource {
         this.sqlAlias = sqlAlias;
     }
 
-    public AbstractSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
+    public AbstractSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean persistedType) {
         this.alias = alias;
+        this.persistedType = persistedType;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
     }
 

@@ -59,6 +59,9 @@ public class EntityFetcher {
     }
 
     private <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
+	if (domainMetadataAnalyser == null) {
+	    throw new IllegalArgumentException("----------------------------------------------------------------------------------------------------");
+	}
 	final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username);
 	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem);
 	final String sql = entQuery.sql();

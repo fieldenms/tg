@@ -19,7 +19,7 @@ public class TypeBasedSource extends AbstractSource {
     }
 
     public TypeBasedSource(final EntityMetadata<? extends AbstractEntity<?>> entityMetadata, final String alias, final boolean generated, final DomainMetadataAnalyser domainMetadataAnalyser) {
-	super(alias, domainMetadataAnalyser);
+	super(alias, domainMetadataAnalyser, entityMetadata.isPersisted());
 	this.generated = generated;
 	this.entityMetadata = entityMetadata;
 	if (entityMetadata == null) {
