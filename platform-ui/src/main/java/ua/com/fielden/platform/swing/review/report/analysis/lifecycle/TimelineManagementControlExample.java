@@ -62,9 +62,10 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 
     ChartPanel localChartPanel = null;
     boolean canMove = false;
-    double finalMovePointY = 0;
+    // double finalMovePointY = 0;
+    double finalMovePointX = 0;
     ChartRenderingInfo info = null;;
-    double initialMovePointY = 0;
+    double initialMovePointX = 0;
     JFreeChart jfreechart = null;
 
 //    final TaskSeriesCollection mainDataSet = new TaskSeriesCollection();
@@ -332,7 +333,7 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
     public void mouseExited(final MouseEvent e) {
        canMove = false; // stop movement if cursor is moved out from the chart
                       // area
-       initialMovePointY = 0;
+       initialMovePointX = 0;
        localChartPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
     }
 
@@ -411,7 +412,7 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
        final Rectangle2D dataArea = localChartPanel.getChartRenderingInfo()
              .getPlotInfo().getDataArea();
        final Point2D p = localChartPanel.translateScreenToJava2D(pt);
-       initialMovePointY = xy.getRangeAxis().java2DToValue(p.getY(), dataArea,
+       initialMovePointX = xy.getRangeAxis().java2DToValue(p.getX(), dataArea,
              xy.getRangeAxisEdge());
        canMove = true;
 
@@ -422,22 +423,22 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
     public void mouseReleased(final MouseEvent e) {
        // stop dragging on mouse released
        canMove = false;
-       initialMovePointY = 0;
+       initialMovePointX = 0;
        provideCursor(e, false);
     }
 
     public void movePoint(final MouseEvent me) {
-//       try {
-//          if (canMove) {
-//             final int itemIndex = xyItemEntity.getItem();
-//             final Point pt = me.getPoint();
-//             final XYPlot xy = jfreechart.getXYPlot();
-//             final Rectangle2D dataArea = localChartPanel.getChartRenderingInfo()
-//                   .getPlotInfo().getDataArea();
-//             final Point2D p = localChartPanel.translateScreenToJava2D(pt);
-//             finalMovePointY = xy.getRangeAxis().java2DToValue(p.getY(),
-//                   dataArea, xy.getRangeAxisEdge());
-//             final double difference = finalMovePointY - initialMovePointY;
+       try {
+          if (canMove) {
+             final int itemIndex = xyItemEntity.getItem();
+             final Point pt = me.getPoint();
+             final XYPlot xy = jfreechart.getXYPlot();
+             final Rectangle2D dataArea = localChartPanel.getChartRenderingInfo().getPlotInfo().getDataArea();
+             final Point2D p = localChartPanel.translateScreenToJava2D(pt);
+             finalMovePointX = xy.getRangeAxis().java2DToValue(p.getX(), dataArea, xy.getRangeAxisEdge());
+             final double difference = finalMovePointX - initialMovePointX;
+
+             System.out.println("difference == " + difference);
 //             if (localTaskSeries().getValue(itemIndex).doubleValue()
 //                   + difference > xy.getRangeAxis().getRange().getLength()
 //                   || localTaskSeries().getValue(itemIndex).doubleValue()
@@ -453,15 +454,20 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 //                return;
 //             } else
 //        	 localTaskSeries().update(itemIndex, targetPoint);
-//
-//             jfreechart.fireChartChanged();
-//             localChartPanel.updateUI();
-//             initialMovePointY = finalMovePointY;
-//          }
-//       } catch (final Exception e) {
-//	   e.printStackTrace();
-//	   System.out.println(e);
-//       }
+
+             final Rectangle2D itemBounds = xyItemEntity.getArea().getBounds2D();
+             final double itemWidth = itemBounds.getMaxX() - itemBounds.getMinX();
+
+             final double resizeValue = difference > itemWidth ? itemWidth : difference;
+
+             jfreechart.fireChartChanged();
+             localChartPanel.updateUI();
+             initialMovePointX = finalMovePointX;
+          }
+       } catch (final Exception e) {
+	   e.printStackTrace();
+	   System.out.println(e);
+       }
     }
 
 //    public void moveTimeSeries(final MouseEvent me) {
