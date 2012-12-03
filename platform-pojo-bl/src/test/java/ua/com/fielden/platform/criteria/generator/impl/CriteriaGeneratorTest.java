@@ -63,6 +63,12 @@ public class CriteriaGeneratorTest {
 	cdtm.getEnhancer().apply();
 
 	//Configuring first tick check properties.
+	cdtm.getFirstTick().check(TopLevelEntity.class, "critSingleEntity", true);
+	cdtm.getFirstTick().check(TopLevelEntity.class, "critRangeEntity", true);
+	cdtm.getFirstTick().check(TopLevelEntity.class, "critISingleProperty", true);
+	cdtm.getFirstTick().check(TopLevelEntity.class, "critIRangeProperty", true);
+	cdtm.getFirstTick().check(TopLevelEntity.class, "critSSingleProperty", true);
+	cdtm.getFirstTick().check(TopLevelEntity.class, "critSRangeProperty", true);
 	cdtm.getFirstTick().check(TopLevelEntity.class, "firstCalc", true);
 	cdtm.getFirstTick().check(TopLevelEntity.class, "thirdCalc", true);
 	cdtm.getFirstTick().check(TopLevelEntity.class, "integerProp", true);
@@ -438,6 +444,7 @@ public class CriteriaGeneratorTest {
 		} catch (final NoSuchMethodException e) {
 		    fail("The " + valueEntry.getKey() + " method for " + annotation.annotationType().getSimpleName() + " annotation doesn't exist.");
 		} catch (final Exception e) {
+		    e.printStackTrace();
 		    fail("Fail to invoke " + valueEntry.getKey() + " method for " + annotation.annotationType().getSimpleName() + " annotation");
 		}
 	    }
