@@ -364,6 +364,11 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
 		    j++;
 		}
 	    }
+
+	    @Override
+	    public boolean isInternal() {
+	        return false;
+	    }
 	};
 	dtm().getRepresentation().addPropertyListener(listener);
 

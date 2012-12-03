@@ -132,6 +132,11 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
 		removeNode(root, property); // nothing to do with an useless item -- just remove it
 	    }
 	}
+
+	@Override
+	public boolean isInternal() {
+	    return false;
+	}
     }
 
     /**

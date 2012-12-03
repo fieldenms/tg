@@ -87,6 +87,8 @@ public interface IDomainTreeRepresentation extends IRootTyped {
 	 */
 	@Override
 	void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState);
+
+	boolean isInternal();
     }
 
     /**

@@ -365,7 +365,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	private void fireProperty(final Class<?> root, final String property, final boolean added) {
 	    if (parentDtr != null) {
 		for (final IPropertyListener listener : parentDtr.propertyListeners) {
-		    listener.propertyStateChanged(root, property, added, null);
+		    if (!listener.isInternal()) {
+			listener.propertyStateChanged(root, property, added, null);
+		    }
+		}
+		for (final IPropertyListener listener : parentDtr.propertyListeners) {
+		    if (listener.isInternal()) {
+			listener.propertyStateChanged(root, property, added, null);
+		    }
 		}
 	    }
 	}

@@ -145,6 +145,11 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	private final ITickRepresentationWithMutability firstTickRepresentation, secondTickRepresentation;
 	private final IDomainTreeRepresentationWithMutability domainTreeRepresentation;
 
+	@Override
+	public boolean isInternal() {
+	    return true;
+	}
+
 	/**
 	 * A constructor that requires two ticks and two tick representations for synchronisation.
 	 *
