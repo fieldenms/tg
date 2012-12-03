@@ -69,7 +69,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 		    end().model();//
 	}
 
-	this.defaultOrdering = orderBy().prop(orderBy).asc().model();
+	this.defaultOrdering = orderBy().yield(orderBy).asc().model();
     }
 
     /**
