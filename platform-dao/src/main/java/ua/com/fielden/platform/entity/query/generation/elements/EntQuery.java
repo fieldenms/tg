@@ -68,6 +68,9 @@ public class EntQuery implements ISingleOperand {
     }
 
     public String sql() {
+        if (isResultQuery()) {
+            assignSqlParamNames();
+        }
         sources.assignSqlAliases(getMasterIndex());
 
         final StringBuffer sb = new StringBuffer();
@@ -387,10 +390,6 @@ public class EntQuery implements ISingleOperand {
 
         assignPropertyPersistenceInfoToYields();
         //sources.reorderSources();
-
-        if (isResultQuery()) {
-            assignSqlParamNames();
-        }
     }
 
     private Map<EntPropStage, List<EntProp>> groupPropsByStage(final List<EntProp> props) {
