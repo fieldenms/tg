@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
@@ -10,7 +9,16 @@ import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 
 public class Conditions extends AbstractCondition {
     private final ICondition firstCondition;
-    private final List<CompoundCondition> otherConditions;
+    private final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
+
+    public Conditions(final ICondition firstCondition, final List<CompoundCondition> otherConditions) {
+	this.firstCondition = firstCondition;
+	this.otherConditions.addAll(otherConditions);
+    }
+
+    public Conditions(final ICondition firstCondition) {
+	this.firstCondition = firstCondition;
+    }
 
     public String sql() {
 	final List<List<ICondition>> orGroups = formConditionIntoLogicalGroups();
@@ -37,6 +45,56 @@ public class Conditions extends AbstractCondition {
 	return orSb.toString();
     }
 
+    private List<List<ICondition>> formConditionIntoLogicalGroups() {
+	final List<List<ICondition>> result = new ArrayList<List<ICondition>>();
+	List<ICondition> currGroup = new ArrayList<ICondition>();
+	currGroup.add(firstCondition);
+
+	for (final CompoundCondition compoundCondition : otherConditions) {
+	    if (compoundCondition.getLogicalOperator() == LogicalOperator.AND) {
+		currGroup.add(compoundCondition.getCondition());
+	    } else {
+		result.add(currGroup);
+		currGroup = new ArrayList<ICondition>();
+		currGroup.add(compoundCondition.getCondition());
+	    }
+	}
+
+	result.add(currGroup);
+
+	return result;
+    }
+
+    @Override
+    public boolean ignore() {
+	if (firstCondition != null && !firstCondition.ignore()) {
+	    return false;
+	}
+
+	for (final CompoundCondition compoundCondition : otherConditions) {
+	    if (!compoundCondition.getCondition().ignore()) {
+		return false;
+	    }
+	}
+
+	return true;
+    }
+
+    @Override
+    protected List<IPropertyCollector> getCollection() {
+	final List<IPropertyCollector> result = new ArrayList<IPropertyCollector>();
+	if (firstCondition != null && !firstCondition.ignore()) {
+	    result.add(firstCondition);
+	}
+
+	for (final CompoundCondition compoundCondition : otherConditions) {
+	    if (!compoundCondition.getCondition().ignore()) {
+		result.add(compoundCondition.getCondition());
+	    }
+	}
+	return result;
+    }
+
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer();
@@ -45,24 +103,6 @@ public class Conditions extends AbstractCondition {
             sb.append(" " + compound);
         }
         return sb.toString();
-    }
-
-    public Conditions(final ICondition firstCondition, final List<CompoundCondition> otherConditions) {
-	this.firstCondition = firstCondition;
-	this.otherConditions = otherConditions;
-    }
-
-    public Conditions(final ICondition firstCondition) {
-	this.firstCondition = firstCondition;
-	this.otherConditions = Collections.emptyList();
-    }
-
-    public ICondition getFirstCondition() {
-        return firstCondition;
-    }
-
-    public List<CompoundCondition> getOtherConditions() {
-        return otherConditions;
     }
 
     @Override
@@ -101,91 +141,5 @@ public class Conditions extends AbstractCondition {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    public boolean ignore() {
-	if (firstCondition != null && !firstCondition.ignore()) {
-	    return false;
-	}
-
-	for (final CompoundCondition compoundCondition : otherConditions) {
-	    if (!compoundCondition.getCondition().ignore()) {
-		return false;
-	    }
-	}
-
-	return true;
-    }
-
-    @Override
-    protected List<IPropertyCollector> getCollection() {
-	final List<IPropertyCollector> result = new ArrayList<IPropertyCollector>();
-	if (firstCondition != null && !firstCondition.ignore()) {
-	    result.add(firstCondition);
-	}
-
-	for (final CompoundCondition compoundCondition : otherConditions) {
-	    if (!compoundCondition.getCondition().ignore()) {
-		result.add(compoundCondition.getCondition());
-	    }
-	}
-	return result;
-    }
-
-    private List<List<ICondition>> formConditionIntoLogicalGroups() {
-	final List<List<ICondition>> result = new ArrayList<List<ICondition>>();
-	List<ICondition> currGroup = new ArrayList<ICondition>();
-	currGroup.add(firstCondition);
-
-	for (final CompoundCondition compoundCondition : otherConditions) {
-	    if (compoundCondition.getLogicalOperator() == LogicalOperator.AND) {
-		currGroup.add(compoundCondition.getCondition());
-	    } else {
-		result.add(currGroup);
-		currGroup = new ArrayList<ICondition>();
-		currGroup.add(compoundCondition.getCondition());
-	    }
-	}
-
-	result.add(currGroup);
-
-	return result;
-    }
-
-    private static class LogicalConditionGroup extends AbstractCondition {
-	    private final LogicalOperator logicalOperator;
-	    private final List<ICondition> conditions = new ArrayList<ICondition>();
-
-	    public LogicalConditionGroup(final LogicalOperator logicalOperator) {
-		this.logicalOperator = logicalOperator;
-	    }
-
-	    public void add(final ICondition condition) {
-		conditions.add(condition);
-	    }
-
-	    @Override
-	    public boolean ignore() {
-		for (final ICondition condition : conditions) {
-		    if (!condition.ignore()) {
-			return false;
-		    }
-		}
-
-		return true;
-	    }
-
-	    @Override
-	    public String sql() {
-		// TODO Auto-generated method stub
-		return null;
-	    }
-
-	    @Override
-	    protected List<IPropertyCollector> getCollection() {
-		// TODO Auto-generated method stub
-		return null;
-	    }
     }
 }

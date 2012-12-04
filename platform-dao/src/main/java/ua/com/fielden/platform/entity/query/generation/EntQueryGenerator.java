@@ -64,8 +64,8 @@ public class EntQueryGenerator {
     }
 
     private EntQuery generateEntQuery(final QueryModel<?> qryModel, final OrderingModel orderModel, final Class resultType, final fetch fetchModel, final Map<String, Object> paramValues, final QueryCategory category, final IFilter filter, final String username) {
-	ConditionsBuilder where = null;
 	final QrySourcesBuilder from = new QrySourcesBuilder(null, this, paramValues);
+	final ConditionsBuilder where = new ConditionsBuilder(null, this, paramValues);
 	final QryYieldsBuilder select = new QryYieldsBuilder(null, this, paramValues);
 	final QryGroupsBuilder groupBy = new QryGroupsBuilder(null, this, paramValues);
 	final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues);
@@ -80,8 +80,8 @@ public class EntQueryGenerator {
 	    } else {
 		switch ((QueryTokens) pair.getValue()) {
 		case WHERE: //eats token
-		    where = new ConditionsBuilder(null, this, paramValues);
 		    active = where;
+		    where.setChild(new ConditionBuilder(where, this, paramValues));
 		    break;
 		case FROM: //eats token
 		    active = from;
@@ -118,8 +118,20 @@ public class EntQueryGenerator {
 
 	}
 
-	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), orderBy.getModel(), resultType != null ? resultType : qryModel.getResultType(), category, //
-		domainMetadataAnalyser, filter, username, this, fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), paramValues);
+	return new EntQuery( //
+		from.getModel(), //
+		where.getModel(), //
+		select.getModel(), //
+		groupBy.getModel(), //
+		orderBy.getModel(), //
+		resultType != null ? resultType : qryModel.getResultType(), //
+		category, //
+		domainMetadataAnalyser, //
+		filter, //
+		username, //
+		this, //
+		fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //
+		paramValues);
     }
 
     public DbVersion getDbVersion() {

@@ -18,13 +18,13 @@ public class EntQueryResultTypeTest extends BaseEntQueryTCase {
     public void test1() {
 	// TODO this is irrational combination
 	final AggregatedResultQueryModel qry = select(VEHICLE).modelAsAggregate();
-	assertEquals("Incorrect result type", EntityAggregates.class, entResultQry(qry).getResultType());
+	assertEquals("Incorrect result type", EntityAggregates.class, entResultQry(qry).type());
     }
 
     @Test
     public void test2() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).model();
-	assertEquals("Incorrect result type", VEHICLE, entResultQry(qry).getResultType());
+	assertEquals("Incorrect result type", VEHICLE, entResultQry(qry).type());
     }
 
     @Test
@@ -39,13 +39,13 @@ public class EntQueryResultTypeTest extends BaseEntQueryTCase {
     @Test
     public void test4() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).yield().prop("model").modelAsEntity(MODEL);
-	assertEquals("Incorrect result type", MODEL, entResultQry(qry).getResultType());
+	assertEquals("Incorrect result type", MODEL, entResultQry(qry).type());
     }
 
     @Test
     public void test5() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).yield().prop("key").modelAsPrimitive();
-	assertEquals("Incorrect result type", null, entSubQry(qry).getResultType());
+	assertEquals("Incorrect result type", null, entSubQry(qry).type());
     }
 
     @Test

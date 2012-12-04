@@ -59,13 +59,10 @@ public class EntityFetcher {
     }
 
     private <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-	if (domainMetadataAnalyser == null) {
-	    throw new IllegalArgumentException("----------------------------------------------------------------------------------------------------");
-	}
 	final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username);
 	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem);
 	final String sql = entQuery.sql();
-	return new QueryModelResult<T>(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
+	return new QueryModelResult<T>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
     }
 
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {

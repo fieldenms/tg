@@ -15,7 +15,7 @@ public class ConditionsBuilder extends AbstractTokensBuilder {
 
     protected ConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
-	setChild(new ConditionBuilder(this, queryBuilder, paramValues));
+//	setChild(new ConditionBuilder(this, queryBuilder, paramValues));
     }
 
     @Override
@@ -33,13 +33,17 @@ public class ConditionsBuilder extends AbstractTokensBuilder {
 	    throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
 	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-	final ICondition firstCondition = (ICondition) iterator.next().getValue();
-	final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
-	for (; iterator.hasNext();) {
-	    final CompoundCondition subsequentCompoundCondition = (CompoundCondition) iterator.next().getValue();
-	    otherConditions.add(subsequentCompoundCondition);
+	if (!iterator.hasNext()) {
+	    return new Conditions(null);
+	} else {
+	    final ICondition firstCondition = (ICondition) iterator.next().getValue();
+	    final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
+	    for (; iterator.hasNext();) {
+		final CompoundCondition subsequentCompoundCondition = (CompoundCondition) iterator.next().getValue();
+		otherConditions.add(subsequentCompoundCondition);
+	    }
+	    return new Conditions(firstCondition, otherConditions);
 	}
-	return new Conditions(firstCondition, otherConditions);
     }
 
     @Override

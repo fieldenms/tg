@@ -76,7 +76,7 @@ public class EntQuery implements ISingleOperand {
         sb.append(yields.sql());
         sb.append("\nFROM ");
         sb.append(sources.sql());
-        if (conditions != null && !conditions.ignore()) {
+        if (!conditions.ignore()) {
             sb.append("\nWHERE ");
             sb.append(conditions.sql());
         }
@@ -101,16 +101,16 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean idAliasEnhancementRequired() {
-        return onlyOneYieldAndWithoutAlias() && isPersistedEntityType(resultType);
+        return onlyOneYieldAndWithoutAlias() && persistedType;
     }
 
     private boolean allPropsYieldEnhancementRequired() {
         return yields.size() == 0 && !isSubQuery() && //
-        ((mainSourceIsTypeBased() && isPersistedEntityType(resultType)) || mainSourceIsQueryBased());
+        ((mainSourceIsTypeBased() && persistedType) || mainSourceIsQueryBased());
     }
 
     private boolean idPropYieldEnhancementRequired() {
-        return yields.size() == 0 && isPersistedEntityType(resultType) && isSubQuery();
+        return yields.size() == 0 && persistedType && isSubQuery();
     }
 
     private boolean mainSourceIsTypeBased() {
@@ -133,7 +133,7 @@ public class EntQuery implements ISingleOperand {
 	} else if (allPropsYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
 	    if (mainSourceIsTypeBased()) {
-		for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
+		for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
 		    final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
 		    if (!skipProperty) {
 			yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
@@ -147,8 +147,8 @@ public class EntQuery implements ISingleOperand {
 			yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
 		    }
 		}
-		if (type() != EntityAggregates.class) {
-		    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
+		if (resultType != EntityAggregates.class) {
+		    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
 			final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
 			if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null && !skipProperty) {
 			    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
@@ -217,8 +217,8 @@ public class EntQuery implements ISingleOperand {
 	final List<OrderBy> toBeAdded = new ArrayList<>();
 	for (final OrderBy orderBy : orderings.getModels()) {
 	    if (orderBy.getYieldName() != null) {
-		if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(type()))) {
-		    final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(type(), sources.getMain().getAlias());
+		if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(resultType))) {
+		    final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(resultType, sources.getMain().getAlias());
 		    for (final String keyMemberProp : keyOrderProps) {
 			toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
 		    }
@@ -254,7 +254,7 @@ public class EntQuery implements ISingleOperand {
 
 	if (original.getYieldName().endsWith(".key")) {
 	    final String prop = original.getYieldName().substring(0, original.getYieldName().length() - 4);
-	    final PropertyMetadata info = domainMetadataAnalyser.getInfoForDotNotatedProp(type(), prop);
+	    final PropertyMetadata info = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, prop);
 	    if (DynamicEntityKey.class.equals(getKeyType(info.getJavaType()))) {
 		final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(info.getJavaType(), propName.substring(0, propName.length() - 4));
 		for (final String keyMemberProp : keyOrderProps) {
@@ -273,13 +273,19 @@ public class EntQuery implements ISingleOperand {
 	int yieldIndex = 0;
         for (final Yield yield : yields.getYields()) {
             yieldIndex = yieldIndex + 1;
-            final ResultQueryYieldDetails ppi = new ResultQueryYieldDetails(yield.getAlias(), determineYieldJavaType(yield), determineYieldHibType(yield), "C" + yieldIndex, determineYieldNullability(yield), determineYieldDetailsType(yield));
-            yield.setInfo(ppi);
+            yield.setInfo(new ResultQueryYieldDetails( //
+        	    yield.getAlias(), //
+        	    determineYieldJavaType(yield), //
+        	    determineYieldHibType(yield), //
+        	    "C" + yieldIndex, //
+        	    determineYieldNullability(yield), //
+        	    determineYieldDetailsType(yield)) //
+            );
         }
     }
 
     private Object determineYieldHibType(final Yield yield) {
-        final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
+        final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, yield.getAlias());
         if (finalPropInfo != null) {
             return finalPropInfo.getHibType();
         } else {
@@ -288,7 +294,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private YieldDetailsType determineYieldDetailsType(final Yield yield) {
-        final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
+        final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, yield.getAlias());
         if (finalPropInfo != null) {
             return finalPropInfo.getYieldDetailType();
         } else {
@@ -302,15 +308,15 @@ public class EntQuery implements ISingleOperand {
 
     private Class determineYieldJavaType(final Yield yield) {
 
-	if (!isPersistedEntityType(type()) && !isUnionEntityType(type()) ) {
+	if (!persistedType && !isUnionEntityType(resultType) ) {
 	    return yield.getOperand().type();
 	}
 
 	final Class qsYt = yield.getOperand().type();
-        final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
-        final Class rtYt = finalPropInfo.getJavaType();//determinePropertyType(type(), yield.getAlias());
+        final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, yield.getAlias());
+        final Class rtYt = finalPropInfo.getJavaType();
 
-	if (isPersistedEntityType(type())) {
+	if (persistedType) {
             if (qsYt != null && !qsYt.equals(rtYt)) {
                 if (!(isPersistedEntityType(qsYt) && Long.class.equals(rtYt)) && //
                         !(isPersistedEntityType(rtYt) && Long.class.equals(qsYt)) && //
@@ -324,8 +330,8 @@ public class EntQuery implements ISingleOperand {
             }
         }
 
-	if (isUnionEntityType(type())) {
-            return rtYt;//determinePropertyType(type(), yield.getAlias());
+	if (isUnionEntityType(resultType)) {
+            return rtYt;
 	}
 
 	throw new IllegalStateException("This is impossible situation");
@@ -370,7 +376,7 @@ public class EntQuery implements ISingleOperand {
         this.orderings = orderings;
         this.resultType = resultType != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);
         if (this.resultType == null && category != QueryCategory.SUB_QUERY) { // only primitive result queries have result type not assigned
-            throw new IllegalStateException("result type is null:\n " + yields.getFirstYield().getAlias() + " --- ");
+            throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
         }
 
         persistedType = (resultType == null || resultType == EntityAggregates.class) ? false : domainMetadataAnalyser.getEntityMetadata(this.resultType).isPersisted();
@@ -601,9 +607,7 @@ public class EntQuery implements ISingleOperand {
     public List<EntProp> getImmediateProps() {
         final List<EntProp> result = new ArrayList<EntProp>();
         result.addAll(sources.getLocalProps());
-        if (conditions != null) {
-            result.addAll(conditions.getLocalProps());
-        }
+        result.addAll(conditions.getLocalProps());
         result.addAll(groups.getLocalProps());
         result.addAll(yields.getLocalProps());
         result.addAll(orderings.getLocalProps());
@@ -615,9 +619,7 @@ public class EntQuery implements ISingleOperand {
         result.addAll(yields.getLocalSubQueries());
         result.addAll(groups.getLocalSubQueries());
         result.addAll(orderings.getLocalSubQueries());
-        if (conditions != null) {
-            result.addAll(conditions.getLocalSubQueries());
-        }
+        result.addAll(conditions.getLocalSubQueries());
         result.addAll(sources.getLocalSubQueries());
         return result;
     }
@@ -636,9 +638,7 @@ public class EntQuery implements ISingleOperand {
     public List<EntValue> getAllValues() {
         final List<EntValue> result = new ArrayList<EntValue>();
         result.addAll(sources.getAllValues());
-        if (conditions != null) {
-            result.addAll(conditions.getAllValues());
-        }
+        result.addAll(conditions.getAllValues());
         result.addAll(groups.getAllValues());
         result.addAll(orderings.getAllValues());
         result.addAll(yields.getAllValues());
@@ -667,10 +667,6 @@ public class EntQuery implements ISingleOperand {
 
     public EntQuery getMaster() {
         return master;
-    }
-
-    public Class getResultType() {
-        return resultType;
     }
 
     public List<EntProp> getUnresolvedProps() {

@@ -21,7 +21,9 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
 	switch (cat) {
 	case ON: //eats token
 	    finaliseChild();
-	    setChild(new ConditionsBuilder(this, getQueryBuilder(), getParamValues()));
+	    final ConditionsBuilder onCondition = new ConditionsBuilder(this, getQueryBuilder(), getParamValues());
+	    onCondition.setChild(new ConditionBuilder(onCondition, getQueryBuilder(), getParamValues()));
+	    setChild(onCondition);
 	    break;
 	default:
 	    super.add(cat, value);
