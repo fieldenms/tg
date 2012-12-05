@@ -96,6 +96,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClass;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -354,7 +355,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	final List<Class<?>> theTypes = new ArrayList<Class<?>>();
 	for (final Class<?> type : types) {
 	    if (EntityUtils.isEnum(type)) {
-		final List<Class<?>> enumTypes = EntityUtils.extractTypes((Class<Enum>)type);
+		final List<Class<?>> enumTypes = EntityUtils.extractTypes((Class<Enum>) type);
 		for (final Class<?> klass : enumTypes) {
 		    theTypes.add(klass);
 		}
@@ -466,7 +467,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
 	} else if (DynamicallyTypedQueryContainer.class.isAssignableFrom(type)) {
 	    return dynamicallyTypedQueryContainerSerialiser;
-	} else if (LifecycleQueryContainer.class.isAssignableFrom(type)){
+	} else if (LifecycleQueryContainer.class.isAssignableFrom(type)) {
 	    return lifecycleQueryContainerSerialiser;
 	}
 	return super.newSerializer(type);
@@ -596,6 +597,12 @@ public class TgKryo extends Kryo implements ISerialiser {
 
 	    for (int index = 2; index < 2 + references.referenceCount; index++) {
 		final Object obj = references.referenceToObject.get(index);
+
+		// let's try to identify whether we are loading generated types here
+		if (obj != null && DynamicEntityClassLoader.isEnhanced(obj.getClass())) {
+		    return;
+		}
+
 		// interested only in instances of the enhanced AbstractEntity.
 		if (obj instanceof AbstractEntity) {
 		    refs.add((AbstractEntity) obj);
@@ -606,22 +613,24 @@ public class TgKryo extends Kryo implements ISerialiser {
 
 	    // iterate through all locally cached entity instances and execute respective definers
 	    for (final AbstractEntity<?> entity : refs) {
-		entity.setInitialising(true);
-		for (final Object mt : entity.getProperties().values()) {
-		    final MetaProperty prop = (MetaProperty) mt;
-		    if (prop != null) {
-			if (!prop.isCollectional()) {
-			    prop.define(prop.getOriginalValue());
+		if (!DynamicEntityClassLoader.isEnhanced(entity.getType())) {
+		    entity.setInitialising(true);
+		    for (final Object mt : entity.getProperties().values()) {
+			final MetaProperty prop = (MetaProperty) mt;
+			if (prop != null) {
+			    if (!prop.isCollectional()) {
+				prop.define(prop.getOriginalValue());
+			    }
 			}
 		    }
+		    entity.setInitialising(false);
 		}
-		entity.setInitialising(false);
 	    }
 	}
     }
 
     @Override
     public EntityFactory factory() {
-        return factory;
+	return factory;
     }
 }
