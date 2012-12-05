@@ -5,8 +5,10 @@ import java.awt.Component;
 import java.awt.LayoutManager;
 import java.util.Map;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
@@ -212,6 +214,11 @@ public abstract class BaseNotifPanel<MODEL extends UModel> extends BasePanelWith
 	final IPropertyEditor editor = editors.get(propertyName);
 	panel.add(editor.getLabel());
 	panel.add(editor.getEditor(), layoutParameter);
+    }
+
+    protected void addWithParamsForEditorPlaceholder(final JPanel panel, final String layoutParameter) {
+	panel.add(new JLabel("<html><b><font color=\"red\">Placeholder:</font></b></html>"));
+	panel.add(new JTextField(" "), layoutParameter);
     }
 
     /**
