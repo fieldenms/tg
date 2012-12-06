@@ -19,10 +19,8 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PurePropInfo;
-import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
@@ -140,6 +138,10 @@ public class BaseEntQueryTCase {
 	return new EntValue(value);
     }
 
+    protected static EntValue iVal(final Object value) {
+	return new EntValue(value, true);
+    }
+
     protected static OperandsBasedSet set(final ISingleOperand ... operands) {
 	return new OperandsBasedSet(Arrays.asList(operands));
     }
@@ -163,8 +165,6 @@ public class BaseEntQueryTCase {
     protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final PurePropInfo propPart) {
 	return new PropResolutionInfo(prop(propName), aliasPart, propPart, propPart, true);
     }
-
-    protected final ComparisonTest alwaysTrueCondition = new ComparisonTest(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
 
     protected List<List<PropResolutionInfo>> getSourcesReferencingProps(final EntQuery entQry) {
 	final List<List<PropResolutionInfo>> result = new ArrayList<List<PropResolutionInfo>>();

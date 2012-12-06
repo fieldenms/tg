@@ -12,12 +12,8 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
     protected QueryModel() {
     }
 
-    public QueryModel(final List<Pair<TokenCategory, Object>> tokens) {
-	super(tokens);
-    }
-
     public QueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType) {
-	this(tokens);
+	super(tokens);
 	this.resultType = resultType;
     }
 

@@ -14,7 +14,7 @@ class CompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<
     }
 
     @Override
-    public /*<T extends AbstractEntity<?>>*/ EntityResultQueryModel<ET> model() {
+    public EntityResultQueryModel<ET> model() {
 	return new EntityResultQueryModel<ET>(getTokens().getValues(), (Class<ET>) getTokens().getMainSourceType());
     }
 

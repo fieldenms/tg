@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -458,6 +459,7 @@ final class Tokens {
 
     public Tokens from(final AggregatedResultQueryModel... sourceModels) {
 	if (sourceModels.length >= 1) {
+	    this.mainSourceType = EntityAggregates.class;
 	    return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
 	    throw new RuntimeException("No models have been specified as a source in from statement!");
@@ -466,6 +468,7 @@ final class Tokens {
 
     public <T extends AbstractEntity<?>> Tokens from(final EntityResultQueryModel<T>... sourceModels) {
 	if (sourceModels.length >= 1) {
+	    this.mainSourceType = sourceModels[0].getResultType();
 	    return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
 	    throw new RuntimeException("No models have been specified as a source in from statement!");

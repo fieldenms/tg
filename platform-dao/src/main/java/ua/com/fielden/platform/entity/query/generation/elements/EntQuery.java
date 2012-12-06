@@ -377,7 +377,7 @@ public class EntQuery implements ISingleOperand {
         this.yields = yields;
         this.groups = groups;
         this.orderings = orderings;
-        this.resultType = resultType != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);
+        this.resultType = resultType;// != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);
         if (this.resultType == null && category != QueryCategory.SUB_QUERY) { // only primitive result queries have result type not assigned
             throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
         }
