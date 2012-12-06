@@ -107,7 +107,7 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
      * @param query
      * @return
      */
-    public final IWhere0<T> where(final ICompleted<T> query) {
+    public static <T extends AbstractEntity<?>> IWhere0<T> where(final ICompleted<T> query) {
 	if (query instanceof IJoin) {
 	    return ((IJoin<T>) query).where();
 	} else {
@@ -121,7 +121,7 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
      * @param propertyName
      * @return
      */
-    public final String property(final String propertyName){
+    public static String property(final String propertyName){
 	return DynamicQueryBuilder.createConditionProperty(propertyName);
     }
 

@@ -77,6 +77,15 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>, M exten
     }
 
     /**
+     * Returns the {@link ICentreDomainTreeManagerAndEnhancer} instance for this manual entity centre config. model
+     *
+     * @return
+     */
+    public ICentreDomainTreeManagerAndEnhancer getCdtme() {
+	return cdtme;
+    }
+
+    /**
      * Returns the binding entity for this manual entity centre.
      *
      * @return
