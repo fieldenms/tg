@@ -48,6 +48,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         sb.append("\n  query:" + queryModel);
         sb.append("\n  order:" + (orderModel != null ? orderModel : ""));
         sb.append("\n  param:" + (paramValues.size() > 0 ? paramValues : ""));
+        sb.append("\n  light: " + lightweight);
         sb.append("\n");
         return sb.toString();
     }
