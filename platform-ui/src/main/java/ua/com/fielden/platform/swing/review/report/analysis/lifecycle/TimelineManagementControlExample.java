@@ -7,9 +7,9 @@ import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,9 +21,10 @@ import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.entity.ChartEntity;
 import org.jfree.chart.entity.XYItemEntity;
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.gantt.TaskSeries;
 import org.jfree.data.gantt.TaskSeriesCollection;
+import org.jfree.data.time.SimpleTimePeriod;
+import org.jfree.data.time.TimePeriod;
 import org.jfree.ui.RefineryUtilities;
 import org.joda.time.DateTime;
 
@@ -40,6 +41,7 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.equery.lifecycle.ValuedInterval;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.swing.categorychart.ChartPanel;
+import ua.com.fielden.platform.swing.timeline.ColoredTask;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BaseFrame;
@@ -66,6 +68,7 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
     double finalMovePointX = 0;
     ChartRenderingInfo info = null;;
     double initialMovePointX = 0;
+    private ResizeMargin resizeMargin = null;
     JFreeChart jfreechart = null;
 
 //    final TaskSeriesCollection mainDataSet = new TaskSeriesCollection();
@@ -337,6 +340,15 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
        localChartPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
     }
 
+
+    /**
+     * Determines an entity currently situated under a cursor.
+     *
+     * @param chartPanel
+     * @param x0
+     * @param y0
+     * @return
+     */
     private XYItemEntity determineAnItemUnderACursor(final ChartPanel chartPanel, final int x0, final int y0) {
 	final Insets insets = chartPanel.getInsets();
 	final int x = (int) ((x0 - insets.left) / chartPanel.getScaleX());
@@ -360,63 +372,42 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 	provideCursor(e, false);
     }
 
-    public void provideCursor(final MouseEvent e, final boolean pressed) {
+    private enum ResizeMargin {
+	LEFT, RIGHT
+    }
+
+    public ResizeMargin provideCursor(final MouseEvent e, final boolean pressed) {
 	final int gap = 3;
 	if (xyItemEntity == null) {
 	    localChartPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 	} else if (!EntityUtils.equalsEx(xyItemEntity, determineAnItemUnderACursor((ChartPanel) e.getSource(), e.getX() - gap, e.getY()))) {
 	    // the left boundary of xyItemEntity has been found
 	    localChartPanel.setCursor(new Cursor(Cursor.W_RESIZE_CURSOR));
+	    return ResizeMargin.LEFT;
 	} else if (!EntityUtils.equalsEx(xyItemEntity, determineAnItemUnderACursor((ChartPanel) e.getSource(), e.getX() + gap, e.getY()))) {
 	    // the right boundary of xyItemEntity has been found
 	    localChartPanel.setCursor(new Cursor(Cursor.E_RESIZE_CURSOR));
+	    return ResizeMargin.RIGHT;
 	} else {
 	    localChartPanel.setCursor(pressed ? new Cursor(Cursor.MOVE_CURSOR) : new Cursor(Cursor.HAND_CURSOR));
 	}
+	return null;
     }
 
     public void mousePressed(final MouseEvent e) {
 //       final int x = e.getX(); // initialized point whenenver mouse is pressed
 //       final int y = e.getY();
 
-       final ChartPanel chartPanel = (ChartPanel) e.getSource();
-       final Insets insets = chartPanel.getInsets();
-       final int x = (int) ((e.getX() - insets.left) / chartPanel.getScaleX());
-       final int y = (int) ((e.getY() - insets.top) / chartPanel.getScaleY());
+//       final ChartPanel chartPanel = (ChartPanel) e.getSource();
+//       final Insets insets = chartPanel.getInsets();
+//       final int x = (int) ((e.getX() - insets.left) / chartPanel.getScaleX());
+//       final int y = (int) ((e.getY() - insets.top) / chartPanel.getScaleY());
 
-//       this.anchor = new Point2D.Double(x, y);
-//       ChartEntity entity = null;
-//        if (this.info != null) {
-//           final EntityCollection entities = this.info.getEntityCollection();
-//           if (entities != null) {
-//               entity = entities.getEntity(x, y);
-//           }
-//       }
 
-//       final EntityCollection entities = this.info.getEntityCollection();
-//       final ChartMouseEvent cme = new ChartMouseEvent(jfreechart, e, entities
-//             .getEntity(x, y));
-//       final ChartEntity entity = cme.getEntity();
-//       if ((entity != null) && (entity instanceof XYItemEntity)) {
-//          xyItemEntity = (XYItemEntity) entity;
-//       } else if (!(entity instanceof XYItemEntity)) {
-//          xyItemEntity = null;
-//          return;
-//       }
-//       if (xyItemEntity == null) {
-//          return; // return if not pressed on any series point
-//       }
-//       System.err.println("		xyItemEntity == " + xyItemEntity);
-       final Point pt = e.getPoint();
-       final XYPlot xy = jfreechart.getXYPlot();
-       final Rectangle2D dataArea = localChartPanel.getChartRenderingInfo()
-             .getPlotInfo().getDataArea();
-       final Point2D p = localChartPanel.translateScreenToJava2D(pt);
-       initialMovePointX = xy.getRangeAxis().java2DToValue(p.getX(), dataArea,
-             xy.getRangeAxisEdge());
+       initialMovePointX = determinePointX(e.getPoint()); // xy.getRangeAxis().java2DToValue(p.getX(), dataArea, xy.getRangeAxisEdge());
        canMove = true;
 
-       provideCursor(e, true);
+       resizeMargin = provideCursor(e, true);
        // localChartPanel.setCursor(new Cursor(Cursor.MOVE_CURSOR));
     }
 
@@ -424,50 +415,82 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
        // stop dragging on mouse released
        canMove = false;
        initialMovePointX = 0;
-       provideCursor(e, false);
+       resizeMargin = provideCursor(e, false);
     }
 
     public void movePoint(final MouseEvent me) {
        try {
           if (canMove) {
-             final int itemIndex = xyItemEntity.getItem();
-             final Point pt = me.getPoint();
-             final XYPlot xy = jfreechart.getXYPlot();
-             final Rectangle2D dataArea = localChartPanel.getChartRenderingInfo().getPlotInfo().getDataArea();
-             final Point2D p = localChartPanel.translateScreenToJava2D(pt);
-             finalMovePointX = xy.getRangeAxis().java2DToValue(p.getX(), dataArea, xy.getRangeAxisEdge());
+             finalMovePointX = determinePointX(me.getPoint());
+
              final double difference = finalMovePointX - initialMovePointX;
+             final double itemWidth = determineEntityWidth();
+             // System.out.println("itemWidth == " + itemWidth);
 
-             System.out.println("difference == " + difference);
-//             if (localTaskSeries().getValue(itemIndex).doubleValue()
-//                   + difference > xy.getRangeAxis().getRange().getLength()
-//                   || localTaskSeries().getValue(itemIndex).doubleValue()
-//                         + difference < 0.0D) {
-//                initialMovePointY = finalMovePointY;
-//             }
-//             // retrict movement for upper and lower limit (upper limit
-//             // should be as per application needs)
-//             final double targetPoint = localTaskSeries().getValue(itemIndex)
-//                   .doubleValue()
-//                   + difference;
-//             if (targetPoint > 10000 || targetPoint < 0) {
-//                return;
-//             } else
-//        	 localTaskSeries().update(itemIndex, targetPoint);
+             final double relational = difference / itemWidth;
+             final double resizeRelationalValue = (relational > 1.0 && ResizeMargin.LEFT == resizeMargin) ? 1.0 : //
+        	     			(relational < -1.0 && ResizeMargin.RIGHT == resizeMargin) ? -1.0 : relational;
+             System.out.println("resizeRelationalValue == " + resizeRelationalValue * 100 + "%");
+             System.out.println("resizeMargin == " + resizeMargin);
 
-             final Rectangle2D itemBounds = xyItemEntity.getArea().getBounds2D();
-             final double itemWidth = itemBounds.getMaxX() - itemBounds.getMinX();
 
-             final double resizeValue = difference > itemWidth ? itemWidth : difference;
+             final int itemIndex = xyItemEntity.getItem();
+             final ColoredTask task = (ColoredTask) localTaskSeries().get(itemIndex);
+             final TimePeriod oldPeriod = task.getDuration();
+             final ColoredTask newTask = new ColoredTask(task.getDescription(), adjustPeriod(oldPeriod, resizeMargin, resizeRelationalValue), task.getColor(), task.getInfo());
+
+             localTaskSeries().remove(task);
+             localTaskSeries().add(newTask);
 
              jfreechart.fireChartChanged();
              localChartPanel.updateUI();
-             initialMovePointX = finalMovePointX;
+
+             initialMovePointX = finalMovePointX; // TODO
+
+//           if (localTaskSeries().getValue(itemIndex).doubleValue()
+//           + difference > xy.getRangeAxis().getRange().getLength()
+//           || localTaskSeries().getValue(itemIndex).doubleValue()
+//                 + difference < 0.0D) {
+//        initialMovePointY = finalMovePointY;
+//     }
+//     // retrict movement for upper and lower limit (upper limit
+//     // should be as per application needs)
+//     final double targetPoint = localTaskSeries().getValue(itemIndex)
+//           .doubleValue()
+//           + difference;
+//     if (targetPoint > 10000 || targetPoint < 0) {
+//        return;
+//     } else
+//	 localTaskSeries().update(itemIndex, targetPoint);
+
           }
        } catch (final Exception e) {
 	   e.printStackTrace();
 	   System.out.println(e);
        }
+    }
+
+    private TimePeriod adjustPeriod(final TimePeriod oldPeriod, final ResizeMargin resizeMargin, final double resizeRelationalValue) {
+	if (resizeMargin == null) {
+	    throw new IllegalArgumentException("ResizeMargin could not be null.");
+	}
+	final Date adjustableDate = ResizeMargin.LEFT == resizeMargin ? oldPeriod.getStart() : oldPeriod.getEnd();
+	final long duration = oldPeriod.getEnd().getTime() - oldPeriod.getStart().getTime();
+	final long newDate = (long) (adjustableDate.getTime() + duration * resizeRelationalValue);
+	return new SimpleTimePeriod(ResizeMargin.LEFT == resizeMargin ? newDate : oldPeriod.getStart().getTime(), ResizeMargin.LEFT == resizeMargin ? oldPeriod.getEnd().getTime() : newDate);
+    }
+
+    public double determineEntityWidth() {
+	final Rectangle2D itemBounds = xyItemEntity.getArea().getBounds2D();
+	return itemBounds.getWidth() * localChartPanel.getScaleX(); // x2 - x1; // itemWidth;
+    }
+
+    public double determinePointX(final Point pt) {
+//	final XYPlot xy = jfreechart.getXYPlot();
+//	final Rectangle2D dataArea = localChartPanel.getChartRenderingInfo().getPlotInfo().getDataArea();
+//	final Point2D p = localChartPanel.translateScreenToJava2D(pt);
+//	return xy.getRangeAxis().java2DToValue(p.getX(), dataArea, xy.getRangeAxisEdge());
+	return pt.getX();
     }
 
 //    public void moveTimeSeries(final MouseEvent me) {
