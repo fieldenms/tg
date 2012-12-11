@@ -613,18 +613,16 @@ public class TgKryo extends Kryo implements ISerialiser {
 
 	    // iterate through all locally cached entity instances and execute respective definers
 	    for (final AbstractEntity<?> entity : refs) {
-		if (!DynamicEntityClassLoader.isEnhanced(entity.getType())) {
-		    entity.setInitialising(true);
-		    for (final Object mt : entity.getProperties().values()) {
-			final MetaProperty prop = (MetaProperty) mt;
-			if (prop != null) {
-			    if (!prop.isCollectional()) {
-				prop.define(prop.getOriginalValue());
-			    }
+		entity.setInitialising(true);
+		for (final Object mt : entity.getProperties().values()) {
+		    final MetaProperty prop = (MetaProperty) mt;
+		    if (prop != null) {
+			if (!prop.isCollectional()) {
+			    prop.define(prop.getOriginalValue());
 			}
 		    }
-		    entity.setInitialising(false);
 		}
+		entity.setInitialising(false);
 	    }
 	}
     }
