@@ -1082,8 +1082,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     public AbstractEntity<K> restoreToOriginal() {
 	setInitialising(true);
 	try {
+	    // restore property value state to original
 	    for (final MetaProperty property : getProperties().values()) {
 		property.restoreToOriginal();
+	    }
+	    // run definers to restore meta-state that could have been set as part of some property after change logic
+	    for (final MetaProperty property : getProperties().values()) {
+		if (!property.isCollectional()) { // TODO for collectional re-running definers is challenging at this stage
+		    property.define(property.getOriginalValue());
+		}
 	    }
 	} finally {
 	    setInitialising(false);

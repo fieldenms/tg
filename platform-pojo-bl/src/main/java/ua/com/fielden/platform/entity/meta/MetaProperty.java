@@ -713,7 +713,6 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 	return this;
     }
 
-    @SuppressWarnings("rawtypes")
     public final AbstractEntity getEntity() {
 	return entity;
     }
