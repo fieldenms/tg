@@ -231,7 +231,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "oldTriple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "oldQuadruple");
 	checkDomainPreparedForEnhancements(dm);
-	assertEquals("Incorrect count of enhanced types byte arrays.", 0, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
+	assertEquals("Incorrect count of enhanced types byte arrays.", 1, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
     protected static void checkDomainPreparedForEnhancements(final IDomainTreeEnhancer dm) {

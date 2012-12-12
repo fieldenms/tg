@@ -22,6 +22,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -177,6 +178,16 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	originalAndEnhancedRootTypesAndArrays.putAll(freshOriginalAndEnhancedRootTypesAndArrays);
     }
 
+    private static Ignore createIgnore() {
+	final Ignore ignoreAnnotation = new Ignore() {
+	    @Override
+	    public Class<Ignore> annotationType() {
+		return Ignore.class;
+	    }
+	};
+	return ignoreAnnotation;
+    }
+
     /**
      * Fully generates a new hierarchy of "originalAndEnhancedRootTypes" that conform to "calculatedProperties".
      *
@@ -188,46 +199,60 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	// single classLoader instance is needed for single "apply" transaction
 	final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 	final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypes = createOriginalAndEnhancedRootTypesAndArraysFromRootTypes(rootTypes);
-	final Map<Class<?>, Map<String, Map<String, CalculatedProperty>>> groupedCalculatedProperties = groupByPaths(calculatedProperties);
+	final Map<Class<?>, Map<String, Map<String, CalculatedProperty>>> groupedCalculatedProperties = groupByPaths(calculatedProperties, rootTypes);
 
 	// iterate through calculated property places (e.g. Vehicle.class+"" or WorkOrder.class+"veh.status") with no care about order
 	for (final Entry<Class<?>, Map<String, Map<String, CalculatedProperty>>> entry : groupedCalculatedProperties.entrySet()) {
 	    final Class<?> originalRoot = entry.getKey();
 	    // generate predefined root type name for all calculated properties
 	    final String predefinedRootTypeName = new DynamicTypeNamingService().nextTypeName(originalRoot.getName());
-	    for (final Entry<String, Map<String, CalculatedProperty>> placeAndProps : entry.getValue().entrySet()) {
-		final Map<String, CalculatedProperty> props = placeAndProps.getValue();
-		if (props != null && !props.isEmpty()) {
-		    final Class<?> realRoot = originalAndEnhancedRootTypes.get(originalRoot).getKey();
-		    // a path to calculated properties
-		    final String path = placeAndProps.getKey();
+	    if (entry.getValue() == null) {
+		final NewProperty[] markerProp = new NewProperty[1];
+		markerProp[0] = new NewProperty("aMarkerPropertyJustToMakeTheTypeEnhanced", Integer.class, false, "Marker to make root type 'enhanced'.", "This is a marker property that just makes the type, that have no calc props, enhanced.", createIgnore());
+		try {
+		    final Class<?> rootEnhanced = classLoader.startModification(originalRoot.getName()).addProperties(markerProp).endModification();
+		    final ByteArray newByteArray = new ByteArray(classLoader.getCachedByteArray(rootEnhanced.getName()));
+		    originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(rootEnhanced, new HashMap<String, ByteArray>() {{ put("", newByteArray); }}));
+		} catch (final ClassNotFoundException e) {
+		    e.printStackTrace();
+		    logger.error(e);
+		    throw new IllegalStateException(e);
+		}
+	    } else {
+		for (final Entry<String, Map<String, CalculatedProperty>> placeAndProps : entry.getValue().entrySet()) {
+		    final Map<String, CalculatedProperty> props = placeAndProps.getValue();
+		    if (props != null && !props.isEmpty()) {
+			final Class<?> realRoot = originalAndEnhancedRootTypes.get(originalRoot).getKey();
+			// a path to calculated properties
+			final String path = placeAndProps.getKey();
 
-		    final NewProperty[] newProperties = new NewProperty[props.size()];
-		    int i = 0;
-		    for (final Entry<String, CalculatedProperty> nameWithProp : props.entrySet()) {
-			final CalculatedProperty prop = nameWithProp.getValue();
-			final String originationProperty = prop.getOriginationProperty() == null ? "" : prop.getOriginationProperty();
-			final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(prop.getContextualExpression()).rootTypeName(predefinedRootTypeName).contextPath(prop.getContextPath()).origination(originationProperty).attribute(prop.getAttribute()).category(prop.category()).newInstance();
-			newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc(), calcAnnotation);
-		    }
-		    // determine a "real" parent type:
-		    final Class<?> realParentToBeEnhanced = StringUtils.isEmpty(path) ? realRoot : PropertyTypeDeterminator.determinePropertyType(realRoot, path);
-		    try {
-			final Map<String, ByteArray> existingByteArrays = new HashMap<String, ByteArray>(originalAndEnhancedRootTypes.get(originalRoot).getValue());
+			final NewProperty[] newProperties = new NewProperty[props.size()];
+			int i = 0;
+			for (final Entry<String, CalculatedProperty> nameWithProp : props.entrySet()) {
+			    final CalculatedProperty prop = nameWithProp.getValue();
+			    final String originationProperty = prop.getOriginationProperty() == null ? "" : prop.getOriginationProperty();
+			    final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(prop.getContextualExpression()).rootTypeName(predefinedRootTypeName).contextPath(prop.getContextPath()).origination(originationProperty).attribute(prop.getAttribute()).category(prop.category()).newInstance();
+			    newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc(), calcAnnotation);
+			}
+			// determine a "real" parent type:
+			final Class<?> realParentToBeEnhanced = StringUtils.isEmpty(path) ? realRoot : PropertyTypeDeterminator.determinePropertyType(realRoot, path);
+			try {
+			    final Map<String, ByteArray> existingByteArrays = new HashMap<String, ByteArray>(originalAndEnhancedRootTypes.get(originalRoot).getValue());
 
-			// generate & load new type enhanced by calculated properties
-			final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced.getName()).addProperties(newProperties).endModification();
-			// propagate enhanced type to root
-			final Pair<Class<?>, Map<String, ByteArray>> rootAfterPropagationAndAdditionalByteArrays = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path, classLoader);
-			final Class<?> rootAfterPropagation = rootAfterPropagationAndAdditionalByteArrays.getKey();
-			// insert new byte arrays into beginning (the first item is an array of root type)
-			existingByteArrays.putAll(rootAfterPropagationAndAdditionalByteArrays.getValue());
-			// replace relevant root type in cache
-			originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(rootAfterPropagation, existingByteArrays));
-		    } catch (final ClassNotFoundException e) {
-			e.printStackTrace();
-			logger.error(e);
-			throw new RuntimeException(e);
+			    // generate & load new type enhanced by calculated properties
+			    final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced.getName()).addProperties(newProperties).endModification();
+			    // propagate enhanced type to root
+			    final Pair<Class<?>, Map<String, ByteArray>> rootAfterPropagationAndAdditionalByteArrays = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path, classLoader);
+			    final Class<?> rootAfterPropagation = rootAfterPropagationAndAdditionalByteArrays.getKey();
+			    // insert new byte arrays into beginning (the first item is an array of root type)
+			    existingByteArrays.putAll(rootAfterPropagationAndAdditionalByteArrays.getValue());
+			    // replace relevant root type in cache
+			    originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(rootAfterPropagation, existingByteArrays));
+			} catch (final ClassNotFoundException e) {
+			    e.printStackTrace();
+			    logger.error(e);
+			    throw new IllegalStateException(e);
+			}
 		    }
 		}
 	    }
@@ -244,7 +269,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	    } catch (final ClassNotFoundException e) {
 		e.printStackTrace();
 		logger.error(e);
-		throw new RuntimeException(e);
+		throw new IllegalStateException(e);
 	    }
 	}
 	return originalAndEnhancedRootTypes;
@@ -256,7 +281,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param calculatedProperties
      * @return
      */
-    private static Map<Class<?>, Map<String, Map<String, CalculatedProperty>>> groupByPaths(final Map<Class<?>, List<CalculatedProperty>> calculatedProperties) {
+    private static Map<Class<?>, Map<String, Map<String, CalculatedProperty>>> groupByPaths(final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Set<Class<?>> rootTypes) {
 	final Map<Class<?>, Map<String, Map<String, CalculatedProperty>>> grouped = new HashMap<Class<?>, Map<String, Map<String, CalculatedProperty>>>();
 	for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
 	    final List<CalculatedProperty> props = entry.getValue();
@@ -272,6 +297,12 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 		    }
 		    grouped.get(root).get(path).put(prop.name(), prop);
 		}
+	    }
+	}
+	// add the types, not enhanced with any calc prop
+	for (final Class<?> originalRoot : rootTypes) {
+	    if (!grouped.containsKey(originalRoot)) {
+		grouped.put(originalRoot, null);
 	    }
 	}
 	return grouped;
