@@ -155,7 +155,9 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
 
 	@Override
 	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
-	    provideEnablementForPath(getCheckingModel(modelIndex), path(root, AbstractDomainTree.reflectionProperty(property)), !hasBeenDisabled);
+	    if (path(root, AbstractDomainTree.reflectionProperty(property)) != null) { // if path does not exist already -- ignore "unchecking"
+		provideEnablementForPath(getCheckingModel(modelIndex), path(root, AbstractDomainTree.reflectionProperty(property)), !hasBeenDisabled);
+	    }
 	}
     }
 
@@ -177,7 +179,9 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
 	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index) {
 	    final String reflectionProperty = AbstractDomainTree.reflectionProperty(property);
 	    if (!AbstractDomainTree.isPlaceholder(reflectionProperty)) {
-		provideCheckingForPath(getCheckingModel(modelIndex), path(root, reflectionProperty), hasBeenChecked);
+		if (path(root, reflectionProperty) != null) { // if path does not exist already -- ignore "unchecking"
+		    provideCheckingForPath(getCheckingModel(modelIndex), path(root, reflectionProperty), hasBeenChecked);
+		}
 	    }
 	}
     }
@@ -190,7 +194,11 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
      * @return
      */
     private TreePath path(final Class<?> root, final String property) {
-	return new TreePath(getPathToRoot(node(root, property, false)));
+	final EntitiesTreeNode2<DTM> node = node(root, property, false);
+	if (node == null) {
+	    return null;
+	}
+	return new TreePath(getPathToRoot(node));
     }
 
     protected FilterableTreeModel createFilteringModel(final EntitiesTreeModel2<DTM> entitiesTreeModel2) {
