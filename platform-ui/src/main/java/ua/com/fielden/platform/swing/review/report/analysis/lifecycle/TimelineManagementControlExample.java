@@ -9,7 +9,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,6 +19,7 @@ import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.entity.ChartEntity;
+import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.entity.XYItemEntity;
 import org.jfree.data.gantt.TaskSeries;
 import org.jfree.data.gantt.TaskSeriesCollection;
@@ -63,13 +63,14 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
     private TaskSeriesCollection mainDataSet = new TaskSeriesCollection();
 
     ChartPanel localChartPanel = null;
-    boolean canMove = false;
+    boolean startedResizingOrMoving = false;
     // double finalMovePointY = 0;
     double finalMovePointX = 0;
     ChartRenderingInfo info = null;;
     double initialMovePointX = 0;
     private ResizeMargin resizeMargin = null;
     JFreeChart jfreechart = null;
+    XYItemEntity xyItemEntity = null;
 
 //    final TaskSeriesCollection mainDataSet = new TaskSeriesCollection();
 //	if (chartEntryModel != null) {
@@ -83,7 +84,6 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 //	    }
 //	}
 
-    XYItemEntity xyItemEntity = null;
 
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Throwable {
@@ -97,8 +97,10 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 	super.beforeUiExposure(args, splashController);
     }
 
+    private final int seriesIndex = 0;
+
     private TaskSeries localTaskSeries() {
-	return mainDataSet.getSeries(0); // TODO take an appropriate series
+	return mainDataSet.getSeries(seriesIndex); // TODO take an appropriate series
     }
 
     /**
@@ -107,7 +109,7 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
      * @param x
      * @return
      */
-    public EntityPropertyLifecycle<TimelineEntity> createEPL(final String key, final int x) {
+    private EntityPropertyLifecycle<TimelineEntity> createEPL(final String key, final int x) {
 	final List<ValuedInterval> intervals = new ArrayList<ValuedInterval>();
 	// not sorted:
 	intervals.add(new ValuedInterval(date(36 + x), date(42 + x), "Value 1"));
@@ -115,15 +117,15 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 	intervals.add(new ValuedInterval(date(42 + x), date(47 + x), "Value 4"));
 	intervals.add(new ValuedInterval(date(10 + x), date(31 + x), "Value 2"));
 	intervals.add(new ValuedInterval(date(31 + x), date(36 + x), "Value 3"));
-	intervals.add(new ValuedInterval(date(47 + x), date(59 + x), "Value 2"));
+	intervals.add(new ValuedInterval(date(47 + x), date(52 + x), "Value 2"));
 	return new EntityPropertyLifecycle<TimelineEntity>(factory.newByKey(TimelineEntity.class, key), TimelineEntity.class, "monitoring", intervals, date(15), date(55));
     }
 
-    public DateTime date(final int millis) {
-	return new DateTime(2010, 1, 1, 0, 0, 0, millis);
+    private DateTime date(final int minutes) {
+	return new DateTime(2010, 1, 1, 0, minutes, 0, 0);
     }
 
-    public EntityPropertyLifecycle<TimelineEntity> createUnavailableEPL(final String key) {
+    private EntityPropertyLifecycle<TimelineEntity> createUnavailableEPL(final String key) {
 	final List<ValuedInterval> intervals = new ArrayList<ValuedInterval>();
 	intervals.add(new ValuedInterval(date(15), date(55), "Value 4"));
 	return new EntityPropertyLifecycle<TimelineEntity>(factory.newByKey(TimelineEntity.class, key), TimelineEntity.class, "monitoring", intervals, date(15), date(55));
@@ -181,12 +183,16 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 
 	jfreechart = LifecycleChartFactory.createAvailabilityChart(chartEntryModel, mainDataSet); // ChartFactory.createTimeSeriesChart("Series & Point Dragging Demo", "Date", "Price Per Unit", createDataset(), true, true, false);
 	localChartPanel = new ChartPanel(jfreechart);
+
 	localChartPanel.addChartMouseListener(this);
 	localChartPanel.addMouseMotionListener(this);
 	localChartPanel.addMouseListener(this);
 	localChartPanel.setPreferredSize(new Dimension(750, 500));
 	localChartPanel.setAutoscrolls(false);
-	// localChartPanel.setMouseZoomable(false);
+
+	// TODO temporally disable "rectangle" mouse zooming:
+	localChartPanel.setMouseZoomable(false);
+
 	localChartPanel.setMouseWheelEnabled(true);
 	this.info = localChartPanel.getChartRenderingInfo();
 
@@ -257,7 +263,7 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 //
 //	});
 
-	mainApplicationFrame.setPreferredSize(new Dimension(1280, 800));
+	mainApplicationFrame.setPreferredSize(new Dimension(1280, 500));
 	mainApplicationFrame.add(localChartPanel);
 	mainApplicationFrame.pack();
 
@@ -334,7 +340,7 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
     }
 
     public void mouseExited(final MouseEvent e) {
-       canMove = false; // stop movement if cursor is moved out from the chart
+       startedResizingOrMoving = false; // stop movement if cursor is moved out from the chart
                       // area
        initialMovePointX = 0;
        localChartPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
@@ -356,6 +362,22 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 
 	final ChartEntity entity = this.info.getEntityCollection().getEntity(x, y);
 
+	return xyEntity(entity);
+    }
+
+    private XYItemEntity findXyEntity(final int seriesIndex, final int itemIndex, final EntityCollection entityCollection) {
+	for (final Object entity : entityCollection.getEntities()) {
+	    if ((entity != null) && (entity instanceof XYItemEntity)) {
+		final XYItemEntity xyEntity = (XYItemEntity) entity;
+		if (xyEntity.getSeriesIndex() == seriesIndex && xyEntity.getItem() == itemIndex) {
+		    return xyEntity;
+		}
+	    }
+	}
+	return null;
+    }
+
+    private XYItemEntity xyEntity(final ChartEntity entity) {
 	if ((entity != null) && (entity instanceof XYItemEntity)) {
 	    return (XYItemEntity) entity;
 	} else {
@@ -364,16 +386,19 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
     }
 
     public void mouseMoved(final MouseEvent e) {
-	final XYItemEntity newItemEntity = determineAnItemUnderACursor((ChartPanel) e.getSource(), e.getX(), e.getY());
-	if (!EntityUtils.equalsEx(newItemEntity, xyItemEntity)) {
-	    xyItemEntity = newItemEntity;
-	    System.err.println("		xyItemEntity has been changed to == " + xyItemEntity);
+	if (!startedResizingOrMoving) {
+	    // System.out.println("Mouse moved.");
+	    final XYItemEntity newItemEntity = determineAnItemUnderACursor((ChartPanel) e.getSource(), e.getX(), e.getY());
+	    if (!EntityUtils.equalsEx(newItemEntity, xyItemEntity)) {
+		xyItemEntity = newItemEntity;
+		System.err.println("MOUSE MOVED:		xyItemEntity has been changed to == " + xyItemEntity);
+	    }
+	    provideCursor(e, false);
 	}
-	provideCursor(e, false);
     }
 
     private enum ResizeMargin {
-	LEFT, RIGHT
+	LEFT, RIGHT, MIDDLE
     }
 
     public ResizeMargin provideCursor(final MouseEvent e, final boolean pressed) {
@@ -390,60 +415,73 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
 	    return ResizeMargin.RIGHT;
 	} else {
 	    localChartPanel.setCursor(pressed ? new Cursor(Cursor.MOVE_CURSOR) : new Cursor(Cursor.HAND_CURSOR));
+	    if (pressed) {
+		return ResizeMargin.MIDDLE;
+	    }
 	}
 	return null;
     }
 
+    private double itemWidth = -1;
+
     public void mousePressed(final MouseEvent e) {
-//       final int x = e.getX(); // initialized point whenenver mouse is pressed
-//       final int y = e.getY();
+	//       final int x = e.getX(); // initialized point whenenver mouse is pressed
+	//       final int y = e.getY();
 
-//       final ChartPanel chartPanel = (ChartPanel) e.getSource();
-//       final Insets insets = chartPanel.getInsets();
-//       final int x = (int) ((e.getX() - insets.left) / chartPanel.getScaleX());
-//       final int y = (int) ((e.getY() - insets.top) / chartPanel.getScaleY());
+	//       final ChartPanel chartPanel = (ChartPanel) e.getSource();
+	//       final Insets insets = chartPanel.getInsets();
+	//       final int x = (int) ((e.getX() - insets.left) / chartPanel.getScaleX());
+	//       final int y = (int) ((e.getY() - insets.top) / chartPanel.getScaleY());
 
+	startedResizingOrMoving = true;
+	initialMovePointX = determinePointX(e.getPoint());
+	finalMovePointX = 0;
 
-       initialMovePointX = determinePointX(e.getPoint()); // xy.getRangeAxis().java2DToValue(p.getX(), dataArea, xy.getRangeAxisEdge());
-       canMove = true;
-
-       resizeMargin = provideCursor(e, true);
-       // localChartPanel.setCursor(new Cursor(Cursor.MOVE_CURSOR));
+	resizeMargin = provideCursor(e, true);
+	itemWidth = determineEntityWidth();
+	// localChartPanel.setCursor(new Cursor(Cursor.MOVE_CURSOR));
     }
 
     public void mouseReleased(final MouseEvent e) {
-       // stop dragging on mouse released
-       canMove = false;
-       initialMovePointX = 0;
-       resizeMargin = provideCursor(e, false);
+	// stop dragging on mouse released
+	startedResizingOrMoving = false;
+	initialMovePointX = 0;
+	finalMovePointX = 0;
+	itemWidth = -1;
+	resizeMargin = provideCursor(e, false);
     }
 
     public void movePoint(final MouseEvent me) {
        try {
-          if (canMove) {
+          if (startedResizingOrMoving) {
              finalMovePointX = determinePointX(me.getPoint());
 
              final double difference = finalMovePointX - initialMovePointX;
-             final double itemWidth = determineEntityWidth();
-             // System.out.println("itemWidth == " + itemWidth);
 
-             final double relational = difference / itemWidth;
-             final double resizeRelationalValue = (relational > 1.0 && ResizeMargin.LEFT == resizeMargin) ? 1.0 : //
-        	     			(relational < -1.0 && ResizeMargin.RIGHT == resizeMargin) ? -1.0 : relational;
-             System.out.println("resizeRelationalValue == " + resizeRelationalValue * 100 + "%");
-             System.out.println("resizeMargin == " + resizeMargin);
-
+             itemWidth = determineEntityWidth();
+             System.out.println("itemWidth == " + itemWidth);
 
              final int itemIndex = xyItemEntity.getItem();
              final ColoredTask task = (ColoredTask) localTaskSeries().get(itemIndex);
              final TimePeriod oldPeriod = task.getDuration();
-             final ColoredTask newTask = new ColoredTask(task.getDescription(), adjustPeriod(oldPeriod, resizeMargin, resizeRelationalValue), task.getColor(), task.getInfo());
+             System.out.println("Old period [" + oldPeriod.getStart() + "; " + oldPeriod.getEnd() + "].");
+             final ColoredTask newTask = new ColoredTask(task.getDescription(), adjustPeriod(oldPeriod, resizeMargin, difference), task.getColor(), task.getInfo());
 
              localTaskSeries().remove(task);
              localTaskSeries().add(newTask);
+             final int newTaskIndex = localTaskSeries().getItemCount() - 1;
 
              jfreechart.fireChartChanged();
              localChartPanel.updateUI();
+
+
+             System.out.println("newTaskIndex == " + newTaskIndex);
+             System.out.println("seriesIndex == " + seriesIndex);
+             xyItemEntity = findXyEntity(seriesIndex, newTaskIndex, this.info.getEntityCollection());
+             System.err.println("MOUSE DRAGGED:		xyItemEntity has been changed to == " + xyItemEntity);
+
+             // final XYItemEntity newItemEntity = determineAnItemUnderACursor((ChartPanel) me.getSource(), me.getX(), me.getY());
+             // xyItemEntity = newItemEntity;
 
              initialMovePointX = finalMovePointX; // TODO
 
@@ -470,14 +508,27 @@ public class TimelineManagementControlExample  extends AbstractUiApplication imp
        }
     }
 
-    private TimePeriod adjustPeriod(final TimePeriod oldPeriod, final ResizeMargin resizeMargin, final double resizeRelationalValue) {
+    private TimePeriod adjustPeriod(final TimePeriod oldPeriod, final ResizeMargin resizeMargin, final double difference) {
 	if (resizeMargin == null) {
 	    throw new IllegalArgumentException("ResizeMargin could not be null.");
 	}
-	final Date adjustableDate = ResizeMargin.LEFT == resizeMargin ? oldPeriod.getStart() : oldPeriod.getEnd();
-	final long duration = oldPeriod.getEnd().getTime() - oldPeriod.getStart().getTime();
-	final long newDate = (long) (adjustableDate.getTime() + duration * resizeRelationalValue);
-	return new SimpleTimePeriod(ResizeMargin.LEFT == resizeMargin ? newDate : oldPeriod.getStart().getTime(), ResizeMargin.LEFT == resizeMargin ? oldPeriod.getEnd().getTime() : newDate);
+
+        final double relational = difference / itemWidth;
+        final double resizeRelationalValue = (relational > 1.0 && ResizeMargin.LEFT == resizeMargin) ? 1.0 : //
+   	     			(relational < -1.0 && ResizeMargin.RIGHT == resizeMargin) ? -1.0 : relational;
+        System.out.println("resizeRelationalValue == " + resizeRelationalValue * 100 + "%");
+        System.out.println("resizeMargin == " + resizeMargin);
+
+	final long oldLeft = oldPeriod.getStart().getTime();
+	final long oldRight = oldPeriod.getEnd().getTime();
+	final long duration = oldRight - oldLeft;
+	return new SimpleTimePeriod(	ResizeMargin.LEFT == resizeMargin || ResizeMargin.MIDDLE == resizeMargin ? adjust(oldLeft, duration * resizeRelationalValue) : oldLeft,
+					ResizeMargin.RIGHT == resizeMargin || ResizeMargin.MIDDLE == resizeMargin ? adjust(oldRight, duration * resizeRelationalValue) : oldRight);
+    }
+
+    private long adjust(final long date, final double by) {
+	final long newDate = (long) (date + by);
+	return newDate;
     }
 
     public double determineEntityWidth() {
