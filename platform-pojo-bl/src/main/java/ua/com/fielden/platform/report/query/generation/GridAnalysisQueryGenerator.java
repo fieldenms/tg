@@ -39,7 +39,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @param <T>
  * @param <CDTME>
  */
-public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> implements IReportQueryGeneration<T> {
+public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> implements IReportQueryGenerator<T> {
 
     private final Class<T> root;
     private final CDTME cdtme;

@@ -7,6 +7,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.configuration.LifecycleAnalysisConfigurationModel;
@@ -16,6 +17,12 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> {
 
+    private IDetailsCustomiser detailsCustomiser;
+
+    public DefaultLifecycleAnalysisFactory(){
+	this.detailsCustomiser = null;
+    }
+
     @Override
         public LifecycleAnalysisConfigurationView<T> createAnalysis(//
             final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
@@ -24,7 +31,7 @@ public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implem
 	    final Map<Object, DetailsFrame> detailsCache,//
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	final LifecycleAnalysisConfigurationModel<T> analysisModel = new LifecycleAnalysisConfigurationModel<T>(criteria, name);
-	return new LifecycleAnalysisConfigurationView<T>(analysisModel, detailsCache, owner, progressLayer);
+	return new LifecycleAnalysisConfigurationView<T>(analysisModel, detailsCache, detailsCustomiser, owner, progressLayer);
         }
 
     @Override
@@ -35,5 +42,11 @@ public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implem
     @Override
     public IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> setQueryCustomiser(final IAnalysisQueryCustomiser<T, ?> queryCustomiser) {
 	throw new UnsupportedOperationException("The analysis query customiser can not be set for lifecycle analysis factory.");
+    }
+
+    @Override
+    public IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
+	this.detailsCustomiser = detailsCustomiser;
+	return this;
     }
 }

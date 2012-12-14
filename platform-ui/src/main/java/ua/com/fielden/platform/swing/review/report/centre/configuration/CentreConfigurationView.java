@@ -64,7 +64,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
     }
 
     @Override
-    public final ICloseGuard canClose() {
+    public ICloseGuard canClose() {
 	final ICloseGuard closeGuard = super.canClose();
 	if(closeGuard != null){
 	    return closeGuard;

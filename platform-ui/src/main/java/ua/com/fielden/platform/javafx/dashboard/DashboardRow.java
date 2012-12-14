@@ -34,7 +34,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
-import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
+import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -252,7 +252,7 @@ public class DashboardRow<T extends AbstractEntity<?>> {
 
     private IPage<T> run() {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = gdtm.getEntityCentreManager(menuItemType, centreName);
-	final IReportQueryGeneration<T> analysisQueryGenerator = new ChartAnalysisQueryGenerator<>(rootType, cdtme, sentinelManager());
+	final IReportQueryGenerator<T> analysisQueryGenerator = new ChartAnalysisQueryGenerator<>(rootType, cdtme, sentinelManager());
 	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria = criteriaGenerator.generateCentreQueryCriteria(rootType, cdtme);
 	final AnalysisResultClassBundle<T> classBundle = analysisQueryGenerator.generateQueryModel();
 	return criteria.run(classBundle.getQueries().get(0), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), Integer.MAX_VALUE);

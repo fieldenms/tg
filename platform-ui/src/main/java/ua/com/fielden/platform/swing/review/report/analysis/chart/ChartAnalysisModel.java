@@ -13,7 +13,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
-import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
+import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
 import ua.com.fielden.platform.reportquery.AnalysisModelChangedEvent;
 import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
 import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
@@ -67,7 +67,7 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	final Class<T> root = getCriteria().getEntityClass();
 
-	final IReportQueryGeneration<T> chartAnalysisQueryGenerator = new ChartAnalysisQueryGenerator<>(//
+	final IReportQueryGenerator<T> chartAnalysisQueryGenerator = new ChartAnalysisQueryGenerator<>(//
 		root, //
 		getCriteria().getCentreDomainTreeMangerAndEnhancer(), //
 		adtme());

@@ -2,7 +2,6 @@ package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -26,41 +25,25 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
-
-import org.apache.commons.lang.StringUtils;
-
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
-import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
-import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
-import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
-import ua.com.fielden.platform.swing.review.IEntityMasterManager;
+import ua.com.fielden.platform.swing.review.report.analysis.chart.AnalysisDetailsData;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
-import ua.com.fielden.platform.swing.review.report.centre.configuration.AnalysisDetailsConfigurationModel;
-import ua.com.fielden.platform.swing.review.report.centre.configuration.AnalysisDetailsConfigurationView;
-import ua.com.fielden.platform.swing.review.report.centre.configuration.MultipleAnalysisEntityCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
@@ -68,8 +51,6 @@ import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventLis
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTableModel;
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTablePanel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
-import ua.com.fielden.platform.swing.view.ICloseHook;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -380,6 +361,20 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	add(splitPane);
     }
 
+    @SuppressWarnings("unchecked")
+    private void performCustomAction(final AnalysisDataEvent<?> clickedData) {
+	final ICentreDomainTreeManagerAndEnhancer baseCdtme = getModel().getCriteria().getCentreDomainTreeManagerAndEnhnacerCopy();
+	baseCdtme.setRunAutomatically(true);
+	final AnalysisDetailsData<T> analysisDetailsData = new AnalysisDetailsData<>(//
+		getModel().getCriteria().getEntityClass(), //
+		getOwner().getOwner().getModel().getName(), //
+		getOwner().getModel().getName(), //
+		baseCdtme, //
+		getModel().adtme(),//
+		(List<Pair<String, Object>>)clickedData.getData());
+	getOwner().showDetails(analysisDetailsData, AnalysisDetailsData.class);
+    }
+
     /**
      * Refreshes the pivot tree table.
      * @param treeTable
@@ -389,165 +384,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	((AbstractTableModel) treeTable.getModel()).fireTableStructureChanged();
 	treeTable.getSelectionModel().setSelectionInterval(0, treeTable.getRowForPath(selectedPath));
     }
-
-    @SuppressWarnings("unchecked")
-    private void performCustomAction(final AnalysisDataEvent<?> clickedData) {
-	createDoubleClickAction((List<Pair<String, Object>>)clickedData.getData()).actionPerformed(null);
-    }
-
-    protected final Action createDoubleClickAction(final List<Pair<String, Object>> choosenItems) {
-   	return new BlockingLayerCommand<Void>("Details", getOwner().getProgressLayer()) {
-
-   	    private static final long serialVersionUID = 1986658954874008023L;
-
-   	    @Override
-   	    protected final Void action(final ActionEvent e) throws Exception {
-   		return null;
-   	    }
-
-   	    @SuppressWarnings("unchecked")
-   	    @Override
-   	    protected void postAction(final Void value) {
-   		super.postAction(value);
-   		final List<Object> entityKey = createKey(choosenItems);
-   		DetailsFrame detailsFrame = getOwner().getDetailsFrame(entityKey);
-   		if (detailsFrame == null) {
-   		    final Class<T> root = getModel().getCriteria().getEntityClass();
-
-   		    final EntityFactory entityFactory = getModel().getCriteria().getEntityFactory();
-
-   		    final ICriteriaGenerator criteriaGenerator = ((MultipleAnalysisEntityCentreConfigurationView<T>)getOwner().getOwner().getOwner()).getModel().getCriteriaGenerator();
-
-   		    final IEntityMasterManager masterManager = getOwner().getOwner().getModel().getMasterManager();
-
-   		    final ICentreDomainTreeManagerAndEnhancer cdtme = getModel().getCriteria().getCentreDomainTreeManagerAndEnhnacerCopy();
-   		    cdtme.setRunAutomatically(true);
-   		    setValueFor(root, cdtme, choosenItems);
-
-   		    final String frameTitle = createFrameTitle(choosenItems);
-
-   		    final AnalysisDetailsConfigurationModel<T> detailsConfigModel = new AnalysisDetailsConfigurationModel<>(//
-   			    getModel().getCriteria().getEntityClass(),//
-   			    frameTitle,//
-   			    entityFactory,//
-   			    criteriaGenerator, masterManager, cdtme);
-   		    final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "Loading");
-   		    final AnalysisDetailsConfigurationView<T> detailsConfigView = new AnalysisDetailsConfigurationView<>(detailsConfigModel, progressLayer);
-   		    progressLayer.setView(detailsConfigView);
-   		    detailsFrame = new DetailsFrame(entityKey,//
-   			    frameTitle,//
-   			    progressLayer, new ICloseHook<DetailsFrame>() {
-
-   			@Override
-   			public void closed(final DetailsFrame frame) {
-   			    getOwner().removeDetailsFrame(frame);
-   			}
-
-   		    });
-   		    getOwner().addDetailsFrame(detailsFrame);
-   		    detailsConfigView.open();
-   		}
-   		detailsFrame.setVisible(true);
-
-   	    }
-
-	    private void setValueFor(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer newCdtme, final List<Pair<String, Object>> choosenItems) {
-		for (final Pair<String, Object> choosenItem : choosenItems) {
-		    setValueFor(root, newCdtme, choosenItem);
-		}
-	    }
-
-   	    @SuppressWarnings("unchecked")
-   	    private void setValueFor(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer newCdtme, final Pair<String, Object> choosenItem){
-   		final Class<T> managedType = (Class<T>)newCdtme.getEnhancer().getManagedType(root);
-   		final boolean isEntityItself = "".equals(choosenItem.getKey()); // empty property means "entity itself"
-   		final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, choosenItem.getKey());
-   		final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, choosenItem.getKey());
-   		final boolean isEntity = EntityUtils.isEntityType(propertyType);
-   		final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
-   		final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType);
-
-   		Object value = choosenItem.getValue();
-   		if (List.class.isAssignableFrom(newPropertyType) && choosenItem.getValue() != null) {
-   		    final List<Object> values = new ArrayList<>();
-   		    values.add(choosenItem.getValue().toString());
-   		    value = values;
-   		}
-
-   		newCdtme.getFirstTick().check(root, choosenItem.getKey(), true);
-
-   		if(choosenItem.getValue() == null){
-   		    newCdtme.getFirstTick().setOrNull(root, choosenItem.getKey(), true);
-   		}
-
-   		newCdtme.getFirstTick().setValue(root, choosenItem.getKey(), value);
-
-   		if(AbstractDomainTree.isDoubleCriterion(managedType, choosenItem.getKey())){
-   		    newCdtme.getFirstTick().setValue2(root, choosenItem.getKey(), value);
-   		}
-
-   		if(EntityUtils.isBoolean(propertyType)){
-   		    if(choosenItem.getValue() != null){
-   			newCdtme.getFirstTick().setValue2(root, choosenItem.getKey(), !(Boolean)value);
-   		    }else{
-   			newCdtme.getFirstTick().setValue2(root, choosenItem.getKey(), null);
-   		    }
-   		}
-
-
-   	    }
-
-   	    private String createFrameTitle(final List<Pair<String, Object>> choosenItems) {
-   		final String reportName = getReportName();
-   		return "Details for " + createDistributionPropertyTitle(choosenItems) + " " + createDistributionEntitiesTitle(choosenItems) + " (" + (StringUtils.isEmpty(reportName) ?
-   			"" :reportName + ": ") + getOwner().getModel().getName() + ")";
-   	    }
-
-   	    private String getReportName() {
-   		final String name = getOwner().getOwner().getModel().getName();
-   		return StringUtils.isEmpty(name) ? "" : name;
-   	    }
-
-   	    private String createDistributionEntitiesTitle(final List<Pair<String, Object>> choosenItems) {
-   		String titles = "";
-
-		for (final Pair<String, Object> pair : choosenItems) {
-		    titles += ", " + createPairString(pair.getValue());
-		}
-		return titles.isEmpty() ? titles : titles.substring(2);
-   	    }
-
-   	    private String createPairString(final Object value) {
-   		if (value instanceof AbstractEntity) {
-   		    return ((AbstractEntity<?>) value).getKey().toString() + " \u2012 " + ((AbstractEntity<?>) value).getDesc();
-   		} else if (value != null) {
-   		    return value.toString() + " \u2012 " + value.toString();
-   		} else {
-   		    return "UNKNOWN \u2012 UNKNOWN";
-   		}
-   	    }
-
-   	    private String createDistributionPropertyTitle(final List<Pair<String, Object>> choosenItems) {
-   		String name = "";
-   		final Class<T> managedType = getModel().getCriteria().getManagedType();
-   		final EntityDescriptor ed = new EntityDescriptor(managedType, getModel().getPivotModel().categoryProperties());
-
-		for (final Pair<String, Object> pair : choosenItems) {
-		    name += '\u2192' + "(" + ed.getTitle(pair.getKey()) + ")";
-		}
-		return name.isEmpty() ? name : name.substring(1);
-   	    }
-
-	    private List<Object> createKey(final List<Pair<String, Object>> choosenItems) {
-		final List<Object> keyList = new ArrayList<Object>();
-		for (final Pair<String, Object> pair : choosenItems) {
-		    keyList.add(pair.getValue());
-		}
-		return keyList;
-	    }
-   	};
-       }
-
 
     //TODO needed for exporting data in to excel file.
     //    public Result exportDataIntoFile(final File file, final List<? extends IBindingEntity> analysisData) {

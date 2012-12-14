@@ -21,7 +21,7 @@ import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> implements IReportQueryGeneration<T> {
+public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> implements IReportQueryGenerator<T> {
 
     private final Class<T> root;
     private final ICentreDomainTreeManagerAndEnhancer cdtme;

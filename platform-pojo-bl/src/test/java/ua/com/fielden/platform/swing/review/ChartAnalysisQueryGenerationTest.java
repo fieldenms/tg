@@ -32,7 +32,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClass;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
-import ua.com.fielden.platform.report.query.generation.IReportQueryGeneration;
+import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
@@ -58,7 +58,7 @@ public class ChartAnalysisQueryGenerationTest {
 
     @SuppressWarnings("serial")
     private final ICentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>(){{ add(MasterDomainEntity.class); }});;
-    private final IReportQueryGeneration<MasterDomainEntity> queryGenerator;
+    private final IReportQueryGenerator<MasterDomainEntity> queryGenerator;
 
     private final Class<AbstractEntity<?>> masterKlass, slaveKlass, evenSlaveKlass, stringKeyKlass;
 

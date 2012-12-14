@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.swing.review.details;
 
+import ua.com.fielden.platform.swing.analysis.DetailsFrame;
+import ua.com.fielden.platform.swing.view.ICloseHook;
+
 /**
  * Details contract.
  *
@@ -10,10 +13,10 @@ package ua.com.fielden.platform.swing.review.details;
 public interface IDetails<T> {
 
     /**
-     * Shows details view for given parameter.
+     * Creates the details frame for the specified parameter.
      *
      * @param detailsParam
      */
-    void showDetails(T detailsParam);
+    DetailsFrame createDetailsView(T detailsParam, ICloseHook<DetailsFrame> closeHook);
 
 }

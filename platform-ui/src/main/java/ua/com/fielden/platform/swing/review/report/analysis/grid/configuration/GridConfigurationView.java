@@ -1,9 +1,13 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid.configuration;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.DefaultGridAnalysisToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
@@ -28,9 +32,11 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
      */
     public static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationView<T, CDTME> createMainDetailsWithDefaultCustomiser( //
 	    	    final GridConfigurationModel<T, CDTME> model, //
+	    	    final Map<Object, DetailsFrame> detailsCache, //
+	    	    final IDetailsCustomiser detailsCustomiser, //
 		    final AbstractEntityCentre<T, CDTME> owner, //
 		    final BlockingIndefiniteProgressLayer progressLayer){
-	 return new GridConfigurationView<>(model, owner, null, progressLayer);
+	 return new GridConfigurationView<>(model, detailsCache, detailsCustomiser, owner, null, progressLayer);
     }
 
     /**
@@ -44,10 +50,12 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
      */
     public static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationView<T, CDTME> createMainDetailsWithSpecificCustomiser( //
 	     	    final GridConfigurationModel<T, CDTME> model, //
+	     	    final Map<Object, DetailsFrame> detailsCache, //
+	     	    final IDetailsCustomiser detailsCustomiser, //
 		    final AbstractEntityCentre<T, CDTME> owner, //
 		    final IToolbarCustomiser<GridAnalysisView<T, CDTME>> toolbarCustomiser,//
 		    final BlockingIndefiniteProgressLayer progressLayer){
-	 return new GridConfigurationView<>(model, owner, toolbarCustomiser, progressLayer);
+	 return new GridConfigurationView<>(model, detailsCache, detailsCustomiser, owner, toolbarCustomiser, progressLayer);
     }
 
     /**
@@ -60,10 +68,12 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
      */
     protected GridConfigurationView(//
 	    final GridConfigurationModel<T, CDTME> model, //
+	    final Map<Object, DetailsFrame> detailsCache, //
+	    final IDetailsCustomiser detailsCustomiser, //
 	    final AbstractEntityCentre<T, CDTME> owner, //
 	    final IToolbarCustomiser<GridAnalysisView<T, CDTME>> toolbarCustomiser, //
 	    final BlockingIndefiniteProgressLayer progressLayer){
-	super(model, null, owner, progressLayer);
+	super(model, detailsCache, detailsCustomiser, owner, progressLayer);
 	this.toolbarCustomiser = toolbarCustomiser == null ? new DefaultGridAnalysisToolbarCustomiser<T, CDTME>() : toolbarCustomiser;
     }
 

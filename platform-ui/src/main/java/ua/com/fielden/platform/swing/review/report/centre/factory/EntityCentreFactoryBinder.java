@@ -63,10 +63,10 @@ public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> implements I
 	this.criteriaGenerator = criteriaGenerator;
 	bindEntityCentreTo(new DefaultEntityCentreFactory<T>());
 	bindDefaultAnalysisTo(new DefaultGridAnalysisFactory<T>());
-	bindAnalysisTo(AnalysisType.SIMPLE, new DefaultChartAnalysisFactory<T>());
+	bindAnalysisTo(AnalysisType.SIMPLE, new DefaultChartAnalysisFactory<T>(entityFactory, criteriaGenerator, masterManager));
 	bindAnalysisTo(AnalysisType.LIFECYCLE, new DefaultLifecycleAnalysisFactory<T>());
-	bindAnalysisTo(AnalysisType.PIVOT, new DefaultPivotAnalysisFactory<T>());
-	bindAnalysisTo(AnalysisType.SENTINEL, new SentinelChartAnalysisFactory<T>());
+	bindAnalysisTo(AnalysisType.PIVOT, new DefaultPivotAnalysisFactory<T>(entityFactory, criteriaGenerator, masterManager));
+	bindAnalysisTo(AnalysisType.SENTINEL, new SentinelChartAnalysisFactory<T>(entityFactory, criteriaGenerator, masterManager));
     }
 
     /**

@@ -6,6 +6,7 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.report.centre.MultipleAnalysisEntityCentre;
 
 public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEntity<?>> extends CentreConfigurationView<T, MultipleAnalysisEntityCentre<T>> {
@@ -17,6 +18,19 @@ public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEnt
     public MultipleAnalysisEntityCentreConfigurationView(final CentreConfigurationModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	this.detailsCache = new HashMap<>();
+    }
+
+    @Override
+    public ICloseGuard canClose() {
+	for(final Map<Object, DetailsFrame> detailsFrames : detailsCache.values()){
+            for(final DetailsFrame frame : detailsFrames.values()){
+        	final ICloseGuard closeGuard = frame.canClose();
+        	if(closeGuard != null){
+        	    return closeGuard;
+        	}
+            }
+        }
+	return super.canClose();
     }
 
     @Override

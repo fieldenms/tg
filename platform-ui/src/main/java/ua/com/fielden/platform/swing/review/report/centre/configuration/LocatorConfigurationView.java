@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
 import java.awt.event.ActionEvent;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.Action;
 import javax.swing.JOptionPane;
@@ -8,7 +10,9 @@ import javax.swing.JOptionPane;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
+import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.SingleAnalysisEntityLocator;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
@@ -36,6 +40,11 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
      */
     private final boolean isMultipleSelection;
 
+    /**
+     * Holds a cache of details associated with this locator.
+     */
+    private final Map<Object, DetailsFrame> detailsCache;
+
     public LocatorConfigurationView(final LocatorConfigurationModel<T, R> model, final BlockingIndefiniteProgressLayer progressLayer, final boolean isMultipleSelection) {
 	super(model, progressLayer);
 	addOpenEventListener(createOpenEventListener());
@@ -43,7 +52,38 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 	this.save = createSaveAction();
 	this.saveAsDefault = createSaveAsDefaultAction();
 	this.loadDefault = createLoadDefaultAction();
+	this.detailsCache = new HashMap<>();
     }
+
+    /**
+     * Returns the cache of details associated with this locator.
+     *
+     * @return
+     */
+    public Map<Object, DetailsFrame> getDetailsCache() {
+	return detailsCache;
+    }
+
+    @Override
+    public ICloseGuard canClose() {
+	for (final DetailsFrame frame : detailsCache.values()) {
+	    final ICloseGuard unableToClose = frame.canClose();
+	    if(unableToClose != null){
+		return unableToClose;
+	    }
+	}
+	return super.canClose();
+    }
+
+    @Override
+    public void close() {
+	super.close();
+	for (final DetailsFrame frame : detailsCache.values()) {
+	    frame.close();
+	}
+	detailsCache.clear();
+    }
+
 
     @Override
     public String getInfo() {

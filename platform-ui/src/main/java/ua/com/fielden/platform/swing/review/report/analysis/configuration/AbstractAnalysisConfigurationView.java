@@ -15,6 +15,8 @@ import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
+import ua.com.fielden.platform.swing.review.details.IDetails;
+import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
@@ -25,6 +27,7 @@ import ua.com.fielden.platform.swing.review.report.events.AnalysisConfigurationE
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IAnalysisConfigurationEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
+import ua.com.fielden.platform.swing.view.ICloseHook;
 
 /**
  * The base class for all type of analysis.
@@ -34,7 +37,6 @@ import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventLis
  * @param <T> - The entity type for which this analysis was created.
  * @param <CDTME> - The type of {@link ICentreDomainTreeManagerAndEnhancer} that represent the centre/locator that owns this analysis.
  * @param <ADTM> - The type of {@link IAbstractAnalysisDomainTreeManager} that holds information for this analysis.
- * @param <LDT> - The type of data that this analysis returns after it's execution.
  * @param <VT> - The type of {@link AbstractAnalysisReview} that represent the analysis view.
  */
 public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTME extends IAbstractAnalysisDomainTreeManager, VT extends AbstractAnalysisReview<T, CDTME, ADTME>> extends AbstractConfigurationView<VT, AnalysisWizardView<T, CDTME>> {
@@ -46,10 +48,8 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      */
     private final AbstractEntityCentre<T, CDTME> owner;
 
-    /**
-     * Holds all details frame associated with entity and details report.
-     */
     private final Map<Object, DetailsFrame> detailsCache;
+    private final IDetailsCustomiser detailsCustomiser;
 
     /**
      * Analysis related actions:
@@ -64,23 +64,16 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
     public AbstractAnalysisConfigurationView(//
 	    final AbstractAnalysisConfigurationModel<T, CDTME> model, //
 	    final Map<Object, DetailsFrame> detailsCache, //
+	    final IDetailsCustomiser detailsCustomiser, //
 	    final AbstractEntityCentre<T, CDTME> owner, //
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	this.detailsCache = detailsCache;
+	this.detailsCustomiser = detailsCustomiser;
 	this.owner = owner;
 	this.save = createSaveAction();
 	this.remove = createRemoveAction();
 	addSelectionEventListener(createSelectionListener());
-    }
-
-    /**
-     * Returns the details cache.
-     *
-     * @return
-     */
-    public Map<Object, DetailsFrame> getDetailsCache() {
-	return detailsCache;
     }
 
     /**
@@ -165,7 +158,7 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      */
     public final void addDetailsFrame(final DetailsFrame frame) {
 	if(frame != null){
-	    getDetailsCache().put(frame.getAssociatedEntity(), frame);
+	    detailsCache.put(frame.getAssociatedEntity(), frame);
 	}
     }
 
@@ -186,19 +179,63 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      * @return
      */
     public final List<DetailsFrame> getDetailsFrames() {
-	return Collections.unmodifiableList(new ArrayList<DetailsFrame>(getDetailsCache().values()));
+	return Collections.unmodifiableList(new ArrayList<DetailsFrame>(detailsCache.values()));
     }
 
     /**
-     * Returns pop up window associated with this analysis report and specified object
+     * Returns pop up window associated with this analysis report and specified object.
      *
      * @param associatedObject
      * @return
      */
     public final DetailsFrame getDetailsFrame(final Object associatedObject) {
-	return getDetailsCache().get(associatedObject);
+	return detailsCache.get(associatedObject);
     }
 
+    /**
+     * Creates and shows details for the specified details parameter and it's type.
+     *
+     * @param detailsParam
+     */
+    public final <DT> void showDetails(final DT detailsParam, final Class<DT> detailsParamType) {
+	if(detailsCache == null || detailsCustomiser == null){
+	    throw new IllegalStateException("The details can not be created for this analysis, because details cache or details customiser is absent");
+	}
+	new BlockingLayerCommand<Void>("Details", getProgressLayer()) {
+
+	    private static final long serialVersionUID = 1986658954874008023L;
+
+	    @Override
+	    protected final Void action(final ActionEvent e) throws Exception {
+		return null;
+	    }
+
+	    @Override
+	    protected void postAction(final Void value) {
+		super.postAction(value);
+		DetailsFrame detailsFrame = getDetailsFrame(detailsParam);
+		if (detailsFrame == null) {
+		    final ICloseHook<DetailsFrame> detailsCloseHook = new ICloseHook<DetailsFrame>() {
+
+			@Override
+			public void closed(final DetailsFrame frame) {
+			    removeDetailsFrame(frame);
+			}
+		    };
+		    final IDetails<DT> details = detailsCustomiser.getDetails(detailsParamType);
+		    if(details == null){
+			throw new IllegalArgumentException("There are no details contract for the details parameter of " + detailsParamType.getSimpleName() + " type.");
+		    }
+		    detailsFrame = details.createDetailsView(detailsParam, detailsCloseHook);
+		    if(detailsFrame == null){
+			throw new IllegalArgumentException("The details frame can not be created for the specified details parameter " + detailsParam.toString());
+		    }
+		    addDetailsFrame(detailsFrame);
+		}
+		detailsFrame.setVisible(true);
+	    }
+	}.actionPerformed(null);
+    }
 
     @Override
     protected AnalysisWizardView<T, CDTME> createWizardView() {
@@ -218,6 +255,8 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 		switch(getModel().getMode()){
 		case REPORT : getPreviousView().select(); break;
 		case WIZARD : getPreviousWizard().select();break;
+		default:
+		    break;
 		}
 	    }
 	};

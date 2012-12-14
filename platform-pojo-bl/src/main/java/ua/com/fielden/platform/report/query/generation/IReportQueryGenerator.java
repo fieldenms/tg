@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IReportQueryGeneration<T extends AbstractEntity<?>> {
+public interface IReportQueryGenerator<T extends AbstractEntity<?>> {
 
     /**
      * Generates query model and returns the {@link AnalysisResultClassBundle} structure.

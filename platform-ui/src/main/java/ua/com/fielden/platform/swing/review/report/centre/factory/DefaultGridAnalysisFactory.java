@@ -7,6 +7,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisModel;
@@ -28,10 +29,13 @@ public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements 
 	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
 	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
 	    final String name, //
-	    final Map<Object, DetailsFrame> detailsCache,//
+	    final Map<Object, DetailsFrame> detailsCache, //
 	    final BlockingIndefiniteProgressLayer progressLayer) {
-	final GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> analysisModel =GridConfigurationModel.createWithCustomQueryCustomiser(criteria, queryCustomiser);
-	return GridConfigurationView.createMainDetailsWithSpecificCustomiser(analysisModel, owner, toolbarCustomiser, progressLayer);
+	return GridConfigurationView.createMainDetailsWithSpecificCustomiser(createAnalysisModel(criteria), detailsCache, null, owner, toolbarCustomiser, progressLayer);
+    }
+
+    protected GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> createAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria){
+	return GridConfigurationModel.createWithCustomQueryCustomiser(criteria, queryCustomiser);
     }
 
     @SuppressWarnings("unchecked")
@@ -48,5 +52,12 @@ public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements 
 	return this;
     }
 
+    public IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> getQueryCustomiser() {
+	return queryCustomiser;
+    }
 
+    @Override
+    public IAnalysisFactory<T, GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
+	throw new UnsupportedOperationException("The details are not supported yet for the main grid analysis");
+    }
 }
