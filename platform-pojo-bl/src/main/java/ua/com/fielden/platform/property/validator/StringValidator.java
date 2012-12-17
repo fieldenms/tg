@@ -15,10 +15,9 @@ import ua.com.fielden.platform.error.Result;
  */
 public class StringValidator implements IBeforeChangeEventHandler<String> {
 
-    private final String regex;
+    private String regex;
 
-    public StringValidator(final String regex) {
-	this.regex = regex;
+    public StringValidator() {
     }
 
     @Override
