@@ -61,7 +61,7 @@ public class AttachmentEntityAssociationModel extends UmDetailsWithCrudAndUpdate
     }
 
     private Command<File> createDownloadAttachmentCommand() {
-	final Command<File> command = new AbstractDownloadAttachmentAction(getController().getAttachmentController(), blockingLayerProvider) {
+	final Command<File> command = new AbstractDownloadAttachmentAction(getCompanion().getAttachmentController(), blockingLayerProvider) {
 	    @Override
 	    protected Attachment getAttachment() {
 		return getManagedEntity().getAttachment();

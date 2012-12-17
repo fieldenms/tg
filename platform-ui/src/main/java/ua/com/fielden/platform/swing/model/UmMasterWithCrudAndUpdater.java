@@ -24,14 +24,14 @@ public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity<?>, C 
     private final FrameTitleUpdater titleUpdater;
     private final IUmViewOwner owner;
 
-    protected UmMasterWithCrudAndUpdater(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C controller, final MasterPropertyBinder<T> propertyBinder, final fetch<T> fm, final FrameTitleUpdater titleUpdater, final IUmViewOwner owner, final boolean lazy) {
-	super(entityProducer, cache, entity, controller, propertyBinder, fm, lazy);
+    protected UmMasterWithCrudAndUpdater(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C companion, final MasterPropertyBinder<T> propertyBinder, final fetch<T> fm, final FrameTitleUpdater titleUpdater, final IUmViewOwner owner, final boolean lazy) {
+	super(entityProducer, cache, entity, companion, propertyBinder, fm, lazy);
 	this.titleUpdater = titleUpdater;
 	this.owner = owner;
     }
 
-    protected UmMasterWithCrudAndUpdater(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C controller, final MasterPropertyBinder<T> propertyBinder, final fetch<T> fm, final FrameTitleUpdater titleUpdater, final boolean lazy) {
-	this(entityProducer, cache, entity, controller, propertyBinder, fm, titleUpdater, null, lazy);
+    protected UmMasterWithCrudAndUpdater(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C companion, final MasterPropertyBinder<T> propertyBinder, final fetch<T> fm, final FrameTitleUpdater titleUpdater, final boolean lazy) {
+	this(entityProducer, cache, entity, companion, propertyBinder, fm, titleUpdater, null, lazy);
     }
 
     protected String now() {

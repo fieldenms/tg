@@ -51,8 +51,8 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
     // its value should be changed strictly on EDT in order to ensure thread safety
     private boolean isModifying = false;
 
-    protected UmDetailsWithCrudMany(final M entity, final C controller, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm, final PropertyTableModel<D> tableModel, final boolean lazy) {
-	super(entity, controller, propertyBinder, fm, lazy);
+    protected UmDetailsWithCrudMany(final M entity, final C companion, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm, final PropertyTableModel<D> tableModel, final boolean lazy) {
+	super(entity, companion, propertyBinder, fm, lazy);
 	this.tableModel = tableModel;
 	onRowSelect = new ListSelectionListener() {
 	    private int oldIndex = -1;
@@ -88,7 +88,7 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
 
     /** A convenient method for loading details. Could potentially be overridden, but unlikely there should be a reason for that. */
     protected List<D> loadDetails() {
-	return getController().findDetails(getEntity(), getFetchModel(), Integer.MAX_VALUE).data();
+	return getCompanion().findDetails(getEntity(), getFetchModel(), Integer.MAX_VALUE).data();
     }
 
     //////////////////////////////////////////////////////////////
@@ -110,7 +110,7 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
 
     @Override
     protected void postInit(final BlockingIndefiniteProgressPane blockingPane) {
-	setEditors(buildEditors(getEntity(), getController(), getPropertyBinder()));
+	setEditors(buildEditors(getEntity(), getCompanion(), getPropertyBinder()));
 	getView().buildUi();
 
 	getTableModel().clearInstances();
@@ -355,7 +355,7 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
 		    return false;
 		}
 
-		// if the item is not persistent then it can be safely deleted -- the responsibility for deleting non-persistent entity lies on the relevant controller
+		// if the item is not persistent then it can be safely deleted -- the responsibility for deleting non-persistent entity relies on the relevant companion
 		if (!getManagedEntity().isPersisted()) {
 		    return true;
 		} else {
@@ -369,7 +369,7 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
 		// wait before the commit process finish
 		getManagedEntity().isValid();
 
-		getController().deleteDetails(getEntity(), getManagedEntity());
+		getCompanion().deleteDetails(getEntity(), getManagedEntity());
 
 		return loadDetails();
 	    }
@@ -419,7 +419,7 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
 		    // wait for all the values entered into controls to be flushed (committed)
 		    final Result res = getManagedEntity().isValid();
 		    if (res.isSuccessful()) {
-			setManagedEntity(getController().saveDetails(getEntity(), getManagedEntity()));
+			setManagedEntity(getCompanion().saveDetails(getEntity(), getManagedEntity()));
 			return new Result(getManagedEntity(), "All is cool.");
 		    } else {
 			return res;

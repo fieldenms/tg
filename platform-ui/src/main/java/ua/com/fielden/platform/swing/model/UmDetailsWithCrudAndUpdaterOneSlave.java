@@ -38,7 +38,7 @@ public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEnti
     private final UmDetailsWithCrudAndUpdaterOne<M, D, C> masterModel;
 
     protected UmDetailsWithCrudAndUpdaterOneSlave(final UmDetailsWithCrudAndUpdaterOne<M, D, C> masterModel) {
-	super(masterModel.getEntity(), masterModel.getController(), masterModel.getPropertyBinder(), masterModel.getFetchModel(), masterModel.getTitleUpdater());
+	super(masterModel.getEntity(), masterModel.getCompanion(), masterModel.getPropertyBinder(), masterModel.getFetchModel(), masterModel.getTitleUpdater());
 	this.masterModel = masterModel;
     }
 
@@ -73,7 +73,7 @@ public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEnti
     @Override
     protected void postInit(final BlockingIndefiniteProgressPane blockingPane) {
 	if (!getMasterModel().isInitialised()) {
-	    getMasterModel().setEditors(getMasterModel().buildEditors(getEntity(), getController(), getPropertyBinder()));
+	    getMasterModel().setEditors(getMasterModel().buildEditors(getEntity(), getCompanion(), getPropertyBinder()));
 	}
 	getView().buildUi();
 
@@ -122,7 +122,7 @@ public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEnti
     }
 
     @Override
-    protected Map<String, IPropertyEditor> buildEditors(final M entity, final C controller, final ILightweightPropertyBinder<D> propertyBinder) {
+    protected Map<String, IPropertyEditor> buildEditors(final M entity, final C companion, final ILightweightPropertyBinder<D> propertyBinder) {
 	throw new IllegalStateException("Slave model should not build editors.");
     };
 
@@ -259,7 +259,7 @@ public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEnti
 		    // wait before the commit process finish
 		    final Result result = getManagedEntity().isValid();
 		    if (result.isSuccessful()) {
-			setManagedEntity(getController().saveDetails(getEntity(), getManagedEntity()));
+			setManagedEntity(getCompanion().saveDetails(getEntity(), getManagedEntity()));
 		    }
 		    return result;
 		} catch (final Exception ex) {

@@ -36,7 +36,7 @@ import ua.com.fielden.platform.swing.view.IEntityMasterCache;
  * @param <T>
  *            -- entity type.
  * @param <C>
- *            -- controller type.
+ *            -- companion type.
  */
 public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IEntityDao<T>> extends UmMaster<T, C> {
 
@@ -47,8 +47,8 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
     /** Responsible for creation of new entity instances */
     private final IEntityProducer<T> entityProducer;
 
-    protected UmMasterWithCrud(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C controller, final ILightweightPropertyBinder<T> propertyBinder, final fetch<T> fm, final boolean lazy) {
-	super(entity, controller, propertyBinder, fm, lazy);
+    protected UmMasterWithCrud(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C companion, final ILightweightPropertyBinder<T> propertyBinder, final fetch<T> fm, final boolean lazy) {
+	super(entity, companion, propertyBinder, fm, lazy);
 	this.cache = cache;
 	this.entityProducer = entityProducer;
     }
@@ -63,16 +63,16 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
 	final T entity = getEntity().getId() == id ? getEntity() : getPrevEntity();
 
 	if (forceRetrieval) {
-	    return getFetchModel() != null ? getController().findById(id, getFetchModel()) : getController().findById(id);
-	} else if (getController().isStale(id, entity.getVersion())) {
-	    return getFetchModel() != null ? getController().findById(id, getFetchModel()) : getController().findById(id);
+	    return getFetchModel() != null ? getCompanion().findById(id, getFetchModel()) : getCompanion().findById(id);
+	} else if (getCompanion().isStale(id, entity.getVersion())) {
+	    return getFetchModel() != null ? getCompanion().findById(id, getFetchModel()) : getCompanion().findById(id);
 	} else {
 	    return entity;
 	}
     }
 
     @Override
-    protected Map<String, IPropertyEditor> buildEditors(final T entity, final C controller, final ILightweightPropertyBinder<T> propertyBinder) {
+    protected Map<String, IPropertyEditor> buildEditors(final T entity, final C companion, final ILightweightPropertyBinder<T> propertyBinder) {
 	return propertyBinder.bind(entity);
     }
 
@@ -309,7 +309,7 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
 		    // wait before the commit process finish
 		    final Result result = getManagedEntity().isValid();
 		    if (result.isSuccessful()) {
-			setEntity(getController().save(getManagedEntity()));
+			setEntity(getCompanion().save(getManagedEntity()));
 		    }
 		    return result;
 		} catch (final Exception ex) {
@@ -368,7 +368,7 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
 	    protected Void action(final ActionEvent event) throws Exception {
 		try {
 		    if (getManagedEntity().isPersisted()) {
-			getController().delete(getManagedEntity());
+			getCompanion().delete(getManagedEntity());
 		    }
 		} finally {
 		    notifyActionStageChange(ActionStage.DELETE_ACTION);

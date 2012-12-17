@@ -95,7 +95,7 @@ public abstract class UModel<M extends AbstractEntity<?>, D extends AbstractEnti
     }
 
     private M entity;
-    private final C controller;
+    private final C companion;
     private final ILightweightPropertyBinder<D> propertyBinder;
     private UmState state = UmState.VIEW;
     private Map<String, IPropertyEditor> editors = new HashMap<String, IPropertyEditor>();
@@ -121,20 +121,20 @@ public abstract class UModel<M extends AbstractEntity<?>, D extends AbstractEnti
      *
      * @param entity
      *            -- managed or master entity instance.
-     * @param controller
-     *            -- controller required for performing various entity manipulation as a result of user action.
+     * @param companion
+     *            -- companioin object that is required for performing various entity manipulation as a result of user action.
      * @param propertyBinder
      *            -- property binder, which is used to create bounded editors for a managed entity.
      * @param lazy
      *            -- a flag indicating weather this model should be initialised lazily.
      */
-    protected UModel(final M entity, final C controller, final ILightweightPropertyBinder<D> propertyBinder, final boolean lazy) {
+    protected UModel(final M entity, final C companion, final ILightweightPropertyBinder<D> propertyBinder, final boolean lazy) {
 	this.entity = entity;
-	this.controller = controller;
+	this.companion = companion;
 	this.propertyBinder = propertyBinder;
 	this.initialised = !lazy;
 	if (!lazy) {
-	    this.editors = buildEditors(entity, controller, propertyBinder);
+	    this.editors = buildEditors(entity, companion, propertyBinder);
 	}
 
 	newAction = createNewAction();
@@ -282,7 +282,7 @@ public abstract class UModel<M extends AbstractEntity<?>, D extends AbstractEnti
 	return entity.isEditable().isSuccessful();
     }
 
-    protected abstract Map<String, IPropertyEditor> buildEditors(M entity, C controller, final ILightweightPropertyBinder<D> propertyBinder);
+    protected abstract Map<String, IPropertyEditor> buildEditors(final M entity, final C companion, final ILightweightPropertyBinder<D> propertyBinder);
 
     protected abstract D getManagedEntity();
 
@@ -372,8 +372,8 @@ public abstract class UModel<M extends AbstractEntity<?>, D extends AbstractEnti
 	this.entity = entity;
     }
 
-    public C getController() {
-	return controller;
+    public C getCompanion() {
+	return companion;
     }
 
     public ILightweightPropertyBinder<D> getPropertyBinder() {

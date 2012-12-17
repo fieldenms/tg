@@ -29,13 +29,13 @@ import ua.com.fielden.platform.swing.ei.editors.development.ILightweightProperty
  */
 public abstract class UmDetailsWithCrudOne<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao<M, D>> extends UmDetailsWithCrud<M, D, C> {
 
-    protected UmDetailsWithCrudOne(final M entity, final C controller, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm) {
-	super(entity, controller, propertyBinder, fm, true);
+    protected UmDetailsWithCrudOne(final M entity, final C companion, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm) {
+	super(entity, companion, propertyBinder, fm, true);
     }
 
     /** A convenient method for loading details entity. Could potentially be overridden, but unlikely there should be a reason for that. */
     protected D loadDetails() {
-	final List<D> list = getController().findDetails(getEntity(), getFetchModel(), Integer.MAX_VALUE).data();
+	final List<D> list = getCompanion().findDetails(getEntity(), getFetchModel(), Integer.MAX_VALUE).data();
 	// there should really be just one or zero elements; if there are more this is an incorrect model to be used or the data is corrupted.
 	if (list.size() == 1) {
 	    return list.get(0);
@@ -64,7 +64,7 @@ public abstract class UmDetailsWithCrudOne<M extends AbstractEntity<?>, D extend
 
     @Override
     protected void postInit(final BlockingIndefiniteProgressPane blockingPane) {
-	setEditors(buildEditors(getEntity(), getController(), getPropertyBinder()));
+	setEditors(buildEditors(getEntity(), getCompanion(), getPropertyBinder()));
 	getView().buildUi();
 
 	setManagedEntity(tmpDetails);
@@ -219,7 +219,7 @@ public abstract class UmDetailsWithCrudOne<M extends AbstractEntity<?>, D extend
 		getManagedEntity().isValid();
 
 		if (getManagedEntity().isPersisted()) {
-		    getController().deleteDetails(getEntity(), getManagedEntity());
+		    getCompanion().deleteDetails(getEntity(), getManagedEntity());
 		}
 
 		return loadDetails();
@@ -258,7 +258,7 @@ public abstract class UmDetailsWithCrudOne<M extends AbstractEntity<?>, D extend
 		    // wait before the commit process finish
 		    final Result result = getManagedEntity().isValid();
 		    if (result.isSuccessful()) {
-			setManagedEntity(getController().saveDetails(getEntity(), getManagedEntity()));
+			setManagedEntity(getCompanion().saveDetails(getEntity(), getManagedEntity()));
 		    }
 		    return result;
 		} catch (final Exception ex) {

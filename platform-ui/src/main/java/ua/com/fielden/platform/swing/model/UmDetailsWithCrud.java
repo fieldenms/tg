@@ -26,8 +26,8 @@ public abstract class UmDetailsWithCrud<M extends AbstractEntity<?>, D extends A
      */
     private D managedEntity;
 
-    protected UmDetailsWithCrud(final M entity, final C controller, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm, final boolean lazy) {
-	super(entity, controller, propertyBinder, fm, lazy);
+    protected UmDetailsWithCrud(final M entity, final C companion, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm, final boolean lazy) {
+	super(entity, companion, propertyBinder, fm, lazy);
     }
 
     /**
@@ -44,7 +44,7 @@ public abstract class UmDetailsWithCrud<M extends AbstractEntity<?>, D extends A
      * entity.
      */
     @Override
-    protected Map<String, IPropertyEditor> buildEditors(final M entity, final C controller, final ILightweightPropertyBinder<D> propertyBinder) {
+    protected Map<String, IPropertyEditor> buildEditors(final M entity, final C companion, final ILightweightPropertyBinder<D> propertyBinder) {
 	setManagedEntity(newEntity(entity.getEntityFactory()));
 	return propertyBinder.bind(getManagedEntity());
     }

@@ -13,7 +13,7 @@ import ua.com.fielden.platform.swing.ei.editors.development.ILightweightProperty
  * @param <T>
  *            -- entity type.
  * @param <C>
- *            -- controller type.
+ *            -- companion type.
  */
 public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao<M, D>> extends UModel<M, D, C> {
     /** Represents an entity model used for details entity fetching and initialisation. */
@@ -26,8 +26,8 @@ public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractE
      *
      * @param entity
      *            -- an instance of a master entity.
-     * @param controller
-     *            -- controller used for managing details entity instances.
+     * @param companion
+     *            -- companion used for managing details entity instances.
      * @param propertyBinder
      *            -- builder for instantiation of editors for editing details entity instance.
      * @param fm
@@ -35,8 +35,8 @@ public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractE
      * @param lazy
      *            -- identifies whether this is a lazy model.
      */
-    protected UmDetails(final M entity, final C controller, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm, final boolean lazy) {
-	super(entity, controller, propertyBinder, lazy);
+    protected UmDetails(final M entity, final C companion, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm, final boolean lazy) {
+	super(entity, companion, propertyBinder, lazy);
 	this.fm = fm;
     }
 

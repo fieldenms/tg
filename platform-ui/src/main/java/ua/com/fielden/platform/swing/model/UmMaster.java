@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.swing.model;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 /**
  * This is convenient UI model based on {@link UModel} simplifying model creation of a single stand alone (or simply master) entity. In this model the entity and managed entity is
@@ -16,14 +16,14 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
  * @param <T>
  *            -- entity type.
  * @param <C>
- *            -- controller type.
+ *            -- companion type.
  */
 public abstract class UmMaster<T extends AbstractEntity<?>, C> extends UModel<T, T, C> {
     /** Represents an entity model used for entity fetching and initialisation. */
     private final fetch<T> fm;
 
-    protected UmMaster(final T entity, final C controller, final ILightweightPropertyBinder<T> propertyBinder, final fetch<T> fm, final boolean lazy) {
-	super(entity, controller, propertyBinder, lazy);
+    protected UmMaster(final T entity, final C companion, final ILightweightPropertyBinder<T> propertyBinder, final fetch<T> fm, final boolean lazy) {
+	super(entity, companion, propertyBinder, lazy);
 	this.fm = fm != null ? fm : fetchAll((Class<T>)entity.getType());
 	if (shouldEnforceEntityLoadingDuringInstantiation()) {
 	    setEntity(findById(entity.getId(), true));

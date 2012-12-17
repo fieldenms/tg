@@ -10,9 +10,9 @@ import ua.com.fielden.platform.swing.ei.editors.development.ILightweightProperty
 
 /**
  * This UI model should be used only in cases where no real model is required, but it is necessary to use a view that by design requires some model.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @SuppressWarnings("unchecked")
 public class DefaultUiModel extends UModel {
@@ -35,7 +35,7 @@ public class DefaultUiModel extends UModel {
     }
 
     @Override
-    protected Map buildEditors(final AbstractEntity entity, final Object controller, final ILightweightPropertyBinder propertyBinder) {
+    protected Map buildEditors(final AbstractEntity entity, final Object companion, final ILightweightPropertyBinder propertyBinder) {
 	return null;
     }
 
