@@ -50,7 +50,7 @@ public class SimpleCompositeEntityModel extends UmMasterWithCrudAndUpdater<Simpl
 
     @Override
     protected void postInit(final BlockingIndefiniteProgressPane blockingPane) {
-	setEditors(buildEditors(getEntity(), getController(), getPropertyBinder()));
+	setEditors(buildEditors(getEntity(), getCompanion(), getPropertyBinder()));
 	getView().buildUi();
 	setState(UmState.VIEW);
     }
