@@ -46,7 +46,7 @@ public class EnumUserType<E extends Enum<E>> implements UserType, IUserTypeInsta
     }
 
     public Object instantiate(final Object argument, final EntityFactory factory) {
-	return Enum.valueOf(clazz, (String) argument);
+	return Enum.valueOf(clazz, argument.toString() /*(String) argument*/);
     }
 
     @SuppressWarnings("unchecked")
