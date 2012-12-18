@@ -19,7 +19,7 @@ public class DefaultGridAnalysisToolbarCustomiser<T extends AbstractEntity<?>, C
 	    final ActionPanelBuilder panelBuilder = new ActionPanelBuilder();
 	    return addMasterRelatedButtons(analysisView, panelBuilder);
 	}
-	return null;
+	return new ActionPanelBuilder();
     }
 
 

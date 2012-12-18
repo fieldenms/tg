@@ -56,6 +56,10 @@ public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements 
 	return queryCustomiser;
     }
 
+    public IToolbarCustomiser<GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer>> getToolbarCustomiser() {
+	return toolbarCustomiser;
+    }
+
     @Override
     public IAnalysisFactory<T, GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
 	throw new UnsupportedOperationException("The details are not supported yet for the main grid analysis");
