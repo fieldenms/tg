@@ -10,9 +10,11 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
-import ua.com.fielden.platform.swing.review.details.customiser.AnalysisDetailsCustomiser;
+import ua.com.fielden.platform.swing.review.details.DefaultGroupingAnalysisDetails;
 import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
+import ua.com.fielden.platform.swing.review.details.customiser.MapBasedDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.analysis.chart.AnalysisDetailsData;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
@@ -30,7 +32,8 @@ public class DefaultPivotAnalysisFactory<T extends AbstractEntity<?>> implements
 	    final EntityFactory entityFactory, //
 	    final ICriteriaGenerator criteriaGenerator, //
 	    final IEntityMasterManager masterManager){
-	detailsCustomiser = new AnalysisDetailsCustomiser<>(entityFactory, criteriaGenerator, masterManager);
+	detailsCustomiser = new MapBasedDetailsCustomiser()//
+		.addDetails(AnalysisDetailsData.class, new DefaultGroupingAnalysisDetails<T>(entityFactory, criteriaGenerator, masterManager));
     }
 
     @Override

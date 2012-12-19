@@ -563,7 +563,7 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	};
     }
 
-    private void performCustomAction(final AnalysisDataEvent<ChartMouseEvent> clickedData) {
+    protected void performCustomAction(final AnalysisDataEvent<ChartMouseEvent> clickedData) {
 	System.out.println("Custom lifecycle action");
     }
 }

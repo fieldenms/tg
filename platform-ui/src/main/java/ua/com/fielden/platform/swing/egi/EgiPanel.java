@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.swing.egi;
 
+import static javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION;
 import static javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION;
-import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
@@ -476,9 +476,8 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
     private EntityGridInspector<T> createEgi(final PropertyTableModel<?> model) {
 	final EntityGridInspector<T> egi = new EntityGridInspector(model, false);
 	egi.setRowHeight(ROW_HEIGHT);
-	egi.setSelectionMode(SINGLE_SELECTION);
+	egi.setSelectionMode(MULTIPLE_INTERVAL_SELECTION);
 	egi.setSingleExpansion(true);
-
 	egi.getColumnModel().getSelectionModel().setSelectionMode(SINGLE_INTERVAL_SELECTION);
 	return egi;
     }

@@ -17,10 +17,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> {
 
-    private IDetailsCustomiser detailsCustomiser;
-
     public DefaultLifecycleAnalysisFactory(){
-	this.detailsCustomiser = null;
     }
 
     @Override
@@ -31,7 +28,7 @@ public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implem
 	    final Map<Object, DetailsFrame> detailsCache,//
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	final LifecycleAnalysisConfigurationModel<T> analysisModel = new LifecycleAnalysisConfigurationModel<T>(criteria, name);
-	return new LifecycleAnalysisConfigurationView<T>(analysisModel, detailsCache, detailsCustomiser, owner, progressLayer);
+	return new LifecycleAnalysisConfigurationView<T>(analysisModel, detailsCache, null, owner, progressLayer);
         }
 
     @Override
@@ -46,7 +43,6 @@ public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implem
 
     @Override
     public IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
-	this.detailsCustomiser = detailsCustomiser;
-	return this;
+	throw new UnsupportedOperationException("The details are not supported yet for the default lifecycle analysis.");
     }
 }
