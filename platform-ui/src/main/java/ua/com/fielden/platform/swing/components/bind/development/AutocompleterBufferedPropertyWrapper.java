@@ -586,9 +586,16 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
 				that =  value.getKey();
 			    }
 
-			    if (bufferedValue.equals(that)) {
+//			    if (bufferedValue.equals(that)) {
+//				return false;
+//			    }
+			    // TODO take into account case sensitivity from upper logic
+			    if (bufferedValue instanceof String && ((String) bufferedValue).equalsIgnoreCase((String) that)) {
+				return false;
+			    } else if (bufferedValue.equals(that)) {
 				return false;
 			    }
+
 			}
 		    }
 		    return true;
