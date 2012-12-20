@@ -251,10 +251,10 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
     private ValueProperty create(final Class<T> clazz, final String propertyName) {
 	if ("".equals(propertyName)) { // high-level entity:
 	    final Pair<String, String> td = TitlesDescsGetter.getEntityTitleAndDesc(clazz);
-	    return new ValueProperty(td.getKey(), "<html>Distribute by high-level <b><i>" + td.getValue() + "</i></b></html>", propertyName);
+	    return new ValueProperty(propertyName, td.getKey(), "<html>Distribute by high-level <b><i>" + td.getValue() + "</i></b></html>");
 	} else {
-	    return new ValueProperty(TitlesDescsGetter.getTitleAndDesc(propertyName, clazz).getKey(), "<html>Distribute by <i>"
-		    + TitlesDescsGetter.removeHtmlTag(TitlesDescsGetter.getFullTitleAndDesc(propertyName, clazz).getValue()) + "</i></html>", propertyName);
+	    return new ValueProperty(propertyName, TitlesDescsGetter.getTitleAndDesc(propertyName, clazz).getKey(), "<html>Distribute by <i>"
+		    + TitlesDescsGetter.removeHtmlTag(TitlesDescsGetter.getFullTitleAndDesc(propertyName, clazz).getValue()) + "</i></html>");
 	}
     }
 

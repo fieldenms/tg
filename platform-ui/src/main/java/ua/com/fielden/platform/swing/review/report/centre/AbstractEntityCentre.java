@@ -275,6 +275,42 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     }
 
     /**
+     * Creates and returns the panel that contains default, run, export and other buttons those operate on criteria or review panel.
+     *
+     * @return
+     */
+    protected JPanel createControlPanel() {
+    
+        final List<JComponent> controlButtons = new ArrayList<JComponent>();
+        final StringBuffer columnConstraints = new StringBuffer("");
+    
+        if(getCriteriaPanel() != null && getCriteriaPanel().canConfigure()){
+            columnConstraints.append("[70::,fill]");
+            controlButtons.add(new JToggleButton(getCriteriaPanel().getSwitchAction()));
+        }
+        columnConstraints.append(addToComponents(controlButtons, "[120::,fill]", getCustomActionChanger()));
+    
+        final JPanel controlPanel = new JPanel(new MigLayout("fill, insets 0", "[70::,fill]" + columnConstraints.toString() + "20:push[][][][]20[]push[:70:,fill][:70:,fill]", "[c,fill]"));
+    
+        controlPanel.add(newButton(getDefaultAction(), true));
+        for(final JComponent component : controlButtons){
+            controlPanel.add(component);
+        }
+    
+        controlPanel.add(newButton(getPaginator().getFirst(), false));
+        controlPanel.add(newButton(getPaginator().getPrev(), false));
+        controlPanel.add(newButton(getPaginator().getNext(), false));
+        controlPanel.add(newButton(getPaginator().getLast(), false));
+        controlPanel.add(feedBack);
+    
+        controlPanel.add(newButton(getExportAction(), true));
+        controlPanel.add(newButton(getRunAction(), true));
+    
+        return controlPanel;
+    
+    }
+
+    /**
      * Creates list of actions for action change button.
      *
      * @return
@@ -437,42 +473,6 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 		}
 	    }
 	};
-
-    }
-
-    /**
-     * Creates and returns the panel that contains default, run, export and other buttons those operate on criteria or review panel.
-     *
-     * @return
-     */
-    private JPanel createControlPanel() {
-
-	final List<JComponent> controlButtons = new ArrayList<JComponent>();
-	final StringBuffer columnConstraints = new StringBuffer("");
-
-	if(getCriteriaPanel() != null && getCriteriaPanel().canConfigure()){
-	    columnConstraints.append("[70::,fill]");
-	    controlButtons.add(new JToggleButton(getCriteriaPanel().getSwitchAction()));
-	}
-	columnConstraints.append(addToComponents(controlButtons, "[120::,fill]", getCustomActionChanger()));
-
-	final JPanel controlPanel = new JPanel(new MigLayout("fill, insets 0", "[70::,fill]" + columnConstraints.toString() + "20:push[][][][]20[]push[:70:,fill][:70:,fill]", "[c,fill]"));
-
-	controlPanel.add(newButton(getDefaultAction(), true));
-	for(final JComponent component : controlButtons){
-	    controlPanel.add(component);
-	}
-
-	controlPanel.add(newButton(getPaginator().getFirst(), false));
-	controlPanel.add(newButton(getPaginator().getPrev(), false));
-	controlPanel.add(newButton(getPaginator().getNext(), false));
-	controlPanel.add(newButton(getPaginator().getLast(), false));
-	controlPanel.add(feedBack);
-
-	controlPanel.add(newButton(getExportAction(), true));
-	controlPanel.add(newButton(getRunAction(), true));
-
-	return controlPanel;
 
     }
 

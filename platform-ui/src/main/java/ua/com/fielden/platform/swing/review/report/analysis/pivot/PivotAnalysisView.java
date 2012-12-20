@@ -40,7 +40,7 @@ import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRendere
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
-import ua.com.fielden.platform.swing.review.report.analysis.chart.AnalysisDetailsData;
+import ua.com.fielden.platform.swing.review.details.AnalysisDetailsData;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;

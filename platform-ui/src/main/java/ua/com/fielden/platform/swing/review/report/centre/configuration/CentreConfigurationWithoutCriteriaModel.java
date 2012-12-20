@@ -17,7 +17,7 @@ import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuild
 import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisFactory;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
-public class AnalysisDetailsConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
+public class CentreConfigurationWithoutCriteriaModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     /**
      * The associated analysis builder.
@@ -30,7 +30,7 @@ public class AnalysisDetailsConfigurationModel<T extends AbstractEntity<?>> exte
     private final ICentreDomainTreeManagerAndEnhancer cdtme;
 
     /**
-     * Initiates this {@link AnalysisDetailsConfigurationModel} with default {@link IAnalysisBuilder}.
+     * Initiates this {@link CentreConfigurationWithoutCriteriaModel} with default {@link IAnalysisBuilder}.
      *
      * @param entityType
      * @param name
@@ -39,12 +39,12 @@ public class AnalysisDetailsConfigurationModel<T extends AbstractEntity<?>> exte
      * @param masterManager
      * @param cdtme
      */
-    public AnalysisDetailsConfigurationModel(final Class<T> entityType, final String name, final EntityFactory entityFactory, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+    public CentreConfigurationWithoutCriteriaModel(final Class<T> entityType, final String name, final EntityFactory entityFactory, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final ICentreDomainTreeManagerAndEnhancer cdtme) {
 	this(entityType, name, null, entityFactory, criteriaGenerator, masterManager, cdtme);
     }
 
     /**
-     * Initiates this {@link AnalysisDetailsConfigurationModel} with specified {@link IAnalysisBuilder}. If the specified {@link IAnalysisBuilder} is null then the default {@link IAnalysisBuilder} will be created.
+     * Initiates this {@link CentreConfigurationWithoutCriteriaModel} with specified {@link IAnalysisBuilder}. If the specified {@link IAnalysisBuilder} is null then the default {@link IAnalysisBuilder} will be created.
      *
      * @param entityType
      * @param name
@@ -54,7 +54,7 @@ public class AnalysisDetailsConfigurationModel<T extends AbstractEntity<?>> exte
      * @param masterManager
      * @param cdtme
      */
-    public AnalysisDetailsConfigurationModel(final Class<T> entityType, final String name, final IAnalysisFactory<T, ?> defaultAnalysisFactory, final EntityFactory entityFactory, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+    public CentreConfigurationWithoutCriteriaModel(final Class<T> entityType, final String name, final IAnalysisFactory<T, ?> defaultAnalysisFactory, final EntityFactory entityFactory, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final ICentreDomainTreeManagerAndEnhancer cdtme) {
 	super(entityType, name, entityFactory, masterManager, criteriaGenerator);
 	this.analysisBuilder = new DefaultAnalysisBuilder<>(defaultAnalysisFactory);
 	this.cdtme = cdtme;

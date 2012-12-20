@@ -68,6 +68,7 @@ import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRendere
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
+import ua.com.fielden.platform.swing.review.details.AnalysisDetailsData;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;

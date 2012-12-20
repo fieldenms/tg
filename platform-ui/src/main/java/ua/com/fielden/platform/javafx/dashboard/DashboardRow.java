@@ -44,8 +44,8 @@ import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.report.centre.configuration.AnalysisDetailsConfigurationModel;
-import ua.com.fielden.platform.swing.review.report.centre.configuration.AnalysisDetailsConfigurationView;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationWithoutCriteriaModel;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationWithoutCriteriaView;
 import ua.com.fielden.platform.swing.view.ICloseHook;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -194,9 +194,9 @@ public class DashboardRow<T extends AbstractEntity<?>> {
 		cdtme.setRunAutomatically(true);
 		setValueFor(rootType, cdtme, choosenItem);
 		final String frameTitle = createFrameTitle(choosenItem);
-		final AnalysisDetailsConfigurationModel<T> detailsConfigModel = new AnalysisDetailsConfigurationModel<>(rootType, frameTitle, entityFactory, criteriaGenerator, masterManager, cdtme);
+		final CentreConfigurationWithoutCriteriaModel<T> detailsConfigModel = new CentreConfigurationWithoutCriteriaModel<>(rootType, frameTitle, entityFactory, criteriaGenerator, masterManager, cdtme);
 		final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "Loading");
-		final AnalysisDetailsConfigurationView<T> detailsConfigView = new AnalysisDetailsConfigurationView<>(detailsConfigModel, progressLayer);
+		final CentreConfigurationWithoutCriteriaView<T> detailsConfigView = new CentreConfigurationWithoutCriteriaView<>(detailsConfigModel, progressLayer);
 		progressLayer.setView(detailsConfigView);
 		final DetailsFrame detailsFrame = new DetailsFrame(choosenItem.getValue(), frameTitle, progressLayer, new ICloseHook<DetailsFrame>() {
 		    @Override

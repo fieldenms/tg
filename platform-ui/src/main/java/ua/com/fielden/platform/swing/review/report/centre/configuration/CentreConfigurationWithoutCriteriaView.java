@@ -7,11 +7,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
-import ua.com.fielden.platform.swing.review.report.centre.AnalysisDetailsEntityCentre;
+import ua.com.fielden.platform.swing.review.report.centre.EntityCentreWithoutSelectionCriteria;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
 import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardView;
 
-public class AnalysisDetailsConfigurationView<T extends AbstractEntity<?>> extends AbstractConfigurationView<AnalysisDetailsEntityCentre<T>, AbstractWizardView<T>> {
+public class CentreConfigurationWithoutCriteriaView<T extends AbstractEntity<?>> extends AbstractConfigurationView<EntityCentreWithoutSelectionCriteria<T>, AbstractWizardView<T>> {
 
     private static final long serialVersionUID = 320053049450359443L;
 
@@ -20,7 +20,7 @@ public class AnalysisDetailsConfigurationView<T extends AbstractEntity<?>> exten
      */
     private final Map<Object, DetailsFrame> detailsCache;
 
-    public AnalysisDetailsConfigurationView(final AnalysisDetailsConfigurationModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
+    public CentreConfigurationWithoutCriteriaView(final CentreConfigurationWithoutCriteriaModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	detailsCache = new HashMap<>();
     }
@@ -56,13 +56,13 @@ public class AnalysisDetailsConfigurationView<T extends AbstractEntity<?>> exten
 
     @SuppressWarnings("unchecked")
     @Override
-    public AnalysisDetailsConfigurationModel<T> getModel() {
-        return (AnalysisDetailsConfigurationModel<T>)super.getModel();
+    public CentreConfigurationWithoutCriteriaModel<T> getModel() {
+        return (CentreConfigurationWithoutCriteriaModel<T>)super.getModel();
     }
 
     @Override
-    protected AnalysisDetailsEntityCentre<T> createConfigurableView() {
-	return new AnalysisDetailsEntityCentre<>(getModel().createEntityCentreModel(), this);
+    protected EntityCentreWithoutSelectionCriteria<T> createConfigurableView() {
+	return new EntityCentreWithoutSelectionCriteria<>(getModel().createEntityCentreModel(), this);
     }
 
     @Override

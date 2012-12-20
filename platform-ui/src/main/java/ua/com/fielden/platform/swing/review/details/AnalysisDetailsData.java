@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.report.analysis.chart;
+package ua.com.fielden.platform.swing.review.details;
 
 import java.util.List;
 
@@ -16,11 +16,8 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public class AnalysisDetailsData<T extends AbstractEntity<?>> {
+public class AnalysisDetailsData<T extends AbstractEntity<?>> extends AbstractAnalysisDetailsData<T>{
 
-    private final Class<T> root;
-    private final String name;
-    private final String analysisName;
     private final String frameTitle;
     private final ICentreDomainTreeManagerAndEnhancer baseCdtme;
     private final IAbstractAnalysisDomainTreeManager adtm;
@@ -33,22 +30,11 @@ public class AnalysisDetailsData<T extends AbstractEntity<?>> {
 	    final ICentreDomainTreeManagerAndEnhancer baseCdtme, //
 	    final IAbstractAnalysisDomainTreeManager adtme, //
 	    final List<Pair<String, Object>> linkPropValuePairs){
-	this.root = root;
+	super(root, name, analysisName);
 	this.baseCdtme = baseCdtme;
 	this.adtm = adtme;
 	this.linkPropValuePairs = linkPropValuePairs;
-	this.name = name;
-	this.analysisName = analysisName;
 	this.frameTitle = createFrameTitle(linkPropValuePairs);
-    }
-
-    /**
-     * Returns the entity type for which this detail must be created.
-     *
-     * @return
-     */
-    public Class<T> getRoot() {
-	return root;
     }
 
     /**
@@ -58,7 +44,7 @@ public class AnalysisDetailsData<T extends AbstractEntity<?>> {
      */
     @SuppressWarnings("unchecked")
     public Class<T> getManagedType(){
-	return (Class<T>)getBaseCdtme().getEnhancer().getManagedType(getRoot());
+	return (Class<T>)getBaseCdtme().getEnhancer().getManagedType(root);
     }
 
     /**
@@ -84,6 +70,7 @@ public class AnalysisDetailsData<T extends AbstractEntity<?>> {
      *
      * @return
      */
+    @Override
     public String getFrameTitle(){
 	return frameTitle;
     }
@@ -94,20 +81,13 @@ public class AnalysisDetailsData<T extends AbstractEntity<?>> {
 	if (this == obj) {
 	    return true;
 	}
+	if (!super.equals(obj)){
+	    return false;
+	}
 	if (obj == null || obj.getClass() != this.getClass()) {
 	    return false;
 	}
 	final AnalysisDetailsData<T> anotherData = (AnalysisDetailsData<T>) obj;
-	if ((getRoot() == null && getRoot() != anotherData.getRoot()) || (getRoot() != null && !getRoot().equals(anotherData.getRoot()))) {
-	    return false;
-	}
-	if ((name == null && name != anotherData.name) || (name != null && !name.equals(name))) {
-	    return false;
-	}
-	if ((analysisName == null && analysisName != anotherData.analysisName) //
-		|| (analysisName != null && !analysisName.equals(anotherData.analysisName))) {
-	    return false;
-	}
 	if ((getLinkPropValuePairs() == null && getLinkPropValuePairs() != anotherData.getLinkPropValuePairs()) //
 		|| (getLinkPropValuePairs() != null && !getLinkPropValuePairs().equals(anotherData.getLinkPropValuePairs()))) {
 	    return false;
@@ -117,19 +97,14 @@ public class AnalysisDetailsData<T extends AbstractEntity<?>> {
 
     @Override
     public int hashCode() {
-	int result = 17;
-	result = 31 * result + (getRoot() != null ? getRoot().hashCode() : 0);
-	result = 31 * result + (name != null ? name.hashCode() : 0);
-	result = 31 * result + (analysisName != null ? analysisName.hashCode() : 0);
-	result = 31 * result + (getLinkPropValuePairs() != null ? getLinkPropValuePairs().hashCode() : 0);
+	int result = super.hashCode();
+	result = 31 * result + ((getLinkPropValuePairs() == null) ? 0 : getLinkPropValuePairs().hashCode());
 	return result;
     }
 
     @Override
     public String toString() {
-	return (getRoot() == null ? "" : (getRoot().getSimpleName() + " ")) +
-		(StringUtils.isEmpty(name) ? "" : (name + " ")) +
-		(StringUtils.isEmpty(analysisName) ? "" : (analysisName + " ")) +
+	return super.toString() +
 		(getLinkPropValuePairs() == null ? "" : getLinkPropValuePairs().toString());
     }
 
@@ -182,7 +157,7 @@ public class AnalysisDetailsData<T extends AbstractEntity<?>> {
      */
     private String createDistributionPropertyTitle(final List<Pair<String, Object>> choosenItems) {
 	String name = "";
-	final EntityDescriptor ed = new EntityDescriptor(getManagedType(), adtm.getFirstTick().checkedProperties(getRoot()));
+	final EntityDescriptor ed = new EntityDescriptor(getManagedType(), adtm.getFirstTick().checkedProperties(root));
 	for (final Pair<String, Object> pair : choosenItems) {
 	    name += '\u2192' + "(" + ed.getTitle(pair.getKey()) + ")";
 	}
