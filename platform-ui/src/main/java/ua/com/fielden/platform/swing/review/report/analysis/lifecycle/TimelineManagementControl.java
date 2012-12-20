@@ -8,6 +8,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
@@ -22,15 +25,17 @@ import org.jfree.data.time.SimpleTimePeriod;
 import org.jfree.data.time.TimePeriod;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.equery.lifecycle.EntityPropertyLifecycle;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.swing.categorychart.ChartPanel;
 import ua.com.fielden.platform.swing.timeline.ColoredTask;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-public class TimelineManagementControl <T extends AbstractEntity> implements ChartMouseListener, MouseListener, MouseMotionListener {
+public abstract class TimelineManagementControl <T extends AbstractEntity> implements ChartMouseListener, MouseListener, MouseMotionListener {
     private final ChartPanel localChartPanel;
     private final JFreeChart jfreechart;
     private final TaskSeriesCollection mainDataSet;
+    private final LifecycleModel<T> chartEntryModel;
 
     private double itemWidth = -1;
     private boolean startedResizingOrMoving = false;
@@ -42,6 +47,7 @@ public class TimelineManagementControl <T extends AbstractEntity> implements Cha
     private int seriesIndex = 0;
 
     public TimelineManagementControl(final LifecycleModel<T> chartEntryModel) {
+	this.chartEntryModel = chartEntryModel;
 	this.mainDataSet = LifecycleChartFactory.createMainDataSet(chartEntryModel);
 	jfreechart = LifecycleChartFactory.createAvailabilityChart(chartEntryModel, mainDataSet); // ChartFactory.createTimeSeriesChart("Series & Point Dragging Demo", "Date", "Price Per Unit", createDataset(), true, true, false);
 	localChartPanel = new ChartPanel(jfreechart);
@@ -57,7 +63,12 @@ public class TimelineManagementControl <T extends AbstractEntity> implements Cha
 
 	localChartPanel.setMouseWheelEnabled(true);
 	this.info = localChartPanel.getChartRenderingInfo();
+
+	jfreechart.removeLegend();
     }
+
+    public abstract boolean canBeChanged(T entity, final Date start, final Date finish);
+    public abstract void change(T entity, final Date start, final Date finish);
 
     public ChartPanel getLocalChartPanel() {
 	return localChartPanel;
@@ -143,21 +154,26 @@ public class TimelineManagementControl <T extends AbstractEntity> implements Cha
 		final ColoredTask task = (ColoredTask) localTaskSeries().get(itemIndex);
 		final TimePeriod oldPeriod = task.getDuration();
 		System.out.println("Old period [" + oldPeriod.getStart() + "; " + oldPeriod.getEnd() + "].");
-		final ColoredTask newTask = new ColoredTask(task.getDescription(), adjustPeriod(oldPeriod, resizeMargin, difference), task.getColor(), task.getInfo());
+		final TimePeriod newPeriod = adjustPeriod(oldPeriod, resizeMargin, difference);
+		final ColoredTask newTask = new ColoredTask(task.getDescription(), newPeriod, task.getColor(), task.getInfo());
 
-		localTaskSeries().remove(task);
-		localTaskSeries().add(newTask);
-		final int newTaskIndex = localTaskSeries().getItemCount() - 1;
+		if (canBeChanged(chartEntryModel.getLifecycleData().get(seriesIndex).getEntity(), newPeriod.getStart(), newPeriod.getEnd())) {
+		    change(chartEntryModel.getLifecycleData().get(seriesIndex).getEntity(), newPeriod.getStart(), newPeriod.getEnd());
 
-		jfreechart.fireChartChanged();
-		localChartPanel.updateUI();
+		    localTaskSeries().remove(task);
+		    localTaskSeries().add(newTask);
+		    final int newTaskIndex = localTaskSeries().getItemCount() - 1;
 
-		System.out.println("newTaskIndex == " + newTaskIndex);
+		    jfreechart.fireChartChanged();
+		    localChartPanel.updateUI();
 
-		System.out.println("seriesIndex == " + seriesIndex);
-		xyItemEntity = findXyEntity(seriesIndex, newTaskIndex, this.info.getEntityCollection());
-		System.err.println("MOUSE DRAGGED:		xyItemEntity has been changed to == " + xyItemEntity);
+		    System.out.println("newTaskIndex == " + newTaskIndex);
 
+		    System.out.println("seriesIndex == " + seriesIndex);
+		    xyItemEntity = findXyEntity(seriesIndex, newTaskIndex, this.info.getEntityCollection());
+		    System.err.println("MOUSE DRAGGED:		xyItemEntity has been changed to == " + xyItemEntity);
+
+		}
 		initialMovePointX = finalMovePointX;
 	    }
 	} catch (final Exception e) {
@@ -264,5 +280,13 @@ public class TimelineManagementControl <T extends AbstractEntity> implements Cha
 
     private TaskSeries localTaskSeries() {
 	return mainDataSet.getSeries(seriesIndex); // TODO take an appropriate series
+    }
+
+    public List<T> getEntities() {
+	final List<T> entities = new ArrayList<T>();
+	for (final EntityPropertyLifecycle<T> epl : chartEntryModel.getLifecycleData()) {
+	    entities.add(epl.getEntity());
+	}
+	return entities;
     }
 }

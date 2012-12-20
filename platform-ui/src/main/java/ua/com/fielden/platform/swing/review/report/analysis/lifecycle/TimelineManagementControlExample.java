@@ -124,7 +124,16 @@ public class TimelineManagementControlExample  extends AbstractUiApplication {
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
 	final BaseFrame mainApplicationFrame = new BaseFrame("Timeline management control example", new HashMap<Class<? extends AbstractEntity<?>>, IEntityMasterCache>());
 	mainApplicationFrame.setPreferredSize(new Dimension(1280, 500));
-	mainApplicationFrame.add(new TimelineManagementControl<TimelineEntity>(chartEntryModel).getLocalChartPanel());
+	mainApplicationFrame.add(new TimelineManagementControl<TimelineEntity>(chartEntryModel){
+	    @Override
+	    public void change(final TimelineEntity entity, final java.util.Date start, final java.util.Date finish) {
+	    };
+
+	    @Override
+	    public boolean canBeChanged(final TimelineEntity entity, final java.util.Date start, final java.util.Date finish) {
+		return true;
+	    };
+	}.getLocalChartPanel());
 	mainApplicationFrame.pack();
 
 	RefineryUtilities.centerFrameOnScreen(mainApplicationFrame);
