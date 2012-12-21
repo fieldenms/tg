@@ -30,6 +30,7 @@ import net.miginfocom.swing.MigLayout;
 
 import org.jfree.chart.ChartMouseEvent;
 
+import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
@@ -102,6 +103,11 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
      * Contains lifecycle related action and controls.
      */
     private final JToolBar toolBar;
+    private final JToggleButton barChartButton;
+    private final JToggleButton stackedChartButton;
+    private final JToggleButton lineChartButton;
+    private final JPanel periodPanel;
+
     /**
      * Panel that holds the distribution list and categories.
      */
@@ -128,7 +134,19 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	this.multipleChartPanel = createMultipleChartPanel(chartPanel);
 	this.configurePanel = createConfigPanel(totalCheckBox, distributionPropertiesList, categoriesList);
 	this.splitPane = createSplitPanel(configurePanel, multipleChartPanel);
-	this.toolBar = createChartTypeBar(createSwitchChartModel(multipleChartPanel));
+
+	//Configuring tool bar buttons and controls.
+	final SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes> switchChartModel = createSwitchChartModel(multipleChartPanel);
+	this.barChartButton = createToggleButtonFor(switchChartModel, CategoryChartTypes.BAR_CHART, "Show availability", ResourceLoader.getIcon("images/chart_bar.png"));
+	this.stackedChartButton = createToggleButtonFor(switchChartModel, CategoryChartTypes.STACKED_BAR_CHART, "Show fractions", ResourceLoader.getIcon("images/chart_stacked_bar.png"));
+	this.lineChartButton = createToggleButtonFor(switchChartModel, CategoryChartTypes.LINE_CHART, "Show summary availability", ResourceLoader.getIcon("images/chart_line.png"));
+	final ButtonGroup group = new ButtonGroup();
+	group.add(barChartButton);
+	group.add(stackedChartButton);
+	group.add(lineChartButton);
+	this.periodPanel = createPeriodPanel();
+	this.toolBar = createToolBar();
+	this.barChartButton.setSelected(true);
 
 	model.addLifecycleModelUpdatedListener(new ILifecycleModelUpdated() {
 
@@ -140,6 +158,148 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	});
 
 	layoutComponents();
+    }
+
+    @Override
+    public LifecycleAnalysisModel<T> getModel() {
+        return (LifecycleAnalysisModel<T>)super.getModel();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public LifecycleAnalysisConfigurationView<T> getOwner() {
+        return (LifecycleAnalysisConfigurationView<T>)super.getOwner();
+    }
+
+    public JPanel getPeriodPanel() {
+	return periodPanel;
+    }
+
+    public JToggleButton getBarChartButton() {
+	return barChartButton;
+    }
+
+    public JToggleButton getStackedChartButton() {
+	return stackedChartButton;
+    }
+
+    public JToggleButton getLineChartButton() {
+	return lineChartButton;
+    }
+
+    /**
+     * Shows/hides "fractions" view configuration.
+     *
+     * @param show
+     */
+    public void showFractionsConfiguration(final boolean show) {
+        splitPane.setOneTouchExpandable(show);
+        splitPane.setLeftComponent(show ? configurePanel : null);
+        if (show) {
+            splitPane.setDividerLocation(normalDividerLocation);
+        }
+
+        splitPane.invalidate();
+        splitPane.validate();
+        splitPane.repaint();
+    }
+
+    /**
+     * Updates chartPanel by new specified life cycle data.
+     *
+     * @param data
+     */
+    public void updateChart(final LifecycleModel<T> data, final IAction postAction) {
+        chartPanel.setPostAction(postAction);
+        chartPanel.setChart(data, true);
+    }
+
+    protected void updateChart() {
+        chartPanel.updateChart();
+    }
+
+    protected MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> createMultipleChartPanel(final ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> chartPanel) {
+        final MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> multPanel = new MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes>();
+        multPanel.addChartPanel(chartPanel);
+        return multPanel;
+    }
+
+    protected SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes> createSwitchChartModel(final MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> multipleChartPanel) {
+        return new SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes>(multipleChartPanel) {
+            @Override
+            public ItemListener createListenerForChartType(final CategoryChartTypes type) {
+        	return new ChartTypeChangeListener(type) {
+        	    @Override
+        	    public void itemStateChanged(final ItemEvent e) {
+        		super.itemStateChanged(e);
+        		showFractionsConfiguration(CategoryChartTypes.STACKED_BAR_CHART.equals(type));
+        	    }
+        	};
+            }
+        };
+    }
+
+    protected JToolBar createToolBar() {
+        final ActionPanelBuilder toolBarBuilder = getOwner().getToolbarCustomiser().createToolbar(this);
+        return toolBarBuilder == null || toolBarBuilder.isEmpty() ? null : configureToolBar(toolBarBuilder.buildActionPanel());
+
+    }
+
+    protected ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> createChartPanel(final int indexOfAppropriateChart) {
+        final ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> chartPanel = new ActionChartPanel<LifecycleModel<T>, CategoryChartTypes>(getModel().getChartFactory(), new IBlockingLayerProvider() {
+            @Override
+            public BlockingIndefiniteProgressLayer getBlockingLayer() {
+        	return getOwner().getProgressLayer();
+            }
+        }, null, indexOfAppropriateChart, 400, 300, 0, 0, Integer.MAX_VALUE, Integer.MAX_VALUE, true, true, true, true, true, true) {
+            private static final long serialVersionUID = -4006162899347838630L;
+
+            @Override
+            public void mouseDoubleClicked(final ChartMouseEvent chartEvent) {
+        	performCustomAction(new AnalysisDataEvent<>(this, chartEvent));
+            }
+        };
+        chartPanel.setZoomFillPaint(new Color(255, 0, 0, 63));
+        return chartPanel;
+    }
+
+    protected final MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> getMultipleChartPanel() {
+        return multipleChartPanel;
+    }
+
+    @Override
+    protected void enableRelatedActions(final boolean enable, final boolean navigate) {
+        if(getCentre().getCriteriaPanel() != null){
+            getCentre().getDefaultAction().setEnabled(enable);
+        }
+        getCentre().getRunAction().setEnabled(enable);
+    }
+
+    @SuppressWarnings("unused")
+    protected void performCustomAction(final AnalysisDataEvent<ChartMouseEvent> clickedData) {
+        System.out.println("Custom lifecycle action");
+    }
+
+    /**
+     * Creates the period panel that contains two date pickers those allows one to chose from/to lifecycle period.
+     *
+     * @return
+     */
+    private JPanel createPeriodPanel() {
+	final JLabel fromLabel = new JLabel("Period:");
+	final JLabel toLabel = new JLabel("To");
+	final BoundedValidationLayer<DatePickerLayer> fromEditor = getModel().getFromeEditor();
+	fromEditor.getView().getUi().setCaption("choose period beginning...");
+	final BoundedValidationLayer<DatePickerLayer> toEditor = getModel().getToEditor();
+	toEditor.getView().getUi().setCaption("choose period ending...");
+
+	final JPanel periodPanel = new JPanel(new MigLayout("fill, insets 5", "[:" + fromLabel.getMinimumSize().width + ":]" +
+			"[grow,:" + 175 + ":][:" + toLabel.getMinimumSize().width + ":][grow,:" + 175 + ":]"));
+	periodPanel.add(fromLabel);
+	periodPanel.add(fromEditor, "growx");
+	periodPanel.add(toLabel);
+	periodPanel.add(toEditor, "growx");
+	return periodPanel;
     }
 
     /**
@@ -195,11 +355,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	setLayout(new MigLayout("insets 0, fill", "[fill,grow]", "[][fill,grow]"));
 	add(toolBar, "wrap");
 	add(splitPane, "grow");
-    }
-
-    @Override
-    public LifecycleAnalysisModel<T> getModel() {
-        return (LifecycleAnalysisModel<T>)super.getModel();
     }
 
     private JCheckBox createTotalCheckBox(final ActionChartPanel<LifecycleModel<T>,CategoryChartTypes> chartPanel) {
@@ -262,47 +417,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 		+ "</i></html>");
 	return totalCheckBox;
     }
-
-    protected MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> createMultipleChartPanel(final ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> chartPanel) {
-	final MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> multPanel = new MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes>();
-	multPanel.addChartPanel(chartPanel);
-	return multPanel;
-    }
-
-    protected SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes> createSwitchChartModel(final MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> multipleChartPanel) {
-	return new SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes>(multipleChartPanel) {
-	    @Override
-	    public ItemListener createListenerForChartType(final CategoryChartTypes type) {
-		return new ChartTypeChangeListener(type) {
-		    @Override
-		    public void itemStateChanged(final ItemEvent e) {
-			super.itemStateChanged(e);
-			showFractionsConfiguration(CategoryChartTypes.STACKED_BAR_CHART.equals(type));
-		    }
-		};
-	    }
-	};
-    }
-
-    /**
-     * Shows/hides "fractions" view configuration.
-     *
-     * @param show
-     */
-    public void showFractionsConfiguration(final boolean show) {
-	splitPane.setOneTouchExpandable(show);
-	splitPane.setLeftComponent(show ? configurePanel : null);
-	if (show) {
-	    splitPane.setDividerLocation(normalDividerLocation);
-	}
-
-	splitPane.invalidate();
-	splitPane.validate();
-	splitPane.repaint();
-    }
-
-
-
 
     /**
      * Returns the {@link SortingCheckboxList} of aggregation properties.
@@ -370,43 +484,10 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	return aggregationList;
     }
 
-    protected JToolBar createChartTypeBar(final SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes> switchChartModel) {
-	final JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
-	toolBar.setFloatable(false);
-	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-
-	toolBar.add(getConfigureAction());
-	toolBar.addSeparator();
-
-	final JToggleButton barChart = createToggleButtonFor(switchChartModel, CategoryChartTypes.BAR_CHART, "Show availability", ResourceLoader.getIcon("images/chart_bar.png"));
-	final JToggleButton stackedBarChart = createToggleButtonFor(switchChartModel, CategoryChartTypes.STACKED_BAR_CHART, "Show fractions", ResourceLoader.getIcon("images/chart_stacked_bar.png"));
-	final JToggleButton lineChart = createToggleButtonFor(switchChartModel, CategoryChartTypes.LINE_CHART, "Show summary availability", ResourceLoader.getIcon("images/chart_line.png"));
-	final ButtonGroup group = new ButtonGroup();
-	group.add(barChart);
-	group.add(stackedBarChart);
-	group.add(lineChart);
-	toolBar.add(barChart);
-	toolBar.add(stackedBarChart);
-	toolBar.add(lineChart);
-	toolBar.addSeparator();
-
-	final JLabel fromLabel = new JLabel("Period:");
-	final JLabel toLabel = new JLabel("To");
-	final BoundedValidationLayer<DatePickerLayer> fromEditor = getModel().getFromeEditor();
-	fromEditor.getView().getUi().setCaption("choose period beginning...");
-	final BoundedValidationLayer<DatePickerLayer> toEditor = getModel().getToEditor();
-	toEditor.getView().getUi().setCaption("choose period ending...");
-
-	final JPanel periodPanel = new JPanel(new MigLayout("fill, insets 5", "[:" + fromLabel.getMinimumSize().width + ":]" +
-			"[grow,:" + 175 + ":][:" + toLabel.getMinimumSize().width + ":][grow,:" + 175 + ":]"));
-	periodPanel.add(fromLabel);
-	periodPanel.add(fromEditor, "growx");
-	periodPanel.add(toLabel);
-	periodPanel.add(toEditor, "growx");
-
-	toolBar.add(periodPanel, "growx");
-	barChart.setSelected(true);
-	return toolBar;
+    private JToolBar configureToolBar(final JToolBar buildActionPanel) {
+	buildActionPanel.setFloatable(false);
+	buildActionPanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+	return buildActionPanel;
     }
 
     private JToggleButton createToggleButtonFor(final SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes> switchChartModel, final CategoryChartTypes type, final String toolTip, final Icon icon) {
@@ -492,50 +573,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	return distributionList;
     }
 
-    protected ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> createChartPanel(final int indexOfAppropriateChart) {
-	final ActionChartPanel<LifecycleModel<T>, CategoryChartTypes> chartPanel = new ActionChartPanel<LifecycleModel<T>, CategoryChartTypes>(getModel().getChartFactory(), new IBlockingLayerProvider() {
-	    @Override
-	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
-		return getOwner().getProgressLayer();
-	    }
-	}, null, indexOfAppropriateChart, 400, 300, 0, 0, Integer.MAX_VALUE, Integer.MAX_VALUE, true, true, true, true, true, true) {
-	    private static final long serialVersionUID = -4006162899347838630L;
-
-	    @Override
-	    public void mouseDoubleClicked(final ChartMouseEvent chartEvent) {
-		performCustomAction(new AnalysisDataEvent<>(this, chartEvent));
-	    }
-	};
-	chartPanel.setZoomFillPaint(new Color(255, 0, 0, 63));
-	return chartPanel;
-    }
-
-    /**
-     * Updates chartPanel by new specified life cycle data.
-     *
-     * @param data
-     */
-    public void updateChart(final LifecycleModel<T> data, final IAction postAction) {
-	chartPanel.setPostAction(postAction);
-	chartPanel.setChart(data, true);
-    }
-
-    protected void updateChart() {
-	chartPanel.updateChart();
-    }
-
-    protected final MultipleChartPanel<LifecycleModel<T>, CategoryChartTypes> getMultipleChartPanel() {
-	return multipleChartPanel;
-    }
-
-    @Override
-    protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	if(getCentre().getCriteriaPanel() != null){
-	    getCentre().getDefaultAction().setEnabled(enable);
-	}
-	getCentre().getRunAction().setEnabled(enable);
-    }
-
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
      *
@@ -561,9 +598,5 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 		getCentre().getRunAction().setEnabled(true);
 	    }
 	};
-    }
-
-    protected void performCustomAction(final AnalysisDataEvent<ChartMouseEvent> clickedData) {
-	System.out.println("Custom lifecycle action");
     }
 }

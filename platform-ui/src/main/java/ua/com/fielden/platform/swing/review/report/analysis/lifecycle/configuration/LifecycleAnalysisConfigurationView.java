@@ -12,6 +12,8 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.DefaultLifecycleAnalysisToolbarCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.LifecycleAnalysisView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
@@ -21,14 +23,41 @@ public class LifecycleAnalysisConfigurationView<T extends AbstractEntity<?>> ext
 
     private static final long serialVersionUID = -44217633254876740L;
 
-    public LifecycleAnalysisConfigurationView(//
+    private final IToolbarCustomiser<LifecycleAnalysisView<T>> toolbarCustomiser;
+
+    public static <T extends AbstractEntity<?>>  LifecycleAnalysisConfigurationView<T> createLifecycleAnalysisWithDefaultToolbar(//
 	    final LifecycleAnalysisConfigurationModel<T> model, //
 	    final Map<Object, DetailsFrame> detailsCache, //
 	    final IDetailsCustomiser detailsCustomiser, //
 	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+	    final BlockingIndefiniteProgressLayer progressLayer){
+	return new LifecycleAnalysisConfigurationView<>(model, detailsCache, detailsCustomiser, owner, null, progressLayer);
+    }
+
+    public static <T extends AbstractEntity<?>>  LifecycleAnalysisConfigurationView<T> createLifecycleAnalysisWithSpecificToolbar(//
+	    final LifecycleAnalysisConfigurationModel<T> model, //
+	    final Map<Object, DetailsFrame> detailsCache, //
+	    final IDetailsCustomiser detailsCustomiser, //
+	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+	    final IToolbarCustomiser<LifecycleAnalysisView<T>> toolbarCustomiser, //
+	    final BlockingIndefiniteProgressLayer progressLayer){
+	return new LifecycleAnalysisConfigurationView<>(model, detailsCache, detailsCustomiser, owner, toolbarCustomiser, progressLayer);
+    }
+
+    protected LifecycleAnalysisConfigurationView(//
+	    final LifecycleAnalysisConfigurationModel<T> model, //
+	    final Map<Object, DetailsFrame> detailsCache, //
+	    final IDetailsCustomiser detailsCustomiser, //
+	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+	    final IToolbarCustomiser<LifecycleAnalysisView<T>> toolbarCustomiser, //
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, detailsCache, detailsCustomiser, owner, progressLayer);
+	this.toolbarCustomiser = toolbarCustomiser == null ? new DefaultLifecycleAnalysisToolbarCustomiser<T>() : toolbarCustomiser;
 	addOpenEventListener(createOpenAnalysisEventListener());
+    }
+
+    public IToolbarCustomiser<LifecycleAnalysisView<T>> getToolbarCustomiser() {
+	return toolbarCustomiser;
     }
 
     @Override

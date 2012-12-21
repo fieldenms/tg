@@ -28,7 +28,7 @@ public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implem
 	    final Map<Object, DetailsFrame> detailsCache,//
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	final LifecycleAnalysisConfigurationModel<T> analysisModel = new LifecycleAnalysisConfigurationModel<T>(criteria, name);
-	return new LifecycleAnalysisConfigurationView<T>(analysisModel, detailsCache, null, owner, progressLayer);
+	return LifecycleAnalysisConfigurationView.createLifecycleAnalysisWithDefaultToolbar(analysisModel, detailsCache, null, owner, progressLayer);
         }
 
     @Override
