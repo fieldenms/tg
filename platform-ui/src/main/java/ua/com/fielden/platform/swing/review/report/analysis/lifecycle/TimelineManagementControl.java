@@ -64,7 +64,7 @@ public abstract class TimelineManagementControl <T extends AbstractEntity> imple
 	localChartPanel.setMouseWheelEnabled(true);
 	this.info = localChartPanel.getChartRenderingInfo();
 
-	jfreechart.removeLegend();
+	// jfreechart.removeLegend();
     }
 
     public abstract boolean canBeChanged(T entity, final Date start, final Date finish);
