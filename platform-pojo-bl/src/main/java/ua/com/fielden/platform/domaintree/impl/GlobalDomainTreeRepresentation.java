@@ -60,7 +60,7 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
     }
 
     @Override
-    public void setLocatorManagerByDefault(final Class<?> propertyType, final ILocatorDomainTreeManagerAndEnhancer locatorManager) {
+    public IGlobalDomainTreeRepresentation setLocatorManagerByDefault(final Class<?> propertyType, final ILocatorDomainTreeManagerAndEnhancer locatorManager) {
 	AbstractDomainTree.validateRootType(propertyType);
 	// only base users have default locators assigned:
 	final User currentUser = userProvider.getUser();
@@ -77,5 +77,6 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
 	}
 	elc.setConfigBody(body);
 	elcController.save(elc);
+	return this;
     }
 }

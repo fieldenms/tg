@@ -331,7 +331,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     @Override
-    public void excludeImmutably(final Class<?> root, final String property) {
+    public IDomainTreeRepresentation excludeImmutably(final Class<?> root, final String property) {
 	if (includedPropertiesMutable(root).contains(property)) {
 	    final int index = includedPropertiesMutable(root).indexOf(property);
 	    while (index < includedPropertiesMutable(root).size() && includedPropertiesMutable(root).get(index).startsWith(property)) {
@@ -339,6 +339,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    }
 	}
 	manuallyExcludedProperties.add(key(root, property));
+	return this;
     }
 
     /**
@@ -575,13 +576,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     @Override
-    public void warmUp(final Class<?> managedType, final String property) {
+    public IDomainTreeRepresentation warmUp(final Class<?> managedType, final String property) {
 	final Date st = new Date();
 	illegalExcludedProperties(this, managedType, reflectionProperty(property), "Could not 'warm up' an 'excluded' property [" + property + "] in type [" + managedType.getSimpleName() + "]. Only properties that are not excluded can be 'warmed up'.");
 	includedPropertiesMutable(managedType); // ensure "included properties" to be loaded
 	if (warmUp(managedType, "", property)) {
 	    logger().info("Warmed up root's [" + managedType.getSimpleName() + "] property [" + property + "] within " + (new Date().getTime() - st.getTime()) + "ms.");
 	}
+	return this;
     }
 
     /**
@@ -634,11 +636,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	@Override
-	public void disableImmutably(final Class<?> root, final String property) {
+	public ITickRepresentation disableImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not disable already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    disabledManuallyProperties.add(key(root, property));
 
 	    fireDisablingEvent(root, property);
+	    return this;
 	}
 
 	protected boolean isDisabledImmutablyPropertiesOfEntityType(final Class<?> propertyType, final KeyType keyTypeAnnotation) {

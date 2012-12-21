@@ -7,6 +7,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation;
+import ua.com.fielden.platform.domaintree.centre.IWidthRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
@@ -230,9 +232,10 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	}
 
 	@Override
-	public void disableOrderingImmutably(final Class<?> root, final String property) {
+	public IOrderingRepresentation disableOrderingImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(getDtr(), root, property, "Could not disable an 'ordering' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    propertiesOrderingDisablement.add(key(root, property));
+	    return this;
 	}
 
 	@Override
@@ -250,9 +253,10 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	}
 
 	@Override
-	public void setOrderedPropertiesByDefault(final Class<?> root, final List<Pair<String, Ordering>> orderedPropertiesByDefault) {
+	public IOrderingRepresentation setOrderedPropertiesByDefault(final Class<?> root, final List<Pair<String, Ordering>> orderedPropertiesByDefault) {
 	    illegalExcludedProperties(getDtr(), root, "", "Could not set an 'ordering by default' for already 'excluded' type [" + root.getSimpleName() + "].");
 	    rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault));
+	    return this;
 	}
 
 	@Override
@@ -262,9 +266,10 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	}
 
 	@Override
-	public void setWidthByDefault(final Class<?> root, final String property, final int width) {
+	public IWidthRepresentation setWidthByDefault(final Class<?> root, final String property, final int width) {
 	    illegalExcludedProperties(getDtr(), root, property, "Could not set a 'width by default' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    propertiesWidths.put(key(root, property), width);
+	    return this;
 	}
 
 	@Override

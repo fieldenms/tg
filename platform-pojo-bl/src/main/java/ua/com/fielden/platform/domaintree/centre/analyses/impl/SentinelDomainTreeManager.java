@@ -71,7 +71,7 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
 	}
 
 	@Override
-	public void check(final Class<?> root, final String property, final boolean check) {
+	public ITickManager check(final Class<?> root, final String property, final boolean check) {
 	    if (check) {
 		// remove previously checked property(ies). It should be the only one, but remove them all to be sure:
 		while (!checkedPropertiesMutable(root).isEmpty()) {
@@ -90,6 +90,7 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
 	    if (check) {
 		useInternally(root, property, true); // automatic usage of the property
 	    }
+	    return this;
 	}
 
 	@Override
@@ -111,7 +112,7 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
 	}
 
 	@Override
-	public void check(final Class<?> root, final String property, final boolean check) {
+	public ITickManager check(final Class<?> root, final String property, final boolean check) {
 	    if (!SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD.equals(property)) {
 		throw new IllegalArgumentException("It was tried to 'check' property [" + property + "] in type [" + root.getSimpleName() + "]. But only [" + SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD + "] is permitted for checking.");
 	    }
@@ -120,6 +121,7 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
 	    }
 	    super.check(root, property, check);
 	    useInternally(root, property, true); // automatic usage of the property
+	    return this;
 	}
 
 	@Override

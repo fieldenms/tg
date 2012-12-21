@@ -40,7 +40,7 @@ public interface ILocatorManager extends IRootTyped {
      * @param property -- a dot-notation expression that defines a property.
      * @return
      */
-    void refreshLocatorManager(final Class<?> root, final String property);
+    ILocatorManager refreshLocatorManager(final Class<?> root, final String property);
 
     /**
      * Resets a current version of locator manager to default in <b>Usage</b> phase.
@@ -53,7 +53,7 @@ public interface ILocatorManager extends IRootTyped {
      * @param property -- a dot-notation expression that defines a property.
      * @return
      */
-    void resetLocatorManagerToDefault(final Class<?> root, final String property);
+    ILocatorManager resetLocatorManagerToDefault(final Class<?> root, final String property);
 
     /**
      * Accepts the changes of the current version of locator.
@@ -66,7 +66,7 @@ public interface ILocatorManager extends IRootTyped {
      * @param property -- a dot-notation expression that defines a property.
      * @return
      */
-    void acceptLocatorManager(final Class<?> root, final String property);
+    ILocatorManager acceptLocatorManager(final Class<?> root, final String property);
 
     /**
      * Discards the changes of the current version of locator.
@@ -79,7 +79,7 @@ public interface ILocatorManager extends IRootTyped {
      * @param property -- a dot-notation expression that defines a property.
      * @return
      */
-    void discardLocatorManager(final Class<?> root, final String property);
+    ILocatorManager discardLocatorManager(final Class<?> root, final String property);
 
     /**
      * Promotes a current (perhaps not accepted) version of locator to global "type-related" configuration (without any additional actions like <b>accept / discard</b>).
@@ -92,7 +92,7 @@ public interface ILocatorManager extends IRootTyped {
      * @param property -- a dot-notation expression that defines a property.
      * @return
      */
-    void saveLocatorManagerGlobally(final Class<?> root, final String property);
+    ILocatorManager saveLocatorManagerGlobally(final Class<?> root, final String property);
 
     /**
      * Freezes a current version of a locator.
@@ -105,7 +105,7 @@ public interface ILocatorManager extends IRootTyped {
      * @param property -- a dot-notation expression that defines a property.
      * @return
      */
-    void freezeLocatorManager(final Class<?> root, final String property);
+    ILocatorManager freezeLocatorManager(final Class<?> root, final String property);
 
     //////////////////////////////////////////////////////////////////////////////
     ////////////////////////////// STATE MANAGEMENT //////////////////////////////

@@ -41,7 +41,7 @@ public interface IPivotDomainTreeManager extends IAbstractAnalysisDomainTreeMana
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void setWidth(Class<?> root, String property, int width);
+	public IPivotAddToDistributionTickManager setWidth(Class<?> root, String property, int width);
     }
 
     /**

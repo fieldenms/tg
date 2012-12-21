@@ -33,5 +33,5 @@ public interface IWidthRepresentation {
      * @param property -- a dot-notation expression that defines a property.
      * @param width -- a width to set
      */
-    void setWidthByDefault(final Class<?> root, final String property, final int width);
+    IWidthRepresentation setWidthByDefault(final Class<?> root, final String property, final int width);
 }

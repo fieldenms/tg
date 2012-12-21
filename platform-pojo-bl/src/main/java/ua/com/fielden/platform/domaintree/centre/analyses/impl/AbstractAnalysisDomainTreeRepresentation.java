@@ -8,7 +8,9 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
@@ -75,9 +77,10 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
     }
 
     @Override
-    public final void excludeImmutably(final Class<?> root, final String property) {
+    public final IDomainTreeRepresentation excludeImmutably(final Class<?> root, final String property) {
 	// inject an enhanced type into method implementation
         super.excludeImmutably(managedType(root), property);
+	return this;
     }
 
     @Override
@@ -101,9 +104,10 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
     }
 
     @Override
-    public void warmUp(final Class<?> root, final String property) {
+    public IDomainTreeRepresentation warmUp(final Class<?> root, final String property) {
 	// inject an enhanced type into method implementation
         super.warmUp(managedType(root), property);
+	return this;
     }
 
     @Override
@@ -174,9 +178,10 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	}
 
 	@Override
-	public final void disableImmutably(final Class<?> root, final String property) {
+	public final ITickRepresentation disableImmutably(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    super.disableImmutably(managedType(root), property);
+	    return this;
 	}
 
 	@Override
@@ -251,9 +256,10 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	}
 
 	@Override
-	public final void disableImmutably(final Class<?> root, final String property) {
+	public final ITickRepresentation disableImmutably(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    super.disableImmutably(managedType(root), property);
+	    return this;
 	}
 
 	@Override
@@ -272,12 +278,13 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	}
 
 	@Override
-	public void disableOrderingImmutably(final Class<?> root, final String property) {
+	public IOrderingRepresentation disableOrderingImmutably(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    final Class<?> managedType = managedType(root);
 
 	    illegalExcludedProperties(getDtr(), managedType, property, "Could not disable an 'ordering' for already 'excluded' property [" + property + "] in type [" + managedType.getSimpleName() + "].");
 	    propertiesOrderingDisablement.add(key(managedType, property));
+	    return this;
 	}
 
 	@Override
@@ -293,12 +300,13 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	}
 
 	@Override
-	public void setOrderedPropertiesByDefault(final Class<?> root, final List<Pair<String, Ordering>> orderedPropertiesByDefault) {
+	public IOrderingRepresentation setOrderedPropertiesByDefault(final Class<?> root, final List<Pair<String, Ordering>> orderedPropertiesByDefault) {
 	    // inject an enhanced type into method implementation
 	    final Class<?> managedType = managedType(root);
 
 	    illegalExcludedProperties(getDtr(), managedType, "", "Could not set an 'ordering by default' for already 'excluded' type [" + managedType.getSimpleName() + "].");
 	    rootsListsOfOrderings.put(managedType, new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault));
+	    return this;
 	}
 
 	@Override

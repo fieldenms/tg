@@ -97,7 +97,7 @@ public interface IDomainTreeManager {
          * @param check -- an action to perform (<code>true</code> to check, <code>false</code> to uncheck)
          *
          */
-        void check(final Class<?> root, final String property, final boolean check);
+        ITickManager check(final Class<?> root, final String property, final boolean check);
 
         /**
          * Returns an <b>ordered</b> list of checked properties for concrete <code>root</code> type. <br><br>
@@ -148,7 +148,7 @@ public interface IDomainTreeManager {
          * @param property1 -- a first property to swap
          * @param property2 -- a second property to swap
          */
-        void swap(final Class<?> root, final String property1, final String property2);
+        ITickManager swap(final Class<?> root, final String property1, final String property2);
 
         /**
          * Moves property <code>what</code> to the place <b>before</b> property <code>beforeWhat</code> in an ordered list of checked properties for concrete <code>root</code> type.
@@ -157,7 +157,7 @@ public interface IDomainTreeManager {
          * @param what -- a property to move
          * @param beforeWhat -- a property before which property "what" will be inserted
          */
-        void move(final Class<?> root, final String what, final String beforeWhat);
+        ITickManager move(final Class<?> root, final String what, final String beforeWhat);
 
         /**
          * Moves property <code>what</code> to the place after all properties in an ordered list of checked properties for concrete <code>root</code> type.
@@ -165,7 +165,7 @@ public interface IDomainTreeManager {
          * @param root -- a root type that contains a checked properties.
          * @param what -- a property to move
          */
-        void moveToTheEnd(final Class<?> root, final String what);
+        ITickManager moveToTheEnd(final Class<?> root, final String what);
 
         @Override
         public boolean equals(Object obj);

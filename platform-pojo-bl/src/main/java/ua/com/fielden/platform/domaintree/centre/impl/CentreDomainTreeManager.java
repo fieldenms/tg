@@ -13,7 +13,9 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToResultTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.centre.IWidthManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
@@ -171,39 +173,51 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
-	public void refreshLocatorManager(final Class<?> root, final String property) {
+	public IAddToCriteriaTickManager check(final Class<?> root, final String property, final boolean check) {
+	    super.check(root, property, check);
+	    return this;
+	}
+
+	@Override
+	public ILocatorManager refreshLocatorManager(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not refresh a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    locatorManager.refreshLocatorManager(root, property);
+	    return this;
 	}
 
 	@Override
-	public void resetLocatorManagerToDefault(final Class<?> root, final String property) {
+	public ILocatorManager resetLocatorManagerToDefault(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not reset a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    locatorManager.resetLocatorManagerToDefault(root, property);
+	    return this;
 	}
 
 	@Override
-	public void acceptLocatorManager(final Class<?> root, final String property) {
+	public ILocatorManager acceptLocatorManager(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not accept a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    locatorManager.acceptLocatorManager(root, property);
+	    return this;
 	}
 
 	@Override
-	public void discardLocatorManager(final Class<?> root, final String property) {
+	public ILocatorManager discardLocatorManager(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not discard a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    locatorManager.discardLocatorManager(root, property);
+	    return this;
 	}
 
 	@Override
-	public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
+	public ILocatorManager saveLocatorManagerGlobally(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not save globally a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    locatorManager.saveLocatorManagerGlobally(root, property);
+	    return this;
 	}
 
 	@Override
-	public void freezeLocatorManager(final Class<?> root, final String property) {
+	public ILocatorManager freezeLocatorManager(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not freeze a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    locatorManager.freezeLocatorManager(root, property);
+	    return this;
 	}
 
 	@Override
@@ -429,19 +443,20 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
 	/////////////////// Checked properties with placeholders ///////////////////
 	@Override
-	public void swap(final Class<?> root, final String property1, final String property2) {
+	public IAddToCriteriaTickManager swap(final Class<?> root, final String property1, final String property2) {
 	    super.swap(root, property1, property2);
 
 	    cropEmptyRows(root);
+	    return this;
 	}
 
 	@Override
-	public void move(final Class<?> root, final String what, final String beforeWhat) {
+	public IAddToCriteriaTickManager move(final Class<?> root, final String what, final String beforeWhat) {
 	    throw new UnsupportedOperationException("Move operation is not supported for Centre domain tree manager's first tick. Please use perhaps 'swap' operation.");
 	}
 
 	@Override
-	public void moveToTheEnd(final Class<?> root, final String what) {
+	public IAddToCriteriaTickManager moveToTheEnd(final Class<?> root, final String what) {
 	    throw new UnsupportedOperationException("MoveToTheEnd operation is not supported for Centre domain tree manager's first tick. Please use perhaps 'swap' operation.");
 	}
 
@@ -717,7 +732,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
-	public void toggleOrdering(final Class<?> root, final String property) {
+	public IOrderingManager toggleOrdering(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not toggle 'ordering' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    if (!rootsListsOfOrderings.containsKey(root)) {
 		rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(orderedProperties(root)));
@@ -731,10 +746,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 		    } else { // Ordering.DESCENDING
 			rootsListsOfOrderings.get(root).remove(index);
 		    }
-		    return;
+		    return this;
 		}
 	    } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
 	    rootsListsOfOrderings.get(root).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
+	    return this;
 	}
 
 	@Override
@@ -770,9 +786,10 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
-	public void setWidth(final Class<?> root, final String property, final int width) {
+	public IWidthManager setWidth(final Class<?> root, final String property, final int width) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'width' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    propertiesWidths.put(key(root, property), width);
+	    return this;
 	}
 
 	@Override

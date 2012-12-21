@@ -19,7 +19,11 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.centre.IWidthManager;
+import ua.com.fielden.platform.domaintree.centre.IWidthRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
@@ -239,7 +243,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     @Override
-    public void initAnalysisManagerByDefault(final String name, final AnalysisType analysisType) {
+    public ICentreDomainTreeManagerAndEnhancer initAnalysisManagerByDefault(final String name, final AnalysisType analysisType) {
 	if (isFreezedAnalysisManager(name)) {
 	    error("Unable to Init analysis instance if it is freezed for title [" + name + "].");
 	}
@@ -268,6 +272,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 		listener.propertyStateChanged(null, name, true, null);
 	    }
 	}
+	return this;
     }
 
     /**
@@ -317,7 +322,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     @Override
-    public void discardAnalysisManager(final String name) {
+    public ICentreDomainTreeManagerAndEnhancer discardAnalysisManager(final String name) {
 	final boolean wasInitialised = getAnalysisManager(name) != null;
 	final IAbstractAnalysisDomainTreeManager dtm = copyAnalysis(persistentAnalyses.get(name), getSerialiser());
 	if (dtm != null) {
@@ -335,10 +340,11 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 		listener.propertyStateChanged(null, name, false, null);
 	    }
 	}
+	return this;
     }
 
     @Override
-    public void acceptAnalysisManager(final String name) {
+    public ICentreDomainTreeManagerAndEnhancer acceptAnalysisManager(final String name) {
 	if (isFreezedAnalysisManager(name)) {
 	    unfreeze(name);
 
@@ -351,6 +357,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 		persistentAnalyses.remove(name);
 	    }
 	}
+	return this;
     }
 
     @Override
@@ -359,7 +366,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     @Override
-    public void removeAnalysisManager(final String name) {
+    public ICentreDomainTreeManagerAndEnhancer removeAnalysisManager(final String name) {
 	if (isFreezedAnalysisManager(name)) {
 	    error("Unable to remove analysis instance if it is freezed for title [" + name + "].");
 	}
@@ -376,6 +383,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 		listener.propertyStateChanged(null, name, false, null);
 	    }
 	}
+	return this;
     }
 
     @Override
@@ -384,7 +392,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     @Override
-    public void freezeAnalysisManager(final String name) {
+    public ICentreDomainTreeManagerAndEnhancer freezeAnalysisManager(final String name) {
 	if (isFreezedAnalysisManager(name)) {
 	    error("Unable to freeze the analysis instance more than once for title [" + name + "].");
 	}
@@ -394,6 +402,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	freezedAnalyses.put(name, persistentAnalyses.remove(name));
 	persistentAnalyses.put(name, copyAnalysis(currentAnalyses.get(name), getSerialiser()));
 	currentAnalyses.put(name, copyAnalysis(currentAnalyses.get(name), getSerialiser())); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
+	return this;
     }
 
     /**
@@ -498,39 +507,69 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
-	public void refreshLocatorManager(final Class<?> root, final String property) {
+	public IAddToCriteriaTickManager swap(final Class<?> root, final String property1, final String property2) {
+	    super.swap(root, property1, property2);
+	    return this;
+	}
+
+	@Override
+	public IAddToCriteriaTickManager moveToTheEnd(final Class<?> root, final String what) {
+	    super.moveToTheEnd(root, what);
+	    return this;
+	}
+
+	@Override
+	public IAddToCriteriaTickManager check(final Class<?> root, final String property, final boolean check) {
+	    super.check(root, property, check);
+    	    return this;
+	}
+
+	@Override
+	public IAddToCriteriaTickManager move(final Class<?> root, final String what, final String beforeWhat) {
+	    super.move(root, what, beforeWhat);
+	    return this;
+	}
+
+	@Override
+	public ILocatorManager refreshLocatorManager(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    base().refreshLocatorManager(enhancer().getManagedType(root), property);
+	    return this;
 	}
 
 	@Override
-	public void resetLocatorManagerToDefault(final Class<?> root, final String property) {
+	public ILocatorManager resetLocatorManagerToDefault(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    base().resetLocatorManagerToDefault(enhancer().getManagedType(root), property);
+	    return this;
 	}
 
 	@Override
-	public void acceptLocatorManager(final Class<?> root, final String property) {
+	public ILocatorManager acceptLocatorManager(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    base().acceptLocatorManager(enhancer().getManagedType(root), property);
+	    return this;
 	}
 
 	@Override
-	public void discardLocatorManager(final Class<?> root, final String property) {
+	public ILocatorManager discardLocatorManager(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    base().discardLocatorManager(enhancer().getManagedType(root), property);
+	    return this;
 	}
 
 	@Override
-	public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
+	public ILocatorManager saveLocatorManagerGlobally(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    base().saveLocatorManagerGlobally(enhancer().getManagedType(root), property);
+	    return this;
 	}
 
 	@Override
-	public void freezeLocatorManager(final Class<?> root, final String property) {
+	public ILocatorManager freezeLocatorManager(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    base().freezeLocatorManager(enhancer().getManagedType(root), property);
+	    return this;
 	}
 
 	@Override
@@ -759,9 +798,10 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
-	public void toggleOrdering(final Class<?> root, final String property) {
+	public IOrderingManager toggleOrdering(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    base().toggleOrdering(enhancer().getManagedType(root), property);
+	    return this;
 	}
 
 	@Override
@@ -783,9 +823,10 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
-	public void setWidth(final Class<?> root, final String property, final int width) {
+	public IWidthManager setWidth(final Class<?> root, final String property, final int width) {
 	    // inject an enhanced type into method implementation
 	    base().setWidth(enhancer().getManagedType(root), property, width);
+	    return this;
 	}
     }
 
@@ -893,9 +934,10 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    }
 
 	    @Override
-	    public void disableOrderingImmutably(final Class<?> root, final String property) {
+	    public IOrderingRepresentation disableOrderingImmutably(final Class<?> root, final String property) {
 		// inject an enhanced type into method implementation
 		base().disableOrderingImmutably(enhancer().getManagedType(root), property);
+		return this;
 	    }
 
 	    @Override
@@ -905,9 +947,10 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    }
 
 	    @Override
-	    public void setOrderedPropertiesByDefault(final Class<?> root, final List<Pair<String, Ordering>> orderedPropertiesByDefault) {
+	    public IOrderingRepresentation setOrderedPropertiesByDefault(final Class<?> root, final List<Pair<String, Ordering>> orderedPropertiesByDefault) {
 		// inject an enhanced type into method implementation
 		base().setOrderedPropertiesByDefault(enhancer().getManagedType(root), orderedPropertiesByDefault);
+		return this;
 	    }
 
 	    @Override
@@ -917,9 +960,10 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    }
 
 	    @Override
-	    public void setWidthByDefault(final Class<?> root, final String property, final int width) {
+	    public IWidthRepresentation setWidthByDefault(final Class<?> root, final String property, final int width) {
 		// inject an enhanced type into method implementation
 		base().setWidthByDefault(enhancer().getManagedType(root), property, width);
+		return this;
 	    }
 	}
 

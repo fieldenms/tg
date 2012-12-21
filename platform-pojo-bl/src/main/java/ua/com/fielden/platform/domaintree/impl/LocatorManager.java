@@ -240,7 +240,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     }
 
     @Override
-    public void refreshLocatorManager(final Class<?> root, final String property) {
+    public ILocatorManager refreshLocatorManager(final Class<?> root, final String property) {
 	nonEntityTypedPropertyError(root, property);
 	if (USAGE_PHASE == phase(root, property)) {
 	    if (GLOBAL == type(root, property)) {
@@ -254,10 +254,11 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	} else { // not applicable
 	    error("Could not Refresh locator while it is editing. Please Accept or Discard it before Refresh (maybe multiple times in case of freezed locator). Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
+	return this;
     }
 
     @Override
-    public void resetLocatorManagerToDefault(final Class<?> root, final String property) {
+    public ILocatorManager resetLocatorManagerToDefault(final Class<?> root, final String property) {
 	nonEntityTypedPropertyError(root, property);
 	if (USAGE_PHASE == phase(root, property)) {
 	    if (LOCAL == type(root, property)) {
@@ -271,11 +272,12 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	} else { // not applicable
 	    error("Could not Reset locator to Default while it is editing. Please Accept or Discard it before ResetToDefault (maybe multiple times in case of freezed locator). Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
+	return this;
     }
 
 
     @Override
-    public void acceptLocatorManager(final Class<?> root, final String property) {
+    public ILocatorManager acceptLocatorManager(final Class<?> root, final String property) {
 	nonEntityTypedPropertyError(root, property);
 	if (USAGE_PHASE == phase(root, property)) { // USAGE_PHASE -- not applicable
 	    error("Could not Accept locator while it is in Usage phase. Please Refresh it (that will move it to Editing phase) before Accept. Property [" + property + "] in type [" + root.getSimpleName() + "].");
@@ -290,10 +292,11 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	    unfreeze(root, property);
 	}
 	current_to_current(root, property);
+	return this;
     }
 
     @Override
-    public void discardLocatorManager(final Class<?> root, final String property) {
+    public ILocatorManager discardLocatorManager(final Class<?> root, final String property) {
 	nonEntityTypedPropertyError(root, property);
 	if (EDITING_PHASE == phase(root, property)) {
 	    if (GLOBAL == type(root, property)) {
@@ -307,20 +310,22 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	} else { // USAGE_PHASE -- not applicable
 	    error("Could not Discard locator while it is in Usage phase. Please Refresh it (that will move it to Editing phase) before Discard. Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
+	return this;
     }
 
     @Override
-    public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
+    public ILocatorManager saveLocatorManagerGlobally(final Class<?> root, final String property) {
 	nonEntityTypedPropertyError(root, property);
 	if (EDITING_PHASE == phase(root, property)) {
 	    globalRepresentation.setLocatorManagerByDefault(propertyTypeForGlobalRepresentationLocator(root, property), getLocatorManager(root, property));
 	} else { // not applicable
 	    error("Could not SaveGlobally locator while it is not in Editing phase. Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
+	return this;
     }
 
     @Override
-    public void freezeLocatorManager(final Class<?> root, final String property) {
+    public ILocatorManager freezeLocatorManager(final Class<?> root, final String property) {
 	nonEntityTypedPropertyError(root, property);
 	if (EDITING_PHASE == phase(root, property)) {
 	    freezedLocators.put(key(root, property), persistentLocators.remove(key(root, property)));
@@ -329,6 +334,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	} else { // not applicable
 	    error("Could not Freeze locator while it is not in Editing phase (e.g. double freezing is not permitted). Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
+	return this;
     }
 
     /**

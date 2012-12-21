@@ -3,6 +3,7 @@ package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
+import ua.com.fielden.platform.domaintree.centre.IWidthManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRepresentation.PivotAddToAggregationTickRepresentation;
@@ -74,12 +75,13 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	}
 
 	@Override
-	public void setWidth(final Class<?> root, final String property, final int width) {
+	public IPivotAddToDistributionTickManager setWidth(final Class<?> root, final String property, final int width) {
 	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not set a 'width' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    // update ALL existing widths for used properties with the same value (single column "treatment")
 	    for (final String usedProperty : usedProperties(root)) {
 		PivotDomainTreeRepresentation.setWidth(tr().getDtr(), root, usedProperty, width, propertiesWidths);
 	    }
+	    return this;
 	}
 
 	@Override
@@ -131,9 +133,10 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	}
 
 	@Override
-	public void setWidth(final Class<?> root, final String property, final int width) {
+	public IWidthManager setWidth(final Class<?> root, final String property, final int width) {
 	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not set a 'width' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    PivotDomainTreeRepresentation.setWidth(tr().getDtr(), root, property, width, propertiesWidths);
+	    return this;
 	}
 
 	@Override

@@ -34,7 +34,7 @@ public interface IOrderingManager {
      * @param ordering -- an ordering to set
      * @return -- a result tick representation
      */
-    void toggleOrdering(final Class<?> root, final String property);
+    IOrderingManager toggleOrdering(final Class<?> root, final String property);
 
     /**
      * A post-successful listener for property ordering.

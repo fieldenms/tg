@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.centre.IWidthRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
@@ -65,9 +66,10 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
 	}
 
 	@Override
-	public void setWidthByDefault(final Class<?> root, final String property, final int width) {
+	public IPivotAddToDistributionTickRepresentation setWidthByDefault(final Class<?> root, final String property, final int width) {
 	    illegalExcludedProperties(getDtr(), root, property, "Could not set a 'width' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    propertiesWidthsByDefault.put(key(root, getDummySuffix()), width);
+	    return this;
 	}
 
 	@Override
@@ -113,8 +115,9 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
 	}
 
 	@Override
-	public void setWidthByDefault(final Class<?> root, final String property, final int width) {
+	public IWidthRepresentation setWidthByDefault(final Class<?> root, final String property, final int width) {
 	    PivotDomainTreeRepresentation.setWidth(getDtr(), root, property, width, propertiesWidthsByDefault);
+	    return this;
 	}
 
 	@Override

@@ -370,9 +370,10 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
-	public void check(final Class<?> root, final String property, final boolean check) {
+	public ITickManager check(final Class<?> root, final String property, final boolean check) {
 	    // inject an enhanced type into method implementation
 	    base.check(enhancerWithPropertiesPopulation.getManagedType(root), property, check);
+	    return this;
 	}
 
 	@Override
@@ -394,21 +395,24 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
-	public void swap(final Class<?> root, final String property1, final String property2) {
+	public ITickManager swap(final Class<?> root, final String property1, final String property2) {
 	    // inject an enhanced type into method implementation
 	    base.swap(enhancerWithPropertiesPopulation.getManagedType(root), property1, property2);
+	    return this;
 	}
 
 	@Override
-	public void move(final Class<?> root, final String what, final String beforeWhat) {
+	public ITickManager move(final Class<?> root, final String what, final String beforeWhat) {
 	    // inject an enhanced type into method implementation
 	    base.move(enhancerWithPropertiesPopulation.getManagedType(root), what, beforeWhat);
+	    return this;
 	}
 
 	@Override
-	public void moveToTheEnd(final Class<?> root, final String what) {
+	public ITickManager moveToTheEnd(final Class<?> root, final String what) {
 	    // inject an enhanced type into method implementation
 	    base.moveToTheEnd(enhancerWithPropertiesPopulation.getManagedType(root), what);
+	    return this;
 	}
 
 
@@ -504,9 +508,10 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    }
 
 	    @Override
-	    public void disableImmutably(final Class<?> root, final String property) {
+	    public ITickRepresentation disableImmutably(final Class<?> root, final String property) {
 		// inject an enhanced type into method implementation
 		base.disableImmutably(enhancerWithPropertiesPopulation.getManagedType(root), property);
+		return this;
 	    }
 
 	    @Override
@@ -556,9 +561,10 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
-	public void excludeImmutably(final Class<?> root, final String property) {
+	public IDomainTreeRepresentation excludeImmutably(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    base.excludeImmutably(enhancerWithPropertiesPopulation.getManagedType(root), property);
+	    return this;
 	}
 
 	@Override
@@ -568,9 +574,10 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
-	public void warmUp(final Class<?> root, final String property) {
+	public IDomainTreeRepresentation warmUp(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    base.warmUp(enhancerWithPropertiesPopulation.getManagedType(root), property);
+	    return this;
 	}
 
 	@Override

@@ -48,33 +48,39 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
     }
 
     @Override
-    public void refreshLocatorManager(final Class<?> root, final String property) {
+    public ILocatorManager refreshLocatorManager(final Class<?> root, final String property) {
 	locatorManager.refreshLocatorManager(root, property);
+	return this;
     }
 
     @Override
-    public void resetLocatorManagerToDefault(final Class<?> root, final String property) {
+    public ILocatorManager resetLocatorManagerToDefault(final Class<?> root, final String property) {
 	locatorManager.resetLocatorManagerToDefault(root, property);
+	return this;
     }
 
     @Override
-    public void acceptLocatorManager(final Class<?> root, final String property) {
+    public ILocatorManager acceptLocatorManager(final Class<?> root, final String property) {
 	locatorManager.acceptLocatorManager(root, property);
+	return this;
     }
 
     @Override
-    public void discardLocatorManager(final Class<?> root, final String property) {
+    public ILocatorManager discardLocatorManager(final Class<?> root, final String property) {
 	locatorManager.discardLocatorManager(root, property);
+	return this;
     }
 
     @Override
-    public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
+    public ILocatorManager saveLocatorManagerGlobally(final Class<?> root, final String property) {
 	locatorManager.saveLocatorManagerGlobally(root, property);
+	return this;
     }
 
     @Override
-    public void freezeLocatorManager(final Class<?> root, final String property) {
+    public ILocatorManager freezeLocatorManager(final Class<?> root, final String property) {
 	locatorManager.freezeLocatorManager(root, property);
+	return this;
     }
 
     @Override

@@ -58,7 +58,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      * @param property -- a dot-notation expression that defines a property (empty property defines an entity itself).
      *
      */
-    void excludeImmutably(final Class<?> root, final String property);
+    IDomainTreeRepresentation excludeImmutably(final Class<?> root, final String property);
 
     /**
      * Returns an immutable <b>ordered</b> list of included properties for concrete <code>root</code> type. <br><br>
@@ -122,7 +122,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      * @param property -- a dot-notation expression that defines a property to be "warmed up"
      *
      */
-    void warmUp(final Class<?> root, final String property);
+    IDomainTreeRepresentation warmUp(final Class<?> root, final String property);
 
     /**
      * Defines a contract for what properties have which functions available. If no functions are available -- the calculated properties could not be created.<br><br>
@@ -184,7 +184,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
          * @param property -- a dot-notation expression that defines a property (empty property defines an entity itself).
          *
          */
-        void disableImmutably(final Class<?> root, final String property);
+        ITickRepresentation disableImmutably(final Class<?> root, final String property);
 
         /**
          * A post-successful listener for property disablement.

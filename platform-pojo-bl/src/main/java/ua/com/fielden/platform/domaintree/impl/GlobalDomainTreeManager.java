@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHASE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,11 +42,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHASE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * The global domain tree manager implementation.
@@ -239,7 +239,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public void initEntityCentreManager(final Class<?> menuItemType, final String name) {
+    public IGlobalDomainTreeManager initEntityCentreManager(final Class<?> menuItemType, final String name) {
 	validateMenuItemType(menuItemType);
 	final Class<?> root = validateMenuItemTypeRootType(menuItemType);
 	if (isFreezedEntityCentreManager(menuItemType, name)) {
@@ -251,7 +251,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final int count = entityCentreConfigController.count(model);
 	if (count == 1) { // the persistence layer contains a entity-centre, so it should be retrieved and deserialised
 	    retrieveAndInit(menuItemType, name, model);
-	    return;
+	    return this;
 	} else if (count < 1) { // there is no entity-centre
 	    if (name == null) { // principle entity-centre
 		// Principle entity-centre should be initialised and then saved. This can be done naturally by base user.
@@ -264,7 +264,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 		final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
 		ecc.setConfigBody(getSerialiser().serialise(centre));
 		saveCentre(centre, ecc);
-		return;
+		return this;
 	    } else {
 		error("Unable to initialise a non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    }
@@ -280,6 +280,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	} else {
 	    error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	}
+	return this;
     }
 
     /**
@@ -550,7 +551,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public void discardEntityCentreManager(final Class<?> menuItemType, final String name) {
+    public IGlobalDomainTreeManager discardEntityCentreManager(final Class<?> menuItemType, final String name) {
 	validateMenuItemType(menuItemType);
 	validateMenuItemTypeRootType(menuItemType);
 	final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.get(key(menuItemType, name));
@@ -560,10 +561,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	if (isFreezedEntityCentreManager(menuItemType, name)) {
 	    unfreeze(menuItemType, name);
 	}
+	return this;
     }
 
     @Override
-    public void freezeEntityCentreManager(final Class<?> menuItemType, final String name) {
+    public IGlobalDomainTreeManager freezeEntityCentreManager(final Class<?> menuItemType, final String name) {
 	validateMenuItemType(menuItemType);
 	validateMenuItemTypeRootType(menuItemType);
 	if (isFreezedEntityCentreManager(menuItemType, name)) {
@@ -575,6 +577,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	freezedCentres.put(key(menuItemType, name), persistentCentres.remove(key(menuItemType, name)));
 	persistentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name))));
 	currentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
+	return this;
     }
 
     /**
@@ -632,7 +635,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public void saveEntityCentreManager(final Class<?> menuItemType, final String name) {
+    public IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name) {
 	validateMenuItemType(menuItemType);
 	validateMenuItemTypeRootType(menuItemType);
 	if (isFreezedEntityCentreManager(menuItemType, name)) {
@@ -661,6 +664,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 		error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    }
 	}
+	return this;
     }
 
     /**
@@ -704,7 +708,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public void saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName) {
+    public IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName) {
 	validateMenuItemType(menuItemType);
 	validateMenuItemTypeRootType(menuItemType);
 
@@ -732,6 +736,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	} else { // > 1
 	    error("There are at least one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser() + "] or its base [" + baseOfTheCurrentUser() + "].");
 	}
+	return this;
     }
 
     private void saveCentre(final ICentreDomainTreeManagerAndEnhancer copyMgr, final EntityCentreConfig ecc) {
@@ -757,7 +762,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public void removeEntityCentreManager(final Class<?> menuItemType, final String name) {
+    public IGlobalDomainTreeManager removeEntityCentreManager(final Class<?> menuItemType, final String name) {
 	validateMenuItemType(menuItemType);
 	validateMenuItemTypeRootType(menuItemType);
 
@@ -777,6 +782,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    // remove an instance of EntityCentreConfig which should exist in DB
 	    entityCentreConfigController.delete(modelForCurrentUser(menuItemType.getName(), title(menuItemType, name)));
 	}
+	return this;
     }
 
     @Override
@@ -813,22 +819,23 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public void initEntityMasterManager(final Class<?> root) {
+    public IGlobalDomainTreeManager initEntityMasterManager(final Class<?> root) {
 	final String rootName = root.getName();
 	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(rootName);
 	final int count = entityMasterConfigController.count(model);
 	if (count == 1) { // the persistence layer contains an entity-master, so it should be retrieved and deserialised
 	    retrieveAndInitMaster(root, model);
-	    return;
+	    return this;
 	} else if (count < 1) { // there is no own entity-master -- should be initialised by default.
 	    initEntityMasterManagerByDefault(root);
 	}  else {
 	    error("There are more than one entity-master instance for type [" + root.getSimpleName() + "] for current user [" + currentUser() + "].");
 	}
+	return this;
     }
 
     @Override
-    public void discardEntityMasterManager(final Class<?> root) {
+    public IGlobalDomainTreeManager discardEntityMasterManager(final Class<?> root) {
 	masterNotInitiliasedError(persistentMasters.get(root), root);
 
 	final String rootName = root.getName();
@@ -842,10 +849,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	}  else {
 	    error("There are more than one entity-master instance for type [" + root.getSimpleName() + "] for current user [" + currentUser() + "].");
 	}
+	return this;
     }
 
     @Override
-    public void saveEntityMasterManager(final Class<?> root) {
+    public IGlobalDomainTreeManager saveEntityMasterManager(final Class<?> root) {
 	final IMasterDomainTreeManager currentMgr = getEntityMasterManager(root);
 	masterValidateBeforeSaving(currentMgr, root);
 
@@ -868,6 +876,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	} else { // > 1
 	    error("There are more than one entity-master instance for type [" + root.getSimpleName() + "] for current user [" + currentUser() + "].");
 	}
+	return this;
     }
 
     //    @Override
@@ -877,13 +886,13 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     //    }
 
     @Override
-    public void initEntityMasterManagerByDefault(final Class<?> root) {
+    public IGlobalDomainTreeManager initEntityMasterManagerByDefault(final Class<?> root) {
 	final String rootName = root.getName();
 	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForBaseUser(rootName);
 	final int count = entityMasterConfigController.count(model);
 	if (count == 1) { // the persistence layer contains an entity-master for base user, so it should be retrieved and deserialised
 	    retrieveAndInitMaster(root, model);
-	    return;
+	    return this;
 	} else if (count < 1) { // there is own entity-master -- should be initialised by default.
 	    // Entity-master should be initialised and then saved. This can be done naturally by base user.
 	    // But if base user haven't did it yet, it will be done by non-base user automatically.
@@ -892,9 +901,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    final EntityMasterConfig emc = factory.newByKey(EntityMasterConfig.class, baseOfTheCurrentUser(), rootName);
 	    emc.setConfigBody(getSerialiser().serialise(getEntityMasterManager(root)));
 	    entityMasterConfigController.save(emc);
-	    return;
+	    return this;
 	}  else {
 	    error("There are more than one entity-master instance for type [" + root.getSimpleName() + "] for current user [" + baseOfTheCurrentUser() + "].");
 	}
+	return this;
     }
 }

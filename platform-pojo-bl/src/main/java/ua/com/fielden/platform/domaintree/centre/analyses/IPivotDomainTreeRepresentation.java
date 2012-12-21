@@ -41,7 +41,7 @@ public interface IPivotDomainTreeRepresentation extends IAbstractAnalysisDomainT
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void setWidthByDefault(Class<?> root, String property, int width);
+	public IPivotAddToDistributionTickRepresentation setWidthByDefault(Class<?> root, String property, int width);
     }
 
     /**

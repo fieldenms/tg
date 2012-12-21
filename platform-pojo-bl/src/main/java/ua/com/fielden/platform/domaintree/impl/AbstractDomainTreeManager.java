@@ -285,12 +285,13 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	}
 
 	@Override
-	public void check(final Class<?> root, final String property, final boolean check) {
+	public ITickManager check(final Class<?> root, final String property, final boolean check) {
 	    AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not [un]check already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    if (tr.isDisabledImmutably(root, property)) {
 		throw new IllegalArgumentException("Could not [un]check 'disabled' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    }
 	    checkSimply(root, property, check);
+	    return this;
 	}
 
 	protected void checkSimply(final Class<?> root, final String property, final boolean check) {
@@ -374,28 +375,31 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	}
 
 	@Override
-	public void swap(final Class<?> root, final String property1, final String property2) {
+	public ITickManager swap(final Class<?> root, final String property1, final String property2) {
 	    final List<String> props = checkedPropertiesMutable(root);
 	    checkPropertyExistence(props, property1, "'Swap' operation for 'checked properties' failed. The property [" + property1 + "] in type [" + root.getSimpleName() + "] is not checked.");
 	    checkPropertyExistence(props, property2, "'Swap' operation for 'checked properties' failed. The property [" + property2 + "] in type [" + root.getSimpleName() + "] is not checked.");
 	    Collections.swap(props, props.indexOf(property1), props.indexOf(property2));
+	    return this;
 	}
 
 	@Override
-	public void move(final Class<?> root, final String what, final String beforeWhat) {
+	public ITickManager move(final Class<?> root, final String what, final String beforeWhat) {
 	    final List<String> props = checkedPropertiesMutable(root);
 	    checkPropertyExistence(props, what, "'Move' operation for 'checked properties' failed. The property [" + what + "] in type [" + root.getSimpleName() + "] is not checked.");
 	    checkPropertyExistence(props, beforeWhat, "'Move' operation for 'checked properties' failed. The property [" + beforeWhat + "] in type [" + root.getSimpleName() + "] is not checked.");
 	    props.remove(what);
 	    props.add(props.indexOf(beforeWhat), what);
+	    return this;
 	}
 
 	@Override
-	public void moveToTheEnd(final Class<?> root, final String what) {
+	public ITickManager moveToTheEnd(final Class<?> root, final String what) {
 	    final List<String> props = checkedPropertiesMutable(root);
 	    checkPropertyExistence(props, what, "'Move to the end' operation for 'checked properties' failed. The property [" + what + "] in type [" + root.getSimpleName() + "] is not checked.");
 	    props.remove(what);
 	    props.add(what);
+	    return this;
 	}
 
 	protected ITickRepresentation tr() {

@@ -31,5 +31,5 @@ public interface IWidthManager {
      * @param width -- a width to set
      * @return -- a result tick representation
      */
-    void setWidth(final Class<?> root, final String property, final int width);
+    IWidthManager setWidth(final Class<?> root, final String property, final int width);
 }

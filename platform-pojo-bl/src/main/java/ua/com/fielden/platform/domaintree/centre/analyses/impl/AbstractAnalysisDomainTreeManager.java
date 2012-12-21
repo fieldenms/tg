@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
@@ -147,9 +148,10 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	}
 
 	@Override
-	public void check(final Class<?> root, final String property, final boolean check) {
+	public ITickManager check(final Class<?> root, final String property, final boolean check) {
 	    // inject an enhanced type into method implementation
 	    super.check(managedType(root), property, check);
+	    return this;
 	}
 
 	@Override
@@ -165,21 +167,24 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	}
 
 	@Override
-	public void swap(final Class<?> root, final String property1, final String property2) {
+	public ITickManager swap(final Class<?> root, final String property1, final String property2) {
 	    // inject an enhanced type into method implementation
 	    super.swap(managedType(root), property1, property2);
+	    return this;
 	}
 
 	@Override
-	public void move(final Class<?> root, final String what, final String beforeWhat) {
+	public ITickManager move(final Class<?> root, final String what, final String beforeWhat) {
 	    // inject an enhanced type into method implementation
 	    super.move(managedType(root), what, beforeWhat);
+	    return this;
 	}
 
 	@Override
-	public void moveToTheEnd(final Class<?> root, final String what) {
+	public ITickManager moveToTheEnd(final Class<?> root, final String what) {
 	    // inject an enhanced type into method implementation
 	    super.moveToTheEnd(managedType(root), what);
+	    return this;
 	}
 
 	@Override
@@ -313,9 +318,10 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	}
 
 	@Override
-	public void check(final Class<?> root, final String property, final boolean check) {
+	public ITickManager check(final Class<?> root, final String property, final boolean check) {
 	    // inject an enhanced type into method implementation
 	    super.check(managedType(root), property, check);
+	    return this;
 	}
 
 	@Override
@@ -331,21 +337,24 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	}
 
 	@Override
-	public void swap(final Class<?> root, final String property1, final String property2) {
+	public ITickManager swap(final Class<?> root, final String property1, final String property2) {
 	    // inject an enhanced type into method implementation
 	    super.swap(managedType(root), property1, property2);
+	    return this;
 	}
 
 	@Override
-	public void move(final Class<?> root, final String what, final String beforeWhat) {
+	public ITickManager move(final Class<?> root, final String what, final String beforeWhat) {
 	    // inject an enhanced type into method implementation
 	    super.move(managedType(root), what, beforeWhat);
+	    return this;
 	}
 
 	@Override
-	public void moveToTheEnd(final Class<?> root, final String what) {
+	public ITickManager moveToTheEnd(final Class<?> root, final String what) {
 	    // inject an enhanced type into method implementation
 	    super.moveToTheEnd(managedType(root), what);
+	    return this;
 	}
 
 	@Override
@@ -433,7 +442,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	}
 
 	@Override
-	public void toggleOrdering(final Class<?> root, final String property) {
+	public IOrderingManager toggleOrdering(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    final Class<?> managedType = managedType(root);
 
@@ -453,7 +462,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 		    for (final IPropertyOrderingListener listener : propertyOrderingListeners) {
 			listener.propertyStateChanged(managedType, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(managedType)), null);
 		    }
-		    return;
+		    return this;
 		}
 	    } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
 	    rootsListsOfOrderings.get(managedType).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
@@ -461,6 +470,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    for (final IPropertyOrderingListener listener : propertyOrderingListeners) {
 		listener.propertyStateChanged(managedType, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(managedType)), null);
 	    }
+	    return this;
 	}
 
 	@Override

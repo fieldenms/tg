@@ -86,7 +86,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	     * @param analysisType -- a type of an analysis.
 	     * @return
 	     */
-	    void initAnalysisManagerByDefault(final String name, final AnalysisType analysisType);
+	    ICentreDomainTreeManagerAndEnhancer initAnalysisManagerByDefault(final String name, final AnalysisType analysisType);
 
 	    /**
 	     * Discards a current version of analysis manager with specified <code>name</code>.
@@ -102,7 +102,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	     * @param name -- a name that defines an analysis.
 	     * @return
 	     */
-	    void discardAnalysisManager(final String name);
+	    ICentreDomainTreeManagerAndEnhancer discardAnalysisManager(final String name);
 
 	    /**
 	     * Accepts a current version of analysis manager with specified <code>name</code>.
@@ -118,7 +118,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	     * @param name -- a name that defines an analysis.
 	     * @return
 	     */
-	    void acceptAnalysisManager(final String name);
+	    ICentreDomainTreeManagerAndEnhancer acceptAnalysisManager(final String name);
 
 	    /**
 	     * Returns <code>true</code> if the current version of analysis manager instance with specified <code>name</code> has been changed since last saving/discard (or since the beginning of analysis history). <br><br>
@@ -146,7 +146,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	     * @param name -- a name that defines an analysis.
 	     * @return
 	     */
-	    void removeAnalysisManager(final String name);
+	    ICentreDomainTreeManagerAndEnhancer removeAnalysisManager(final String name);
 
 	    /**
 	     * Gets a current version of analysis manager with specified <code>name</code>. <br><br>
@@ -174,7 +174,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	     * @param name -- a name that defines an analysis.
 	     * @return
 	     */
-	    void freezeAnalysisManager(final String name);
+	    ICentreDomainTreeManagerAndEnhancer freezeAnalysisManager(final String name);
 
 	    /**
 	     * Returns <code>true</code> if the current version of analysis manager instance with specified <code>name</code> is in freezed state.
@@ -207,7 +207,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	    //     * @param what -- a property to move
 	    //     * @param beforeWhat -- a property before which property "what" will be inserted
 	    //     */
-	    //    void moveAnalysis(final String what, final String beforeWhat);
+	    //    ICentreDomainTreeManagerAndEnhancer moveAnalysis(final String what, final String beforeWhat);
 	    //
 	    //    /**
 	    //     * Moves property <code>what</code> to the place after all properties in an ordered list of checked properties for concrete <code>root</code> type.
@@ -215,7 +215,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	    //     * @param root -- a root type that contains a checked properties.
 	    //     * @param what -- a property to move
 	    //     */
-	    //    void moveAnalysisToTheEnd(final String what);
+	    //    ICentreDomainTreeManagerAndEnhancer moveAnalysisToTheEnd(final String what);
     }
 
     /**
@@ -586,7 +586,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param check -- an action to perform (<code>true</code> to check, <code>false</code> to uncheck)
          *
          */
-        void check(final Class<?> root, final String property, final boolean check);
+        IAddToCriteriaTickManager check(final Class<?> root, final String property, final boolean check);
 
         /**
          * Returns an <b>ordered</b> list of checked properties for concrete <code>root</code> type. <br><br>
@@ -615,7 +615,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param property1 -- a first property to swap
          * @param property2 -- a second property to swap
          */
-        void swap(final Class<?> root, final String property1, final String property2);
+        IAddToCriteriaTickManager swap(final Class<?> root, final String property1, final String property2);
 
         /**
          * Throws {@link UnsupportedOperationException}.
@@ -624,7 +624,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param what -- a property to move
          * @param beforeWhat -- a property before which property "what" will be inserted
          */
-        void move(final Class<?> root, final String what, final String beforeWhat);
+        IAddToCriteriaTickManager move(final Class<?> root, final String what, final String beforeWhat);
 
         /**
          * Throws {@link UnsupportedOperationException}.
@@ -632,7 +632,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param root -- a root type that contains a checked properties.
          * @param what -- a property to move
          */
-        void moveToTheEnd(final Class<?> root, final String what);
+        IAddToCriteriaTickManager moveToTheEnd(final Class<?> root, final String what);
     }
 
     /**

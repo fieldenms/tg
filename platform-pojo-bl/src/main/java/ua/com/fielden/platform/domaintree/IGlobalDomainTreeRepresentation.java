@@ -38,5 +38,5 @@ public interface IGlobalDomainTreeRepresentation {
      * @param locatorManager -- a new locator manager to set
      * @return
      */
-    void setLocatorManagerByDefault(final Class<?> propertyType, final ILocatorDomainTreeManagerAndEnhancer locatorManager);
+    IGlobalDomainTreeRepresentation setLocatorManagerByDefault(final Class<?> propertyType, final ILocatorDomainTreeManagerAndEnhancer locatorManager);
 }

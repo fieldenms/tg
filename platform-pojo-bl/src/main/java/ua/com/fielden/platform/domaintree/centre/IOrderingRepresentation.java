@@ -66,7 +66,7 @@ public interface IOrderingRepresentation {
      * @param property -- a dot-notation expression that defines a property (empty property defines an entity itself).
      *
      */
-    void disableOrderingImmutably(final Class<?> root, final String property);
+    IOrderingRepresentation disableOrderingImmutably(final Class<?> root, final String property);
 
     /**
      * Returns a list of <b>ordered</b> properties (columns) for concrete <code>root</code> type.
@@ -86,5 +86,5 @@ public interface IOrderingRepresentation {
      * @param root -- a root type that contains an <b>ordered</b> properties.
      * @return
      */
-    void setOrderedPropertiesByDefault(final Class<?> root, final List<Pair<String, Ordering>> orderedPropertiesByDefault);
+    IOrderingRepresentation setOrderedPropertiesByDefault(final Class<?> root, final List<Pair<String, Ordering>> orderedPropertiesByDefault);
 }

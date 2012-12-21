@@ -90,7 +90,7 @@ public interface IGlobalDomainTreeManager {
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      * @return
      */
-    void freezeEntityCentreManager(final Class<?> menuItemType, final String name);
+    IGlobalDomainTreeManager freezeEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
      * Returns <code>true</code> if the current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b> is in freezed state.
@@ -128,7 +128,7 @@ public interface IGlobalDomainTreeManager {
      * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    void initEntityCentreManager(final Class<?> menuItemType, final String name);
+    IGlobalDomainTreeManager initEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
      * Discards a current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.
@@ -148,7 +148,7 @@ public interface IGlobalDomainTreeManager {
      * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    void discardEntityCentreManager(final Class<?> menuItemType, final String name);
+    IGlobalDomainTreeManager discardEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
      * Saves a current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.
@@ -168,7 +168,7 @@ public interface IGlobalDomainTreeManager {
      * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    void saveEntityCentreManager(final Class<?> menuItemType, final String name);
+    IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
      * Duplicates an <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with <b>originalName</b> to an <b>entity-centre manager</b> with <b>newName</b> and then saves a manager copy.
@@ -188,7 +188,7 @@ public interface IGlobalDomainTreeManager {
      * @param originalName -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre, which should be copied.
      * @param newName -- should represent a not empty (if empty -- throws {@link IllegalArgumentException}) name of new entity-centre.
      */
-    void saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName);
+    IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName);
 
     /**
      * Returns <code>true</code> if the current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b> has been changed since last saving/discard (or since the beginning of manager history).
@@ -226,7 +226,7 @@ public interface IGlobalDomainTreeManager {
      * @param menuItemType -- a domain type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    void removeEntityCentreManager(final Class<?> menuItemType, final String name);
+    IGlobalDomainTreeManager removeEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
      * Returns distinct ordered (as in the cloud) names of persisted in the cloud <b>entity-centre managers</b> for menu item type <b>menuItemType</b>.<br><br>
@@ -270,7 +270,7 @@ public interface IGlobalDomainTreeManager {
      *
      * @param root -- a domain type relevant to an entity-master manager.
      */
-    void initEntityMasterManager(final Class<?> root);
+    IGlobalDomainTreeManager initEntityMasterManager(final Class<?> root);
 
     /**
      * Discards a current version of <b>entity-master manager</b> for domain type <b>root</b>. <br><br>
@@ -283,7 +283,7 @@ public interface IGlobalDomainTreeManager {
      *
      * @param root -- a domain type relevant to an entity-master manager.
      */
-    void discardEntityMasterManager(final Class<?> root);
+    IGlobalDomainTreeManager discardEntityMasterManager(final Class<?> root);
 
     /**
      * Saves a current version of <b>entity-master manager</b> for domain type <b>root</b>. Non-base user can modify and save to perform base user's configuration overriding,
@@ -297,7 +297,7 @@ public interface IGlobalDomainTreeManager {
      *
      * @param root -- a domain type relevant to an entity-master manager.
      */
-    void saveEntityMasterManager(final Class<?> root);
+    IGlobalDomainTreeManager saveEntityMasterManager(final Class<?> root);
 
 //    /**
 //     * Returns <code>true</code> if the current version of <b>entity-master manager</b> for domain type <b>root</b> has been changed since last saving/discard (or since the beginning of manager history). <br><br>
@@ -322,5 +322,5 @@ public interface IGlobalDomainTreeManager {
      *
      * @param root -- a domain type relevant to an entity-master manager.
      */
-    void initEntityMasterManagerByDefault(final Class<?> root);
+    IGlobalDomainTreeManager initEntityMasterManagerByDefault(final Class<?> root);
 }
