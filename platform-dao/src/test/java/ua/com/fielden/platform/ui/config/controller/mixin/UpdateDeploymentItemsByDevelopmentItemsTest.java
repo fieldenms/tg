@@ -1140,6 +1140,32 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 	assertTrue("Incorrect menu after updating.", itemsEquals(new CheckingBuilder19(factory).build(), mixin.loadMenuSkeletonStructure()));
     }
 
+    private static int n = 100;
+
+    private static class CheckingAndUpdatingBuilder20 extends MainMenu {
+	protected CheckingAndUpdatingBuilder20(final EntityFactory factory) {
+	    super(factory);
+	}
+
+	@Override
+	public List<MainMenuItem> build() {
+	    for  (int i = 0; i < n; i++) {
+		structureFactory().
+			push("type_neew_" + i).pop();
+	    }
+	    return super.build();
+	}
+    }
+
+    @Test
+    public void test_update_with_a_lot_of_items() {
+	final User baseUser = getBaseUser();
+	mixin.setUser(baseUser);
+	assertTrue("Incorrect menu before updating.", itemsEquals(new OriginalCheckingBuilder(factory).build(), mixin.loadMenuSkeletonStructure()));
+	mixin.updateMenuItemsWithDevelopmentOnes(new CheckingAndUpdatingBuilder20(factory));
+	assertTrue("Incorrect menu after updating.", itemsEquals(new CheckingAndUpdatingBuilder20(factory).build(), mixin.loadMenuSkeletonStructure()));
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     /////////////////////////////// INITIAL SETUP ////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
