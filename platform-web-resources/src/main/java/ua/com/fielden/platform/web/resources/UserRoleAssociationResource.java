@@ -5,14 +5,15 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.Representation;
-import org.restlet.resource.Resource;
+import org.restlet.representation.Representation;
+import org.restlet.representation.Variant;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.Variant;
+import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.error.Result;
@@ -25,7 +26,7 @@ import ua.com.fielden.platform.security.user.UserRole;
  *
  * @author TG Team
  */
-public class UserRoleAssociationResource extends Resource {
+public class UserRoleAssociationResource extends ServerResource {
 
     private final IUserController controller;
     private final IUserRoleDao userRoleDao;
@@ -34,29 +35,12 @@ public class UserRoleAssociationResource extends Resource {
     private final Long userIdToHaveRolesUpdated;
     private final Long[] roleIds;
 
-    ////////////////////////////////////////////////////////////////////
-    // let's specify what HTTP methods are supported by this resource //
-    ////////////////////////////////////////////////////////////////////
-    @Override
-    public boolean allowGet() {
-	return false;
-    }
-
-    @Override
-    public boolean allowHead() {
-	return false;
-    }
-
-    @Override
-    public boolean allowPost() {
-	return true;
-    }
-
     /**
      * Principle constructor.
      */
     public UserRoleAssociationResource(final IUserController controller, final IUserRoleDao userRoleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(context, request, response);
+	init(context, request, response);
+	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.controller = controller;
 	this.userRoleDao = userRoleDao;
@@ -86,8 +70,9 @@ public class UserRoleAssociationResource extends Resource {
     /**
      * Handles POST request resulting from RAO call to method updateUser.
      */
+    @Post
     @Override
-    public void acceptRepresentation(final Representation envelope) throws ResourceException {
+    public Representation post(final Representation envelope) throws ResourceException {
 	try {
 	    // retrieve roles by ids and user with roles by key
 	    final List<UserRole> roles = userRoleDao.findByIds(roleIds);
@@ -95,11 +80,13 @@ public class UserRoleAssociationResource extends Resource {
 	    // update user with new roles
 	    controller.updateUser(user, roles);
 	    // if there  was no exception then report a success back to client
-	    getResponse().setEntity(restUtil.resultRepresentation(new Result("Roles updated successfully.")));
+	    //getResponse().setEntity(restUtil.resultRepresentation(new Result("Roles updated successfully.")));
+	    return restUtil.resultRepresentation(new Result("Roles updated successfully."));
 	} catch (final Exception ex) {
 	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
 	    final String msg = !StringUtils.isEmpty(ex.getMessage()) ? ex.getMessage() : "Exception does not contain any specific message.";
-	    getResponse().setEntity(restUtil.errorRepresentation(msg));
+	    //getResponse().setEntity(restUtil.errorRepresentation(msg));
+	    return restUtil.errorRepresentation(msg);
 	}
     }
 

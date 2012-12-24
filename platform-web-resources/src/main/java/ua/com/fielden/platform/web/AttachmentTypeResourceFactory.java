@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web;
 
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachmentController;
@@ -50,12 +50,8 @@ public class AttachmentTypeResourceFactory extends Restlet {
 	final String username = (String) request.getAttributes().get("username");
 	injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	if (Method.GET.equals(request.getMethod())) {
-	    new AttachmentTypeResource(location, dao, factory, restUtil, getContext(), request, response).handleGet();
-	} else if (Method.HEAD.equals(request.getMethod())) {
-	    new AttachmentTypeResource(location, dao, factory, restUtil, getContext(), request, response).handleHead();
-	} else if (Method.POST.equals(request.getMethod())) {
-	    new AttachmentTypeResource(location, dao, factory, restUtil, getContext(), request, response).handlePost();
+	if (Method.GET.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod()) || Method.POST.equals(request.getMethod())) {
+	    new AttachmentTypeResource(location, dao, factory, restUtil, getContext(), request, response).handle();
 	}
     }
 }

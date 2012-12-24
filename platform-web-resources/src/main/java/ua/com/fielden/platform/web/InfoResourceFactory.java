@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web;
 
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 
 import ua.com.fielden.platform.web.resources.InfoResource;
 
@@ -23,10 +23,8 @@ public class InfoResourceFactory extends Restlet {
     @Override
     public void handle(final Request request, final Response response) {
 	super.handle(request, response);
-	if (Method.GET.equals(request.getMethod())) {
-	    new InfoResource(appInfo, getContext(), request, response).handleGet();
-	} else if (Method.HEAD.equals(request.getMethod())) {
-	    new InfoResource(appInfo, getContext(), request, response).handleHead();
+	if (Method.GET.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod())) {
+	    new InfoResource(appInfo, getContext(), request, response).handle();
 	}
     }
 

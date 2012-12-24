@@ -2,9 +2,10 @@ package ua.com.fielden.platform.web;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
-import org.restlet.Guard;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
-import org.restlet.data.Request;
+import org.restlet.security.ChallengeAuthenticator;
 
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.roa.HttpHeaders;
@@ -22,7 +23,7 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
-public class ResourceGuard extends Guard {
+public class ResourceGuard extends ChallengeAuthenticator {
 
     private final RestServerUtil util;
     private final Injector injector;
@@ -40,43 +41,49 @@ public class ResourceGuard extends Guard {
 	super(context, ChallengeScheme.CUSTOM, realm);
 	this.util = util;
 	this.injector = injector;
-	setRechallengeEnabled(false);
+	setRechallenging(false);
     }
 
     @Override
-    public int authenticate(final Request request) {
+    public boolean authenticate(final Request request, final Response response) {
 	try {
 	    final String token = util.getHeaderValue(request, HttpHeaders.AUTHENTICATION);
 	    if (StringUtils.isEmpty(token)) {
-		return AUTHENTICATION_INVALID;
+		forbid(response);
+		return false;
 	    }
 	    // separate username from the encoded part of the token
 	    final String[] parts = token.split("::");
 	    if (parts.length != 2) {
-		return AUTHENTICATION_INVALID;
+		forbid(response);
+		return false;
 	    }
 	    // use the username to lookup a corresponding public key to decode security token
 	    final String username = parts[0];
 	    final IUserController controller = getController();
 	    final User user = controller.findByKey(username);
 	    if (user == null) {
-		return AUTHENTICATION_INVALID;
+		forbid(response);
+		return false;
 	    }
 	    final String publicKey = user.getPublicKey();
 	    if (StringUtils.isEmpty(publicKey)) {
-		return AUTHENTICATION_INVALID;
+		forbid(response);
+		return false;
 	    }
 
 	    // validate the decoded URI by matching it with the request URI
 	    final String tokenUri = new Cypher().decrypt(parts[1], publicKey);
 	    if (!request.getResourceRef().toString().equals(tokenUri)) {
-		return AUTHENTICATION_INVALID;
+		forbid(response);
+		return false;
 	    }
 	} catch (final Exception e) {
-	    return AUTHENTICATION_INVALID;
+	    forbid(response);
+	    return false;
 	}
 
-	return AUTHENTICATION_VALID;
+	return true;
     }
 
     protected IUserController getController() {

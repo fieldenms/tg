@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web;
 
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -49,14 +49,8 @@ public class EntityInstanceResourceFactory<T extends AbstractEntity<?>, DAO exte
 	injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
 	final EntityInstanceResource<T> resource = new EntityInstanceResource<T>(dao, factory, restUtil, getContext(), request, response);
-	if (Method.GET == request.getMethod()) {
-	    resource.handleGet();
-	} else if (Method.HEAD == request.getMethod()) {
-	    resource.handleHead();
-	} else if (Method.POST == request.getMethod()) {
-	    resource.handlePost();
-	} else if (Method.DELETE == request.getMethod()) {
-	    resource.handleDelete();
+	if (Method.GET == request.getMethod() || Method.HEAD == request.getMethod() || Method.POST == request.getMethod() || Method.DELETE == request.getMethod()) {
+	    resource.handle();
 	}
     }
 }

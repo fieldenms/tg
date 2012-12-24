@@ -4,21 +4,22 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.InputRepresentation;
-import org.restlet.resource.Representation;
-import org.restlet.resource.Resource;
-import org.restlet.resource.Variant;
+import org.restlet.representation.InputRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.Variant;
+import org.restlet.resource.Get;
+import org.restlet.resource.ServerResource;
 
 /**
  * A web resource for downloading a file representing an application dependency (e.g. a jar file, or a .properties file).
- * 
+ *
  * @author TG Team
  */
-public class ReferenceDependencyDownloadResource extends Resource {
+public class ReferenceDependencyDownloadResource extends ServerResource {
     // the following properties are determined from request
     private final String username;
 
@@ -27,7 +28,8 @@ public class ReferenceDependencyDownloadResource extends Resource {
     private final String fileName;
 
     public ReferenceDependencyDownloadResource(final String location, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(context, request, response);
+	init(context, request, response);
+	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 
 	this.location = location;
@@ -36,28 +38,12 @@ public class ReferenceDependencyDownloadResource extends Resource {
 	this.fileName = (String) request.getAttributes().get("file-name");
     }
 
-    // //////////////////////////////////////////////////////////////////
-    // let's specify what HTTP methods are supported by this resource //
-    // //////////////////////////////////////////////////////////////////
-    @Override
-    public boolean allowPost() {
-	return false;
-    }
-
-    @Override
-    public boolean allowGet() {
-	return true;
-    }
-
     /**
      * Handles GET requests for obtaining a file representing a dependency.
      */
+    @Get
     @Override
-    public Representation represent(final Variant variant) {
-	// ensure that request media type is supported
-	if (!MediaType.APPLICATION_OCTET_STREAM.equals(variant.getMediaType())) {
-	    return restUtil.errorRepresentation("Unsupported media type " + variant.getMediaType() + ".");
-	}
+    public Representation get() {
 	// process GET request
 	try {
 	    final File file = new File(location + "/" + fileName);

@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.junit.Test;
 import org.restlet.Restlet;
-import org.restlet.Router;
+import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
@@ -66,7 +66,7 @@ public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCas
     }
 
     @Override
-    public synchronized Restlet getRoot() {
+    public synchronized Restlet getInboundRoot() {
 	final Router router = new Router(getContext());
 
 	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);

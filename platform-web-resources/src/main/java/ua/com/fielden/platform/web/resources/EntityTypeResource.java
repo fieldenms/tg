@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.web.resources;
 
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
-import org.restlet.resource.Representation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.Variant;
+import org.restlet.resource.Get;
+import org.restlet.resource.Put;
 import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.Variant;
+import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -26,7 +29,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  *
  * @author TG Team
  */
-public class EntityTypeResource<T extends AbstractEntity<?>> extends Resource {
+public class EntityTypeResource<T extends AbstractEntity<?>> extends ServerResource {
     // the following properties are determined from request
     private final int pageCapacity;
     private final int pageNo;
@@ -47,29 +50,6 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends Resource {
         return restUtil;
     }
 
-    ////////////////////////////////////////////////////////////////////
-    // let's specify what HTTP methods are supported by this resource //
-    ////////////////////////////////////////////////////////////////////
-    @Override
-    public boolean allowGet() {
-	return true;
-    }
-
-    @Override
-    public boolean allowHead() {
-	return true;
-    }
-
-    @Override
-    public boolean allowPut() {
-	return true;
-    }
-
-    @Override
-    public boolean allowPost() {
-	return false;
-    }
-
     /**
      * The main resource constructor accepting a DAO instance in addition to the standard {@link Resource} parameters.
      * <p>
@@ -82,7 +62,8 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends Resource {
      * @param response
      */
     public EntityTypeResource(final IEntityDao<T> dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(context, request, response);
+	init(context, request, response);
+	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
 	this.factory = factory;
@@ -129,12 +110,9 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends Resource {
     /**
      * Handles GET requests resulting from RAO call to {@link IEntityDao#getPage(int, int)}.
      */
+    @Get
     @Override
-    public Representation represent(final Variant variant) {
-	// ensure that request media type is supported
-	if (!MediaType.APPLICATION_OCTET_STREAM.equals(variant.getMediaType())) {
-	    return restUtil.errorRepresentation("Unsupported media type " + variant.getMediaType() + ".");
-	}
+    public Representation get() {
 
 	try {
 	    final IPage<T> page = dao.getPage(pageNo, pageCapacity);
@@ -150,13 +128,16 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends Resource {
     /**
      * Handles PUT request resulting from RAO call to method save in case of a new entity instance.
      */
+    @Put
     @Override
-    public void storeRepresentation(final Representation envelope) throws ResourceException {
+    public Representation put(final Representation envelope) throws ResourceException {
 	try {
 	    final T entity =  restUtil.restoreEntity(envelope, dao.getEntityType());
-	    getResponse().setEntity(restUtil.singleRepresentation(dao.save(entity)));
+	    // getResponse().setEntity(restUtil.singleRepresentation(dao.save(entity)));
+	    return restUtil.singleRepresentation(dao.save(entity));
 	} catch (final Exception ex) {
-	    getResponse().setEntity(restUtil.errorRepresentation(ex.getMessage()));
+	    //getResponse().setEntity(restUtil.errorRepresentation(ex.getMessage()));
+	    return restUtil.errorRepresentation(ex.getMessage());
 	}
     }
 }

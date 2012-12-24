@@ -1,13 +1,15 @@
 package ua.com.fielden.platform.web.resources;
 
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
-import org.restlet.resource.Representation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.Variant;
+import org.restlet.resource.Post;
 import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.Variant;
+import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.ILifecycleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -21,7 +23,7 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
  *
  * @author TG Team
  */
-public class EntityLifecycleResource<T extends AbstractEntity<?>> extends Resource {
+public class EntityLifecycleResource<T extends AbstractEntity<?>> extends ServerResource {
 
     private final ILifecycleDao<T> lifecycleDao;
     private final RestServerUtil restUtil;
@@ -35,38 +37,30 @@ public class EntityLifecycleResource<T extends AbstractEntity<?>> extends Resour
      * @param response
      */
     public EntityLifecycleResource(final ILifecycleDao<T> lifecycleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(context, request, response);
+	init(context, request, response);
+	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.lifecycleDao = lifecycleDao;
 	this.restUtil = restUtil;
     }
 
-    // //////////////////////////////////////////////////////////////////
-    // let's specify what HTTP methods are supported by this resource //
-    // //////////////////////////////////////////////////////////////////
-    @Override
-    public boolean allowPost() {
-	return true;
-    }
-
-    @Override
-    public boolean allowGet() {
-	return false;
-    }
-
     /**
      * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of a list containing {@link IQueryModel}+"propertyName"+"period".
      */
+    @Post
     @Override
-    public void acceptRepresentation(final Representation envelope) throws ResourceException {
+    public Representation post(final Representation envelope) throws ResourceException {
 	try {
 	    final LifecycleQueryContainer container = restUtil.restoreLifecycleQueryContainer(envelope);
 
-	    getResponse().setEntity(restUtil.lifecycleRepresentation(lifecycleDao.getLifecycleInformation(container.getModel(), container.getBinaryTypes(), //
-		    container.getDistributionProperties(), container.getPropertyName(), container.getFrom(), container.getTo())));
+	    //getResponse().setEntity(restUtil.lifecycleRepresentation(lifecycleDao.getLifecycleInformation(container.getModel(), container.getBinaryTypes(), //
+	    //    container.getDistributionProperties(), container.getPropertyName(), container.getFrom(), container.getTo())));
+	    return restUtil.lifecycleRepresentation(lifecycleDao.getLifecycleInformation(container.getModel(), container.getBinaryTypes(), //
+		    container.getDistributionProperties(), container.getPropertyName(), container.getFrom(), container.getTo()));
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
-	    getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
+	    //getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
+	    return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
 	}
     }
 }

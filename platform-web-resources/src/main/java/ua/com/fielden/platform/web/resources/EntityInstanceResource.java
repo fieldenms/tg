@@ -3,14 +3,20 @@ package ua.com.fielden.platform.web.resources;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.ObjectNotFoundException;
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.Representation;
+import org.restlet.representation.EmptyRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.StringRepresentation;
+import org.restlet.representation.Variant;
+import org.restlet.resource.Delete;
+import org.restlet.resource.Get;
+import org.restlet.resource.Post;
 import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.Variant;
+import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -30,7 +36,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  *
  * @author TG Team
  */
-public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resource {
+public class EntityInstanceResource<T extends AbstractEntity<?>> extends ServerResource {
     // the following properties are determined from request
     protected final Long entityId;
 
@@ -39,29 +45,6 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
     protected final IEntityDao<T> dao;
     protected final EntityFactory factory;
     protected final RestServerUtil restUtil;
-
-    ////////////////////////////////////////////////////////////////////
-    // let's specify what HTTP methods are supported by this resource //
-    ////////////////////////////////////////////////////////////////////
-    @Override
-    public boolean allowGet() {
-	return true;
-    }
-
-    @Override
-    public boolean allowHead() {
-	return true;
-    }
-
-    @Override
-    public boolean allowPost() {
-	return true;
-    }
-
-    @Override
-    public boolean allowDelete() {
-	return true;
-    }
 
     /**
      * The main resource constructor accepting a DAO instance and an entity factory in addition to the standard {@link Resource} parameters.
@@ -75,7 +58,8 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
      * @param response
      */
     public EntityInstanceResource(final IEntityDao<T> dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(context, request, response);
+	init(context, request, response);
+	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
 	this.factory = factory;
@@ -100,12 +84,9 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
     /**
      * Handles GET requests resulting from RAO call to {@link IEntityDao#findById(Long)}
      */
+    @Get
     @Override
-    public Representation represent(final Variant variant) {
-	// ensure that request media type is supported
-	if (!MediaType.APPLICATION_OCTET_STREAM.equals(variant.getMediaType())) {
-	    return restUtil.errorRepresentation("Unsupported media type " + variant.getMediaType() + ".");
-	}
+    public Representation get() {
 	// process GET request
 	try {
 	    return restUtil.singleRepresentation(dao.findById(entityId));
@@ -118,8 +99,9 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
     /**
      * Handles HEAD request resulting from RAO call to {@link IEntityDao#entityExists(AbstractEntity)} and {@link IEntityDao#isStale(Long, Long)}.
      */
+    @Get // used in place of HEAD
     @Override
-    public void handleHead() {
+    public Representation head() {
 	if (checkStaleness()) {
 	    try {
 		final boolean stale = dao.isStale(entityId, entityVersion);
@@ -138,13 +120,16 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.ERROR, ex.getMessage());
 	    }
 	}
+
+	return new EmptyRepresentation();
     }
 
     /**
      * Handles POST request resulting from RAO call to method save.
      */
+    @Post
     @Override
-    public void acceptRepresentation(final Representation envelope) throws ResourceException {
+    public Representation post(final Representation envelope) throws ResourceException {
 	try {
 	    final T entity = restUtil.restoreEntity(envelope, dao.getEntityType());
 	    // TODO: This validation does not really validate anything since restored entity would not have anything validated,
@@ -153,25 +138,31 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
 	    //       there is not apparent reason at this stage to enforce rigorous server side validation.
 	    final Result validationResult = entity.isValid();
 	    if (validationResult.isSuccessful()) {
-		getResponse().setEntity(restUtil.singleRepresentation(dao.save(entity)));
+		//getResponse().setEntity(restUtil.singleRepresentation(dao.save(entity)));
+		return restUtil.singleRepresentation(dao.save(entity));
 	    } else {
-		getResponse().setEntity(restUtil.resultRepresentation(validationResult));
+		//getResponse().setEntity(restUtil.resultRepresentation(validationResult));
+		return restUtil.resultRepresentation(validationResult);
 	    }
 	} catch (final Exception ex) {
 	    getResponse().setStatus(Status.CLIENT_ERROR_CONFLICT);
 	    final String msg = !StringUtils.isEmpty(ex.getMessage()) ? ex.getMessage() : "Exception does not contain any specific message.";
-	    getResponse().setEntity(restUtil.errorRepresentation(msg));
+	    //getResponse().setEntity(restUtil.errorRepresentation(msg));
+	    return restUtil.errorRepresentation(msg);
 	}
     }
 
+    @Delete
     @Override
-    public void handleDelete() {
+    public Representation delete() {
 	try {
 	    dao.delete(factory.newEntity(dao.getEntityType(), entityId));
 	} catch (final Exception ex) {
 	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
 	    restUtil.setHeaderEntry(getResponse(), HttpHeaders.ERROR, ex.getMessage());
 	}
+
+	return new StringRepresentation("delete");
     }
 
     private boolean checkStaleness() {
@@ -179,15 +170,15 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
     }
 
     public IEntityDao<T> getDao() {
-        return dao;
+	return dao;
     }
 
     public EntityFactory getFactory() {
-        return factory;
+	return factory;
     }
 
     public Long getEntityId() {
-        return entityId;
+	return entityId;
     }
 
 }

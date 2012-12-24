@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web;
 
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ILifecycleDao;
@@ -51,7 +51,7 @@ public class EntityLifecycleResourceFactory<T extends AbstractEntity<?>, DAO ext
 		final String username = (String) request.getAttributes().get("username");
 		injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-		new EntityLifecycleResource<T>((ILifecycleDao<T>) dao, restUtil, getContext(), request, response).handlePost();
+		new EntityLifecycleResource<T>((ILifecycleDao<T>) dao, restUtil, getContext(), request, response).handle();
 	    }
 	}
     }

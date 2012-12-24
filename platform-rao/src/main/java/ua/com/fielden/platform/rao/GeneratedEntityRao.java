@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.lang.StringUtils;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.Representation;
+import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;

@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web;
 
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.security.provider.IUserController;
@@ -46,7 +46,7 @@ public class SnappyQueryRestlet<T extends AbstractEntity> extends Restlet {
 	} else if (Method.HEAD.equals(request.getMethod())) {
 	} else if (Method.PUT.equals(request.getMethod())) {
 	} else if (Method.POST.equals(request.getMethod())) {
-	    new SnappyQueryResource<T>(dao, restUtil, getContext(), request, response).handlePost();
+	    new SnappyQueryResource<T>(dao, restUtil, getContext(), request, response).handle();
 	}
     }
 }

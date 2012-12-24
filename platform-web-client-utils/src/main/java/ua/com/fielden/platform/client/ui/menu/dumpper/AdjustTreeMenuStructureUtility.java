@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.client.ui.menu.dumpper;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.algorithm.search.ITreeNodePredicate;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
@@ -9,7 +10,6 @@ import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.menu.TreeMenuItemWrapper;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 /**
  * Traverses the main menu tree and persists each relevant item together with its configuration stored locally.

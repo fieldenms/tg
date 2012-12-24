@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.web.resources;
 
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
-import org.restlet.resource.Representation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.StringRepresentation;
+import org.restlet.representation.Variant;
+import org.restlet.resource.Post;
 import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.Variant;
+import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -24,7 +27,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  *
  * @author TG Team
  */
-public class EntityQueryResource<T extends AbstractEntity<?>> extends Resource {
+public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerResource {
     private static final int DEFAULT_PAGE_CAPACITY = 25;
     // the following properties are determined from request
     private final Integer pageCapacity;
@@ -40,19 +43,6 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends Resource {
     private final IEntityDao<T> dao;
     private final RestServerUtil restUtil;
 
-    // //////////////////////////////////////////////////////////////////
-    // let's specify what HTTP methods are supported by this resource //
-    // //////////////////////////////////////////////////////////////////
-    @Override
-    public boolean allowPost() {
-	return true;
-    }
-
-    @Override
-    public boolean allowGet() {
-	return false;
-    }
-
     /**
      * The main resource constructor accepting a DAO instance in addition to the standard {@link Resource} parameters.
      * <p>
@@ -64,7 +54,8 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends Resource {
      * @param response
      */
     public EntityQueryResource(final IEntityDao<T> dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(context, request, response);
+	init(context, request, response);
+	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
 	this.restUtil = restUtil;
@@ -116,27 +107,33 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends Resource {
     /**
      * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of {@link QueryExecutionModel}.
      */
+    @Post
     @Override
-    public void acceptRepresentation(final Representation envelope) throws ResourceException {
+    public Representation post(final Representation envelope) throws ResourceException {
 	try {
 	    final QueryExecutionModel<T, EntityResultQueryModel<T>> qem = (QueryExecutionModel<T, EntityResultQueryModel<T>>) restUtil.restoreQueryExecutionModel(envelope);
 	    if (shouldDelete) {
 		dao.delete(qem.getQueryModel(), qem.getParamValues());
-		getResponse().setEntity(restUtil.resultRepresentation( Result.successful(null)));
+		//getResponse().setEntity(restUtil.resultRepresentation( Result.successful(null)));
+		return restUtil.resultRepresentation( Result.successful(null));
 	    } else if (shouldReturnCount) {
 		final int count = dao.count(qem.getQueryModel(), qem.getParamValues());
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.COUNT, count + "");
+		return new StringRepresentation("count");
 	    } else if (shouldReturnAll) {
-		getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(qem)));
+		//getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(qem)));
+		return restUtil.listRepresentation(dao.getAllEntities(qem));
 	    } else {
 		final IPage<T> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
-		getResponse().setEntity(restUtil.listRepresentation(page.data()));
+		//getResponse().setEntity(restUtil.listRepresentation(page.data()));
+		return restUtil.listRepresentation(page.data());
 	    }
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
-	    getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
+	    //getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
+	    return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
 	}
     }
 }

@@ -7,9 +7,9 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Map;
 
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
 
 import ua.com.fielden.platform.cypher.Checksum;
@@ -21,9 +21,9 @@ import com.google.inject.Inject;
 
 /**
  * A default implementation for {@link IReferenceDependancyController}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ReferenceDependancyController implements IReferenceDependancyController {
     private static final int READ_BLOCK = 8192;

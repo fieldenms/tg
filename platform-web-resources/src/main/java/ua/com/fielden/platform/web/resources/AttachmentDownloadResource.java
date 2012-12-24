@@ -4,14 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.InputRepresentation;
-import org.restlet.resource.Representation;
-import org.restlet.resource.Resource;
-import org.restlet.resource.Variant;
+import org.restlet.representation.InputRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.Variant;
+import org.restlet.resource.Get;
+import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachmentController;
@@ -21,7 +22,7 @@ import ua.com.fielden.platform.attachment.IAttachmentController;
  *
  * @author TG Team
  */
-public class AttachmentDownloadResource extends Resource {
+public class AttachmentDownloadResource extends ServerResource {
 
     private final IAttachmentController controller;
     private final RestServerUtil restUtil;
@@ -30,7 +31,8 @@ public class AttachmentDownloadResource extends Resource {
     private final String location;
 
     public AttachmentDownloadResource(final String location, final IAttachmentController controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(context, request, response);
+	init(context, request, response);
+	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 
 	this.location = location;
@@ -40,29 +42,12 @@ public class AttachmentDownloadResource extends Resource {
 	attachmentId = Long.parseLong(request.getAttributes().get("entity-id").toString());
     }
 
-    // //////////////////////////////////////////////////////////////////
-    // let's specify what HTTP methods are supported by this resource //
-    // //////////////////////////////////////////////////////////////////
-    @Override
-    public boolean allowPost() {
-	return false;
-    }
-
-    @Override
-    public boolean allowGet() {
-	return true;
-    }
-
-
     /**
      * Handles GET requests resulting from RAO implementation of IAttachmentController.download
      */
+    @Get
     @Override
-    public Representation represent(final Variant variant) {
-	// ensure that request media type is supported
-	if (!MediaType.APPLICATION_OCTET_STREAM.equals(variant.getMediaType())) {
-	    return restUtil.errorRepresentation("Unsupported media type " + variant.getMediaType() + ".");
-	}
+    public Representation get() {
 	// process GET request
 	try {
 	    //return restUtil.singleRepresentation(dao.findById(entityId));

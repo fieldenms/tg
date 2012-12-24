@@ -4,15 +4,18 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.restlet.data.Form;
+import org.restlet.Message;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
-import org.restlet.resource.InputRepresentation;
-import org.restlet.resource.Representation;
+import org.restlet.engine.header.Header;
+import org.restlet.representation.InputRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.util.Series;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -45,6 +48,20 @@ public class RestServerUtil {
 
 
     private final Logger logger = Logger.getLogger(RestServerUtil.class);
+
+    private static final String HEADERS_KEY = "org.restlet.http.headers";
+
+    private static Series<Header> getMessageHeaders(final Message message) {
+        final ConcurrentMap<String, Object> attrs = message.getAttributes();
+        Series<Header> headers = (Series<Header>) attrs.get(HEADERS_KEY);
+        if (headers == null) {
+            headers = new Series<Header>(Header.class);
+            final Series<Header> prev = (Series<Header>) attrs.putIfAbsent(HEADERS_KEY, headers);
+            if (prev != null) { headers = prev; }
+        }
+        return headers;
+    }
+
     /**
      * Creates a response header entry.
      *
@@ -53,12 +70,7 @@ public class RestServerUtil {
      * @param value
      */
     public void setHeaderEntry(final Response response, final HttpHeaders headerEntry, final String value) {
-	Form responseHeaders = (Form) response.getAttributes().get("org.restlet.http.headers");
-	if (responseHeaders == null) {
-	    responseHeaders = new Form();
-	    response.getAttributes().put("org.restlet.http.headers", responseHeaders);
-	}
-	responseHeaders.add(headerEntry.value, value);
+	getMessageHeaders(response).add(headerEntry.value, value);
     }
 
     /**
@@ -69,8 +81,8 @@ public class RestServerUtil {
      * @return
      */
     public String getHeaderValue(final Request request, final HttpHeaders headerEntry) {
-	final Form header = (Form) request.getAttributes().get("org.restlet.http.headers");
-	return header != null && header.getFirst(headerEntry.value) != null ? header.getFirst(headerEntry.value).getValue() : null;
+	final Series<Header> header = getMessageHeaders(request);
+	return header!= null && header.getFirst(headerEntry.value) != null ? header.getFirst(headerEntry.value).getValue() : null;
     }
 
     /**

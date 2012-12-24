@@ -21,7 +21,7 @@
 		<!-- other dependencies, including third party libs -->
 		
 		<!-- Apache libraries -->
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.2.1</version>
@@ -30,24 +30,19 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpmime</artifactId>
 			<version>4.2.1</version>
-		</dependency>
+		</dependency> -->
 		<!-- End of Apache libraries -->
 		<!-- Restlet libraries -->
 		<dependency>
-			<groupId>org.restlet</groupId>
+			<groupId>org.restlet.jse</groupId>
 			<artifactId>org.restlet</artifactId>
-			<version>1.1.1</version>
+			<version>2.1.1</version>
 		</dependency>
 		<dependency>
-			<groupId>com.noelios.restlet</groupId>
-			<artifactId>com.noelios.restlet</artifactId>
-			<version>1.1.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.noelios.restlet</groupId>
-			<artifactId>com.noelios.restlet.ext.net
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet.ext.httpclient
 			</artifactId>
-			<version>1.1.1</version>
+			<version>2.1.1</version>
 		</dependency>
 		<!-- end of RESTlet libraries -->		
 	</dependencies>

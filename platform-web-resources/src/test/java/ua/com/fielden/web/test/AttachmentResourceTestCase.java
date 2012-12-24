@@ -14,7 +14,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.restlet.Restlet;
-import org.restlet.Router;
+import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachmentController;
@@ -43,7 +43,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
     }
 
     @Override
-    public synchronized Restlet getRoot() {
+    public synchronized Restlet getInboundRoot() {
 	final Router router = new Router(getContext());
 
 	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);

@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web;
 
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.security.provider.IUserController;
@@ -42,7 +42,7 @@ public class EntityAggregatesQueryResourceFactory extends Restlet {
 	    final String username = (String) request.getAttributes().get("username");
 	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	    new EntityAggregatesQueryResource(dao, restUtil, getContext(), request, response).handlePost();
+	    new EntityAggregatesQueryResource(dao, restUtil, getContext(), request, response).handle();
 	}
     }
 }

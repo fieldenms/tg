@@ -6,14 +6,17 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.Representation;
-import org.restlet.resource.Resource;
+import org.restlet.representation.EmptyRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.Variant;
+import org.restlet.resource.Get;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.Variant;
+import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.error.Result;
@@ -32,7 +35,7 @@ import ua.com.fielden.platform.security.user.UserRole;
  *
  * @author TG Team
  */
-public class SecurityTokenResource extends Resource {
+public class SecurityTokenResource extends ServerResource {
     private final String username; // TODO to be used for auditing purposes
 
     private final ISecurityTokenController controller;
@@ -41,29 +44,12 @@ public class SecurityTokenResource extends Resource {
 
     private final Class<? extends ISecurityToken> token;
 
-    ////////////////////////////////////////////////////////////////////
-    // let's specify what HTTP methods are supported by this resource //
-    ////////////////////////////////////////////////////////////////////
-    @Override
-    public boolean allowGet() {
-	return true;
-    }
-
-    @Override
-    public boolean allowHead() {
-	return true;
-    }
-
-    @Override
-    public boolean allowPost() {
-	return true;
-    }
-
     /**
      * Principle constructor.
      */
     public SecurityTokenResource(final ISecurityTokenController controller, final IUserRoleDao userRoleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(context, request, response);
+	init(context, request, response);
+	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.controller = controller;
 	this.userRoleDao = userRoleDao;
@@ -83,21 +69,19 @@ public class SecurityTokenResource extends Resource {
     ////////////////////// request handlers ///////////////////////////
     ///////////////////////////////////////////////////////////////////
     /** Handles HEAD request, which corresponds to an authorisation request. */
+    @Get // instead of HEAD
     @Override
-    public void handleHead() {
-	super.handleHead();
+    public Representation head() {
 	restUtil.setHeaderEntry(getResponse(), HttpHeaders.AUTHORIZED, controller.canAccess(username, token) ? "true" : "false");
+	return new EmptyRepresentation();
     }
 
     /**
      * Handles GET requests, which should return roles associated with the specified security token.
      */
+    @Get
     @Override
-    public Representation represent(final Variant variant) {
-	// ensure that request media type is supported
-	if (!MediaType.APPLICATION_OCTET_STREAM.equals(variant.getMediaType())) {
-	    return restUtil.errorRepresentation("Unsupported media type " + variant.getMediaType() + ".");
-	}
+    public Representation get() {
 	// process GET request
 	try {
 	    return restUtil.listRepresentation(controller.findUserRolesFor(token));
@@ -110,17 +94,20 @@ public class SecurityTokenResource extends Resource {
     /**
      * Handles POST request resulting making associations between security tokens and user roles.
      */
+    @Post
     @Override
-    public void acceptRepresentation(final Representation envelope) throws ResourceException {
+    public Representation post(final Representation envelope) throws ResourceException {
 	try {
 	    final Map<String, List<Long>> map = restUtil.restoreMap(envelope);
 	    final Map<Class<? extends ISecurityToken>, List<UserRole>> associations = convert(map);
 	    controller.saveSecurityToken(associations);
 	    // if there  was no exception then report a success back to client
-	    getResponse().setEntity(restUtil.resultRepresentation(new Result("Security tokens updated successfully.")));
+	    //getResponse().setEntity(restUtil.resultRepresentation(new Result("Security tokens updated successfully.")));
+	    return restUtil.resultRepresentation(new Result("Security tokens updated successfully."));
 	} catch (final Exception ex) {
 	    final String msg = !StringUtils.isEmpty(ex.getMessage()) ? ex.getMessage() : "Exception does not contain any specific message.";
-	    getResponse().setEntity(restUtil.errorRepresentation(msg));
+	    //getResponse().setEntity(restUtil.errorRepresentation(msg));
+	    return restUtil.errorRepresentation(msg);
 	}
     }
 

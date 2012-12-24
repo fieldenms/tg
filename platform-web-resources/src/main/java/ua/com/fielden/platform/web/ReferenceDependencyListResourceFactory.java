@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web;
 
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.ReferenceDependencyListResource;
@@ -13,9 +13,9 @@ import com.google.inject.Injector;
 
 /**
  * A factory for {@link ReferenceDependencyListResource}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ReferenceDependencyListResourceFactory extends Restlet {
     private final String dependencyLocation;
@@ -31,7 +31,7 @@ public class ReferenceDependencyListResourceFactory extends Restlet {
 	super.handle(request, response);
 	if (Method.GET == request.getMethod()) {
 	    final ReferenceDependencyListResource resource = new ReferenceDependencyListResource(dependencyLocation, restUtil, getContext(), request, response);
-	    resource.handleGet();
+	    resource.handle();
 	}
     }
 }

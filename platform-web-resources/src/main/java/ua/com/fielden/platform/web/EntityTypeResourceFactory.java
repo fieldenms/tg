@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web;
 
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -49,14 +49,10 @@ public class EntityTypeResourceFactory<T extends AbstractEntity<?>, DAO extends 
 	final String username = (String) request.getAttributes().get("username");
 	injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	if (Method.GET.equals(request.getMethod())) {
-	    new EntityTypeResource<T>(dao, factory, restUtil, getContext(), request, response).handleGet();
-	} else if (Method.HEAD.equals(request.getMethod())) {
-	    new EntityTypeResource<T>(dao, factory, restUtil, getContext(), request, response).handleHead();
-	} else if (Method.PUT.equals(request.getMethod())) {
-	    new EntityTypeResource<T>(dao, factory, restUtil, getContext(), request, response).handlePut();
+	if (Method.GET.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod()) || Method.PUT.equals(request.getMethod())) {
+	    new EntityTypeResource<T>(dao, factory, restUtil, getContext(), request, response).handle();
 	} else if (Method.POST.equals(request.getMethod())) {
-	    new EntityQueryResource<T>(dao, restUtil, getContext(), request, response).handlePost();
+	    new EntityQueryResource<T>(dao, restUtil, getContext(), request, response).handle();
 	}
     }
 }

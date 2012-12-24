@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.lang.StringUtils;
@@ -13,15 +14,18 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.restlet.Client;
+import org.restlet.Message;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
 import org.restlet.data.Protocol;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.InputRepresentation;
-import org.restlet.resource.Representation;
+import org.restlet.engine.header.Header;
+import org.restlet.representation.InputRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.util.Series;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.cypher.Cypher;
@@ -299,12 +303,7 @@ public final class RestClientUtil implements IUserProvider {
      * @throws Exception
      */
     protected void setChallengeResponse(final Request request, final String token) throws Exception {
-	Form requestHeaders = (Form) request.getAttributes().get("org.restlet.http.headers");
-	if (requestHeaders == null) {
-	    requestHeaders = new Form();
-	    request.getAttributes().put("org.restlet.http.headers", requestHeaders);
-	}
-	requestHeaders.add("Autherization", token);
+	getMessageHeaders(request).add("Autherization", token);
     }
 
     /**
@@ -521,6 +520,20 @@ public final class RestClientUtil implements IUserProvider {
 	return header != null && header.getFirst(headerEntry.value) != null && value.equals(header.getFirst(headerEntry.value).getValue());
     }
 
+
+    private static final String HEADERS_KEY = "org.restlet.http.headers";
+
+    private static Series<Header> getMessageHeaders(final Message message) {
+        final ConcurrentMap<String, Object> attrs = message.getAttributes();
+        Series<Header> headers = (Series<Header>) attrs.get(HEADERS_KEY);
+        if (headers == null) {
+            headers = new Series<Header>(Header.class);
+            final Series<Header> prev = (Series<Header>) attrs.putIfAbsent(HEADERS_KEY, headers);
+            if (prev != null) { headers = prev; }
+        }
+        return headers;
+    }
+
     /**
      * Creates a response header entry.
      *
@@ -529,12 +542,7 @@ public final class RestClientUtil implements IUserProvider {
      * @param value
      */
     public void setHeaderEntry(final Request request, final HttpHeaders headerEntry, final String value) {
-	Form requestHeaders = (Form) request.getAttributes().get("org.restlet.http.headers");
-	if (requestHeaders == null) {
-	    requestHeaders = new Form();
-	    request.getAttributes().put("org.restlet.http.headers", requestHeaders);
-	}
-	requestHeaders.add(headerEntry.value, value);
+	getMessageHeaders(request).add(headerEntry.value, value);
     }
 
     /**
@@ -545,8 +553,8 @@ public final class RestClientUtil implements IUserProvider {
      * @return
      */
     public String getHeaderValue(final Response response, final HttpHeaders headerEntry) {
-	final Form header = (Form) response.getAttributes().get("org.restlet.http.headers");
-	return header != null && header.getFirst(headerEntry.value) != null ? header.getFirst(headerEntry.value).getValue() : null;
+	final Series<Header> header = getMessageHeaders(response);
+	return header!= null && header.getFirst(headerEntry.value) != null ? header.getFirst(headerEntry.value).getValue() : null;
     }
 
     public ISerialiser getSerialiser() {

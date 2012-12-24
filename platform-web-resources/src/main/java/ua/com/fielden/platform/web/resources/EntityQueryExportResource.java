@@ -4,14 +4,16 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
-import org.restlet.resource.InputRepresentation;
-import org.restlet.resource.Representation;
+import org.restlet.representation.InputRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.Variant;
+import org.restlet.resource.Post;
 import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.Variant;
+import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -26,7 +28,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
  *
  * @author TG Team
  */
-public class EntityQueryExportResource<T extends AbstractEntity<?>> extends Resource {
+public class EntityQueryExportResource<T extends AbstractEntity<?>> extends ServerResource {
 
     private final IEntityDao<T> dao;
     private final RestServerUtil restUtil;
@@ -42,40 +44,31 @@ public class EntityQueryExportResource<T extends AbstractEntity<?>> extends Reso
      * @param response
      */
     public EntityQueryExportResource(final IEntityDao<T> dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(context, request, response);
+	init(context, request, response);
+	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
 	this.restUtil = restUtil;
-    }
-
-    // //////////////////////////////////////////////////////////////////
-    // let's specify what HTTP methods are supported by this resource //
-    // //////////////////////////////////////////////////////////////////
-    @Override
-    public boolean allowPost() {
-	return true;
-    }
-
-    @Override
-    public boolean allowGet() {
-	return false;
     }
 
     /**
      * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of a list containing {@link QueryExecutionModel}, a list of property
      * names and a list of corresponding titles.
      */
+    @Post
     @Override
-    public void acceptRepresentation(final Representation envelope) throws ResourceException {
+    public Representation post(final Representation envelope) throws ResourceException {
 	try {
 	    final List<?> list = restUtil.restoreList(envelope);
 	    final QueryExecutionModel<T, EntityResultQueryModel<T>> query = (QueryExecutionModel<T, EntityResultQueryModel<T>>) list.get(0);
 	    final String[] propertyNames = (String[]) list.get(1);
 	    final String[] propertyTitles = (String[]) list.get(2);
-	    getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(dao.export(query, propertyNames, propertyTitles)), MediaType.APPLICATION_OCTET_STREAM));
+	    //getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(dao.export(query, propertyNames, propertyTitles)), MediaType.APPLICATION_OCTET_STREAM));
+	    return new InputRepresentation(new ByteArrayInputStream(dao.export(query, propertyNames, propertyTitles)), MediaType.APPLICATION_OCTET_STREAM);
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
-	    getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
+	    //getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
+	    return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
 	}
     }
 }

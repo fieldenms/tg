@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.system;
 import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.Restlet;
-import org.restlet.Router;
+import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
@@ -52,7 +52,7 @@ public final class SystemResources extends Application {
 
 
     @Override
-    public Restlet createRoot() {
+    public Restlet createInboundRoot() {
 	// create resource router and attach all relevant resources to it
 	final Router routerForResources = new Router(getContext());
 	routerForResources.attach("/users/{username}/dependencies/{file-name}", new ReferenceDependencyDownloadResourceFactory(referenceDependeciensLocation, injector));

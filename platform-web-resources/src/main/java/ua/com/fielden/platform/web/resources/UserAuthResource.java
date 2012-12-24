@@ -2,13 +2,15 @@ package ua.com.fielden.platform.web.resources;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.Representation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.Variant;
+import org.restlet.resource.Get;
 import org.restlet.resource.Resource;
-import org.restlet.resource.Variant;
+import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.error.Result;
@@ -21,7 +23,7 @@ import ua.com.fielden.platform.security.user.User;
  *
  * @author TG Team
  */
-public class UserAuthResource extends Resource {
+public class UserAuthResource extends ServerResource {
     private final IUserController controller;
     private final RestServerUtil restUtil;
     private final String token;
@@ -33,24 +35,6 @@ public class UserAuthResource extends Resource {
     public static final String PASSWORD_RESET = "The password has been reset. Log in is required.";
     public static final String INVALID_CREDENTIALS = "Provided credentials are invalid. Log in required.";
     public static final String ANOTHER_USER_LOGGED_IN = "<html>Another user has logged in with the same credentials.<br/>Please change the password once logged in if fraud is suspected.</html>";
-
-    ////////////////////////////////////////////////////////////////////
-    // let's specify what HTTP methods are supported by this resource //
-    ////////////////////////////////////////////////////////////////////
-    @Override
-    public boolean allowGet() {
-	return true;
-    }
-
-    @Override
-    public boolean allowHead() {
-	return false;
-    }
-
-    @Override
-    public boolean allowPost() {
-	return false;
-    }
 
     /**
      * The main resource constructor accepting a DAO instance and an entity factory in addition to the standard {@link Resource} parameters.
@@ -65,7 +49,8 @@ public class UserAuthResource extends Resource {
      * @throws Exception
      */
     public UserAuthResource(final IUserController controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(context, request, response);
+	init(context, request, response);
+	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.controller = controller;
 	this.restUtil = restUtil;
@@ -82,8 +67,9 @@ public class UserAuthResource extends Resource {
      * Handles GET requests for user authentication. The GET here means client application is trying to access user specific information, where the details of the request are
      * provided as a security token in an encrypted form.
      */
+    @Get
     @Override
-    public Representation represent(final Variant variant) {
+    public Representation get() {
 	// process GET request
 	if (!StringUtils.isEmpty(publicKey)) { // login request
 	    return login();

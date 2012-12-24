@@ -1,8 +1,15 @@
 package ua.com.fielden.web.security;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+
 import org.junit.Test;
 import org.restlet.Restlet;
-import org.restlet.Router;
+import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
@@ -20,12 +27,6 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntity;
 import ua.com.fielden.web.rao.InspectedEntityRao;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 /**
  * Provides a unit test for request authentication process.
@@ -183,7 +184,7 @@ public class RequestAuthenticationTestCase extends WebBasedTestCase {
 
 
     @Override
-    public synchronized Restlet getRoot() {
+    public synchronized Restlet getInboundRoot() {
 	final Router router = new Router(getContext());
 	// add some other resource to be accessed
 

@@ -6,13 +6,14 @@ import java.util.List;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
 import org.restlet.ext.fileupload.RestletFileUpload;
-import org.restlet.resource.Representation;
-import org.restlet.resource.StringRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.StringRepresentation;
+import org.restlet.resource.Post;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachmentController;
@@ -39,23 +40,14 @@ public class AttachmentTypeResource extends EntityTypeResource<Attachment> {
 	this.location = location;
     }
 
-    @Override
-    public boolean allowPost() {
-	return true;
-    }
-
-    @Override
-    public boolean allowPut() {
-	return true;
-    }
-
     /**
      * Accepts and processes a representation posted to the resource.
      *
      * Expects a multi-part request representing
      */
+    @Post
     @Override
-    public void acceptRepresentation(final Representation entity) {
+    public Representation post(final Representation entity) {
 	if (entity != null) {
 	    if (MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true)) {
 
@@ -92,19 +84,23 @@ public class AttachmentTypeResource extends EntityTypeResource<Attachment> {
 			attachment = getDao().save(attachment);
 
 			try {
-			    getResponse().setEntity(getRestUtil().singleRepresentation(attachment));
+			    //getResponse().setEntity(getRestUtil().singleRepresentation(attachment));
+			    return getRestUtil().singleRepresentation(attachment);
 			} catch (final Exception ex) {
-			    getResponse().setEntity(getRestUtil().errorRepresentation(ex));
+			    //getResponse().setEntity(getRestUtil().errorRepresentation(ex));
+			    return getRestUtil().errorRepresentation(ex);
 			}
 		    }
 		} catch (final Exception ex) {
 		    // The message of all thrown exception is sent back to client
-		    getResponse().setEntity(getRestUtil().errorRepresentation(ex));
+		    //getResponse().setEntity(getRestUtil().errorRepresentation(ex));
+		    return getRestUtil().errorRepresentation(ex);
 		}
 	    }
 	} else {
 	    // POST request with no entity.
 	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
 	}
+	return new StringRepresentation("no result");
     }
 }

@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.Restlet;
-import org.restlet.Router;
+import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -56,7 +56,7 @@ public abstract class BasicServerApplication extends Application {
 
 
     @Override
-    public final Restlet createRoot() {
+    public final Restlet createInboundRoot() {
 	// create resource router and attach all relevant resources to it
 	final Router routerForResources = new Router(getContext());
 

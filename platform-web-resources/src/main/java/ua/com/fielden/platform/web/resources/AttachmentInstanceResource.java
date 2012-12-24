@@ -3,9 +3,12 @@ package ua.com.fielden.platform.web.resources;
 import java.io.File;
 
 import org.restlet.Context;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.Status;
+import org.restlet.representation.Representation;
+import org.restlet.representation.StringRepresentation;
+import org.restlet.resource.Delete;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachmentController;
@@ -26,8 +29,9 @@ public class AttachmentInstanceResource extends EntityInstanceResource<Attachmen
 	this.location = location;
     }
 
+    @Delete
     @Override
-    public void handleDelete() {
+    public Representation delete() {
 	// need to delete file first and then persisted attachment instance from the database
 	try {
 	    final Attachment attachment = dao.findById(entityId);
@@ -55,6 +59,8 @@ public class AttachmentInstanceResource extends EntityInstanceResource<Attachmen
 	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
 	    restUtil.setHeaderEntry(getResponse(), HttpHeaders.ERROR, ex.getMessage());
 	}
+
+	return new StringRepresentation("delete");
     }
 
 }

@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.restlet.Restlet;
-import org.restlet.Router;
+import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.update.EChecksumMismatch;
@@ -42,7 +42,7 @@ public class ReferenceDependecyResourcesTestCase extends WebBasedTestCase {
     private final IReferenceDependancyController controller = new ReferenceDependancyController(config.restClientUtil());
 
     @Override
-    public synchronized Restlet getRoot() {
+    public synchronized Restlet getInboundRoot() {
 	final Router router = new Router(getContext());
 	router.attach("/users/{username}/dependencies/{file-name}", new ReferenceDependencyDownloadResourceFactory(REFERENCE_DEPENDENCIES_LOCATION, DbDrivenTestCase.injector));
 	router.attach("/users/{username}/update", new ReferenceDependencyListResourceFactory(REFERENCE_DEPENDENCIES_LOCATION, DbDrivenTestCase.injector));

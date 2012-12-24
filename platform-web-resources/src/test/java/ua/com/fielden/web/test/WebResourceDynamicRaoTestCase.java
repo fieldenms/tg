@@ -11,7 +11,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import org.junit.Test;
 import org.restlet.Restlet;
-import org.restlet.Router;
+import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -111,7 +111,7 @@ public class WebResourceDynamicRaoTestCase extends WebBasedTestCase {
     }
 
     @Override
-    public synchronized Restlet getRoot() {
+    public synchronized Restlet getInboundRoot() {
 	final Router router = new Router(getContext());
 
 	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);

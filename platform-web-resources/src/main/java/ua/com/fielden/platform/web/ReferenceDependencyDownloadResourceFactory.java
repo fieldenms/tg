@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web;
 
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.ReferenceDependencyDownloadResource;
@@ -31,7 +31,7 @@ public class ReferenceDependencyDownloadResourceFactory extends Restlet {
 	super.handle(request, response);
 	if (Method.GET == request.getMethod()) {
 	    final ReferenceDependencyDownloadResource resource = new ReferenceDependencyDownloadResource(dependencyLocation, restUtil, getContext(), request, response);
-	    resource.handleGet();
+	    resource.handle();
 	}
     }
 }
