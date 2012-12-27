@@ -32,6 +32,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
+import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
 
@@ -297,6 +298,39 @@ public final class MainMenuItemMixin {
 	}
     }
 
+    private String str(final char c, final int n) {
+	return str0(c, n, "");
+    }
+    private String str0(final char c, final int n, final String accu) {
+	if (n == 0) {
+	    return accu;
+	} else {
+	    return str0(c, n - 1, accu + c);
+	}
+    }
+    private String wrap(final String s, final int width) {
+	final int partCount = (width - s.length()) / 2;
+	final String part = str('=', partCount);
+	final String all = part + s + part;
+	return all.length() == width ? all : all + '=';
+    }
+
+    private Pair<String, DateTime> info(final Pair<String, DateTime> oldMessageAndOldSt, final String newMessage) {
+	final Period pd = new Period(oldMessageAndOldSt.getValue(), new DateTime());
+	final int width = 120;
+	final String row = str('=', width);
+	System.err.println(str('-', width));
+	System.err.println(row);
+	System.err.println(oldMessageAndOldSt.getKey() == null ? row : wrap(oldMessageAndOldSt.getKey() + "...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms", width));
+	System.err.println(row);
+	System.err.println(wrap(newMessage, width));
+	System.err.println(row);
+	System.err.println(row);
+	System.err.println(row);
+	System.err.println(str('-', width));
+	return new Pair<String, DateTime>(newMessage, new DateTime()); // return newMessageAndNewSt
+    }
+
     /**
      * Updates existing persisted menu items with new "development" ones. This method is only applicable for base user, which is capable for menu items modification.
      * <p>
@@ -311,72 +345,25 @@ public final class MainMenuItemMixin {
      * @return
      */
     public final List<MainMenuItem> updateMenuItemsWithDevelopmentOnes(final IMainMenuStructureBuilder developmentMainMenuStructureBuilder) {
-	Period pd = null;
-	DateTime st = new DateTime();
 	if (!user.isBase()) {
 	    throw new IllegalArgumentException("Updating of menu items is not permitted for non-base user. Current user [" + user + "] is not base user.");
 	}
+	Pair<String, DateTime> newMessageAndNewSt = new Pair<String, DateTime>(null, new DateTime());
+
+	newMessageAndNewSt = info(newMessageAndNewSt, "BUILD DEVELOPMENT ITEMS");
 	final List<MainMenuItem> developmentMainMenuItems = developmentMainMenuStructureBuilder.build();
 	final List<MainMenuItem> updatedMainMenuItems = new ArrayList<MainMenuItem>();
 
-	pd = new Period(st, new DateTime());
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==========retrieve all ECC========================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	st = new DateTime();
-
-	// retrieve all EntityCentreConfig's, locally keep meta-info, and then purge them all
-	final Map<Long, List<String>> analysesMap = new LinkedHashMap<Long, List<String>>();
+	newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all ECC, ECAC");
 	final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac = select(EntityCentreAnalysisConfig.class).model();
-	final List<EntityCentreAnalysisConfig> ecacs = ecacController.getAllEntities(from(modelEcac).with(fetchOnly(EntityCentreAnalysisConfig.class).with("entityCentreConfig", fetchOnly(EntityCentreConfig.class).with("id")).with("title")).model());
-	for (final EntityCentreAnalysisConfig ecac : ecacs) {
-	    if (!analysesMap.containsKey(ecac.getEntityCentreConfig().getId())) {
-		analysesMap.put(ecac.getEntityCentreConfig().getId(), new ArrayList<String>());
-	    }
-	    analysesMap.get(ecac.getEntityCentreConfig().getId()).add(ecac.getTitle());
-	}
-
 	final EntityResultQueryModel<EntityCentreConfig> modelEcc = select(EntityCentreConfig.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
-	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(modelEcc).model());
-	final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = new LinkedHashMap<EntityCentreConfigKey, EntityCentreConfigBody>();
-	for (final EntityCentreConfig ecc : eccs) {
-	    final List<String> analyseNames = analysesMap.get(ecc.getId()) == null ? new ArrayList<String>() : analysesMap.get(ecc.getId());
-	    centresKeysAndBodies.put(new EntityCentreConfigKey(ecc.getOwner(), ecc.getTitle(), ecc.getMenuItem().getKey(), analyseNames), new EntityCentreConfigBody(ecc.isPrincipal(), ecc.getConfigBody()));
-	}
+	// retrieve all EntityCentreConfig's, locally keep meta-info, and then purge them all
+	final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = retrieveCentresKeysAndBodies(modelEcac, modelEcc);
 
-	pd = new Period(st, new DateTime());
-	final String m = "retrieve all ECC";
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println(m + "...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-	System.err.println("==================================================");
-	System.err.println("==========purge all ECC ==========================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	st = new DateTime();
+	newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all ECC, ECAC");
+	purgeCentres(modelEcac, modelEcc);
 
-	ecacController.delete(modelEcac);
-	eccController.delete(modelEcc);
-
-	pd = new Period(st, new DateTime());
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("purge all ECC...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-	System.err.println("==================================================");
-	System.err.println("==========retrieve all MMII=======================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	st = new DateTime();
-
+	newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all MMII");
 	// retrieve all MainMenuItemInvisibility's, locally keep meta-info, and then purge them all
 	final EntityResultQueryModel<MainMenuItemInvisibility> modelMmii = select(MainMenuItemInvisibility.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
 	final List<MainMenuItemInvisibility> mmiis = mmiiController.getAllEntities(from(modelMmii).model());
@@ -385,80 +372,19 @@ public final class MainMenuItemMixin {
 	    invisibilitiesKeys.add(new MainMenuItemInvisibilityKey(mmii.getOwner(), mmii.getMenuItem().getKey()));
 	}
 
-	pd = new Period(st, new DateTime());
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("retrieve all MMII...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-	System.err.println("==================================================");
-	System.err.println("==========purge all MMII =========================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	st = new DateTime();
-
+	newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all MMII");
 	mmiiController.delete(modelMmii);
 
-	pd = new Period(st, new DateTime());
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("purge all MMII...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-	System.err.println("==================================================");
-	System.err.println("==========retrieve all Main Menu Items============");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	st = new DateTime();
+	newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all MMI");
+	purgeAllMMI();
 
-	// purge all old menu items
-	final List<MainMenuItem> mmis = loadMenuSkeletonStructure();
-
-	pd = new Period(st, new DateTime());
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("retrieve all Main Menu Items...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-	System.err.println("==================================================");
-	System.err.println("==============purge all Main Menu Items===========");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	st = new DateTime();
-
-	for (final MainMenuItem rootItem : mmis) {
-	    purgeAll(rootItem);
-	}
-
-	pd = new Period(st, new DateTime());
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("purge all Main Menu Items...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-	System.err.println("==================================================");
-	System.err.println("==========save new Main Menu Items ===============");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	st = new DateTime();
-
+	newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all MMI");
 	// persist new menu items
 	for (final MainMenuItem rootDevelopmentMainMenuItem : developmentMainMenuItems) {
 	    updatedMainMenuItems.add(saveMenuItem(rootDevelopmentMainMenuItem));
 	}
 
-	pd = new Period(st, new DateTime());
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("save new Main Menu Items...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-	System.err.println("==================================================");
-	System.err.println("==========save old ECC ===========================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	st = new DateTime();
-
+	newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all ECC, ECAC");
 	// persist old EntityCentreConfig's
 	for (final Entry<EntityCentreConfigKey, EntityCentreConfigBody> centresKeyAndBody : centresKeysAndBodies.entrySet()) {
 	    final MainMenuItem mmi = mmiController.findByKey(centresKeyAndBody.getKey().getMainMenuItemKey());
@@ -476,18 +402,7 @@ public final class MainMenuItemMixin {
 	    }
 	}
 
-	pd = new Period(st, new DateTime());
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("save old ECC...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-	System.err.println("==================================================");
-	System.err.println("==========save old MMII ==========================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	st = new DateTime();
-
+	newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all MMII");
 	// persist old MainMenuItemInvisibility's
 	for (final MainMenuItemInvisibilityKey invisibilityKey : invisibilitiesKeys) {
 	    final MainMenuItem mmi = mmiController.findByKey(invisibilityKey.getMainMenuItemKey());
@@ -499,33 +414,63 @@ public final class MainMenuItemMixin {
 	    }
 	}
 
-	pd = new Period(st, new DateTime());
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("save old MMII...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-	System.err.println("==================================================");
-	System.err.println("=================DONE ============================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	System.err.println("==================================================");
-	st = new DateTime();
-
+	newMessageAndNewSt = info(newMessageAndNewSt, "DONE");
 	return updatedMainMenuItems;
     }
 
+    private void purgeAllMMI() {
+	mmiController.delete(select(MainMenuItem.class).model());
+    }
+
+//    private void purgeAllMMI(final List<MainMenuItem> mmis) {
+//	for (final MainMenuItem rootItem : mmis) {
+//	    purgeAll(rootItem);
+//	}
+//    }
+//    private void purgeAll(final MainMenuItem mmi) {
+//	for (final MainMenuItem child : mmi.getChildren()) {
+//	    if (child.isPersisted()) {
+//		purgeAll(child);
+//	    }
+//	}
+//	mmiController.delete(mmi);
+//    }
+
     /**
-     * Purges (deletes from cloud) all menu items in the hierarchy of passed menu item including itself.
+     * Purges all centres and its analyses.
      *
-     * @param mmi
+     * @param modelEcac
+     * @param modelEcc
      */
-    private void purgeAll(final MainMenuItem mmi) {
-	for (final MainMenuItem child : mmi.getChildren()) {
-	    if (child.isPersisted()) {
-		purgeAll(child);
+    public void purgeCentres(final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac, final EntityResultQueryModel<EntityCentreConfig> modelEcc) {
+	ecacController.delete(modelEcac);
+	eccController.delete(modelEcc);
+    }
+
+    /**
+     * Retrieves all centres and its analyses.
+     *
+     * @param modelEcac
+     * @param modelEcc
+     * @return
+     */
+    public Map<EntityCentreConfigKey, EntityCentreConfigBody> retrieveCentresKeysAndBodies(final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac, final EntityResultQueryModel<EntityCentreConfig> modelEcc) {
+	final Map<Long, List<String>> analysesMap = new LinkedHashMap<Long, List<String>>();
+	final List<EntityCentreAnalysisConfig> ecacs = ecacController.getAllEntities(from(modelEcac).with(fetchOnly(EntityCentreAnalysisConfig.class).with("entityCentreConfig", fetchOnly(EntityCentreConfig.class).with("id")).with("title")).model());
+	for (final EntityCentreAnalysisConfig ecac : ecacs) {
+	    if (!analysesMap.containsKey(ecac.getEntityCentreConfig().getId())) {
+		analysesMap.put(ecac.getEntityCentreConfig().getId(), new ArrayList<String>());
 	    }
+	    analysesMap.get(ecac.getEntityCentreConfig().getId()).add(ecac.getTitle());
 	}
-	mmiController.delete(mmi);
+
+	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(modelEcc).model());
+	final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = new LinkedHashMap<EntityCentreConfigKey, EntityCentreConfigBody>();
+	for (final EntityCentreConfig ecc : eccs) {
+	    final List<String> analyseNames = analysesMap.get(ecc.getId()) == null ? new ArrayList<String>() : analysesMap.get(ecc.getId());
+	    centresKeysAndBodies.put(new EntityCentreConfigKey(ecc.getOwner(), ecc.getTitle(), ecc.getMenuItem().getKey(), analyseNames), new EntityCentreConfigBody(ecc.isPrincipal(), ecc.getConfigBody()));
+	}
+	return centresKeysAndBodies;
     }
 
     /**
