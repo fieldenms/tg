@@ -35,6 +35,8 @@ import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
+import ua.com.fielden.platform.ui.config.IMainMenu;
+import ua.com.fielden.platform.ui.config.MainMenuDao;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
@@ -118,6 +120,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 	// configuration related binding
 	bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
 	bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerDao.class);
+	bind(IMainMenu.class).to(MainMenuDao.class);
 	bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
 	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);

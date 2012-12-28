@@ -53,6 +53,8 @@ import ua.com.fielden.platform.test.domain.entities.daos.WagonSlotDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WorkshopDao;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
+import ua.com.fielden.platform.ui.config.IMainMenu;
+import ua.com.fielden.platform.ui.config.MainMenuDao;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
@@ -114,6 +116,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
 	bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
+	bind(IMainMenu.class).to(MainMenuDao.class);
 	bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
 
 	bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerDao.class);

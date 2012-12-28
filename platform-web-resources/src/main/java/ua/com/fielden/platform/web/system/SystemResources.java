@@ -7,6 +7,7 @@ import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
+import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
@@ -60,6 +61,7 @@ public final class SystemResources extends Application {
 
 	helper.register(routerForResources, IMainMenuItemController.class);
 	helper.register(routerForResources, IMainMenuItemInvisibilityController.class);
+	helper.register(routerForResources, IMainMenu.class);
 	helper.register(routerForResources, IEntityMasterConfigController.class);
 	helper.register(routerForResources, IEntityLocatorConfigController.class);
 	helper.register(routerForResources, IEntityCentreConfigController.class);

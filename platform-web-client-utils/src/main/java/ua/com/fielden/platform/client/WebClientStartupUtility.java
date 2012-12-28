@@ -44,6 +44,7 @@ import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
+import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
@@ -309,6 +310,7 @@ public class WebClientStartupUtility {
 	    final UndockableTreeMenuWithTabs<?> menu) {
 
 	final IApplicationSettings settings = injector.getInstance(IApplicationSettings.class);
+	final IMainMenu mmController = injector.getInstance(IMainMenu.class);
 	final IMainMenuItemController mmiController = injector.getInstance(IMainMenuItemController.class);
 	final IEntityCentreConfigController eccController = injector.getInstance(IEntityCentreConfigController.class);
 	final IEntityCentreAnalysisConfig ecacController = injector.getInstance(IEntityCentreAnalysisConfig.class);
@@ -318,7 +320,7 @@ public class WebClientStartupUtility {
 	if (Workflows.development.equals(Workflows.valueOf(settings.workflow()))) {
 	    message("Updating user configurations (development mode)...", splash, loginScreen);
 	    // persist NEW / UPDATED menu items (delete OBSOLETE items) into database
-	    final MainMenuItemMixin mixin = new MainMenuItemMixin(mmiController, eccController, ecacController, mmiiController, factory);
+	    final MainMenuItemMixin mixin = new MainMenuItemMixin(mmController, mmiController, eccController, ecacController, mmiiController, factory);
 	    mixin.setUser(restUtil.getUser());
 	    mixin.updateMenuItemsWithDevelopmentOnes(developmentMainMenuStructureBuilder);
 	}
@@ -329,7 +331,7 @@ public class WebClientStartupUtility {
 	// get menu items using "remote" IMainMenuStructureBuilder (from database)
 	st = new DateTime();
 
-	final IMainMenuStructureBuilder persistedMainMenuStructureBuilder = new PersistedMainMenuStructureBuilder(mmiController, eccController, ecacController, mmiiController, factory, restUtil.getUser());
+	final IMainMenuStructureBuilder persistedMainMenuStructureBuilder = new PersistedMainMenuStructureBuilder(mmController, mmiController, eccController, ecacController, mmiiController, factory, restUtil.getUser());
 	final List<MainMenuItem> itemsFromCloud = persistedMainMenuStructureBuilder.build();
 
 	pd = new Period(st, new DateTime());

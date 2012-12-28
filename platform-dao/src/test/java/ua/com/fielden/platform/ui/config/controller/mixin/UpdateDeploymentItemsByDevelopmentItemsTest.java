@@ -17,6 +17,7 @@ import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
+import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
@@ -33,7 +34,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
  */
 public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainDrivenTestCase {
     private final IUserDao userDao = getInstance(IUserDao.class);
-    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibilityController.class), getInstance(EntityFactory.class));
+    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenu.class), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibilityController.class), getInstance(EntityFactory.class));
     private final EntityFactory factory = getInstance(EntityFactory.class);
 
     private User getBaseUser() {

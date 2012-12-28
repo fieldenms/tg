@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 
@@ -64,6 +66,25 @@ public final class MainMenuStructureFactory {
     }
 
     /**
+     * Builds a menu structure based on sequence of strings (where "" means "pop"):
+     * <p>
+     * E.g. "MiVehicle", "", "MiMaint", "MiWorkOrder", "", "".
+     *
+     * @param miTypeNamesOrPopMarkers
+     * @return
+     */
+    public MainMenuStructureFactory pushAll(final List<String> miTypeNamesOrPopMarkers) {
+	for (final String typeNameOrEmpty : miTypeNamesOrPopMarkers) {
+	    if (StringUtils.isEmpty(typeNameOrEmpty)) {
+		pop();
+	    } else {
+		push(typeNameOrEmpty);
+	    }
+	}
+	return this;
+    }
+
+    /**
      * Creates new {@link MainMenuItem} instance and adds it one level deeper into the hierarchy.
      * Makes the created item the current one.
      *
@@ -111,5 +132,15 @@ public final class MainMenuStructureFactory {
      */
     public List<MainMenuItem> build() {
 	return Collections.unmodifiableList(menuItems);
+    }
+
+    public static List<String> toStrings(final List<MainMenuItem> menuItems) {
+	final List<String> strings = new ArrayList<String>();
+	for (final MainMenuItem mmi : menuItems) {
+	    strings.add(mmi.getKey());
+	    strings.addAll(toStrings(mmi.getChildren()));
+	    strings.add("");
+	}
+	return strings;
     }
 }

@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
+import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.web.ResourceGuard;
 import ua.com.fielden.platform.web.SecurityTokenResourceFactory;
 import ua.com.fielden.platform.web.UserRoleAssociationResourceFactory;
@@ -65,6 +66,7 @@ public abstract class BasicServerApplication extends Application {
 	helper.register(routerForResources, IUserDao.class);
 	helper.register(routerForResources, IEntityAttachmentAssociationController.class);
 	helper.register(routerForResources, IEntityCentreAnalysisConfig.class);
+	helper.register(routerForResources, IMainMenu.class);
 	// TODO what about IMainMenuItemController or IEntityCentreConfigController? Or any other types?
 
 	// register standard entity resources

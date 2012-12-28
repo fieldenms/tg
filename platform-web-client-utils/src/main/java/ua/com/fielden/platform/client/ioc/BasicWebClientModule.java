@@ -36,6 +36,8 @@ import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigRao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
+import ua.com.fielden.platform.ui.config.IMainMenu;
+import ua.com.fielden.platform.ui.config.MainMenuRao;
 import ua.com.fielden.platform.ui.config.api.EntityCentreConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityLocatorConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityMasterConfigControllerRao;
@@ -129,6 +131,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	//////////////// bind UI configuration controllers /////////////////////
 	////////////////////////////////////////////////////////////////////////
 	bind(IMainMenuItemController.class).to(MainMenuItemControllerRao.class).in(Scopes.SINGLETON);
+	bind(IMainMenu.class).to(MainMenuRao.class).in(Scopes.SINGLETON);
 	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
 	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
