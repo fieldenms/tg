@@ -23,7 +23,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
-import ua.com.fielden.platform.report.query.generation.PivotAnalysisQueryGgenerator;
+import ua.com.fielden.platform.report.query.generation.PivotAnalysisQueryGenerator;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel;
@@ -131,7 +131,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	final Class<T> root = getCriteria().getEntityClass();
 
-	final IReportQueryGenerator<T> pivotQueryGenerator = new PivotAnalysisQueryGgenerator<>(root,//
+	final IReportQueryGenerator<T> pivotQueryGenerator = new PivotAnalysisQueryGenerator<>(root,//
 		getCriteria().getCentreDomainTreeManagerAndEnhnacerCopy(), //
 		adtme());
 

@@ -40,7 +40,6 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
-import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.categorychart.ActionChartPanel;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
@@ -209,7 +208,7 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
      *
      * @param data
      */
-    public void updateChart(final LifecycleModel<T> data, final IAction postAction) {
+    public void updateChart(final LifecycleModel<T> data, final Runnable postAction) {
         chartPanel.setPostAction(postAction);
         chartPanel.setChart(data, true);
     }

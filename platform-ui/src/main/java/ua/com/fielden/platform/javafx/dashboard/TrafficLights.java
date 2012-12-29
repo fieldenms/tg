@@ -14,7 +14,6 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Circle;
-import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 
 /**
  * A traffic lights control.
@@ -29,34 +28,34 @@ public class TrafficLights extends Group {
     private final TrafficLightsModel model;
     private final TrafficLight redLight, goldLight, greenLight;
 
-    public TrafficLights(final TrafficLightsModel model, final IAction redAction, final IAction goldAction, final IAction greenAction) {
+    public TrafficLights(final TrafficLightsModel model, final Runnable redAction, final Runnable goldAction, final Runnable greenAction) {
 	this.model = model;
 
 	final int radius = 13;
 	final int gap = 3;
 
 	redLight = new TrafficLight(model.getRedLightingModel(), radius, RED_COLOUR, redAction);
-	redLight.getModel().addAfterChangeAction(new IAction() {
+	redLight.getModel().addAfterChangeAction(new Runnable() {
 	    @Override
-	    public void action() {
+	    public void run() {
 		redLight.updateColor();
 	    }
 	});
 	redLight.setTranslateX(2 * gap + radius);
 	redLight.setTranslateY(gap + radius);
 	goldLight = new TrafficLight(model.getYellowLightingModel(), radius, GOLD_COLOUR, goldAction);
-	goldLight.getModel().addAfterChangeAction(new IAction() {
+	goldLight.getModel().addAfterChangeAction(new Runnable() {
 	    @Override
-	    public void action() {
+	    public void run() {
 		goldLight.updateColor();
 	    }
 	});
 	goldLight.setTranslateX(2 * gap + radius + gap * 2 + radius * 2);
 	goldLight.setTranslateY(gap + radius);
 	greenLight = new TrafficLight(model.getGreenLightingModel(), radius, GREEN_COLOUR, greenAction);
-	greenLight.getModel().addAfterChangeAction(new IAction() {
+	greenLight.getModel().addAfterChangeAction(new Runnable() {
 	    @Override
-	    public void action() {
+	    public void run() {
 		greenLight.updateColor();
 	    }
 	});
@@ -75,21 +74,21 @@ public class TrafficLights extends Group {
     public static class TrafficLightModel {
 	// private boolean isLighting = false;
 	private Integer count = 0;
-	private final List<IAction> afterChangeActions = new ArrayList<>();
+	private final List<Runnable> afterChangeActions = new ArrayList<>();
 
 	public boolean isLighting() {
 	    return count > 0;
 	}
 
-	public void addAfterChangeAction(final IAction action) {
+	public void addAfterChangeAction(final Runnable action) {
 	    afterChangeActions.add(action);
 	}
 
 	public TrafficLightModel setCount(final Integer count) {
 	    this.count = count;
 
-	    for (final IAction afterChange : afterChangeActions) {
-		afterChange.action();
+	    for (final Runnable afterChange : afterChangeActions) {
+		afterChange.run();
 	    }
 	    return this;
 	}
@@ -102,7 +101,7 @@ public class TrafficLights extends Group {
     public static class TrafficLight extends Circle {
 	private final TrafficLightModel model;
 	private final Color lightingColor;
-	private final IAction action;
+	private final Runnable action;
 	private final Tooltip tooltip;
 	private boolean isBlinking = false;
 
@@ -126,7 +125,7 @@ public class TrafficLights extends Group {
 	    return tooltip;
 	}
 
-	public TrafficLight(final TrafficLightModel model, final double radius, final Color lightingColor, final IAction action) {
+	public TrafficLight(final TrafficLightModel model, final double radius, final Color lightingColor, final Runnable action) {
 	    super(0, 0, radius);
 
 	    tooltip = new Tooltip();
@@ -151,7 +150,7 @@ public class TrafficLights extends Group {
 		public void handle(final MouseEvent event) {
 		    if (isLighting()) {
 			setEffect(null);
-			TrafficLight.this.action.action();
+			TrafficLight.this.action.run();
 		    }
 		}
 	    });

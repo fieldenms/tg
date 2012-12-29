@@ -48,7 +48,6 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.reportquery.AnalysisModelChangedEvent;
 import ua.com.fielden.platform.reportquery.AnalysisModelChangedListener;
-import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.categorychart.ActionChartPanel;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
@@ -471,7 +470,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	return selectedValuesOrder;
     }
 
-    private void updateChart(final List<T> data, final IAction postAction) {
+    private void updateChart(final List<T> data, final Runnable postAction) {
 	final List<Integer> selectedOrder = getSeriesOrder();
 	if (split) {
 	    final int numOfSelectedWithoutNew = getNumOfSelectedWithoutNew();
@@ -487,17 +486,17 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		}
 	    }
 	    if (chartPanel.getChartPanelsCount() > 0) {
-		chartPanel.getChartPanel(0).setPostAction(new IAction() {
+		chartPanel.getChartPanel(0).setPostAction(new Runnable() {
 
 		    @Override
-		    public void action() {
+		    public void run() {
 			for (int index = 1; index < chartPanel.getChartPanelsCount(); index++) {
 			    final ActionChartPanel<List<T>, CategoryChartTypes> panel = chartPanel.getChartPanel(index);
 			    panel.setPostAction(null);
 			    panel.setChart(data, false, selectedOrder.get(index));
 			}
 			if (postAction != null) {
-			    postAction.action();
+			    postAction.run();
 			}
 		    }
 

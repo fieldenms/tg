@@ -11,7 +11,6 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
 
 import ua.com.fielden.platform.equery.lifecycle.IProgressUpdater;
-import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
@@ -34,7 +33,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
     private boolean labelVisible = false;
 
     private T chartType = null;
-    private IAction postAction, preAction;
+    private Runnable postAction, preAction;
 
     /**
      * Should be used to get appropriate chart from list of charts created by {@link IChartFactory}. Please note that {@link IChartFactory} SHOULD be re-factored, see
@@ -152,7 +151,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 		setMessage("Updating...");
 		final boolean b = super.preAction();
 		if (preAction != null) {
-		    preAction.action();
+		    preAction.run();
 		}
 		return b;
 	    }
@@ -173,7 +172,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 		setChart(chartFactory.getCharts(chartType).get(indexOfAppropriateChart));
 		try {
 		    if (postAction != null) {
-			postAction.action();
+			postAction.run();
 		    }
 		    super.postAction(value);
 		} catch (final Exception e) {
@@ -189,7 +188,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 	    protected void handlePreAndPostActionException(final Throwable ex) {
 		super.handlePreAndPostActionException(ex);
 		if (postAction != null) {
-		    postAction.action();
+		    postAction.run();
 		}
 		super.postAction(null);
 	    }
@@ -241,19 +240,19 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 	return chartType;
     }
 
-    public IAction getPostAction() {
+    public Runnable getPostAction() {
 	return postAction;
     }
 
-    public void setPostAction(final IAction postAction) {
+    public void setPostAction(final Runnable postAction) {
 	this.postAction = postAction;
     }
 
-    public IAction getPreAction() {
+    public Runnable getPreAction() {
 	return preAction;
     }
 
-    public void setPreAction(final IAction preAction) {
+    public void setPreAction(final Runnable preAction) {
 	this.preAction = preAction;
     }
 

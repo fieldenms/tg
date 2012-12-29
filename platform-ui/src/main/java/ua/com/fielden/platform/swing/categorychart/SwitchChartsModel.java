@@ -3,8 +3,6 @@ package ua.com.fielden.platform.swing.categorychart;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
-import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
-
 /**
  *
  *
@@ -51,10 +49,10 @@ public class SwitchChartsModel<M, T> {
 	    if (e.getStateChange() == ItemEvent.SELECTED) {
 		currentType = type;
 		if (chartPanel.getChartPanelsCount() > 0) {
-		    chartPanel.getChartPanel(0).setPostAction(new IAction() {
+		    chartPanel.getChartPanel(0).setPostAction(new Runnable() {
 
 			@Override
-			public void action() {
+			public void run() {
 			    for (int index = 1; index < chartPanel.getChartPanelsCount(); index++) {
 				final ActionChartPanel<M, T> panel = chartPanel.getChartPanel(index);
 				panel.setPostAction(null);

@@ -21,7 +21,7 @@ public class PivotAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
 	if(ReportMode.REPORT.equals(mode)){
 	    final IPivotDomainTreeManager pdtme = (IPivotDomainTreeManager) getAnalysisManager();
 	    if(pdtme==null){
-		return new Result(this, new IllegalStateException("Simple analysis with " + getName() + " name can not be created!"));
+		return new Result(this, new IllegalStateException("Pivot analysis with " + getName() + " name can not be created!"));
 	    }
 	    if(pdtme.getFirstTick().checkedProperties(getCriteria().getEntityClass()).size() == 0 //
 		    && pdtme.getSecondTick().checkedProperties(getCriteria().getEntityClass()).size() == 0){

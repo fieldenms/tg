@@ -64,7 +64,6 @@ import ua.com.fielden.platform.equery.lifecycle.IProgressUpdater;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.equery.lifecycle.ValuedInterval;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
 import ua.com.fielden.platform.swing.categorychart.IChartFactory;
 import ua.com.fielden.platform.swing.timeline.ColoredTask;
@@ -319,9 +318,9 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
     protected void updateGroups(final boolean total) {
     }
 
-    private void stage(final String message, final IProgressUpdater progressUpdater, final IAction stage){
+    private void stage(final String message, final IProgressUpdater progressUpdater, final Runnable stage){
 	final Long curr = new Date().getTime();
-	stage.action();
+	stage.run();
 	final String done = message + "done in " + (new Date().getTime() - curr) + "ms.";
 	System.out.println(done);
     }
@@ -347,27 +346,27 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	if (chartEntryModel != null) {
 	    chartEntryModel.setProgressUpdater(progressUpdater);
 	    if (lifecycleModelChanged()) {
-		stage("cat/non-cat values creation...", progressUpdater, new IAction() {
+		stage("cat/non-cat values creation...", progressUpdater, new Runnable() {
 		    @Override
-		    public void action() {
+		    public void run() {
 			updateCategoriesAndNonCatValues();
 		    }
 		});
 	    }
 
 	    if (lifecycleModelChanged() || totalIndicatorChanged()){
-		stage("cache clearing...", progressUpdater, new IAction() {
+		stage("cache clearing...", progressUpdater, new Runnable() {
 		    @Override
-		    public void action() {
+		    public void run() {
 			cache.clear();
 		    }
 		});
 	    }
 
 	    if (lifecycleModelChanged() || groupingChanged()) {
-		stage("entities re-grouping...", progressUpdater, new IAction() {
+		stage("entities re-grouping...", progressUpdater, new Runnable() {
 		    @Override
-		    public void action() {
+		    public void run() {
 			final String property = model.getDistributionProperty();
 			if (!cache.containsKey(property)){
 			    cache.put(property, chartEntryModel.groupBy(property));
@@ -379,33 +378,33 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 
 	    final boolean changed = lifecycleModelChanged() || groupingChanged() || orderingChanged() || currentCategoriesChanged() || totalIndicatorChanged();
 	    if (changed) {
-		stage("entities groups updating...", progressUpdater, new IAction() {
+		stage("entities groups updating...", progressUpdater, new Runnable() {
 		    @Override
-		    public void action() {
+		    public void run() {
 			updateGroups(model.getTotal());
 		    }
 		});
-		stage("entity re-indexing...", progressUpdater, new IAction() {
+		stage("entity re-indexing...", progressUpdater, new Runnable() {
 		    @Override
-		    public void action() {
+		    public void run() {
 			updateEntityIndexing();
 		    }
 		});
-		stage("empty series creation...", progressUpdater, new IAction() {
+		stage("empty series creation...", progressUpdater, new Runnable() {
 		    @Override
-		    public void action() {
+		    public void run() {
 			updateSeriesByCatAndNonValues();
 		    }
 		});
-		stage("series filling...", progressUpdater, new IAction() {
+		stage("series filling...", progressUpdater, new Runnable() {
 		    @Override
-		    public void action() {
+		    public void run() {
 			fillSeries(progressUpdater);
 		    }
 		});
-		stage("dataset filling...", progressUpdater, new IAction() {
+		stage("dataset filling...", progressUpdater, new Runnable() {
 		    @Override
-		    public void action() {
+		    public void run() {
 			fillDataset();
 		    }
 		});
@@ -466,7 +465,7 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
     public static class ColoredXYSeries extends XYSeries {
 	private static final long serialVersionUID = -8924544742595509358L;
 
-	public ColoredXYSeries(final Comparable key, final boolean autoSort, final boolean allowDuplicateXValues) {
+	public ColoredXYSeries(final Comparable<?> key, final boolean autoSort, final boolean allowDuplicateXValues) {
 	    super(key, autoSort, allowDuplicateXValues);
 	}
 
@@ -495,7 +494,7 @@ public class LifecycleChartFactory<T extends AbstractEntity<?>> implements IChar
 	}
     }
 
-    private static <T extends AbstractEntity> String[] createEntityCaptions(final LifecycleModel<T> model, final boolean withAvailability) {
+    private static <T extends AbstractEntity<?>> String[] createEntityCaptions(final LifecycleModel<T> model, final boolean withAvailability) {
 	if (model == null) {
 	    return new String[0];
 	}

@@ -30,6 +30,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisD
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.MultipleDecDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeRepresentation;
@@ -265,6 +266,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    currentAnalyses.put(name, initAnalysisManagerReferencesOn(new LifecycleDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()), this));
 	    final LifecycleDomainTreeManager ldtm = (LifecycleDomainTreeManager) getAnalysisManager(name);
 	    ldtm.provideMetaStateForLifecycleAnalysesDatePeriodProperties();
+	} if (AnalysisType.MULTIPLEDEC.equals(analysisType)){
+	    currentAnalyses.put(name, initAnalysisManagerReferencesOn(new MultipleDecDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()), this));
 	}
 	// fire "initialised" event
 	if (getAnalysisManager(name) != null) {

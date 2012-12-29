@@ -30,7 +30,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 
@@ -113,9 +112,9 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
 	    if (getIndex() <= table.getItems().size() - 1) {
 		final DashboardRow<T> sentinel = table.getItems().get(getIndex());
 		setGraphic(new TrafficLights(sentinel.getModel(),
-			new IAction() { @Override public void action() { sentinel.invokeDetails(RED); }}, //
-			new IAction() { @Override public void action() { sentinel.invokeDetails(YELLOW); }}, //
-			new IAction() { @Override public void action() { sentinel.invokeDetails(GREEN); }} //
+			new Runnable() { @Override public void run() { sentinel.invokeDetails(RED); }}, //
+			new Runnable() { @Override public void run() { sentinel.invokeDetails(YELLOW); }}, //
+			new Runnable() { @Override public void run() { sentinel.invokeDetails(GREEN); }} //
 			));
 	    }
 	}

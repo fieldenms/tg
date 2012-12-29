@@ -40,7 +40,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	     *
 	     */
 	    public enum AnalysisType {
-		SIMPLE, PIVOT, LIFECYCLE, SENTINEL
+		SIMPLE, PIVOT, LIFECYCLE, SENTINEL, MULTIPLEDEC
 	    }
 
 	    /**

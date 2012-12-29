@@ -23,7 +23,6 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 
 public class TrafficLightsSpike extends Application {
     private final static String packageName = "trafficlights";
@@ -97,9 +96,9 @@ public class TrafficLightsSpike extends Application {
 	final Group trafficLight = createTrafficLight(null);
 	trafficLight.setTranslateX(150);
 	trafficLight.setTranslateY(50);
-	final IAction a = new IAction() {
+	final Runnable a = new Runnable() {
 	    @Override
-	    public void action() {
+	    public void run() {
 	    }
 	};
 

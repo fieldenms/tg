@@ -9,9 +9,9 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManage
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-public class PivotAnalysisQueryGgenerator<T extends AbstractEntity<?>> extends GroupAnalysisQueryGenerator<T> {
+public class PivotAnalysisQueryGenerator<T extends AbstractEntity<?>> extends GroupAnalysisQueryGenerator<T> {
 
-    public PivotAnalysisQueryGgenerator(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final IPivotDomainTreeManager pdtm) {
+    public PivotAnalysisQueryGenerator(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final IPivotDomainTreeManager pdtm) {
 	super(root, cdtme, pdtm);
     }
 
