@@ -22,6 +22,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -412,6 +413,10 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      * @return
      */
     protected int getPageSize() {
+	if (AnnotationReflector.isTransactionEntity(getModel().getCriteria().getEntityClass())) {
+	    // provide unlimited size of the page for "transaction entities"
+	    return Integer.MAX_VALUE;
+	}
 	double pageSize = egiPanel.getSize().getHeight() / EgiPanel.ROW_HEIGHT;
 	if (getOwner().getOwner().getCriteriaPanel() != null) {
 	    pageSize += getOwner().getOwner().getCriteriaPanel().getSize().getHeight() / EgiPanel.ROW_HEIGHT;

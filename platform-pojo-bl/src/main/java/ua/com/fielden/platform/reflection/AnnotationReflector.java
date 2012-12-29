@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -156,6 +157,26 @@ public final class AnnotationReflector {
      */
     public static boolean isAnnotationPresent(final Class<? extends Annotation> annotationType, final Class<?> forType) {
 	return getAnnotation(annotationType, forType) != null;
+    }
+
+    /**
+     * Determines if the entity type represents a "transaction entity". See {@link TransactionEntity} for more details.
+     *
+     * @param forType
+     * @return
+     */
+    public static boolean isTransactionEntity(final Class<?> forType) {
+	return isAnnotationPresent(TransactionEntity.class, forType);
+    }
+
+    /**
+     * Determines a "transaction date" property name for "transaction entity". See {@link TransactionEntity} for more details.
+     *
+     * @param forType
+     * @return
+     */
+    public static String getTransactionDateProperty(final Class<?> forType) {
+	return getAnnotation(TransactionEntity.class, forType).value();
     }
 
     // //////////////////////////////////PROPERTY RELATED ////////////////////////////////////////

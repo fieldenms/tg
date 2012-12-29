@@ -2,16 +2,23 @@ package ua.com.fielden.platform.swing.review.report.analysis.grid;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.dao.SinglePage;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.review.DynamicPropertyAnalyser;
@@ -21,15 +28,97 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
 import ua.com.fielden.platform.utils.Pair;
 
 public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReviewModel<T, CDTME, IAbstractAnalysisDomainTreeManager> {
-
+    private final long TRANSACTION_ENTITY_DELTA_DELAY = 6000;
     /** holds the last executed query */
     private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries;
 
     private final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser;
+    private DeltaRetriever deltaRetriever;
 
     public GridAnalysisModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser) {
 	super(criteria, null);
 	this.queryCustomiser = queryCustomiser;
+    }
+
+    /**
+     * An utility class to receive delta and to provide a merged entities.
+     *
+     * @author TG Team
+     *
+     */
+    private class DeltaRetriever {
+        private final TreeSet<T> entities;
+        private Timer timer;
+        private Date oldNow;
+
+        public DeltaRetriever(final IPage<T> initialPage, final Comparator<T> comparator, final Date oldNow) {
+            this.oldNow = oldNow;
+            entities = new TreeSet<T>(comparator);
+	    entities.addAll(initialPage.data());
+	}
+
+	public void scheduleDeltaRetrieval() {
+	    if (timer != null) {
+		throw new IllegalStateException("Can not schedule one more task, when other task exists.");
+	    }
+
+            timer = new Timer();
+	    final TimerTask deltaRetrivalTask = new TimerTask() {
+		@Override
+		public void run() {
+		    if (analysisQueries == null) {
+			throw new IllegalArgumentException("Cannot retrieve 'delta' if main query has not been run.");
+		    }
+
+		    final Date old = new Date(oldNow.getTime());
+		    oldNow = new Date();
+		    final Result result = runQuery(enhanceByTransactionDateBoundaries(analysisQueries, old, oldNow));
+		    if (result.isSuccessful()) {
+			getPageHolder().newPage(produceEnhancedPage(page(result))); // update loaded page
+		    } else {
+			System.err.println("DELTA RETRIEVAL HAS BEEN FAILED DUE TO [" + result.getMessage() + "].");
+		    }
+
+		    timer = null;
+		    scheduleDeltaRetrieval();
+		}
+	    };
+	    timer.schedule(deltaRetrivalTask, TRANSACTION_ENTITY_DELTA_DELAY);
+	}
+
+	public IPage<T> produceEnhancedPage(final IPage<T> retrievedPage) {
+	    for (final T entity : retrievedPage.data()) {
+		entities.add(entity); // efficient adding (merging) to a tree structure
+	    }
+	    return new SinglePage<T>(new ArrayList<T>(entities)) {
+		@Override
+		public T summary() {
+		    return retrievedPage.summary();
+		}
+	    };
+	}
+
+	public void stop() {
+	    timer.cancel();
+	}
+    }
+
+    /**
+     * Enhance existing queries (immutably) with transaction date boundaries.
+     *
+     * @param oldNow -- if <code>null</code> then the initial query is performed, else -- delta query from "oldNow" should be performed.
+     * @param queries
+     * @return
+     */
+    private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> enhanceByTransactionDateBoundaries(final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries, final Date left, final Date right) {
+	// TODO queries.getKey()!   .getQueryModel(). setParam transDate (left == null ? [---, right] : [left, right])
+
+	// TODO total query should remain the same (to get updated totals) and other query should be filtered by transaction date (from NOW)
+	return queries;
+    }
+
+    private IPage<T> page(final Result result) {
+	return (IPage<T>) result.getInstance();
     }
 
     /**
@@ -38,7 +127,40 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
     @Override
     public Result executeAnalysisQuery() {
 	analysisQueries = createQueryExecutionModel();
-	return runQuery(analysisQueries);
+
+	final Result result;
+	final Date now;
+	if (AnnotationReflector.isTransactionEntity(getCriteria().getEntityClass())) {
+	    if (deltaRetriever != null) {
+		deltaRetriever.stop();
+	    }
+	    now = new Date();
+	    result = runQuery(enhanceByTransactionDateBoundaries(analysisQueries, null, now));
+	} else {
+	    result = runQuery(analysisQueries);
+	    now = null;
+	}
+
+	if (result.isSuccessful()) {
+	    final IPage<T> loadedPage = promotePage(result);
+
+	    if (AnnotationReflector.isTransactionEntity(getCriteria().getEntityClass())) {
+		deltaRetriever = new DeltaRetriever(loadedPage, createComparator(), now);
+		deltaRetriever.scheduleDeltaRetrieval();
+	    }
+	}
+	return result;
+    }
+
+    private Comparator<T> createComparator() {
+	// TODO create comparator based on the ordering properties of CDTMAE.
+	return null;
+    }
+
+    public IPage<T> promotePage(final Result result) {
+	final IPage<T> loadedPage = page(result);
+	getPageHolder().newPage(loadedPage); // update loaded page
+	return loadedPage;
     }
 
     /**
@@ -60,13 +182,20 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	} else {
 	    newPage = getCriteria().firstPage(analysisQueries.getKey(), analysisQueries.getValue(), pageSize);
 	}
-	getPageHolder().newPage(newPage);
 	return Result.successful(newPage);
     }
 
     @Override
     public Result reExecuteAnalysisQuery() {
-	return analysisQueries == null ? executeAnalysisQuery() : runQuery(analysisQueries);
+	if (analysisQueries == null) {
+	    return executeAnalysisQuery();
+	} else {
+	    final Result result = runQuery(analysisQueries);
+	    if (result.isSuccessful()) {
+		promotePage(result);
+	    }
+	    return result;
+	}
     }
 
     protected T getEntityById(final Long id) {
