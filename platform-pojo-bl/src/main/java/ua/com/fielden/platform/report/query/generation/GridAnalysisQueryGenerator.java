@@ -171,4 +171,8 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
 	queryProperty.setNot(tickManager.getNot(entityClass(), actualProperty));
 	return queryProperty;
     }
+
+    public CDTME getCdtme() {
+	return cdtme;
+    }
 }

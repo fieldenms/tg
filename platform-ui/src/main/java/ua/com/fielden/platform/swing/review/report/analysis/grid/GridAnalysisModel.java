@@ -14,17 +14,20 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.SinglePage;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.report.query.generation.GridAnalysisQueryGenerator;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.review.DynamicPropertyAnalyser;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAnalysisQueryCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReviewModel<T, CDTME, IAbstractAnalysisDomainTreeManager> {
@@ -112,9 +115,26 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      */
     private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> enhanceByTransactionDateBoundaries(final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries, final Date left, final Date right) {
 	// TODO queries.getKey()!   .getQueryModel(). setParam transDate (left == null ? [---, right] : [left, right])
+	if (queryCustomiser.getQueryGenerator(this) instanceof GridAnalysisQueryGenerator) {
+	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> qGenerator = (GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>) queryCustomiser.getQueryGenerator(this);
 
-	// TODO total query should remain the same (to get updated totals) and other query should be filtered by transaction date (from NOW)
-	return queries;
+	    final ICentreDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(qGenerator.getCdtme(), ((CentreDomainTreeManagerAndEnhancer) qGenerator.getCdtme()).getSerialiser());
+
+	    final Class<T> root = qGenerator.entityClass();
+	    // copy.getFirstTick().setValue(root, property, value)
+
+	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> newQGenerator = new GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(root, copy);
+
+	    final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> newQueries = newQGenerator.generateQueryModel().getQueries();
+	    if (newQueries.size() == 2) {
+		// TODO total query should remain the same (to get updated totals) and other query should be filtered by transaction date (from NOW)
+		return new Pair<>(newQueries.get(0), newQueries.get(1));
+	    } else {
+		return new Pair<>(newQueries.get(0), null);
+	    }
+	} else {
+	    throw new IllegalArgumentException("Non GridAnalysisQueryGenerator is not supported for TransactionalEntity handling.");
+	}
     }
 
     private IPage<T> page(final Result result) {
