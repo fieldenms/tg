@@ -3,6 +3,8 @@ package ua.com.fielden.platform.swing.review.report.analysis.grid;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +76,21 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    @SuppressWarnings("unchecked")
 	    @Override
 	    public void pageChanged(final PageChangedEvent e) {
+		final List<T> oldSelected = getSelectedEntities();
+				
 		egiPanel.setData((IPage<T>) e.getNewPage());
+		
+		selectEntities(oldSelected);
+	    }
+	});
+	
+	addHierarchyListener(new HierarchyListener() {
+	    public void hierarchyChanged(final HierarchyEvent e) {
+	        if ((HierarchyEvent.SHOWING_CHANGED & e.getChangeFlags()) != 0 && isShowing()) {
+	            if (getModel().getDeltaRetriever() != null) {
+	        	getModel().getDeltaRetriever().scheduleDeltaRetrieval();
+	            }
+	        }
 	    }
 	});
 	getModel().getPageHolder().newPage(null);
@@ -171,6 +187,18 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     public List<T> getEnhnacedSelectedEntities(){
 	final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
 	return tableModel.getSelectedEntities();
+    }
+    
+    /**
+     * Selects the entities in EGI.
+     *
+     * @return
+     */
+    public void selectEntities(final List<T> entities) {
+	final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
+	for (final T entity : entities) {
+	    tableModel.select(entity);
+	}
     }
 
     /**
@@ -469,5 +497,11 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    }
 	};
     }
-
+    
+    @Override
+    public void close() {
+	getModel().stopDeltaRetrievalIfAny();
+	
+        super.close();
+    }
 }

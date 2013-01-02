@@ -52,6 +52,13 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 
     @Override
     public void close() {
+	if (getSingleAnalysis() != null && getSingleAnalysis() instanceof GridConfigurationView) {
+	    final GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> v = (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>) getSingleAnalysis();
+	    if (v.getPreviousView() != null) {
+		v.getPreviousView().getModel().stopDeltaRetrievalIfAny();
+	    }
+	}
+	
 	wasResized = false;
 	wasAnalysisLoaded = false;
 	setSize(new Dimension(0, 0));

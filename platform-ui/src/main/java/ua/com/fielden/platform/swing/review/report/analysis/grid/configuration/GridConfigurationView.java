@@ -95,5 +95,14 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
     protected AnalysisWizardView<T, CDTME> createWizardView() {
 	throw new UnsupportedOperationException("Main details can not be configured!");
     }
+    
+    @Override
+    public void close() {
+	if (getPreviousView() != null) {
+	    getPreviousView().getModel().stopDeltaRetrievalIfAny();
+	}
+
+	super.close();
+    }
 
 }

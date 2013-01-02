@@ -555,6 +555,12 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	final int nonDataRowsIndex = nonDataRows.indexOf(row);
 	return hasGrandTotals ? nonDataRowsIndex > -1 && nonDataRowsIndex < nonDataRows.size() - 1 : nonDataRows.contains(row);
     }
+    
+    public void select(final T instance) {
+	if (getIndexOf(instance) != -1) {
+	    selectRow(getIndexOf(instance));
+	}
+    }
 
     /**
      * Returns index of the passed instance in instance list. If passed instance is not in the list, then -1 value is returned.

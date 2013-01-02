@@ -445,4 +445,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	}
 	return byteArray;
     }
+    
+    public IGeneratedEntityController<T> getGeneratedEntityController() {
+	return generatedEntityController;
+    }
+    
+    public ISerialiser getSerialiser() {
+	return serialiser;
+    }
 }

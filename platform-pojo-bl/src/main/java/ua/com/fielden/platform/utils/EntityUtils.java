@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.utils;
 
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -30,7 +32,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 public class EntityUtils {
     private final static Logger logger = Logger.getLogger(EntityUtils.class);
@@ -513,6 +514,16 @@ public class EntityUtils {
 	return Date.class.isAssignableFrom(type);
     }
 
+    /**
+     * Indicates whether type represents {@link DateTime} values.
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isDateTime(final Class<?> type) {
+	return DateTime.class.isAssignableFrom(type);
+    }
+    
     /**
      * Indicates whether type represents string values.
      *

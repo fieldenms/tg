@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -9,9 +10,13 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
 
+import org.joda.time.DateTime;
+
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.SinglePage;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
@@ -20,6 +25,8 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.report.query.generation.GridAnalysisQueryGenerator;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
@@ -37,6 +44,8 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     private final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser;
     private DeltaRetriever deltaRetriever;
+    private ICentreDomainTreeManagerAndEnhancer cdtmaeCopy;
+    private final static String tdPropCopy = "_________transactionDatePropertyCopy";
 
     public GridAnalysisModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser) {
 	super(criteria, null);
@@ -49,7 +58,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * @author TG Team
      *
      */
-    private class DeltaRetriever {
+    public class DeltaRetriever {
         private final TreeSet<T> entities;
         private Timer timer;
         private Date oldNow;
@@ -62,7 +71,9 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
 	public void scheduleDeltaRetrieval() {
 	    if (timer != null) {
-		throw new IllegalStateException("Can not schedule one more task, when other task exists.");
+		// throw new IllegalStateException("Can not schedule one more task, when other task exists.");
+		System.err.println("One more task is trying to be schedulled, when other task exists ==> ignored.");
+		return;
 	    }
 
             timer = new Timer();
@@ -75,7 +86,8 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
 		    final Date old = new Date(oldNow.getTime());
 		    oldNow = new Date();
-		    final Result result = runQuery(enhanceByTransactionDateBoundaries(analysisQueries, old, oldNow));
+		    final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = enhanceByTransactionDateBoundaries(analysisQueries, old, oldNow);
+		    final Result result = runQuery(getUpdatedCriteria(), queries);
 		    if (result.isSuccessful()) {
 			getPageHolder().newPage(produceEnhancedPage(page(result))); // update loaded page
 		    } else {
@@ -83,7 +95,13 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		    }
 
 		    timer = null;
-		    scheduleDeltaRetrieval();
+		    
+		    if (getAnalysisView().isShowing()) {
+			System.err.println("INIT DELTA RETRIEVAL ==> isShowing == " + getAnalysisView().isShowing());
+			scheduleDeltaRetrieval();
+		    } else {
+			System.err.println("DELTA RETRIEVAL STOPPED ==> isShowing == " + getAnalysisView().isShowing());
+		    }
 		}
 	    };
 	    timer.schedule(deltaRetrivalTask, TRANSACTION_ENTITY_DELTA_DELAY);
@@ -102,29 +120,129 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	}
 
 	public void stop() {
-	    timer.cancel();
+	    if (timer != null) {
+		timer.cancel();
+	    }
 	}
     }
+    
+    public void stopDeltaRetrievalIfAny() {
+	if (deltaRetriever != null) {
+	    deltaRetriever.stop();
+	}
+    }
+    
+    /**
+     * Provides a new {@link EntityQueryCriteria} for "cdtmaeCopy".
+     * 
+     * TODO : this is dangerous, need to create a proper copy (perhaps through {@link CriteriaGenerator}?).
+     * 
+     * @return
+     */
+    public EntityQueryCriteria<CDTME, T, IEntityDao<T>> getUpdatedCriteria() {
+	final EntityQueryCriteria<CDTME, T, IEntityDao<T>> old = getCriteria();
+
+	final EntityQueryCriteria<CDTME, T, IEntityDao<T>> newCriteria = new EntityQueryCriteria<CDTME, T, IEntityDao<T>>(null, old.getGeneratedEntityController(), old.getSerialiser()) {
+	};
+
+	// Set dao for generated entity query criteria.
+	final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
+	final boolean isDaoAccessable = daoField.isAccessible();
+	daoField.setAccessible(true);
+	try {
+	    daoField.set(newCriteria, old.companionObject());
+	} catch (IllegalArgumentException | IllegalAccessException e) {
+	    e.printStackTrace();
+	    throw new RuntimeException(e);
+	}
+	daoField.setAccessible(isDaoAccessable);
+
+	// Set domain tree manager for entity query criteria.
+	final Field dtmField = Finder.findFieldByName(EntityQueryCriteria.class, "cdtme");
+	final boolean isCdtmeAccessable = dtmField.isAccessible();
+	dtmField.setAccessible(true);
+	try {
+	    dtmField.set(newCriteria, cdtmaeCopy);
+	} catch (IllegalArgumentException | IllegalAccessException e) {
+	    e.printStackTrace();
+	    throw new RuntimeException(e);
+	}
+	dtmField.setAccessible(isCdtmeAccessable);
+	return newCriteria;
+    }
+    
+//    private void intersectWithDelta(final Date oldNow, final Date now) {
+//	if (now == null) {
+//	    throw new IllegalArgumentException("Now cannot be null.");
+//	}
+//	final Class<?> root = getCriteria().getEntityClass();
+//	final String tdProp = AnnotationReflector.getTransactionDateProperty(root);
+//	final Class<?> tdPropType = PropertyTypeDeterminator.determinePropertyType(root, tdProp);
+//
+//	final DateTime left, right;
+//	final DateTime leftInfinity = new DateTime(1900, 1, 1, 0, 0, 0, 0);
+//	final DateTime rightInfinity = new DateTime(2100, 1, 1, 0, 0, 0, 0);
+//	if (EntityUtils.isDate(tdPropType)) {	    
+//	    left = value == null ? leftInfinity : new DateTime(((Date) value).getTime());
+//	    right = value2 == null ? rightInfinity : new DateTime(((Date) value2).getTime());
+//	} else if (EntityUtils.isDateTime(tdPropType)) {
+//	    left = value == null ? leftInfinity : (DateTime) value;
+//	    right = value2 == null ? rightInfinity : (DateTime) value2;
+//	} else {
+//	    throw new IllegalArgumentException("The type [" + tdPropType.getSimpleName() + "] of property [" + tdProp + "] in entity [" + root + "] is not supported.");
+//	}
+//	final Interval existingInterval = new Interval(left, right);
+//
+//	final DateTime newLeft = oldNow == null ? leftInfinity : new DateTime(oldNow.getTime());
+//	final DateTime newRight = new DateTime(now.getTime());
+//	final Interval newInterval = new Interval(newLeft, newRight);
+//	
+//	final Interval overlap = existingInterval.overlap(newInterval);
+//	if (EntityUtils.isDate(tdPropType)) {
+//	    cdtmaeCopy.getFirstTick().setValue(root, tdProp, leftInfinity.equals(overlap.getStart()) ? null : overlap.getStart().toDate());
+//	    cdtmaeCopy.getFirstTick().setValue2(root, tdProp, rightInfinity.equals(overlap.getEnd()) ? null : overlap.getEnd().toDate());
+//	} else if (EntityUtils.isDateTime(tdPropType)) {
+//	    cdtmaeCopy.getFirstTick().setValue(root, tdProp, leftInfinity.equals(overlap.getStart()) ? null : overlap.getStart());
+//	    cdtmaeCopy.getFirstTick().setValue2(root, tdProp, rightInfinity.equals(overlap.getEnd()) ? null : overlap.getEnd());
+//	} else {
+//	    throw new IllegalArgumentException("The type [" + tdPropType.getSimpleName() + "] of property [" + tdProp + "] in entity [" + root + "] is not supported.");
+//	}
+//    }
 
     /**
      * Enhance existing queries (immutably) with transaction date boundaries.
      *
      * @param oldNow -- if <code>null</code> then the initial query is performed, else -- delta query from "oldNow" should be performed.
+     * @param now -- if <code>null</code> then the initial query is performed, else -- delta query from "oldNow" should be performed.
      * @param queries
      * @return
      */
-    private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> enhanceByTransactionDateBoundaries(final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries, final Date left, final Date right) {
-	// TODO queries.getKey()!   .getQueryModel(). setParam transDate (left == null ? [---, right] : [left, right])
+    private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> enhanceByTransactionDateBoundaries(final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries, final Date oldNow, final Date now) {
+	// queries.getKey()!   .getQueryModel(). setParam transDate (left == null ? [---, right] : [left, right])
 	if (queryCustomiser.getQueryGenerator(this) instanceof GridAnalysisQueryGenerator) {
 	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> qGenerator = (GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>) queryCustomiser.getQueryGenerator(this);
-
-	    final ICentreDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(qGenerator.getCdtme(), ((CentreDomainTreeManagerAndEnhancer) qGenerator.getCdtme()).getSerialiser());
-
 	    final Class<T> root = qGenerator.entityClass();
-	    // copy.getFirstTick().setValue(root, property, value)
+	    final String tdProp = AnnotationReflector.getTransactionDateProperty(root);
+	    if (oldNow == null) { // RUN is performed (not Delta)
+		cdtmaeCopy = EntityUtils.deepCopy(qGenerator.getCdtme(), ((CentreDomainTreeManagerAndEnhancer) qGenerator.getCdtme()).getSerialiser());
+		cdtmaeCopy.getEnhancer().addCalculatedProperty(root, "", tdProp, tdPropCopy, "A copy of transaction date property to enhance query with delta boundaries", CalculatedPropertyAttribute.NO_ATTR, "");
+		cdtmaeCopy.getEnhancer().apply();
+		cdtmaeCopy.getFirstTick().check(root, tdPropCopy, true);
+	    }
+	    final Class<?> tdPropType = PropertyTypeDeterminator.determinePropertyType(root, tdProp);
+	    if (EntityUtils.isDate(tdPropType)) {
+		cdtmaeCopy.getFirstTick().setValue(root, tdPropCopy, oldNow);
+		cdtmaeCopy.getFirstTick().setValue2(root, tdPropCopy, now);
+	    } else if (EntityUtils.isDateTime(tdPropType)) {
+		cdtmaeCopy.getFirstTick().setValue(root, tdPropCopy, oldNow == null ? null : new DateTime(oldNow.getTime()));
+		cdtmaeCopy.getFirstTick().setValue2(root, tdPropCopy, new DateTime(now.getTime()));
+	    } else {
+		throw new IllegalArgumentException("The type [" + tdPropType.getSimpleName() + "] of property [" + tdProp + "] in entity [" + root + "] is not supported.");
+	    }
+	    
+	    // intersectWithDelta(oldNow, now);
 
-	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> newQGenerator = new GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(root, copy);
-
+	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> newQGenerator = new GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(root, cdtmaeCopy);
 	    final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> newQueries = newQGenerator.generateQueryModel().getQueries();
 	    if (newQueries.size() == 2) {
 		// TODO total query should remain the same (to get updated totals) and other query should be filtered by transaction date (from NOW)
@@ -155,9 +273,10 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		deltaRetriever.stop();
 	    }
 	    now = new Date();
-	    result = runQuery(enhanceByTransactionDateBoundaries(analysisQueries, null, now));
+	    final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = enhanceByTransactionDateBoundaries(analysisQueries, null, now);
+	    result = runQuery(getUpdatedCriteria(), queries);
 	} else {
-	    result = runQuery(analysisQueries);
+	    result = runQuery(getCriteria(), analysisQueries);
 	    now = null;
 	}
 
@@ -189,7 +308,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * @param analysisQueries
      * @return
      */
-    private Result runQuery(final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries) {
+    private Result runQuery(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries) {
 	final Result analysisQueryExecutionResult = canLoadData();
 	if(!analysisQueryExecutionResult.isSuccessful()){
 	    return analysisQueryExecutionResult;
@@ -198,9 +317,9 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	final int pageSize = getAnalysisView().getPageSize();
 	final IPage<T> newPage;
 	if(analysisQueries.getValue() == null){
-	    newPage = getCriteria().firstPage(analysisQueries.getKey(), pageSize);
+	    newPage = criteria.firstPage(analysisQueries.getKey(), pageSize);
 	} else {
-	    newPage = getCriteria().firstPage(analysisQueries.getKey(), analysisQueries.getValue(), pageSize);
+	    newPage = criteria.firstPage(analysisQueries.getKey(), analysisQueries.getValue(), pageSize);
 	}
 	return Result.successful(newPage);
     }
@@ -210,7 +329,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	if (analysisQueries == null) {
 	    return executeAnalysisQuery();
 	} else {
-	    final Result result = runQuery(analysisQueries);
+	    final Result result = runQuery(getCriteria(), analysisQueries);
 	    if (result.isSuccessful()) {
 		promotePage(result);
 	    }
@@ -266,6 +385,10 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	} else {
 	    return new Pair<>(queries.get(0), null);
 	}
+    }
+    
+    public DeltaRetriever getDeltaRetriever() {
+	return deltaRetriever;
     }
 
     @Override
