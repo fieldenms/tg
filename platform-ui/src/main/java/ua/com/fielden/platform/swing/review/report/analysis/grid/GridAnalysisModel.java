@@ -41,8 +41,9 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
     private final long TRANSACTION_ENTITY_DELTA_DELAY = 6000;
     /** holds the last executed query */
     private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries;
-
     private final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser;
+    
+    /******* Delta related stuff ********/
     private DeltaRetriever deltaRetriever;
     private ICentreDomainTreeManagerAndEnhancer cdtmaeCopy;
     private final static String tdPropCopy = "_________transactionDatePropertyCopy";
@@ -71,7 +72,6 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
 	public void scheduleDeltaRetrieval() {
 	    if (timer != null) {
-		// throw new IllegalStateException("Can not schedule one more task, when other task exists.");
 		System.err.println("One more task is trying to be schedulled, when other task exists ==> ignored.");
 		return;
 	    }
@@ -88,8 +88,11 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		    oldNow = new Date();
 		    final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = enhanceByTransactionDateBoundaries(analysisQueries, old, oldNow);
 		    final Result result = runQuery(getUpdatedCriteria(), queries);
+		    final IPage<T> deltaPage = page(result);
 		    if (result.isSuccessful()) {
-			getPageHolder().newPage(produceEnhancedPage(page(result))); // update loaded page
+			if (!deltaPage.data().isEmpty()) {
+			    getPageHolder().newPage(produceEnhancedPage(deltaPage)); // update loaded page
+			}
 		    } else {
 			System.err.println("DELTA RETRIEVAL HAS BEEN FAILED DUE TO [" + result.getMessage() + "].");
 		    }
@@ -115,6 +118,11 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		@Override
 		public T summary() {
 		    return retrievedPage.summary();
+		}
+		
+		@Override
+		public String toString() {
+		    return "Page 1 of 1";
 		}
 	    };
 	}
@@ -171,43 +179,13 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	return newCriteria;
     }
     
-//    private void intersectWithDelta(final Date oldNow, final Date now) {
-//	if (now == null) {
-//	    throw new IllegalArgumentException("Now cannot be null.");
-//	}
-//	final Class<?> root = getCriteria().getEntityClass();
-//	final String tdProp = AnnotationReflector.getTransactionDateProperty(root);
-//	final Class<?> tdPropType = PropertyTypeDeterminator.determinePropertyType(root, tdProp);
-//
-//	final DateTime left, right;
-//	final DateTime leftInfinity = new DateTime(1900, 1, 1, 0, 0, 0, 0);
-//	final DateTime rightInfinity = new DateTime(2100, 1, 1, 0, 0, 0, 0);
-//	if (EntityUtils.isDate(tdPropType)) {	    
-//	    left = value == null ? leftInfinity : new DateTime(((Date) value).getTime());
-//	    right = value2 == null ? rightInfinity : new DateTime(((Date) value2).getTime());
-//	} else if (EntityUtils.isDateTime(tdPropType)) {
-//	    left = value == null ? leftInfinity : (DateTime) value;
-//	    right = value2 == null ? rightInfinity : (DateTime) value2;
-//	} else {
-//	    throw new IllegalArgumentException("The type [" + tdPropType.getSimpleName() + "] of property [" + tdProp + "] in entity [" + root + "] is not supported.");
-//	}
-//	final Interval existingInterval = new Interval(left, right);
-//
-//	final DateTime newLeft = oldNow == null ? leftInfinity : new DateTime(oldNow.getTime());
-//	final DateTime newRight = new DateTime(now.getTime());
-//	final Interval newInterval = new Interval(newLeft, newRight);
-//	
-//	final Interval overlap = existingInterval.overlap(newInterval);
-//	if (EntityUtils.isDate(tdPropType)) {
-//	    cdtmaeCopy.getFirstTick().setValue(root, tdProp, leftInfinity.equals(overlap.getStart()) ? null : overlap.getStart().toDate());
-//	    cdtmaeCopy.getFirstTick().setValue2(root, tdProp, rightInfinity.equals(overlap.getEnd()) ? null : overlap.getEnd().toDate());
-//	} else if (EntityUtils.isDateTime(tdPropType)) {
-//	    cdtmaeCopy.getFirstTick().setValue(root, tdProp, leftInfinity.equals(overlap.getStart()) ? null : overlap.getStart());
-//	    cdtmaeCopy.getFirstTick().setValue2(root, tdProp, rightInfinity.equals(overlap.getEnd()) ? null : overlap.getEnd());
-//	} else {
-//	    throw new IllegalArgumentException("The type [" + tdPropType.getSimpleName() + "] of property [" + tdProp + "] in entity [" + root + "] is not supported.");
-//	}
-//    }
+    public ICentreDomainTreeManagerAndEnhancer getCdtme() {
+	if (queryCustomiser.getQueryGenerator(this) instanceof GridAnalysisQueryGenerator) {
+	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> qGenerator = (GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>) queryCustomiser.getQueryGenerator(this);
+	    return qGenerator.getCdtme();
+	}
+	return null;
+    }
 
     /**
      * Enhance existing queries (immutably) with transaction date boundaries.
@@ -217,14 +195,15 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * @param queries
      * @return
      */
-    private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> enhanceByTransactionDateBoundaries(final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries, final Date oldNow, final Date now) {
+    protected Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> enhanceByTransactionDateBoundaries(final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries, final Date oldNow, final Date now) {
 	// queries.getKey()!   .getQueryModel(). setParam transDate (left == null ? [---, right] : [left, right])
 	if (queryCustomiser.getQueryGenerator(this) instanceof GridAnalysisQueryGenerator) {
 	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> qGenerator = (GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>) queryCustomiser.getQueryGenerator(this);
 	    final Class<T> root = qGenerator.entityClass();
 	    final String tdProp = AnnotationReflector.getTransactionDateProperty(root);
-	    if (oldNow == null) { // RUN is performed (not Delta)
-		cdtmaeCopy = EntityUtils.deepCopy(qGenerator.getCdtme(), ((CentreDomainTreeManagerAndEnhancer) qGenerator.getCdtme()).getSerialiser());
+	    if (oldNow == null) { // RUN is performed (not Delta)		
+		final ICentreDomainTreeManagerAndEnhancer cdtme = qGenerator.getCdtme();
+		cdtmaeCopy = EntityUtils.deepCopy(cdtme, ((CentreDomainTreeManagerAndEnhancer) cdtme).getSerialiser());
 		cdtmaeCopy.getEnhancer().addCalculatedProperty(root, "", tdProp, tdPropCopy, "A copy of transaction date property to enhance query with delta boundaries", CalculatedPropertyAttribute.NO_ATTR, "");
 		cdtmaeCopy.getEnhancer().apply();
 		cdtmaeCopy.getFirstTick().check(root, tdPropCopy, true);
@@ -239,8 +218,6 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    } else {
 		throw new IllegalArgumentException("The type [" + tdPropType.getSimpleName() + "] of property [" + tdProp + "] in entity [" + root + "] is not supported.");
 	    }
-	    
-	    // intersectWithDelta(oldNow, now);
 
 	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> newQGenerator = new GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(root, cdtmaeCopy);
 	    final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> newQueries = newQGenerator.generateQueryModel().getQueries();
@@ -310,13 +287,13 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      */
     private Result runQuery(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries) {
 	final Result analysisQueryExecutionResult = canLoadData();
-	if(!analysisQueryExecutionResult.isSuccessful()){
+	if (!analysisQueryExecutionResult.isSuccessful()) {
 	    return analysisQueryExecutionResult;
 	}
 
 	final int pageSize = getAnalysisView().getPageSize();
 	final IPage<T> newPage;
-	if(analysisQueries.getValue() == null){
+	if(analysisQueries.getValue() == null) {
 	    newPage = criteria.firstPage(analysisQueries.getKey(), pageSize);
 	} else {
 	    newPage = criteria.firstPage(analysisQueries.getKey(), analysisQueries.getValue(), pageSize);

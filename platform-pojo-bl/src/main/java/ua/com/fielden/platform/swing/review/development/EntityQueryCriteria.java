@@ -116,7 +116,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     @SuppressWarnings("unchecked")
     public Class<T> getManagedType(){
-	return (Class<T>)getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass());
+	return (Class<T>) getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass());
     }
 
     /**

@@ -83,7 +83,7 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
 
     @Override
     public GridConfigurationModel<T, CDTME> getModel() {
-	return (GridConfigurationModel<T, CDTME>)super.getModel();
+	return (GridConfigurationModel<T, CDTME>) super.getModel();
     }
 
     @Override

@@ -51,7 +51,7 @@ import ua.com.fielden.platform.swing.categorychart.IChartFactory;
 import ua.com.fielden.platform.swing.chartscroll.ScrollableCategoryPlot;
 
 //TODO this class should be removed later on.
-class CategoryChartFactory<T extends AbstractEntity<?>> implements IChartFactory<List<T>, CategoryChartTypes> {
+public class CategoryChartFactory<T extends AbstractEntity<?>> implements IChartFactory<List<T>, CategoryChartTypes> {
 
     private static final CommonCategoryRenderer commonRenderer = new CommonCategoryRenderer();
 
@@ -296,6 +296,10 @@ class CategoryChartFactory<T extends AbstractEntity<?>> implements IChartFactory
     private Color getSentinelBarsColour(final int column) {
 	final String status = ((EntityWrapper) dataSet.getColumnKey(column)).toString();
 	final javafx.scene.paint.Color javafxColor = DashboardRow.getColour(status);
+	return getAwtColor(javafxColor);
+    }
+    
+    public static java.awt.Color getAwtColor(final javafx.scene.paint.Color javafxColor) {
 	return new java.awt.Color((float) javafxColor.getRed(), (float) javafxColor.getGreen(), (float) javafxColor.getBlue(), (float) javafxColor.getOpacity());
     }
 

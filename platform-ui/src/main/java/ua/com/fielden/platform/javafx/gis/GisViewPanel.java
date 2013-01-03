@@ -305,6 +305,13 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 		removeOldAndAddNew(webEngine, zoom(webEngine));
             }
         });
+        final Button fitToBounds = new Button("Fit To Bounds");
+        fitToBounds.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(final ActionEvent actionEvent) {
+        	fitToBounds();
+		removeOldAndAddNew(webEngine, zoom(webEngine));
+            }
+        });
         final Button zoomOut = new Button("Zoom Out");
         zoomOut.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(final ActionEvent actionEvent) {
@@ -338,7 +345,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
                 // google, startSlider, endSlider, //yahoo, bing,
                 // createSpacer(),
                 //new Label("Location:"), searchBox,
-                zoomIn, zoomOut);
+                zoomIn, fitToBounds, zoomOut);
         // create root
         root = new BorderPane();
         root.getStyleClass().add("map");
@@ -446,10 +453,15 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	webViewPanel.getChildren().add(this.path);
     }
 
-    private Color getColor(final int speed) {
+    protected Color getColor(final P start) {
+	final int speed = start.getSpeed();
 	final double maxSpeed = 80.0;
 	// return Color.hsb(0, speed / maxSpeed, 1.0);
 	return Color.hsb(120.0 - (120.0 * speed / maxSpeed), 1.0, 1.0); // 0 (green, hue=120) to 80 (red, hue=0) km/hour
+    }
+    
+    protected String getTooltip(final P point) {
+	return point.toString();
     }
 
     protected Pair<Double, Double> addPoint(final WebEngine webEngine, final P start, final int size) {
@@ -460,7 +472,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     }
 
     private Pair<Double, Double> addLine(final WebEngine webEngine, final P start, final P end, final int size, final boolean drawSpeedValues) {
-	System.err.println(" =======++++++++++ adding start " + start + " to end " + end);
+	// System.err.println(" =======++++++++++ adding start " + start + " to end " + end);
 	JSObject point = (JSObject) webEngine.executeScript("document.convertPoint(" + start.getLatitude() + ", " + start.getLongitude() + ")");
 	final Double x0 = (Double) point.getMember("x");
 	final Double y0 = (Double) point.getMember("y");
@@ -475,7 +487,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	    p.getElements().add(new MoveTo(x0, y0));
 	    p.getElements().add(new LineTo(x, y));
 
-	    final Stop[] stops2 = new Stop[] { new Stop(0.0, getColor(start.getSpeed())), new Stop(1.0, getColor(end.getSpeed())) };
+	    final Stop[] stops2 = new Stop[] { new Stop(0.0, getColor(start)), new Stop(1.0, getColor(end)) };
 	    final LinearGradient lg1 = new LinearGradient(x0, y0, x, y, false, CycleMethod.NO_CYCLE, stops2);
 	    p.setStroke(lg1);
 
@@ -512,22 +524,25 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     private int zoom(final WebEngine webEngine) {
 	return (Integer) webEngine.executeScript("document.map.getZoom()");
     }
+    
+    protected void fitToBounds() {
+	// fit all coordinates to the bounds calculated by existing points
+	webEngine.executeScript("document.viewBounds = new google.maps.LatLngBounds()");
+	for (final P point : points) {
+	    webEngine.executeScript("document.viewBounds.extend(new google.maps.LatLng(" + point.getLatitude() + "," + point.getLongitude() + "))");
+	}
+	webEngine.executeScript("document.map.fitBounds(document.viewBounds)");
+    }
 
-    public void providePoints(final List<P> points) {
+    public void providePoints(final List<P> points, final boolean fitToBounds) {
 	Platform.runLater(new Runnable() {
 	    @Override
 	    public void run() {
 		GisViewPanel.this.points.clear();
 		GisViewPanel.this.points.addAll(points);
-
-		// fit all coordinates to the bounds calculated by existing points
-		webEngine.executeScript("document.viewBounds = new google.maps.LatLngBounds()");
-		for (final P point : GisViewPanel.this.points) {
-		    System.err.println("================== Point == " + point);
-		    webEngine.executeScript("document.viewBounds.extend(new google.maps.LatLng(" + point.getLatitude() + "," + point.getLongitude() + "))");
+		if (fitToBounds) {
+		    fitToBounds();
 		}
-		webEngine.executeScript("document.map.fitBounds(document.viewBounds)");
-
 		// actually add a markers
 		removeOldAndAddNew(webEngine, zoom(webEngine));
 	    }

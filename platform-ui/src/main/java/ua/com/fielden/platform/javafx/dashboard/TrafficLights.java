@@ -197,7 +197,7 @@ public class TrafficLights extends Group {
 	    return isLighting() ? lightingColor : Color.GREY;
 	}
 
-	private boolean isLighting() {
+	private final boolean isLighting() {
 	    return model.isLighting();
 	}
 
