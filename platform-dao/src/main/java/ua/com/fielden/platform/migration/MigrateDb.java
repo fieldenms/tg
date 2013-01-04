@@ -115,7 +115,7 @@ public class MigrateDb {
     }
 
     private static enum CmdParams {
-	    LIMIT_TO("-limitTo"), RESET_PASSWORDS("-resetPasswords"), THREADS("-threads"), CREATE_DB_SCHEMA("-createSchema");
+	    LIMIT_TO("-limitTo"), RESET_PASSWORDS("-resetPasswords"), THREADS("-threads"), CREATE_DB_SCHEMA("-createSchema"), PRINT_DB_SCHEMA("-printSchema");
 
 	    private final String value;
 
@@ -148,6 +148,8 @@ public class MigrateDb {
 		result.put(CmdParams.RESET_PASSWORDS, null);
 	    } else if (CmdParams.CREATE_DB_SCHEMA.value.equals(args[i])) {
 		result.put(CmdParams.CREATE_DB_SCHEMA, null);
+	    } else if (CmdParams.PRINT_DB_SCHEMA.value.equals(args[i])) {
+		result.put(CmdParams.PRINT_DB_SCHEMA, null);
 	    } else if (CmdParams.THREADS.value.equals(args[i])) {
 		i = i + 1;
 		if (i < args.length && !args[i].startsWith("-")) {
@@ -211,7 +213,8 @@ public class MigrateDb {
     public void migrate(final String[] args, final Properties props, final List<String> ddl, final Class[] retrieversClassesSequence, final Injector injector) throws Exception {
 	final Map<CmdParams, String> cmdParams = retrieveCommandLineParams(args);
 	final String limitToParamArgument = cmdParams.get(CmdParams.LIMIT_TO);
-	final Class[] limitToRetrievers = limitToParamArgument == null ? retrieversClassesSequence : decodeLimitToParameter(limitToParamArgument, retrieversClassesSequence).toArray(new Class[]{});
+	final Class[] limitToRetrievers = limitToParamArgument == null ? retrieversClassesSequence
+		: decodeLimitToParameter(limitToParamArgument, retrieversClassesSequence).toArray(new Class[] {});
 
 	DOMConfigurator.configure("src/main/resources/log4j.xml");
 
@@ -219,18 +222,25 @@ public class MigrateDb {
 	final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
 	if (cmdParams.containsKey(CmdParams.CREATE_DB_SCHEMA)) {
-		System.out.println("Creating database schema...");
-		checkAndCreate(ddl, hibernateUtil);
+	    System.out.println("Creating database schema...");
+	    checkAndCreate(ddl, hibernateUtil);
 	}
-	new DataMigrator(injector, hibernateUtil, factory, "main", decodeThreadsParameter(cmdParams.get(CmdParams.THREADS)), limitToRetrievers).populateData();
 
+	if (cmdParams.containsKey(CmdParams.PRINT_DB_SCHEMA)) {
+	    System.out.println("Printing database schema...\n");
+	    for (final String ddlStmt : ddl) {
+		System.out.println(ddlStmt);
+	    }
+	} else {
+	    new DataMigrator(injector, hibernateUtil, factory, "main", decodeThreadsParameter(cmdParams.get(CmdParams.THREADS)), limitToRetrievers).populateData();
+	}
 	// reset passwords
 	if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {
-		System.out.println("Resetting user passwords...");
-		final ResetUserPassword passwordReset = new ResetUserPassword(injector.getInstance(IUserController.class));
-		passwordReset.resetAll(props.getProperty("private-key"));
+	    System.out.println("Resetting user passwords...");
+	    final ResetUserPassword passwordReset = new ResetUserPassword(injector.getInstance(IUserController.class));
+	    passwordReset.resetAll(props.getProperty("private-key"));
 	}
 
-	System.out.println("Data migration completed.");
+	System.out.println("\nData migration completed.");
     }
 }
