@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.javafx.gis;
 
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +42,10 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.util.Duration;
 import netscape.javascript.JSObject;
+
+import org.joda.time.DateTime;
+import org.joda.time.Period;
+
 import ua.com.fielden.platform.gis.Point;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -58,8 +63,16 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     private BorderPane root;
     private BorderPane webViewPanel;
     private Slider startSlider, endSlider;
+    private WebView webView;
     private WebEngine webEngine;
     private final List<P> points;
+    
+    private IWorldToScreen currentTranformation;
+    
+    private Double get(final JSObject p, final String what) {
+	final String s = p.call(what).toString();
+	return new Double(s);
+    }
 
     public Group path() {
 	return path;
@@ -141,7 +154,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 
     public Scene createScene() {
 	// create web engine and view
-	final WebView webView = new WebView();
+	webView = new WebView();
 	webEngine = webView.getEngine();
 
 //	webView.setOnScroll(new EventHandler<ScrollEvent>() {
@@ -433,6 +446,11 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     }
 
     protected void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
+	final DateTime start = new DateTime();
+	System.err.println("REMOVING OLD AND ADDING NEW...");
+	
+	updateTransformation();
+	
 	if (path != null) {
 	    webViewPanel.getChildren().remove(path);
 	}
@@ -451,6 +469,8 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	    addLine(webEngine, points.get(i-1), points.get(i), points.size(), zoom > 15);
 	}
 	webViewPanel.getChildren().add(this.path);
+	final Period pd = new Period(start, new DateTime());
+	System.err.println("REMOVING OLD AND ADDING NEW...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
     }
 
     protected Color getColor(final P start) {
@@ -463,22 +483,43 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     protected String getTooltip(final P point) {
 	return point.toString();
     }
+    
+    private static Point2D googleConvertWorld2Pixel(final WebEngine webEngine, final double latitude, final double longitude) {
+	final JSObject point = (JSObject) webEngine.executeScript("document.convertPoint(" + latitude + ", " + longitude + ")");
+	return new Point2D.Double((Double) point.getMember("x"), (Double) point.getMember("y"));
+    }
+    
+    protected void updateTransformation() {
+	final JSObject northEast = (JSObject) webEngine.executeScript("document.getNorthEast()");
+	final JSObject southWest = (JSObject) webEngine.executeScript("document.getSouthWest()");
+	
+	System.err.println("northEast == " + northEast);
+	System.err.println("southWest == " + southWest);
+	
+//	currentTranformation = new WorldToScreenAffineTransformation(webView.getWidth(), webView.getHeight(), 
+//		get(southWest, "lng"), get(southWest, "lat"), get(northEast, "lng"), get(northEast, "lat"));
+	currentTranformation = new WorldToScreenMercatorProjection(webView.getWidth(), webView.getHeight(), zoom(webEngine), 
+		get(southWest, "lng"), get(southWest, "lat"), get(northEast, "lng"), get(northEast, "lat"));
+    }
+    
+    private Point2D convertWorld2Pixel(final WebEngine webEngine, final double latitude, final double longitude) {
+	// System.err.println("longitude = " + longitude + " latitude = " + latitude);
+	final Point2D p = currentTranformation.world2pixelXY(longitude, latitude); // googleConvertWorld2Pixel(webEngine, latitude, longitude);
+	// System.err.println("trasformed = " + p);
+	return p;
+    }
 
-    protected Pair<Double, Double> addPoint(final WebEngine webEngine, final P start, final int size) {
-	final JSObject point = (JSObject) webEngine.executeScript("document.convertPoint(" + start.getLatitude() + ", " + start.getLongitude() + ")");
-	final Double x0 = (Double) point.getMember("x");
-	final Double y0 = (Double) point.getMember("y");
-	return new Pair<Double, Double>(x0, y0);
+    protected Point2D addPoint(final WebEngine webEngine, final P point, final int size) {
+	return convertWorld2Pixel(webEngine, point.getLatitude(), point.getLongitude());
     }
 
     private Pair<Double, Double> addLine(final WebEngine webEngine, final P start, final P end, final int size, final boolean drawSpeedValues) {
-	// System.err.println(" =======++++++++++ adding start " + start + " to end " + end);
-	JSObject point = (JSObject) webEngine.executeScript("document.convertPoint(" + start.getLatitude() + ", " + start.getLongitude() + ")");
-	final Double x0 = (Double) point.getMember("x");
-	final Double y0 = (Double) point.getMember("y");
-	point = (JSObject) webEngine.executeScript("document.convertPoint(" + end.getLatitude() + ", " + end.getLongitude() + ")");
-	final Double x = (Double) point.getMember("x");
-	final Double y = (Double) point.getMember("y");
+	final Point2D s = convertWorld2Pixel(webEngine, start.getLatitude(), start.getLongitude());
+	final Double x0 = s.getX();
+	final Double y0 = s.getY();
+	final Point2D e = convertWorld2Pixel(webEngine, end.getLatitude(), end.getLongitude());
+	final Double x = e.getX();
+	final Double y = e.getY();
 
 	if (drawLines()) {
 	    final Path p = new Path();

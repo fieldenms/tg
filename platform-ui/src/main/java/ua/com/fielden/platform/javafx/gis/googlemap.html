@@ -48,6 +48,22 @@
 		return null; 
 	};
 	
+	document.convertPoint2 = function convertPoint2(latLng) {
+         var topRight=document.map.getProjection().fromLatLngToPoint(document.map.getBounds().getNorthEast()); 
+         var bottomLeft=document.map.getProjection().fromLatLngToPoint(document.map.getBounds().getSouthWest()); 
+         var scale=Math.pow(2,document.map.getZoom()); 
+         var worldPoint=document.map.getProjection().fromLatLngToPoint(latLng); 
+         return new google.maps.Point((worldPoint.x-bottomLeft.x)*scale,(worldPoint.y-topRight.y)*scale); 
+    } 
+	
+	document.getNorthEast = function getNorthEast() {
+	    return document.map.getBounds().getNorthEast();
+	}
+	
+	document.getSouthWest = function getSouthWest() {
+		return document.map.getBounds().getSouthWest();
+	}
+	
 	document.convertPoint = function convertPoint(lat, lng) {
 	     var latLng = new google.maps.LatLng(lat, lng); 
          var topRight=document.map.getProjection().fromLatLngToPoint(document.map.getBounds().getNorthEast()); 

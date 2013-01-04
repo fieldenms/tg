@@ -164,6 +164,7 @@ public class TrafficLights extends Group {
 			setRadius(getRadius() - 0.5);
 			setStrokeWidth(1.0);
 		    }
+		    updateTooltip();
 		}
 	    });
 	    setOnMouseExited(new EventHandler<MouseEvent>() {
@@ -179,8 +180,6 @@ public class TrafficLights extends Group {
 
 	public void updateColor() {
 	    setFill(new RadialGradient(225, 0.5, 0, 0, getRadius(), false, CycleMethod.NO_CYCLE, new Stop(0.0, Color.WHITE), new Stop(1.0, realColor())));
-
-	    updateTooltip();
 	}
 
 	protected void updateTooltip() {
