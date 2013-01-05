@@ -10,6 +10,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker.State;
 import javafx.embed.swing.JFXPanel;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -33,7 +34,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
-import javafx.scene.shape.HLineTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
@@ -120,12 +120,12 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 //	      ['Bondi Beach', -33.890542, 151.274856, 4],
 //	      ['Coogee Beach', -33.923036, 151.259052, 5],
 
-	final MoveTo moveTo = new MoveTo();
-	moveTo.setX(0.0f);
-	moveTo.setY(0.0f);
-
-	final HLineTo hLineTo = new HLineTo();
-	hLineTo.setX(70.0f);
+//	final MoveTo moveTo = new MoveTo();
+//	moveTo.setX(0.0f);
+//	moveTo.setY(0.0f);
+//
+//	final HLineTo hLineTo = new HLineTo();
+//	hLineTo.setX(70.0f);
 
 //	final QuadCurveTo quadCurveTo = new QuadCurveTo();
 //	quadCurveTo.setX(120.0f);
@@ -143,8 +143,8 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 //	arcTo.setRadiusX(50.0f);
 //	arcTo.setRadiusY(50.0f);
 
-	path.getElements().add(moveTo);
-	path.getElements().add(hLineTo);
+//	path.getElements().add(moveTo);
+//	path.getElements().add(hLineTo);
 //	path.getElements().add(quadCurveTo);
 //	path.getElements().add(lineTo);
 //	path.getElements().add(arcTo);
@@ -157,88 +157,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	webView = new WebView();
 	webEngine = webView.getEngine();
 
-//	webView.setOnScroll(new EventHandler<ScrollEvent>() {
-//	    @Override
-//	    public void handle(final ScrollEvent event) {
-//		event.getEventType().equals(ScrollEvent.SCROLL);
-//		final double deltaY = event.getDeltaY();
-//		final int deltaYDiscrete = (int) (deltaY / 40.0);
-//		final String zoomScript = deltaYDiscrete > 0 ? "document.zoomIn()" : "document.zoomOut()";
-//		for (int i = 0; i < Math.abs(deltaYDiscrete); i++) {
-//		    webEngine.executeScript(zoomScript);
-//		    removeOldAndAddNew(webEngine, zoom(webEngine));
-//		}
-//	    }
-//	});
-//
-//	webView.setOnDragDetected(new EventHandler<MouseEvent>() {
-//	    @Override
-//	    public void handle(final MouseEvent event) {
-//		xForDragBegin = event.getSceneX();
-//		yForDragBegin = event.getSceneY();
-//		// webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
-//		webView.startFullDrag();
-//		// webView.startDragAndDrop(TransferMode.ANY);
-//		System.out.println("setOnDragDetected " + event);
-//	    }
-//
-//	});
-//	// fujhsdfuhsdfuhsdfhisdfjhiosdfsdf
-//
-//	webView.setOnDragOver(new EventHandler<DragEvent>() {
-//	    @Override
-//	    public void handle(final DragEvent event) {
-//		System.out.println("setOnDragOver " + event);
-//	    }
-//
-//	});
-//
-//
-//	webView.setOnDragDropped(new EventHandler<DragEvent>() {
-//	    @Override
-//	    public void handle(final DragEvent event) {
-//		System.out.println("setOnDragDropped " + event);
-//	    }
-//
-//	});
-//
-//	webView.setOnDragDone(new EventHandler<DragEvent>() {
-//	    @Override
-//	    public void handle(final DragEvent event) {
-//		System.out.println("setOnDragDone " + event);
-//	    }
-//
-//	});
-//
-//	webView.setOnMouseDragReleased(new EventHandler<MouseDragEvent>() {
-//	    @Override
-//	    public void handle(final MouseDragEvent event) {
-//		final int deltaXForPan = -(int) (event.getSceneX() - xForDragBegin),
-//			  deltaYForPan = -(int) (event.getSceneY() - yForDragBegin);
-//		webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
-//		System.out.println("deltaXForPan == " + deltaXForPan + ", deltaYForPan == " + deltaYForPan + ", setOnMouseDragReleased " + event);
-//
-//		path.setTranslateX(path.getTranslateX() - deltaXForPan);
-//		path.setTranslateY(path.getTranslateY() - deltaYForPan);
-//	    }
-//	});
-//
-//	webView.setOnMouseClicked(new EventHandler<MouseEvent>() {
-//	    @Override
-//	    public void handle(final MouseEvent event) {
-//		if (event.getClickCount() == 2) {
-//		    final List<Point> pe = new DataRetriever().getData("src/main/resources/gis/gis-data-sample.csv"); //       createUrl("gis-data-sample.csv")         "/home/jhou/workspace/trident-genesis/platform-ui/src/main/resources/gis/gis-data-sample.csv"
-//		    Collections.sort(pe);
-//		    GisViewPanel.this.points.clear();
-//		    // TODO GisViewPanel.this.points.addAll(pe);
-//
-//		    webEngine.executeScript("document.setCenter(48.93061,24.96296)"); // -34.028249, 151.157507
-//		    removeOldAndAddNew(webEngine, zoom(webEngine));
-//		}
-//	    }
-//	});
-
-	webEngine.load(GisViewPanel.class.getResource("googlemap.html").toString());
+	loadMap();
         // create map type buttons
         final ToggleGroup mapTypeGroup = new ToggleGroup();
         final ToggleButton road = new ToggleButton("Road");
@@ -290,7 +209,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 
         //searchBox.setColumns(12);
         searchBox.setPromptText("Search");
-        searchBox./*rawT*/textProperty().addListener(new ChangeListener<String>() {
+        searchBox.textProperty().addListener(new ChangeListener<String>() {
             public void changed(
                     final ObservableValue<? extends String> observableValue,
                     final String s, final String s1) {
@@ -303,8 +222,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
                     new KeyFrame(new Duration(400),
                             new EventHandler<ActionEvent>() {
                         public void handle(final ActionEvent actionEvent) {
-                            webEngine.executeScript("document.goToLocation(\""+
-                                    searchBox.getText() /*RawT*/ +"\")");
+                            webEngine.executeScript("document.goToLocation(\""+ searchBox.getText() + "\")");
                         }
                     })
                 );
@@ -382,12 +300,8 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	    public void handle(final MouseEvent event) {
 		final int deltaXForPan = -(int) (event.getSceneX() - xForDragBegin);
 		final int deltaYForPan = -(int) (event.getSceneY() - yForDragBegin);
-		webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
-
-		//System.out.println("deltaXForPan == " + deltaXForPan + ", deltaYForPan == " + deltaYForPan + ", setOnMouseDragReleased " + event);
-
-		path.setTranslateX(path.getTranslateX() - deltaXForPan);
-		path.setTranslateY(path.getTranslateY() - deltaYForPan);
+		
+		panBy(deltaXForPan, deltaYForPan);
 
 		xForDragBegin = event.getSceneX();
 		yForDragBegin = event.getSceneY();
@@ -408,13 +322,28 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	webViewPanel.setOnScroll(new EventHandler<ScrollEvent>() {
 	    @Override
 	    public void handle(final ScrollEvent event) {
+		final double cursorPixelX = event.getX();
+		final double cursorPixelY = event.getY();
+		System.err.println("cursorPixelX == " + cursorPixelX + " cursorPixelY == " + cursorPixelY);
+		final double centrePixelX = webView.getWidth() / 2.0;
+		final double centrePixelY = webView.getHeight() / 2.0;
+		
+		// TODO use Transformation! not removeOldAndAddNew
+		// final Point2D cursorLongLat = currentTranformation.pixel2worldXY(cursorPixelX, cursorPixelY);
+		
+		
 		final double deltaY = event.getDeltaY();
 		final int deltaYDiscrete = (int) (deltaY / 40.0);
 		final String zoomScript = deltaYDiscrete > 0 ? "document.zoomIn()" : "document.zoomOut()";
-		for (int zoomSteps = 0; zoomSteps < Math.abs(deltaYDiscrete); zoomSteps++) {
+		final int zoomSteps = Math.abs(deltaYDiscrete);
+		for (int zoomStep = 0; zoomStep < zoomSteps; zoomStep++) {
 		    webEngine.executeScript(zoomScript);
-		    removeOldAndAddNew(webEngine, zoom(webEngine));
 		}
+
+		final double alfa = (deltaYDiscrete > 0 ? (-1) : 1) * Math.pow((deltaYDiscrete > 0 ? 2.0 : (1.0 / 2.0)), zoomSteps - (deltaYDiscrete > 0 ? 1 : 0)); // zoomSteps - 1
+		panBy((int) (alfa * (centrePixelX - cursorPixelX)), (int) (alfa * (centrePixelY - cursorPixelY)));
+		
+		removeOldAndAddNew(webEngine, zoom(webEngine));
 	    }
 	});
 
@@ -428,7 +357,22 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
         webViewPanel.getChildren().add(path);
         final Scene scene = new Scene(root,1100,600, Color.web("#666970"));
         scene.getStylesheets().add("/webmap/WebMap.css");
+        
 	return scene;
+    }
+
+    protected void afterMapLoaded() {
+    }
+
+    protected void loadMap() {
+	webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
+	    public void changed(final ObservableValue ov, final State oldState, final State newState) {
+		if (newState == State.SUCCEEDED) {
+		    afterMapLoaded();
+		}
+	    }
+	});
+	webEngine.load(GisViewPanel.class.getResource("googlemap.html").toString());
     }
 
     private Node createSpacer() {
@@ -443,6 +387,10 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 
     public static void main(final String[] args){
         Application.launch(args);
+    }
+    
+    protected boolean drawSpeedValues(final int zoom) {
+	return zoom > 15;
     }
 
     protected void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
@@ -462,12 +410,17 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	// addLineTo(webEngine, path, -33.890542, 151.274856);
 	// addLineTo(webEngine, path, -33.80010128657071, 151.28747820854187);
 
+	for (int i = 1 + (int)(startSlider.getValue() * points.size()); i < (int)(endSlider.getValue() * points.size()); i++) {
+	    addLine(webEngine, points.get(i-1), points.get(i), points.size(), drawSpeedValues(zoom));
+	}
+
 	if (points.size() > 0) {
 	    addPoint(webEngine, points.get(0), points.size());
 	}
 	for (int i = 1 + (int)(startSlider.getValue() * points.size()); i < (int)(endSlider.getValue() * points.size()); i++) {
-	    addLine(webEngine, points.get(i-1), points.get(i), points.size(), zoom > 15);
+	    addPoint(webEngine, points.get(i), points.size());
 	}
+	
 	webViewPanel.getChildren().add(this.path);
 	final Period pd = new Period(start, new DateTime());
 	System.err.println("REMOVING OLD AND ADDING NEW...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
@@ -553,7 +506,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	    this.path.getChildren().add(text);
 	}
 
-	addPoint(webEngine, end, size);
+	// addPoint(webEngine, end, size);
 
 	return new Pair<Double, Double>(x, y);
     }
@@ -562,7 +515,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	return true;
     }
 
-    private int zoom(final WebEngine webEngine) {
+    protected int zoom(final WebEngine webEngine) {
 	return (Integer) webEngine.executeScript("document.map.getZoom()");
     }
     
@@ -588,5 +541,18 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 		removeOldAndAddNew(webEngine, zoom(webEngine));
 	    }
 	});
+    }
+    
+    public WebEngine getWebEngine() {
+	return webEngine;
+    }
+
+    protected void panBy(final int deltaXForPan, final int deltaYForPan) {
+	webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
+
+	//System.out.println("deltaXForPan == " + deltaXForPan + ", deltaYForPan == " + deltaYForPan + ", setOnMouseDragReleased " + event);
+
+	path.setTranslateX(path.getTranslateX() - deltaXForPan);
+	path.setTranslateY(path.getTranslateY() - deltaYForPan);
     }
 }
