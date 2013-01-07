@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review.development;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -12,6 +14,7 @@ import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILoca
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -29,15 +32,13 @@ import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, DAO> {
 
     private static final long serialVersionUID = -9199540944743417928L;
 
     @Inject
-    public EnhancedLocatorEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser) {
-	super(valueMatcherFactory, generatedEntityController, serialiser);
+    public EnhancedLocatorEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final IDefaultControllerProvider controllerProvider) {
+	super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
     }
 
     @SuppressWarnings("unchecked")

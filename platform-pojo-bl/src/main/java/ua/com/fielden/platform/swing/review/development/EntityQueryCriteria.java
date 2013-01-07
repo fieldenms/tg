@@ -32,6 +32,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -64,13 +65,15 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private final ISerialiser serialiser;
 
     private final C cdtme;
+    private final IDefaultControllerProvider controllerProvider;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
-    public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser){
+    public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final IDefaultControllerProvider controllerProvider){
 	this.valueMatcherFactory = valueMatcherFactory;
 	this.generatedEntityController = generatedEntityController;
 	this.serialiser = serialiser;
+	this.controllerProvider = controllerProvider;
 
 	//This values should be initialized through reflection.
 	this.dao = null;
@@ -452,5 +455,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     
     public ISerialiser getSerialiser() {
 	return serialiser;
+    }
+
+    /**
+     * @return the default <code>controllerProvider</code>.
+     */
+    public IDefaultControllerProvider getControllerProvider() {
+	return controllerProvider;
     }
 }

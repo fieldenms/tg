@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.review.report.analysis.grid;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -86,10 +87,9 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
 		    final Date old = new Date(oldNow.getTime());
 		    oldNow = new Date();
-		    final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = enhanceByTransactionDateBoundaries(analysisQueries, old, oldNow);
-		    final Result result = runQuery(getUpdatedCriteria(), queries);
-		    final IPage<T> deltaPage = page(result);
+		    final Result result = getDelta(old, oldNow);
 		    if (result.isSuccessful()) {
+			final IPage<T> deltaPage = page(result);
 			if (!deltaPage.data().isEmpty()) {
 			    getPageHolder().newPage(produceEnhancedPage(deltaPage)); // update loaded page
 			}
@@ -112,19 +112,10 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
 	public IPage<T> produceEnhancedPage(final IPage<T> retrievedPage) {
 	    for (final T entity : retrievedPage.data()) {
+		entities.remove(entity); // remove old entity if exists
 		entities.add(entity); // efficient adding (merging) to a tree structure
 	    }
-	    return new SinglePage<T>(new ArrayList<T>(entities)) {
-		@Override
-		public T summary() {
-		    return retrievedPage.summary();
-		}
-		
-		@Override
-		public String toString() {
-		    return "Page 1 of 1";
-		}
-	    };
+	    return createSinglePage(retrievedPage, new ArrayList<T>(entities));
 	}
 
 	public void stop() {
@@ -132,6 +123,20 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		timer.cancel();
 	    }
 	}
+    }
+    
+    protected static <T extends AbstractEntity<?>> IPage<T> createSinglePage(final IPage<T> retrievedPage, final Collection<T> entities) {
+	return new SinglePage<T>(new ArrayList<T>(entities)) {
+	    @Override
+	    public T summary() {
+		return retrievedPage == null ? null : retrievedPage.summary();
+	    }
+
+	    @Override
+	    public String toString() {
+		return "Page 1 of 1";
+	    }
+	};
     }
     
     public void stopDeltaRetrievalIfAny() {
@@ -150,7 +155,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
     public EntityQueryCriteria<CDTME, T, IEntityDao<T>> getUpdatedCriteria() {
 	final EntityQueryCriteria<CDTME, T, IEntityDao<T>> old = getCriteria();
 
-	final EntityQueryCriteria<CDTME, T, IEntityDao<T>> newCriteria = new EntityQueryCriteria<CDTME, T, IEntityDao<T>>(null, old.getGeneratedEntityController(), old.getSerialiser()) {
+	final EntityQueryCriteria<CDTME, T, IEntityDao<T>> newCriteria = new EntityQueryCriteria<CDTME, T, IEntityDao<T>>(null, old.getGeneratedEntityController(), old.getSerialiser(), old.getControllerProvider()) {
 	};
 
 	// Set dao for generated entity query criteria.
@@ -371,5 +376,11 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
     @Override
     protected GridAnalysisView<T, CDTME> getAnalysisView() {
 	return (GridAnalysisView<T, CDTME>)super.getAnalysisView();
+    }
+
+    protected Result getDelta(final Date old, final Date oldNow) {
+	final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = enhanceByTransactionDateBoundaries(analysisQueries, old, oldNow);
+	final Result result = runQuery(getUpdatedCriteria(), queries);
+	return result;
     }
 }
