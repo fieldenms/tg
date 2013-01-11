@@ -33,7 +33,6 @@ public class DecModel<T extends AbstractEntity<?>> {
 
     private final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel;
     private final String series;
-    private final String categoryName;
     private final Color color;
     private final String chartName;
     private final String domainAxisName;
@@ -44,10 +43,9 @@ public class DecModel<T extends AbstractEntity<?>> {
 
     private final List<Line<T>> lineCalculators;
 
-    public DecModel(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel, final String series, final String categoryName, final Color color, final String chartName, final String domainAxisName, final String valueAxisName){
+    public DecModel(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel, final String series, final Color color, final String chartName, final String domainAxisName, final String valueAxisName){
 	this.chartModel = chartModel;
 	this.series = series;
-	this.categoryName = categoryName;
 	this.color = color;
 	this.chartName = chartName;
 	this.domainAxisName = domainAxisName;
@@ -88,9 +86,10 @@ public class DecModel<T extends AbstractEntity<?>> {
 
     private Pair<CategoryDataset, CategoryDataset> createDatasets() {
 	final DefaultCategoryDataset mainDataset = new DefaultCategoryDataset();
+	final String categoryName = chartModel.categoryProperties().size() != 1 ? null : chartModel.categoryProperties().get(0);
 
 	for (int columnCounter = 0; columnCounter < chartModel.getCategoryDataEntryCount(); columnCounter++) {
-	    final Comparable<?> category = chartModel.getCategoryDataValue(columnCounter, categoryName);
+	    final Comparable<?> category = new EntityWrapper(chartModel.getCategoryDataValue(columnCounter, categoryName));
 	    mainDataset.addValue(chartModel.getAggregatedDataValue(columnCounter, series), series, category);
 	}
 
@@ -98,7 +97,7 @@ public class DecModel<T extends AbstractEntity<?>> {
 
 	for(int lineIndex = 0; lineIndex < lineCalculators.size(); lineIndex++){
 	    for (int columnCounter = 0; columnCounter < chartModel.getCategoryDataEntryCount(); columnCounter++) {
-		final Comparable<?> category = chartModel.getCategoryDataValue(columnCounter, categoryName);
+		final Comparable<?> category = new EntityWrapper(chartModel.getCategoryDataValue(columnCounter, categoryName));
 		final ILineCalculator<T> lineCalc = lineCalculators.get(lineIndex).lineCalculator;
 		lineDataset.addValue(lineCalc.calculateLineValue(chartModel, columnCounter), lineCalc.getRelatedSeries(), category);
 	    }

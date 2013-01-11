@@ -31,6 +31,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IMultipleDecDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -184,17 +185,38 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	if(subToolBar != null){
 	    panelBuilder = panelBuilder.addSubToolBar(subToolBar).addSeparator();
 	}
-	panelBuilder.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")));//
-	if (!Finder.findLifecycleProperties(getModel().getCriteria().getEntityClass()).isEmpty()) {
-	    panelBuilder.addButton(new AddAnalysisAction(AnalysisType.LIFECYCLE, "Add lifecycle analysis", "Add lifecycle report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")));//
+	boolean analysisButtonWasAdded = false;
+	if (isAnalysisSupported(AnalysisType.SIMPLE)) {
+	    panelBuilder = panelBuilder.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")));//
+	    analysisButtonWasAdded = true;
 	}
-	panelBuilder.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
-	.addButton(new AddAnalysisAction(AnalysisType.SENTINEL, "Add sentinel analysis", "Add sentinel analysis report", ResourceLoader.getIcon("images/sentinel-add.png"), ResourceLoader.getIcon("images/sentinel-add.png")))//
-	.addButton(createRemoveAnalysisAction());
+	if (isAnalysisSupported(AnalysisType.MULTIPLEDEC)) {
+	    panelBuilder = panelBuilder.addButton(new AddAnalysisAction(AnalysisType.MULTIPLEDEC, "Add multiple dec analysis", "Add multiple dec analysis report", ResourceLoader.getIcon("images/coins.png"), ResourceLoader.getIcon("images/coins.png")));//
+	    analysisButtonWasAdded = true;
+	}
+	if (!Finder.findLifecycleProperties(getModel().getCriteria().getEntityClass()).isEmpty() && isAnalysisSupported(AnalysisType.LIFECYCLE) ) {
+	    panelBuilder = panelBuilder.addButton(new AddAnalysisAction(AnalysisType.LIFECYCLE, "Add lifecycle analysis", "Add lifecycle report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")));//
+	    analysisButtonWasAdded = true;
+	}
+	if (isAnalysisSupported(AnalysisType.PIVOT)) {
+	    panelBuilder = panelBuilder.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")));//
+	    analysisButtonWasAdded = true;
+	}
+	if (isAnalysisSupported(AnalysisType.SENTINEL)) {
+	    panelBuilder = panelBuilder.addButton(new AddAnalysisAction(AnalysisType.SENTINEL, "Add sentinel analysis", "Add sentinel analysis report", ResourceLoader.getIcon("images/sentinel-add.png"), ResourceLoader.getIcon("images/sentinel-add.png")));//
+	    analysisButtonWasAdded = true;
+	}
+	if(analysisButtonWasAdded){
+	    panelBuilder = panelBuilder.addButton(createRemoveAnalysisAction());
+	}
 	final JToolBar toolBar = panelBuilder.buildActionPanel();
 		toolBar.setFloatable(false);
 	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 	return toolBar;
+    }
+
+    private boolean isAnalysisSupported(final AnalysisType analysisType){
+	return getModel().getAnalysisBuilder().isSupported(analysisType);
     }
 
     @Override
@@ -316,6 +338,8 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    return AnalysisType.PIVOT;
 	} else if(analysisManager instanceof ILifecycleDomainTreeManager) {
 	    return AnalysisType.LIFECYCLE;
+	} else if(analysisManager instanceof IMultipleDecDomainTreeManager) {
+	    return AnalysisType.MULTIPLEDEC;
 	}
 	return null;
     }

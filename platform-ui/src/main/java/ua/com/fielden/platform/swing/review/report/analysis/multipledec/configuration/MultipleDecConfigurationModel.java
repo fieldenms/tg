@@ -24,7 +24,7 @@ public class MultipleDecConfigurationModel<T extends AbstractEntity<?>> extends 
 		return new Result(this, new IllegalStateException("Multiple dec analysis with " + getName() + " name can not be created!"));
 	    }
 	    if (multipleDec.getFirstTick().checkedProperties(getCriteria().getEntityClass()).size() == 0 //
-		    && multipleDec.getSecondTick().checkedProperties(getCriteria().getEntityClass()).size() == 0) {
+		    || multipleDec.getSecondTick().checkedProperties(getCriteria().getEntityClass()).size() == 0) {
 		return new Result(this, new CanNotSetModeException("Please choose distribution or aggregation properties!"));
 	    }
 	}

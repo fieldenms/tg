@@ -2,6 +2,7 @@ package ua.com.fielden.platform.swing.review.report.analysis.multipledec;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -111,6 +112,34 @@ public abstract class CalculatedNumber<T extends AbstractEntity<?>> {
 	    }
 	}
 
+    }
+
+    /**
+     * Calculates the average for the specified series of values in the given {@link ICategoryAnalysisDataProvider} instance.
+     *
+     * @param series
+     * @param chartModel
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> BigDecimal calculateAvg(final String series, final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel) {
+	final int categoryCount = chartModel.getCategoryDataEntryCount();
+	return calculateTotal(series, chartModel).divide(BigDecimal.valueOf(categoryCount), RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Calculates the total for specified serial of values in the given {@link ICategoryAnalysisDataProvider} instance.
+     *
+     * @param series
+     * @param chartModel
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> BigDecimal calculateTotal(final String series, final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel) {
+	final int categoryCount = chartModel.getCategoryDataEntryCount();
+	BigDecimal sum = BigDecimal.ZERO;
+	for(int categoryIndex = 0; categoryIndex < categoryCount; categoryIndex++){
+	    sum = sum.add(new BigDecimal(chartModel.getAggregatedDataValue(categoryIndex, series).toString()));
+	}
+	return sum;
     }
 
 }

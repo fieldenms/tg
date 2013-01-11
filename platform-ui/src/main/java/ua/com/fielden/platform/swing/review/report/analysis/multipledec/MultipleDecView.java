@@ -193,15 +193,18 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
 	leftPanel.add(distributionLabel, "wrap");
 	leftPanel.add(new JScrollPane(distributionList));
 
+	final JPanel rightPanel = new JPanel(new MigLayout("fill, insets 3", "[fill,grow]", "[][grow,fill]"));
+	rightPanel.add(toolBar, "wrap");
+	rightPanel.add(multipleDecView);
+
 	//Configuring main view panel.
 	final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 	splitPane.setOneTouchExpandable(true);
 	splitPane.setLeftComponent(leftPanel);
-	splitPane.setRightComponent(multipleDecView);
+	splitPane.setRightComponent(rightPanel);
 
-	setLayout(new MigLayout("insets 0, fill", "[fill,grow]", "[][fill,grow]"));
-	add(toolBar, "wrap");
-	add(splitPane, "grow");
+	setLayout(new MigLayout("insets 0, fill", "[fill,grow]", "[fill,grow]"));
+	add(splitPane);
 
 	invalidate();
 	validate();

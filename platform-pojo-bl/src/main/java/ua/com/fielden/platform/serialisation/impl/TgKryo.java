@@ -38,6 +38,10 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTr
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager.LifecycleDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleDomainTreeRepresentationSerialiser;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.MultipleDecDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.MultipleDecDomainTreeManager.MultipleDecDomainTreeManagerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.MultipleDecDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.MultipleDecDomainTreeRepresentation.MultipleDecDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager.PivotDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRepresentation;
@@ -195,6 +199,7 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer analysisDomainTreeRepresentationSerialiser;
     private final Serializer sentinelDomainTreeRepresentationSerialiser;
     private final Serializer lifecycleDomainTreeRepresentationSerialiser;
+    private final Serializer multipleDecDomainTreeRepresentationSerialiser;
     private final Serializer locatorDomainTreeManagerSerialiser;
     private final Serializer centreDomainTreeManagerSerialiser;
     private final Serializer masterDomainTreeManagerSerialiser;
@@ -204,6 +209,7 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer analysisDomainTreeManagerSerialiser;
     private final Serializer sentinelDomainTreeManagerSerialiser;
     private final Serializer lifecycleDomainTreeManagerSerialiser;
+    private final Serializer multipleDecDomainTreeManagerSerialiser;
     private final Serializer locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
     private final Serializer centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
     private final Serializer dynamicallyTypedQueryContainerSerialiser;
@@ -240,6 +246,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(this);
 	sentinelDomainTreeRepresentationSerialiser = new SentinelDomainTreeRepresentationSerialiser(this);
 	lifecycleDomainTreeRepresentationSerialiser = new LifecycleDomainTreeRepresentationSerialiser(this);
+	multipleDecDomainTreeRepresentationSerialiser = new MultipleDecDomainTreeRepresentationSerialiser(this);
 	locatorDomainTreeManagerSerialiser = new LocatorDomainTreeManagerSerialiser(this);
 	centreDomainTreeManagerSerialiser = new CentreDomainTreeManagerSerialiser(this);
 	masterDomainTreeManagerSerialiser = new MasterDomainTreeManagerSerialiser(this);
@@ -250,6 +257,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(this);
 	sentinelDomainTreeManagerSerialiser = new SentinelDomainTreeManagerSerialiser(this);
 	lifecycleDomainTreeManagerSerialiser = new LifecycleDomainTreeManagerSerialiser(this);
+	multipleDecDomainTreeManagerSerialiser = new MultipleDecDomainTreeManagerSerialiser(this);
 	locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser = new LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(this);
 	centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser = new CentreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(this);
 	dynamicallyTypedQueryContainerSerialiser = new DynamicallyTypedQueryContainerSerialiser(this);
@@ -443,6 +451,8 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return analysisDomainTreeRepresentationSerialiser;
 	} else if (LifecycleDomainTreeRepresentation.class.isAssignableFrom(type)) {
 	    return lifecycleDomainTreeRepresentationSerialiser;
+	} else if (MultipleDecDomainTreeRepresentation.class.isAssignableFrom(type)) {
+	    return multipleDecDomainTreeRepresentationSerialiser;
 	} else if (LocatorDomainTreeManager.class.isAssignableFrom(type)) { // higher in hierarchy above CriteriaDomainTreeManager!
 	    return locatorDomainTreeManagerSerialiser;
 	} else if (CentreDomainTreeManager.class.isAssignableFrom(type)) {
@@ -461,6 +471,8 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return analysisDomainTreeManagerSerialiser;
 	} else if (LifecycleDomainTreeManager.class.isAssignableFrom(type)) {
 	    return lifecycleDomainTreeManagerSerialiser;
+	} else if (MultipleDecDomainTreeManager.class.isAssignableFrom(type)) {
+	    return multipleDecDomainTreeManagerSerialiser;
 	} else if (LocatorDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) { // higher in hierarchy above CentreDomainTreeManagerAndEnhancer!
 	    return locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
 	} else if (CentreDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {

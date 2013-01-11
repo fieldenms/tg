@@ -117,7 +117,6 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager$ITickManagerWithMutability"));
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager$TickManager"));
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer$TickManagerAndEnhancer"));
-
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager$SearchBy"));
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation$ListenedArrayList"));
 	utilityGeneratedClasses.add(findClass("java.util.LinkedHashMap"));
@@ -148,6 +147,10 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.IDomainTreeManager"));
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.IDomainTreeRepresentation$ITickRepresentation"));
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.IDomainTreeManager$ITickManager"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.centre.analyses.IMultipleDecDomainTreeRepresentation"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.centre.analyses.impl.MultipleDecDomainTreeRepresentation"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.centre.analyses.IMultipleDecDomainTreeManager"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.centre.analyses.impl.MultipleDecDomainTreeManager"));
     }
 
     @Inject

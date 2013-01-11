@@ -161,4 +161,9 @@ public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> implements I
 		gdtm, entityFactory, masterManager, criteriaGenerator,//
 		progressLayer);
     }
+
+    @Override
+    public boolean isSupported(final AnalysisType analysisType) {
+	return analysisFactoryMap.containsKey(analysisType);
+    }
 }

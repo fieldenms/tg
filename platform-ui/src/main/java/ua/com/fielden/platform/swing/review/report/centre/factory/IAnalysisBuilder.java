@@ -38,4 +38,12 @@ public interface IAnalysisBuilder<T extends AbstractEntity<?>> {
 	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
 	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
 	    final BlockingIndefiniteProgressLayer progressLayer);
+
+    /**
+     * Returns value that indicates whether specified analysis type is supported or not.
+     *
+     * @param analysisType
+     * @return
+     */
+    boolean isSupported(AnalysisType analysisType);
 }

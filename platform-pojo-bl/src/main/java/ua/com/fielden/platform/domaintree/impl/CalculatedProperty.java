@@ -265,6 +265,7 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
     public ICalculatedProperty setTitle(final String title) {
 	this.title = title;
 	return this;
+
     }
 
     /**

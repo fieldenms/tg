@@ -43,4 +43,9 @@ public class DefaultAnalysisBuilder<T extends AbstractEntity<?>> implements IAna
 	return null;
     }
 
+    @Override
+    public boolean isSupported(final AnalysisType analysisType) {
+	return analysisType == null;
+    }
+
 }

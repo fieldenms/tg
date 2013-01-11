@@ -411,4 +411,15 @@ public class DynamicEntityTypeGenerationTest {
 	assertEquals(DetailsEntityForOneToManyAssociation.class, Finder.findFieldByName(enhancedType, "one2manyAssociationCollectional2").getAnnotation(IsProperty.class).value());
     }
 
+    @Test
+    public void test_to_ensure_that_property_name_with_dangerous_character_works() throws Exception {
+	final NewProperty exoticProperty = new NewProperty("\\firstProperty\\", String.class, false, "title", "desc");
+	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(exoticProperty).endModification();
+	try{
+	    Finder.findFieldByName(newType, "\\firstProperty\\");
+	} catch (final Exception e){
+	    e.printStackTrace();
+	    fail("The exotic field should have been found");
+	}
+    }
 }

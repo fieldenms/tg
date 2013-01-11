@@ -30,7 +30,7 @@ public class GroupAnalysisDataProvider<T extends AbstractEntity<?>> extends Abst
     public Number getAggregatedDataValue(final int index, final String aggregated) {
 	final Object value = loadedData.get(index).get(aggregated);
 	if (value == null) {
-	    return null;
+	    return 0;
 	} else if (value instanceof Money) {
 	    return ((Money) value).getAmount();
 	} else if (value instanceof Number) {
