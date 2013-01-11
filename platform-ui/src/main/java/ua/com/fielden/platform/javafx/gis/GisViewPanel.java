@@ -2,6 +2,8 @@ package ua.com.fielden.platform.javafx.gis;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javafx.animation.KeyFrame;
@@ -474,7 +476,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	final Double x = e.getX();
 	final Double y = e.getY();
 
-	if (drawLines()) {
+	if (drawLines(start, end)) {
 	    final Path p = new Path();
 	    p.setStrokeWidth(3.0);
 
@@ -511,7 +513,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	return new Pair<Double, Double>(x, y);
     }
 
-    protected boolean drawLines() {
+    protected boolean drawLines(final P start, final P end) {
 	return true;
     }
 
@@ -532,6 +534,11 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	Platform.runLater(new Runnable() {
 	    @Override
 	    public void run() {
+		// This should order points in its natural ordering (see compareTo() method in concrete Point implementation)
+		System.err.println("SORT " + new Date());
+		Collections.sort(points);
+		System.err.println("SORTED " + new Date());
+		
 		GisViewPanel.this.points.clear();
 		GisViewPanel.this.points.addAll(points);
 		if (fitToBounds) {

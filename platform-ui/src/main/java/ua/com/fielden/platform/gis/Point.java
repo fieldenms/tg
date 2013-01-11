@@ -37,7 +37,6 @@ public class Point implements Comparable<Point> {
 
     @Override
     public int compareTo(final Point o) {
-	// return new Long(getTimestamp().getTime()).compareTo(new Long(o.getTimestamp().getTime()));
 	return new Long(getGpstime().getTime()).compareTo(new Long(o.getGpstime().getTime()));
     }
 

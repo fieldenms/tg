@@ -191,6 +191,20 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	}
 	return null;
     }
+    
+    /**
+     * This method is designed to be overridden for adding some custom fetch properties or other stuff to override query.
+     * 
+     * @param cdtmaeCopy
+     */
+    protected void provideCustomPropertiesForQueries(final ICentreDomainTreeManagerAndEnhancer cdtmaeCopy) {
+    }
+    
+    protected static void checkFetchPropertyIfNotChecked(final ICentreDomainTreeManagerAndEnhancer cdtmaeCopy, final Class<?> root, final String property) {
+	if (!cdtmaeCopy.getSecondTick().isChecked(root, property)) {
+            cdtmaeCopy.getSecondTick().check(root, property, true);
+        }
+    }
 
     /**
      * Enhance existing queries (immutably) with transaction date boundaries.
@@ -212,6 +226,8 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		cdtmaeCopy.getEnhancer().addCalculatedProperty(root, "", tdProp, tdPropCopy, "A copy of transaction date property to enhance query with delta boundaries", CalculatedPropertyAttribute.NO_ATTR, "");
 		cdtmaeCopy.getEnhancer().apply();
 		cdtmaeCopy.getFirstTick().check(root, tdPropCopy, true);
+		
+		provideCustomPropertiesForQueries(cdtmaeCopy);
 	    }
 	    final Class<?> tdPropType = PropertyTypeDeterminator.determinePropertyType(root, tdProp);
 	    if (EntityUtils.isDate(tdPropType)) {
