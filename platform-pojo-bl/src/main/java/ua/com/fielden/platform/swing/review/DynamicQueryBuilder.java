@@ -32,6 +32,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
@@ -777,7 +779,8 @@ public class DynamicQueryBuilder {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final EntityResultQueryModel<E> sourceQueryModel, final List<String> distributionProperties, final Map<String, String> yieldProperties){
+    //TODO Later the genClass property must be removed. This is an interim solution that allows to add .amount prefix to the money properties.
+    public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final EntityResultQueryModel<E> sourceQueryModel, final List<String> distributionProperties, final Class<E> genClass, final Map<String, String> yieldProperties){
 
 	ICompleted<E> baseQuery = select(sourceQueryModel).as(ALIAS);
 	for (final String groupProperty : distributionProperties) {
@@ -785,7 +788,7 @@ public class DynamicQueryBuilder {
 	}
 	ISubsequentCompletedAndYielded<E> yieldedQuery = null;
 	for (final Map.Entry<String, String> yieldProperty : yieldProperties.entrySet()) {
-	    yieldedQuery = yieldedQuery == null ? yield(yieldProperty, baseQuery) : yield(yieldProperty, yieldedQuery);
+	    yieldedQuery = yieldedQuery == null ? yield(genClass, yieldProperty, baseQuery) : yield(genClass, yieldProperty, yieldedQuery);
 	}
 	if (yieldedQuery == null) {
 	    throw new IllegalStateException("The query was compound incorrectly!");
@@ -812,8 +815,15 @@ public class DynamicQueryBuilder {
      * @param query
      * @return
      */
-    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Map.Entry<String, String> yield, final ICompleted<E> query){
-	return query.yield().prop(yield.getKey().isEmpty() ? ALIAS : ALIAS + "." + yield.getKey()).as(yield.getValue());
+    //TODO Later the genClass property must be removed. This is an interim solution that allows to add .amount prefix to the money properties.
+    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Class<E> genClass, final Map.Entry<String, String> yield, final ICompleted<E> query){
+	//TODO this code must be removed as a interim solution
+	String aliasValue = yield.getValue();
+    	if(!aliasValue.isEmpty() && Money.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(genClass, aliasValue))){
+    		aliasValue += ".amount";
+    	}
+    	//remove code above
+    	return query.yield().prop(yield.getKey().isEmpty() ? ALIAS : ALIAS + "." + yield.getKey()).as(aliasValue);
     }
 
     /**
@@ -823,8 +833,15 @@ public class DynamicQueryBuilder {
      * @param query
      * @return
      */
-    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Map.Entry<String, String> yield, final ISubsequentCompletedAndYielded<E> query){
-	return query.yield().prop(yield.getKey().isEmpty() ? ALIAS : ALIAS + "." + yield.getKey()).as(yield.getValue());
+    //TODO Later the genClass property must be removed. This is an interim solution that allows to add .amount prefix to the money properties.
+    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Class<E> genClass, final Map.Entry<String, String> yield, final ISubsequentCompletedAndYielded<E> query){
+    	//TODO this code must be removed as a interim solution
+	String aliasValue = yield.getValue();
+    	if(!aliasValue.isEmpty() && Money.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(genClass, aliasValue))){
+    		aliasValue += ".amount";
+    	}
+    	//remove code above
+    	return query.yield().prop(yield.getKey().isEmpty() ? ALIAS : ALIAS + "." + yield.getKey()).as(aliasValue);
     }
 
     /**

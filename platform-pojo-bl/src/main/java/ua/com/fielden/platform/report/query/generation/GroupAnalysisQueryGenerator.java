@@ -55,7 +55,8 @@ public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> i
 
 	//Create base sub-query and query models.
 	final EntityResultQueryModel<T> subQueryModel = DynamicQueryBuilder.createQuery(managedType, ReportQueryGenerationUtils.createQueryProperties(getRoot(), getCdtme())).model();
-	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, distributionProperties, yieldMap).modelAsEntity(genClass);
+	//TODO the DynamicQueryBuilder.createAggregationQuery method must not receive genClass this is interim solution in order to distinguish money properties and add .mount prefix. 
+	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, distributionProperties, genClass, yieldMap).modelAsEntity(genClass);
 
 	final List<Pair<String, Ordering>> analysisOrderingProperties = new ArrayList<>();
 	for(final Pair<String, Ordering> orderingProp : adtm().getSecondTick().orderedProperties(getRoot())){
