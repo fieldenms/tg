@@ -70,13 +70,13 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 	try {
 
 	    final Configuration cfg = new Configuration();
-		final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
-		domainTypes.add(User.class);
-		domainTypes.add(UserRole.class);
-		domainTypes.add(UserAndRoleAssociation.class);
-		domainTypes.add(SecurityRoleAssociation.class);
-		domainTypes.add(InspectedEntity.class);
-		domainTypes.add(Attachment.class);
+	    final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
+	    domainTypes.add(User.class);
+	    domainTypes.add(UserRole.class);
+	    domainTypes.add(UserAndRoleAssociation.class);
+	    domainTypes.add(SecurityRoleAssociation.class);
+	    domainTypes.add(InspectedEntity.class);
+	    domainTypes.add(Attachment.class);
 	    final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, DbVersion.H2);
 	    cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
 
