@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.ioc;
 
+import static com.google.inject.matcher.Matchers.annotatedWith;
+import static com.google.inject.matcher.Matchers.any;
+import static com.google.inject.matcher.Matchers.subclassesOf;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,9 +23,6 @@ import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
-import static com.google.inject.matcher.Matchers.annotatedWith;
-import static com.google.inject.matcher.Matchers.any;
-import static com.google.inject.matcher.Matchers.subclassesOf;
 
 /**
  * Guice injector module for platform-wide Hibernate related injections such as transaction support and domain level validation configurations.
@@ -49,7 +50,7 @@ public abstract class TransactionalModule extends EntityModule {
 	final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(props, defaultHibernateTypes, applicationEntityTypes);
 	final Configuration hibernateConfig = hcf.build();
 	interceptor = new ProxyInterceptor();
-	hibernateUtil = new HibernateUtil(interceptor, hibernateConfig);
+	hibernateUtil = new HibernateUtil(interceptor, hibernateConfig).addSupprtForManagedSessionFactory(hcf.buildManaged());
 
 	this.sessionFactory = hibernateUtil.getSessionFactory();
 	this.domainMetadata = hcf.getDomainMetadata();

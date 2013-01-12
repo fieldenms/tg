@@ -55,18 +55,7 @@ public class HibernateUtil {
      */
     private Configuration configuration;
     private SessionFactory sessionFactory = null;
-
-    public HibernateUtil() {
-    }
-
-    /**
-     * Constructs utility with custom intercepter.
-     * 
-     * @param interceptor
-     */
-    public HibernateUtil(final Interceptor interceptor) {
-	config(interceptor, configuration);
-    }
+    private SessionFactory managedSessionFactory = null;
 
     /**
      * Constructs utility with custom intercepter and configuration.
@@ -77,9 +66,15 @@ public class HibernateUtil {
 	config(interceptor, configuration);
     }
 
-    public void config(final Interceptor interceptor, final Configuration configuration) {
+    private void config(final Interceptor interceptor, final Configuration configuration) {
 	this.interceptor = interceptor;
 	this.configuration = rebuildSessionFactory(configuration);
+    }
+
+    public HibernateUtil addSupprtForManagedSessionFactory(final Configuration configuration) {
+	configuration.setInterceptor(interceptor);
+	managedSessionFactory = configuration.buildSessionFactory();
+	return this;
     }
 
     /**
@@ -111,6 +106,13 @@ public class HibernateUtil {
 	    rebuildSessionFactory();
 	}
 	return sessionFactory;
+    }
+
+    public SessionFactory getManagedSessionFactory() {
+	if (managedSessionFactory == null) {
+	    throw new IllegalStateException("No support for managed sussion was added.");
+	}
+	return managedSessionFactory;
     }
 
     /**
