@@ -68,6 +68,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     private WebView webView;
     private WebEngine webEngine;
     private final List<P> points;
+    private ToggleButton road, satellite, hybrid, terrain;
     
     private IWorldToScreen currentTranformation;
     
@@ -153,6 +154,24 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	g.getChildren().add(path);
 	return g;
     }
+    
+    public enum GisView {
+	ROAD, SATELLITE, HYBRID, TERRAIN
+    }
+    
+    /**
+     * Activates approriate view {@link GisView}.
+     * 
+     * @param gisView
+     */
+    protected void activateView(final GisView gisView) {
+	final ToggleButton neededButton = 
+		GisView.ROAD.equals(gisView) ? road : 
+		    GisView.SATELLITE.equals(gisView) ? satellite : 
+			GisView.HYBRID.equals(gisView) ? hybrid : 
+			    terrain;
+	neededButton.setSelected(true);
+    }
 
     public Scene createScene() {
 	// create web engine and view
@@ -162,14 +181,14 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	loadMap();
         // create map type buttons
         final ToggleGroup mapTypeGroup = new ToggleGroup();
-        final ToggleButton road = new ToggleButton("Road");
+        road = new ToggleButton("Road");
         road.setSelected(true);
         road.setToggleGroup(mapTypeGroup);
-        final ToggleButton satellite = new ToggleButton("Satellite");
+        satellite = new ToggleButton("Satellite");
         satellite.setToggleGroup(mapTypeGroup);
-        final ToggleButton hybrid = new ToggleButton("Hybrid");
+        hybrid = new ToggleButton("Hybrid");
         hybrid.setToggleGroup(mapTypeGroup);
-        final ToggleButton terrain = new ToggleButton("Terrain");
+        terrain = new ToggleButton("Terrain");
         terrain.setToggleGroup(mapTypeGroup);
         mapTypeGroup.selectedToggleProperty().addListener(
                             new ChangeListener<Toggle>() {
@@ -561,5 +580,9 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 
 	path.setTranslateX(path.getTranslateX() - deltaXForPan);
 	path.setTranslateY(path.getTranslateY() - deltaYForPan);
+    }
+    
+    public void centerBy(final double longitude, final double latitude) {
+	webEngine.executeScript("document.setCenter(" + latitude + "," + longitude + ")"); // -34.028249, 151.157507
     }
 }

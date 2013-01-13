@@ -180,6 +180,16 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     }
 
     /**
+     * A convenient method for accessing selected in EGI entity in terms of {@link AbstractEntity}.
+     *
+     * @return
+     */
+    public AbstractEntity<?> getEnhancedSelectedAbstractEntity() {
+	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
+	return tableModel.getSelectedEntity();
+    }
+    
+    /**
      * Returns the selected entities in EGI.
      *
      * @return
