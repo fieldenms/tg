@@ -583,6 +583,9 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     }
     
     public void centerBy(final double longitude, final double latitude) {
-	webEngine.executeScript("document.setCenter(" + latitude + "," + longitude + ")"); // -34.028249, 151.157507
+	webEngine.executeScript("document.setCenter(" + latitude + "," + longitude + ")");
+	
+	// TODO this is very heavy: should be done through : path.setTranslateX/Y
+	removeOldAndAddNew(webEngine, zoom(webEngine));
     }
 }
