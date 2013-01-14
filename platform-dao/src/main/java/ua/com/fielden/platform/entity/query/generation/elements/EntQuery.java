@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.getOrderPropsFromCompositeEntityKey;
@@ -323,7 +324,7 @@ public class EntQuery implements ISingleOperand {
             if (qsYt != null && !qsYt.equals(rtYt)) {
                 if (!(isPersistedEntityType(qsYt) && Long.class.equals(rtYt)) && //
                         !(isPersistedEntityType(rtYt) && Long.class.equals(qsYt)) && //
-                        !(rtYt.equals(DynamicEntityKey.class) && qsYt.equals(String.class))) {
+                        !(rtYt.equals(DynamicEntityKey.class) && qsYt.equals(String.class)) && !rtYt.equals(Money.class)) {
                     throw new IllegalStateException("Different types: from source = " + qsYt.getSimpleName() + " from result type = "
                             + rtYt.getSimpleName());
                 }

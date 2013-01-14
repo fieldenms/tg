@@ -346,7 +346,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     @Override
     public String toString() {
 	return "\nname = " + name + " javaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + " hibType = "
-		+ (hibType != null ? hibType/*.getClass().getSimpleName()*/ : hibType) + " type = " + type + "\ncolumn(s) = " + columns + " nullable = " + nullable;
+		+ (hibType != null ? hibType/*.getClass().getSimpleName()*/ : hibType) + " type = " + type + "\ncolumn(s) = " + columns + " nullable = " + nullable + " calculated = " + isCalculated();
     }
 
     @Override

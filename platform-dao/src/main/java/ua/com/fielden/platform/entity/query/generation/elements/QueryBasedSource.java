@@ -100,8 +100,10 @@ public class QueryBasedSource extends AbstractSource {
 
     private Pair<PurePropInfo, PurePropInfo> validateCandidate(final String dotNotatedPropName, final String first, final String rest) {
 	final Yield firstLevelPropYield = firstModel().getYields().getYieldByAlias(first);
-	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
+
+	if (firstLevelPropYield == null || firstLevelPropYield.isCompositePropertyHeader()) { // there are no such first level prop at all within source query yields
 	    final PropertyMetadata explicitPropMetadata = getDomainMetadataAnalyser().getInfoForDotNotatedProp(sourceType(), first);
+
 	    if (explicitPropMetadata == null) {
 		return null;
 	    } else {
@@ -129,7 +131,8 @@ public class QueryBasedSource extends AbstractSource {
 		} else if (explicitPropMetadata.isCompositeProperty()) {
 		    final String singleSubProp = explicitPropMetadata.getSinglePropertyOfCompositeUserType();
 		    if (singleSubProp != null) {
-			return validateCandidate(dotNotatedPropName, first + "." + singleSubProp, rest);
+			final Pair<PurePropInfo,PurePropInfo> result = validateCandidate(dotNotatedPropName, first + "." + singleSubProp, rest);
+			return result;
 		    }
 		    return null;
 		} else {
@@ -137,7 +140,7 @@ public class QueryBasedSource extends AbstractSource {
 		}
 	    }
 	} else if (firstLevelPropYield.getInfo().getJavaType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
-		return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true)) : null;
+	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true)) : null;
 	} else if (!StringUtils.isEmpty(rest)) {
 	    final PropertyMetadata propInfo = getDomainMetadataAnalyser().getInfoForDotNotatedProp(firstLevelPropYield.getInfo().getJavaType(), rest);
 	    if (propInfo == null) {

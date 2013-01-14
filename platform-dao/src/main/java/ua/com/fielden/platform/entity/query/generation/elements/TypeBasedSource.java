@@ -7,8 +7,8 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropByFirstDot;
 
 public class TypeBasedSource extends AbstractSource {
     private final boolean generated;
@@ -51,20 +51,20 @@ public class TypeBasedSource extends AbstractSource {
 		return null;
 	    } else {
 		final boolean propNullability = getDomainMetadataAnalyser().isNullable(sourceType(), dotNotatedPropName);
-		final String onePartProp = EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey();
+		final String onePartProp = splitPropByFirstDot(dotNotatedPropName).getKey();
 		final PropertyMetadata explicitPartPropInfo = getDomainMetadataAnalyser().getPropPersistenceInfoExplicitly(sourceType(), onePartProp);
-		final String twoPartProp = onePartProp + "." + EntityUtils.splitPropByFirstDot(EntityUtils.splitPropByFirstDot(dotNotatedPropName).getValue()).getKey();
+		final String twoPartProp = onePartProp + "." + splitPropByFirstDot(splitPropByFirstDot(dotNotatedPropName).getValue()).getKey();
 		final PropertyMetadata explicitPartPropInfo2 = getDomainMetadataAnalyser().getPropPersistenceInfoExplicitly(sourceType(), twoPartProp);
 		if (explicitPartPropInfo2 != null) {
-			final boolean explicitPropNullability = true; // TODO why this
-			final PurePropInfo ppi = new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable());
-			ppi.setExpressionModel(propInfo.getExpressionModel());
-			return new Pair<PurePropInfo, PurePropInfo>( //
-			new PurePropInfo(explicitPartPropInfo2.getName(), explicitPartPropInfo2.getJavaType(), explicitPartPropInfo2.getHibType(), explicitPropNullability || isNullable()), //
-			ppi);
+		    final boolean explicitPropNullability = true; // TODO why this
+		    final PurePropInfo ppi = new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable());
+		    ppi.setExpressionModel(propInfo.getExpressionModel());
+		    return new Pair<PurePropInfo, PurePropInfo>( //
+		    /*       */new PurePropInfo(explicitPartPropInfo2.getName(), explicitPartPropInfo2.getJavaType(), explicitPartPropInfo2.getHibType(), explicitPropNullability || isNullable()), //
+		    /*       */ppi);
 		}
 
-		final boolean explicitPropNullability = getDomainMetadataAnalyser().isNullable(sourceType(), EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
+		final boolean explicitPropNullability = getDomainMetadataAnalyser().isNullable(sourceType(), splitPropByFirstDot(dotNotatedPropName).getKey());
 		final PurePropInfo ppi = new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable());
 		ppi.setExpressionModel(propInfo.getExpressionModel());
 		return new Pair<PurePropInfo, PurePropInfo>( //
