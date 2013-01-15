@@ -9,6 +9,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @author TG Team
  *
  */
-public interface IDefaultControllerProvider {
-    <T extends IEntityDao<E>, E extends AbstractEntity<?>> T findController(Class<E> type);
+public interface ICompanionObjectFinder {
+    <T extends IEntityDao<E>, E extends AbstractEntity<?>> T find(final Class<E> type);
 }

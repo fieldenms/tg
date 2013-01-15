@@ -18,7 +18,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 import static java.lang.String.format;
@@ -38,7 +38,7 @@ public abstract class DomainDrivenDataPopulation {
 
     public final IDomainDrivenTestCaseConfiguration config;
 
-    private final IDefaultControllerProvider provider;
+    private final ICompanionObjectFinder provider;
     private final EntityFactory factory;
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -47,7 +47,7 @@ public abstract class DomainDrivenDataPopulation {
     protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config) {
 	try {
 	    this.config = config;
-	    provider = config.getInstance(IDefaultControllerProvider.class);
+	    provider = config.getInstance(ICompanionObjectFinder.class);
 	    factory = config.getEntityFactory();
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
@@ -143,12 +143,12 @@ public abstract class DomainDrivenDataPopulation {
     }
 
     public final <T extends AbstractEntity<?>> T save(final T instance) {
-	final IEntityDao<T> pp = provider.findController((Class<T>) instance.getType());
+	final IEntityDao<T> pp = provider.find((Class<T>) instance.getType());
 	return pp.save(instance);
     }
 
     public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T ao(final Class<E> type) {
-	return (T) provider.findController(type);
+	return (T) provider.find(type);
     }
 
     public final Date date(final String dateTime) {

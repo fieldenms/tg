@@ -32,7 +32,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -65,11 +65,11 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private final ISerialiser serialiser;
 
     private final C cdtme;
-    private final IDefaultControllerProvider controllerProvider;
+    private final ICompanionObjectFinder controllerProvider;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
-    public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final IDefaultControllerProvider controllerProvider){
+    public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider){
 	this.valueMatcherFactory = valueMatcherFactory;
 	this.generatedEntityController = generatedEntityController;
 	this.serialiser = serialiser;
@@ -460,7 +460,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /**
      * @return the default <code>controllerProvider</code>.
      */
-    public IDefaultControllerProvider getControllerProvider() {
+    public ICompanionObjectFinder getControllerProvider() {
 	return controllerProvider;
     }
 }

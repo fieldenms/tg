@@ -33,7 +33,7 @@ import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -59,11 +59,11 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final EntityFactory entityFactory;
 
-    private final IDefaultControllerProvider controllerProvider;
+    private final ICompanionObjectFinder controllerProvider;
 
 
     @Inject
-    public CriteriaGenerator(final EntityFactory entityFactory, final IDefaultControllerProvider controllerProvider){
+    public CriteriaGenerator(final EntityFactory entityFactory, final ICompanionObjectFinder controllerProvider){
 	this.entityFactory = entityFactory;
 	this.controllerProvider = controllerProvider;
     }
@@ -96,7 +96,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	    final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
 	    final boolean isDaoAccessable = daoField.isAccessible();
 	    daoField.setAccessible(true);
-	    daoField.set(entity, controllerProvider.findController(root));
+	    daoField.set(entity, controllerProvider.find(root));
 	    daoField.setAccessible(isDaoAccessable);
 
 	    //Set domain tree manager for entity query criteria.

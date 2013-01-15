@@ -28,16 +28,19 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityRao.PageInfo;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
 import ua.com.fielden.platform.roa.HttpHeaders;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
 
 /**
  * This RAO is applicable for executing queries based on dynamically generated entity types.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGeneratedEntityController<T> {
 
@@ -45,44 +48,87 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
     private Class<? extends Comparable> keyType;
 
     protected final RestClientUtil restUtil;
+    private final IAuthorisationModel authModel;
+    private Class<? extends IEntityDao<?>> coType;
 
     /**
      * Needed for reflective instantiation.
      */
     @Inject
-    public GeneratedEntityRao(final RestClientUtil util) {
+    public GeneratedEntityRao(final RestClientUtil util, final IAuthorisationModel authModel) {
 	this.restUtil = util;
+	this.authModel = authModel;
+    }
+
+    /** This constructor is intended for testing purposes only. */
+    public GeneratedEntityRao(final RestClientUtil util) {
+	this(util, null);
     }
 
     protected WebResourceType getDefaultWebResourceType() {
 	return WebResourceType.VERSIONED;
     }
 
+    @Override
     public void setEntityType(final Class<T> type) {
 	this.entityType = type;
 	this.keyType = AnnotationReflector.getKeyType(entityType);
+	this.coType = CompanionObjectAutobinder.companionObjectType(getEntityType());
     }
 
+    @Override
     public Class<T> getEntityType() {
 	return entityType;
     }
 
+    @Override
     public Class<? extends Comparable> getKeyType() {
 	return keyType;
     }
 
+    /**
+     * A general purpose logic for manual authorisation of method calls on companion entity object based on the security model.
+     * 
+     * @param methodName
+     */
+    private void authCall(final String methodName) {
+	if (authModel != null && coType != null) {
+	    final java.lang.reflect.Method[] methods = coType.getDeclaredMethods();
+	    for (final java.lang.reflect.Method method : methods) {
+		if (methodName.equalsIgnoreCase(method.getName())) {
+		    final Authorise annotation = method.getAnnotation(Authorise.class);
+		    if (annotation != null) {
+			authModel.start();
+			final Result result = authModel.authorise(annotation.value());
+			try {
+			    if (!result.isSuccessful()) {
+				throw result;
+			    }
+			} finally {
+			    authModel.stop();
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+
     @Override
     public T findById(final Long id, final fetch<T> fetchModel, final List<byte[]> binaryTypes) {
+	authCall("findById");
 	return fetchOneEntityInstance(id, fetchModel, binaryTypes);
     }
 
     @Override
     public T findById(final Long id, final List<byte[]> binaryTypes) {
+	authCall("findById");
 	return fetchOneEntityInstance(id, null, binaryTypes);
     }
 
     @Override
     public T getEntity(final QueryExecutionModel<T, ?> model, final List<byte[]> binaryTypes) {
+	authCall("getEntity");
 	final List<T> data = new EntityQueryPage(model, new PageInfo(0, 1, IEntityDao.DEFAULT_PAGE_CAPACITY), binaryTypes).data();
 	if (data.size() > 1) {
 	    throw new IllegalArgumentException("The provided query model leads to retrieval of more than one entity (" + data.size() + ").");
@@ -92,32 +138,36 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 
     @Override
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> qem, final int pageCapacity, final List<byte[]> binaryTypes) {
+	authCall("firstPage");
 	return new EntityQueryPage(qem, new PageInfo(0, 0, pageCapacity), binaryTypes);
     }
 
     @Override
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> qem, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity, final List<byte[]> binaryTypes) {
+	authCall("firstPage");
 	return new EntityQueryPage(qem, summaryModel, new PageInfo(0, 0, pageCapacity), binaryTypes);
     }
 
     @Override
     public IPage<T> getPage(final QueryExecutionModel<T, ?> qem, final int pageNo, final int pageCapacity, final List<byte[]> binaryTypes) {
+	authCall("getPage");
 	return new EntityQueryPage(qem, new PageInfo(pageNo, 0, pageCapacity), binaryTypes);
     }
 
     @Override
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity, final List<byte[]> binaryTypes) {
+	authCall("getPage");
 	return new EntityQueryPage(model, new PageInfo(pageNo, pageCount, pageCapacity), binaryTypes);
     }
 
-
     /**
-     * Sends a POST request to /query/generated-type??page-capacity=all with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated types.
-     * The response suppose to return an envelope containing all entities resulting from the query.
+     * Sends a POST request to /query/generated-type??page-capacity=all with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated
+     * types. The response suppose to return an envelope containing all entities resulting from the query.
      */
 
     @Override
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> qem, final List<byte[]> binaryTypes) {
+	authCall("getAllEntities");
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(qem, binaryTypes);
 	// create a request URI containing page capacity and number
@@ -136,8 +186,8 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
     }
 
     /**
-     * Sends a POST request to /export/generated-type with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated types.
-     * The response suppose to return an file with exported information.
+     * Sends a POST request to /export/generated-type with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated types. The response
+     * suppose to return an file with exported information.
      */
     @Override
     public byte[] export(//
@@ -145,7 +195,8 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	    final String[] propertyNames,//
 	    final String[] propertyTitles,//
 	    final List<byte[]> binaryTypes) throws IOException {
-	// TODO need to implemented security token check based on the pure entity type
+
+	authCall("export");
 
 	// create request envelope containing Entity Query
 	final List<Object> requestContent = new ArrayList<Object>();
@@ -176,14 +227,13 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	return oStream.toByteArray();
     }
 
-
     /**
-     * Sends a POST request to /query/generated-type?page-capacity=pageCapacity&page-no=pageNumber with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated types.
-     * The response suppose to return an envelope containing entities resulting from the query.
-     * The number of returned entities is constrained by the information provided as part of <code>pageInfo</code> argument.
+     * Sends a POST request to /query/generated-type?page-capacity=pageCapacity&page-no=pageNumber with an envelope containing instance of {@link QueryExecutionModel} and binary
+     * representation of generated types. The response suppose to return an envelope containing entities resulting from the query. The number of returned entities is constrained by
+     * the information provided as part of <code>pageInfo</code> argument.
      */
     protected List<T> list(final QueryExecutionModel<T, ?> query, final PageInfo pageInfo, final List<byte[]> binaryTypes) {
-	// TODO need to implemented security token check based on the pure entity type
+	authCall("list");
 
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(query, binaryTypes);
@@ -218,22 +268,20 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	return list.size() == 1 ? list.get(0) : null;
     }
 
-
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel, final List<byte[]> binaryTypes) {
-        try {
-            final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
-            return getEntity(from(query).with(fetchModel).model(), binaryTypes);
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
+	try {
+	    final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
+	    return getEntity(from(query).with(fetchModel).model(), binaryTypes);
+	} catch (final Exception e) {
+	    throw new IllegalStateException(e);
+	}
     }
-
 
     /**
      * Implements pagination based on the provided query for either generated or coded entity type.
-     *
+     * 
      * @author TG Team
-     *
+     * 
      */
     private class EntityQueryPage implements IPage<T> {
 	private int pageNumber; // zero-based

@@ -43,7 +43,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
     /** holds the last executed query */
     private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries;
     private final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser;
-    
+
     /******* Delta related stuff ********/
     private DeltaRetriever deltaRetriever;
     private ICentreDomainTreeManagerAndEnhancer cdtmaeCopy;
@@ -61,13 +61,13 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      *
      */
     public class DeltaRetriever {
-        private final TreeSet<T> entities;
-        private Timer timer;
-        private Date oldNow;
+	private final TreeSet<T> entities;
+	private Timer timer;
+	private Date oldNow;
 
-        public DeltaRetriever(final IPage<T> initialPage, final Comparator<T> comparator, final Date oldNow) {
-            this.oldNow = oldNow;
-            entities = new TreeSet<T>(comparator);
+	public DeltaRetriever(final IPage<T> initialPage, final Comparator<T> comparator, final Date oldNow) {
+	    this.oldNow = oldNow;
+	    entities = new TreeSet<T>(comparator);
 	    entities.addAll(initialPage.data());
 	}
 
@@ -77,7 +77,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		return;
 	    }
 
-            timer = new Timer();
+	    timer = new Timer();
 	    final TimerTask deltaRetrivalTask = new TimerTask() {
 		@Override
 		public void run() {
@@ -98,7 +98,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		    }
 
 		    timer = null;
-		    
+
 		    if (getAnalysisView().isShowing()) {
 			System.err.println("INIT DELTA RETRIEVAL ==> isShowing == " + getAnalysisView().isShowing());
 			scheduleDeltaRetrieval();
@@ -124,7 +124,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    }
 	}
     }
-    
+
     protected static <T extends AbstractEntity<?>> IPage<T> createSinglePage(final IPage<T> retrievedPage, final Collection<T> entities) {
 	return new SinglePage<T>(new ArrayList<T>(entities)) {
 	    @Override
@@ -138,13 +138,13 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    }
 	};
     }
-    
+
     public void stopDeltaRetrievalIfAny() {
 	if (deltaRetriever != null) {
 	    deltaRetriever.stop();
 	}
     }
-    
+
     /**
      * Provides a new {@link EntityQueryCriteria} for "cdtmaeCopy".
      * 
@@ -183,7 +183,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	dtmField.setAccessible(isCdtmeAccessable);
 	return newCriteria;
     }
-    
+
     public ICentreDomainTreeManagerAndEnhancer getCdtme() {
 	if (queryCustomiser.getQueryGenerator(this) instanceof GridAnalysisQueryGenerator) {
 	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> qGenerator = (GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>) queryCustomiser.getQueryGenerator(this);
@@ -191,7 +191,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	}
 	return null;
     }
-    
+
     /**
      * This method is designed to be overridden for adding some custom fetch properties or other stuff to override query.
      * 
@@ -199,11 +199,11 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      */
     protected void provideCustomPropertiesForQueries(final ICentreDomainTreeManagerAndEnhancer cdtmaeCopy) {
     }
-    
+
     protected static void checkFetchPropertyIfNotChecked(final ICentreDomainTreeManagerAndEnhancer cdtmaeCopy, final Class<?> root, final String property) {
 	if (!cdtmaeCopy.getSecondTick().isChecked(root, property)) {
-            cdtmaeCopy.getSecondTick().check(root, property, true);
-        }
+	    cdtmaeCopy.getSecondTick().check(root, property, true);
+	}
     }
 
     /**
@@ -220,13 +220,13 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> qGenerator = (GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>) queryCustomiser.getQueryGenerator(this);
 	    final Class<T> root = qGenerator.entityClass();
 	    final String tdProp = AnnotationReflector.getTransactionDateProperty(root);
-	    if (oldNow == null) { // RUN is performed (not Delta)		
+	    if (oldNow == null) { // RUN is performed (not Delta)
 		final ICentreDomainTreeManagerAndEnhancer cdtme = qGenerator.getCdtme();
 		cdtmaeCopy = EntityUtils.deepCopy(cdtme, ((CentreDomainTreeManagerAndEnhancer) cdtme).getSerialiser());
 		cdtmaeCopy.getEnhancer().addCalculatedProperty(root, "", tdProp, tdPropCopy, "A copy of transaction date property to enhance query with delta boundaries", CalculatedPropertyAttribute.NO_ATTR, "");
 		cdtmaeCopy.getEnhancer().apply();
 		cdtmaeCopy.getFirstTick().check(root, tdPropCopy, true);
-		
+
 		provideCustomPropertiesForQueries(cdtmaeCopy);
 	    }
 	    final Class<?> tdPropType = PropertyTypeDeterminator.determinePropertyType(root, tdProp);
@@ -314,10 +314,16 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
 	final int pageSize = getAnalysisView().getPageSize();
 	final IPage<T> newPage;
-	if(analysisQueries.getValue() == null) {
-	    newPage = criteria.firstPage(analysisQueries.getKey(), pageSize);
-	} else {
-	    newPage = criteria.firstPage(analysisQueries.getKey(), analysisQueries.getValue(), pageSize);
+	try {
+	    if(analysisQueries.getValue() == null) {
+		newPage = criteria.firstPage(analysisQueries.getKey(), pageSize);
+	    } else {
+		newPage = criteria.firstPage(analysisQueries.getKey(), analysisQueries.getValue(), pageSize);
+	    }
+	} catch (final Result ex) {
+	    return ex;
+	} catch (final Exception ex) {
+	    return new Result(ex);
 	}
 	return Result.successful(newPage);
     }
@@ -336,7 +342,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
     }
 
     protected T getEntityById(final Long id) {
-        return getCriteria().getEntityById(id);
+	return getCriteria().getEntityById(id);
     }
 
     private Result canLoadData() {
@@ -384,7 +390,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    return new Pair<>(queries.get(0), null);
 	}
     }
-    
+
     public DeltaRetriever getDeltaRetriever() {
 	return deltaRetriever;
     }

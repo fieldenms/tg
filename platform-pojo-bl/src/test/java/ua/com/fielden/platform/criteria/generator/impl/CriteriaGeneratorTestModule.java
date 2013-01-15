@@ -3,8 +3,8 @@ package ua.com.fielden.platform.criteria.generator.impl;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
-import ua.com.fielden.platform.entity.factory.DefaultConrollerProviderImpl;
-import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
+import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -15,17 +15,17 @@ import com.google.inject.Scopes;
 
 public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory {
 
-    protected final DefaultConrollerProviderImpl defaultControllerProvider;
+    protected final DefaultCompanionObjectFinderImpl defaultControllerProvider;
 
     public CriteriaGeneratorTestModule() {
-	defaultControllerProvider = new DefaultConrollerProviderImpl();
+	defaultControllerProvider = new DefaultCompanionObjectFinderImpl();
     }
 
     @Override
     protected void configure() {
 	super.configure();
 	bind(ITopLevelEntity.class).to(TopLevelEntityDaoStub.class);
-	bind(IDefaultControllerProvider.class).toInstance(defaultControllerProvider);
+	bind(ICompanionObjectFinder.class).toInstance(defaultControllerProvider);
 	bind(IDaoFactory.class).to(StubDaoFactory.class).in(Scopes.SINGLETON);
 	bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class).in(Scopes.SINGLETON);
 	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);

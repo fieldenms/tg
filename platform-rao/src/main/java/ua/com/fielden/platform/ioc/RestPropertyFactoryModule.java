@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.ioc;
 
-import ua.com.fielden.platform.entity.factory.DefaultConrollerProviderImpl;
+import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
@@ -23,7 +23,7 @@ public class RestPropertyFactoryModule extends EntityModule {
 
     protected final EntityFactory entityFactory;
     protected final RestClientUtil restUtil;
-    protected final DefaultConrollerProviderImpl defaultControllerProvider;
+    protected final DefaultCompanionObjectFinderImpl defaultControllerProvider;
 
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
@@ -31,7 +31,7 @@ public class RestPropertyFactoryModule extends EntityModule {
     public RestPropertyFactoryModule(final RestClientUtil restUtil) {
 	this.restUtil = restUtil;
 	entityFactory = new EntityFactory() {};
-	defaultControllerProvider = new DefaultConrollerProviderImpl();
+	defaultControllerProvider = new DefaultCompanionObjectFinderImpl();
     }
 
     @Override
@@ -48,7 +48,7 @@ public class RestPropertyFactoryModule extends EntityModule {
 	// bind DomainMetaPropertyConfig
 	bind(DomainMetaPropertyConfig.class).toInstance(domainMetaPropertyConfig);
 	// bind provider for default entity controller
-	bind(IDefaultControllerProvider.class).toInstance(defaultControllerProvider);
+	bind(ICompanionObjectFinder.class).toInstance(defaultControllerProvider);
 	// bind property factory
 	bind(IMetaPropertyFactory.class).to(RaoMetaPropertyFactory.class).in(Scopes.SINGLETON);
 

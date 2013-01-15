@@ -7,17 +7,17 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import com.google.inject.Injector;
 
 /**
- * Default implementation for {@link IDefaultControllerProvider}, which utilises injector for creating controller instances.
+ * Default implementation for {@link ICompanionObjectFinder}, which utilises injector for creating controller instances.
  *
  * @author TG Team
  *
  */
-public class DefaultConrollerProviderImpl implements IDefaultControllerProvider {
+public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
 
     private Injector injector;
 
     @Override
-    public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T findController(final Class<E> type) {
+    public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T find(final Class<E> type) {
 	if (type.isAnnotationPresent(DefaultController.class)) {
 	    try {
 		final Class<T> controllerType = (Class<T>) type.getAnnotation(DefaultController.class).value();

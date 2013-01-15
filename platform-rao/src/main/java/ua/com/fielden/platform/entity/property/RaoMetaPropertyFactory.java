@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.property;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
@@ -23,11 +23,11 @@ import com.google.inject.Inject;
  */
 public class RaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
 
-    private final IDefaultControllerProvider defaultControllerProvider;
+    private final ICompanionObjectFinder defaultControllerProvider;
     private final RestClientUtil restUtil;
 
     @Inject
-    public RaoMetaPropertyFactory(final DomainValidationConfig domainConfig, final DomainMetaPropertyConfig domainMetaConfig, final IDefaultControllerProvider defaultControllerProvider, final RestClientUtil restUtil) {
+    public RaoMetaPropertyFactory(final DomainValidationConfig domainConfig, final DomainMetaPropertyConfig domainMetaConfig, final ICompanionObjectFinder defaultControllerProvider, final RestClientUtil restUtil) {
 	super(domainConfig, domainMetaConfig);
 	this.defaultControllerProvider = defaultControllerProvider;
 	this.restUtil = restUtil;
@@ -37,7 +37,7 @@ public class RaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
     protected synchronized IBeforeChangeEventHandler createEntityExists(final EntityExists anotation) {
 	final Class<? extends AbstractEntity> key = anotation.value();
 	if (!entityExistsValidators.containsKey(key)) {
-	    final IEntityDao dao = defaultControllerProvider.findController(key);
+	    final IEntityDao dao = defaultControllerProvider.find(key);
 	    if (dao != null) {
 		entityExistsValidators.put(key, new EntityExistsValidator(dao));
 	    } else {
