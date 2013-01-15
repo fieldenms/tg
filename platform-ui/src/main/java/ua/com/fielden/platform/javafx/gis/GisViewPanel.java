@@ -4,7 +4,9 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -68,6 +70,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     private WebView webView;
     private WebEngine webEngine;
     private final List<P> points;
+    private final Map<P, TrackSegment> trackSegments;
     private ToggleButton road, satellite, hybrid, terrain;
     
     private IWorldToScreen currentTranformation;
@@ -94,6 +97,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	Platform.setImplicitExit(false);
 
 	this.points = new ArrayList<>();
+	this.trackSegments = new HashMap<>();
 	// this.data = createData();
 
 	Platform.runLater(new Runnable() {
@@ -421,15 +425,11 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	updateTransformation();
 	
 	if (path != null) {
+	    path.getChildren().clear();
 	    webViewPanel.getChildren().remove(path);
 	}
 
 	this.path = new Group();
-	// addPoint(webEngine, path, -34.028249, 151.157507);
-	// addLineTo(webEngine, path, -33.950198, 151.259302);
-	// addLineTo(webEngine, path, -33.923036, 151.259052);
-	// addLineTo(webEngine, path, -33.890542, 151.274856);
-	// addLineTo(webEngine, path, -33.80010128657071, 151.28747820854187);
 
 	for (int i = 1 + (int)(startSlider.getValue() * points.size()); i < (int)(endSlider.getValue() * points.size()); i++) {
 	    addLine(webEngine, points.get(i-1), points.get(i), points.size(), drawSpeedValues(zoom));
@@ -451,7 +451,8 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	final int speed = start.getSpeed();
 	final double maxSpeed = 80.0;
 	// return Color.hsb(0, speed / maxSpeed, 1.0);
-	return Color.hsb(120.0 - (120.0 * speed / maxSpeed), 1.0, 1.0); // 0 (green, hue=120) to 80 (red, hue=0) km/hour
+	// return Color.hsb(120.0 - (120.0 * speed / maxSpeed), 1.0, 1.0); // 0 (green, hue=120) to 80 (red, hue=0) km/hour
+	return Color.hsb(240.0 + ((360.0 - 240.0) * speed / maxSpeed), 1.0, 1.0); // 0 (dark blue, hue=? 120) to 80 (red, hue=0) km/hour
     }
     
     protected String getTooltip(final P point) {
@@ -486,27 +487,52 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     protected Point2D addPoint(final WebEngine webEngine, final P point, final int size) {
 	return convertWorld2Pixel(webEngine, point.getLatitude(), point.getLongitude());
     }
+    
+    protected class TrackSegment extends Path {
+	private final MoveTo startPoint;
+	private final LineTo lineToEnd;
+	private final P start, end;
+	
+	public TrackSegment(final P start, final P end) {
+	    super();
+	    this.start = start;
+	    this.end = end;
+	    this.startPoint = new MoveTo();
+	    this.lineToEnd = new LineTo();
+	    
+	    setStrokeWidth(3.0);
 
-    private Pair<Double, Double> addLine(final WebEngine webEngine, final P start, final P end, final int size, final boolean drawSpeedValues) {
-	final Point2D s = convertWorld2Pixel(webEngine, start.getLatitude(), start.getLongitude());
-	final Double x0 = s.getX();
-	final Double y0 = s.getY();
-	final Point2D e = convertWorld2Pixel(webEngine, end.getLatitude(), end.getLongitude());
-	final Double x = e.getX();
-	final Double y = e.getY();
-
-	if (drawLines(start, end)) {
-	    final Path p = new Path();
-	    p.setStrokeWidth(3.0);
-
-	    p.getElements().add(new MoveTo(x0, y0));
-	    p.getElements().add(new LineTo(x, y));
-
+	    getElements().add(startPoint);
+	    getElements().add(lineToEnd);
+	}
+	
+	public void update(final Point2D xY0, final Point2D xY) {
+	    startPoint.setX(xY0.getX()); 
+	    startPoint.setY(xY0.getY());
+	    lineToEnd.setX(xY.getX()); 
+	    lineToEnd.setY(xY.getY());
+	    
 	    final Stop[] stops2 = new Stop[] { new Stop(0.0, getColor(start)), new Stop(1.0, getColor(end)) };
-	    final LinearGradient lg1 = new LinearGradient(x0, y0, x, y, false, CycleMethod.NO_CYCLE, stops2);
-	    p.setStroke(lg1);
+	    final LinearGradient lg1 = new LinearGradient(xY0.getX(), xY0.getY(), xY.getX(), xY.getY(), false, CycleMethod.NO_CYCLE, stops2);
+	    setStroke(lg1);
+	}
+    }
 
-	    this.path.getChildren().add(p);
+    protected Pair<Double, Double> addLine(final WebEngine webEngine, final P start, final P end, final int size, final boolean drawSpeedValues) {
+	final Point2D xY0 = convertWorld2Pixel(webEngine, start.getLatitude(), start.getLongitude());
+	final Point2D xY = convertWorld2Pixel(webEngine, end.getLatitude(), end.getLongitude());
+
+	if (drawLines(start, end)) {	    
+	    final TrackSegment cachedTrackSegment = trackSegments.get(end);
+	    if (cachedTrackSegment != null) {
+		cachedTrackSegment.update(xY0, xY);
+		this.path.getChildren().add(cachedTrackSegment);
+	    } else {
+		final TrackSegment newTrackSegment = new TrackSegment(start, end);
+		newTrackSegment.update(xY0, xY);
+		trackSegments.put(end, newTrackSegment);
+		this.path.getChildren().add(newTrackSegment);
+	    }
 	}
 
 //	if (end.getSpeed() < 5) {
@@ -519,8 +545,8 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 
 	if (drawSpeedValues) {
 	    final Text text = new Text(end.getSpeed() + "");
-	    text.setX(x);
-	    text.setY(y);
+	    text.setX(xY.getX());
+	    text.setY(xY.getY());
 	    // text.setFill(/*getColor(end.getSpeed()) */Color.VIOLET);
 	    text.setStroke(/*getColor(end.getSpeed()) */Color.BLACK);
 	    // text.setStrokeWidth(2);
@@ -529,7 +555,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 
 	// addPoint(webEngine, end, size);
 
-	return new Pair<Double, Double>(x, y);
+	return new Pair<Double, Double>(xY.getX(), xY.getY());
     }
 
     protected boolean drawLines(final P start, final P end) {
