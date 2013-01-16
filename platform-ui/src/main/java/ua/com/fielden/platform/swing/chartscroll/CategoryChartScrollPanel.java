@@ -39,7 +39,7 @@ public class CategoryChartScrollPanel extends JPanel {
 	this.multipleChartPanel = multipleChartPanel;
 	this.currentExtentValue = extentSize;
 	int max = 0;
-	for (int chartPanelIndex = 0; chartPanelIndex < multipleChartPanel.getChartPanelsCount(); chartPanelIndex++) {
+	for (int chartPanelIndex = 0; chartPanelIndex < multipleChartPanel.getChartPanelCount(); chartPanelIndex++) {
 	    final ActionChartPanel<?, ?> chartPanel = multipleChartPanel.getChartPanel(chartPanelIndex);
 	    if (chartPanel.getChart() != null) {
 		final int newMax = chartPanel.getChart().getCategoryPlot().getCategories().size();
@@ -54,7 +54,7 @@ public class CategoryChartScrollPanel extends JPanel {
 
 	    @Override
 	    public void adjustmentValueChanged(final AdjustmentEvent e) {
-		for (int chartPanelIndex = 0; chartPanelIndex < multipleChartPanel.getChartPanelsCount(); chartPanelIndex++) {
+		for (int chartPanelIndex = 0; chartPanelIndex < multipleChartPanel.getChartPanelCount(); chartPanelIndex++) {
 		    final ActionChartPanel<?, CategoryChartTypes> chartPanel = multipleChartPanel.getChartPanel(chartPanelIndex);
 		    if (chartPanel.getChart() != null) {
 			updateChart(chartPanel.getChart(), chartScroll.getModel().getExtent(), chartScroll.getModel().getValue());
@@ -63,7 +63,7 @@ public class CategoryChartScrollPanel extends JPanel {
 	    }
 
 	});
-	for (int chartPanelIndex = 0; chartPanelIndex < multipleChartPanel.getChartPanelsCount(); chartPanelIndex++) {
+	for (int chartPanelIndex = 0; chartPanelIndex < multipleChartPanel.getChartPanelCount(); chartPanelIndex++) {
 	    initChartPanel(multipleChartPanel.getChartPanel(chartPanelIndex));
 	}
 	multipleChartPanel.addMultipleChartPanelListener(new MultipleChartPanelListener() {
@@ -165,7 +165,7 @@ public class CategoryChartScrollPanel extends JPanel {
     public void updateScroll(final int categoryCount) {
 	currentExtentValue = categoryCount;
 	setScrollBarProperties(chartScroll.getValue(), currentExtentValue, chartScroll.getMinimum(), chartScroll.getMaximum());
-	for (int chartPanelIndex = 0; chartPanelIndex < multipleChartPanel.getChartPanelsCount(); chartPanelIndex++) {
+	for (int chartPanelIndex = 0; chartPanelIndex < multipleChartPanel.getChartPanelCount(); chartPanelIndex++) {
 	    final ActionChartPanel<?, ?> chartPanel = multipleChartPanel.getChartPanel(chartPanelIndex);
 	    if (chartPanel.getChart() != null) {
 		updateChart(chartPanel.getChart(), chartScroll.getModel().getExtent(), chartScroll.getModel().getValue());

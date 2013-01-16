@@ -48,12 +48,12 @@ public class SwitchChartsModel<M, T> {
 	public void itemStateChanged(final ItemEvent e) {
 	    if (e.getStateChange() == ItemEvent.SELECTED) {
 		currentType = type;
-		if (chartPanel.getChartPanelsCount() > 0) {
+		if (chartPanel.getChartPanelCount() > 0) {
 		    chartPanel.getChartPanel(0).setPostAction(new Runnable() {
 
 			@Override
 			public void run() {
-			    for (int index = 1; index < chartPanel.getChartPanelsCount(); index++) {
+			    for (int index = 1; index < chartPanel.getChartPanelCount(); index++) {
 				final ActionChartPanel<M, T> panel = chartPanel.getChartPanel(index);
 				panel.setPostAction(null);
 				panel.setChart(type);

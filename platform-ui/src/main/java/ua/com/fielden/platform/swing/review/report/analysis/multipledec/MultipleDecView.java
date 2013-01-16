@@ -29,16 +29,29 @@ import org.jfree.chart.entity.ChartEntity;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IMultipleDecDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
+import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
+import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
+import ua.com.fielden.platform.swing.categorychart.ChartAnalysisAggregationListDragToSupport;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
+import ua.com.fielden.platform.swing.checkboxlist.ListSortingModel;
+import ua.com.fielden.platform.swing.checkboxlist.SortableList;
+import ua.com.fielden.platform.swing.checkboxlist.SortableListCellRenderer;
+import ua.com.fielden.platform.swing.checkboxlist.SorterChangedEvent;
+import ua.com.fielden.platform.swing.checkboxlist.SorterEventListener;
+import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.review.details.AnalysisDetailsData;
 import ua.com.fielden.platform.swing.review.report.analysis.multipledec.configuration.MultipleDecConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
+import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListSortingModel;
+import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
@@ -57,6 +70,10 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
      */
     private final JList<String> distributionList;
     /**
+     * The list of available aggregation properties.
+     */
+    private final SortableList<String> aggregationList;
+    /**
      * The multiple dec panel.
      */
     private final NDecPanel<T> multipleDecView;
@@ -65,7 +82,17 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
 	super(model, owner);
 	this.toolBar = createToolBar();
 	this.distributionList = createDistributionList();
+	this.aggregationList = createAggregationList();
 	this.multipleDecView = createMultipleDecPanel();
+
+	DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), //
+		new ChartAnalysisAggregationListDragToSupport<T>(//
+			getModel().getCriteria().getEntityClass(), //
+			getModel().adtme().getSecondTick(),//
+			aggregationList, multipleDecView, getModel().getChartModel()), true);
+	DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), //
+		new AnalysisListDragToSupport<T>(distributionList, getModel().getCriteria().getEntityClass(), getModel().adtme().getFirstTick()), true);
+
 	this.addSelectionEventListener(createMultipleDecSelectionListener());
 	layoutComponents();
     }
@@ -184,14 +211,74 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
 	return distributionList;
     }
 
+    /**
+     * Returns the {@link SortableList} of aggregation properties.
+     *
+     * @return
+     */
+    private SortableList<String> createAggregationList() {
+	final DefaultListModel<String> listModel = new DefaultListModel<String>();
+
+	final Class<T> root = getModel().getCriteria().getEntityClass();
+	final IAnalysisAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
+
+	for (final String aggregationProperty : secondTick.checkedProperties(root)) {
+	    listModel.addElement(aggregationProperty);
+	}
+	final SortableList<String> aggregationList = new SortableList<String>(listModel);
+	aggregationList.setCellRenderer(new SortableListCellRenderer<String>(aggregationList) {
+
+	    private static final long serialVersionUID = -6751336113879821723L;
+
+	    private final EntityDescriptor ed = new EntityDescriptor(getModel().getCriteria().getManagedType(), secondTick.checkedProperties(root));
+
+	    @Override
+	    public Component getListCellRendererComponent(final JList<? extends String> list, final String value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+		final Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+		final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value);
+		defaultRenderer.setText(titleAndDesc.getKey());
+		setToolTipText(titleAndDesc.getValue());
+		return rendererComponent;
+	    }
+	});
+	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+	final ListSortingModel<String> sortingModel = new DomainTreeListSortingModel<T>(root, secondTick, getModel().adtme().getRepresentation().getSecondTick());
+	sortingModel.addSorterEventListener(new SorterEventListener<String>() {
+
+	    @Override
+	    public void valueChanged(final SorterChangedEvent<String> e) {
+		getModel().sortLoadedData();
+	    }
+	});
+	aggregationList.setSortingModel(sortingModel);
+	return aggregationList;
+    }
+
     private void layoutComponents(){
 	removeAll();
 
-	//Configuring controls those allows to choose distribution properties.
-	final JPanel leftPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));
+	final JPanel topLeftPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));
 	final JLabel distributionLabel = DummyBuilder.label("Distribution properties");
-	leftPanel.add(distributionLabel, "wrap");
-	leftPanel.add(new JScrollPane(distributionList));
+	topLeftPanel.add(distributionLabel, "wrap");
+	topLeftPanel.add(new JScrollPane(distributionList));
+
+	final JPanel bottomLeftPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));
+	final JLabel aggregationLabel = DummyBuilder.label("Aggregation properties");
+	bottomLeftPanel.add(aggregationLabel, "wrap");
+	bottomLeftPanel.add(new JScrollPane(aggregationList));
+
+	//Configuring controls those allows to choose distribution properties.
+	final JSplitPane leftPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+	leftPanel.setTopComponent(topLeftPanel);
+	leftPanel.setBottomComponent(bottomLeftPanel);
+	addLoadListener(new ILoadListener() {
+
+	    @Override
+	    public void viewWasLoaded(final LoadEvent event) {
+		leftPanel.setDividerLocation(0.5);
+	    }
+	});
 
 	final JPanel rightPanel = new JPanel(new MigLayout("fill, insets 3", "[fill,grow]", "[][grow,fill]"));
 	rightPanel.add(toolBar, "wrap");

@@ -9,7 +9,7 @@ import javax.swing.event.EventListenerList;
 
 import net.miginfocom.swing.MigLayout;
 
-public class MultipleChartPanel<M, T> extends JScrollPane {
+public class MultipleChartPanel<M, T> extends JScrollPane implements IChartPositioner{
 
     private static final long serialVersionUID = 8064024233551027989L;
 
@@ -63,33 +63,13 @@ public class MultipleChartPanel<M, T> extends JScrollPane {
 	return chartPanels;
     }
 
-    public int getChartPanelsCount() {
-	return viewport.getComponentCount();
-    }
-
     public int indexOfChartPanel(final ActionChartPanel<M, T> chartPanel) {
-	for (int chartPanelIndex = 0; chartPanelIndex < getChartPanelsCount(); chartPanelIndex++) {
+	for (int chartPanelIndex = 0; chartPanelIndex < getChartPanelCount(); chartPanelIndex++) {
 	    if (getChartPanel(chartPanelIndex).equals(chartPanel)) {
 		return chartPanelIndex;
 	    }
 	}
 	return -1;
-    }
-
-    public void changeChartPosition(final int oldIndex, final int newIndex) {
-	final List<ActionChartPanel<M, T>> allCharts = getAllChartPanels();
-	final ActionChartPanel<M, T> chart = allCharts.remove(oldIndex);
-	if (newIndex >= allCharts.size()) {
-	    allCharts.add(chart);
-	} else {
-	    allCharts.add(newIndex, chart);
-	}
-	for (int componentIndex = 0; componentIndex < viewport.getComponentCount(); componentIndex++) {
-	    viewport.remove(componentIndex);
-	}
-	for (int componentIndex = 0; componentIndex < allCharts.size(); componentIndex++) {
-	    viewport.add(allCharts.get(componentIndex));
-	}
     }
 
     public void addMultipleChartPanelListener(final MultipleChartPanelListener l) {
@@ -111,6 +91,31 @@ public class MultipleChartPanel<M, T> extends JScrollPane {
 		((MultipleChartPanelListener) listeners[i + 1]).valueChanged(event);
 	    }
 	}
+    }
+
+    @Override
+    public void positionChart(final int fromIndex, final int toIndex) {
+	final List<ActionChartPanel<M, T>> allCharts = getAllChartPanels();
+	final ActionChartPanel<M, T> chart = allCharts.remove(fromIndex);
+	if (toIndex >= allCharts.size()) {
+	    allCharts.add(chart);
+	} else {
+	    allCharts.add(toIndex, chart);
+	}
+	for (int componentIndex = 0; componentIndex < viewport.getComponentCount(); componentIndex++) {
+	    viewport.remove(componentIndex);
+	}
+	for (int componentIndex = 0; componentIndex < allCharts.size(); componentIndex++) {
+	    viewport.add(allCharts.get(componentIndex));
+	}
+	invalidate();
+	revalidate();
+	repaint();
+    }
+
+    @Override
+    public int getChartPanelCount() {
+	return viewport.getComponentCount();
     }
 
 }

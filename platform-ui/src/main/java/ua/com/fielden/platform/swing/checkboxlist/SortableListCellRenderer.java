@@ -1,37 +1,42 @@
 package ua.com.fielden.platform.swing.checkboxlist;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Rectangle;
 import java.util.List;
 
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
-import javax.swing.JToggleButton;
+import javax.swing.JPanel;
+import javax.swing.ListCellRenderer;
 import javax.swing.SortOrder;
 
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.swing.review.OrderingArrow;
 import ua.com.fielden.platform.utils.Pair;
 
-public class SortingCheckboxListCellRenderer<T> extends CheckboxListCellRenderer<T> implements ISortableListCellRenderer<T> {
+public class SortableListCellRenderer<E> extends JPanel implements ListCellRenderer<E>, ISortableListCellRenderer<E> {
 
-    private static final long serialVersionUID = 681138672137969031L;
+    private static final long serialVersionUID = -2031455406156836074L;
 
     protected final OrderingArrow arrow;
 
     private int totalCellWidth;
 
-    public SortingCheckboxListCellRenderer(final SortingCheckboxList<T> list, final JToggleButton toggleButton) {
-	super(toggleButton);
+    protected final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+
+    public SortableListCellRenderer(final SortableList<E> list){
+	super(new FlowLayout(FlowLayout.LEFT, 0, 0));
 	arrow = new OrderingArrow();
-	removeAll();
-	add(toggleButton);
 	add(defaultRenderer);
 	add(arrow);
 	updateCellWidth(list);
     }
 
-    protected void updateCellWidth(final SortingCheckboxList<T> list) {
+    protected void updateCellWidth(final SortableList<E> list) {
 	int cellWidth = 0;
 	for (int index = 0; index < list.getModel().getSize(); index++) {
 	    final int currentCellWidth = defaultRenderer.getListCellRendererComponent(list, list.getModel().getElementAt(index), index, false, false).getPreferredSize().width;
@@ -39,34 +44,54 @@ public class SortingCheckboxListCellRenderer<T> extends CheckboxListCellRenderer
 		cellWidth = currentCellWidth;
 	    }
 	}
-	totalCellWidth = cellWidth + toggleButton.getPreferredSize().width + arrow.getMinimumSize().width + 10;
+	totalCellWidth = cellWidth + arrow.getMinimumSize().width + 10;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public Component getListCellRendererComponent(final JList<? extends T> list, final T value, final int index, final boolean isSelected, final boolean cellHasFocus) {
-	if (list instanceof SortingCheckboxList) {
-	    final SortingCheckboxList<T> sortingList = (SortingCheckboxList<T>) list;
-	    if (sortingList.isValueChecked(value) && sortingList.getSortingModel().isSortable(value)) {
+    public Component getListCellRendererComponent(final JList<? extends E> list, final E value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+	if (list instanceof SortableList) {
+	    final SortableList<E> sortingList = (SortableList<E>) list;
+	    defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+	    setBackground(new Color(defaultRenderer.getBackground().getRGB()));
+	    setBorder(defaultRenderer.getBorder());
+	    defaultRenderer.setOpaque(false);
+	    defaultRenderer.setBorder(BorderFactory.createEmptyBorder());
+	    if (sortingList.getSortingModel().isSortable(value)) {
 		arrow.setVisible(true);
 		arrow.setOrder(0);
 		arrow.setSortOrder(SortOrder.UNSORTED);
-		final List<Pair<T, Ordering>> sortItems = sortingList.getSortingModel().getSortObjects();
+		final List<Pair<E, Ordering>> sortItems = sortingList.getSortingModel().getSortObjects();
 		for(int sortIndex = 0; sortIndex < sortItems.size(); sortIndex++){
-		    final Pair<T, Ordering> orderItem = sortItems.get(sortIndex);
+		    final Pair<E, Ordering> orderItem = sortItems.get(sortIndex);
 		    if(orderItem.getKey().equals(value)){
 			arrow.setOrder(sortIndex + 1);
-			arrow.setSortOrder(SortableListCellRenderer.sortOrder(orderItem.getValue()));
+			arrow.setSortOrder(sortOrder(orderItem.getValue()));
 		    }
 		}
 	    } else {
 		arrow.setVisible(false);
 	    }
+	    return this;
 	}
-	return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+	return defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
     }
 
-
+    /**
+     * Returns the {@link SortOrder} instance for specified {@link Ordering}.
+     *
+     * @param value
+     * @return
+     */
+    static SortOrder sortOrder(final Ordering value) {
+	switch (value) {
+	case ASCENDING:
+	    return SortOrder.ASCENDING;
+	case DESCENDING:
+	    return SortOrder.DESCENDING;
+	}
+	return SortOrder.UNSORTED;
+    }
 
     @Override
     public boolean isOnOrderingArrow(final int x, final int y) {
@@ -81,28 +106,13 @@ public class SortingCheckboxListCellRenderer<T> extends CheckboxListCellRenderer
 	return true;
     }
 
-//    @Override
-//    public void paint(final Graphics g) {
-//	super.paint(g);
-//	if (arrow.isVisible()) {
-//	    final Point arrowLocation = arrow.getLocation();
-//	    g.translate(arrowLocation.x, arrowLocation.y);
-//	    arrow.paintComponent(g);
-//	    g.translate(-arrowLocation.x, -arrowLocation.y);
-//	}
-//    }
-
     @Override
     public void doLayout() {
 	final int rendererHeight = getPreferredSize().height;
-	final Dimension toggleButtonSize = toggleButton.getPreferredSize();
-	toggleButton.doLayout();
-	toggleButton.setSize(toggleButtonSize);
-	toggleButton.setLocation(0, (int) Math.ceil(Math.abs(rendererHeight - toggleButtonSize.getHeight()) / 2.0));
 	defaultRenderer.doLayout();
 	defaultRenderer.setSize(defaultRenderer.getPreferredSize());
 	final Dimension rSize = defaultRenderer.getSize();
-	defaultRenderer.setLocation(toggleButtonSize.width, (int) Math.ceil(Math.abs(rendererHeight - rSize.getHeight()) / 2.0));
+	defaultRenderer.setLocation(0, (int) Math.ceil(Math.abs(rendererHeight - rSize.getHeight()) / 2.0));
 	final Dimension arrowSize = arrow.getMinimumSize();
 	arrow.setLocation(totalCellWidth - arrowSize.width, (int) Math.ceil(Math.abs(rendererHeight - arrowSize.getHeight()) / 2.0));
 	arrow.setSize(arrowSize);

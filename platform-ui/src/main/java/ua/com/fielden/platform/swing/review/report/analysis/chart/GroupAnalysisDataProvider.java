@@ -2,6 +2,7 @@ package ua.com.fielden.platform.swing.review.report.analysis.chart;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -71,6 +72,11 @@ public class GroupAnalysisDataProvider<T extends AbstractEntity<?>> extends Abst
 	this.categoryList.addAll(categoryList);
 	this.aggregationList.clear();
 	this.aggregationList.addAll(aggregationList);
+    }
+
+    public void sortLoadedData(final Comparator<T> c){
+	Collections.sort(loadedData, c);
+	fireAnalysisModelChangeEvent(new AnalysisModelChangedEvent(this));
     }
 
     @Override

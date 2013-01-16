@@ -135,7 +135,10 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	layoutComponents();
 
 	DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), //
-		new ChartAnalysisAggregationListDragToSupport<T, List<T>, CategoryChartTypes>(aggregationList, chartPanel, getModel()), true);
+		new ChartAnalysisAggregationListDragToSupport<T>(//
+			getModel().getCriteria().getEntityClass(), //
+			getModel().adtme().getSecondTick(), //
+			aggregationList, chartPanel, getModel().getChartAnalysisDataProvider()), true);
 	DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), //
 		new AnalysisListDragToSupport<T>(distributionList, getModel().getCriteria().getEntityClass(), getModel().adtme().getFirstTick()), true);
 
@@ -373,12 +376,12 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	final JSpinner spinner = new JSpinner(new SpinnerNumberModel(getModel().adtme().getVisibleDistributedValuesNumber(), null, null, 1));
 	final Dimension prefSize = spinner.getPreferredSize();
 	spinner.setPreferredSize(new Dimension(50, prefSize.height));
-	spinner.setEnabled(chartPanel.getChartPanelsCount() > 0 && isAllChartAvailable());
+	spinner.setEnabled(chartPanel.getChartPanelCount() > 0 && isAllChartAvailable());
 	return spinner;
     }
 
     private boolean isAllChartAvailable() {
-	for (int index = 0; index < chartPanel.getChartPanelsCount(); index++) {
+	for (int index = 0; index < chartPanel.getChartPanelCount(); index++) {
 	    if (chartPanel.getChartPanel(index).getChart() == null) {
 		return false;
 	    }
@@ -474,23 +477,23 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	final List<Integer> selectedOrder = getSeriesOrder();
 	if (split) {
 	    final int numOfSelectedWithoutNew = getNumOfSelectedWithoutNew();
-	    if (chartPanel.getChartPanelsCount() < numOfSelectedWithoutNew) {
-		final int howManyToAdd = numOfSelectedWithoutNew - chartPanel.getChartPanelsCount();
+	    if (chartPanel.getChartPanelCount() < numOfSelectedWithoutNew) {
+		final int howManyToAdd = numOfSelectedWithoutNew - chartPanel.getChartPanelCount();
 		for (int chartIndex = 0; chartIndex < howManyToAdd; chartIndex++) {
 		    chartPanel.addChartPanel(createChartPanel(true));
 		}
 	    } else {
-		final int howManyToRemove = chartPanel.getChartPanelsCount() - numOfSelectedWithoutNew;
+		final int howManyToRemove = chartPanel.getChartPanelCount() - numOfSelectedWithoutNew;
 		for (int chartIndex = 0; chartIndex < howManyToRemove; chartIndex++) {
-		    chartPanel.removeChartPanel(chartPanel.getChartPanelsCount() - 1);
+		    chartPanel.removeChartPanel(chartPanel.getChartPanelCount() - 1);
 		}
 	    }
-	    if (chartPanel.getChartPanelsCount() > 0) {
+	    if (chartPanel.getChartPanelCount() > 0) {
 		chartPanel.getChartPanel(0).setPostAction(new Runnable() {
 
 		    @Override
 		    public void run() {
-			for (int index = 1; index < chartPanel.getChartPanelsCount(); index++) {
+			for (int index = 1; index < chartPanel.getChartPanelCount(); index++) {
 			    final ActionChartPanel<List<T>, CategoryChartTypes> panel = chartPanel.getChartPanel(index);
 			    panel.setPostAction(null);
 			    panel.setChart(data, false, selectedOrder.get(index));
@@ -505,9 +508,9 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    }
 	} else {
 	    ActionChartPanel<List<T>, CategoryChartTypes> panel = null;
-	    if (chartPanel.getChartPanelsCount() > 0) {
+	    if (chartPanel.getChartPanelCount() > 0) {
 		panel = chartPanel.getChartPanel(0);
-		final int countToRemove = chartPanel.getChartPanelsCount();
+		final int countToRemove = chartPanel.getChartPanelCount();
 		for (int index = 1; index < countToRemove; index++) {
 		    chartPanel.removeChartPanel(1);
 		}

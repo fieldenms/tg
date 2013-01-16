@@ -5,47 +5,57 @@ import java.awt.event.MouseEvent;
 import java.util.Vector;
 
 import javax.swing.DefaultListModel;
-import javax.swing.JCheckBox;
+import javax.swing.JList;
 import javax.swing.ListModel;
 
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.utils.Pair;
 
-public class SortingCheckboxList<T> extends CheckboxList<T> {
+public class SortableList<E> extends JList<E> {
 
-    private static final long serialVersionUID = -1396817497547523857L;
+    private static final long serialVersionUID = 4696705540337797795L;
 
-    private ListSortingModel<T> sortingModel;
+    private ListSortingModel<E> sortingModel;
 
-    private SorterEventListener<T> defaultSortingListener;
+    private SorterEventListener<E> defaultSortingListener;
 
-    public SortingCheckboxList(final DefaultListModel<T> model) {
+    /**
+     * Whether sorting event causes it to be selected, too.
+     */
+    private boolean selectBySortingEvent = true;
+
+    public SortableList(final DefaultListModel<E> model){
 	super(model);
-	this.defaultSortingListener = new SorterEventListener<T>() {
+	this.defaultSortingListener = new SorterEventListener<E>() {
 
 	    @Override
-	    public void valueChanged(final SorterChangedEvent<T> e) {
+	    public void valueChanged(final SorterChangedEvent<E> e) {
 		repaint();
 	    }
 	};
-	sortingModel = new DefaultSortingModel<T>();
+	sortingModel = new DefaultSortingModel<E>();
 	sortingModel.addSorterEventListener(defaultSortingListener);
-	setCellRenderer(new SortingCheckboxListCellRenderer<T>(this, new JCheckBox()));
+	setCellRenderer(new SortableListCellRenderer<E>(this));
     }
 
-    public ListSortingModel<T> getSortingModel() {
+    @Override
+    public DefaultListModel<E> getModel() {
+        return (DefaultListModel<E>)super.getModel();
+    }
+
+    public ListSortingModel<E> getSortingModel() {
 	return sortingModel;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void setModel(final ListModel<T> newModel) {
+    public void setModel(final ListModel<E> newModel) {
 	super.setModel(newModel);
 	if (getCellRenderer() instanceof SortingCheckboxListCellRenderer) {
-	    ((SortingCheckboxListCellRenderer<T>) getCellRenderer()).updateCellWidth(this);
+	    ((SortableListCellRenderer<E>) getCellRenderer()).updateCellWidth(this);
 	}
-	final Vector<T> listData = getVectorListData();
-	for (final Pair<T, Ordering> sortObject : sortingModel.getSortObjects()) {
+	final Vector<E> listData = getVectorListData();
+	for (final Pair<E, Ordering> sortObject : sortingModel.getSortObjects()) {
 	    if (!listData.contains(sortObject.getKey())) {
 		resetSortOrder(sortObject.getKey(), sortObject.getValue());
 	    }
@@ -58,13 +68,13 @@ public class SortingCheckboxList<T> extends CheckboxList<T> {
      *
      * @param sortingModel
      */
-    public void setSortingModel(final ListSortingModel<T> newSortingModel) {
+    public void setSortingModel(final ListSortingModel<E> newSortingModel) {
 	if(sortingModel == newSortingModel){
 	    return;
 	}
 	if (newSortingModel != null) {
-	    final DefaultListModel<T> listModel = getModel();
-	    for (final Pair<T, Ordering> orderItem : newSortingModel.getSortObjects()) {
+	    final DefaultListModel<E> listModel = getModel();
+	    for (final Pair<E, Ordering> orderItem : newSortingModel.getSortObjects()) {
 		if (!listModel.contains(orderItem.getKey())) {
 		    resetSortOrder(orderItem.getKey(), orderItem.getValue());
 		}
@@ -79,15 +89,20 @@ public class SortingCheckboxList<T> extends CheckboxList<T> {
     }
 
     /**
-     * Rests the sort order for the specified pair of sorting value and it's ordering.
+     * Returns list data.
      *
-     * @param sortObject
+     * @return
      */
-    private void resetSortOrder(final T item, final Ordering ordering) {
-	getSortingModel().toggleSorter(item);
-	if(ordering == Ordering.ASCENDING){
-	    getSortingModel().toggleSorter(item);
+    public Vector<E> getVectorListData() {
+	final Vector<E> listData = new Vector<E>();
+	for (int index = 0; index < getModel().getSize(); index++) {
+	    listData.add(getModel().getElementAt(index));
 	}
+	return listData;
+    }
+
+    public boolean isSelectBySortingEvent() {
+	return selectBySortingEvent;
     }
 
     @SuppressWarnings("unchecked")
@@ -101,19 +116,30 @@ public class SortingCheckboxList<T> extends CheckboxList<T> {
 	    final int actualX = rect != null ? x - rect.x : 0;
 	    final int actualY = rect != null ? y - rect.y : 0;
 	    if (getCellRenderer() instanceof ISortableListCellRenderer) {
-		if (row >= 0 && isValueChecked(getModel().getElementAt(row)) && //
-			((ISortableListCellRenderer<T>) getCellRenderer()).isOnOrderingArrow(actualX, actualY)) {
+		if (row >= 0 && ((ISortableListCellRenderer<E>) getCellRenderer()).isOnOrderingArrow(actualX, actualY)) {
 		    if (!e.isControlDown()) {
 			sortingModel.toggleSorterSingle(getModel().getElementAt(row));
 		    } else {
 			sortingModel.toggleSorter(getModel().getElementAt(row));
 		    }
-		    if (!isSelectsByChecking()) {
+		    if (!isSelectBySortingEvent()) {
 			return;
 		    }
 		}
 	    }
 	}
 	super.processMouseEvent(e);
+    }
+
+    /**
+     * Rests the sort order for the specified pair of sorting value and it's ordering.
+     *
+     * @param sortObject
+     */
+    private void resetSortOrder(final E item, final Ordering ordering) {
+	getSortingModel().toggleSorter(item);
+	if(ordering == Ordering.ASCENDING){
+	    getSortingModel().toggleSorter(item);
+	}
     }
 }

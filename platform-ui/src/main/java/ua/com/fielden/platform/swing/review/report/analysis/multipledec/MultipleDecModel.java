@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.swing.review.report.analysis.multipledec;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IMultipleDecDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
@@ -16,10 +19,12 @@ import ua.com.fielden.platform.swing.review.report.analysis.chart.GroupAnalysisD
 import ua.com.fielden.platform.swing.review.report.analysis.chart.ICategoryAnalysisDataProvider;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
+import ua.com.fielden.platform.utils.Pair;
 
 public class MultipleDecModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IMultipleDecDomainTreeManager> {
 
     private final GroupAnalysisDataProvider<T> multipleDecDataProvider = new GroupAnalysisDataProvider<T>();
+    private final MultipleDecSorter sorter = new MultipleDecSorter();
 
     public MultipleDecModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IMultipleDecDomainTreeManager adtme) {
 	super(criteria, adtme);
@@ -57,6 +62,10 @@ public class MultipleDecModel<T extends AbstractEntity<?>> extends AbstractAnaly
 	return Result.successful(result);
     }
 
+    public void sortLoadedData(){
+	multipleDecDataProvider.sortLoadedData(sorter);
+    }
+
     public ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> getChartModel() {
 	return multipleDecDataProvider;
     }
@@ -89,9 +98,70 @@ public class MultipleDecModel<T extends AbstractEntity<?>> extends AbstractAnaly
 
     @Override
     protected String[] getExportFileExtensions() {
-	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");    }
+	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");
+    }
 
     @Override
     protected String getDefaultExportFileExtension() {
-	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");    }
+	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");
+    }
+
+    private class MultipleDecSorter implements Comparator<T> {
+
+	    @SuppressWarnings("rawtypes")
+	    @Override
+	    public int compare(final T o1, final T o2) {
+
+		final Class<T> root = getCriteria().getEntityClass();
+		final String category = multipleDecDataProvider.categoryProperties().size() != 1 ? null : multipleDecDataProvider.categoryProperties().get(0);
+		final IAnalysisAddToAggregationTickManager secondTick = adtme().getSecondTick();
+
+		final List<Pair<String, Ordering>> sortObjects = secondTick.orderedProperties(root);
+		if (sortObjects == null || sortObjects.isEmpty()) {
+		    return defaultCompare(o1.get(category), o2.get(category));
+		}
+		for (final Pair<String, Ordering> sortingParam : sortObjects) {
+		    final Comparable<?> value1 = (Comparable) o1.get(sortingParam.getKey());
+		    final Comparable<?> value2 = (Comparable) o2.get(sortingParam.getKey());
+		    int result = 0;
+		    if (value1 == null) {
+			if (value2 != null) {
+			    return -1;
+			}
+		    } else {
+			if (value2 == null) {
+			    return 1;
+			} else {
+			    result = compareValues(value1, value2, sortingParam.getValue());
+			}
+		    }
+		    if (result != 0) {
+			return result;
+		    }
+		}
+		return defaultCompare(o1, o2);
+	    }
+
+	    @SuppressWarnings({ "rawtypes", "unchecked" })
+	    private int compareValues(final Comparable value1, final Comparable value2, final Ordering sortingParam) {
+		final int sortMultiplier = sortingParam == Ordering.ASCENDING ? 1 : (sortingParam == Ordering.DESCENDING ? -1 : 0);
+		return value1.compareTo(value2) * sortMultiplier;
+	    }
+
+	    private int defaultCompare(final Object o1, final Object o2) {
+		if (o1 == null) {
+		    if (o2 == null) {
+			return 0;
+		    } else {
+			return -1;
+		    }
+		} else {
+		    if (o2 == null) {
+			return 1;
+		    } else {
+			return o1.toString().compareTo(o2.toString());
+		    }
+		}
+	    }
+	}
 }

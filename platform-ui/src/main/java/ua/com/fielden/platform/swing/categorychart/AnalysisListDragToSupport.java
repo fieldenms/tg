@@ -19,18 +19,18 @@ import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragToSupport;
  */
 public class AnalysisListDragToSupport<T extends AbstractEntity<?>> implements DragToSupport {
 
-    private final JList list;
+    private final JList<String> list;
 
-    private final ITickManager tickManager;
+    protected final ITickManager tickManager;
 
-    private final Class<T> root;
+    protected final Class<T> root;
 
     /**
      * Initialises this {@link AnalysisListDragToSupport} with the "drag into" list, and {@link IAbstractAnalysisDomainTreeManager} instance.
      *
      * @param list
      */
-    public AnalysisListDragToSupport(final JList list, final Class<T> root, final ITickManager tickManager) {
+    public AnalysisListDragToSupport(final JList<String> list, final Class<T> root, final ITickManager tickManager) {
 	this.list = list;
 	this.root = root;
 	this.tickManager = tickManager;
@@ -43,7 +43,7 @@ public class AnalysisListDragToSupport<T extends AbstractEntity<?>> implements D
 
     @Override
     public boolean dropTo(final Point point, final Object what, final JComponent draggedFrom) {
-	final int fromIndex = ((DefaultListModel)getList().getModel()).indexOf(what);
+	final int fromIndex = ((DefaultListModel<String>)list.getModel()).indexOf(what);
 	final int toIndex = list.locationToIndex(point);
 	if (toIndex < 0) {
 	    return false;
@@ -54,18 +54,13 @@ public class AnalysisListDragToSupport<T extends AbstractEntity<?>> implements D
 	}else if(toIndex == list.getModel().getSize() - 1){
 	    tickManager.moveToTheEnd(root, what.toString());
 	}
-	((DefaultListModel) list.getModel()).removeElement(what);
-	((DefaultListModel) list.getModel()).add(toIndex, what);
+	((DefaultListModel<String>) list.getModel()).removeElement(what);
+	((DefaultListModel<String>) list.getModel()).add(toIndex, what.toString());
 	list.setSelectedIndex(toIndex);
 	return true;
     }
 
-    /**
-     * Returns the "drag into" list.
-     *
-     * @return
-     */
-    protected JList getList() {
+    protected JList<String> getList() {
 	return list;
     }
 }
