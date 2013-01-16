@@ -263,7 +263,6 @@ public final class RestClientUtil implements IUserProvider {
 	    }
 	}
 	final Client client = new Client(getProtocol());
-	client.setConnectTimeout(3000);
 	return client.handle(request);
     }
 
@@ -278,7 +277,6 @@ public final class RestClientUtil implements IUserProvider {
     public Response send(final Request request, final String token) throws Exception {
 	setChallengeResponse(request, token);
 	final Client client = new Client(getProtocol());
-	client.setConnectTimeout(3000);
 	return new Client(getProtocol()).handle(request);
     }
 
@@ -524,14 +522,14 @@ public final class RestClientUtil implements IUserProvider {
     private static final String HEADERS_KEY = "org.restlet.http.headers";
 
     private static Series<Header> getMessageHeaders(final Message message) {
-        final ConcurrentMap<String, Object> attrs = message.getAttributes();
-        Series<Header> headers = (Series<Header>) attrs.get(HEADERS_KEY);
-        if (headers == null) {
-            headers = new Series<Header>(Header.class);
-            final Series<Header> prev = (Series<Header>) attrs.putIfAbsent(HEADERS_KEY, headers);
-            if (prev != null) { headers = prev; }
-        }
-        return headers;
+	final ConcurrentMap<String, Object> attrs = message.getAttributes();
+	Series<Header> headers = (Series<Header>) attrs.get(HEADERS_KEY);
+	if (headers == null) {
+	    headers = new Series<Header>(Header.class);
+	    final Series<Header> prev = (Series<Header>) attrs.putIfAbsent(HEADERS_KEY, headers);
+	    if (prev != null) { headers = prev; }
+	}
+	return headers;
     }
 
     /**
@@ -611,6 +609,7 @@ public final class RestClientUtil implements IUserProvider {
 	userController = controller;
     }
 
+    @Override
     public User getUser() {
 	return user;
     }
