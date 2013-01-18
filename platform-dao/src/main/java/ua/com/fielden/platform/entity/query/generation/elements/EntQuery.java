@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -358,22 +359,25 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Sources enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final Sources sources, final EntQueryGenerator generator) {
-        final ISource newMain =
-                (sources.getMain() instanceof TypeBasedSource && filter != null && filter.enhance(sources.getMain().sourceType(), username) != null) ?
-            new QueryBasedSource(sources.getMain().getAlias(), domainMetadataAnalyser, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
+        if (sources.getMain() instanceof TypeBasedSource && filter != null) {
+            final QueryModel<AbstractEntity<?>> enhanceQuery = filter.enhance(sources.getMain().sourceType(), username);
+            if (enhanceQuery != null) {
+        	final ISource newMain = new QueryBasedSource(sources.getMain().getAlias(), domainMetadataAnalyser, generator.generateEntQueryAsSourceQuery(enhanceQuery));
+        	System.out.println("             ENHANCED QUERY WITH MAIN SOURCE TYPE: " + sources.getMain().sourceType().getSimpleName());
+        	return new Sources(newMain, sources.getCompounds());
+            }
+        }
 
-        return newMain != null ? new Sources(newMain, sources.getCompounds()) : sources;
+        return sources;
     }
 
-
-
-    public EntQuery(final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
+    public EntQuery(final boolean filterable, final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
             final Class resultType, final QueryCategory category, final DomainMetadataAnalyser domainMetadataAnalyser, //
             final IFilter filter, final String username, final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
-        this.sources = enhanceSourcesWithUserDataFiltering(filter, username, sources, generator);
+        this.sources = filterable ? enhanceSourcesWithUserDataFiltering(filter, username, sources, generator) : sources;
         this.conditions = conditions;
         this.yields = yields;
         this.groups = groups;

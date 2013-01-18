@@ -8,6 +8,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractModel {
     private Class<T> resultType;
+    private boolean filterable = true;
 
     protected QueryModel() {
     }
@@ -55,5 +56,13 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
 
     public Class<? extends AbstractEntity<?>> getResultType() {
         return resultType;
+    }
+
+    public boolean isFilterable() {
+	return filterable;
+    }
+
+    public void setFilterable(boolean filterable) {
+	this.filterable = filterable;
     }
 }

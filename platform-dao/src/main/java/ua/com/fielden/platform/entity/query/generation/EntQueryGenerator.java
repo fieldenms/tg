@@ -119,6 +119,7 @@ public class EntQueryGenerator {
 	}
 
 	return new EntQuery( //
+		qryModel.isFilterable(), //
 		from.getModel(), //
 		where.getModel(), //
 		select.getModel(), //
