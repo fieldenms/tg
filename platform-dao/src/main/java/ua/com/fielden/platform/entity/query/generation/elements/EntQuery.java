@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -44,7 +46,10 @@ public class EntQuery implements ISingleOperand {
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final Map<String, Object> paramValues;
 
+
     private EntQuery master;
+
+    transient private final Logger logger = Logger.getLogger(this.getClass());
 
     private boolean isSubQuery() {
         return QueryCategory.SUB_QUERY.equals(category);
@@ -358,12 +363,12 @@ public class EntQuery implements ISingleOperand {
         return result;
     }
 
-    private Sources enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final Sources sources, final EntQueryGenerator generator) {
+    private Sources enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final Sources sources, final EntQueryGenerator generator, final Map<String, Object> paramValues) {
         if (sources.getMain() instanceof TypeBasedSource && filter != null) {
             final QueryModel<AbstractEntity<?>> enhanceQuery = filter.enhance(sources.getMain().sourceType(), username);
             if (enhanceQuery != null) {
-        	final ISource newMain = new QueryBasedSource(sources.getMain().getAlias(), domainMetadataAnalyser, generator.generateEntQueryAsSourceQuery(enhanceQuery));
-        	System.out.println("             ENHANCED QUERY WITH MAIN SOURCE TYPE: " + sources.getMain().sourceType().getSimpleName());
+        	final ISource newMain = new QueryBasedSource(sources.getMain().getAlias(), domainMetadataAnalyser, generator.generateEntQueryAsSourceQuery(enhanceQuery, paramValues));
+        	logger.debug("\nApplied user-driven-filter to query main source type [" + sources.getMain().sourceType().getSimpleName() +"]");
         	return new Sources(newMain, sources.getCompounds());
             }
         }
@@ -377,7 +382,7 @@ public class EntQuery implements ISingleOperand {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
-        this.sources = filterable ? enhanceSourcesWithUserDataFiltering(filter, username, sources, generator) : sources;
+        this.sources = filterable ? enhanceSourcesWithUserDataFiltering(filter, username, sources, generator, paramValues) : sources;
         this.conditions = conditions;
         this.yields = yields;
         this.groups = groups;

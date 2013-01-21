@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.classloader.TgSystemClassLoader;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.utils.Pair;
@@ -223,17 +224,17 @@ public class DynamicEntityClassLoader extends ClassLoader {
      * @param type
      * @return
      */
-    public static Class<?> getOriginalType(final Class<?> type) {
+    public static <T extends AbstractEntity<?>>  Class<T> getOriginalType(final Class<?> type) {
 	final String typeName = type.getName();
 	if (isEnhanced(type)) {
 	    final String originalTypeName = typeName.substring(0, typeName.indexOf(DynamicTypeNamingService.APPENDIX));
 	    try {
-		return ClassLoader.getSystemClassLoader().loadClass(originalTypeName);
+		return (Class<T>) ClassLoader.getSystemClassLoader().loadClass(originalTypeName);
 	    } catch (final ClassNotFoundException e) {
 		throw new IllegalStateException(e);
 	    }
 	} else {
-	    return type;
+	    return (Class<T>) type;
 	}
     }
 

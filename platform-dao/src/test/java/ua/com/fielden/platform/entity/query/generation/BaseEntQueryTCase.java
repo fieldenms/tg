@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -103,7 +104,7 @@ public class BaseEntQueryTCase {
     private static final EntQueryGenerator qbwf = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
-	return qb.generateEntQueryAsSourceQuery(qryModel);
+	return qb.generateEntQueryAsSourceQuery(qryModel, Collections.EMPTY_MAP);
     }
 
     protected static EntQuery entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {

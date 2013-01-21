@@ -43,16 +43,14 @@ public class EntQueryGenerator {
 	return generateEntQueryAsResultQuery(qryModel, new HashMap<String, Object>());
     }
 
-    public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues, final IFilter filter, final String username) {
-	return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
-    }
-
     public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues, final Class resultType) {
 	return generateEntQuery(qryModel, null, resultType, null, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
     }
 
-    public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel) {
-	return generateEntQueryAsSourceQuery(qryModel, new HashMap<String, Object>(), null, null);
+    public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
+//	return generateEntQueryAsSourceQuery(qryModel, paramValues, null);
+	return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.SOURCE_QUERY, null, null);
+
     }
 
     public EntQuery generateEntQueryAsSubquery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
