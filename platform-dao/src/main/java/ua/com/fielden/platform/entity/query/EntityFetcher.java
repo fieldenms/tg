@@ -7,10 +7,13 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.type.Type;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
@@ -36,6 +39,7 @@ public class EntityFetcher {
     private DomainMetadata domainMetadata;
     private final IFilter filter;
     private final String username;
+    private Logger logger = Logger.getLogger(this.getClass());
 
     public EntityFetcher(final Session session, final EntityFactory entityFactory, final DomainMetadata domainMetadata, final IFilter filter, final String username) {
 	this.session = session;
@@ -47,7 +51,11 @@ public class EntityFetcher {
 
     public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
 	try {
-	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
+		final DateTime st = new DateTime();
+		final List<E> result = instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
+		final Period pd = new Period(st, new DateTime());
+		logger.info("Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + result.size());
+		return result;
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new IllegalStateException(e);
@@ -92,21 +100,24 @@ public class EntityFetcher {
 
     protected Query produceHibernateQuery(final String sql, final SortedSet<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {
 	final SQLQuery q = session.createSQLQuery(sql);
-	System.out.println("   SQL: " + sql);
+	logger.info("\nSQL:\n   " + sql + "\n");
 
 	for (final HibernateScalar aliasEntry : retrievedColumns) {
 	    if (aliasEntry.hasHibType()) {
+		logger.debug("adding scalar: alias = [" + aliasEntry.columnName + "] type = [" + aliasEntry.hibType + "]");
 		q.addScalar(aliasEntry.columnName, aliasEntry.hibType);
 	    } else {
+		logger.debug("adding scalar: alias = [" + aliasEntry.columnName + "]");
 		q.addScalar(aliasEntry.columnName);
 	    }
 	}
 
-	System.out.println("   PARAMS: " + queryParams);
+	logger.info("\nPARAMS:\n   " + queryParams + "\n");
 	for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
 	    if (paramEntry.getValue() instanceof Collection) {
 		throw new IllegalStateException("Should not have collectional param at this level: [" + paramEntry + "]");
 	    } else {
+		logger.debug("setting param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
 		q.setParameter(paramEntry.getKey(), paramEntry.getValue());
 	    }
 	}
