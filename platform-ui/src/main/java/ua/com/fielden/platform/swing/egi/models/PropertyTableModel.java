@@ -124,6 +124,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
     /**
      * @return number of passed {@link AbstractPropertyColumnMapping} instances
      */
+    @Override
     public int getColumnCount() {
 	return propertyColumnMappings.size();
     }
@@ -147,6 +148,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
     /**
      * @return number of entities plus non-data rows (i.e. rows showing group, grand totals)
      */
+    @Override
     public int getRowCount() {
 	return instances().size() + nonDataRows.size();
     }
@@ -154,6 +156,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
     /**
      * Directly uses {@link AbstractPropertyColumnMapping#getPropertyValue(Object)} method for particular column and entity (at rowIndex)
      */
+    @Override
     public Object getValueAt(final int rowIndex, final int columnIndex) {
 	if (isDataRow(rowIndex)) {
 	    final T instance = instance(rowIndex);
@@ -240,11 +243,12 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      *
      * @param instances
      */
-    public void addInstances(final T... instances) {
+    public PropertyTableModel<T> addInstances(final T... instances) {
 	final List<T> currInstances = instances();
 	currInstances.addAll(asList(instances));
 
 	regroup(currInstances);
+	return this;
     }
 
     /**
@@ -252,11 +256,12 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      *
      * @param instances
      */
-    public void addInstances(final List<T> instances) {
+    public PropertyTableModel<T> addInstances(final List<T> instances) {
 	final List<T> currInstances = instances();
 	currInstances.addAll(instances);
 
 	regroup(currInstances);
+	return this;
     }
 
     private void regroup(final List<T> newInstances) {
@@ -283,7 +288,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      *
      * @return
      */
-    public void refresh(final T instance) {
+    public PropertyTableModel<T> refresh(final T instance) {
 	final List<T> instances = new ArrayList<T>();
 	for (final List<T> group : groups) {
 	    for (final T currElem : group) {
@@ -300,6 +305,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	}
 
 	regroup(instances);
+	return this;
     }
 
     public void removeInstances(final T... instances) {
@@ -323,19 +329,22 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      *
      * @param newEntities
      */
-    public void setInstances(final List<T> newEntities) {
+    public PropertyTableModel<T> setInstances(final List<T> newEntities) {
 	regroup(newEntities);
 
 	if (getEntityGridInspector() != null) {
 	    getEntityGridInspector().scrollRowToVisible(0);
 	}
+
+	return this;
     }
 
     /**
      * Removes all instances from table.
      */
-    public void clearInstances() {
+    public PropertyTableModel<T> clearInstances() {
 	setInstances(new ArrayList<T>());
+	return this;
     }
 
     /**
@@ -555,7 +564,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	final int nonDataRowsIndex = nonDataRows.indexOf(row);
 	return hasGrandTotals ? nonDataRowsIndex > -1 && nonDataRowsIndex < nonDataRows.size() - 1 : nonDataRows.contains(row);
     }
-    
+
     public void select(final T instance) {
 	if (getIndexOf(instance) != -1) {
 	    selectRow(getIndexOf(instance));
