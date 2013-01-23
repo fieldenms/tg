@@ -339,7 +339,10 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	    public void handle(final MouseEvent event) {
 		xForDragBegin = event.getSceneX();
 		yForDragBegin = event.getSceneY();
-		//System.out.println("setOnMouseReleased: xForDragBegin = " + xForDragBegin + "   yForDragBegin = " + yForDragBegin);
+		
+		removeOldAndAddNew(webEngine, zoom(webEngine));
+		// TODO
+		// System.out.println("setOnMouseReleased: xForDragBegin = " + xForDragBegin + "   yForDragBegin = " + yForDragBegin);
 	    }
 
 	});
@@ -349,7 +352,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	    public void handle(final ScrollEvent event) {
 		final double cursorPixelX = event.getX();
 		final double cursorPixelY = event.getY();
-		System.err.println("cursorPixelX == " + cursorPixelX + " cursorPixelY == " + cursorPixelY);
+		// System.err.println("cursorPixelX == " + cursorPixelX + " cursorPixelY == " + cursorPixelY);
 		final double centrePixelX = webView.getWidth() / 2.0;
 		final double centrePixelY = webView.getHeight() / 2.0;
 		
@@ -418,6 +421,9 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	return zoom > 15;
     }
 
+    protected Point2D prevXY;
+    protected int countOfProcessed;
+    
     protected void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
 	final DateTime start = new DateTime();
 	System.err.println("REMOVING OLD AND ADDING NEW...");
@@ -431,16 +437,21 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 
 	this.path = new Group();
 
+	countOfProcessed = 0;
 	for (int i = 1 + (int)(startSlider.getValue() * points.size()); i < (int)(endSlider.getValue() * points.size()); i++) {
 	    addLine(webEngine, points.get(i-1), points.get(i), points.size(), drawSpeedValues(zoom));
 	}
+	System.out.println("PROCESSED segments: " + countOfProcessed);
 
+	prevXY = null;
+	countOfProcessed = 0;
 	if (points.size() > 0) {
 	    addPoint(webEngine, points.get(0), points.size());
 	}
 	for (int i = 1 + (int)(startSlider.getValue() * points.size()); i < (int)(endSlider.getValue() * points.size()); i++) {
 	    addPoint(webEngine, points.get(i), points.size());
 	}
+	System.out.println("PROCESSED nodes: " + countOfProcessed);
 	
 	webViewPanel.getChildren().add(this.path);
 	final Period pd = new Period(start, new DateTime());
@@ -518,44 +529,66 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	}
     }
 
+    private double sqr(final double x) {
+	return x * x;
+    }
+	
+    protected double dist(final Point2D prevXY, final Point2D xY) {
+	if (prevXY == null) {
+	    return 1000;
+	}
+	return Math.sqrt(sqr(xY.getX() - prevXY.getX()) + sqr(xY.getY() - prevXY.getY()));
+    }
+    
+    protected static double THRESHOLD = 2.0;
+
     protected Pair<Double, Double> addLine(final WebEngine webEngine, final P start, final P end, final int size, final boolean drawSpeedValues) {
 	final Point2D xY0 = convertWorld2Pixel(webEngine, start.getLatitude(), start.getLongitude());
 	final Point2D xY = convertWorld2Pixel(webEngine, end.getLatitude(), end.getLongitude());
 
-	if (drawLines(start, end)) {	    
-	    final TrackSegment cachedTrackSegment = trackSegments.get(end);
-	    if (cachedTrackSegment != null) {
-		cachedTrackSegment.update(xY0, xY);
-		this.path.getChildren().add(cachedTrackSegment);
-	    } else {
-		final TrackSegment newTrackSegment = new TrackSegment(start, end);
-		newTrackSegment.update(xY0, xY);
-		trackSegments.put(end, newTrackSegment);
-		this.path.getChildren().add(newTrackSegment);
+	if (dist(xY0, xY) >= THRESHOLD && (inside(xY0) || inside(xY))) {
+	    countOfProcessed++;
+
+	    if (drawLines(start, end)) {
+		final TrackSegment cachedTrackSegment = trackSegments.get(end);
+		if (cachedTrackSegment != null) {
+		    cachedTrackSegment.update(xY0, xY);
+		    this.path.getChildren().add(cachedTrackSegment);
+		} else {
+		    final TrackSegment newTrackSegment = new TrackSegment(start, end);
+		    newTrackSegment.update(xY0, xY);
+		    trackSegments.put(end, newTrackSegment);
+		    this.path.getChildren().add(newTrackSegment);
+		}
 	    }
+
+	    //	if (end.getSpeed() < 5) {
+	    //	    // simply displays ImageView the image as is
+	    //	    final ImageView iv1 = new ImageView(image);
+	    //	    iv1.setX(x - 8);
+	    //	    iv1.setY(y - 8);
+	    //	    this.path.getChildren().add(iv1);
+	    //	}
+
+	    if (drawSpeedValues) {
+		final Text text = new Text(end.getSpeed() + "");
+		text.setX(xY.getX());
+		text.setY(xY.getY());
+		// text.setFill(/*getColor(end.getSpeed()) */Color.VIOLET);
+		text.setStroke(/*getColor(end.getSpeed()) */Color.BLACK);
+		// text.setStrokeWidth(2);
+		this.path.getChildren().add(text);
+	    }
+
+	    // addPoint(webEngine, end, size);
+
 	}
-
-//	if (end.getSpeed() < 5) {
-//	    // simply displays ImageView the image as is
-//	    final ImageView iv1 = new ImageView(image);
-//	    iv1.setX(x - 8);
-//	    iv1.setY(y - 8);
-//	    this.path.getChildren().add(iv1);
-//	}
-
-	if (drawSpeedValues) {
-	    final Text text = new Text(end.getSpeed() + "");
-	    text.setX(xY.getX());
-	    text.setY(xY.getY());
-	    // text.setFill(/*getColor(end.getSpeed()) */Color.VIOLET);
-	    text.setStroke(/*getColor(end.getSpeed()) */Color.BLACK);
-	    // text.setStrokeWidth(2);
-	    this.path.getChildren().add(text);
-	}
-
-	// addPoint(webEngine, end, size);
-
 	return new Pair<Double, Double>(xY.getX(), xY.getY());
+    }
+
+    protected boolean inside(final Point2D xY) {
+	return xY.getX() >= 0 && xY.getX() <= webView.getWidth() && 
+		xY.getY() >= 0 && xY.getY() <= webView.getHeight();
     }
 
     protected boolean drawLines(final P start, final P end) {
@@ -604,8 +637,8 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 
 	//System.out.println("deltaXForPan == " + deltaXForPan + ", deltaYForPan == " + deltaYForPan + ", setOnMouseDragReleased " + event);
 
-	path.setTranslateX(path.getTranslateX() - deltaXForPan);
-	path.setTranslateY(path.getTranslateY() - deltaYForPan);
+	// TODO path.setTranslateX(path.getTranslateX() - deltaXForPan);
+	// TODO path.setTranslateY(path.getTranslateY() - deltaYForPan);
     }
     
     public void centerBy(final double longitude, final double latitude) {
