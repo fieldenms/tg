@@ -92,6 +92,9 @@
       })(marker, i));
     } */
 
+    document.setZoom = function setZoom(zoomLevel) {
+    	if (zoomLevel >= 0 && zoomLevel <= 21) document.map.setZoom(zoomLevel);
+    }
 	
     document.zoomIn = function zoomIn() {
     	var zoomLevel = document.map.getZoom();
