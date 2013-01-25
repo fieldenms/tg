@@ -62,7 +62,7 @@ public class ChartAnalysisAggregationListDragToSupport<T extends AbstractEntity<
      *
      * @return
      */
-    private List<String> getSelectedOrderedProperties() {
+    protected List<String> getSelectedOrderedProperties() {
 
 	final List<String> usedProperties = ((IUsageManager)tickManager).usedProperties(root);
 	final List<String> actualProperties = categoryDataProvider.aggregatedProperties();

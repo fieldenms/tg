@@ -193,9 +193,9 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 
 	// initialise the references on THIS instance in AbstractAnalysisDomainTreeManager, its both ticks, its representation and its both ticks
 	try {
-	    setValueForLazyField(mgr, parentCentreDomainTreeManager);
-	    setValueForLazyField(mgr.getFirstTick(), parentCentreDomainTreeManager);
-	    setValueForLazyField(mgr.getSecondTick(), parentCentreDomainTreeManager);
+	    setValueForLazyField(mgr, "parentCentreDomainTreeManager", parentCentreDomainTreeManager);
+	    setValueForLazyField(mgr.getFirstTick(), "parentCentreDomainTreeManager", parentCentreDomainTreeManager);
+	    setValueForLazyField(mgr.getSecondTick(), "parentCentreDomainTreeManager", parentCentreDomainTreeManager);
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new IllegalStateException(e);
@@ -208,15 +208,15 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 
 	// initialise the references on THIS instance in AbstractAnalysisDomainTreeManager's representation and its both ticks
 	try {
-	    setValueForLazyField(dtr, parentCentreDomainTreeManager);
+	    setValueForLazyField(dtr, "parentCentreDomainTreeManager", parentCentreDomainTreeManager);
 
 	    // load analysis property tree! it depends on "parent centre domain type"!
 	    for (final Class<?> type : dtr.rootTypes()) {
 		dtr.includedPropertiesMutable(type);
 	    }
 
-	    setValueForLazyField(dtr.getFirstTick(), parentCentreDomainTreeManager);
-	    setValueForLazyField(dtr.getSecondTick(), parentCentreDomainTreeManager);
+	    setValueForLazyField(dtr.getFirstTick(), "parentCentreDomainTreeManager", parentCentreDomainTreeManager);
+	    setValueForLazyField(dtr.getSecondTick(), "parentCentreDomainTreeManager", parentCentreDomainTreeManager);
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new IllegalStateException(e);
@@ -225,8 +225,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
 
-    private static void setValueForLazyField(final Object mgr, final ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager) throws IllegalAccessException {
-	final Field parentCentreDomainTreeManagerField = Finder.findFieldByName(mgr.getClass(), "parentCentreDomainTreeManager");
+    private static void setValueForLazyField(final Object mgr, final String propertyName, final ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager) throws IllegalAccessException {
+	final Field parentCentreDomainTreeManagerField = Finder.findFieldByName(mgr.getClass(), propertyName);
 	final boolean isAccessible = parentCentreDomainTreeManagerField.isAccessible();
 	parentCentreDomainTreeManagerField.setAccessible(true);
 	parentCentreDomainTreeManagerField.set(mgr, parentCentreDomainTreeManager);

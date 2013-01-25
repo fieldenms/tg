@@ -19,7 +19,12 @@ public class ChartAnalysisQueryGenerator<T extends AbstractEntity<?>> extends Gr
     @Override
     public AnalysisResultClassBundle<T> generateQueryModel() {
 	//Generate analysis result map that is based on analysis domain manager associated with this query generator.
-	final AnalysisResultClassBundle<T>  classBundle = (AnalysisResultClassBundle<T> )AnalysisResultClass.generateAnalysisQueryClass((Class<T>)getCdtme().getEnhancer().getManagedType(getRoot()), adtm());
+	final AnalysisResultClassBundle<T>  classBundle = (AnalysisResultClassBundle<T> )AnalysisResultClass.generateAnalysisQueryClass(//
+		(Class<T>)getCdtme().getEnhancer().getManagedType(getRoot()),//
+		adtm().getFirstTick().checkedProperties(getRoot()),//
+		adtm().getSecondTick().checkedProperties(getRoot()),//
+		adtm().getFirstTick().usedProperties(getRoot()),//
+		adtm().getSecondTick().usedProperties(getRoot()));
 	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> result = new ArrayList<>();
 	result.add(createQueryAndGroupBy(classBundle.getGeneratedClass(), adtm().getFirstTick().usedProperties(getRoot())));
 	return new AnalysisResultClassBundle<>(classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), result);

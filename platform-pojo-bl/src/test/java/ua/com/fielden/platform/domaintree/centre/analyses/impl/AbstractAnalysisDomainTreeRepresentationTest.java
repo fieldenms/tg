@@ -176,7 +176,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     }
 
     @Test
-    public void test_that_first_tick_for_properties_of_non_entity_or_non_boolean_or_non_string_are_disabled() {
+    public void test_that_first_tick_for_properties_of_non_entity_or_non_boolean_or_non_string_or_non_integer_are_disabled() {
 	// range types (except dates)
 	// integer
 	allLevels(new IAction() {
@@ -185,18 +185,18 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 		    assertTrue("Property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
 		}
 	    }
-	}, "integerProp", "doubleProp", "bigDecimalProp", "moneyProp", "dateProp");
+	}, "doubleProp", "bigDecimalProp", "moneyProp", "dateProp");
     }
 
     @Test
-    public void test_that_first_tick_for_properties_of_entity_or_date_or_boolean_or_string_are_NOT_disabled() {
+    public void test_that_first_tick_for_properties_of_entity_or_date_or_boolean_or_string_or_integer_are_NOT_disabled() {
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
 		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
 		    assertFalse("Property should be not disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
 		}
 	    }
-	}, "simpleEntityProp", "booleanProp", "stringProp");
+	}, "integerProp", "simpleEntityProp", "booleanProp", "stringProp");
     }
 
     @Test
@@ -427,7 +427,14 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     @Override
     @Test
     public void test_that_checked_properties_first_tick_are_actually_disabled() {
-	allLevels(new IAction() {
+	allLevelsWithoutCollections(new IAction() {
+	    public void action(final String name) {
+		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
+		    assertFalse("By contract of 'disabled' it should NOT be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		}
+	    }
+	}, "checkedManuallyProp");
+	allLevelsWithCollections(new IAction() {
 	    public void action(final String name) {
 		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
 		    assertTrue("By contract of 'disabled' it should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));

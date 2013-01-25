@@ -42,6 +42,18 @@ public interface IPivotDomainTreeManager extends IAbstractAnalysisDomainTreeMana
 	 */
 	@Override
 	public IPivotAddToDistributionTickManager setWidth(Class<?> root, String property, int width);
+
+	/**
+	 * Returns the another {@link IUsageManager} for distribution properties.
+	 * This {@link IUsageManager} is used to specify column distribution properties.
+	 * Right now this usage manager must use only one property,
+	 * first usage manager must not use property that is used by the second usage manager and vise versa.
+	 * Usage manager of the second tick must have only one aggregation property if second usage manager use some property.
+	 * Later this usage manager allows to use multiple properties and second tick usage manager will allow to use more then one property.
+	 *
+	 * @return
+	 */
+	public IUsageManager getSecondUsageManager();
     }
 
     /**

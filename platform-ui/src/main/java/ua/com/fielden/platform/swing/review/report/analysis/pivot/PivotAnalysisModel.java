@@ -382,7 +382,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 			final AbstractEntity<?> entity = (AbstractEntity<?>) getUserObject();
 			return entity.getKey().toString() + (StringUtils.isEmpty(entity.getDesc()) ? "" : " - " + entity.getDesc());
 		    }
-		    return getUserObject();
+		    return getUserObject() == null ? PivotTreeTableNode.NULL_USER_OBJECT : getUserObject();
 		}
 		final String property = visibleAggregationProperties.get(column - 1);
 		return aggregatedData.get(property);
@@ -408,7 +408,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		    if (getUserObject() instanceof AbstractEntity) {
 			return ((AbstractEntity) getUserObject()).getDesc();
 		    }
-		    return getUserObject().toString();
+		    return getUserObject() == null ? PivotTreeTableNode.NULL_USER_OBJECT : getUserObject().toString();
 		}
 		final Object value = getValueAt(column);
 		return value != null ? value.toString() : null;
@@ -442,16 +442,17 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		for (final Pair<Integer, Ordering> sortingParam : sortOrders) {
 		    final Comparable<?> value1 = (Comparable) o1.getValueAt(sortingParam.getKey().intValue() + 1);
 		    final Comparable<?> value2 = (Comparable) o2.getValueAt(sortingParam.getKey().intValue() + 1);
+		    final int sortMultiplier = sortingParam.getValue() == Ordering.ASCENDING ? 1 : (sortingParam.getValue() == Ordering.DESCENDING ? -1 : 0);
 		    int result = 0;
 		    if (value1 == null) {
 			if (value2 != null) {
-			    return -1;
+			    return -1 * sortMultiplier;
 			}
 		    } else {
 			if (value2 == null) {
-			    return 1;
+			    return 1 * sortMultiplier;
 			} else {
-			    result = compareValues(value1, value2, sortingParam.getValue());
+			    result = compareValues(value1, value2, sortMultiplier);
 			}
 		    }
 		    if (result != 0) {
@@ -462,20 +463,19 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    }
 
 	    @SuppressWarnings({ "rawtypes", "unchecked" })
-	    private int compareValues(final Comparable value1, final Comparable value2, final Ordering sortingParam) {
-		final int sortMultiplier = sortingParam == Ordering.ASCENDING ? 1 : (sortingParam == Ordering.DESCENDING ? -1 : 0);
+	    private int compareValues(final Comparable value1, final Comparable value2, final int sortMultiplier) {
 		return value1.compareTo(value2) * sortMultiplier;
 	    }
 
 	    private int defaultCompare(final MutableTreeTableNode o1, final MutableTreeTableNode o2) {
-		if (o1.getUserObject().equals(PivotTreeTableNodeEx.NULL_USER_OBJECT)) {
-		    if (o2.getUserObject().equals(PivotTreeTableNodeEx.NULL_USER_OBJECT)) {
+		if (o1.getUserObject() == null) {
+		    if (o2.getUserObject() == null) {
 			return 0;
 		    } else {
 			return -1;
 		    }
 		} else {
-		    if (o2.getUserObject().equals(PivotTreeTableNodeEx.NULL_USER_OBJECT)) {
+		    if (o2.getUserObject() == null) {
 			return 1;
 		    } else {
 			return o1.getUserObject().toString().compareTo(o2.getUserObject().toString());

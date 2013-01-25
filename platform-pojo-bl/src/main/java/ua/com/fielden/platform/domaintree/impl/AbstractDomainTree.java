@@ -271,7 +271,7 @@ public abstract class AbstractDomainTree {
      * @param <T> -- a type of values in map
      * @return
      */
-    protected static <T> EnhancementRootsMap<T> createRootsMap() {
+    public static <T> EnhancementRootsMap<T> createRootsMap() {
 	return new EnhancementRootsMap<T>();
     }
 

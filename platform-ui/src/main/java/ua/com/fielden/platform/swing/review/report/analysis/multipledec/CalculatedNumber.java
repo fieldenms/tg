@@ -123,7 +123,11 @@ public abstract class CalculatedNumber<T extends AbstractEntity<?>> {
      */
     public static <T extends AbstractEntity<?>> BigDecimal calculateAvg(final String series, final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel) {
 	final int categoryCount = chartModel.getCategoryDataEntryCount();
-	return calculateTotal(series, chartModel).divide(BigDecimal.valueOf(categoryCount), RoundingMode.HALF_UP);
+	if (categoryCount != 0) {
+	    return calculateTotal(series, chartModel).divide(BigDecimal.valueOf(categoryCount), RoundingMode.HALF_UP);
+	} else {
+	    return BigDecimal.ZERO;
+	}
     }
 
     /**

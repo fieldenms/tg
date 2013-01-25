@@ -36,7 +36,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
-import ua.com.fielden.platform.swing.categorychart.ChartAnalysisAggregationListDragToSupport;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
 import ua.com.fielden.platform.swing.checkboxlist.ListSortingModel;
 import ua.com.fielden.platform.swing.checkboxlist.SortableList;
@@ -86,7 +85,7 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
 	this.multipleDecView = createMultipleDecPanel();
 
 	DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), //
-		new ChartAnalysisAggregationListDragToSupport<T>(//
+		new MultipleDecAggregationDragToSupport<T>(//
 			getModel().getCriteria().getEntityClass(), //
 			getModel().adtme().getSecondTick(),//
 			aggregationList, multipleDecView, getModel().getChartModel()), true);

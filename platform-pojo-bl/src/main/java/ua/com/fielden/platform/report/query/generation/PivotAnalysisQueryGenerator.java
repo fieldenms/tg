@@ -20,7 +20,12 @@ public class PivotAnalysisQueryGenerator<T extends AbstractEntity<?>> extends Gr
     public AnalysisResultClassBundle<T> generateQueryModel() {
 
 	//Generate analysis result map that is based on analysis domain manager associated with this query generator.
-	final AnalysisResultClassBundle<T> classBundle = (AnalysisResultClassBundle<T>)AnalysisResultClass.generateAnalysisQueryClass((Class<T>) getCdtme().getEnhancer().getManagedType(getRoot()), adtm());
+	final AnalysisResultClassBundle<T> classBundle = (AnalysisResultClassBundle<T>)AnalysisResultClass.generateAnalysisQueryClass(//
+		(Class<T>)getCdtme().getEnhancer().getManagedType(getRoot()),//
+		adtm().getFirstTick().checkedProperties(getRoot()),//
+		adtm().getSecondTick().checkedProperties(getRoot()),//
+		adtm().getFirstTick().usedProperties(getRoot()),//
+		adtm().getSecondTick().usedProperties(getRoot()));
 
 	final List<String> distributionProperties = adtm().getFirstTick().usedProperties(getRoot());
 

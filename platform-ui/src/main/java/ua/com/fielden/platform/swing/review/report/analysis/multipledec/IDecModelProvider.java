@@ -20,5 +20,5 @@ public interface IDecModelProvider<T extends AbstractEntity<?>> {
      * @param chartModel
      * @return
      */
-    NDecPanelModel<T> getMultipleDecModel(ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel);
+    NDecPanelModel<T> getMultipleDecModel(List<String> orderedProperties, ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel);
 }

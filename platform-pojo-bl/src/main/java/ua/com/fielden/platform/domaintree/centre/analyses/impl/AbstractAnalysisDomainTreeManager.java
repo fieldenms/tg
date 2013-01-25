@@ -130,7 +130,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    rootsListsOfUsedProperties = createRootsMap();
 	    propertyUsageListeners = new ArrayList<IPropertyUsageListener>();
 
-	    parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
+	    parentCentreDomainTreeManager = null; // as soon as this analysis will be added into centre manager -- this field should be initialised
 	}
 
 	private ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager() {
@@ -139,6 +139,13 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 
 	protected Class<?> managedType(final Class<?> root) {
 	    return parentCentreDomainTreeManager().getEnhancer().getManagedType(DynamicEntityClassLoader.getOriginalType(root));
+	}
+
+	protected void usedPropertiesChanged(final Class<?> root, final String property, final boolean check) {
+	    final Class<?> managedType = managedType(root);
+	    for (final IPropertyUsageListener listener : propertyUsageListeners) {
+		listener.propertyStateChanged(managedType, property, check, null);
+	    }
 	}
 
 	@Override
@@ -207,9 +214,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    } else if (!check) {
 		listOfUsedProperties.remove(property);
 	    }
-	    for (final IPropertyUsageListener listener : propertyUsageListeners) {
-		listener.propertyStateChanged(managedType, property, check, null);
-	    }
+	    usedPropertiesChanged(root, property, check);
 	}
 
 	@Override
@@ -289,6 +294,12 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    return (IAbstractAnalysisAddToAggregationTickRepresentation) super.tr();
 	}
 
+	protected void usedPropertiesChanged(final Class<?> root, final String property, final boolean check) {
+	    final Class<?> managedType = managedType(root);
+	    for (final IPropertyUsageListener listener : propertyUsageListeners) {
+		listener.propertyStateChanged(managedType, property, check, null);
+	    }
+	}
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.
@@ -382,10 +393,10 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 		// perform actual removal
 		listOfUsedProperties.remove(property);
 	    }
-	    for (final IPropertyUsageListener listener : propertyUsageListeners) {
-		listener.propertyStateChanged(managedType, property, check, null);
-	    }
+	    usedPropertiesChanged(root, property, check);
 	}
+
+
 
 	@Override
 	public final List<String> usedProperties(final Class<?> root) {
@@ -402,7 +413,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    return usedProperties;
 	}
 
-	private static boolean isOrdered(final String property, final List<Pair<String, Ordering>> orderedProperties) {
+	protected static boolean isOrdered(final String property, final List<Pair<String, Ordering>> orderedProperties) {
 	    for (final Pair<String, Ordering> pair : orderedProperties) {
 		if (property.equals(pair.getKey())) {
 		    return true;

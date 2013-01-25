@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
@@ -43,14 +42,16 @@ public class AnalysisResultClass extends AbstractEntity<String> {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static AnalysisResultClassBundle<AbstractEntity<?>> generateAnalysisQueryClass(final Class<? extends AbstractEntity<?>> enhancedType, final IAbstractAnalysisDomainTreeManager adtm){
-	final Class<? extends AbstractEntity<?>> root = (Class<? extends AbstractEntity<?>>)DynamicEntityClassLoader.getOriginalType(enhancedType);
-	final EntityDescriptor distributionED = new EntityDescriptor(enhancedType, adtm.getFirstTick().checkedProperties(root));
-	final EntityDescriptor aggregationED = new EntityDescriptor(enhancedType, adtm.getSecondTick().checkedProperties(root));
-	final List<String> distributionProperties = adtm.getFirstTick().usedProperties(root);
-	final List<String> aggregationProperties = adtm.getSecondTick().usedProperties(root);
-	final List<NewProperty> newProperties = createNewProperties(enhancedType, distributionProperties, distributionED);
-	newProperties.addAll(createNewProperties(enhancedType, aggregationProperties, aggregationED));
+    public static AnalysisResultClassBundle<AbstractEntity<?>> generateAnalysisQueryClass(//
+	    		final Class<? extends AbstractEntity<?>> enhancedType, //
+	    		final List<String> distributionProperties, //
+	    		final List<String> aggregationProperties, //
+	    		final List<String> usedDistributions, //
+	    		final List<String> usedAggregations){
+	final EntityDescriptor distributionED = new EntityDescriptor(enhancedType, distributionProperties);
+	final EntityDescriptor aggregationED = new EntityDescriptor(enhancedType, aggregationProperties);
+	final List<NewProperty> newProperties = createNewProperties(enhancedType, usedDistributions, distributionED);
+	newProperties.addAll(createNewProperties(enhancedType, usedAggregations, aggregationED));
 
 	final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 

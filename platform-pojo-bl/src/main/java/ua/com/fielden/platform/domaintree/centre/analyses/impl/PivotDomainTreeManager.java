@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.IWidthManager;
@@ -10,6 +13,8 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRe
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRepresentation.PivotAddToDistributionTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
+import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
@@ -40,6 +45,23 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
      */
     protected PivotDomainTreeManager(final ISerialiser serialiser, final PivotDomainTreeRepresentation dtr, final Boolean visible, final PivotAddToDistributionTickManager firstTick, final PivotAddToAggregationTickManager secondTick) {
 	super(serialiser, dtr, visible, firstTick, secondTick);
+
+	// Initialise the pdtm field for first tick.
+	try {
+	   setPdtmForTickManager(firstTick);
+	   setPdtmForTickManager(secondTick);
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    throw new IllegalStateException(e);
+	}
+    }
+
+    private void setPdtmForTickManager(final TickManager tickManager) throws IllegalArgumentException, IllegalAccessException{
+	final Field pdtmField = Finder.findFieldByName(tickManager.getClass(), "pdtm");
+	final boolean isAccessibleForFirstTick = pdtmField.isAccessible();
+	pdtmField.setAccessible(true);
+	pdtmField.set(tickManager, this);
+	pdtmField.setAccessible(isAccessibleForFirstTick);
     }
 
     @Override
@@ -60,12 +82,35 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
     public static class PivotAddToDistributionTickManager extends AbstractAnalysisAddToDistributionTickManager implements IPivotAddToDistributionTickManager {
 	private final EnhancementPropertiesMap<Integer> propertiesWidths;
 
+	private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
+	private final transient IUsageManager columnUsageManager;
+
+	private final transient IPivotDomainTreeManager pdtm;
+
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.
 	 */
 	public PivotAddToDistributionTickManager() {
 	    propertiesWidths = createPropertiesMap();
+	    rootsListsOfUsedProperties = createRootsMap();
+	    columnUsageManager = new ColumnUsageManager();
+	    pdtm = null;
+	}
+
+	@Override
+	public void use(final Class<?> root, final String property, final boolean check) {
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
+	    if (check && !listOfUsedProperties.contains(property)) {
+		listOfUsedProperties.add(property);
+		getSecondUsageManager().use(root, property, false);
+	    } else if (!check) {
+		listOfUsedProperties.remove(property);
+	    }
+	    usedPropertiesChanged(root, property, check);
 	}
 
 	@Override
@@ -94,6 +139,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	    final int prime = 31;
 	    int result = super.hashCode();
 	    result = prime * result + ((propertiesWidths == null) ? 0 : propertiesWidths.hashCode());
+	    result = prime * result + (rootsListsOfUsedProperties == null ? 0 : rootsListsOfUsedProperties.hashCode());
 	    return result;
 	}
 
@@ -111,12 +157,100 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 		    return false;
 	    } else if (!propertiesWidths.equals(other.propertiesWidths))
 		return false;
+	    if (rootsListsOfUsedProperties == null) {
+		if (other.rootsListsOfUsedProperties != null) {
+		    return false;
+		}
+	    } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
+		return false;
+	    }
 	    return true;
+	}
+
+	@Override
+	public IUsageManager getSecondUsageManager() {
+	    return columnUsageManager;
+	}
+
+	private class ColumnUsageManager implements IUsageManager{
+
+	    private final transient List<IPropertyUsageListener> propertyUsageListeners;
+
+	    public ColumnUsageManager(){
+		propertyUsageListeners = new ArrayList<>();
+	    }
+
+	    private List<String> getAndInitSecondUsedProperties(final Class<?> root, final String property) {
+		illegalUncheckedProperties(PivotAddToDistributionTickManager.this, root, property, "It's illegal to use/unuse the specified property [" + property + "] if it is not 'checked' in type [" + root.getSimpleName() + "].");
+		if (!rootsListsOfUsedProperties.containsKey(root)) {
+		    rootsListsOfUsedProperties.put(root, new ArrayList<String>());
+		}
+		return rootsListsOfUsedProperties.get(root);
+	    }
+
+	    @Override
+	    public boolean isUsed(final Class<?> root, final String property) {
+		// inject an enhanced type into method implementation
+		final Class<?> managedType = managedType(root);
+
+		illegalUncheckedProperties(PivotAddToDistributionTickManager.this, managedType, property, "It's illegal to ask whether the specified property [" + property+ "] is 'used' if it is not 'checked' in type [" + managedType.getSimpleName() + "].");
+		return rootsListsOfUsedProperties.containsKey(managedType) && rootsListsOfUsedProperties.get(managedType).contains(property);
+	    }
+
+	    @Override
+	    public void use(final Class<?> root, final String property, final boolean check) {
+		// inject an enhanced type into method implementation
+		final Class<?> managedType = managedType(root);
+
+		final List<String> listOfUsedProperties = getAndInitSecondUsedProperties(managedType, property);
+		if (check && !listOfUsedProperties.contains(property)) {
+		    if (pdtm.getSecondTick().usedProperties(root).size() <= 1) {
+			listOfUsedProperties.clear();
+			listOfUsedProperties.add(property);
+			PivotAddToDistributionTickManager.this.use(root, property, false);
+		    } else {
+			throw new IllegalStateException("Please select only one aggregation property!");
+		    }
+		} else if (!check) {
+		    listOfUsedProperties.remove(property);
+		}
+		for (final IPropertyUsageListener listener : propertyUsageListeners) {
+		    listener.propertyStateChanged(managedType, property, check, null);
+		}
+	    }
+
+	    @Override
+	    public List<String> usedProperties(final Class<?> root) {
+		// inject an enhanced type into method implementation
+		final Class<?> managedType = managedType(root);
+
+		final List<String> checkedProperties = checkedProperties(managedType);
+		final List<String> usedProperties = new ArrayList<String>();
+		for (final String property : checkedProperties) {
+		    if (isUsed(managedType, property)) {
+			usedProperties.add(property);
+		    }
+		}
+		return usedProperties;
+	    }
+
+	    @Override
+	    public boolean addPropertyUsageListener(final IPropertyUsageListener listener) {
+		return propertyUsageListeners.add(listener);
+	    }
+
+	    @Override
+	    public boolean removePropertyUsageListener(final IPropertyUsageListener listener) {
+		return propertyUsageListeners.remove(listener);
+	    }
+
 	}
     }
 
     public static class PivotAddToAggregationTickManager extends AbstractAnalysisAddToAggregationTickManager implements IPivotAddToAggregationTickManager {
 	private final EnhancementPropertiesMap<Integer> propertiesWidths;
+
+	private final transient IPivotDomainTreeManager pdtm;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
@@ -124,6 +258,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	 */
 	public PivotAddToAggregationTickManager() {
 	    propertiesWidths = createPropertiesMap();
+	    pdtm = null;
 	}
 
 	@Override
@@ -142,6 +277,28 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	@Override
 	protected PivotAddToAggregationTickRepresentation tr() {
 	    return (PivotAddToAggregationTickRepresentation) super.tr();
+	}
+
+	@Override
+	public void use(final Class<?> root, final String property, final boolean check) {
+	    // inject an enhanced type into method implementation
+	    final Class<?> managedType = managedType(root);
+
+	    final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
+	    if (check && !listOfUsedProperties.contains(property)) {
+		if (!pdtm.getFirstTick().getSecondUsageManager().usedProperties(root).isEmpty()) {
+		    listOfUsedProperties.clear();
+		}
+		listOfUsedProperties.add(property);
+	    } else if (!check && listOfUsedProperties.contains(property)) {
+		// before successful removal of the Usage -- the Ordering should be removed
+		while (isOrdered(property, orderedProperties(managedType))) {
+		    toggleOrdering(managedType, property);
+		}
+		// perform actual removal
+		listOfUsedProperties.remove(property);
+	    }
+	    usedPropertiesChanged(root, property, check);
 	}
 
 	@Override

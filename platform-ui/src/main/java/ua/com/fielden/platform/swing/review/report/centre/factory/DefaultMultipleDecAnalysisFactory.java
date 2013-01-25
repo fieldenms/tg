@@ -45,5 +45,4 @@ public abstract class DefaultMultipleDecAnalysisFactory<T extends AbstractEntity
 	this.detailsCustomiser = detailsCustomiser;
 	return this;
     }
-
 }

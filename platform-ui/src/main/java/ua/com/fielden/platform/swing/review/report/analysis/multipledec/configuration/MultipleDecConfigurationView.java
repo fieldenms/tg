@@ -49,7 +49,7 @@ public class MultipleDecConfigurationView<T extends AbstractEntity<?>> extends A
      * @return
      */
     public NDecPanelModel<T> getMultipleDecModel(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel){
-	return modelProvider.getMultipleDecModel(chartModel);
+	return modelProvider.getMultipleDecModel(getModel().getAnalysisManager().getSecondTick().usedProperties(getModel().getCriteria().getEntityClass()), chartModel);
     }
 
     @Override
