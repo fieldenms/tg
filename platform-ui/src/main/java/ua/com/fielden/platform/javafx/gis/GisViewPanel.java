@@ -462,7 +462,6 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	updateTransformation();
 
 	if (path != null) {
-	    path.getChildren().clear();
 	    webViewPanel.getChildren().remove(path);
 	}
 
