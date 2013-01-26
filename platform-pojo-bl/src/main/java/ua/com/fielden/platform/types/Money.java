@@ -318,9 +318,10 @@ public class Money implements Comparable<Money> {
      * @param monetaryAmount
      */
     private void checkCurrencies(final Money monetaryAmount) {
-	if (!getCurrency().equals(monetaryAmount.getCurrency())) {
-	    throw new IllegalArgumentException("Can only operate on monetary amounts of the same currency");
-	}
+	// FIXME at this stage the platform is not ready to be so serious about currency missmatch
+//	if (!getCurrency().equals(monetaryAmount.getCurrency())) {
+//	    throw new IllegalArgumentException("Can only operate on monetary amounts of the same currency");
+//	}
     }
 
     /**
