@@ -21,6 +21,8 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
@@ -376,6 +378,15 @@ public class EntQuery implements ISingleOperand {
         return sources;
     }
 
+    private Conditions enhanceConditions(final Conditions originalConditions) {
+	// TODO take into account the case when original conditions are null/empty
+
+	final ComparisonTest dummyCond = new ComparisonTest(new EntValue(1), ComparisonOperator.EQ, new EntValue(1));
+	final List<CompoundCondition> others = new ArrayList();
+	others.add(new CompoundCondition(LogicalOperator.AND, originalConditions));
+	return new Conditions(dummyCond, others);
+    }
+
     public EntQuery(final boolean filterable, final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
             final Class resultType, final QueryCategory category, final DomainMetadataAnalyser domainMetadataAnalyser, //
             final IFilter filter, final String username, final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
@@ -383,7 +394,7 @@ public class EntQuery implements ISingleOperand {
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.sources = filterable ? enhanceSourcesWithUserDataFiltering(filter, username, sources, generator, paramValues) : sources;
-        this.conditions = conditions;
+        this.conditions = conditions;//enhanceConditions(conditions);
         this.yields = yields;
         this.groups = groups;
         this.orderings = orderings;
