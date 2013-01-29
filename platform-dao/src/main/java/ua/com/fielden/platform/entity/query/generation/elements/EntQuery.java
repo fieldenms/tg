@@ -21,13 +21,13 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
+import ua.com.fielden.platform.entity.query.generation.StandAloneConditionBuilder;
 import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -365,26 +365,19 @@ public class EntQuery implements ISingleOperand {
         return result;
     }
 
-    private Sources enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final Sources sources, final EntQueryGenerator generator, final Map<String, Object> paramValues) {
-        if (sources.getMain() instanceof TypeBasedSource && filter != null) {
-            final QueryModel<AbstractEntity<?>> enhanceQuery = filter.enhance(sources.getMain().sourceType(), username);
-            if (enhanceQuery != null) {
-        	final ISource newMain = new QueryBasedSource(sources.getMain().getAlias(), domainMetadataAnalyser, generator.generateEntQueryAsSourceQuery(enhanceQuery, paramValues));
-        	logger.debug("\nApplied user-driven-filter to query main source type [" + sources.getMain().sourceType().getSimpleName() +"]");
-        	return new Sources(newMain, sources.getCompounds());
-            }
-        }
-
-        return sources;
-    }
-
-    private Conditions enhanceConditions(final Conditions originalConditions) {
-	// TODO take into account the case when original conditions are null/empty
-
-	final ComparisonTest dummyCond = new ComparisonTest(new EntValue(1), ComparisonOperator.EQ, new EntValue(1));
+    private Conditions enhanceConditions(final Conditions originalConditions, final IFilter filter, final String username, final ISource mainSource, final EntQueryGenerator generator, final Map<String, Object> paramValues) {
+	if (mainSource instanceof TypeBasedSource && filter != null) {
+	final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
+	if (filteringCondition == null) {
+	    return originalConditions;
+	}
+	logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
 	final List<CompoundCondition> others = new ArrayList();
 	others.add(new CompoundCondition(LogicalOperator.AND, originalConditions));
-	return new Conditions(dummyCond, others);
+	return originalConditions.ignore() ? new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition).getModel()) : new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition).getModel(), others);
+	} else {
+	    return originalConditions;
+	}
     }
 
     public EntQuery(final boolean filterable, final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
@@ -393,8 +386,8 @@ public class EntQuery implements ISingleOperand {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
-        this.sources = filterable ? enhanceSourcesWithUserDataFiltering(filter, username, sources, generator, paramValues) : sources;
-        this.conditions = conditions;//enhanceConditions(conditions);
+        this.sources = sources;
+        this.conditions = filterable ? enhanceConditions(conditions, filter, username, sources.getMain(), generator, paramValues) : conditions;
         this.yields = yields;
         this.groups = groups;
         this.orderings = orderings;

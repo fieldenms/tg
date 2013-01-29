@@ -3,7 +3,6 @@ package ua.com.fielden.platform.example.swing.expressioneditor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +19,7 @@ import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurpose
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.example.dynamiccriteria.BaseUserProvider;
 import ua.com.fielden.platform.example.dynamiccriteria.GeneratedEntityControllerStub;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
@@ -52,9 +51,8 @@ public class ExpressionEditorModule extends BasicWebServerModule{
     }
 
     private static class NoFilter implements IFilter {
-
 	@Override
-	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> enhance(final Class<T> entityType, final String username) {
+	public <ET extends AbstractEntity<?>> ConditionModel enhance(final Class<ET> entityType, final String typeAlias, final String username) {
 	    return null;
 	}
     }

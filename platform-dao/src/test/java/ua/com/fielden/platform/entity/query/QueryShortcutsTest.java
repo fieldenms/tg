@@ -713,15 +713,16 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 
     ////////////////////////////////////////////////////////////  User-based data filtering ////////////////////////////////////////////////////////////////////////
 
+    @Ignore
     @Test
     public void test15() {
 	assertModelsEqualsAccordingUserDataFiltering(//
 		select(VEHICLE). //
 		where().prop("model.make.key").eq().val("MERC").model(),
 
-		select(select(VEHICLE).	where().prop("key").notLike().val("A%").model()). //
+		select(VEHICLE). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
 		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
-		where().prop("model.make.key").eq().val("MERC").model());
+		where().begin().prop("key").notLike().val("A%").end().and().prop("model.make.key").eq().val("MERC").model());
     }
 }
