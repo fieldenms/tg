@@ -6,14 +6,12 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
 
 
-abstract class TwoOperandsFunction implements ISingleOperand {
-    private final DbVersion dbVersion;
+abstract class TwoOperandsFunction extends AbstractFunction implements ISingleOperand {
     private final ISingleOperand operand1;
     private final ISingleOperand operand2;
 
     public TwoOperandsFunction(final DbVersion dbVersion, final ISingleOperand operand1, final ISingleOperand operand2) {
-	super();
-	this.dbVersion = dbVersion;
+	super(dbVersion);
 	this.operand1 = operand1;
 	this.operand2 = operand2;
     }
@@ -106,9 +104,5 @@ abstract class TwoOperandsFunction implements ISingleOperand {
 	    return false;
 	}
 	return true;
-    }
-
-    public DbVersion getDbVersion() {
-        return dbVersion;
     }
 }

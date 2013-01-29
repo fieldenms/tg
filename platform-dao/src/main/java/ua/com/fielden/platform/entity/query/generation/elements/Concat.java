@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -10,13 +9,12 @@ import org.hibernate.Hibernate;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
 
 
-public class Concat implements ISingleOperand {
+public class Concat extends AbstractFunction implements ISingleOperand {
 
     private final List<ISingleOperand> operands;
-    final DbVersion dbVersion;
 
     public Concat(final List<ISingleOperand> operands, final DbVersion dbVersion) {
-	this.dbVersion = dbVersion;
+	super(dbVersion);
 	this.operands = operands;
     }
 
@@ -72,18 +70,12 @@ public class Concat implements ISingleOperand {
 	sb.append("CONCAT (");
 
 	for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
-	    final ISingleOperand operand = iterator.next();
-	    if (Date.class.equals(operand.type())) {
-		sb.append("FORMATDATETIME(" + operand.sql() + ", 'YYYY-MM-dd hh:mm:ss')");
-	    } else if (String.class.equals(operand.type())) {
-		sb.append(operand.sql());
-	    } else {
-		sb.append("CAST(" + operand.sql() + " AS VARCHAR(255))");
-	    }
+	    sb.append(getConvertToStringSql(iterator.next()));
 	    if (iterator.hasNext()) {
 		sb.append(", ");
 	    }
 	}
+
 	sb.append(")");
 
 	return  sb.toString();
@@ -94,18 +86,12 @@ public class Concat implements ISingleOperand {
 	sb.append(" (");
 
 	for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
-	    final ISingleOperand operand = iterator.next();
-	    if (Date.class.equals(operand.type())) {
-		sb.append("CONVERT(VARCHAR(19), " + operand.sql() + ", 120)");
-	    } else if (String.class.equals(operand.type())) {
-		sb.append(operand.sql());
-	    } else {
-		sb.append("CAST(" + operand.sql() + " AS VARCHAR(255))");
-	    }
+	    sb.append(getConvertToStringSql(iterator.next()));
 	    if (iterator.hasNext()) {
 		sb.append(" + ");
 	    }
 	}
+
 	sb.append(")");
 
 	return  sb.toString();
@@ -114,19 +100,14 @@ public class Concat implements ISingleOperand {
     public String sqlForPostgresql() {
 	final StringBuffer sb = new StringBuffer();
 	sb.append(" (");
+
 	for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
-	    final ISingleOperand operand = iterator.next();
-	    if (Date.class.equals(operand.type())) {
-		sb.append("TO_CHAR(" + operand.sql() + ", 'YYYY-MM-DD HH24:MI:SS')");
-	    } else if (String.class.equals(operand.type())) {
-		sb.append(operand.sql());
-	    } else {
-		sb.append("CAST(" + operand.sql() + " AS VARCHAR(255))");
-	    }
+	    sb.append(getConvertToStringSql(iterator.next()));
 	    if (iterator.hasNext()) {
 		sb.append(" || ");
 	    }
 	}
+
 	sb.append(")");
 
 	return sb.toString();
@@ -134,7 +115,7 @@ public class Concat implements ISingleOperand {
 
     @Override
     public String sql() {
-	switch (dbVersion) {
+	switch (getDbVersion()) {
 	case H2:
 	    return sqlForH2();
 	case MSSQL:
@@ -142,7 +123,7 @@ public class Concat implements ISingleOperand {
 	case POSTGRESQL:
 	    return sqlForPostgresql();
 	default:
-	    throw new IllegalStateException("Function [" + getClass().getSimpleName() +"] is not yet implemented for RDBMS [" + dbVersion + "]!");
+	    throw new IllegalStateException("Function [" + getClass().getSimpleName() +"] is not yet implemented for RDBMS [" + getDbVersion() + "]!");
 	}
     }
 
