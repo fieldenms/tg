@@ -47,12 +47,22 @@ import javafx.scene.text.Text;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.util.Duration;
+
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
 import netscape.javascript.JSObject;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.gis.Point;
+import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
+import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
+import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -61,7 +71,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public class GisViewPanel <P extends Point> extends JFXPanel {
+public abstract class GisViewPanel <P extends Point> extends JFXPanel {
     private static final long serialVersionUID = 9202827128855362320L;
     protected static double THRESHOLD = 2.0;
     private Timeline locationUpdateTimeline;
@@ -79,6 +89,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
     private static long ZOOM_DELAY = 300;
     private Timer timer = new Timer();
     private GisView activeView;
+    private AbstractEntity<?> previousSelectedEntity;
 
     private IWorldToScreen currentTranformation;
 
@@ -95,17 +106,18 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	return points;
     }
 
-    /**s
+    protected abstract AbstractEntity<?> selectedEntity();
+
+    /**
      * Creates a swing container with javaFx dashboard.
      *
      * @return
      */
-    public GisViewPanel() {
+    public GisViewPanel(final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
 	Platform.setImplicitExit(false);
 
 	this.points = new ArrayList<>();
 	this.trackSegments = new HashMap<>();
-	// this.data = createData();
 
 	Platform.runLater(new Runnable() {
 	    @Override
@@ -115,6 +127,43 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	        setScene(scene);
 	    }
 	});
+
+	listSelectionModel.addListSelectionListener(new ListSelectionListener() {
+	    @Override
+	    public void valueChanged(final ListSelectionEvent e) {
+		if (!e.getValueIsAdjusting()) {
+		    selectEntity();
+		}
+		return;
+	    }
+	});
+
+	pageHolder.addPageChangedListener(new IPageChangedListener() {
+	    @Override
+	    public void pageChanged(final PageChangedEvent e) {
+		providePoints(createPoints((IPage<AbstractEntity<?>>) e.getNewPage()), shouldFitToBounds());
+	    }
+	});
+    }
+
+    protected abstract List<P> createPoints(final IPage<AbstractEntity<?>> entitiesPage);
+
+    protected abstract void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity);
+
+    protected abstract boolean shouldFitToBounds();
+
+    protected void selectEntity() {
+	final AbstractEntity<?> unselectedEntity = previousSelectedEntity;
+	final AbstractEntity<?> selectedEntity = selectedEntity();
+	if (selectedEntity != null) {
+	    Platform.runLater(new Runnable() {
+		@Override
+		public void run() {
+		    findAndSelectPoint(selectedEntity, unselectedEntity);
+		    previousSelectedEntity = selectedEntity;
+		}
+	    });
+	}
     }
 
     // load the image
@@ -476,10 +525,10 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	prevXY = null;
 	countOfProcessed = 0;
 	if (points.size() > 0) {
-	    addPoint(webEngine, points.get(0), points.size());
+	    addPoint(webEngine, points.get(0));
 	}
 	for (int i = 1 + (int)(startSlider.getValue() * points.size()); i < (int)(endSlider.getValue() * points.size()); i++) {
-	    addPoint(webEngine, points.get(i), points.size());
+	    addPoint(webEngine, points.get(i));
 	}
 	System.out.println("PROCESSED nodes: " + countOfProcessed);
 
@@ -522,7 +571,7 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 	return p;
     }
 
-    protected Point2D addPoint(final WebEngine webEngine, final P point, final int size) {
+    protected Point2D addPoint(final WebEngine webEngine, final P point) {
 	return convertWorld2Pixel(webEngine, point.getLatitude(), point.getLongitude());
     }
 
@@ -644,11 +693,13 @@ public class GisViewPanel <P extends Point> extends JFXPanel {
 
 		GisViewPanel.this.points.clear();
 		GisViewPanel.this.points.addAll(points);
+
 		if (fitToBounds) {
 		    fitToBounds();
 		}
 		// actually add a markers
 		removeOldAndAddNew(webEngine, zoom(webEngine));
+		selectEntity();
 	    }
 	});
     }
