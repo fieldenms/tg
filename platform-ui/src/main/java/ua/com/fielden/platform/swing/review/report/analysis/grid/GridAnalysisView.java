@@ -76,14 +76,12 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    @SuppressWarnings("unchecked")
 	    @Override
 	    public void pageChanged(final PageChangedEvent e) {
-		final List<T> oldSelected = getSelectedEntities();
-				
+		final List<AbstractEntity<?>> oldSelected = getEnhnacedSelectedEntities();
 		egiPanel.setData((IPage<T>) e.getNewPage());
-		
 		selectEntities(oldSelected);
 	    }
 	});
-	
+
 	addHierarchyListener(new HierarchyListener() {
 	    public void hierarchyChanged(final HierarchyEvent e) {
 	        if ((HierarchyEvent.SHOWING_CHANGED & e.getChangeFlags()) != 0 && isShowing()) {
@@ -158,15 +156,15 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      */
     public List<T> getSelectedEntities(){
 	final List<T> selectedAndNotEnhancedEntities = new ArrayList<>();
-	for(final T selectedEntity : getEnhnacedSelectedEntities()){
+	for(final AbstractEntity<?> selectedEntity : getEnhnacedSelectedEntities()){
 	    selectedAndNotEnhancedEntities.add(makeNotEnhnaced(selectedEntity));
 	}
 	return selectedAndNotEnhancedEntities;
     }
 
     @SuppressWarnings("unchecked")
-    private T makeNotEnhnaced(final T enhnacedEntity) {
-	return enhnacedEntity == null ? null : (T) enhnacedEntity.copy((Class<AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(enhnacedEntity.getType()));
+    private T makeNotEnhnaced(final AbstractEntity<?> enhnacedEntity) {
+	return enhnacedEntity == null ? null : (T) enhnacedEntity.copy(DynamicEntityClassLoader.getOriginalType(enhnacedEntity.getType()));
     }
 
     /**
@@ -188,27 +186,42 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
 	return tableModel.getSelectedEntity();
     }
-    
+
     /**
      * Returns the selected entities in EGI.
      *
      * @return
      */
-    public List<T> getEnhnacedSelectedEntities(){
-	final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
+    public List<AbstractEntity<?>> getEnhnacedSelectedEntities(){
+	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
 	return tableModel.getSelectedEntities();
     }
-    
+
     /**
      * Selects the entities in EGI.
      *
      * @return
      */
-    public void selectEntities(final List<T> entities) {
-	final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
-	for (final T entity : entities) {
+    public void selectEntities(final List<AbstractEntity<?>> entities) {
+	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
+	for (final AbstractEntity<?> entity : entities) {
 	    tableModel.select(entity);
 	}
+    }
+
+    public void bringToView(final AbstractEntity<?> entity) {
+	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
+	final int row = tableModel.getRowOf(entity);
+	getEgiPanel().getEgi().scrollRectToVisible(getEgiPanel().getEgi().getCellRect(row, 0, true));
+    }
+
+    /**
+     * Deselects all instances.
+     *
+     */
+    public void deselectAll() {
+	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
+	tableModel.deselectRows2();
     }
 
     /**
@@ -507,11 +520,11 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    }
 	};
     }
-    
+
     @Override
     public void close() {
 	getModel().stopDeltaRetrievalIfAny();
-	
+
         super.close();
     }
 }

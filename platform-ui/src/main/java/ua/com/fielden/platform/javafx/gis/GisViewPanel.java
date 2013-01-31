@@ -148,7 +148,7 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
 
     protected abstract List<P> createPoints(final IPage<AbstractEntity<?>> entitiesPage);
 
-    protected abstract void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity);
+    protected abstract void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity, final boolean showTooltip);
 
     protected abstract boolean shouldFitToBounds();
 
@@ -159,7 +159,7 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
 	    Platform.runLater(new Runnable() {
 		@Override
 		public void run() {
-		    findAndSelectPoint(selectedEntity, unselectedEntity);
+		    findAndSelectPoint(selectedEntity, unselectedEntity, !selectedEntity.equals(unselectedEntity));
 		    previousSelectedEntity = selectedEntity;
 		}
 	    });

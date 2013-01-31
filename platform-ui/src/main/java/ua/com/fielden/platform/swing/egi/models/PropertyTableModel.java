@@ -489,6 +489,10 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	getEntityGridInspector().getSelectionModel().removeSelectionInterval(0, 0);
     }
 
+    public void deselectRows2() {
+	getEntityGridInspector().getSelectionModel().clearSelection();
+    }
+
     /**
      * Return an index of the selected row.
      *
