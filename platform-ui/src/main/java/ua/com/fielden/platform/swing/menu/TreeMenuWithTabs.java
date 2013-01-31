@@ -21,6 +21,8 @@ import javax.swing.border.LineBorder;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
+import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.menu.api.IItemSelector;
@@ -394,7 +396,30 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
     protected void selectMenuItem(final TreeMenuItem<?> treeMenuItem) {
 	if (treeMenuItem instanceof MiDashboard) {
 	    final MiDashboard miDashboard = (MiDashboard) treeMenuItem;
-	    miDashboard.getView().getDashboardPanel().initDataAndSceneIfNotInitialised();
+	    final Command<Void> command = new BlockingLayerCommand<Void>("Refresh all", miDashboard.getView().getBlockingLayer()) {
+		@Override
+		protected boolean preAction() {
+		    return super.preAction();
+		}
+
+		@Override
+		protected Void action(final java.awt.event.ActionEvent e) throws Exception {
+		    setMessage("Refresh sentinel list...");
+		    miDashboard.getView().getDashboardPanel().refreshSentinelList();
+		    setMessage("Run sentinels...");
+		    miDashboard.getView().getDashboardPanel().runSentinels();
+		    setMessage("Run sentinels...done");
+		    Thread.sleep(500);
+		    return null;
+		}
+
+		@Override
+		protected void postAction(final Void value) {
+		    super.postAction(value);
+		    miDashboard.getView().getDashboardPanel().initSceneIfNotInitialised();
+		}
+	    };
+	    command.actionPerformed(null);
 	}
 	if (treeMenuItem instanceof IItemSelector) {
 	    ((IItemSelector) treeMenuItem).selectTreeMenuItem();

@@ -72,6 +72,7 @@ public class DashboardRow<T extends AbstractEntity<?>> {
     private final SimpleStringProperty sentinelTitle;
     private final SimpleIntegerProperty countOfBad;
     private final TrafficLightsModel model;
+    private IPage<T> resultPage;
 
     /**
      * Creates a dashboard row that holds and manages a sentinel information.
@@ -125,8 +126,14 @@ public class DashboardRow<T extends AbstractEntity<?>> {
     /**
      * Runs query and updates UI by fresh results.
      */
-    public void runAndUpdate() {
-	final IPage<T> resultPage = run();
+    public void run() {
+	resultPage = runQuery();
+    }
+
+    /**
+     * Runs query and updates UI by fresh results.
+     */
+    public void update() {
 	if (resultPage == null) {
 	    model.getRedLightingModel().setCount(0);
 	    model.getYellowLightingModel().setCount(0);
@@ -250,7 +257,7 @@ public class DashboardRow<T extends AbstractEntity<?>> {
 	};
     }
 
-    private IPage<T> run() {
+    private IPage<T> runQuery() {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = gdtm.getEntityCentreManager(menuItemType, centreName);
 	final IReportQueryGenerator<T> analysisQueryGenerator = new ChartAnalysisQueryGenerator<>(rootType, cdtme, sentinelManager());
 	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria = criteriaGenerator.generateCentreQueryCriteria(rootType, cdtme);

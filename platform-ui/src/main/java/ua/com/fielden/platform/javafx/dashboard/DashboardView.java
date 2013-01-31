@@ -24,7 +24,7 @@ public class DashboardView extends BaseNotifPanel<StubUiModel> {
 	    final ICriteriaGenerator criteriaGenerator, //
 	    final IEntityMasterManager masterManager) {
 	super("Dashboard", new StubUiModel(true));
-	this.dashboardPanel = new DashboardPanel<AbstractEntity<?>>(globalManager, criteriaGenerator, masterManager, treeMenu);
+	this.dashboardPanel = new DashboardPanel<AbstractEntity<?>>(globalManager, criteriaGenerator, masterManager, treeMenu, getBlockingLayer());
 	add(dashboardPanel);
     }
 

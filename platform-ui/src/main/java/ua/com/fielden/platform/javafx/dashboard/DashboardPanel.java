@@ -30,6 +30,9 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
+import ua.com.fielden.platform.swing.actions.Command;
+import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 
@@ -51,13 +54,15 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
 
     private final String webLightGrey = "d6d9df";
     private final Color lightGrey = Color.web(webLightGrey);
+    private final BlockingIndefiniteProgressLayer blockingLayer;
 
     /**
      * Creates a swing container with javaFx dashboard.
      *
      * @return
      */
-    public DashboardPanel(final IGlobalDomainTreeManager globalManager, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final TreeMenuWithTabs<?> treeMenu) {
+    public DashboardPanel(final IGlobalDomainTreeManager globalManager, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final TreeMenuWithTabs<?> treeMenu, final BlockingIndefiniteProgressLayer blockingLayer) {
+	this.blockingLayer = blockingLayer;
 	Platform.setImplicitExit(false);
 	this.globalManager = globalManager;
 	this.criteriaGenerator = criteriaGenerator;
@@ -65,11 +70,7 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
 	this.treeMenu = treeMenu;
     }
 
-    public void initDataAndSceneIfNotInitialised() {
-	if (data == null) {
-	    data = createData();
-	}
-
+    public void initSceneIfNotInitialised() {
 	if (getScene() == null) {
 	    Platform.runLater(new Runnable() {
 		@Override
@@ -130,8 +131,35 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
 		final Button button = new Button("Refresh");
 		button.setOnAction(new EventHandler<ActionEvent>() {
 		    public void handle(final ActionEvent arg0) {
-			sentinel.runAndUpdate();
-		        sort();
+			final Command<Void> command = new BlockingLayerCommand<Void>("Run sentinel", blockingLayer) {
+
+			    @Override
+			    protected boolean preAction() {
+				return super.preAction();
+			    }
+
+			    @Override
+			    protected Void action(final java.awt.event.ActionEvent e) throws Exception {
+				setMessage("Run sentinel...");
+				sentinel.run();
+				setMessage("Run sentinel...done");
+				Thread.sleep(500);
+				return null;
+			    }
+
+			    @Override
+			    protected void postAction(final Void value) {
+				super.postAction(value);
+
+				Platform.runLater(new Runnable() {
+				    public void run() {
+					sentinel.update();
+				        sort();
+				    }
+				});
+			    }
+			};
+			command.actionPerformed(null);
 		    };
 		});
 		setGraphic(button);
@@ -191,9 +219,7 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
         table.getColumns().addAll(resultCol, sentinelCol, refreshCol);
         table.setItems(data);
 
-        for (final DashboardRow<T> sentinel : data) {
-            sentinel.runAndUpdate();
-        }
+        updateSentinels();
         sort();
 
         borderPane.setCenter(table);
@@ -215,16 +241,56 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
         return (scene);
     }
 
-    public void refreshAll() {
-	initDataAndSceneIfNotInitialised();
-
-	table.getSortOrder().clear();
-	table.getItems().clear();
-	table.getItems().addAll(createData());
-        for (final DashboardRow sentinel : table.getItems()) {
-            sentinel.runAndUpdate();
+    public void updateSentinels() {
+	for (final DashboardRow<T> sentinel : data) {
+            sentinel.update();
         }
-        sort();
+    }
+
+    public void refreshAll() {
+	final Command<Void> command = new BlockingLayerCommand<Void>("Refresh all", blockingLayer) {
+	    @Override
+	    protected boolean preAction() {
+		return super.preAction();
+	    }
+
+	    @Override
+	    protected Void action(final java.awt.event.ActionEvent e) throws Exception {
+		setMessage("Refresh sentinel list...");
+		refreshSentinelList();
+		setMessage("Run sentinels...");
+		runSentinels();
+		setMessage("Run sentinels...done");
+		Thread.sleep(500);
+		return null;
+	    }
+
+	    @Override
+	    protected void postAction(final Void value) {
+		super.postAction(value);
+
+		Platform.runLater(new Runnable() {
+		    public void run() {
+			table.getSortOrder().clear();
+			table.getItems().clear();
+			table.getItems().addAll(data);
+			updateSentinels();
+			sort();
+		    }
+		});
+	    }
+	};
+	command.actionPerformed(null);
+    }
+
+    public void runSentinels() {
+	for (final DashboardRow<T> sentinel : data) {
+	    sentinel.run();
+	}
+    }
+
+    public void refreshSentinelList() {
+	data = createData();
     }
 
     private void sort() {
