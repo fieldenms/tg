@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,17 +27,28 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.factory.AfterChangeAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.CriteriaPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.RequiredAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
+import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
@@ -153,14 +165,35 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      */
     @SuppressWarnings({ "unchecked", "serial", "rawtypes" })
     private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
+	final boolean isEntityItself = "".equals(propertyName);
 	final boolean isEntity = EntityUtils.isEntityType(propertyType);
 	final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
+	final boolean isRequired = isEntityItself ? false : AnnotationReflector.isPropertyAnnotationPresent(Required.class, managedType, propertyName);
+	boolean hasEntityExists = false;
+	try {
+	    final Method getter = isEntityItself ? null : Reflector.obtainPropertySetter(managedType, propertyName);
+	    hasEntityExists = getter == null ? false : getter.isAnnotationPresent(EntityExists.class);
+	} catch (final NoSuchMethodException e) {
+	    logger.error("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName(), e);
+	}
+	final boolean finalHasEntityExists = hasEntityExists;
 	final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType);
 
 	final List<Annotation> annotations = new ArrayList<Annotation>(){{
 	    if(isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)){
 		add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
 		add(new EntityTypeAnnotation((Class<? extends AbstractEntity>) propertyType).newInstance());
+	    }
+	    if(isRequired){
+		add(new RequiredAnnotation().newInstance());
+	    }
+	    if(isEntity && finalHasEntityExists){
+		final Class<? extends IEntityDao<?>> controllerType = CompanionObjectAutobinder.companionObjectType((Class<? extends AbstractEntity<?>>)newPropertyType);
+		add(new BeforeChangeAnnotation(new Handler[] {
+			new HandlerAnnotation(EntityExistsValidator.class).non_ordinary(new ClassParam[]{
+				ParamAnnotation.classParam("controller", controllerType)
+			}).newInstance()
+		}).newInstance());
 	    }
 	    add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
 	    add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
@@ -180,9 +213,11 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      */
     @SuppressWarnings("serial")
     private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc) {
+	//final boolean isEntityItself = "".equals(propertyName);
 	final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
 	final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
 	final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType;
+	//final boolean isRequired = isEntityItself ? false : AnnotationReflector.isPropertyAnnotationPresent(Required.class, managedType, propertyName);
 
 	final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
 		new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());

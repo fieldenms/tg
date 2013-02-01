@@ -147,9 +147,9 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     /**
      * Provides a new {@link EntityQueryCriteria} for "cdtmaeCopy".
-     * 
+     *
      * TODO : this is dangerous, need to create a proper copy (perhaps through {@link CriteriaGenerator}?).
-     * 
+     *
      * @return
      */
     public EntityQueryCriteria<CDTME, T, IEntityDao<T>> getUpdatedCriteria() {
@@ -194,7 +194,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     /**
      * This method is designed to be overridden for adding some custom fetch properties or other stuff to override query.
-     * 
+     *
      * @param cdtmaeCopy
      */
     protected void provideCustomPropertiesForQueries(final ICentreDomainTreeManagerAndEnhancer cdtmaeCopy) {
@@ -253,6 +253,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	}
     }
 
+    @SuppressWarnings("unchecked")
     private IPage<T> page(final Result result) {
 	return (IPage<T>) result.getInstance();
     }
@@ -262,7 +263,11 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      */
     @Override
     public Result executeAnalysisQuery() {
-	analysisQueries = createQueryExecutionModel();
+	try {
+	    analysisQueries = createQueryExecutionModel();
+	} catch(final Result result){
+	    return result;
+	}
 
 	final Result result;
 	final Date now;
@@ -289,6 +294,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	return result;
     }
 
+    //TODO maybe it should be removed.
     private Comparator<T> createComparator() {
 	// TODO create comparator based on the ordering properties of CDTMAE.
 	return null;
@@ -307,11 +313,6 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * @return
      */
     private Result runQuery(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries) {
-	final Result analysisQueryExecutionResult = canLoadData();
-	if (!analysisQueryExecutionResult.isSuccessful()) {
-	    return analysisQueryExecutionResult;
-	}
-
 	final int pageSize = getAnalysisView().getPageSize();
 	final IPage<T> newPage;
 	try {
@@ -345,15 +346,17 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	return getCriteria().getEntityById(id);
     }
 
-    private Result canLoadData() {
+    private Result canCreateQuery() {
 	return getCriteria().isValid();
     }
 
     @Override
     protected Result exportData(final String fileName) throws IOException {
-	final Result analysisQueryExecutionResult = canLoadData();
-	if(!analysisQueryExecutionResult.isSuccessful()){
-	    return analysisQueryExecutionResult;
+	final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel;
+	try {
+	    queryModel = createQueryExecutionModel().getKey();
+	} catch(final Result result){
+	    return result;
 	}
 	final PropertyTableModel<T> tableModel = getAnalysisView().getEgiPanel().getEgi().getActualModel();
 	final List<String> propertyNames = new ArrayList<String>(tableModel.getPropertyColumnMappings().size());
@@ -363,7 +366,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    propertyNames.add(propertyAnalyser.getCriteriaFullName());
 	    propertyTitles.add(mapping.getPropertyTitle());
 	}
-	getCriteria().export(fileName, createQueryExecutionModel().getKey(), propertyNames.toArray(new String[] {}), propertyTitles.toArray(new String[] {}));
+	getCriteria().export(fileName, queryModel, propertyNames.toArray(new String[] {}), propertyTitles.toArray(new String[] {}));
 	return Result.successful(this);
     }
 
@@ -383,6 +386,10 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * @return
      */
     public final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> createQueryExecutionModel(){
+	final Result queryGenerationResult = canCreateQuery();
+	if(!queryGenerationResult.isSuccessful()){
+	    throw queryGenerationResult;
+	}
 	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = queryCustomiser.getQueryGenerator(this).generateQueryModel().getQueries();
 	if (queries.size() == 2) {
 	    return new Pair<>(queries.get(0), queries.get(1));
