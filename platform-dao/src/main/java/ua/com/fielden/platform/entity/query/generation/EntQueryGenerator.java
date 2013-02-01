@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
+import ua.com.fielden.platform.entity.query.generation.elements.OrderBys;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryCategory;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -66,7 +67,6 @@ public class EntQueryGenerator {
 	final ConditionsBuilder where = new ConditionsBuilder(null, this, paramValues);
 	final QryYieldsBuilder select = new QryYieldsBuilder(null, this, paramValues);
 	final QryGroupsBuilder groupBy = new QryGroupsBuilder(null, this, paramValues);
-	final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues);
 
 	ITokensBuilder active = null;
 
@@ -77,18 +77,18 @@ public class EntQueryGenerator {
 		}
 	    } else {
 		switch ((QueryTokens) pair.getValue()) {
-		case WHERE: //eats token
+		case WHERE:
 		    active = where;
 		    where.setChild(new ConditionBuilder(where, this, paramValues));
 		    break;
-		case FROM: //eats token
+		case FROM:
 		    active = from;
 		    break;
-		case YIELD: //eats token
+		case YIELD:
 		    active = select;
 		    select.setChild(new YieldBuilder(select, this, paramValues));
 		    break;
-		case GROUP_BY: //eats token
+		case GROUP_BY:
 		    active = groupBy;
 		    groupBy.setChild(new GroupBuilder(groupBy, this, paramValues));
 		    break;
@@ -97,6 +97,26 @@ public class EntQueryGenerator {
 		}
 	    }
 	}
+
+	return new EntQuery( //
+		qryModel.isFilterable(), //
+		from.getModel(), //
+		where.getModel(), //
+		select.getModel(), //
+		groupBy.getModel(), //
+		produceOrderBys(orderModel, paramValues), //
+		resultType != null ? resultType : qryModel.getResultType(), //
+		category, //
+		domainMetadataAnalyser, //
+		filter, //
+		username, //
+		this, //
+		fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //
+		paramValues);
+    }
+
+    private OrderBys produceOrderBys(final OrderingModel orderModel, final Map<String, Object> paramValues) {
+	final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues);
 
 	if (orderModel != null) {
 	    for (final Iterator<Pair<TokenCategory, Object>> iterator = orderModel.getTokens().iterator(); iterator.hasNext();) {
@@ -115,22 +135,7 @@ public class EntQueryGenerator {
 	    }
 
 	}
-
-	return new EntQuery( //
-		qryModel.isFilterable(), //
-		from.getModel(), //
-		where.getModel(), //
-		select.getModel(), //
-		groupBy.getModel(), //
-		orderBy.getModel(), //
-		resultType != null ? resultType : qryModel.getResultType(), //
-		category, //
-		domainMetadataAnalyser, //
-		filter, //
-		username, //
-		this, //
-		fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //
-		paramValues);
+	return orderBy.getModel();
     }
 
     public DbVersion getDbVersion() {
