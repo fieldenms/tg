@@ -59,9 +59,9 @@ import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTI
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
@@ -74,6 +74,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
@@ -160,7 +161,11 @@ public class DomainMetadata {
 	case PERSISTED:
 	    return isOneToOne(entityType) ? idPropertyInOne2One : idProperty/*(entityType)*/;
 	case QUERY_BASED:
-	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(expr().prop("key").model()).type(EXPRESSION).build();
+	    if (isEntityType(getKeyType(entityType))) {
+		return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(expr().prop("key").model()).type(EXPRESSION).build();
+	    } else {
+		return null;
+	    }
 	case UNION:
 	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "id")).type(EXPRESSION).build();
 	default:

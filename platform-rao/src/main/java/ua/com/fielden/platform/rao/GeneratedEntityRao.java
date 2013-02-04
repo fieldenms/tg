@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.rao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,11 +33,14 @@ import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 /**
  * This RAO is applicable for executing queries based on dynamically generated entity types.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGeneratedEntityController<T> {
 
@@ -88,7 +88,7 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 
     /**
      * A general purpose logic for manual authorisation of method calls on companion entity object based on the security model.
-     * 
+     *
      * @param methodName
      */
     private void authCall(final String methodName) {
@@ -168,6 +168,8 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
     @Override
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> qem, final List<byte[]> binaryTypes) {
 	authCall("getAllEntities");
+	qem.getQueryModel().setFilterable(true);
+
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(qem, binaryTypes);
 	// create a request URI containing page capacity and number
@@ -197,6 +199,7 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	    final List<byte[]> binaryTypes) throws IOException {
 
 	authCall("export");
+	qem.getQueryModel().setFilterable(true);
 
 	// create request envelope containing Entity Query
 	final List<Object> requestContent = new ArrayList<Object>();
@@ -234,7 +237,7 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
      */
     protected List<T> list(final QueryExecutionModel<T, ?> query, final PageInfo pageInfo, final List<byte[]> binaryTypes) {
 	authCall("list");
-
+	query.getQueryModel().setFilterable(true);
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(query, binaryTypes);
 	// create a request URI containing page capacity and number
@@ -279,9 +282,9 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 
     /**
      * Implements pagination based on the provided query for either generated or coded entity type.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     private class EntityQueryPage implements IPage<T> {
 	private int pageNumber; // zero-based

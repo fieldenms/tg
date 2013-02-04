@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.rao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +28,7 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 /**
  * Base class for all RAO implementations. Provides REST-driven implementation of all {@link IEntityDao} functionality including Entity Query API and pagination.
@@ -189,6 +188,8 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
      *            -- numbers from a set of N+{0} indicate a page number to be retrieved; value of -1 (negative one) indicates the need for the last page.
      */
     public List<T> list(final QueryExecutionModel<T, ?> query, final PageInfo pageInfo) {
+	query.getQueryModel().setFilterable(true);
+
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(query);
 	// create a request URI containing page capacity and number
@@ -284,6 +285,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     }
 
     protected int count(final QueryExecutionModel<T, ?> model) {
+	model.getQueryModel().setFilterable(true);
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(model);
 	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType());
