@@ -850,12 +850,11 @@ public class DynamicQueryBuilder {
      * @param propertyName
      * @return
      */
-    private static String getPropertyNameWithoutKeyPart(final String propertyName) {
+    public static String getPropertyNameWithoutKeyPart(final String propertyName) {
 	return replaceLast(propertyName, ".key", "");
     }
 
     private static String replaceLast(final String s, final String what, final String byWhat) {
-	final int i = s.lastIndexOf(what);
-	return i >= 0 ? s.substring(0, i) : s;
+	return s.endsWith(what) ? s.substring(0, s.lastIndexOf(what)) : s;
     }
 }

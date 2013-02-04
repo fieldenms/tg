@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.dao.dynamic;
 
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.createQuery;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getPropertyNameWithoutKeyPart;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -43,11 +49,6 @@ import ua.com.fielden.snappy.MnemonicEnum;
 
 import com.google.inject.Injector;
 
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.createQuery;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
-
 /**
  * A test for {@link DynamicQueryBuilder}.
  *
@@ -65,15 +66,6 @@ public class DynamicQueryBuilderSqlTest {
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
 	return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
-    }
-
-    private static String getPropertyNameWithoutKeyPart(final String propertyName) {
-	return replaceLast(propertyName, ".key", "");
-    }
-
-    private static String replaceLast(final String s, final String what, final String byWhat) {
-	final int i = s.lastIndexOf(what);
-	return i >= 0 ? s.substring(0, i) : s;
     }
 
     private final String alias;

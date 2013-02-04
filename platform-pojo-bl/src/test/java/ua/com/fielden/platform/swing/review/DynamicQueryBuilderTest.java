@@ -466,6 +466,15 @@ public class DynamicQueryBuilderTest {
     }
 
     @Test
+    public void test_QueryProperty_ignoring_key_part_not_to_do_extra_joins() {
+	assertEquals("Should be equal.", "alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias"));
+	assertEquals("Should be equal.", "alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key"));
+	assertEquals("Should be equal.", "alias.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.prop.key"));
+	assertEquals("Should be equal.", "alias.key.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key.prop"));
+	assertEquals("Should be equal.", "alias.key.prop1.prop2", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key.prop1.prop2"));
+    }
+
+    @Test
     public void test_QueryProperty_collectional_meta_information_determination() {
 	final Class<?> klass = EntityForQueryPropertyTesting.class;
 	QueryProperty qp = null;
