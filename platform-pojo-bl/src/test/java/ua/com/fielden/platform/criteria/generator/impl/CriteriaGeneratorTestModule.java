@@ -25,6 +25,8 @@ public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory
     protected void configure() {
 	super.configure();
 	bind(ITopLevelEntity.class).to(TopLevelEntityDaoStub.class);
+	bind(ILastLevelEntity.class).to(LastLevelEntityDaoStub.class);
+	bind(ISecondLevelEntity.class).to(SecondLevelEntityDaoStub.class);
 	bind(ICompanionObjectFinder.class).toInstance(defaultControllerProvider);
 	bind(IDaoFactory.class).to(StubDaoFactory.class).in(Scopes.SINGLETON);
 	bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class).in(Scopes.SINGLETON);

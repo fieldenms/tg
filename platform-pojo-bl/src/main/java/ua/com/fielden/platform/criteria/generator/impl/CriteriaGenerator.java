@@ -163,7 +163,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param critOnlyAnnotation
      * @return
      */
-    @SuppressWarnings({ "unchecked", "serial", "rawtypes" })
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
 	final boolean isEntityItself = "".equals(propertyName);
 	final boolean isEntity = EntityUtils.isEntityType(propertyType);
@@ -171,33 +171,26 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	final boolean isRequired = isEntityItself ? false : AnnotationReflector.isPropertyAnnotationPresent(Required.class, managedType, propertyName);
 	boolean hasEntityExists = false;
 	try {
-	    final Method getter = isEntityItself ? null : Reflector.obtainPropertySetter(managedType, propertyName);
-	    hasEntityExists = getter == null ? false : getter.isAnnotationPresent(EntityExists.class);
+	    final Method setter = isEntityItself ? null : Reflector.obtainPropertySetter(managedType, propertyName);
+	    hasEntityExists = setter == null ? false : setter.isAnnotationPresent(EntityExists.class);
 	} catch (final NoSuchMethodException e) {
 	    logger.error("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName(), e);
 	}
 	final boolean finalHasEntityExists = hasEntityExists;
 	final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType);
 
-	final List<Annotation> annotations = new ArrayList<Annotation>(){{
-	    if(isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)){
-		add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
-		add(new EntityTypeAnnotation((Class<? extends AbstractEntity>) propertyType).newInstance());
-	    }
-	    if(isRequired){
-		add(new RequiredAnnotation().newInstance());
-	    }
-	    if(isEntity && finalHasEntityExists){
-		final Class<? extends IEntityDao<?>> controllerType = CompanionObjectAutobinder.companionObjectType((Class<? extends AbstractEntity<?>>)newPropertyType);
-		add(new BeforeChangeAnnotation(new Handler[] {
-			new HandlerAnnotation(EntityExistsValidator.class).non_ordinary(new ClassParam[]{
-				ParamAnnotation.classParam("controller", controllerType)
-			}).newInstance()
-		}).newInstance());
-	    }
-	    add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
-	    add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
-	}};
+	final List<Annotation> annotations = new ArrayList<Annotation>();
+	if (isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)) {
+	    annotations.add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
+	    annotations.add(new EntityTypeAnnotation((Class<? extends AbstractEntity>) propertyType).newInstance());
+	}
+	if (isEntity && isSingle && isRequired && finalHasEntityExists) {
+	    final Class<? extends IEntityDao<?>> controllerType = CompanionObjectAutobinder.companionObjectType((Class<? extends AbstractEntity<?>>) newPropertyType);
+	    annotations.add(new RequiredAnnotation().newInstance());
+	    annotations.add(new BeforeChangeAnnotation(new Handler[] { new HandlerAnnotation(EntityExistsValidator.class).non_ordinary(new ClassParam[] { ParamAnnotation.classParam("controller", controllerType) }).newInstance() }).newInstance());
+	}
+	annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
+	annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 
 	return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
     }

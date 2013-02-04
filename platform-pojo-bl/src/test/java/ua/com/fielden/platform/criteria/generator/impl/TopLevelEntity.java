@@ -8,8 +8,10 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -48,6 +50,7 @@ public class TopLevelEntity extends AbstractEntity<String> {
     private SecondLevelEntity entityProp;
 
     @IsProperty
+    @Required
     @Title(value = "single entity property", desc = "single entity property description")
     @CritOnly(Type.SINGLE)
     private LastLevelEntity critSingleEntity;
@@ -118,6 +121,7 @@ public class TopLevelEntity extends AbstractEntity<String> {
     }
 
     @Observable
+    @EntityExists(SecondLevelEntity.class)
     public void setEntityProp(final SecondLevelEntity entityProp) {
 	this.entityProp = entityProp;
     }
@@ -127,6 +131,7 @@ public class TopLevelEntity extends AbstractEntity<String> {
     }
 
     @Observable
+    @EntityExists(LastLevelEntity.class)
     public void setCritSingleEntity(final LastLevelEntity critSingleEntity) {
 	this.critSingleEntity = critSingleEntity;
     }
@@ -136,7 +141,7 @@ public class TopLevelEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setCritRangeEntiyt(final LastLevelEntity critRangeEntity) {
+    public void setCritRangeEntity(final LastLevelEntity critRangeEntity) {
 	this.critRangeEntity = critRangeEntity;
     }
 
