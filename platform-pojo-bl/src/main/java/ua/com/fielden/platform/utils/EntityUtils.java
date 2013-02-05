@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.utils;
 
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -32,6 +30,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 public class EntityUtils {
     private final static Logger logger = Logger.getLogger(EntityUtils.class);
@@ -523,7 +522,7 @@ public class EntityUtils {
     public static boolean isDateTime(final Class<?> type) {
 	return DateTime.class.isAssignableFrom(type);
     }
-    
+
     /**
      * Indicates whether type represents string values.
      *
@@ -723,7 +722,7 @@ public class EntityUtils {
     }
 
     /**
-     * Splits dot.notated property in two parts: fist level property and the rest of subproperties.
+     * Splits dot.notated property in two parts: first level property and the rest of subproperties.
      * @param dotNotatedPropName
      * @return
      */
@@ -733,6 +732,29 @@ public class EntityUtils {
 	    return new Pair<String, String>(dotNotatedPropName.substring(0, firstDotIndex), dotNotatedPropName.substring(firstDotIndex + 1));
 	} else {
 	    return new Pair<String, String>(dotNotatedPropName, null);
+	}
+    }
+
+    /**
+     * Splits dot.notated property in two parts: last subproperty (as second part) and prior subproperties.
+     * @param dotNotatedPropName
+     * @return
+     */
+    public static Pair<String, String> splitPropByLastDot(final String dotNotatedPropName) {
+	final int lastDotIndex = findLastDotInString(0, dotNotatedPropName);
+	if (lastDotIndex != -1) {
+	    return new Pair<String, String>(dotNotatedPropName.substring(0, lastDotIndex - 1), dotNotatedPropName.substring(lastDotIndex));
+	} else {
+	    return new Pair<String, String>(null, dotNotatedPropName);
+	}
+    }
+
+    private static int findLastDotInString(final int fromPosition, final String dotNotatedPropName) {
+	final int nextDotIndex = dotNotatedPropName.indexOf(".", fromPosition);
+	if (nextDotIndex != -1) {
+	    return findLastDotInString(nextDotIndex + 1, dotNotatedPropName);
+	} else {
+	    return fromPosition;
 	}
     }
 
