@@ -77,7 +77,6 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
 	return super.getValueMatcher();
     }
 
-
     @Override
     public BoundedValidationLayer<AutocompleterTextFieldLayer> getEditor() {
 	return editor;
@@ -88,5 +87,13 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + elementType + ".");
 	}
 	return ComponentFactory.createOnFocusLostAutocompleter(bindingEntity, bindingPropertyName, caption, elementType, "key", "desc", isSingle ? null : ",", getValueMatcher(), tooltip, stringBinding);
+    }
+
+    public void highlightFirstHintValue(final boolean highlight) {
+	getEditor().getView().highlightFirstHintValue(highlight);
+    }
+
+    public void highlightSecondHintValue(final boolean highlight) {
+	getEditor().getView().highlightSecondHintValue(highlight);
     }
 }
