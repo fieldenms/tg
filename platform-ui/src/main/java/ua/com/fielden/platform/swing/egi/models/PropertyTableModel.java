@@ -671,6 +671,16 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	return instances;
     }
 
+    /** A convenient method to check whether model has no entity instances in it. */
+    public boolean isEmpty() {
+	for (final List<T> group : groups) {
+	    if (!group.isEmpty()) {
+		return false;
+	    }
+	}
+	return true;
+    }
+
     /**
      * Returns group of instances to which passed row belongs.
      *

@@ -83,6 +83,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	});
 
 	addHierarchyListener(new HierarchyListener() {
+	    @Override
 	    public void hierarchyChanged(final HierarchyEvent e) {
 	        if ((HierarchyEvent.SHOWING_CHANGED & e.getChangeFlags()) != 0 && isShowing()) {
 	            if (getModel().getDeltaRetriever() != null) {
@@ -160,6 +161,20 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    selectedAndNotEnhancedEntities.add(makeNotEnhnaced(selectedEntity));
 	}
 	return selectedAndNotEnhancedEntities;
+    }
+
+    /**
+     * Returns all associated entities in a non-enhanced state.
+     *
+     * @return
+     */
+    public List<T> getEntities() {
+	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
+	final List<T> nonEnhancedEntities = new ArrayList<>();
+	for(final AbstractEntity<?> selectedEntity : tableModel.instances()){
+	    nonEnhancedEntities.add(makeNotEnhnaced(selectedEntity));
+	}
+	return nonEnhancedEntities;
     }
 
     @SuppressWarnings("unchecked")
