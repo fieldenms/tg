@@ -706,10 +706,11 @@ public class EntQuery implements ISingleOperand {
 
     @Override
     public boolean isNullable() {
-        if (yields.size() == 1) {
-                  return yields.getFirstYield().getInfo().isNullable();
-                }
-        return true;
+	// TODO replace with always TRUE, or extend eql with possibility to set yielded property requiredness explicitly within query
+	if (yields.size() == 1) {
+	    return conditions.getCollection().isEmpty() ? yields.getFirstYield().getInfo().isNullable() : true;
+	}
+	return true;
     }
 
     @Override
