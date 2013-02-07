@@ -38,13 +38,13 @@ public class DefaultTreeMenuItemFactory implements ITreeMenuItemFactory {
 		ex.printStackTrace();
 	    }
 	} catch(final Exception ex){
-	    logger.error(ex);
+	    logger.debug(ex);
 	}
 	try {
 	    final Constructor<?> constructor = Reflector.getConstructorForClass(clazz, Injector.class, ITreeMenuItemVisibilityProvider.class);
 	    return (MiWithVisibilityProvider<?>) constructor.newInstance(injector, visibilityProvider);
 	}catch (final Exception ex) {
-	    logger.error(ex);
+	    logger.debug(ex);
 	}
 	try { // find default constructor:
 	    final Constructor<?> constructor = Reflector.getConstructorForClass(clazz, ITreeMenuItemVisibilityProvider.class);
