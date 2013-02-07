@@ -300,7 +300,7 @@ public final class RestClientUtil implements IUserProvider {
      * @throws Exception
      */
     protected void setChallengeResponse(final Request request, final String token) throws Exception {
-	getMessageHeaders(request).add("Autherization", token);
+	getMessageHeaders(request).add(HttpHeaders.AUTHENTICATION.value, token);
     }
 
     /**
