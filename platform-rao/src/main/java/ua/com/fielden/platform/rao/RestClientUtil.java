@@ -276,7 +276,6 @@ public final class RestClientUtil implements IUserProvider {
      */
     public Response send(final Request request, final String token) throws Exception {
 	setChallengeResponse(request, token);
-	final Client client = new Client(getProtocol());
 	return new Client(getProtocol()).handle(request);
     }
 
