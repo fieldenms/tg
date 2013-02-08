@@ -13,7 +13,7 @@ import org.restlet.data.Status;
 import org.restlet.ext.fileupload.RestletFileUpload;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
-import org.restlet.resource.Post;
+import org.restlet.resource.Put;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachmentController;
@@ -45,9 +45,9 @@ public class AttachmentTypeResource extends EntityTypeResource<Attachment> {
      *
      * Expects a multi-part request representing
      */
-    @Post
+    @Put
     @Override
-    public Representation post(final Representation entity) {
+    public Representation put(final Representation entity) {
 	if (entity != null) {
 	    if (MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true)) {
 
@@ -71,16 +71,18 @@ public class AttachmentTypeResource extends EntityTypeResource<Attachment> {
 		    // Request is parsed by the handler which generates a list of FileItems
 		    final List<FileItem> items = upload.parseRepresentation(entity);
 
-		    if (items.size() != 3) {
+		    if (items.size() != 4) {
 			getResponse().setEntity(new StringRepresentation("Unexpected structure of the request.", MediaType.TEXT_PLAIN));
 			getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
 		    } else {
 			final String key =  MiscUtilities.convertToString(items.get(0).getInputStream());
 			final String desc = MiscUtilities.convertToString(items.get(1).getInputStream());
+			final String fileName = MiscUtilities.convertToString(items.get(2).getInputStream());
 			final File file = new File(location + "/" + key);
-			items.get(2).write(file);
+			items.get(3).write(file);
 			Attachment attachment = getFactory().newEntity(Attachment.class, key, desc);
-			attachment.setFile(file);
+			attachment.setFileName(fileName);
+			attachment.setJustFile(file);
 			attachment = getDao().save(attachment);
 
 			try {
@@ -98,7 +100,7 @@ public class AttachmentTypeResource extends EntityTypeResource<Attachment> {
 		}
 	    }
 	} else {
-	    // POST request with no entity.
+	    // PUT request with no entity.
 	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
 	}
 	return new StringRepresentation("no result");

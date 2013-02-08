@@ -36,6 +36,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
     private final static String ATTACHMENT_LOCATION = "src/test/resources/data-files/attachments";
     private final static String ORIGINAL_FILE_NAME = "TEST-FILE.TXT";
     private final static String NEW_ATTACHMENT_FILE_NAME = "NEW-ATTACHMENT-FILE.TXT";
+    private final static String NEW_ATTACHMENT_FILE_WITH_FUNNY_NAME = "file with funny chars & NEW-ATTACHMENT-FILE.TXT";
 
     @Override
     protected String[] getDataSetPaths() {
@@ -89,7 +90,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_saving_changes_to_existing_attachment() {
-	// FIXME needs to be resolved -- for some reason does not pass the correct type inform,ation during serialisation using XStream
+	// FIXME needs to be resolved -- for some reason does not pass the correct type information during serialisation using XStream
 	final String desc = "Changed description";
 	final Attachment attachment = (Attachment) rao.findById(0L).setDesc(desc);
 
@@ -120,7 +121,35 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
 	rao.delete(attachment);
 
 	assertNull("Deleted attachment should not exist", rao.findById(attachment.getId()));
-	assertFalse("Deleted attachment file should not exist", new File(ATTACHMENT_LOCATION + "/" + NEW_ATTACHMENT_FILE_NAME).exists());
+	assertFalse("Deleted attachment file should not exist", new File(ATTACHMENT_LOCATION + "/" + attachment.getFileName()).exists());
     }
+
+    @Test
+    public void test_saving_new_attachment_with_funny_name_that_should_result_in_file_upload() {
+	Attachment attachment = DbDrivenTestCase.entityFactory.newEntity(Attachment.class);
+	attachment.setFile(new File(ATTACHMENT_LOCATION + "/new/" + NEW_ATTACHMENT_FILE_WITH_FUNNY_NAME));
+	attachment.setDesc("new attachment to upload");
+	attachment = rao.save(attachment);
+
+	assertTrue("Failed to persist attachment", attachment.isPersisted());
+
+	final byte[] content = rao.download(attachment);
+	assertNotNull("Failed to upload file.", content);
+	assertTrue("Content of the uploaded file should not be empty", content.length > 0);
+    }
+
+    @Test
+    public void test_attachment_with_funny_name_deletion() {
+	Attachment attachment = DbDrivenTestCase.entityFactory.newEntity(Attachment.class);
+	attachment.setFile(new File(ATTACHMENT_LOCATION + "/new/" + NEW_ATTACHMENT_FILE_WITH_FUNNY_NAME));
+	attachment.setDesc("new attachment to upload");
+	attachment = rao.save(attachment);
+
+	rao.delete(attachment);
+
+	assertNull("Deleted attachment should not exist", rao.findById(attachment.getId()));
+	assertFalse("Deleted attachment file should not exist", new File(ATTACHMENT_LOCATION + "/" + attachment.getFileName()).exists());
+    }
+
 
 }

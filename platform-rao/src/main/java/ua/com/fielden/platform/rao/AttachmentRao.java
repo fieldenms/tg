@@ -8,7 +8,7 @@ import java.io.UnsupportedEncodingException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
@@ -66,6 +66,7 @@ public class AttachmentRao extends CommonEntityRao<Attachment> implements IAttac
 	try {
 	    mpe.addPart("KEY", new StringBody(entity.getKey()));
 	    mpe.addPart("DESC", new StringBody(entity.getDesc()));
+	    mpe.addPart("FILE_NAME", new StringBody(entity.getFileName()));
 	} catch (final UnsupportedEncodingException e) {
 	    throw new IllegalArgumentException(e);
 	}
@@ -74,12 +75,12 @@ public class AttachmentRao extends CommonEntityRao<Attachment> implements IAttac
 	mpe.addPart("UPLOAD_FILE", fileBody);
 
 	// create and post the request
-	final HttpPost httpPost = new HttpPost(restUtil.getUri(getEntityType(), getDefaultWebResourceType()));// "http://localhost:9001/testFileUpload/"
-	httpPost.setEntity(mpe);
+	final HttpPut httpPut = new HttpPut(restUtil.getUri(getEntityType(), getDefaultWebResourceType()));// "http://localhost:9001/testFileUpload/"
+	httpPut.setEntity(mpe);
 
 	final InputStream envelope;
 	try {
-	    final HttpResponse response = httpClient.execute(httpPost);
+	    final HttpResponse response = httpClient.execute(httpPut);
 	    System.out.println(response.getStatusLine());
 	    if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 		envelope = response.getEntity().getContent();

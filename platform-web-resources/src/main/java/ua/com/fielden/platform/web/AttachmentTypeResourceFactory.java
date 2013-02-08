@@ -49,8 +49,8 @@ public class AttachmentTypeResourceFactory extends Restlet {
 
 	final String username = (String) request.getAttributes().get("username");
 	injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
-
-	if (Method.GET.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod()) || Method.POST.equals(request.getMethod())) {
+	// Method.GET.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod()) ||
+	if (Method.PUT.equals(request.getMethod())) {
 	    new AttachmentTypeResource(location, dao, factory, restUtil, getContext(), request, response).handle();
 	}
     }

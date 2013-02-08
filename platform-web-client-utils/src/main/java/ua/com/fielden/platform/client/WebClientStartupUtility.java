@@ -262,7 +262,7 @@ public class WebClientStartupUtility {
 			    // create main application frame and menu menu based on the above menu items
 			    message("Instantiating application main window...", splash, loginScreen);
 
-			    mainApplicationFrame.setIconImage(icon);
+			    mainApplicationFrame.setIconImage(icon); // setIconImages(icons) should be used to pass icons of different sizes
 			    mainApplicationFrame.setPreferredSize(dim);
 
 			    mainApplicationFrame.add(new DefaultApplicationMainPanel(menu));
