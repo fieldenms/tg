@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -37,6 +34,8 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.generation.EntQueryBlocks;
+import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -52,6 +51,9 @@ import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
@@ -354,6 +356,16 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
 	return new EntityFetcher(getSession(), getEntityFactory(), domainMetadata, filter, getUsername()).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+    }
+
+    /**
+     * Extract structured blocks of eql query from the given query execution model.
+     * @param queryModel
+     * @return
+     */
+    protected EntQueryBlocks getEntQueryBlocks(final QueryExecutionModel<T, ?> queryModel) {
+	return new EntQueryGenerator(new DomainMetadataAnalyser(domainMetadata), filter, getUsername()). //
+		parseTokensIntoComponents(queryModel.getQueryModel(), queryModel.getOrderModel(), queryModel.getFetchModel(), queryModel.getParamValues());
     }
 
     @Override

@@ -23,7 +23,6 @@ public class EntQueryGenerator {
     private final IFilter filter;
     private final String username;
 
-
     public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
 	this.dbVersion = domainMetadataAnalyser.getDomainMetadata().getDbVersion();
 	this.domainMetadataAnalyser = domainMetadataAnalyser;
@@ -43,11 +42,14 @@ public class EntQueryGenerator {
 	return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.SUB_QUERY, filter, username);
     }
 
-    private EntQuery generateEntQuery(final QueryModel<?> qryModel, final OrderingModel orderModel, final Class resultType, final fetch fetchModel, final Map<String, Object> paramValues, final QueryCategory category, final IFilter filter, final String username) {
-	final QrySourcesBuilder from = new QrySourcesBuilder(null, this, paramValues);
+    public EntQueryBlocks parseTokensIntoComponents(final QueryModel<?> qryModel, //
+	    final OrderingModel orderModel, //
+	    final fetch fetchModel, //
+	    final Map<String, Object> paramValues) {
+	final QrySourcesBuilder from = new QrySourcesBuilder(this, paramValues);
 	final ConditionsBuilder where = new ConditionsBuilder(null, this, paramValues);
-	final QryYieldsBuilder select = new QryYieldsBuilder(null, this, paramValues);
-	final QryGroupsBuilder groupBy = new QryGroupsBuilder(null, this, paramValues);
+	final QryYieldsBuilder select = new QryYieldsBuilder(this, paramValues);
+	final QryGroupsBuilder groupBy = new QryGroupsBuilder(this, paramValues);
 
 	ITokensBuilder active = null;
 
@@ -79,13 +81,26 @@ public class EntQueryGenerator {
 	    }
 	}
 
+	return new EntQueryBlocks(from.getModel(), //
+	where.getModel(), //
+	select.getModel(), //
+	groupBy.getModel(), //
+	produceOrderBys(orderModel, paramValues));
+    }
+
+    private EntQuery generateEntQuery(
+	    final QueryModel<?> qryModel, //
+	    final OrderingModel orderModel, //
+	    final Class resultType, //
+	    final fetch fetchModel, //
+	    final Map<String, Object> paramValues, //
+	    final QueryCategory category, //
+	    final IFilter filter, //
+	    final String username) {
+
 	return new EntQuery( //
 		qryModel.isFilterable(), //
-		from.getModel(), //
-		where.getModel(), //
-		select.getModel(), //
-		groupBy.getModel(), //
-		produceOrderBys(orderModel, paramValues), //
+		parseTokensIntoComponents(qryModel, orderModel, fetchModel, paramValues), //
 		resultType != null ? resultType : qryModel.getResultType(), //
 		category, //
 		domainMetadataAnalyser, //
@@ -114,16 +129,15 @@ public class EntQueryGenerator {
 		    orderBy.add(pair.getKey(), pair.getValue());
 		}
 	    }
-
 	}
 	return orderBy.getModel();
     }
 
     public DbVersion getDbVersion() {
-        return dbVersion;
+	return dbVersion;
     }
 
     public DomainMetadataAnalyser getDomainMetadataAnalyser() {
-        return domainMetadataAnalyser;
+	return domainMetadataAnalyser;
     }
 }

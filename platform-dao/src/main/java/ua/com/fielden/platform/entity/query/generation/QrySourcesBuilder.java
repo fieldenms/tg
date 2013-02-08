@@ -7,14 +7,14 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundSource;
-import ua.com.fielden.platform.entity.query.generation.elements.Sources;
 import ua.com.fielden.platform.entity.query.generation.elements.ISource;
+import ua.com.fielden.platform.entity.query.generation.elements.Sources;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {
 
-    protected QrySourcesBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-	super(parent, queryBuilder, paramValues);
+    protected QrySourcesBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+	super(null, queryBuilder, paramValues);
 	setChild(new QrySourceBuilder(this, queryBuilder, paramValues));
     }
 

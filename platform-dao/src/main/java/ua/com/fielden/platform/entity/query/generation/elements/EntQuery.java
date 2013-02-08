@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.generation.EntQueryBlocks;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.StandAloneConditionBuilder;
 import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
@@ -380,17 +381,17 @@ public class EntQuery implements ISingleOperand {
 	}
     }
 
-    public EntQuery(final boolean filterable, final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
-            final Class resultType, final QueryCategory category, final DomainMetadataAnalyser domainMetadataAnalyser, //
-            final IFilter filter, final String username, final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
+    public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
+	    final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, //
+            final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
-        this.sources = sources;
-        this.conditions = filterable ? enhanceConditions(conditions, filter, username, sources.getMain(), generator, paramValues) : conditions;
-        this.yields = yields;
-        this.groups = groups;
-        this.orderings = orderings;
+        this.sources = queryBlocks.getSources();
+        this.conditions = filterable ? enhanceConditions(queryBlocks.getConditions(), filter, username, sources.getMain(), generator, paramValues) : queryBlocks.getConditions();
+        this.yields = queryBlocks.getYields();
+        this.groups = queryBlocks.getGroups();
+        this.orderings = queryBlocks.getOrderings();
         this.resultType = resultType;// != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);
         if (this.resultType == null && category != QueryCategory.SUB_QUERY) { // only primitive result queries have result type not assigned
             throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
