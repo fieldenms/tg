@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.generation;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -36,30 +35,12 @@ public class EntQueryGenerator {
 	return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), null, qem.getFetchModel(), qem.getParamValues(), QueryCategory.RESULT_QUERY, filter, username);
     }
 
-    public EntQuery generateEntQueryAsResultQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
-	return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.RESULT_QUERY, filter, username);
-    }
-
-    public EntQuery generateEntQueryAsResultQuery(final QueryModel<?> qryModel) {
-	return generateEntQueryAsResultQuery(qryModel, new HashMap<String, Object>());
-    }
-
     public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues, final Class resultType) {
 	return generateEntQuery(qryModel, null, resultType, null, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
     }
 
-    public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
-//	return generateEntQueryAsSourceQuery(qryModel, paramValues, null);
-	return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.SOURCE_QUERY, null, null);
-
-    }
-
     public EntQuery generateEntQueryAsSubquery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
 	return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.SUB_QUERY, filter, username);
-    }
-
-    public EntQuery generateEntQueryAsSubquery(final QueryModel<?> qryModel) {
-	return generateEntQueryAsSubquery(qryModel, new HashMap<String, Object>());
     }
 
     private EntQuery generateEntQuery(final QueryModel<?> qryModel, final OrderingModel orderModel, final Class resultType, final fetch fetchModel, final Map<String, Object> paramValues, final QueryCategory category, final IFilter filter, final String username) {

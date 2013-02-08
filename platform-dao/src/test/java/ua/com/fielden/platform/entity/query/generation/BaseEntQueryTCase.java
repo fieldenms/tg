@@ -28,6 +28,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISource;
 import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -104,7 +105,7 @@ public class BaseEntQueryTCase {
     private static final EntQueryGenerator qbwf = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
-	return qb.generateEntQueryAsSourceQuery(qryModel, Collections.EMPTY_MAP);
+	return qb.generateEntQueryAsSourceQuery(qryModel, Collections.EMPTY_MAP, null);
     }
 
     protected static EntQuery entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
@@ -112,7 +113,13 @@ public class BaseEntQueryTCase {
     }
 
     protected static EntQuery entResultQry(final QueryModel qryModel) {
-	return qb.generateEntQueryAsResultQuery(qryModel);
+	if (qryModel instanceof EntityResultQueryModel) {
+	    return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model());
+	} else if (qryModel instanceof AggregatedResultQueryModel) {
+	    return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel)qryModel).model());
+	} else {
+	    throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
+	}
     }
 
     protected static EntQuery entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
@@ -120,15 +127,27 @@ public class BaseEntQueryTCase {
     }
 
     protected static EntQuery entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-	return qb.generateEntQueryAsResultQuery(qryModel, paramValues);
+	if (qryModel instanceof EntityResultQueryModel) {
+	    return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).with(paramValues).model());
+	} else if (qryModel instanceof AggregatedResultQueryModel) {
+	    return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel)qryModel).with(paramValues).model());
+	} else {
+	    throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
+	}
     }
 
     protected static EntQuery entSubQry(final QueryModel qryModel) {
-	return qb.generateEntQueryAsSubquery(qryModel);
+	return qb.generateEntQueryAsSubquery(qryModel, Collections.EMPTY_MAP);
     }
 
     protected static EntQuery entResultQryWithUserFilter(final QueryModel qryModel) {
-	return qbwf.generateEntQueryAsResultQuery(qryModel);
+	if (qryModel instanceof EntityResultQueryModel) {
+	    return qbwf.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model());
+	} else if (qryModel instanceof AggregatedResultQueryModel) {
+	    return qbwf.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel)qryModel).model());
+	} else {
+	    throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
+	}
     }
 
     protected static EntProp prop(final String propName) {
