@@ -121,7 +121,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
 	rao.delete(attachment);
 
 	assertNull("Deleted attachment should not exist", rao.findById(attachment.getId()));
-	assertFalse("Deleted attachment file should not exist", new File(ATTACHMENT_LOCATION + "/" + attachment.getFileName()).exists());
+	assertFalse("Deleted attachment file should not exist", new File(ATTACHMENT_LOCATION + "/" + attachment.getKey()).exists());
     }
 
     @Test
@@ -148,7 +148,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
 	rao.delete(attachment);
 
 	assertNull("Deleted attachment should not exist", rao.findById(attachment.getId()));
-	assertFalse("Deleted attachment file should not exist", new File(ATTACHMENT_LOCATION + "/" + attachment.getFileName()).exists());
+	assertFalse("Deleted attachment file should not exist", new File(ATTACHMENT_LOCATION + "/" + attachment.getKey()).exists());
     }
 
 

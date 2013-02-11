@@ -92,7 +92,7 @@ public abstract class AbstractDownloadAttachmentAction extends Command<File> {
     protected File action(final ActionEvent e) throws Exception {
 	try {
 	    final byte[] content = attachmentController.download(getAttachment());
-	    final File file = new File(prevLocation.getPath() + "/" + getAttachment().getFileName());
+	    final File file = new File(prevLocation.getPath() + "/" + getAttachment().getKey());
 	    if (!file.exists()) {
 		file.createNewFile();
 	    }

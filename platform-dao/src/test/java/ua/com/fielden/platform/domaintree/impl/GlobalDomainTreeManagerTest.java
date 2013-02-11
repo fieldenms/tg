@@ -82,25 +82,25 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
     @Test
     public void test_that_MASTER_saving_works_fine_with_just_initialised_and_modified_LOCATORS() {
 	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityMasterManager(MENU_ITEM_TYPE);
-	final ILocatorManager locatorManager = managerForNonBaseUser.getEntityMasterManager(MENU_ITEM_TYPE);
+	managerForNonBaseUser.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	final ILocatorManager locatorManager = managerForNonBaseUser.getMasterDomainTreeManager(MENU_ITEM_TYPE);
 
 	test_that_saving_works_fine_with_just_initialised_and_modified_LOCATORS_PART1(managerForNonBaseUser, property, locatorManager);
 
 	// should be accepted before saving
 	try {
-	    managerForNonBaseUser.saveEntityMasterManager(MENU_ITEM_TYPE);
+	    managerForNonBaseUser.saveMasterDomainTreeManager(MENU_ITEM_TYPE);
 	    fail("The save operation should be performed for fully accepted instance of entity-centre manager.");
 	} catch (final IllegalArgumentException e) {
 	}
 	locatorManager.acceptLocatorManager(ROOT, property);
 	// save a box with locators
-	managerForNonBaseUser.saveEntityMasterManager(MENU_ITEM_TYPE);
+	managerForNonBaseUser.saveMasterDomainTreeManager(MENU_ITEM_TYPE);
 
 	test_that_saving_works_fine_with_just_initialised_and_modified_LOCATORS_PART2(property, locatorManager);
 	assertNull("Should be null.", locatorManager.getLocatorManager(ROOT, property));
 	// save a box with locators
-	managerForNonBaseUser.saveEntityMasterManager(MENU_ITEM_TYPE);
+	managerForNonBaseUser.saveMasterDomainTreeManager(MENU_ITEM_TYPE);
 	assertNull("Should be null.", locatorManager.getLocatorManager(ROOT, property));
     }
 
@@ -619,108 +619,108 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
     @Test
     public void test_that_MASTER_initialisation_and_uploading_works_fine_for_BASE_user() {
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
-	baseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", baseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
+	baseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", baseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
     }
 
     @Test
     public void test_that_MASTER_initialisation_and_uploading_works_fine_for_NON_BASE_user() {
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
-	nonBaseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
+	nonBaseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
     }
 
     @Test
     public void test_that_MASTER_initialisation_and_uploading_works_fine_for_BASE_user_and_then_retrieval_and_initialisation_works_fine_for_its_NON_BASE_user() {
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
-	baseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", baseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
+	baseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", baseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
 
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
-	nonBaseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
-	assertEquals("Should be equal.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE), baseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
+	nonBaseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
+	assertEquals("Should be equal.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE), baseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
     }
 
     @Test
     public void test_that_MASTER_initialisation_and_uploading_works_fine_for_NON_BASE_user_and_then_retrieval_and_initialisation_works_fine_for_other_NON_BASE_user_in_the_same_hierarchy() {
 	final IGlobalDomainTreeManager nonBaseMgr1 = createManagerForNonBaseUser();
-	nonBaseMgr1.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", nonBaseMgr1.getEntityMasterManager(MENU_ITEM_TYPE));
+	nonBaseMgr1.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", nonBaseMgr1.getMasterDomainTreeManager(MENU_ITEM_TYPE));
 
 	final IGlobalDomainTreeManager nonBaseMgr2 = createManagerForNonBaseUser2();
-	nonBaseMgr2.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", nonBaseMgr2.getEntityMasterManager(MENU_ITEM_TYPE));
-	assertEquals("Should be equal.", nonBaseMgr1.getEntityMasterManager(MENU_ITEM_TYPE), nonBaseMgr2.getEntityMasterManager(MENU_ITEM_TYPE));
+	nonBaseMgr2.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", nonBaseMgr2.getMasterDomainTreeManager(MENU_ITEM_TYPE));
+	assertEquals("Should be equal.", nonBaseMgr1.getMasterDomainTreeManager(MENU_ITEM_TYPE), nonBaseMgr2.getMasterDomainTreeManager(MENU_ITEM_TYPE));
     }
 
     @Test
     public void test_that_MASTER_retrieval_and_initialisation_works_fine_for_BASE_user() {
 	// create master mgr for user USER1
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
-	baseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
+	baseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
 
 	// check init methods for another instance of application for user USER1
 	final IGlobalDomainTreeManager newBaseMgr = createManagerForNonBaseUser();
-	newBaseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", newBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
+	newBaseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", newBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
     }
 
     @Test
     public void test_that_MASTER_retrieval_and_initialisation_and_intelligent_discard_and_save_works_fine_for_NON_BASE_user() {
 	// create mgr for user USER1
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
-	baseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	baseMgr.getEntityMasterManager(MENU_ITEM_TYPE).refreshLocatorManager(ROOT, property);
-	baseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	baseMgr.getEntityMasterManager(MENU_ITEM_TYPE).acceptLocatorManager(ROOT, property);
-	baseMgr.saveEntityMasterManager(MENU_ITEM_TYPE);
+	baseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	baseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).refreshLocatorManager(ROOT, property);
+	baseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
+	baseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).acceptLocatorManager(ROOT, property);
+	baseMgr.saveMasterDomainTreeManager(MENU_ITEM_TYPE);
 
 	// check init methods for another instance of application for user USER2
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
-	nonBaseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
-	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property));
-	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	nonBaseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
+	assertNotNull("Should be initialised.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property));
+	assertTrue("The state is incorrect.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	// discard action which should reset current master manager (because it was initialised from base configuration, not own)
-	nonBaseMgr.discardEntityMasterManager(MENU_ITEM_TYPE);
-	assertNull("Should be resetted to empty! Intelligent discard operation.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
+	nonBaseMgr.discardMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNull("Should be resetted to empty! Intelligent discard operation.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
 	// check init methods again for user USER2
-	nonBaseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
-	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property));
-	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	nonBaseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
+	assertNotNull("Should be initialised.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property));
+	assertTrue("The state is incorrect.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	// modify & save a current instance of master manager
-	nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).refreshLocatorManager(ROOT, property);
-	nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).acceptLocatorManager(ROOT, property);
-	nonBaseMgr.saveEntityMasterManager(MENU_ITEM_TYPE);
+	nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).refreshLocatorManager(ROOT, property);
+	nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
+	nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).acceptLocatorManager(ROOT, property);
+	nonBaseMgr.saveMasterDomainTreeManager(MENU_ITEM_TYPE);
 	// check init methods for another instance of application for user USER2
 	final IGlobalDomainTreeManager newNonBaseMgr = createManagerForNonBaseUser();
-	newNonBaseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
-	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property));
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	newNonBaseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
+	assertNotNull("Should be initialised.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property));
+	assertTrue("The state is incorrect.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("The state is incorrect.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	// discard action which should do nothing with current instance of master manager, due to lack of connection with base configuration
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).isRunAutomatically());
-	newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).setRunAutomatically(false);
+	assertTrue("The state is incorrect.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).isRunAutomatically());
+	newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).setRunAutomatically(false);
 
-	newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getEnhancer().addCalculatedProperty(EntityWithStringKeyType.class, "", "2 * integerProp", "New calc prop", "Double integer prop", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getEnhancer().apply();
-	assertNotNull("Should be not null.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp"));
-	assertFalse("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).isRunAutomatically());
-	newNonBaseMgr.discardEntityMasterManager(MENU_ITEM_TYPE);
-	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE));
-	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property));
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getEnhancer().addCalculatedProperty(EntityWithStringKeyType.class, "", "2 * integerProp", "New calc prop", "Double integer prop", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getEnhancer().apply();
+	assertNotNull("Should be not null.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp"));
+	assertFalse("The state is incorrect.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).isRunAutomatically());
+	newNonBaseMgr.discardMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertNotNull("Should be initialised.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE));
+	assertNotNull("Should be initialised.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property));
+	assertTrue("The state is incorrect.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("The state is incorrect.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	try {
-	    newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp");
+	    newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp");
 	    fail("The calc prop should not be acceptable after discard operation.");
 	} catch (final IncorrectCalcPropertyException e) {
 	}
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).isRunAutomatically());
+	assertTrue("The state is incorrect.", newNonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).isRunAutomatically());
     }
 
     @Test
@@ -728,12 +728,12 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
 
 	try {
-	    nonBaseMgr.discardEntityMasterManager(MENU_ITEM_TYPE);
+	    nonBaseMgr.discardMasterDomainTreeManager(MENU_ITEM_TYPE);
 	    fail("Should be initialised before.");
 	} catch (final IllegalArgumentException e) {
 	}
 	try {
-	    nonBaseMgr.saveEntityMasterManager(MENU_ITEM_TYPE);
+	    nonBaseMgr.saveMasterDomainTreeManager(MENU_ITEM_TYPE);
 	    fail("Should be initialised before.");
 	} catch (final IllegalArgumentException e) {
 	}
@@ -769,31 +769,31 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
     public void test_that_MASTER_reloading_works_fine() {
 	// create mgr for user USER1
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
-	baseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	baseMgr.getEntityMasterManager(MENU_ITEM_TYPE).refreshLocatorManager(ROOT, property);
-	baseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	baseMgr.getEntityMasterManager(MENU_ITEM_TYPE).acceptLocatorManager(ROOT, property);
-	baseMgr.saveEntityMasterManager(MENU_ITEM_TYPE);
+	baseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	baseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).refreshLocatorManager(ROOT, property);
+	baseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
+	baseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).acceptLocatorManager(ROOT, property);
+	baseMgr.saveMasterDomainTreeManager(MENU_ITEM_TYPE);
 	// prepare a test by saving own configuration for USER2
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
-	nonBaseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).refreshLocatorManager(ROOT, property);
-	nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).acceptLocatorManager(ROOT, property);
-	nonBaseMgr.saveEntityMasterManager(MENU_ITEM_TYPE);
+	nonBaseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).refreshLocatorManager(ROOT, property);
+	nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
+	nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).acceptLocatorManager(ROOT, property);
+	nonBaseMgr.saveMasterDomainTreeManager(MENU_ITEM_TYPE);
 
 	// modify and reload instantly (OWN configuration)
-	nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", false);
-	nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
-	nonBaseMgr.initEntityMasterManager(MENU_ITEM_TYPE);
-	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", false);
+	nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
+	nonBaseMgr.initMasterDomainTreeManager(MENU_ITEM_TYPE);
+	assertTrue("The state is incorrect.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("The state is incorrect.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 
 	// modify and reload instantly (BASE configuration)
-	nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", false);
-	nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
-	nonBaseMgr.initEntityMasterManagerByDefault(MENU_ITEM_TYPE);
-	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertFalse("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", false);
+	nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
+	nonBaseMgr.initMasterDomainTreeManagerByDefault(MENU_ITEM_TYPE);
+	assertTrue("The state is incorrect.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertFalse("The state is incorrect.", nonBaseMgr.getMasterDomainTreeManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
     }
 }

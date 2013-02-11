@@ -27,7 +27,7 @@ import ua.com.fielden.platform.error.Result;
  *
  */
 @KeyType(String.class)
-@KeyTitle(value = "Converted File", desc = "Unique name of the file attached.")
+@KeyTitle(value = "File name", desc = "Unique name of the file attached.")
 @DescTitle(value = "Description", desc = "A comment about the attached file, which can be used for search.")
 @DescRequired
 @KeyReadonly
@@ -38,43 +38,13 @@ public class Attachment extends AbstractEntity<String> {
     /** Used purely to represent a new file being attached. */
     private File file;
 
-    @IsProperty
-    @MapTo
-    @Required
-    @Readonly
-    @Title(value = "File name", desc = "The original name of the file represented by this attachment.")
-    private String fileName;
-
-    @Observable
-    public Attachment setFileName(final String fileName) {
-	this.fileName = fileName;
-	return this;
-    }
-
-    public String getFileName() {
-	return fileName;
-    }
-
     public File getFile() {
 	return file;
     }
 
     public void setFile(final File file) {
 	this.file = file;
-	if (file != null) {
-	    try {
-		final String key = URLEncoder.encode(file.getName().toUpperCase(), "UTF-8");
-		setKey(key);
-	    } catch (final UnsupportedEncodingException e) {
-		throw new Result(e);
-	    }
-
-	    setFileName(file.getName());
-	}
-    }
-
-    public void setJustFile(final File file) {
-	this.file = file;
+	setKey(file.getName());
     }
 
     @Override

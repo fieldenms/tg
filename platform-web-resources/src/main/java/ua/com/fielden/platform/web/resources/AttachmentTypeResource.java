@@ -71,31 +71,26 @@ public class AttachmentTypeResource extends EntityTypeResource<Attachment> {
 		    // Request is parsed by the handler which generates a list of FileItems
 		    final List<FileItem> items = upload.parseRepresentation(entity);
 
-		    if (items.size() != 4) {
+		    if (items.size() != 3) {
 			getResponse().setEntity(new StringRepresentation("Unexpected structure of the request.", MediaType.TEXT_PLAIN));
 			getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
 		    } else {
 			final String key =  MiscUtilities.convertToString(items.get(0).getInputStream());
 			final String desc = MiscUtilities.convertToString(items.get(1).getInputStream());
-			final String fileName = MiscUtilities.convertToString(items.get(2).getInputStream());
 			final File file = new File(location + "/" + key);
-			items.get(3).write(file);
+			items.get(2).write(file);
 			Attachment attachment = getFactory().newEntity(Attachment.class, key, desc);
-			attachment.setFileName(fileName);
-			attachment.setJustFile(file);
+			attachment.setFile(file);
 			attachment = getDao().save(attachment);
 
 			try {
-			    //getResponse().setEntity(getRestUtil().singleRepresentation(attachment));
 			    return getRestUtil().singleRepresentation(attachment);
 			} catch (final Exception ex) {
-			    //getResponse().setEntity(getRestUtil().errorRepresentation(ex));
 			    return getRestUtil().errorRepresentation(ex);
 			}
 		    }
 		} catch (final Exception ex) {
 		    // The message of all thrown exception is sent back to client
-		    //getResponse().setEntity(getRestUtil().errorRepresentation(ex));
 		    return getRestUtil().errorRepresentation(ex);
 		}
 	    }

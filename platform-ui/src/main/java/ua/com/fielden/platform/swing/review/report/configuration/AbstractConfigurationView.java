@@ -348,6 +348,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 			// from component because it is already not-useful
 			final ILoadListener refToThis = this;
 			SwingUtilitiesEx.invokeLater(new Runnable() {
+			    @Override
 			    public void run() {
 				component.removeLoadListener(refToThis);
 			    }

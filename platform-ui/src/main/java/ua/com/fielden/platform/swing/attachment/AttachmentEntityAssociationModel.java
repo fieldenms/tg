@@ -44,12 +44,11 @@ public class AttachmentEntityAssociationModel extends UmDetailsWithCrudAndUpdate
 	    final IEntityMasterManager entityMasterFactory,//
 	    //final IDaoFactory daoFactory,//
 	    final FrameTitleUpdater titleUpdater,//
-	    final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator) {
-	super(master, controller, MasterPropertyBinder.<EntityAttachmentAssociation>createPropertyBinderWithLocatorSupport(//
+	    final IMasterDomainTreeManager masterManager,//
+	    final ICriteriaGenerator criteriaGenerator) {
+	super(master, controller, //
+		MasterPropertyBinder.<EntityAttachmentAssociation>createPropertyBinderWithLocatorSupport(//
 		valueMatcherFactory, //
-		//entityMasterFactory,//
-		//daoFactory, locatorController,//
-		//locatorRetriever,
 		masterManager,//
 		criteriaGenerator,//
 		"entityId"), null, produceEgiModel(), titleUpdater, false);
@@ -84,7 +83,7 @@ public class AttachmentEntityAssociationModel extends UmDetailsWithCrudAndUpdate
 
     private static PropertyTableModel<EntityAttachmentAssociation> produceEgiModel() {
 	return new PropertyTableModelBuilder<EntityAttachmentAssociation>(EntityAttachmentAssociation.class).//
-		addReadonly("attachment", 100).//
+		addReadonly("attachment", 300).//
 		addReadonly("attachment.desc", 300).//
 		build(new ArrayList<EntityAttachmentAssociation>());
     }

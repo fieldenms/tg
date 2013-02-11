@@ -323,11 +323,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param entity
      */
     public void delete(final T entity){
-	if(entity.getType().equals(getEntityClass()) || entity.getType().equals(getManagedType())){
-	    final EntityResultQueryModel<T> deleteQuery = select(getEntityClass()).where().prop("id").eq().val(entity.getId()).model();
-	    dao.delete(deleteQuery);
+	if(entity.getType().equals(getEntityClass())){
+	    dao.delete(entity);
 	} else {
-	    throw new IllegalArgumentException("It's impossible to delete entity that isn't of the entity type or managed type of this criteria!");
+	    throw new IllegalArgumentException("Unexpeted entity type " + entity.getType() + " preventing deletion.");
 	}
     }
 
@@ -448,11 +447,11 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	}
 	return byteArray;
     }
-    
+
     public IGeneratedEntityController<T> getGeneratedEntityController() {
 	return generatedEntityController;
     }
-    
+
     public ISerialiser getSerialiser() {
 	return serialiser;
     }

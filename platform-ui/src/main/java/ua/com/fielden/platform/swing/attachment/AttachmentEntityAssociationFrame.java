@@ -31,7 +31,8 @@ public class AttachmentEntityAssociationFrame extends BaseFrame {
 	    final IValueMatcherFactory valueMatcherFactory,//
 	    final IEntityMasterManager entityMasterFactory,//
 	    //final IDaoFactory daoFactory,//
-	    final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator) {
+	    final IMasterDomainTreeManager masterManager,//
+	    final ICriteriaGenerator criteriaGenerator) {
 	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
 
 	model = new AttachmentEntityAssociationModel(entity, controller, valueMatcherFactory, entityMasterFactory,  new FrameTitleUpdater(this), masterManager, criteriaGenerator);

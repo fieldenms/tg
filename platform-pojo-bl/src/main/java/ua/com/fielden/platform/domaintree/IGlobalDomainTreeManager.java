@@ -249,78 +249,65 @@ public interface IGlobalDomainTreeManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Gets a current version of <b>entity-master manager</b> for domain type <b>root</b>. <br><br>
+     * Gets a current version of <b>master domain tree manager</b> for a domain type <b>root</b>. <br><br>
      *
-     * The current version of a entity-master manager should be initialised before usage ({@link #initEntityMasterManager(Class)}),
-     * then can be altered by its methods, and then saved ({@link #saveEntityMasterManager(Class)}) or discarded ({@link #discardEntityMasterManager(Class)}).
+     * The current version of a master domain tree manager should be initialised before using ({@link #initMasterDomainTreeManager(Class)}),
+     * then can be altered by its methods, and then saved ({@link #saveMasterDomainTreeManager(Class)}) or discarded ({@link #discardMasterDomainTreeManager(Class)}).
      * After that it can be asked "if changed" ({@link #isChangedEntityMasterManager(Class)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-master manager.
+     * @param root -- a domain type relevant to a master domain tree manager.
      * @return
      */
-    IMasterDomainTreeManager getEntityMasterManager(final Class<?> root);
+    IMasterDomainTreeManager getMasterDomainTreeManager(final Class<?> root);
 
     /**
-     * Initialises a brand new <b>entity-master manager</b> for domain type <b>root</b>. The initialisation uses own configuration (if exists) or base configuration (if exists) or raw instance creation -- for non-base user,
+     * Initialises a brand new <b>master domain tree manager</b> for domain type <b>root</b>. The initialisation uses own configuration (if exists) or base configuration (if exists) or raw instance creation -- for non-base user,
      * it uses own configuration (if exists) or raw instance creation -- for base user. <br><br>
      *
-     * The current version of a entity-master manager should be initialised before usage ({@link #initEntityMasterManager(Class)}),
-     * then can be altered by its methods, and then saved ({@link #saveEntityMasterManager(Class)}) or discarded ({@link #discardEntityMasterManager(Class)}).
+     * The current version of a entity-master manager should be initialised before using ({@link #initMasterDomainTreeManager(Class)}),
+     * then can be altered by its methods, and then saved ({@link #saveMasterDomainTreeManager(Class)}) or discarded ({@link #discardMasterDomainTreeManager(Class)}).
      * After that it can be asked "if changed" ({@link #isChangedEntityMasterManager(Class)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-master manager.
+     * @param root -- a domain type relevant to a master domain tree manager.
      */
-    IGlobalDomainTreeManager initEntityMasterManager(final Class<?> root);
+    IGlobalDomainTreeManager initMasterDomainTreeManager(final Class<?> root);
 
     /**
-     * Discards a current version of <b>entity-master manager</b> for domain type <b>root</b>. <br><br>
+     * Discards a current version of <b>master domain tree manager</b> for domain type <b>root</b>. <br><br>
      *
-     * The current version of a entity-master manager should be initialised before usage ({@link #initEntityMasterManager(Class)}),
-     * then can be altered by its methods, and then saved ({@link #saveEntityMasterManager(Class)}) or discarded ({@link #discardEntityMasterManager(Class)}).
+     * The current version of a entity-master manager should be initialised before using ({@link #initMasterDomainTreeManager(Class)}),
+     * then can be altered by its methods, and then saved ({@link #saveMasterDomainTreeManager(Class)}) or discarded ({@link #discardMasterDomainTreeManager(Class)}).
      * After that it can be asked "if changed" ({@link #isChangedEntityMasterManager(Class)}).<br><br>
      *
      * Throws {@link IllegalArgumentException} when entity-master was not initialised.<br><br>
      *
-     * @param root -- a domain type relevant to an entity-master manager.
+     * @param root -- a domain type relevant to a master domain tree manager.
      */
-    IGlobalDomainTreeManager discardEntityMasterManager(final Class<?> root);
+    IGlobalDomainTreeManager discardMasterDomainTreeManager(final Class<?> root);
 
     /**
-     * Saves a current version of <b>entity-master manager</b> for domain type <b>root</b>. Non-base user can modify and save to perform base user's configuration overriding,
+     * Saves a current version of <b>master domain tree manager</b> for domain type <b>root</b>. Non-base user can modify and save to perform base user's configuration overriding,
      * the base user can change and save "base" configuration. "Load default" action can be used by non-base users to retrieve and apply base configuration. <br><br>
      *
-     * The current version of a entity-master manager should be initialised before usage ({@link #initEntityMasterManager(Class)}),
-     * then can be altered by its methods, and then saved ({@link #saveEntityMasterManager(Class)}) or discarded ({@link #discardEntityMasterManager(Class)}).
+     * The current version of a entity-master manager should be initialised before using ({@link #initMasterDomainTreeManager(Class)}),
+     * then can be altered by its methods, and then saved ({@link #saveMasterDomainTreeManager(Class)}) or discarded ({@link #discardMasterDomainTreeManager(Class)}).
      * After that it can be asked "if changed" ({@link #isChangedEntityMasterManager(Class)}).<br><br>
      *
      * Throws {@link IllegalArgumentException} when entity-master was not initialised.<br><br>
      *
-     * @param root -- a domain type relevant to an entity-master manager.
+     * @param root -- a domain type relevant to a master domain tree manager.
      */
-    IGlobalDomainTreeManager saveEntityMasterManager(final Class<?> root);
-
-//    /**
-//     * Returns <code>true</code> if the current version of <b>entity-master manager</b> for domain type <b>root</b> has been changed since last saving/discard (or since the beginning of manager history). <br><br>
-//     *
-//     * The current version of a entity-master manager should be initialised before usage ({@link #initEntityMasterManager(Class)}),
-//     * then can be altered by its methods, and then saved ({@link #saveEntityMasterManager(Class)}) or discarded ({@link #discardEntityMasterManager(Class)}).
-//     * After that it can be asked "if changed" ({@link #isChangedEntityMasterManager(Class)}).<br><br>
-//     *
-//     * Throws {@link IllegalArgumentException} when entity-master was not initialised.<br><br>
-//     *
-//     * @param root -- a domain type relevant to an entity-master manager.
-//     */
-//    boolean isChangedEntityMasterManager(final Class<?> root);
+    IGlobalDomainTreeManager saveMasterDomainTreeManager(final Class<?> root);
 
     /**
-     * Initialises a brand new <b>entity-master manager</b> for domain type <b>root</b> from default configuration. The initialisation uses base configuration (if exists) or raw instance creation -- for non-base user,
+     * Initialises a brand new <b>master domain tree manager</b> for domain type <b>root</b> from default configuration. The initialisation uses base configuration (if exists) or raw instance creation -- for non-base user,
      * it uses raw instance creation -- for base user. <br><br>
      *
-     * The current version of a entity-master manager should be initialised before usage ({@link #initEntityMasterManager(Class)}),
-     * then can be altered by its methods, and then saved ({@link #saveEntityMasterManager(Class)}) or discarded ({@link #discardEntityMasterManager(Class)}).
+     * The current version of a entity-master manager should be initialised before using ({@link #initMasterDomainTreeManager(Class)}),
+     * then can be altered by its methods, and then saved ({@link #saveMasterDomainTreeManager(Class)}) or discarded ({@link #discardMasterDomainTreeManager(Class)}).
      * After that it can be asked "if changed" ({@link #isChangedEntityMasterManager(Class)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-master manager.
+     * @param root -- a domain type relevant to a master domain tree manager.
      */
-    IGlobalDomainTreeManager initEntityMasterManagerByDefault(final Class<?> root);
+    IGlobalDomainTreeManager initMasterDomainTreeManagerByDefault(final Class<?> root);
 }

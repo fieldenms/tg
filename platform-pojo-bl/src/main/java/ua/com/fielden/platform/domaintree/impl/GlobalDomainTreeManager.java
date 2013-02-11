@@ -814,12 +814,12 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     /////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public IMasterDomainTreeManager getEntityMasterManager(final Class<?> root) {
+    public IMasterDomainTreeManager getMasterDomainTreeManager(final Class<?> root) {
 	return currentMasters.get(root);
     }
 
     @Override
-    public IGlobalDomainTreeManager initEntityMasterManager(final Class<?> root) {
+    public IGlobalDomainTreeManager initMasterDomainTreeManager(final Class<?> root) {
 	final String rootName = root.getName();
 	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(rootName);
 	final int count = entityMasterConfigController.count(model);
@@ -827,7 +827,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    retrieveAndInitMaster(root, model);
 	    return this;
 	} else if (count < 1) { // there is no own entity-master -- should be initialised by default.
-	    initEntityMasterManagerByDefault(root);
+	    initMasterDomainTreeManagerByDefault(root);
 	}  else {
 	    error("There are more than one entity-master instance for type [" + root.getSimpleName() + "] for current user [" + currentUser() + "].");
 	}
@@ -835,7 +835,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public IGlobalDomainTreeManager discardEntityMasterManager(final Class<?> root) {
+    public IGlobalDomainTreeManager discardMasterDomainTreeManager(final Class<?> root) {
 	masterNotInitiliasedError(persistentMasters.get(root), root);
 
 	final String rootName = root.getName();
@@ -853,8 +853,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public IGlobalDomainTreeManager saveEntityMasterManager(final Class<?> root) {
-	final IMasterDomainTreeManager currentMgr = getEntityMasterManager(root);
+    public IGlobalDomainTreeManager saveMasterDomainTreeManager(final Class<?> root) {
+	final IMasterDomainTreeManager currentMgr = getMasterDomainTreeManager(root);
 	masterValidateBeforeSaving(currentMgr, root);
 
 	// save an instance of EntityMasterConfig with overridden body
@@ -886,7 +886,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     //    }
 
     @Override
-    public IGlobalDomainTreeManager initEntityMasterManagerByDefault(final Class<?> root) {
+    public IGlobalDomainTreeManager initMasterDomainTreeManagerByDefault(final Class<?> root) {
 	final String rootName = root.getName();
 	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForBaseUser(rootName);
 	final int count = entityMasterConfigController.count(model);
@@ -899,7 +899,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    initMaster(root, new MasterDomainTreeManager(getSerialiser(), new HashSet<Class<?>>() {{ add(root); }}));
 	    // save a new instance of EntityMasterConfig
 	    final EntityMasterConfig emc = factory.newByKey(EntityMasterConfig.class, baseOfTheCurrentUser(), rootName);
-	    emc.setConfigBody(getSerialiser().serialise(getEntityMasterManager(root)));
+	    emc.setConfigBody(getSerialiser().serialise(getMasterDomainTreeManager(root)));
 	    entityMasterConfigController.save(emc);
 	    return this;
 	}  else {

@@ -443,7 +443,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
 	    @Override
 	    protected T action(final ActionEvent event) throws Exception {
-		final T selectedEntity = getEnhancedSelectedEntity();
+		final T selectedEntity = getSelectedEntity();
 		getModel().getCriteria().delete(selectedEntity);
 		getModel().reExecuteAnalysisQuery();
 		return selectedEntity;

@@ -111,10 +111,10 @@ public class EntityMasterManager implements IEntityMasterManager {
 	    if (factory == null) {
 		throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " domain entity.");
 	    }
-	    IMasterDomainTreeManager masterManager = gdtm.getEntityMasterManager(entity.getType());
+	    IMasterDomainTreeManager masterManager = gdtm.getMasterDomainTreeManager(entity.getType());
 	    if (masterManager == null) {
-		gdtm.initEntityMasterManager(entity.getType());
-		masterManager = gdtm.getEntityMasterManager(entity.getType());
+		gdtm.initMasterDomainTreeManager(entity.getType());
+		masterManager = gdtm.getMasterDomainTreeManager(entity.getType());
 	    }
 	    frame = factory.createMasterFrame(getEntityProducer((Class<T>) entity.getType()), //
 		    cache, //
@@ -134,7 +134,7 @@ public class EntityMasterManager implements IEntityMasterManager {
 
 			@Override
 			protected Void action(final ActionEvent e) throws Exception {
-			    gdtm.saveEntityMasterManager(entity.getType());
+			    gdtm.saveMasterDomainTreeManager(entity.getType());
 			    return null;
 			}
 		    }.actionPerformed(null);

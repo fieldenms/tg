@@ -66,7 +66,6 @@ public class AttachmentRao extends CommonEntityRao<Attachment> implements IAttac
 	try {
 	    mpe.addPart("KEY", new StringBody(entity.getKey()));
 	    mpe.addPart("DESC", new StringBody(entity.getDesc()));
-	    mpe.addPart("FILE_NAME", new StringBody(entity.getFileName()));
 	} catch (final UnsupportedEncodingException e) {
 	    throw new IllegalArgumentException(e);
 	}
@@ -81,7 +80,6 @@ public class AttachmentRao extends CommonEntityRao<Attachment> implements IAttac
 	final InputStream envelope;
 	try {
 	    final HttpResponse response = httpClient.execute(httpPut);
-	    System.out.println(response.getStatusLine());
 	    if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 		envelope = response.getEntity().getContent();
 	    } else {
