@@ -228,12 +228,14 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IFirstYieldedItemAlias<T> {
         T as(String alias);
+        T asRequired(String alias);
         <E extends AbstractEntity<?>> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
         PrimitiveResultQueryModel modelAsPrimitive();
     }
 
     interface ISubsequentYieldedItemAlias<T> /*extends ICompletedAndYielded*/ {
         T as(String alias);
+        T asRequired(String alias);
     }
 
     interface IArithmeticalOperator<T> {

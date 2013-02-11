@@ -316,7 +316,11 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean determineYieldNullability(final Yield yield) {
-            return yield.getOperand().isNullable();
+	if (yield.isRequiredHint()) {
+	    return false;
+	}
+
+	return yield.getOperand().isNullable();
     }
 
     private Class determineYieldJavaType(final Yield yield) {
@@ -707,10 +711,6 @@ public class EntQuery implements ISingleOperand {
 
     @Override
     public boolean isNullable() {
-	// TODO replace with always TRUE, or extend eql with possibility to set yielded property requiredness explicitly within query
-	if (yields.size() == 1) {
-	    return conditions.getCollection().isEmpty() ? yields.getFirstYield().getInfo().isNullable() : true;
-	}
 	return true;
     }
 

@@ -197,6 +197,10 @@ final class Tokens {
 	return add(TokenCategory.AS_ALIAS, yieldAlias);
     }
 
+    public Tokens asRequired(final String yieldAlias) {
+	return add(TokenCategory.AS_ALIAS_REQUIRED, yieldAlias);
+    }
+
     public Tokens anyOfProps(final String... props) {
 	return add(TokenCategory.ANY_OF_PROPS, getListFromArray(props));
     }

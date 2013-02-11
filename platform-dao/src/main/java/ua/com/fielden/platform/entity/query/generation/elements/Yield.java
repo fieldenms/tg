@@ -4,11 +4,18 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 public class Yield {
     private final ISingleOperand operand;
     private final String alias;
+    private final boolean requiredHint;
     private ResultQueryYieldDetails info;
 
-    public Yield(final ISingleOperand operand, final String alias) {
+
+    public Yield(final ISingleOperand operand, final String alias, final boolean requiredHint) {
 	this.operand = operand;
 	this.alias = alias;
+	this.requiredHint = requiredHint;
+    }
+
+    public Yield(final ISingleOperand operand, final String alias) {
+	this(operand, alias, false);
     }
 
     @Override
@@ -76,5 +83,9 @@ public class Yield {
 
     public void setInfo(final ResultQueryYieldDetails info) {
 	this.info = info;
+    }
+
+    protected boolean isRequiredHint() {
+        return requiredHint;
     }
 }

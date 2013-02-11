@@ -47,6 +47,7 @@ public class FluencyApiTest extends TestCase {
     private static String condition = "condition";
     private static String join = "join";
     private static String as = "as";
+    private static String asRequired = "asRequired";
     private static String modelAsEntity = "modelAsEntity";
     private static String modelAsPrimitive = "modelAsPrimitive";
     private static String where = "where";
@@ -155,7 +156,7 @@ public class FluencyApiTest extends TestCase {
     public void test_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded() {
 	checkFluency( //
 		select(TgVehicle.class).yield().prop("prop"), //
-		array(as, modelAsEntity, modelAsPrimitive));
+		array(as, asRequired, modelAsEntity, modelAsPrimitive));
     }
 
     public void test_IFunctionLastArgument_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
