@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Represents the compatibility between certain wagon and bogie classes.
@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
-@DefaultController(ITgWagonClassCompatibility.class)
+@CompanionObject(ITgWagonClassCompatibility.class)
 public class TgWagonClassCompatibility extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 

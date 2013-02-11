@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyUserType;
@@ -31,7 +31,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 @KeyType(String.class)
 @DescTitle("Description")
 @MapEntityTo("MONEY_CLASS_TABLE")
-@DefaultController(EntityWithMoneyDao.class)
+@CompanionObject(EntityWithMoneyDao.class)
 public class EntityWithMoney extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
@@ -23,8 +23,8 @@ public class CompanionObjectAutobinder {
      * @return
      */
     public static <T extends IEntityDao<E>, E extends AbstractEntity<?>> Class<T> companionObjectType(final Class<E> entityType) {
-	if (entityType.isAnnotationPresent(DefaultController.class)) {
-	    return (Class<T>) entityType.getAnnotation(DefaultController.class).value();
+	if (entityType.isAnnotationPresent(CompanionObject.class)) {
+	    return (Class<T>) entityType.getAnnotation(CompanionObject.class).value();
 	}
 	return null;
     }

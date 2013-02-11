@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.factory;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 import com.google.inject.Injector;
 
@@ -18,9 +18,9 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
 
     @Override
     public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T find(final Class<E> type) {
-	if (type.isAnnotationPresent(DefaultController.class)) {
+	if (type.isAnnotationPresent(CompanionObject.class)) {
 	    try {
-		final Class<T> controllerType = (Class<T>) type.getAnnotation(DefaultController.class).value();
+		final Class<T> controllerType = (Class<T>) type.getAnnotation(CompanionObject.class).value();
 		return injector.getInstance(controllerType);
 	    } catch (final Exception e) {
 		// if controller could not be instantiated for whatever reason it can be considered non-existent

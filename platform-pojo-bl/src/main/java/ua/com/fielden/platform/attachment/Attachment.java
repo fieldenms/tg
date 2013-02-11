@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.error.Result;
 
 /**
@@ -32,7 +32,7 @@ import ua.com.fielden.platform.error.Result;
 @DescRequired
 @KeyReadonly
 @MapEntityTo("ATTACHMENTS")
-@DefaultController(IAttachmentController.class)
+@CompanionObject(IAttachmentController.class)
 public class Attachment extends AbstractEntity<String> {
 
     /** Used purely to represent a new file being attached. */

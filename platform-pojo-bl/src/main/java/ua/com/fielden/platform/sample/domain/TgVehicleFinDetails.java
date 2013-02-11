@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Entity representing {@link Vehicle} financial details.
@@ -22,7 +22,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 @KeyType(TgVehicle.class)
 @KeyTitle(value="Vehicle", desc="Vehicle")
 @MapEntityTo
-@DefaultController(ITgVehicleFinDetails.class)
+@CompanionObject(ITgVehicleFinDetails.class)
 public class TgVehicleFinDetails extends AbstractEntity<TgVehicle> {
     private static final long serialVersionUID = 1L;
 

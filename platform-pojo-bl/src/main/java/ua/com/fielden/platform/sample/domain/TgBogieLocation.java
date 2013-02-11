@@ -6,10 +6,10 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 @EntityTitle(value = "Bogie location", desc = "Bogie location")
-@DefaultController(ITgBogieLocation.class)
+@CompanionObject(ITgBogieLocation.class)
 public class TgBogieLocation extends AbstractUnionEntity {
 
     private static final long serialVersionUID = 7362243737334921917L;

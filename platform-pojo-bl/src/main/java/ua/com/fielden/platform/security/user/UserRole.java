@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Represents a concept of a user role. Multiple users may have the same role. At this stage user role has only key and description.
@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 @KeyTitle("Role Title")
 @DescTitle("Description")
 @MapEntityTo("USER_ROLE")
-@DefaultController(IUserRoleDao.class)
+@CompanionObject(IUserRoleDao.class)
 public class UserRole extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

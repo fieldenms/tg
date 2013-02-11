@@ -4,7 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Entity for testing purposes.
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 @KeyType(String.class)
 @KeyTitle("key")
 @DescTitle("desc")
-@DefaultController(ILastLevelEntity.class)
+@CompanionObject(ILastLevelEntity.class)
 public class LastLevelEntity extends AbstractEntity<String> {
 
     private static final long serialVersionUID = -7989043784346226378L;

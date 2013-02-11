@@ -10,10 +10,10 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 @KeyType(TgVehicle.class)
-@DefaultController(ITgAverageFuelUsage.class)
+@CompanionObject(ITgAverageFuelUsage.class)
 public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
     // TODO support make property being entity key (KeyType(TgVehicleMake))
     private static final long serialVersionUID = 1L;

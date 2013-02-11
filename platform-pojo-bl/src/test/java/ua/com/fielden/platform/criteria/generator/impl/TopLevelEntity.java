@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.types.Money;
 @KeyType(String.class)
 @KeyTitle("key")
 @DescTitle("desc")
-@DefaultController(ITopLevelEntity.class)
+@CompanionObject(ITopLevelEntity.class)
 public class TopLevelEntity extends AbstractEntity<String> {
 
     private static final long serialVersionUID = 2041371879621946573L;

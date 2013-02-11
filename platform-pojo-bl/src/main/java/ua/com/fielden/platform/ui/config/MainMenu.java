@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * An entity that holds all menu items.
@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Main Menu key", desc = "Main Menu key description")
-@DefaultController(IMainMenu.class)
+@CompanionObject(IMainMenu.class)
 public class MainMenu extends AbstractEntity<String> {
     @IsProperty(String.class)
     @Title(value = "Menu Items and pop markers", desc = "All menu items (and pop markers) in one bunch")

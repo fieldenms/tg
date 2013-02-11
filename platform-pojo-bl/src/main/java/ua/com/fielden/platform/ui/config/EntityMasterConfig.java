@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -28,7 +28,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity master configuration")
-@DefaultController(IEntityMasterConfigController.class)
+@CompanionObject(IEntityMasterConfigController.class)
 @MapEntityTo("ENTITY_MASTER_CONFIG")
 public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;

@@ -19,7 +19,7 @@ import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
@@ -30,7 +30,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 @MapEntityTo
 @DescTitle("Description")
 @Ignore
-@DefaultController(ITgVehicle.class)
+@CompanionObject(ITgVehicle.class)
 public class TgVehicle extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

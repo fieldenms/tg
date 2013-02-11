@@ -14,13 +14,13 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 @KeyTitle("Fuel Usages")
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
-@DefaultController(ITgFuelUsage.class)
+@CompanionObject(ITgFuelUsage.class)
 public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 

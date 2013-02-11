@@ -10,13 +10,13 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 @KeyTitle("Author")
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
-@DefaultController(ITgAuthor.class)
+@CompanionObject(ITgAuthor.class)
 public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 

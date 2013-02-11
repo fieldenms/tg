@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
@@ -27,7 +27,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
  *
  */
 @KeyType(DynamicEntityKey.class)
-@DefaultController(IMainMenuItemInvisibilityController.class)
+@CompanionObject(IMainMenuItemInvisibilityController.class)
 @MapEntityTo("MAIN_MENU_INVISIBLE")
 public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;

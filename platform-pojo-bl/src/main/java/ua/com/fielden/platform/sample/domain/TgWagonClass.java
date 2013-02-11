@@ -10,12 +10,12 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 @KeyType(String.class)
 @MapEntityTo
 @DescTitle("Description")
-@DefaultController(ITgWagonClass.class)
+@CompanionObject(ITgWagonClass.class)
 public class TgWagonClass extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

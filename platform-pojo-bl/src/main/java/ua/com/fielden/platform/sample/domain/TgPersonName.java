@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Master entity object.
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
-@DefaultController(ITgPersonName.class)
+@CompanionObject(ITgPersonName.class)
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 public class TgPersonName extends AbstractEntity<String> {

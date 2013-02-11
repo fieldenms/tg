@@ -9,12 +9,12 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 @KeyType(TgVehicleMake.class)
-@DefaultController(ITgMakeCount.class)
+@CompanionObject(ITgMakeCount.class)
 public class TgMakeCount extends AbstractEntity<TgVehicleMake> {
     // TODO support make property being entity key (KeyType(TgVehicleMake))
     private static final long serialVersionUID = 1L;
