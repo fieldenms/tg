@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.model.DefaultEntityProducer;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
@@ -96,6 +95,7 @@ public class EntityMasterManager implements IEntityMasterManager {
 	return cache;
     }
 
+    @Override
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner) {
 	// let's be defensive...
 	if (entity == null) {
@@ -111,16 +111,16 @@ public class EntityMasterManager implements IEntityMasterManager {
 	    if (factory == null) {
 		throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " domain entity.");
 	    }
-	    IMasterDomainTreeManager masterManager = gdtm.getMasterDomainTreeManager(entity.getType());
-	    if (masterManager == null) {
+	    IMasterDomainTreeManager masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entity.getType());
+	    if (masterDomainTreeManager == null) {
 		gdtm.initMasterDomainTreeManager(entity.getType());
-		masterManager = gdtm.getMasterDomainTreeManager(entity.getType());
+		masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entity.getType());
 	    }
 	    frame = factory.createMasterFrame(getEntityProducer((Class<T>) entity.getType()), //
 		    cache, //
 		    entity, //
 		    vmf, //
-		    masterManager, //
+		    masterDomainTreeManager, //
 		    owner);
 	    //TODO should be removed later.
 	    frame.addWindowListener(new WindowAdapter() {
