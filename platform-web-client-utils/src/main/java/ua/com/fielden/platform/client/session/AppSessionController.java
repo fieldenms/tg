@@ -32,11 +32,8 @@ public class AppSessionController {
 	dirs = pathToConfigFile.lastIndexOf("/") > 0 ? pathToConfigFile.substring(0, pathToConfigFile.lastIndexOf("/")) : null;
 	final File file = new File(path);
 	if (file.exists()) {
-	    final InputStream is = new FileInputStream(path);
-	    try {
+	    try (final InputStream is = new FileInputStream(path)) {
 		properties.load(is);
-	    } finally {
-		is.close();
 	    }
 	}
 
