@@ -34,8 +34,8 @@ public class AppConfigTest {
 	removePropertyFile();
 	// save properties
 	AppSessionController config = new AppSessionController(path, null);
-	assertNull("Property should not yet be set.", config.getUsername());
-	assertNull("Property should not yet be set.", config.getPrivateKey());
+	assertNull("Property should not have been set yet.", config.getUsername());
+	assertNull("Property should not have been set yet.", config.getPrivateKey());
 	config.persist("username", "some private key");
 	// load properties and assert
 	config = new AppSessionController(path, null);
@@ -43,6 +43,8 @@ public class AppConfigTest {
 	assertEquals("Incorrect username.", "username", config.getUsername());
 	assertTrue("Missing private key.", !StringUtils.isEmpty(config.getPrivateKey()));
 	assertEquals("Incorrect private key.", "some private key", config.getPrivateKey());
+
+	removePropertyFile();
     }
 
     @Test
@@ -57,6 +59,8 @@ public class AppConfigTest {
 
 	assertEquals("Incorrect username.", "another username", config.getUsername());
 	assertEquals("Incorrect private key.", "some other private key", config.getPrivateKey());
+
+	removePropertyFile();
     }
 
 }
