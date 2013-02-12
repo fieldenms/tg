@@ -53,7 +53,16 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
 	this.entityMasterFactory = entityMasterFactory;
 	this.ownerView = ownerView;
 	// initialise trimmedPropertyName property that is used as the basis for invoking entity master
-	this.trimmedPropertyName = propertyName.trim();
+	//this.trimmedPropertyName = propertyName.trim();
+	if (isEmpty(propertyName) || KEY.equals(propertyName)) {
+	    // this means we should open master for the entity represented by clicked row
+	    this.trimmedPropertyName = "";
+	} else if (propertyName.endsWith("." + KEY)) {
+	    // this means we should simply skip ".key" suffix, and this is how we obtain desired property name
+	    this.trimmedPropertyName = propertyName.substring(0, propertyName.length() - 4);
+	} else {
+	    this.trimmedPropertyName = propertyName.trim();
+	}
 
     }
 
@@ -104,12 +113,11 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
 	return clickedObject instanceof AbstractEntity ? (AbstractEntity<?>) clickedObject : null;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void postAction(final AbstractEntity<?> clickedEntity) {
 	super.postAction(clickedEntity);
 	if (clickedEntity != null) {
-	    final AbstractEntity<?> originalClickedEntity = clickedEntity.copy((Class<AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(clickedEntity.getType()));
+	    final AbstractEntity<?> originalClickedEntity = clickedEntity.copy(DynamicEntityClassLoader.getOriginalType(clickedEntity.getType()));
 	    entityMasterFactory.<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> showMaster(originalClickedEntity, ownerView);
 	}
     }

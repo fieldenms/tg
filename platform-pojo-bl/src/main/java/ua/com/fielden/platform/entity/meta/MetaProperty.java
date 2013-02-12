@@ -713,7 +713,8 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 	return this;
     }
 
-    public final AbstractEntity getEntity() {
+    /** Returns the owning entity instance. */
+    public final AbstractEntity<?> getEntity() {
 	return entity;
     }
 
