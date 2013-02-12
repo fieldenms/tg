@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review.development;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,8 +15,11 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -68,7 +72,12 @@ public class EntityQueryCriteriaUtils {
 	for (final String propertyName : tickManager.checkedProperties(root)) {
 	    if (!AbstractDomainTree.isPlaceholder(propertyName)) {
 		if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
-		    paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));
+		    if (EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(managedType, propertyName)) && tickManager.getDatePrefix(root, propertyName) != null && tickManager.getDateMnemonic(root, propertyName) != null) {
+			final Pair<Date, Date> fromAndTo = DynamicQueryBuilder.getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName));
+			paramValues.put(propertyName, new Pair<Object, Object>(fromAndTo.getKey(), fromAndTo.getValue()));
+		    } else {
+			paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));
+		    }
 		} else {
 		    paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), null));
 		}
