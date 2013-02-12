@@ -17,8 +17,9 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -150,7 +151,8 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
     }
 
     private fetch<T> produceDefaultFetchModel(final Class<T> entityType) {
-	return fetch(dao.getEntityType());
+	final fetch<T> fetchWithKeyOnly = fetchOnly(dao.getEntityType()).with("key");
+	return EntityUtils.hasDescProperty(entityType) ? fetchWithKeyOnly.with("desc") : fetchWithKeyOnly;
     }
 
 

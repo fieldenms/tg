@@ -781,15 +781,19 @@ public class EntityUtils {
      */
     public static List<Field> getRealProperties(final Class entityType) {
 	final List<Field> result = new ArrayList<Field>();
-	final boolean noDesc = !AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType);
 
 	for (final Field propField : Finder.findRealProperties(entityType)) { //, MapTo.class
-	    if (!(propField.getName().equals("desc") && noDesc)) {
+	    if (!(propField.getName().equals("desc") && !hasDescProperty(entityType))) {
 		result.add(propField);
 	    }
 	}
 
 	return result;
+    }
+
+
+    public static <ET extends AbstractEntity<?>> boolean hasDescProperty(final Class<ET> entityType) {
+	return AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType);
     }
 
     /**
