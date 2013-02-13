@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.swing.review.development;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -49,6 +46,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 @KeyType(String.class)
 public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
@@ -375,6 +374,21 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	}else{
 	    generatedEntityController.setEntityType(getManagedType());
 	    return generatedEntityController.getAllEntities(queryModel, getByteArrayForManagedType());
+	}
+    }
+
+    /**
+     * Returns first entities those satisfies conditions of the specified {@link QueryExecutionModel}.
+     *
+     * @param queryModel - query model for which the first result page must be returned.
+     * @return
+     */
+    public final List<T> getFirstEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int numberOfEntities){
+	if(getManagedType().equals(getEntityClass())){
+	    return dao.getFirstEntities(queryModel, numberOfEntities);
+	}else{
+	    generatedEntityController.setEntityType(getManagedType());
+	    return generatedEntityController.getFirstEntities(queryModel, numberOfEntities, getByteArrayForManagedType());
 	}
     }
 
