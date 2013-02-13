@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.review.development;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -31,6 +29,8 @@ import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, DAO> {
 
@@ -107,7 +107,7 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 	}
 	final Builder<T, EntityResultQueryModel<T>> builderModel = from(compondCondition.model())//
 	.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)));
-	return firstPage(fetch == null ? builderModel.model() : builderModel.with((fetch<T>) fetch).model(), resultSize).data();
+	return getFirstEntities(fetch == null ? builderModel.model() : builderModel.with((fetch<T>) fetch).model(), resultSize);
     }
 
     /**

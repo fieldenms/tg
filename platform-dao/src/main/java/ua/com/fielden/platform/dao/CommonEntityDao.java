@@ -408,7 +408,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     public T getEntity(final QueryExecutionModel<T, ?> model) {
-	final List<T> data = new EntityQueryPage(model, 0, DEFAULT_PAGE_CAPACITY, 1).data();
+	final List<T> data = getFirstEntities(model, DEFAULT_PAGE_CAPACITY);
 	if (data.size() > 1) {
 	    throw new IllegalArgumentException("The provided query model leads to retrieval of more than one entity (" + data.size() + ").");
 	}

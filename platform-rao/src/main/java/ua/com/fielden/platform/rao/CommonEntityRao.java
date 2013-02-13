@@ -105,7 +105,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 
     @Override
     public T getEntity(final QueryExecutionModel<T, ?> model) {
-	final List<T> data = new EntityQueryPage(model, new PageInfo(0, 1, DEFAULT_PAGE_CAPACITY)).data();
+	final List<T> data = getFirstEntities(model, DEFAULT_PAGE_CAPACITY);
 	if (data.size() > 1) {
 	    throw new IllegalArgumentException("The provided query model leads to retrieval of more than one entity (" + data.size() + ").");
 	}

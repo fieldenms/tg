@@ -118,12 +118,12 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 
     @Override
     public List<T> findMatches(final String value) {
-	return dao.getPage(from(queryModel).with(defaultOrdering).with(propertyParamName, value).with(defaultFetchModel).model(), 0, pageSize).data();
+	return dao.getFirstEntities(from(queryModel).with(defaultOrdering).with(propertyParamName, value).with(defaultFetchModel).model(), pageSize);
     }
 
     @Override
     public List<T> findMatchesWithModel(final String value) {
-	return dao.getPage(from(queryModel).with(defaultOrdering).with(propertyParamName, value).with(fetchModel).model(), 0, pageSize).data();
+	return dao.getFirstEntities(from(queryModel).with(defaultOrdering).with(propertyParamName, value).with(fetchModel).model(), pageSize);
     }
 
     public EntityQueryValueMatcher<T> setPageSize(final int pageSize) {
@@ -153,11 +153,5 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
     private fetch<T> produceDefaultFetchModel(final Class<T> entityType) {
 	final fetch<T> fetchWithKeyOnly = fetchOnly(dao.getEntityType()).with("key");
 	return EntityUtils.hasDescProperty(entityType) ? fetchWithKeyOnly.with("desc") : fetchWithKeyOnly;
-    }
-
-
-    public static void main(final String[] args) {
-	System.out.println("key1.key2.key3".contains("."));
-	System.out.println(PropertyTypeDeterminator.penultAndLast("key1.key2.key3"));
     }
 }

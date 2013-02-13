@@ -69,7 +69,7 @@ public final class Validators {
 	final OrderingModel orderBy = orderBy().prop(fromDateProperty).asc().model();
 
 	final fetch<T> runFetch = fetchModel != null ? fetchModel : fetch((Class<T>) entity.getType());
-	final List<T> result = controller.firstPage(from(model).with(runFetch).with(orderBy).model(), 1).data();
+	final List<T> result = controller.getFirstEntities(from(model).with(runFetch).with(orderBy).model(), 1);
 	return result.size() > 0 ? result.get(0) : null;
     }
 

@@ -129,7 +129,7 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
     @Override
     public T getEntity(final QueryExecutionModel<T, ?> model, final List<byte[]> binaryTypes) {
 	authCall("getEntity");
-	final List<T> data = new EntityQueryPage(model, new PageInfo(0, 1, IEntityDao.DEFAULT_PAGE_CAPACITY), binaryTypes).data();
+	final List<T> data = getFirstEntities(model, IEntityDao.DEFAULT_PAGE_CAPACITY, binaryTypes);
 	if (data.size() > 1) {
 	    throw new IllegalArgumentException("The provided query model leads to retrieval of more than one entity (" + data.size() + ").");
 	}
