@@ -96,4 +96,7 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
 
 	@Override
 	public IPage<TopLevelEntity> firstPage(final QueryExecutionModel<TopLevelEntity, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) { return null;}
+
+	@Override
+	public List<TopLevelEntity> getFirstEntities(final QueryExecutionModel<TopLevelEntity, ?> query, final int numberOfEntities) {return null;}
 }

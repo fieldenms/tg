@@ -214,4 +214,10 @@ public class UserControllerForTestPurposes implements IUserController {
 	// TODO Auto-generated method stub
 	return null;
     }
+
+    @Override
+    public List<User> getFirstEntities(final QueryExecutionModel<User, ?> query, final int numberOfEntities) {
+	// TODO Auto-generated method stub
+	return null;
+    }
 }

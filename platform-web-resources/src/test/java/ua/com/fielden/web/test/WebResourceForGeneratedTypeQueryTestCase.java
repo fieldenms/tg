@@ -1,10 +1,5 @@
 package ua.com.fielden.web.test;
 
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +32,11 @@ import ua.com.fielden.web.entities.InspectedEntity;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 /**
  * Provides a unit test to ensure correct interaction with IPage summary model.
  *
@@ -44,10 +44,13 @@ import com.google.inject.Module;
  *
  */
 public class WebResourceForGeneratedTypeQueryTestCase extends WebBasedTestCase {
+    private static int ENT_COUNT = 7;
     private final IGeneratedEntityController rao = new GeneratedEntityRao(config.restClientUtil());
     private final IInspectedEntityDao dao = DbDrivenTestCase.injector.getInstance(IInspectedEntityDao.class);
 
     private IPage firstPage;
+    private int allEntitiesCount;
+    private int firstEntitiesCount;
 
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
@@ -91,6 +94,8 @@ public class WebResourceForGeneratedTypeQueryTestCase extends WebBasedTestCase {
 	rao.setEntityType(type);
 	final EntityResultQueryModel model = select(type).model();
 	firstPage = rao.firstPage(from(model).model(), 15, toByteArray(binaryTypes));
+	allEntitiesCount = rao.getAllEntities(from(model).model(), toByteArray(binaryTypes)).size();
+	firstEntitiesCount = rao.getFirstEntities(from(model).model(), ENT_COUNT, toByteArray(binaryTypes)).size();
     }
 
     private List<byte[]> toByteArray(final List<ByteArray> list) {
@@ -135,4 +140,13 @@ public class WebResourceForGeneratedTypeQueryTestCase extends WebBasedTestCase {
 	assertEquals("Incorrect value.", 20, instance.get("calculatedProperty"));
     }
 
+    @Test
+    public void test_get_all_entities() {
+	assertEquals("Incorrect count value.", 45, allEntitiesCount);
+    }
+
+    @Test
+    public void test_get_first_entities() {
+	assertEquals("Incorrect count value.", ENT_COUNT, firstEntitiesCount);
+    }
 }

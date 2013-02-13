@@ -1,14 +1,5 @@
 package ua.com.fielden.web.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +16,14 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntity;
 import ua.com.fielden.web.rao.InspectedEntityRao;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Provides a unit test for entity driven web resources.
@@ -91,6 +90,13 @@ public class WebResourceTestCase extends WebBasedTestCase {
 	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).model();
 	final List<InspectedEntity> list = rao.getAllEntities(from(q).model());
 	assertEquals("Incorrect count value.", 45, list.size());
+    }
+
+    @Test
+    public void test_get_first_entities() {
+	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).model();
+	final List<InspectedEntity> list = rao.getFirstEntities(from(q).model(), 7);
+	assertEquals("Incorrect count value.", 7, list.size());
     }
 
     @Test

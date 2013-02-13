@@ -27,6 +27,8 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  * @author TG Team
  */
 public class EntityAggregatesQueryResource extends ServerResource {
+    private static final String FIRST = "first";
+
     // the following properties are determined from request
     private final Integer pageCapacity;
     private final int pageCount;
@@ -34,6 +36,9 @@ public class EntityAggregatesQueryResource extends ServerResource {
     /** Indicates whether response should return count. */
     private final boolean shouldReturnCount;
     private final boolean shouldReturnAll;
+    /** Indicates whether response should return only first items (number limited by page capacity. */
+    private final boolean shouldReturnFirst;
+
 
     private final IEntityAggregatesDao dao;
     private final RestServerUtil restUtil;
@@ -55,14 +60,16 @@ public class EntityAggregatesQueryResource extends ServerResource {
 	this.dao = dao;
 	this.restUtil = restUtil;
 
-	final String param = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
+	final String pageCapacityParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
+	final String pageNoParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-no");
 
-	pageCapacity = initPageCapacity(param);
-	pageNo = initPageNoOrCount(request.getResourceRef().getQueryAsForm().getFirstValue("page-no"));
+	pageCapacity = initPageCapacity(pageCapacityParam);
+	pageNo = initPageNoOrCount(pageNoParam);
 	pageCount = initPageNoOrCount(request.getResourceRef().getQueryAsForm().getFirstValue("page-count"));
 
-	shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(param);
-	shouldReturnAll = "all".equalsIgnoreCase(param);
+	shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(pageCapacityParam) && !FIRST.equalsIgnoreCase(pageNoParam);
+	shouldReturnAll = "all".equalsIgnoreCase(pageCapacityParam);
+	shouldReturnFirst = FIRST.equalsIgnoreCase(pageNoParam);
     }
 
     /**
@@ -87,7 +94,7 @@ public class EntityAggregatesQueryResource extends ServerResource {
      */
     private int initPageNoOrCount(final String pageNoParamName) {
 	try {
-	    return pageNoParamName != null ? Integer.parseInt(pageNoParamName) : 0;
+	    return pageNoParamName != null && !pageNoParamName.equalsIgnoreCase(FIRST) ? Integer.parseInt(pageNoParamName) : 0;
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    return 0;
@@ -101,16 +108,18 @@ public class EntityAggregatesQueryResource extends ServerResource {
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
 	try {
-	    final  QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryAndFetch = (QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>) restUtil.restoreQueryExecutionModel(envelope);
+	    final  QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = (QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>) restUtil.restoreQueryExecutionModel(envelope);
 	    if (shouldReturnCount) {
-		final int count = dao.count(queryAndFetch.getQueryModel(), queryAndFetch.getParamValues());
+		final int count = dao.count(qem.getQueryModel(), qem.getParamValues());
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.COUNT, count + "");
 		return new StringRepresentation("count");
 	    } else if (shouldReturnAll) {
 		//getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(queryAndFetch)));
-		return restUtil.listRepresentation(dao.getAllEntities(queryAndFetch));
+		return restUtil.listRepresentation(dao.getAllEntities(qem));
+	    } else if (shouldReturnFirst) {
+		return restUtil.listRepresentation(dao.getFirstEntities(qem, pageCapacity));
 	    } else {
-		final IPage<EntityAggregates> page = dao.getPage(queryAndFetch, pageNo, pageCount, pageCapacity);
+		final IPage<EntityAggregates> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
 		//getResponse().setEntity(restUtil.listRepresentation(page.data()));

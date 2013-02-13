@@ -25,8 +25,14 @@ public class EntityAggregatesDao implements IEntityAggregatesDao {
 	this.dao = dao;
     }
 
+    @Override
     public List<EntityAggregates> getAllEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel) {
 	return dao.getAllEntities(aggregatesQueryModel);
+    }
+
+    @Override
+    public List<EntityAggregates> getFirstEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel, final int numberOfEntities) {
+	return dao.getFirstEntities(aggregatesQueryModel, numberOfEntities);
     }
 
     @Override

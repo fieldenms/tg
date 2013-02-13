@@ -245,6 +245,15 @@ public interface IEntityDao<T extends AbstractEntity<?>> {
     List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
 
     /**
+     * Returns first entities produced by the provided query.
+     *
+     * @param quert
+     * @return
+     */
+    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, int numberOfEntities);
+
+
+    /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
      * <p>
      * For example it could be a byte array of GZipped Excel data.

@@ -179,4 +179,10 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
 	return null;
     }
 
+    @Override
+    public List<LastLevelEntity> getFirstEntities(final QueryExecutionModel<LastLevelEntity, ?> query, final int numberOfEntities) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
 }

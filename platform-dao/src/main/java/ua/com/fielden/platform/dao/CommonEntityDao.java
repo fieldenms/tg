@@ -373,6 +373,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	return getEntitiesOnPage(query, null, null);
     }
 
+    @Override
+    public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
+	return getEntitiesOnPage(query, 0, numberOfEntities);
+    }
+
     /**
      * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by query with no filtering conditions. Useful for things like autocompleters.
      */

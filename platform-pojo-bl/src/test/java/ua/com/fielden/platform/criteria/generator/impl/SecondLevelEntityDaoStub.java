@@ -176,4 +176,10 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
 	return null;
     }
 
+    @Override
+    public List<SecondLevelEntity> getFirstEntities(QueryExecutionModel<SecondLevelEntity, ?> query, int numberOfEntities) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
 }

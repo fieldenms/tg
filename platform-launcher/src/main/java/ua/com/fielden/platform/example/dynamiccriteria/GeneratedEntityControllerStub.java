@@ -83,4 +83,10 @@ public class GeneratedEntityControllerStub<T extends AbstractEntity<?>> implemen
 	return null;
     }
 
+    @Override
+    public List<T> getFirstEntities(final QueryExecutionModel<T, ?> qem, final int numberOfEntities, final List<byte[]> binaryTypes) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
 }

@@ -29,6 +29,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  */
 public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerResource {
     private static final int DEFAULT_PAGE_CAPACITY = 25;
+    private static final String FIRST = "first";
     // the following properties are determined from request
     private final Integer pageCapacity;
     private final int pageNo;
@@ -37,6 +38,8 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
     private final boolean shouldReturnCount;
     /** Indicates whether response should return the whole result. */
     private final boolean shouldReturnAll;
+    /** Indicates whether response should return only first items (number limited by page capacity. */
+    private final boolean shouldReturnFirst;
     /** Indicates whether the provided request indicated a deletion query. */
     private final boolean shouldDelete;
 
@@ -60,14 +63,16 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
 	this.dao = dao;
 	this.restUtil = restUtil;
 
-	final String param = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
+	final String pageCapacityParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
+	final String pageNoParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-no");
 
-	pageCapacity = initPageCapacity(param);
-	pageNo = initPageNoOrCount(request.getResourceRef().getQueryAsForm().getFirstValue("page-no"));
+	pageCapacity = initPageCapacity(pageCapacityParam);
+	pageNo = initPageNoOrCount(pageNoParam);
 	pageCount = initPageNoOrCount(request.getResourceRef().getQueryAsForm().getFirstValue("page-count"));
 
-	shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(param);
-	shouldReturnAll = "all".equalsIgnoreCase(param);
+	shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(pageCapacityParam) && !FIRST.equalsIgnoreCase(pageNoParam);
+	shouldReturnAll = "all".equalsIgnoreCase(pageCapacityParam);
+	shouldReturnFirst = FIRST.equalsIgnoreCase(pageNoParam);
 	shouldDelete = request.getResourceRef().getQueryAsForm().getFirstValue("deletion") != null;
     }
 
@@ -93,7 +98,7 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
      */
     private int initPageNoOrCount(final String pageNoParamName) {
 	try {
-	    return pageNoParamName != null ? Integer.parseInt(pageNoParamName) : 0;
+	    return pageNoParamName != null && !pageNoParamName.equalsIgnoreCase(FIRST) ? Integer.parseInt(pageNoParamName) : 0;
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    return 0;
@@ -123,6 +128,8 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
 	    } else if (shouldReturnAll) {
 		//getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(qem)));
 		return restUtil.listRepresentation(dao.getAllEntities(qem));
+	    } else if (shouldReturnFirst) {
+		return restUtil.listRepresentation(dao.getFirstEntities(qem, pageCapacity));
 	    } else {
 		final IPage<T> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");

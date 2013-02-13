@@ -188,6 +188,32 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
     }
 
     /**
+     * Sends a POST request to /query/generated-type??page-no=first with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated
+     * types. The response suppose to return an envelope containing first entities resulting from the query.
+     */
+
+    @Override
+    public List<T> getFirstEntities(final QueryExecutionModel<T, ?> qem, final int numberOfEntities, final List<byte[]> binaryTypes) {
+	authCall("getFirstEntities");
+	qem.getQueryModel().setFilterable(true);
+
+	// create request envelope containing Entity Query
+	final Representation envelope = restUtil.represent(qem, binaryTypes);
+	// create a request URI containing page capacity and number
+	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=" + numberOfEntities + "&page-no=first";
+	final Request request = new Request(Method.POST, uri, envelope);
+	// process request
+	final Pair<Response, Result> res = restUtil.process(request);
+	final Result result = res.getValue();
+	// process result
+	if (result.isSuccessful()) {
+	    return (List<T>) result.getInstance();
+	} else {
+	    throw result;
+	}
+    }
+
+    /**
      * Sends a POST request to /export/generated-type with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated types. The response
      * suppose to return an file with exported information.
      */

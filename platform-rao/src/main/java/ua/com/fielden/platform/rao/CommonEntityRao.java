@@ -538,6 +538,24 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     }
 
     @Override
+    public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
+	// create request envelope containing Entity Query
+	final Representation envelope = restUtil.represent(query);
+	// create a request URI containing page capacity and number
+	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) +  "?page-capacity=" + numberOfEntities + "&page-no=first";
+	final Request request = new Request(Method.POST, uri, envelope);
+	// process request
+	final Pair<Response, Result> res = restUtil.process(request);
+	final Result result = res.getValue();
+	// process result
+	if (result.isSuccessful()) {
+	    return (List<T>) result.getInstance();
+	} else {
+	    throw result;
+	}
+    }
+
+    @Override
     public boolean isStale(final Long entityId, final Long version) {
 	if (entityId == null) {
 	    return false;

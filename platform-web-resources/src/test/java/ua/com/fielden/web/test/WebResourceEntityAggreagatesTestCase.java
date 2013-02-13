@@ -1,14 +1,5 @@
 package ua.com.fielden.web.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -28,6 +19,14 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.InspectedEntity;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Provides a unit test for entity aggregates web resource.
@@ -50,6 +49,17 @@ public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
 	assertEquals("Incorrect number of fetched aggregated items.", 2, result.size());
 	assertEquals("Incorrect value of aggregated property.", 10, result.get(0).get("intProperty"));
 	assertEquals("Incorrect value of aggregated result.", "9", result.get(0).get("kount").toString());
+    }
+
+    @Test
+    public void test_aggregated_data_first_entities_retrieval() {
+	final AggregatedResultQueryModel model = select(InspectedEntity.class)//
+		.groupBy().prop("intProperty")//
+		.yield().prop("intProperty").as("intProperty").yield().beginExpr().countOf().prop("id").endExpr().as("kount").modelAsAggregate();
+
+	final List<EntityAggregates> result = rao.getFirstEntities(from(model).model(), 1);
+
+	assertEquals("Incorrect number of fetched aggregated items.", 1, result.size());
     }
 
     @Test

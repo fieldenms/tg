@@ -35,6 +35,14 @@ public interface IEntityAggregatesDao {
     List<EntityAggregates> getAllEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel);
 
     /**
+     * Returns results from running given aggregation query.
+     *
+     * @param aggregatesQueryModel
+     * @return
+     */
+    List<EntityAggregates> getFirstEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel, int numberOfEntities);
+
+    /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query model (new EntityQuery).
      *
      * @param pageCapacity

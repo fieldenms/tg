@@ -142,6 +142,18 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> {
 	    final List<byte[]> binaryTypes);
 
     /**
+     * Returns first entities produced by the provided query.
+     *
+     * @param qem
+     * @param binaryTypes -- a list of binary representation of generated types.
+     * @return
+     */
+    List<T> getFirstEntities(//
+	    final QueryExecutionModel<T, ?> qem,//
+	    int numberOfEntities, //
+	    final List<byte[]> binaryTypes);
+
+    /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
      * <p>
      * For example it could be a byte array of GZipped Excel data.

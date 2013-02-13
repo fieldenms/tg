@@ -26,6 +26,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  */
 public class GeneratedEntityQueryResource extends ServerResource {
     private static final int DEFAULT_PAGE_CAPACITY = 25;
+    private static final String FIRST = "first";
     // the following properties are determined from request
     private final Integer pageCapacity;
     private final int pageNo;
@@ -34,6 +35,8 @@ public class GeneratedEntityQueryResource extends ServerResource {
     private final boolean shouldReturnCount;
     /** Indicates whether response should return the whole result. */
     private final boolean shouldReturnAll;
+    /** Indicates whether response should return only first items (number limited by page capacity. */
+    private final boolean shouldReturnFirst;
 
     private final DynamicEntityDao dao;
     private final RestServerUtil restUtil;
@@ -53,14 +56,16 @@ public class GeneratedEntityQueryResource extends ServerResource {
 	this.dao = dao;
 	this.restUtil = restUtil;
 
-	final String param = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
+	final String pageCapacityParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
+	final String pageNoParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-no");
 
-	pageCapacity = initPageCapacity(param);
-	pageNo = initPageNoOrCount(request.getResourceRef().getQueryAsForm().getFirstValue("page-no"));
+	pageCapacity = initPageCapacity(pageCapacityParam);
+	pageNo = initPageNoOrCount(pageNoParam);
 	pageCount = initPageNoOrCount(request.getResourceRef().getQueryAsForm().getFirstValue("page-count"));
 
-	shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(param);
-	shouldReturnAll = "all".equalsIgnoreCase(param);
+	shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(pageCapacityParam) && !FIRST.equalsIgnoreCase(pageNoParam);
+	shouldReturnAll = "all".equalsIgnoreCase(pageCapacityParam);
+	shouldReturnFirst = FIRST.equalsIgnoreCase(pageNoParam);
     }
 
     /**
@@ -85,7 +90,7 @@ public class GeneratedEntityQueryResource extends ServerResource {
      */
     private int initPageNoOrCount(final String pageNoParamName) {
 	try {
-	    return pageNoParamName != null ? Integer.parseInt(pageNoParamName) : 0;
+	    return pageNoParamName != null && !pageNoParamName.equalsIgnoreCase(FIRST) ? Integer.parseInt(pageNoParamName) : 0;
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    return 0;
@@ -114,6 +119,8 @@ public class GeneratedEntityQueryResource extends ServerResource {
 	    } else if (shouldReturnAll) {
 		//getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(qem)));
 		return restUtil.listRepresentation(dao.getAllEntities(qem));
+	    } else if (shouldReturnFirst) {
+		return restUtil.listRepresentation(dao.getFirstEntities(qem, pageCapacity));
 	    } else {
 		final IPage<?> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
