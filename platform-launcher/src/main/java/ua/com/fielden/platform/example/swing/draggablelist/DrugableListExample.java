@@ -30,12 +30,12 @@ public class DrugableListExample {
 		final JFrame frame = new JFrame("Dragable list example");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setPreferredSize(new Dimension(200, 300));
-		final DefaultListModel listModel = new DefaultListModel();
+		final DefaultListModel<String> listModel = new DefaultListModel<String>();
 		listModel.add(0, "Red");
 		listModel.add(1, "Green");
 		listModel.add(2, "Blue");
 		listModel.add(3, "White");
-		final JList list = new JList(listModel);
+		final JList<String> list = new JList<String>(listModel);
 		DnDSupport2.installDnDSupport(list, new DragFromSupportImplementation(list), new DragToSupportImplementation(list), true);
 		frame.add(new JScrollPane(list));
 		frame.pack();

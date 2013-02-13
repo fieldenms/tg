@@ -9,9 +9,9 @@ import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragFromSupport;
 
 public class DragFromSupportImplementation implements DragFromSupport {
 
-    private final JList list;
+    private final JList<String> list;
 
-    public DragFromSupportImplementation(final JList list) {
+    public DragFromSupportImplementation(final JList<String> list) {
 	this.list = list;
     }
 

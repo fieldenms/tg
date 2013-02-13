@@ -155,8 +155,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    return result;
 	}
 	final Class<T> entityClass = getCriteria().getEntityClass();
-	if(adtme().getFirstTick().usedProperties(entityClass).isEmpty() && adtme().getSecondTick().usedProperties(entityClass).isEmpty()){
-	    return new Result(new IllegalStateException("Please choose distribution or aggregation properties"));
+	if(adtme().getSecondTick().usedProperties(entityClass).isEmpty()){
+	    return new Result(new IllegalStateException("Please choose aggregation properties"));
 	}
 	return Result.successful(this);
     }

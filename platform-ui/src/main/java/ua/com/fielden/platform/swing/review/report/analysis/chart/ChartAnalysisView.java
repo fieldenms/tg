@@ -14,7 +14,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -332,8 +331,8 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	for (final String aggregationProperty : secondTick.checkedProperties(root)) {
 	    listModel.addElement(aggregationProperty);
 	}
-	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel);
-	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList, new JCheckBox()) {
+	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel, 1);
+	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList) {
 
 	    private static final long serialVersionUID = -6751336113879821723L;
 
@@ -354,9 +353,13 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		}
 		return rendererComponent;
 	    }
+
+	    @Override
+	    public boolean isSortingAvailable(final String element) {
+		return aggregationList.isValueChecked(element, 0) && aggregationList.isSortable(element);
+	    }
 	});
 	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
 	final ListCheckingModel<String> checkingModel = new DomainTreeListCheckingModel<T>(root, secondTick);
 	checkingModel.addListCheckingListener(new ListCheckingListener<String>() {
 
@@ -366,7 +369,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		chartScroller.resetScrollRanges();
 	    }
 	});
-	aggregationList.setCheckingModel(checkingModel);
+	aggregationList.setCheckingModel(checkingModel, 0);
 	aggregationList.setSortingModel(new DomainTreeListSortingModel<T>(root, secondTick, getModel().adtme().getRepresentation().getSecondTick()));
 
 	return aggregationList;

@@ -4,18 +4,17 @@ import java.awt.Dimension;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
-import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
-import ua.com.fielden.platform.swing.checkboxlist.CheckboxListCellRenderer;
+import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
+import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 import com.jidesoft.plaf.LookAndFeelFactory;
 
-public class RadiobuttonListExample {
+public class DoubleCheckboxListWithSortingExample {
 
     /**
      * @param args
@@ -32,13 +31,22 @@ public class RadiobuttonListExample {
 		final JFrame frame = new JFrame("Checkbox list example");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setPreferredSize(new Dimension(200, 300));
-		final DefaultListModel listModel = new DefaultListModel();
+		final DefaultListModel<String> listModel = new DefaultListModel<String>();
 		listModel.add(0, "Red");
 		listModel.add(1, "Green");
 		listModel.add(2, "Blue");
 		listModel.add(3, "White");
-		final CheckboxList list = new CheckboxList(listModel);
-		list.setCellRenderer(new CheckboxListCellRenderer(new JRadioButton()));
+		final SortingCheckboxList<String> list = new SortingCheckboxList<String>(listModel, 2);
+		list.setCellRenderer(new SortingCheckboxListCellRenderer<String>(list){
+
+		    private static final long serialVersionUID = 7083287819656588503L;
+
+		    @Override
+		    public boolean isSortingAvailable(final String element) {
+			return list.getSortingModel().isSortable(element) && list.isValueChecked(element, 0);
+		    }
+
+		});
 		DnDSupport2.installDnDSupport(list, new DragFromSupportImplementation(list), new DragToSupportImplementation(list), true);
 		frame.add(new JScrollPane(list));
 		frame.pack();

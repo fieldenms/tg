@@ -38,10 +38,10 @@ import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
 import ua.com.fielden.platform.swing.checkboxlist.ListSortingModel;
-import ua.com.fielden.platform.swing.checkboxlist.SortableList;
-import ua.com.fielden.platform.swing.checkboxlist.SortableListCellRenderer;
 import ua.com.fielden.platform.swing.checkboxlist.SorterChangedEvent;
 import ua.com.fielden.platform.swing.checkboxlist.SorterEventListener;
+import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
+import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.review.details.AnalysisDetailsData;
 import ua.com.fielden.platform.swing.review.report.analysis.multipledec.configuration.MultipleDecConfigurationView;
@@ -71,7 +71,7 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
     /**
      * The list of available aggregation properties.
      */
-    private final SortableList<String> aggregationList;
+    private final SortingCheckboxList<String> aggregationList;
     /**
      * The multiple dec panel.
      */
@@ -215,7 +215,7 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
      *
      * @return
      */
-    private SortableList<String> createAggregationList() {
+    private SortingCheckboxList<String> createAggregationList() {
 	final DefaultListModel<String> listModel = new DefaultListModel<String>();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
@@ -224,8 +224,8 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
 	for (final String aggregationProperty : secondTick.checkedProperties(root)) {
 	    listModel.addElement(aggregationProperty);
 	}
-	final SortableList<String> aggregationList = new SortableList<String>(listModel);
-	aggregationList.setCellRenderer(new SortableListCellRenderer<String>(aggregationList) {
+	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel, 0);
+	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList) {
 
 	    private static final long serialVersionUID = -6751336113879821723L;
 
@@ -238,6 +238,11 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
 		defaultRenderer.setText(titleAndDesc.getKey());
 		setToolTipText(titleAndDesc.getValue());
 		return rendererComponent;
+	    }
+
+	    @Override
+	    public boolean isSortingAvailable(final String element) {
+		return aggregationList.isSortable(element);
 	    }
 	});
 	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

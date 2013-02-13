@@ -10,9 +10,9 @@ import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragToSupport;
 
 public class DragToSupportImplementation implements DragToSupport {
 
-    private final JList list;
+    private final JList<String> list;
 
-    public DragToSupportImplementation(final JList list) {
+    public DragToSupportImplementation(final JList<String> list) {
 	this.list = list;
     }
 
@@ -27,8 +27,8 @@ public class DragToSupportImplementation implements DragToSupport {
 	if (index < 0) {
 	    return false;
 	}
-	((DefaultListModel) list.getModel()).removeElement(what);
-	((DefaultListModel) list.getModel()).add(index, what);
+	((DefaultListModel<String>) list.getModel()).removeElement(what);
+	((DefaultListModel<String>) list.getModel()).add(index, what.toString());
 	return true;
     }
 

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 import com.jidesoft.plaf.LookAndFeelFactory;
 
-public class CheckboxListExample {
+public class ListExample {
 
     /**
      * @param args
@@ -36,7 +36,7 @@ public class CheckboxListExample {
 		listModel.add(1, "Green");
 		listModel.add(2, "Blue");
 		listModel.add(3, "White");
-		final SortingCheckboxList<String> list = new SortingCheckboxList<String>(listModel, 1);
+		final SortingCheckboxList<String> list = new SortingCheckboxList<String>(listModel, 0);
 		list.setCellRenderer(new SortingCheckboxListCellRenderer<String>(list){
 
 		    private static final long serialVersionUID = 7083287819656588503L;
@@ -54,7 +54,6 @@ public class CheckboxListExample {
 		frame.setVisible(true);
 	    }
 	});
-
     }
 
 }

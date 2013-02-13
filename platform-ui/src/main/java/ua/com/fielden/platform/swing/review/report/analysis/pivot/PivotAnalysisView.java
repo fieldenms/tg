@@ -11,7 +11,6 @@ import java.util.List;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -33,8 +32,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
-import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
-import ua.com.fielden.platform.swing.checkboxlist.CheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
@@ -68,7 +65,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     /**
      * Represents the list of available distribution properties.
      */
-    private final CheckboxList<String> distributionList;
+    private final SortingCheckboxList<String> distributionList;
     /**
      * Represents the list of available aggregation properties.
      */
@@ -150,7 +147,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
      *
      * @return
      */
-    private CheckboxList<String> createDistributionList() {
+    private SortingCheckboxList<String> createDistributionList() {
 	final DefaultListModel<String> listModel = new DefaultListModel<String>();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
@@ -159,8 +156,8 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	for (final String distributionProperty : firstTick.checkedProperties(root)) {
 	    listModel.addElement(distributionProperty);
 	}
-	final CheckboxList<String> distributionList = new CheckboxList<String>(listModel);
-	distributionList.setCellRenderer(new CheckboxListCellRenderer<String>(new JCheckBox()) {
+	final SortingCheckboxList<String> distributionList = new SortingCheckboxList<String>(listModel, 1);
+	distributionList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(distributionList) {
 
 	    private static final long serialVersionUID = 7712966992046861840L;
 
@@ -183,9 +180,15 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		}
 		return rendererComponent;
 	    }
+
+	    @Override
+	    public boolean isSortingAvailable(final String element) {
+		return false;
+	    }
 	});
 	distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	distributionList.setCheckingModel(getModel().getDistributionCheckingModel());
+	distributionList.setCheckingModel(getModel().getDistributionCheckingModel(), 0);
+	distributionList.setSortingModel(null);
 	return distributionList;
     }
 
@@ -203,8 +206,8 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	for (final String aggregationProperty : secondTick.checkedProperties(root)) {
 	    listModel.addElement(aggregationProperty);
 	}
-	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel);
-	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList, new JCheckBox()) {
+	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel, 1);
+	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList) {
 
 	    private static final long serialVersionUID = -6751336113879821723L;
 
@@ -227,9 +230,14 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		}
 		return rendererComponent;
 	    }
+
+	    @Override
+	    public boolean isSortingAvailable(final String element) {
+		return aggregationList.isValueChecked(element, 0) && aggregationList.isSortable(element);
+	    }
 	});
 	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	aggregationList.setCheckingModel(getModel().getAggregationCheckingModel());
+	aggregationList.setCheckingModel(getModel().getAggregationCheckingModel(), 0);
 	aggregationList.setSortingModel(getModel().getAggregationSortingModel());
 
 	return aggregationList;

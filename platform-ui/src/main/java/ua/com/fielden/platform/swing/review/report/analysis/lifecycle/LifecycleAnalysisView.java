@@ -438,8 +438,8 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 		 listModel.addElement(categoryProperty);
 	    }
 	}
-	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel);
-	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList, new JCheckBox()) {
+	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel, 1);
+	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList) {
 
 	    private static final long serialVersionUID = -6751336113879821723L;
 
@@ -452,6 +452,11 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 		defaultRenderer.setText(titleAndDesc.getKey());
 		setToolTipText(titleAndDesc.getValue());
 		return rendererComponent;
+	    }
+
+	    @Override
+	    public boolean isSortingAvailable(final String element) {
+		return aggregationList.isValueChecked(element, 0) && aggregationList.isSortable(element);
 	    }
 	});
 	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -466,7 +471,7 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 		}
 	    }
 	});
-	aggregationList.setCheckingModel(checkingModel);
+	aggregationList.setCheckingModel(checkingModel, 0);
 
 	final ListSortingModel<String> sortingModel = new DomainTreeListSortingModel<T>(root, secondTick, getModel().adtme().getRepresentation().getSecondTick());
 	sortingModel.addSorterEventListener(new SorterEventListener<String>() {

@@ -8,14 +8,14 @@ import javax.swing.tree.TreePath;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
-import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
+import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTableModel;
 
 public class PivotListDragToSupport<T extends AbstractEntity<?>> extends AnalysisListDragToSupport<T> {
 
     private final PivotTreeTable pivotTreeTable;
 
-    public PivotListDragToSupport(final CheckboxList<String> list, final PivotTreeTable pivotTreeTable, final PivotAnalysisModel<T> pivotAnalysisModel) {
+    public PivotListDragToSupport(final SortingCheckboxList<String> list, final PivotTreeTable pivotTreeTable, final PivotAnalysisModel<T> pivotAnalysisModel) {
 	super(list, pivotAnalysisModel.getCriteria().getEntityClass(), pivotAnalysisModel.adtme().getSecondTick());
 	this.pivotTreeTable = pivotTreeTable;
     }
@@ -40,10 +40,9 @@ public class PivotListDragToSupport<T extends AbstractEntity<?>> extends Analysi
 	return true;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected CheckboxList<String> getList() {
-	return (CheckboxList<String>) super.getList();
+    protected SortingCheckboxList<String> getList() {
+	return (SortingCheckboxList<String>) super.getList();
     }
 
 }
