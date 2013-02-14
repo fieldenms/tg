@@ -17,9 +17,8 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -51,7 +50,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
      */
     public EntityQueryValueMatcher(final IEntityDao<T> dao, final String propertyName, final String orderBy) {
 	this.dao = dao;
-	this.defaultFetchModel = produceDefaultFetchModel(dao.getEntityType());
+	this.defaultFetchModel = fetchKeyAndDescOnly(dao.getEntityType());
 	this.propertyParamName = "paramNameFor" + propertyName.replaceAll("\\.", "_");
 	this.propertyName = propertyName;
 
@@ -109,7 +108,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
      */
     public EntityQueryValueMatcher(final IEntityDao<T> dao, final ICompoundCondition0<T> condition, final String propertyName) {
 	this.dao = dao;
-	this.defaultFetchModel = produceDefaultFetchModel(dao.getEntityType());
+	this.defaultFetchModel = fetchKeyAndDescOnly(dao.getEntityType());
 	this.propertyParamName = "paramNameFor" + propertyName.replaceAll("\\.", "_");
 	this.propertyName = propertyName;
 	this.queryModel = condition.and().prop(propertyName).iLike().param(propertyParamName).model();
@@ -148,10 +147,5 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
     @Override
     public <FT extends AbstractEntity<?>> void setFetchModel(final fetch<FT> fetchModel) {
 	this.fetchModel = (fetch<T>) fetchModel;
-    }
-
-    private fetch<T> produceDefaultFetchModel(final Class<T> entityType) {
-	final fetch<T> fetchWithKeyOnly = fetchOnly(dao.getEntityType()).with("key");
-	return EntityUtils.hasDescProperty(entityType) ? fetchWithKeyOnly.with("desc") : fetchWithKeyOnly;
     }
 }
