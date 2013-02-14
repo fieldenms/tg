@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.utils;
 
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -27,10 +29,10 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 public class EntityUtils {
     private final static Logger logger = Logger.getLogger(EntityUtils.class);
@@ -663,6 +665,34 @@ public class EntityUtils {
 	//		throw deepCopyError(oldObj, e2);
 	//	    }
 	//	}
+    }
+
+    /**
+     * Returns the not enhanced copy of the specified enhancedEntity.
+     *
+     * @param enhancedEntity
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends AbstractEntity<?>> T makeNotEnhanced(final T enhancedEntity) {
+	return enhancedEntity == null ? null : (T) enhancedEntity.copy(DynamicEntityClassLoader.getOriginalType(enhancedEntity.getType()));
+    }
+
+    /**
+     * Returns the not enhanced copy of the list of enhanced entities.
+     *
+     * @param enhancedEntities
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> List<T> makeNotEnhanced(final List<T> enhancedEntities) {
+	if(enhancedEntities == null){
+	    return null;
+	}
+	final List<T> notEnhnacedEntities = new ArrayList<>();
+	for(final T entry : enhancedEntities){
+	    notEnhnacedEntities.add(makeNotEnhanced(entry));
+	}
+	return notEnhnacedEntities;
     }
 
     protected static IllegalStateException deepCopyError(final Object oldObj, final Exception e) {

@@ -26,6 +26,7 @@ import ua.com.fielden.platform.swing.review.report.events.LocatorConfigurationEv
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorConfigurationEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends AbstractEntity<?>> extends JDialog {
@@ -80,7 +81,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 
     /**
      * Binds this entity locator dialog to the passed autocompleter.
-     * 
+     *
      * @param autocompleter
      */
     @SuppressWarnings("unchecked")
@@ -133,7 +134,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
      */
     private List<VT> getSelectedEntities(){
 	if(locatorConfigurationView.getPreviousView() != null){
-	    return locatorConfigurationView.getPreviousView().getSelectedEntities();
+	    return EntityUtils.makeNotEnhanced(locatorConfigurationView.getPreviousView().getSelectedEntities());
 	}
 	return new ArrayList<VT>();
     }
@@ -211,7 +212,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 
     /**
      * Creates the window closing event listener.
-     * 
+     *
      * @return
      */
     private ILocatorEventListener createLocatorEventListener() {
@@ -227,7 +228,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 
     /**
      * Creates the focus listener for autocompleter's component.
-     * 
+     *
      * @return
      */
     private FocusListener createComponentFocusListener() {
@@ -245,7 +246,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 
     /**
      * Generates the title for the locator dialog.
-     * 
+     *
      * @return
      */
     private String generateTitle() {

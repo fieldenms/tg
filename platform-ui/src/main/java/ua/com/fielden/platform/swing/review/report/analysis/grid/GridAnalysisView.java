@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.utils.EntityUtils.makeNotEnhanced;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.HierarchyEvent;
@@ -25,7 +26,6 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomai
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -147,7 +147,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      */
     public T getSelectedEntity() {
 	final T selectedEntity = getEnhancedSelectedEntity();
-	return makeNotEnhnaced(selectedEntity);
+	return makeNotEnhanced(selectedEntity);
     }
 
     /**
@@ -155,10 +155,11 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      *
      * @return
      */
+    @SuppressWarnings("unchecked")
     public List<T> getSelectedEntities(){
 	final List<T> selectedAndNotEnhancedEntities = new ArrayList<>();
 	for(final AbstractEntity<?> selectedEntity : getEnhnacedSelectedEntities()){
-	    selectedAndNotEnhancedEntities.add(makeNotEnhnaced(selectedEntity));
+	    selectedAndNotEnhancedEntities.add((T)makeNotEnhanced(selectedEntity));
 	}
 	return selectedAndNotEnhancedEntities;
     }
@@ -168,18 +169,14 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      *
      * @return
      */
+    @SuppressWarnings("unchecked")
     public List<T> getEntities() {
 	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
 	final List<T> nonEnhancedEntities = new ArrayList<>();
 	for(final AbstractEntity<?> selectedEntity : tableModel.instances()){
-	    nonEnhancedEntities.add(makeNotEnhnaced(selectedEntity));
+	    nonEnhancedEntities.add((T)makeNotEnhanced(selectedEntity));
 	}
 	return nonEnhancedEntities;
-    }
-
-    @SuppressWarnings("unchecked")
-    private T makeNotEnhnaced(final AbstractEntity<?> enhnacedEntity) {
-	return enhnacedEntity == null ? null : (T) enhnacedEntity.copy(DynamicEntityClassLoader.getOriginalType(enhnacedEntity.getType()));
     }
 
     /**
@@ -197,6 +194,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      *
      * @return
      */
+    @SuppressWarnings("unchecked")
     public AbstractEntity<?> getEnhancedSelectedAbstractEntity() {
 	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
 	return tableModel.getSelectedEntity();
@@ -207,6 +205,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      *
      * @return
      */
+    @SuppressWarnings("unchecked")
     public List<AbstractEntity<?>> getEnhnacedSelectedEntities(){
 	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
 	return tableModel.getSelectedEntities();
@@ -217,6 +216,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      *
      * @return
      */
+    @SuppressWarnings("unchecked")
     public void selectEntities(final List<AbstractEntity<?>> entities) {
 	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
 	for (final AbstractEntity<?> entity : entities) {
@@ -224,6 +224,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	}
     }
 
+    @SuppressWarnings("unchecked")
     public void bringToView(final AbstractEntity<?> entity) {
 	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
 	final int row = tableModel.getRowOf(entity);
@@ -234,6 +235,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      * Deselects all instances.
      *
      */
+    @SuppressWarnings("unchecked")
     public void deselectAll() {
 	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
 	tableModel.deselectRows2();

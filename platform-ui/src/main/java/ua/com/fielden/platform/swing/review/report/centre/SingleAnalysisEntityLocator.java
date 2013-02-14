@@ -243,15 +243,15 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 		}
 	    }
 
-	    public boolean isSelected(final T entityToCheck) {
+	    private boolean isSelected(final T entityToCheck) {
 		return selectedEntities.contains(entityToCheck);
 	    }
 
-	    public void performDeselect(final T selectedObject) {
+	    private void performDeselect(final T selectedObject) {
 		selectedEntities.remove(selectedObject);
 	    }
 
-	    public void performSelection(final T selectedObject) {
+	    private void performSelection(final T selectedObject) {
 		if (isMultipleSelection) {
 		    if (!isSelected(selectedObject)) {
 			selectedEntities.add(selectedObject);
