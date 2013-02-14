@@ -34,7 +34,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     private QueryExecutionModel(final Builder<T, Q> builder) {
 	queryModel = builder.queryModel;
 	orderModel = builder.orderModel;
-	fetchModel = builder.fetchModel;
+	fetchModel = builder.fetchModel;// != null ? builder.fetchModel : (fetch<T>) fetch(queryModel.getResultType());
 	paramValues = preprocessParamValues(builder.paramValues);
 	lightweight = builder.lightweight;
 	logger.debug(this);

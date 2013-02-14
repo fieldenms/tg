@@ -27,7 +27,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYield
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -93,8 +93,8 @@ public class EntityFetcher {
 		    with(queryModel.getParamValues()).model(), pageNumber, pageCapacity);
 	}
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetchAll(modelResult.getResultType());
-	final FetchModel<E> entFetch = new FetchModel<E>(fetchModel, domainMetadataAnalyser);
+	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetch(modelResult.getResultType());
+	final FetchModel<E> entFetch = new FetchModel<E>(/*queryModel.getFetchModel()*/fetchModel, domainMetadataAnalyser);
 	return new EntityEnhancer<E>(this, domainMetadataAnalyser).enhance(result, entFetch);
     }
 
