@@ -32,6 +32,9 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    case MINIMAL:
 		includeAllFirstLevelPrimPropsAndKey();
 		break;
+	    case KEY_AND_DESC:
+		includeKeyAndDescOnly();
+		break;
 	    case NONE:
 		if (EntityUtils.isPersistedEntityType(getEntityType())) {
 		    includeIdAndVersionOnly();
@@ -70,6 +73,18 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    if (!ppi.isCalculated()) {
 		with(ppi.getName(), !(ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || ppi.getType().equals(PropertyCategory.ENTITY_KEY)));
 	    }
+	}
+    }
+
+    private void includeKeyAndDescOnly() {
+	if (EntityUtils.isPersistedEntityType(getEntityType())) {
+	    includeIdAndVersionOnly();
+	}
+
+	with(AbstractEntity.KEY, true);
+
+	if (EntityUtils.hasDescProperty(getEntityType())) {
+	    with(AbstractEntity.DESC, true);
 	}
     }
 

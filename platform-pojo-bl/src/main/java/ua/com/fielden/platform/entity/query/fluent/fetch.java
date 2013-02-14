@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 public class fetch<T extends AbstractEntity<?>> {
     public enum FetchCategory {
-	ALL, MINIMAL, NONE
+	ALL, MINIMAL, KEY_AND_DESC, NONE
     }
 
     private final Class<T> entityType;
@@ -184,13 +184,28 @@ public class fetch<T extends AbstractEntity<?>> {
 	return sb.toString();
     }
 
+    private FetchCategory getMergedFetchCategory(final fetch<?> second) {
+	if (fetchCategory == FetchCategory.ALL || second.fetchCategory == FetchCategory.ALL) {
+	    return FetchCategory.ALL;
+	}
+
+	if (fetchCategory == FetchCategory.MINIMAL || second.fetchCategory == FetchCategory.MINIMAL) {
+	    return FetchCategory.MINIMAL;
+	}
+
+	if (fetchCategory == FetchCategory.KEY_AND_DESC || second.fetchCategory == FetchCategory.KEY_AND_DESC) {
+	    return FetchCategory.KEY_AND_DESC;
+	}
+
+	return FetchCategory.NONE;
+    }
+
     public fetch<?> unionWith(final fetch<?> second) {
 	if (second == null) {
 	    return this;
 	}
 
-	final FetchCategory resultCategory = (fetchCategory == FetchCategory.ALL || second.fetchCategory == FetchCategory.ALL) ? FetchCategory.ALL :
-	    ((fetchCategory == FetchCategory.MINIMAL || second.fetchCategory == FetchCategory.MINIMAL) ? FetchCategory.MINIMAL : FetchCategory.NONE);
+	final FetchCategory resultCategory = getMergedFetchCategory(second);
 	final fetch<T> result = new fetch<>(getEntityType(), resultCategory);
 	result.incudedProps.addAll(incudedProps);
 	result.incudedProps.addAll(second.incudedProps);
