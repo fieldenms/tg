@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -8,6 +9,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
+import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
@@ -203,4 +205,16 @@ public class FetchModelTest extends BaseEntQueryTCase {
 	assertTrue(fetchModel.containsProp("name"));
 	assertTrue(fetchModel.containsProp("surname"));
     }
+
+    @Test
+    @Ignore
+    public void test_entity_key_of_synchetic_entity() {
+	final fetch<TgAverageFuelUsage> fetch = new fetch<TgAverageFuelUsage>(TgAverageFuelUsage.class, FetchCategory.MINIMAL);
+	final FetchModel<TgAverageFuelUsage> fetchModel = new FetchModel<TgAverageFuelUsage>(fetch, DOMAIN_METADATA_ANALYSER);
+	assertFalse(fetchModel.containsProp("id"));
+	assertFalse(fetchModel.containsProp("version"));
+	assertTrue(fetchModel.containsProp("key"));
+	assertTrue(fetchModel.containsProp("qty"));
+    }
+
 }

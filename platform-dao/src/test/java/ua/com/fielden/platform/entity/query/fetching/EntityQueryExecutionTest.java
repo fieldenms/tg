@@ -84,6 +84,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -371,6 +372,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final List<TgAverageFuelUsage> models = averageFuelUsageDao.getAllEntities(from(qry). //
 		with("datePeriod.from", new DateTime(2008, 01, 01, 0, 0).toDate()). //
 		with("datePeriod.to", new DateTime(2010, 01, 01, 0, 0).toDate()). //
+		with(fetch(TgAverageFuelUsage.class).with("qty").with("key", fetchKeyAndDescOnly(TgVehicle.class))). //
 		model());
 	assertEquals("Incorrect key", 1, models.size());
 	assertEquals("Incorrect key", "120", models.get(0).getQty().toString());
@@ -383,6 +385,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final List<TgAverageFuelUsage> models = averageFuelUsageDao.getAllEntities(from(qry). //
 		with("datePeriod.from", null). //
 		with("datePeriod.to", null). //
+		with(fetch(TgAverageFuelUsage.class).with("qty").with("key", fetchKeyAndDescOnly(TgVehicle.class))). //
 		model());
 	assertEquals("Incorrect key", 1, models.size());
 	assertEquals("Incorrect key", "220", models.get(0).getQty().toString());
@@ -757,7 +760,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test1() {
 	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("key").eq().val("316").model();
-	final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(model).model());
+	final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(model).with(fetch(TgVehicleModel.class).with("make")).model());
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
