@@ -25,6 +25,7 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EnhancedLocatorEntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationModel;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEditor {
@@ -254,7 +255,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		    }
 		}
 		final EnhancedLocatorEntityQueryCriteria<T, IEntityDao<T>> criteria = criteriaGenerator.generateLocatorQueryCriteria(entityType, ldtme);
-		return criteria.runLocatorQuery(getPageSize(), value, fetchModel, dependentValues.toArray(new Pair[0]));
+		return EntityUtils.makeNotEnhanced(criteria.runLocatorQuery(getPageSize(), value, fetchModel, dependentValues.toArray(new Pair[0])));
 	    }else{
 		bindedPropertyEditor.getEditor().getView().highlightFirstHintValue(true);
 		bindedPropertyEditor.getEditor().getView().highlightSecondHintValue(false);
