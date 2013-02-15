@@ -20,7 +20,6 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import com.google.inject.Inject;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -106,6 +105,6 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
 
     @Override
     public User findUser(final String username) {
-	return findByKeyAndFetch(fetchAll(User.class), username);
+	return findByKeyAndFetch(fetch(User.class), username);
     }
 }
