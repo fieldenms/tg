@@ -9,8 +9,10 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.ILocatorManager.Phase;
+import ua.com.fielden.platform.domaintree.ILocatorManager.Type;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.LocatorManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -291,20 +293,32 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	    }
 	}
 
+	private ILocatorDomainTreeManagerAndEnhancer cachedLocator;
+
 	/**
-	 * Returns the instance of {@link ILocatorDomainTreeManagerAndEnhancer} associated with this value matcher.
+	 * Returns a fresh instance of {@link ILocatorDomainTreeManagerAndEnhancer} to be used by this value matcher.
+	 * <p>
+	 * IMPORTANT: the 'freshness' of locator is determined by its type: <br>
+	 *  1) GLOBAL locator is requested (refresh + get + discard) at the beginning of 'property editor' history. <br>
+	 *  	It will not be requested later (during 'property editor' lifecycle) due to heavy-weight nature of request. <br>
+	 *  2) LOCAL locator is just taken (refresh + get + discard) from {@link LocatorManager}. No queries are needed for that. <br>
 	 *
 	 * @return
 	 */
-	private ILocatorDomainTreeManagerAndEnhancer ldtme(){
-	    if(Phase.USAGE_PHASE != locatorManager.phaseAndTypeOfLocatorManager(rootType, propertyName).getKey()){
-		throw new IllegalStateException("The locator must be in usage mode!");
+	private ILocatorDomainTreeManagerAndEnhancer ldtme() {
+	    final Pair<Phase, Type> phaseAndType = locatorManager.phaseAndTypeOfLocatorManager(rootType, propertyName);
+	    if (Phase.USAGE_PHASE != phaseAndType.getKey()) {
+		throw new IllegalStateException("The locator must be in usage mode.");
 	    }
+	    if (Type.GLOBAL == phaseAndType.getValue() && cachedLocator == null) {
+		cachedLocator = getFreshLocator();
+	    }
+	    return Type.GLOBAL == phaseAndType.getValue() ? cachedLocator : getFreshLocator();
+	}
+
+	protected ILocatorDomainTreeManagerAndEnhancer getFreshLocator() {
 	    locatorManager.refreshLocatorManager(rootType, propertyName);
 	    final ILocatorDomainTreeManagerAndEnhancer ldtme = locatorManager.getLocatorManager(rootType, propertyName);
-	    if(ldtme == null){
-		throw new IllegalStateException("The locator manager must be initialised");
-	    }
 	    locatorManager.discardLocatorManager(rootType, propertyName);
 	    return ldtme;
 	}
