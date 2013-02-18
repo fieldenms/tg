@@ -8,10 +8,14 @@ public class OrderBy {
     private final boolean desc;
 
     public String sql() {
+	return sqlWithoutSortOrder() + (desc ? " DESC" : " ASC");
+    }
+
+    public String sqlWithoutSortOrder() {
 	if (yieldName == null) {
-	    return operand.sql() + (desc ? " DESC" : " ASC");
+	    return operand.sql();
 	} else {
-	    return yield.getInfo().getColumn() + (desc ? " DESC" : " ASC");
+	    return yield.getInfo().getColumn();
 	}
     }
 

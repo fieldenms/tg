@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public class OrderBys implements IPropertyCollector {
     private final List<OrderBy> models;
@@ -49,14 +51,28 @@ public class OrderBys implements IPropertyCollector {
 	return result;
     }
 
+    private List<String> prepareSqls() {
+	final List<String> result = new ArrayList<String>();
+	final Set<String> sqlsWithoutSortOrder = new HashSet<String>();
+	for (final OrderBy model : models) {
+	    final String sqlWithoutSortOrder = model.sqlWithoutSortOrder();
+	    if (!sqlsWithoutSortOrder.contains(sqlWithoutSortOrder)) {
+		sqlsWithoutSortOrder.add(sqlWithoutSortOrder);
+		result.add(model.sql());
+	    }
+	}
+	return result;
+    }
+
     public String sql() {
 	final StringBuffer sb = new StringBuffer();
-	if (models.size() > 0) {
+	final List<String> sqls = prepareSqls();
+	if (sqls.size() > 0) {
 	    sb.append("\nORDER BY ");
 	}
-	for (final Iterator<OrderBy> iterator = models.iterator(); iterator.hasNext();) {
-	    final OrderBy orderBy = iterator.next();
-	    sb.append(orderBy.sql());
+	for (final Iterator<String> iterator = sqls.iterator(); iterator.hasNext();) {
+	    final String orderBy = iterator.next();
+	    sb.append(orderBy);
 	    if (iterator.hasNext()) {
 		sb.append(", ");
 	    }
