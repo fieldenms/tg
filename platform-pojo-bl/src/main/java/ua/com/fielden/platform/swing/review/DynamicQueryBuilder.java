@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.review;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -41,6 +39,7 @@ import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.DateRangeSelectorEnum;
 import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 /**
  * An utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
  *
@@ -782,6 +781,7 @@ public class DynamicQueryBuilder {
     //TODO Later the genClass property must be removed. This is an interim solution that allows to add .amount prefix to the money properties.
     public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final EntityResultQueryModel<E> sourceQueryModel, final List<String> distributionProperties, final Class<E> genClass, final Map<String, String> yieldProperties){
 
+	sourceQueryModel.setFilterable(true);
 	ICompleted<E> baseQuery = select(sourceQueryModel).as(ALIAS);
 	for (final String groupProperty : distributionProperties) {
 	    baseQuery = groupBy(groupProperty, baseQuery);
