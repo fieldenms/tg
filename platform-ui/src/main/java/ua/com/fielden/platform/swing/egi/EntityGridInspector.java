@@ -163,7 +163,8 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 //		do {
 //
 //		} while (index >= maxColumns || text.toCharArray()[index] != ' ');
-		final String wrappedByHtml = TitlesDescsGetter.addHtmlTag(brdText(TitlesDescsGetter.removeHtmlTag(tipText == null ? "" : tipText), 50));
+		final String t = tipText == null ? "" : tipText;
+		final String wrappedByHtml = t.contains("<br>") ? TitlesDescsGetter.addHtmlTag(TitlesDescsGetter.removeHtmlTag(t)) : TitlesDescsGetter.addHtmlTag(brdText(TitlesDescsGetter.removeHtmlTag(t), 50));
 	        super.setTipText(wrappedByHtml);
 	    }
 //
