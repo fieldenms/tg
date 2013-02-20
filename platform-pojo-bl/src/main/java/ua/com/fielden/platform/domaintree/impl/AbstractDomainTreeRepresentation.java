@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -178,11 +179,17 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     private static List<Field> constructKeysAndProperties(final Class<?> type) {
 	final List<Field> properties = Finder.findProperties(type);
-	properties.remove(Finder.getFieldByName(type, AbstractEntity.KEY));
-	properties.remove(Finder.getFieldByName(type, AbstractEntity.DESC));
+	// let's remove desc and key properties as they will be added separately a couple of lines below
+	for (final Iterator<Field> iter = properties.iterator(); iter.hasNext();) {
+	    final Field prop = iter.next();
+	    if (AbstractEntity.KEY.equals(prop.getName()) || AbstractEntity.DESC.equals(prop.getName())) {
+		iter.remove();
+	    }
+	}
 	final List<Field> keys = Finder.getKeyMembers(type);
-	properties.removeAll(keys);
+	properties.removeAll(keys); // remove composite key members if any
 
+	// now let's ensure that that key related properties and desc are first in the list of properties
 	final List<Field> fieldsAndKeys = new ArrayList<Field>();
 	fieldsAndKeys.addAll(keys);
 	fieldsAndKeys.add(Finder.getFieldByName(type, AbstractEntity.DESC));
