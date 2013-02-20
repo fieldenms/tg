@@ -4,9 +4,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
 import org.apache.commons.lang.StringUtils;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
@@ -19,11 +24,13 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManage
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.ndimcube.EntitiesMultipleDimensionCubeData;
+import ua.com.fielden.platform.ndimcube.EntitiesMultipleDimensionCubeModel;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
-import ua.com.fielden.platform.report.query.generation.PivotAnalysisQueryGenerator;
+import ua.com.fielden.platform.report.query.generation.MultipleDimensionCubeQueryGenerator;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel;
@@ -40,7 +47,8 @@ import ua.com.fielden.platform.utils.Pair;
 public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager> {
 
     private final PivotTreeTableModelEx pivotModel;
-    private final ListCheckingModel<String> distributionCheckingModel;
+    private final ListCheckingModel<String> rowDistributionCheckingModel;
+    private final ListCheckingModel<String> columnDistributionCheckingModel;
     private final ListCheckingModel<String> aggregationCheckingModel;
     private final ListSortingModel<String> aggregationSortingModel;
 
@@ -60,34 +68,41 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	    @Override
 	    public void columnOrderChanged(final PivotColumnOrderChangedEvent event) {
-		if (pivotModel.aggregationProperties.contains(event.getProperty())) {
-		    final List<String> usedProperties = secondTick.usedProperties(root);
-		    reorderList(usedProperties, pivotModel.aggregationProperties, event.getProperty(), false);
-		    reorderList(usedProperties, pivotModel.aggregationProperties, event.getProperty(), true);
+		final int fromIndex = pivotModel.cubeModel.getIdentifierIndex(event.getProperty());
+		if(fromIndex < 0){
+		    return;
 		}
-		if (pivotModel.visibleAggregationProperties.contains(event.getProperty())) {
-		    reorderList(pivotModel.aggregationProperties, pivotModel.visibleAggregationProperties, event.getProperty(), false);
-		    reorderList(pivotModel.aggregationProperties, pivotModel.visibleAggregationProperties, event.getProperty(), true);
+		final List<String> properties = secondTick.checkedProperties(root);
+		int toIndex = 0;
+		for(int checkedIndex = 0; checkedIndex < event.getTo(); checkedIndex++){
+		    if(pivotModel.cubeModel.getIdentifierIndex(properties.get(checkedIndex)) >= 0){
+			toIndex++;
+		    }
 		}
+		pivotModel.cubeModel.moveColumnTo(fromIndex, toIndex);
 	    }
 	});
 
-	distributionCheckingModel = new DomainTreeListCheckingModel<T>(root, firstTick);
-	distributionCheckingModel.addListCheckingListener(new ListCheckingListener<String>() {
-
-	    @Override
-	    public void valueChanged(final ListCheckingEvent<String> e) {
-		pivotModel.fireTableHierarchyChangedEvent(new PivotHierarchyChangedEvent(pivotModel, e.getItem(), e.getNewCheck()));
-	    }
-	});
+	rowDistributionCheckingModel = new DomainTreeListCheckingModel<T>(root, firstTick);
+	columnDistributionCheckingModel = new DomainTreeListCheckingModel<>(root, firstTick.getSecondUsageManager());
 
 	aggregationCheckingModel = new DomainTreeListCheckingModel<T>(root, secondTick);
 	aggregationCheckingModel.addListCheckingListener(new ListCheckingListener<String>() {
 
 	    @Override
 	    public void valueChanged(final ListCheckingEvent<String> e) {
-		if (pivotModel.aggregationProperties.contains(e.getItem())) {
-		    reorderList(pivotModel.aggregationProperties, pivotModel.visibleAggregationProperties, e.getItem(), e.getNewCheck());
+		if (pivotModel.aggregatedProperties().contains(e.getItem()) && e.getNewCheck()) {
+		    final List<String> properties = secondTick.checkedProperties(root);
+		    final int to = properties.indexOf(e.getItem());
+		    int toIndex = 0;
+		    for (int checkedIndex = 0; checkedIndex < to; checkedIndex++) {
+			if (pivotModel.cubeModel.getIdentifierIndex(properties.get(checkedIndex)) >= 0) {
+			    toIndex++;
+			}
+		    }
+		    pivotModel.cubeModel.addValueColumn(e.getItem(), toIndex);
+		} else if(!e.getNewCheck()){
+		    pivotModel.cubeModel.removeValueColumn(e.getItem(), false);
 		}
 		pivotModel.fireTableHeaderChangedEvent(new PivotTableHeaderChangedEvent(pivotModel, e.getItem(), e.getNewCheck()));
 	    }
@@ -98,7 +113,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    @SuppressWarnings("unchecked")
 	    @Override
 	    public void valueChanged(final SorterChangedEvent<String> e) {
-		if (pivotModel.getRoot() != null) {
+		if (pivotModel.getRoot() != null && !pivotModel.isMultipleCube()) {
 		    ((PivotTreeTableModelEx.PivotTreeTableNodeEx) pivotModel.getRoot()).sort();
 		    pivotModel.fireSorterChageEvent(new PivotSorterChangeEvent(pivotModel, e.getNewSortObjectes()));
 		}
@@ -110,8 +125,12 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
         return pivotModel;
     }
 
-    public ListCheckingModel<String> getDistributionCheckingModel() {
-	return distributionCheckingModel;
+    public ListCheckingModel<String> getRowDistributionCheckingModel() {
+	return rowDistributionCheckingModel;
+    }
+
+    public ListCheckingModel<String> getColumnDistributionCheckingModel() {
+	return columnDistributionCheckingModel;
     }
 
     public ListCheckingModel<String> getAggregationCheckingModel() {
@@ -130,23 +149,70 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	}
 
 	final Class<T> root = getCriteria().getEntityClass();
+	final Class<T> managedType = getCriteria().getManagedType();
 
-	final IReportQueryGenerator<T> pivotQueryGenerator = new PivotAnalysisQueryGenerator<>(root,//
+	final IReportQueryGenerator<T> pivotQueryGenerator = new MultipleDimensionCubeQueryGenerator<>(root,//
 		getCriteria().getCentreDomainTreeManagerAndEnhnacerCopy(), //
 		adtme());
 
 	final AnalysisResultClassBundle<T> classBundle = pivotQueryGenerator.generateQueryModel();
+	final List<String> aggregations = adtme().getSecondTick().checkedProperties(root);
+	final EntityDescriptor aggregationDescriptor = new EntityDescriptor(managedType, aggregations);
+	final EntitiesMultipleDimensionCubeData<T> data = new EntitiesMultipleDimensionCubeData<T>()//
+		.setData(generateDataMap(root, classBundle))//
+		.setRowDistributionProperties(adtme().getFirstTick().usedProperties(root))//
+		.setColumnDistributionProperties(adtme().getFirstTick().getSecondUsageManager().usedProperties(root))//
+		.setAggregationProperties(adtme().getSecondTick().usedProperties(root))//
+		.setColumnNames(aggregationDescriptor.getTitles())//
+		.setColumnToolTips(aggregationDescriptor.getDescs())//
+		.setColumnClass(generateColumnTypes(managedType, aggregations));
 
-	final List<String> distributionProperties = adtme().getFirstTick().usedProperties(root);
-
-	final Map<String, List<T>> resultMap = new HashMap<String, List<T>>();
-	resultMap.put("Grand total", getGroupList(classBundle, 0));
-	for(int index = 0; index < distributionProperties.size(); index++){
-	    resultMap.put(distributionProperties.get(index), getGroupList(classBundle, index+1));
-	}
-	pivotModel.loadData(resultMap, distributionProperties, adtme().getSecondTick().usedProperties(root));
-
+	pivotModel.loadTree(data);
 	return Result.successful(pivotModel);
+    }
+
+    /**
+     * Generates the map between property name and it's type.
+     *
+     * @param managedType
+     * @param aggregations
+     * @return
+     */
+    private Map<String, Class<?>> generateColumnTypes(final Class<T> managedType, final List<String> aggregations) {
+	final Map<String, Class<?>> columnTypes = new HashMap<>();
+	for(final String property : aggregations){
+	    columnTypes.put(property, PropertyTypeDeterminator.determineClass(managedType, property, true, true));
+	}
+	return columnTypes;
+    }
+
+    /**
+     * Generates the data map needed for Multiple dimension cube model.
+     *
+     * @param root
+     * @param classBundle
+     * @return
+     */
+    private Map<List<String>, List<T>> generateDataMap(final Class<T> root, final AnalysisResultClassBundle<T> classBundle) {
+	final Map<List<String>, List<T>> data = new HashMap<>();
+	final List<String> rows = adtme().getFirstTick().usedProperties(root);
+	final List<String> columns = adtme().getFirstTick().getSecondUsageManager().usedProperties(root);
+
+	final List<String> rowGroup = new ArrayList<>();
+	for(int rowIndex = -1; rowIndex < rows.size(); rowIndex++){
+	    if(rowIndex >=0){
+		rowGroup.add(rows.get(rowIndex));
+	    }
+	    final List<String> group = new ArrayList<>(rowGroup);
+	    for(int columnIndex = -1; columnIndex < columns.size(); columnIndex++){
+		if(columnIndex >= 0){
+		    group.add(columns.get(columnIndex));
+		}
+		data.put(new ArrayList<>(group), getGroupList(classBundle, (rowIndex + 1) * (columns.size() + 1) + (columnIndex + 1)));
+	    }
+	}
+
+	return data;
     }
 
     private Result canLoadData() {
@@ -177,35 +243,6 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
     }
 
     /**
-     * (Adds/removes) specified item (in to/from) the destination list in order that elements of the destination corresponds the order of source list.
-     *
-     * @param sourceList
-     * @param destinationList
-     * @param item
-     * @param newCheck - determines whether to add or remove item from/to destination list.
-     */
-    private void reorderList(final List<String> sourceList, final List<String> destinationList, final String item, final Boolean newCheck) {
-	if (!newCheck) {
-	    destinationList.remove(item);
-	} else {
-	    int visibleIndex = 0;
-	    for(int index = 0; index < sourceList.size(); index++){
-		if(visibleIndex >= destinationList.size()){
-		    destinationList.add(item);
-		    return;
-		}else{
-		    if(sourceList.get(index).equals(destinationList.get(visibleIndex))){
-			visibleIndex++;
-		    }else if(sourceList.get(index).equals(item)){
-			destinationList.add(visibleIndex, item);
-			return;
-		    }
-		}
-	    }
-	}
-    }
-
-    /**
      * Returns the page for the pivot analysis query grouped by specified list of properties.
      *
      * @param groups
@@ -217,46 +254,59 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     private class PivotTreeTableModelEx extends PivotTreeTableModel {
 
-	private static final char RIGHT_ARROW = '\u2192';
+	private EntitiesMultipleDimensionCubeModel<T> cubeModel = new EntitiesMultipleDimensionCubeModel<>();
 
-	private final List<String> distributionProperties = new ArrayList<>();
-	private final List<String> aggregationProperties = new ArrayList<>();
-
-	private final List<String> visibleAggregationProperties = new ArrayList<>();
-
-	private EntityDescriptor aggregationDescriptor, distributionDescriptor;
-
-	private final Comparator<MutableTreeTableNode> sorter = new AggregationSorter();
+	private final Comparator<PivotTreeTableNodeEx> sorter = new AggregationSorter();
 
 	@Override
 	public int getColumnCount() {
-	    if(!visibleAggregationProperties.isEmpty()){
-		return 1 + visibleAggregationProperties.size();
+	    if (isMultipleCube()) {
+		return 2 + cubeModel.getColumnRoot().getChildCount();
+	    } else if (cubeModel.getValueColumnCount() != 0) {
+		return 1 + cubeModel.getValueColumnCount();
 	    }
-	    return distributionProperties.isEmpty() ? 0 : 1;
+	    return cubeModel.getRowDistributionProperties().isEmpty() ? 0 : 1;
 	}
 
 	@Override
 	public Class<?> getColumnClass(final int column) {
 	    if (column == 0) {
 		return String.class;
+	    } else if(isMultipleCube()){
+		return cubeModel.getValueColumnClass(0);
+	    } else {
+		return cubeModel.getValueColumnClass(column-1);
 	    }
-	    final Class<?> managedType = getCriteria().getManagedType();
-	    final String property = visibleAggregationProperties.get(column - 1);
-	    return PropertyTypeDeterminator.determineClass(managedType, property, true, true);
 	}
 
 	@Override
 	public String getColumnName(final int column) {
 	    if (column == 0) {
-		String name = "";
-		for (final String columnEntry : distributionProperties) {
-		    name += RIGHT_ARROW + "(" + distributionDescriptor.getTitle(columnEntry) + ")";
+		return "<html><i>Distribution properties</i></html>";
+	    } else if(isMultipleCube()){
+		DefaultMutableTreeNode treeNode = null;
+		if(column == cubeModel.getColumnRoot().getChildCount() + 1){
+		    treeNode = cubeModel.getColumnRoot();
+		} else {
+		    treeNode = (DefaultMutableTreeNode)cubeModel.getColumnRoot().getChildAt(column - 1);
 		}
-		return name.isEmpty() ? "<html><i>(Distribution properties)</i></html>" : name.substring(1);
+		return treeNode.getUserObject() == null ? PivotTreeTableNode.NULL_USER_OBJECT : treeNode.getUserObject().toString();
+	    } else {
+		return cubeModel.getValueColumnName(column-1);
 	    }
-	    final String property = aggregationDescriptor.getTitle(visibleAggregationProperties.get(column - 1));
-	    return property;
+	}
+
+	@Override
+	TreePath getPathForColumn(final int column) {
+	    TreeNode treeNode = cubeModel.getColumnRoot();
+	    if (isMultipleCube()) {
+		if (column == cubeModel.getColumnRoot().getChildCount() + 1) {
+		    treeNode = cubeModel.getColumnRoot();
+		} else if (column > 0) {
+		    treeNode = cubeModel.getColumnRoot().getChildAt(column - 1);
+		}
+	    }
+	    return new TreePath(cubeModel.getColumnModel().getPathToRoot(treeNode));
 	}
 
 	@Override
@@ -264,10 +314,10 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    final Class<T> root = getCriteria().getEntityClass();
 	    final IPivotAddToDistributionTickManager firstTick = adtme().getFirstTick();
 	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
-	    if(column == 0 && !distributionProperties.isEmpty()){
-		firstTick.setWidth(root, distributionProperties.get(0), width);
-	    } else if(column > 0) {
-		secondTick.setWidth(root, visibleAggregationProperties.get(column-1), width);
+	    if(column == 0){
+		firstTick.setWidth(root, cubeModel.getRowDistributionProperties().get(0), width);
+	    } else if(column > 0 && !isMultipleCube()) {
+		secondTick.setWidth(root, cubeModel.getColumnIdentifier(column-1).toString(), width);
 	    }
 	}
 
@@ -276,10 +326,10 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    final Class<T> root = getCriteria().getEntityClass();
 	    final IPivotAddToDistributionTickManager firstTick = adtme().getFirstTick();
 	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
-	    if(column == 0 && !distributionProperties.isEmpty()){
-		return firstTick.getWidth(root, distributionProperties.get(0));
-	    } else if(column > 0) {
-		return secondTick.getWidth(root, visibleAggregationProperties.get(column-1));
+	    if(column == 0){
+		return firstTick.getWidth(root, cubeModel.getRowDistributionProperties().get(0));
+	    } else if(column > 0 && !isMultipleCube()) {
+		return secondTick.getWidth(root, cubeModel.getColumnIdentifier(column-1).toString());
 	    }
 	    return 0;
 	}
@@ -290,102 +340,115 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	}
 
 	@Override
-	List<String> categoryProperties() {
-	    return Collections.unmodifiableList(distributionProperties);
+	List<String> rowCategoryProperties() {
+	    return Collections.unmodifiableList(cubeModel.getRowDistributionProperties());
+	}
+
+	@Override
+	List<String> columnCategoryProperties() {
+	    return Collections.unmodifiableList(cubeModel.getColumnDistributionProperties());
 	}
 
 	@Override
 	List<String> aggregatedProperties() {
-	    return Collections.unmodifiableList(aggregationProperties);
+	    return Collections.unmodifiableList(cubeModel.getAggregationProperties());
+	}
+
+	/**
+	 * Returns the value that indicates whether this pivot model is multiple dimension cube or not.
+	 *
+	 * @return
+	 */
+	public boolean isMultipleCube() {
+	    return !cubeModel.getColumnDistributionProperties().isEmpty();
 	}
 
 
-	@SuppressWarnings("unchecked")
-	private final void loadData(final Map<String, List<T>> loadedData, final List<String> distributionProperties, final List<String> aggregationProperties){
+	/**
+	 * Builds and sets the root node for this tree table model.
+	 *
+	 * @param data
+	 */
+	private void loadTree(final EntitiesMultipleDimensionCubeData<T> data) {
 
-	    //Loading the alias maps for the aggregation and category properties.
-	    if(distributionProperties == null || aggregationProperties == null){
-		return;
-	    }
-	    this.distributionProperties.clear();
-	    this.distributionProperties.addAll(distributionProperties);
-	    this.aggregationProperties.clear();
-	    this.aggregationProperties.addAll(aggregationProperties);
-	    this.visibleAggregationProperties.clear();
-	    this.visibleAggregationProperties.addAll(aggregationProperties);
+	    final EntitiesMultipleDimensionCubeModel<T> newCubeModel = new EntitiesMultipleDimensionCubeModel<>(data);
+	    final PivotTreeTableNodeEx root = generateRoot((DefaultMutableTreeNode)newCubeModel.getRowModel().getRoot());
 
-	    final Class<T> entityType = getCriteria().getEntityClass();
-	    final Class<T> managedType = getCriteria().getManagedType();
-
-	    this.distributionDescriptor = new EntityDescriptor(managedType, adtme().getFirstTick().checkedProperties(entityType));
-	    this.aggregationDescriptor = new EntityDescriptor(managedType, adtme().getSecondTick().checkedProperties(entityType));
-
-	    final PivotTreeTableNodeEx root = new PivotTreeTableNodeEx("root", null);
-	    final PivotTreeTableNodeEx grand = new PivotTreeTableNodeEx("Grand total", loadedData.get("Grand total").get(0));
-
-	    final Map<Object, Pair<PivotTreeTableNodeEx,Map<?, ?>>> nodes = new HashMap<Object, Pair<PivotTreeTableNodeEx,Map<?, ?>>>();
-	    for(int categoryIndex = 0; categoryIndex < distributionProperties.size(); categoryIndex++){
-		final List<T> listToLoad = loadedData.get(distributionProperties.get(categoryIndex));
-		for(final T data : listToLoad){
-		    Map<Object, Pair<PivotTreeTableNodeEx,Map<?, ?>>> currentLevel = nodes;
-		    PivotTreeTableNodeEx currentNode = grand;
-		    for(int dataIndex = 0; dataIndex < categoryIndex; dataIndex++){
-			final Object key = data.get(distributionProperties.get(dataIndex));
-			final Pair<PivotTreeTableNodeEx,Map<?, ?>> nodePair = currentLevel.get(key);
-			if(nodePair == null){
-			    throw new IllegalStateException("The node with " + key + " wasn't found!");
-			}
-			currentLevel = (Map<Object, Pair<PivotTreeTableNodeEx,Map<?, ?>>>)nodePair.getValue();
-			currentNode = nodePair.getKey();
-		    }
-		    final Object currentKey = data.get(distributionProperties.get(categoryIndex));
-		    final PivotTreeTableNodeEx child = new PivotTreeTableNodeEx(currentKey, data);
-		    final Pair<PivotTreeTableNodeEx, Map<?, ?>> childPair = new Pair<PivotTreeTableNodeEx, Map<?, ?>>(child, new HashMap<Object, Pair<PivotTreeTableNodeEx, Map<?, ?>>>());
-		    currentLevel.put(currentKey, childPair);
-		    currentNode.add(child);
-		}
-	    }
-	    root.add(grand);
 	    SwingUtilitiesEx.invokeLater(new Runnable() {
 
 		@Override
 		public void run() {
+		    cubeModel = newCubeModel;
 		    setRoot(root);
 		    firePivotDataLoaded(new PivotDataLoadedEvent(PivotTreeTableModelEx.this));
 		}
 	    });
 	}
 
+	/**
+	 * Generates the tree table node for the specified {@link DefaultMutableTreeNode} instance.
+	 *
+	 * @param root
+	 * @return
+	 */
+	private PivotTreeTableNodeEx generateRoot(final DefaultMutableTreeNode root) {
+	    final PivotTreeTableNodeEx node = new PivotTreeTableNodeEx(root);
+	    for(int childIndex = 0; childIndex < root.getChildCount(); childIndex++){
+		node.add(generateRoot((DefaultMutableTreeNode)root.getChildAt(childIndex)));
+	    }
+	    return node;
+	}
+
+	/**
+	 * The tree table node for pivot analysis.
+	 *
+	 * @author TG Team
+	 *
+	 */
 	private class PivotTreeTableNodeEx extends PivotTreeTableNode {
 
-	    //private final static String NULL_USER_OBJECT = "UNKNOWN";
+	    public PivotTreeTableNodeEx(final DefaultMutableTreeNode treeNode){
+		super(treeNode);
+	    }
 
-	    private final T aggregatedData;
+	    @Override
+	    public DefaultMutableTreeNode getUserObject() {
+	        return (DefaultMutableTreeNode)super.getUserObject();
+	    }
 
-	    public PivotTreeTableNodeEx(final Object userObject, final T aggregatedData){
-		super(userObject);
-		this.aggregatedData = aggregatedData;
+	    /**
+	     * Returns the user object of the wrapped {@link DefaultMutableTreeNode} instance.
+	     *
+	     * @return
+	     */
+	    public Object getWrappedUserObject(){
+		return getUserObject().getUserObject();
 	    }
 
 	    @Override
 	    public int getColumnCount() {
-		if(!visibleAggregationProperties.isEmpty()){
-		    return 1 + visibleAggregationProperties.size();
-		}
-		return distributionProperties.isEmpty() ? 0 : 1;
+		return PivotTreeTableModelEx.this.getColumnCount();
 	    }
 
 	    @Override
 	    public Object getValueAt(final int column) {
 		if (column == 0) {
-		    if (getUserObject() instanceof AbstractEntity) {
-			final AbstractEntity<?> entity = (AbstractEntity<?>) getUserObject();
+		    if (getWrappedUserObject() instanceof AbstractEntity) {
+			final AbstractEntity<?> entity = (AbstractEntity<?>) getWrappedUserObject();
 			return entity.getKey().toString() + (StringUtils.isEmpty(entity.getDesc()) ? "" : " - " + entity.getDesc());
 		    }
-		    return getUserObject() == null ? PivotTreeTableNode.NULL_USER_OBJECT : getUserObject();
+		    return getWrappedUserObject() == null ? PivotTreeTableNode.NULL_USER_OBJECT : getWrappedUserObject();
+		} else if(isMultipleCube()){
+		    DefaultMutableTreeNode treeNode = null;
+		    if(column == cubeModel.getColumnRoot().getChildCount() + 1){
+			treeNode = cubeModel.getColumnRoot();
+		    } else {
+			treeNode = (DefaultMutableTreeNode)cubeModel.getColumnRoot().getChildAt(column -1);
+		    }
+		    return cubeModel.getValueAt(getUserObject(), treeNode, 0);
+		} else {
+		    return cubeModel.getValueAt(getUserObject(), cubeModel.getColumnRoot(), column-1);
 		}
-		final String property = visibleAggregationProperties.get(column - 1);
-		return aggregatedData.get(property);
 	    }
 
 	    /**
@@ -398,28 +461,31 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		for (final MutableTreeTableNode child : children) {
 		    ((PivotTreeTableNodeEx) child).sort();
 		}
-		Collections.sort(children, sorter);
+		final List<PivotTreeTableNodeEx> childrenCopy = Collections.list((Enumeration<PivotTreeTableNodeEx>)children());
+		Collections.sort(childrenCopy, sorter);
+		children.clear();
+		children.addAll(childrenCopy);
 	    }
 
 	    @SuppressWarnings("rawtypes")
 	    @Override
 	    public String getTooltipAt(final int column) {
 		if (column == 0) {
-		    if (getUserObject() instanceof AbstractEntity) {
-			return ((AbstractEntity) getUserObject()).getDesc();
+		    if (getWrappedUserObject() instanceof AbstractEntity) {
+			return ((AbstractEntity) getWrappedUserObject()).getDesc();
 		    }
-		    return getUserObject() == null ? PivotTreeTableNode.NULL_USER_OBJECT : getUserObject().toString();
+		    return getWrappedUserObject() == null ? PivotTreeTableNode.NULL_USER_OBJECT : getWrappedUserObject().toString();
 		}
 		final Object value = getValueAt(column);
 		return value != null ? value.toString() : null;
 	    }
 	}
 
-	private class AggregationSorter implements Comparator<MutableTreeTableNode> {
+	private class AggregationSorter implements Comparator<PivotTreeTableNodeEx> {
 
 	    @SuppressWarnings("rawtypes")
 	    @Override
-	    public int compare(final MutableTreeTableNode o1, final MutableTreeTableNode o2) {
+	    public int compare(final PivotTreeTableNodeEx o1, final PivotTreeTableNodeEx o2) {
 
 		final Class<T> root = getCriteria().getEntityClass();
 		final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
@@ -429,9 +495,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		    return defaultCompare(o1, o2);
 		}
 		final List<Pair<Integer, Ordering>> sortOrders = new ArrayList<Pair<Integer, Ordering>>();
-		final List<String> columns = visibleAggregationProperties;
 		for (final Pair<String, Ordering> aggregationProperty : sortObjects) {
-		    final int sortOrder = getIndex(aggregationProperty.getKey(), columns);
+		    final int sortOrder = cubeModel.getIdentifierIndex(aggregationProperty.getKey());
 		    if (sortOrder >= 0) {
 			sortOrders.add(new Pair<Integer, Ordering>(Integer.valueOf(sortOrder), aggregationProperty.getValue()));
 		    }
@@ -467,33 +532,22 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		return value1.compareTo(value2) * sortMultiplier;
 	    }
 
-	    private int defaultCompare(final MutableTreeTableNode o1, final MutableTreeTableNode o2) {
-		if (o1.getUserObject() == null) {
-		    if (o2.getUserObject() == null) {
+	    private int defaultCompare(final PivotTreeTableNodeEx o1, final PivotTreeTableNodeEx o2) {
+		if (o1.getWrappedUserObject() == null) {
+		    if (o2.getWrappedUserObject() == null) {
 			return 0;
 		    } else {
 			return -1;
 		    }
 		} else {
-		    if (o2.getUserObject() == null) {
+		    if (o2.getWrappedUserObject() == null) {
 			return 1;
 		    } else {
-			return o1.getUserObject().toString().compareTo(o2.getUserObject().toString());
+			return o1.getWrappedUserObject().toString().compareTo(o2.getWrappedUserObject().toString());
 		    }
 		}
 
 	    }
-
-	    private int getIndex(final String string, final List<String> properties) {
-		for (int index = 0; index < properties.size(); index++) {
-		    final String anotherAggregation = properties.get(index);
-		    if (anotherAggregation.equals(string)) {
-			return index;
-		    }
-		}
-		return -1;
-	    }
-
 	}
     }
 }

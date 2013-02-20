@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.beans.PropertyChangeEvent;
@@ -36,7 +37,7 @@ public class PivotTreeTable extends FilterableTreeTable {
     private static final long serialVersionUID = -731155079399567971L;
 
     public PivotTreeTable(final FilterableTreeTableModel treeTableModel) {
-	super(treeTableModel, false);
+	super(treeTableModel, true);
 
 	getTableHeader().setReorderingAllowed(false);
 	addToolTipSuportForTableHeader();
@@ -100,6 +101,45 @@ public class PivotTreeTable extends FilterableTreeTable {
 	    }
 
 	});
+    }
+
+    @Override
+    public String getToolTipText(final MouseEvent event) {
+        final int row = rowAtPoint(event.getPoint());
+        final int col = columnAtPoint(event.getPoint());
+        if (row >= 0 && col >= 0) {
+            final PivotTreeTableNode node = (PivotTreeTableNode) getPathForRow(row).getLastPathComponent();
+            return node.getTooltipAt(col);
+        }
+        return super.getToolTipText(event);
+    }
+
+    /**
+     * Returns the path for row at the point specified with x and y coordinates.
+     *
+     * @param x
+     * @param y
+     * @return
+     */
+    public TreePath getRowPathForLocation(final int x, final int y){
+	return getPathForLocation(x, y);
+    }
+
+    /**
+     * Returns the path for column at the point specified with x and y coordinates.
+     *
+     * @param x
+     * @param y
+     * @return
+     */
+    public TreePath getColumnPathForLocation(final int x, final int y){
+	final int column = columnAtPoint(new Point(x, y));
+	if(column < 0){
+	    return null;
+	} else {
+	    final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
+	    return pivotModel.getPathForColumn(column);
+	}
     }
 
     /**
@@ -232,114 +272,4 @@ public class PivotTreeTable extends FilterableTreeTable {
 	scrollPathToVisible(selectedPath);
 	getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
     }
-
-    @Override
-    public String getToolTipText(final MouseEvent event) {
-	final int row = rowAtPoint(event.getPoint());
-	final int col = columnAtPoint(event.getPoint());
-	if (row >= 0 && col >= 0) {
-	    final PivotTreeTableNode node = (PivotTreeTableNode) getPathForRow(row).getLastPathComponent();
-	    return node.getTooltipAt(col);
-	}
-	return super.getToolTipText(event);
-    }
-    //
-    //    public void addGroupParameter(final IDistributedProperty group, final int index) {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	pivotModel.addGroupParameter(group, index);
-    //	refreshTreeTable();
-    //    }
-    //
-    //    public IDistributedProperty removeGroupParameter(final int index) {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	final IDistributedProperty removedGroup = pivotModel.removeGroupParameter(index);
-    //	refreshTreeTable();
-    //	return removedGroup;
-    //    }
-    //
-    //    public boolean removeGroupParameter(final IDistributedProperty group) {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	final boolean result = pivotModel.removeGroupParameter(group);
-    //	refreshTreeTable();
-    //	return result;
-    //
-    //    }
-    //
-    //    public void addTotalColumn(final Pair<IAggregatedProperty, Integer> column, final int index) {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	pivotModel.addColumn(column, index);
-    //	refreshTreeTable();
-    //    }
-    //
-    //    public Pair<IAggregatedProperty, Integer> removeTotalColumn(final int index) {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	final Pair<IAggregatedProperty, Integer> removedColumn = pivotModel.removeTotalColumn(index);
-    //	refreshTreeTable();
-    //	return removedColumn;
-    //    }
-    //
-    //    public boolean removeTotalColumn(final IAggregatedProperty column) {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	final boolean result = pivotModel.removeTotalColumn(column);
-    //	refreshTreeTable();
-    //	return result;
-    //    }
-    //
-    //    public void setTreeTableSorter(final Comparator<MutableTreeTableNode> treeTableSorter) {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	pivotModel.setTreeTableSorter(treeTableSorter);
-    //	reloadWithoutCollapsing();
-    //    }
-    //
-    //    public void toggleSorter() {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	pivotModel.toggleSorter();
-    //	reloadWithoutCollapsing();
-    //    }
-    //
-    //	scrollPathToVisible(selectedPath);
-    //	getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
-    //    }
-    //
-    //    public void loadData(final GroupItem root) {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	pivotModel.loadData(root);
-    //    }
-    //
-    //    private void refreshTreeTable() {
-    //	if (getModel() instanceof AbstractTableModel) {
-    //	    final TreePath selectedPath = getPathForRow(getSelectedRow());
-    //	    ((AbstractTableModel) getModel()).fireTableStructureChanged();
-    //	    //scrollPathToVisible(selectedPath);
-    //	    getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
-    //	}
-    //    }
-    //
-    //    public void swapGroupParameter(final int oldIndex, final int newIndex) {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	pivotModel.swapGroupParameter(oldIndex, newIndex);
-    //	refreshTreeTable();
-    //    }
-    //
-    //    public void swapTotalParameter(final int oldIndex, final int newIndex) {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	pivotModel.swapTotalParameter(oldIndex, newIndex);
-    //	getColumnModel().moveColumn(oldIndex + 1, newIndex + 1);
-    //	refreshTreeTable();
-    //    }
-    //
-    //    public List<Pair<IAggregatedProperty, Integer>> getAggregationColumnsWidth() {
-    //	final List<Pair<IAggregatedProperty, Integer>> pivotColumns = new ArrayList<Pair<IAggregatedProperty, Integer>>();
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	for (int column = 1; column < getColumnCount(); column++) {
-    //	    pivotColumns.add(pivotModel.getTotalColumnAt(column - 1));
-    //	}
-    //	return pivotColumns;
-    //    }
-    //
-    //    public int getHierarchicalColumnWidth() {
-    //	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    //	return pivotModel.getColumnWidthAt(getHierarchicalColumn());
-    //    }
-
 }

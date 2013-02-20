@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -21,6 +20,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
@@ -103,12 +103,12 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     @Override
     public PivotAnalysisModel<T> getModel() {
-	return (PivotAnalysisModel<T>)super.getModel();
+	return (PivotAnalysisModel<T>) super.getModel();
     }
 
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	if(getCentre().getCriteriaPanel() != null){
+	if (getCentre().getCriteriaPanel() != null) {
 	    getCentre().getDefaultAction().setEnabled(enable);
 	}
 	getCentre().getExportAction().setEnabled(enable);
@@ -156,7 +156,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	for (final String distributionProperty : firstTick.checkedProperties(root)) {
 	    listModel.addElement(distributionProperty);
 	}
-	final SortingCheckboxList<String> distributionList = new SortingCheckboxList<String>(listModel, 1);
+	final SortingCheckboxList<String> distributionList = new SortingCheckboxList<String>(listModel, 2);
 	distributionList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(distributionList) {
 
 	    private static final long serialVersionUID = 7712966992046861840L;
@@ -171,13 +171,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value.toString());
 		defaultRenderer.setText(titleAndDesc.getKey());
 		setToolTipText(titleAndDesc.getValue());
-		if (!isSelected) {
-		    if (getModel().getPivotModel().categoryProperties().contains(value)) {
-			rendererComponent.setBackground(new Color(175, 240, 208));
-		    } else {
-			rendererComponent.setBackground(Color.WHITE);
-		    }
-		}
 		return rendererComponent;
 	    }
 
@@ -187,7 +180,8 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    }
 	});
 	distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	distributionList.setCheckingModel(getModel().getDistributionCheckingModel(), 0);
+	distributionList.setCheckingModel(getModel().getRowDistributionCheckingModel(), 0);
+	distributionList.setCheckingModel(getModel().getColumnDistributionCheckingModel(), 1);
 	distributionList.setSortingModel(null);
 	return distributionList;
     }
@@ -221,13 +215,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value);
 		defaultRenderer.setText(titleAndDesc.getKey());
 		setToolTipText(titleAndDesc.getValue());
-		if (!isSelected) {
-		    if (getModel().getPivotModel().aggregatedProperties().contains(value)) {
-			rendererComponent.setBackground(new Color(175, 240, 208));
-		    } else {
-			rendererComponent.setBackground(Color.WHITE);
-		    }
-		}
 		return rendererComponent;
 	    }
 
@@ -280,28 +267,73 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    public void mouseClicked(final MouseEvent e) {
 		super.mouseClicked(e);
 		if (e.getClickCount() == 2) {
-		    final TreePath treePath = treeTable.getPathForLocation(e.getX(), e.getY());
-		    if (treePath.getPathCount() > 2) {
-			TreePath newPath = new TreePath(treePath.getPathComponent(2));
-			for (int index = 3; index < treePath.getPathCount(); index++) {
-			    newPath = newPath.pathByAddingChild(treePath.getPathComponent(index));
-			}
-			final List<Pair<String, Object>> choosenProperty = createChoosenProperty(newPath);
-			performCustomAction(new AnalysisDataEvent<>(PivotAnalysisView.this, choosenProperty));
-		    }
+		    final TreePath rowPath = generatePathWithoutRoot(treeTable.getRowPathForLocation(e.getX(), e.getY()));
+		    final TreePath columnPath = generatePathWithoutRoot(treeTable.getColumnPathForLocation(e.getX(), e.getY()));
+		    final List<Pair<String, Object>> choosenProperty = createChoosenProperty(rowPath, columnPath);
+		    performCustomAction(new AnalysisDataEvent<>(PivotAnalysisView.this, choosenProperty));
 		}
 	    }
 
-	    private List<Pair<String, Object>> createChoosenProperty(final TreePath newPath) {
+	    /**
+	     * Returns the tree path without root node.
+	     *
+	     * @param treePath
+	     * @return
+	     */
+	    private TreePath generatePathWithoutRoot(final TreePath treePath) {
+		if (treePath.getPathCount() > 1) {
+		    TreePath newPath = new TreePath(treePath.getPathComponent(1));
+		    for (int index = 2; index < treePath.getPathCount(); index++) {
+			newPath = newPath.pathByAddingChild(treePath.getPathComponent(index));
+		    }
+		    return newPath;
+		}
+		return null;
+	    }
+
+	    /**
+	     * Returns the list of property name - value pairs of the selected value.
+	     *
+	     * @param rowPath - the path for selected row.
+	     * @param columnPath - the path for selected column.
+	     * @return
+	     */
+	    private List<Pair<String, Object>> createChoosenProperty(final TreePath rowPath, final TreePath columnPath) {
+		final List<Pair<String, Object>> choosenItems = new ArrayList<>(createChoosenProperty(rowPath, getModel().getPivotModel().rowCategoryProperties()));
+		choosenItems.addAll(createChoosenProperty(columnPath, getModel().getPivotModel().columnCategoryProperties()));
+		return choosenItems;
+	    }
+
+	    /**
+	     * Returns the List of selected property name and it's value.
+	     *
+	     * @param path - path of tree nodes with values.
+	     * @param distributions - the list of distribution properties.
+	     * @return
+	     */
+	    private List<Pair<String, Object>> createChoosenProperty(final TreePath path, final List<String> distributions){
 		final List<Pair<String, Object>> choosenItems = new ArrayList<>();
-		final List<String> distributionProperties = getModel().getPivotModel().categoryProperties();
-		for (int index = 0; index < newPath.getPathCount(); index++) {
-		    final PivotTreeTableNode node = (PivotTreeTableNode) newPath.getPathComponent(index);
-		    final String distributionProperty = distributionProperties.get(index);
-		    final Object value = node.getUserObject().equals(PivotTreeTableNode.NULL_USER_OBJECT) ? null : node.getUserObject();
+		for (int index = 0; path != null && index < path.getPathCount(); index++) {
+		    final DefaultMutableTreeNode node = getUnderlyingNode(path.getPathComponent(index));
+		    final String distributionProperty = distributions.get(index);
+		    final Object value = PivotTreeTableNode.NULL_USER_OBJECT.equals(node.getUserObject())? null : node.getUserObject();
 		    choosenItems.add(new Pair<>(distributionProperty, value));
 		}
 		return choosenItems;
+	    }
+
+	    /**
+	     * Returns the underlying node for the specified node.
+	     *
+	     * @param node
+	     * @return
+	     */
+	    private DefaultMutableTreeNode getUnderlyingNode(final Object node){
+		if (node instanceof PivotTreeTableNode) {
+		    return (DefaultMutableTreeNode) ((PivotTreeTableNode) node).getUserObject();
+		} else {
+		    return (DefaultMutableTreeNode)node;
+		}
 	    }
 
 	};
@@ -323,7 +355,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	toolBar.add(getConfigureAction());
 	return toolBar;
     }
-
 
     //////////////////////Refactor code below//////////////////////////////////
     private void layoutComponents() {
@@ -374,20 +405,21 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	final ICentreDomainTreeManagerAndEnhancer baseCdtme = getModel().getCriteria().getCentreDomainTreeManagerAndEnhnacerCopy();
 	baseCdtme.setRunAutomatically(true);
 	final AnalysisDetailsData<T> analysisDetailsData = new AnalysisDetailsData<>(//
-		getModel().getCriteria().getEntityClass(), //
-		getOwner().getOwner().getModel().getName(), //
-		getOwner().getModel().getName(), //
-		baseCdtme, //
-		getModel().adtme(),//
-		(List<Pair<String, Object>>)clickedData.getData());
+	getModel().getCriteria().getEntityClass(), //
+	getOwner().getOwner().getModel().getName(), //
+	getOwner().getModel().getName(), //
+	baseCdtme, //
+	getModel().adtme(),//
+	(List<Pair<String, Object>>) clickedData.getData());
 	getOwner().showDetails(analysisDetailsData, AnalysisDetailsData.class);
     }
 
     /**
      * Refreshes the pivot tree table.
+     *
      * @param treeTable
      */
-    private static void refreshPivotTable(final PivotTreeTable treeTable){
+    private static void refreshPivotTable(final PivotTreeTable treeTable) {
 	final TreePath selectedPath = treeTable.getPathForRow(treeTable.getSelectedRow());
 	((AbstractTableModel) treeTable.getModel()).fireTableStructureChanged();
 	treeTable.getSelectionModel().setSelectionInterval(0, treeTable.getRowForPath(selectedPath));

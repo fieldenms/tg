@@ -12,8 +12,10 @@ import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTree;
+import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -117,7 +119,7 @@ public class FilterableTreeTable extends JXTreeTable {
 
 	    @Override
 	    public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
-		final Component defaultCellComponent = defaultRenderer.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+		final JComponent defaultCellComponent = (JComponent)defaultRenderer.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 		final Font originFont = defaultCellComponent.getFont().deriveFont(Font.PLAIN);
 		final Font derivedFont = originFont.deriveFont(Font.BOLD);
 		if (model.matches((TreeNode) value)) {
@@ -125,6 +127,18 @@ public class FilterableTreeTable extends JXTreeTable {
 		} else {
 		    defaultCellComponent.setFont(originFont);
 		}
+		if (!selected) {
+		    defaultCellComponent.setOpaque(true);
+		    if (row % 2 != 0) {
+			final Color ac = UIManager.getColor("Table.alternateRowColor");
+			defaultCellComponent.setBackground(new Color(ac.getRed(), ac.getGreen(), ac.getBlue()));
+		    } else {
+			defaultCellComponent.setBackground(Color.WHITE);
+		    }
+		} else {
+		    defaultCellComponent.setOpaque(false);
+		}
+
 		return defaultCellComponent;
 	    }
 

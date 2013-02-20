@@ -22,8 +22,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class DefaultMultipleDimensionCubeModel implements MultipleDimensionCubeModel {
 
-    private DefaultTreeModel rowModel, columnModel;
-
+    private final DefaultTreeModel rowModel, columnModel;
     private final Map<Pair<TreeNode, TreeNode>, Map<Object, Object>> data = new HashMap<>();
     private final Map<Object, String> valueName = new HashMap<>();
     private final Map<Object, String> valueTip = new HashMap<>();
@@ -147,15 +146,30 @@ public class DefaultMultipleDimensionCubeModel implements MultipleDimensionCubeM
     }
 
     /**
-     * Adds new column with specified identifier, column name and column class.
+     * Adds new column with specified identifier.
      * If column with given identifier exists, then it will throw {@link IllegalArgumentException}.
-     * column.
      *
      * @param identifier
      */
     public DefaultMultipleDimensionCubeModel addValueColumn(final Object identifier) {
 	if (!valueIdentifiers.contains(identifier)) {
 	    valueIdentifiers.add(identifier);
+	    return this;
+	}
+	throw new IllegalArgumentException("The column with " + identifier + " identifier already exists");
+    }
+
+    /**
+     * Adds new column with specified identifier at position index.
+     * If column with given identifier exists, then it will throw {@link IllegalArgumentException}.
+     *
+     * @param identifier
+     * @param index
+     * @return
+     */
+    public DefaultMultipleDimensionCubeModel addValueColumn(final Object identifier, final int index) {
+	if (!valueIdentifiers.contains(identifier)) {
+	    valueIdentifiers.add(index, identifier);
 	    return this;
 	}
 	throw new IllegalArgumentException("The column with " + identifier + " identifier already exists");
@@ -210,16 +224,61 @@ public class DefaultMultipleDimensionCubeModel implements MultipleDimensionCubeM
      * Removes the value column specified with identifier.
      *
      * @param identifier
+     * @param withRelatedInfo - determines whether to remove other information (e.a. name, tool tip and value type, value) related to the identifier.
      * @return
      */
-    public boolean removeValueColumn(final Object identifier) {
-	if(valueIdentifiers.remove(identifier)){
+    public boolean removeValueColumn(final Object identifier, final boolean withRelatedInfo) {
+	final boolean result = valueIdentifiers.remove(identifier);
+	if(result && withRelatedInfo){
 	    valueName.remove(identifier);
 	    valueTip.remove(identifier);
 	    valueClass.remove(identifier);
+	    removeValuesFor(identifier);
 	    return true;
 	}
-	return false;
+	return result;
+    }
+
+    /**
+     * Moves the value column fromIndex to toIndex.
+     *
+     * @param fromIndex
+     * @param toIndex
+     */
+    public void moveColumnTo(final int fromIndex, final int toIndex){
+	final Object identifier = valueIdentifiers.remove(fromIndex);
+	valueIdentifiers.add(toIndex, identifier);
+    }
+
+    /**
+     * Returns the column identifier at specified index.
+     *
+     * @param index
+     * @return
+     */
+    public Object getColumnIdentifier(final int index){
+	return valueIdentifiers.get(index);
+    }
+
+    /**
+     * Returns the identifier index.
+     *
+     * @param identifier
+     * @return
+     */
+    public int getIdentifierIndex(final Object identifier){
+	return valueIdentifiers.indexOf(identifier);
+    }
+
+    /**
+     * Removes values from data those corresponds to the given identifier.
+     *
+     * @param identifier
+     */
+    private void removeValuesFor(final Object identifier) {
+	for(final Map<Object, Object> valueEntry : data.values()){
+	    valueEntry.remove(identifier);
+	}
     }
 
     /**

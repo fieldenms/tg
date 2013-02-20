@@ -120,6 +120,38 @@ public class EntityDescriptor {
     }
 
     /**
+     * Returns the map between property name and it's title.
+     *
+     * @return
+     */
+    public Map<String, String> getTitles(){
+	return getMapOfTitlesOrDesc(true);
+    }
+
+    /**
+     * Returns the map between property name and it's description.
+     *
+     * @return
+     */
+    public Map<String, String> getDescs(){
+	return getMapOfTitlesOrDesc(false);
+    }
+
+    /**
+     * Returns the map between property name and title or description depending on titles parameter.
+     *
+     * @param titles
+     * @return
+     */
+    private Map<String, String> getMapOfTitlesOrDesc(final boolean titles){
+	final Map<String, String> titlesOrDescs = new HashMap<>();
+	for(final Map.Entry<String, Pair<String, String>> titleDescPair : mapByNames.entrySet()){
+	    titlesOrDescs.put(titleDescPair.getKey(), titles ? titleDescPair.getValue().getKey() : titleDescPair.getValue().getValue());
+	}
+	return titlesOrDescs;
+    }
+
+    /**
      * Returns value that indicates whether the passed entity class has description or not.
      *
      * @param klass

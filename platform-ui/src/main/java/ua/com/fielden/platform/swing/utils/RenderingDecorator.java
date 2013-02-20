@@ -19,7 +19,7 @@ import ua.com.fielden.platform.swing.components.ValidationLayer;
  * Class with two methods that applies, corresponding to current LnF, decoration for table renderers and editors <br>
  * <br>
  * Note : code is copy-pasted from {@link DefaultTableCellRenderer#getTableCellRendererComponent(JTable, Object, boolean, boolean, int, int)} and slightly refactored
- * 
+ *
  * @author Yura
  */
 public class RenderingDecorator {
@@ -57,7 +57,7 @@ public class RenderingDecorator {
      * Decorates passed component to look like cell renderer for passed table.<br>
      * <br>
      * Note : code copy-pasted from {@link DefaultTableCellRenderer#getTableCellRendererComponent(JTable, Object, boolean, boolean, int, int)} and slightly refactored
-     * 
+     *
      * @param component
      * @param table
      * @param isSelected
@@ -90,7 +90,7 @@ public class RenderingDecorator {
 		Color background = table.getBackground();
 		if (background == null || background instanceof javax.swing.plaf.UIResource) {
 		    final Color alternateColor = UIManager.getColor("Table.alternateRowColor");
-		    if (alternateColor != null && row % 2 == 0) {
+		    if (alternateColor != null && row % 2 != 0) {
 			background = alternateColor;
 		    }
 		}
@@ -129,7 +129,7 @@ public class RenderingDecorator {
     /**
      * Decorates passed component to look like cell editor for passed table. Decorates like {@link #decorateRenderer(JComponent, JTable, boolean, boolean, int, int)} but assuming
      * that cell is selected and has focus
-     * 
+     *
      * @param component
      * @param table
      */

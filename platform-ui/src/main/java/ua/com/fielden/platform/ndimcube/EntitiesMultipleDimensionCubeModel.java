@@ -21,6 +21,16 @@ public class EntitiesMultipleDimensionCubeModel<T extends AbstractEntity<?>> ext
     private final Map<Object, Pair<DefaultMutableTreeNode,Map<?, ?>>> rowNodes = new HashMap<Object, Pair<DefaultMutableTreeNode,Map<?, ?>>>();
     private final Map<Object, Pair<DefaultMutableTreeNode,Map<?, ?>>> columnNodes = new HashMap<Object, Pair<DefaultMutableTreeNode,Map<?, ?>>>();
 
+    /**
+     * Initialises empty multiple dimension cube model.
+     */
+    public EntitiesMultipleDimensionCubeModel(){
+	super(new DefaultTreeModel(new DefaultMutableTreeNode("Grand total")), new DefaultTreeModel(new DefaultMutableTreeNode("Grand total")));
+    }
+
+    /**
+     * Initialises multiple dimension cube model for specified {@link EntitiesMultipleDimensionCubeData} instance.
+     */
     public EntitiesMultipleDimensionCubeModel(final EntitiesMultipleDimensionCubeData<T> data) {
 	super(new DefaultTreeModel(new DefaultMutableTreeNode("Grand total")), new DefaultTreeModel(new DefaultMutableTreeNode("Grand total")));
 	loadData(data);
@@ -58,7 +68,6 @@ public class EntitiesMultipleDimensionCubeModel<T extends AbstractEntity<?>> ext
 		loadDataList(rowDistribution, columnDistribution, dataList);
 	    }
 	}
-
 	rowNodes.clear();
 	columnNodes.clear();
     }
@@ -117,12 +126,48 @@ public class EntitiesMultipleDimensionCubeModel<T extends AbstractEntity<?>> ext
 	}
     }
 
-    private DefaultMutableTreeNode getColumnRoot() {
+    /**
+     * Returns the root for the column tree model.
+     *
+     * @return
+     */
+    public DefaultMutableTreeNode getColumnRoot() {
 	return (DefaultMutableTreeNode)getColumnModel().getRoot();
     }
 
-    private DefaultMutableTreeNode getRowRoot() {
+    /**
+     * Returns the root for the row tree model.
+     *
+     * @return
+     */
+    public DefaultMutableTreeNode getRowRoot() {
 	return (DefaultMutableTreeNode)getRowModel().getRoot();
     }
 
+    /**
+     * Returns the list of property names those where used for constructing row tree model.
+     *
+     * @return
+     */
+    public List<String> getRowDistributionProperties() {
+	return new ArrayList<>(rowDistributionProperties);
+    }
+
+    /**
+     * Returns the list of property names those where used for constructing column tree model.
+     *
+     * @return
+     */
+    public List<String> getColumnDistributionProperties() {
+	return new ArrayList<>(columnDistributionProperties);
+    }
+
+    /**
+     * Returns the list of properties which were aggregated.
+     *
+     * @return
+     */
+    public List<String> getAggregationProperties() {
+	return new ArrayList<>(aggregationProperties);
+    }
 }

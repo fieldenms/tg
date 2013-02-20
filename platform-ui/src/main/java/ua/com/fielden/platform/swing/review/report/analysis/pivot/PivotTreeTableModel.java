@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 import java.util.List;
 
 import javax.swing.event.EventListenerList;
+import javax.swing.tree.TreePath;
 
 import ua.com.fielden.platform.swing.treetable.DynamicTreeTableModel;
 
@@ -28,9 +29,13 @@ abstract class PivotTreeTableModel extends DynamicTreeTableModel {
 
     abstract String getColumnTooltipAt(int column);
 
-    abstract List<String> categoryProperties();
+    abstract List<String> rowCategoryProperties();
 
     abstract List<String> aggregatedProperties();
+
+    abstract List<String> columnCategoryProperties();
+
+    abstract TreePath getPathForColumn(int column);
 
     public void addPivotDataLoadedListener(final PivotDataLoadedListener listener) {
 	listeners.add(PivotDataLoadedListener.class, listener);

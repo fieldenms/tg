@@ -19,15 +19,18 @@ public class MultipleDimensionCubeQueryGenerator<T extends AbstractEntity<?>> ex
     @Override
     public AnalysisResultClassBundle<T> generateQueryModel() {
 	//Generate analysis result map that is based on analysis domain manager associated with this query generator.
+	final List<String> distributionProperties = new ArrayList<>();
+	distributionProperties.addAll(adtm().getFirstTick().usedProperties(getRoot()));
+	distributionProperties.addAll(adtm().getFirstTick().getSecondUsageManager().usedProperties(getRoot()));
 	final AnalysisResultClassBundle<T> classBundle = (AnalysisResultClassBundle<T>) AnalysisResultClass.generateAnalysisQueryClass(//
 	(Class<T>) getCdtme().getEnhancer().getManagedType(getRoot()),//
 		adtm().getFirstTick().checkedProperties(getRoot()),//
 		adtm().getSecondTick().checkedProperties(getRoot()),//
-		adtm().getFirstTick().usedProperties(getRoot()),//
+		distributionProperties,//
 		adtm().getSecondTick().usedProperties(getRoot()));
 
 	final List<String> rowDistributionProperties = adtm().getFirstTick().usedProperties(getRoot());
-	final List<String> columnDistributionProperties = new ArrayList<>();
+	final List<String> columnDistributionProperties = adtm().getFirstTick().getSecondUsageManager().usedProperties(getRoot());
 
 	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> resultQueryList = new ArrayList<>();
 	final List<String> rowGroups = new ArrayList<>();
@@ -46,6 +49,11 @@ public class MultipleDimensionCubeQueryGenerator<T extends AbstractEntity<?>> ex
 	    }
 	}
 	return new AnalysisResultClassBundle<>(classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), resultQueryList);
+    }
+
+    @Override
+    protected IPivotDomainTreeManager adtm() {
+        return (IPivotDomainTreeManager)super.adtm();
     }
 
 }
