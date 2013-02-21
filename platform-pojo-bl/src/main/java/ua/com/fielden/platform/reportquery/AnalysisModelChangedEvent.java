@@ -6,8 +6,15 @@ public class AnalysisModelChangedEvent extends EventObject {
 
     private static final long serialVersionUID = -3919820231084583440L;
 
-    public AnalysisModelChangedEvent(final Object source) {
+    private final boolean isSorted;
+
+    public AnalysisModelChangedEvent(final Object source, final boolean isSorted) {
 	super(source);
+	this.isSorted = isSorted;
+    }
+
+    public boolean isSorted() {
+	return isSorted;
     }
 
 }

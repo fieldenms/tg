@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.JOptionPane;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -31,6 +33,7 @@ import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
 import ua.com.fielden.platform.report.query.generation.MultipleDimensionCubeQueryGenerator;
+import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel;
@@ -84,13 +87,25 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	});
 
 	rowDistributionCheckingModel = new DomainTreeListCheckingModel<T>(root, firstTick);
-	columnDistributionCheckingModel = new DomainTreeListCheckingModel<>(root, firstTick.getSecondUsageManager());
+	columnDistributionCheckingModel = new DomainTreeListCheckingModel<T>(root, firstTick.getSecondUsageManager()){
+	    @Override
+	    public void checkValue(final String value, final boolean check) {
+		try {
+		    super.checkValue(value, check);
+		} catch (final IllegalStateException e) {
+		    JOptionPane.showMessageDialog(getAnalysisView(), e.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
+		}
+	    }
+	};
 
 	aggregationCheckingModel = new DomainTreeListCheckingModel<T>(root, secondTick);
 	aggregationCheckingModel.addListCheckingListener(new ListCheckingListener<String>() {
 
 	    @Override
 	    public void valueChanged(final ListCheckingEvent<String> e) {
+		if(pivotModel.isMultipleCube()){
+		    return;
+		}
 		if (pivotModel.aggregatedProperties().contains(e.getItem()) && e.getNewCheck()) {
 		    final List<String> properties = secondTick.checkedProperties(root);
 		    final int to = properties.indexOf(e.getItem());
@@ -113,10 +128,30 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    @SuppressWarnings("unchecked")
 	    @Override
 	    public void valueChanged(final SorterChangedEvent<String> e) {
-		if (pivotModel.getRoot() != null && !pivotModel.isMultipleCube()) {
-		    ((PivotTreeTableModelEx.PivotTreeTableNodeEx) pivotModel.getRoot()).sort();
-		    pivotModel.fireSorterChageEvent(new PivotSorterChangeEvent(pivotModel, e.getNewSortObjectes()));
-		}
+		new BlockingLayerCommand<Boolean>("", getAnalysisView().getOwner().getProgressLayer()) {
+
+		    private static final long serialVersionUID = 8904506380751507330L;
+
+		    @Override
+		    protected Boolean action(final ActionEvent event) throws Exception {
+			if (pivotModel.getRoot() != null && !pivotModel.isMultipleCube()) {
+			    getProvider().getBlockingLayer().setText("Sorting...");
+			    ((PivotTreeTableModelEx.PivotTreeTableNodeEx) pivotModel.getRoot()).sort();
+			    return Boolean.TRUE;
+			}
+			return Boolean.FALSE;
+		    }
+
+		    @Override
+		    protected void postAction(final Boolean value) {
+			if(value){
+			    pivotModel.fireSorterChageEvent(new PivotSorterChangeEvent(pivotModel, e.getNewSortObjectes()));
+			}
+			super.postAction(value);
+		    };
+
+		}.actionPerformed(null);
+
 	    }
 	});
     }
@@ -457,7 +492,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	     * @param treeTableSorter
 	     */
 	    @SuppressWarnings("unchecked")
-	    private void sort() {
+	    private synchronized void sort() {
 		for (final MutableTreeTableNode child : children) {
 		    ((PivotTreeTableNodeEx) child).sort();
 		}

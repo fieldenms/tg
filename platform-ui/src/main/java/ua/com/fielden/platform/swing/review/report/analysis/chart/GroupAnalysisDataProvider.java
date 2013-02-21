@@ -55,7 +55,7 @@ public class GroupAnalysisDataProvider<T extends AbstractEntity<?>> extends Abst
 	if (loadedData != null) {
 	    this.loadedData.clear();
 	    this.loadedData.addAll(loadedData);
-	    fireAnalysisModelChangeEvent(new AnalysisModelChangedEvent(this));
+	    fireAnalysisModelChangeEvent(new AnalysisModelChangedEvent(this, false));
 	}
     }
 
@@ -76,7 +76,7 @@ public class GroupAnalysisDataProvider<T extends AbstractEntity<?>> extends Abst
 
     public void sortLoadedData(final Comparator<T> c){
 	Collections.sort(loadedData, c);
-	fireAnalysisModelChangeEvent(new AnalysisModelChangedEvent(this));
+	fireAnalysisModelChangeEvent(new AnalysisModelChangedEvent(this, true));
     }
 
     @Override

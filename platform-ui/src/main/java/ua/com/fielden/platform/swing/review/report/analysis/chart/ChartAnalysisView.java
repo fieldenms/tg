@@ -196,6 +196,9 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
             @Override
             public void cahrtModelChanged(final AnalysisModelChangedEvent event) {
         	updateChart(getModel().getChartAnalysisDataProvider().getLoadedData(), null);
+        	if(!event.isSorted()){
+        	    chartScroller.resetScrollRanges();
+        	}
             }
         };
     }

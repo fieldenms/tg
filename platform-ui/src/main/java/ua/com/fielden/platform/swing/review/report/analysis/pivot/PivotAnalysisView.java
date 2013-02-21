@@ -32,6 +32,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
+import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
+import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
@@ -177,6 +179,14 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public boolean isSortingAvailable(final String element) {
 		return false;
+	    }
+	});
+
+	getModel().getRowDistributionCheckingModel().addListCheckingListener(new ListCheckingListener<String>() {
+
+	    @Override
+	    public void valueChanged(final ListCheckingEvent<String> e) {
+		aggregationList.repaint();
 	    }
 	});
 	distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

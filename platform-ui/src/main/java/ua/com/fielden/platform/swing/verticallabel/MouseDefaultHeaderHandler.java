@@ -10,22 +10,32 @@ import javax.swing.table.TableCellRenderer;
 
 /**
  * Handles mouse move, mouse entered and mouse exited events in order to support Nimbus L&F
- * 
+ *
  * @author oleh
- * 
+ *
  */
 public class MouseDefaultHeaderHandler implements MouseMotionListener, MouseListener {
 
     private int currentColumn;
+    private boolean receiveEvents;
 
     @Override
     public void mouseDragged(final MouseEvent e) {
-
+	mouseMovedOrDragged(e);
     }
 
     @Override
     public void mouseMoved(final MouseEvent e) {
-	if (!(e.getSource() instanceof JTableHeader)) {
+	mouseMovedOrDragged(e);
+    }
+
+    /**
+     * Handles mouse move or mouse drag events.
+     *
+     * @param e
+     */
+    private void mouseMovedOrDragged(final MouseEvent e){
+	if (!(e.getSource() instanceof JTableHeader) || !receiveEvents) {
 	    return;
 	}
 	final JTableHeader tableHeader = (JTableHeader) e.getSource();
@@ -46,6 +56,7 @@ public class MouseDefaultHeaderHandler implements MouseMotionListener, MouseList
 
     @Override
     public void mouseEntered(final MouseEvent e) {
+	receiveEvents = true;
 	if (!(e.getSource() instanceof JTableHeader)) {
 	    return;
 	}
@@ -58,17 +69,17 @@ public class MouseDefaultHeaderHandler implements MouseMotionListener, MouseList
 
     @Override
     public void mouseExited(final MouseEvent e) {
+	receiveEvents = false;
 	setMouseOverCurrentColumn(e, Boolean.FALSE);
     }
 
     @Override
     public void mouseReleased(final MouseEvent e) {
-	// setMouseOverCurrentColumn(e, Boolean.TRUE);
     }
 
     /**
      * Sets the mouseOver property of the VerticalTableHeaderRederer instance to true if the mouseOver parameter is true otherwise it sets that property to false
-     * 
+     *
      * @param table
      * @param columnIndex
      * @param mouseOver
@@ -90,7 +101,6 @@ public class MouseDefaultHeaderHandler implements MouseMotionListener, MouseList
 
     @Override
     public void mousePressed(final MouseEvent e) {
-	// setMouseOverCurrentColumn(e, Boolean.FALSE);
     }
 
     private void setMouseOverCurrentColumn(final MouseEvent e, final Boolean mouseOver) {
