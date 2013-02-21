@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.migration;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 
@@ -14,8 +16,22 @@ public class tModelRetrieverWithAllMakesAssigned extends AbstractRetriever<TgVeh
     }
 
     @Override
-    public String selectSql() {
-	return "SELECT MODEL key_, MODEL_DESC desc_, MAKE make_ FROM MODEL WHERE MAKE IS NOT NULL";
+    public Map<String, String> resultFields() {
+	return map( //
+		field("key", "MODEL"), //
+		field("desc", "MODEL_DESC"), //
+		field("make", "MAKE") //
+		);
+    }
+
+    @Override
+    public String fromSql() {
+	return "MODEL";
+    }
+
+    @Override
+    public String whereSql() {
+	return "MAKE IS NOT NULL";
     }
 
     @Override

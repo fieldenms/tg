@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.migration;
 
 import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.SessionFactory;
 
@@ -17,16 +19,27 @@ import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
  *
  */
 public interface IRetriever<T extends AbstractEntity<?>> {
-    /**
-     * Should provide an SQL for selection of data from a legacy database. The convention:
-     * <ul>
-     *   <li> Each column in select should correspond to an entity property, which is defined as a column alias.
-     *   <li> Column alias should be named as property_name_; e.g. for property vehicleTechDetails alias must be vehicle_tech_details_.
-     * </ul>
-     * @return
-     */
-    String selectSql();
 
+    Map<String, String> resultFields();
+
+    String fromSql();
+
+    String whereSql();
+
+    List<String> groupSql();
+
+    List<String> orderSql();
+
+//    /**
+//     * Should provide an SQL for selection of data from a legacy database. The convention:
+//     * <ul>
+//     *   <li> Each column in select should correspond to an entity property, which is defined as a column alias.
+//     *   <li> Column alias should be named as property_name_; e.g. for property vehicleTechDetails alias must be vehicle_tech_details_.
+//     * </ul>
+//     * @return
+//     */
+//    String selectSql();
+//
     /**
      * Determines whether data (re-)population is required.
      * In case of data (re-)population retrieves data from a legacy database, creates entity instances based on this data and persists them.
@@ -46,7 +59,7 @@ public interface IRetriever<T extends AbstractEntity<?>> {
 
 
     /**
-     * Returns name of the entity property, by which retrieved entities can be grouped in certain number of batches. This property is usually part of the entity key and cannot be null.
+     * Returns name of the entity property, by which retrieved entities can be grouped into batches. This property is usually part of the entity key and cannot be null.
      * @return
      */
     String splitProperty();

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.migration;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -9,13 +8,6 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import junit.framework.TestCase;
-
-import org.hibernate.SessionFactory;
-
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
-import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.utils.Pair;
 
 
@@ -48,59 +40,119 @@ public class SplitIntoBatches extends TestCase{
 	assertTrue("Contains different batches of items then expected", pq.containsAll(expected));
     }
 
-    public void testThatSplitSqlCompositionForRetieverWithOrderedSelectWorks() {
-	System.out.println(DataMigrator.getSplitSql(new IRetriever() {
-
-	    @Override
-	    public String selectSql() {
-		return "SELECT aa first_property_, bb second_property_ FROM CC ORDER BY 1 DESC";
-	    }
-
-	    @Override
-	    public Result populateData(final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationErrorDao errorDao, final MigrationHistoryDao histDao, final MigrationRun migrationRun, final String subset)
-		    throws Exception {
-		return null;
-	    }
-
-	    @Override
-	    public Class type() {
-		return null;
-	    }
-
-	    @Override
-	    public String splitProperty() {
-		return "firstProperty";
-	    }
-
-	}));
-    }
-
-    public void testThatSplitSqlCompositionForRetieverWithUnorderedSelectWorks() {
-	System.out.println(DataMigrator.getSplitSql(new IRetriever() {
-
-	    @Override
-	    public String selectSql() {
-		// TODO Auto-generated method stub
-		return "SELECT aa first_property_, bb second_property_ FROM CC";
-	    }
-
-	    @Override
-	    public Result populateData(final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationErrorDao errorDao, final MigrationHistoryDao histDao, final MigrationRun migrationRun, final String subset)
-		    throws Exception {
-		return null;
-	    }
-
-	    @Override
-	    public Class type() {
-		return null;
-	    }
-
-	    @Override
-	    public String splitProperty() {
-		return "firstProperty";
-	    }
-
-	}));
-    }
+//    public void testThatSplitSqlCompositionForRetieverWithOrderedSelectWorks() {
+//	System.out.println(DataMigrator.getSplitSql(new IRetriever() {
+//
+//	    @Override
+//	    public Map<String, String> resultFields() {
+//		return AbstractRetriever.map( //
+//			AbstractRetriever.field("firstProperty", "aa"), //
+//			AbstractRetriever.field("secondProperty", "bb") //
+//			);
+//	    }
+//
+//	    @Override
+//	    public String fromSql() {
+//		return "CC";
+//	    }
+//
+//	    @Override
+//	    public List<String> orderSql() {
+//		return AbstractRetriever.list("1 desc");
+//	    }
+//
+//	    @Override
+//	    public Result populateData(final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationErrorDao errorDao, final MigrationHistoryDao histDao, final MigrationRun migrationRun, final String subset)
+//		    throws Exception {
+//		return null;
+//	    }
+//
+//	    @Override
+//	    public Class type() {
+//		return null;
+//	    }
+//
+//	    @Override
+//	    public String splitProperty() {
+//		return "firstProperty";
+//	    }
+//
+//	    @Override
+//	    public String whereSql() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	    }
+//
+//	    @Override
+//	    public String selectSql() {
+//		return "SELECT aa first_property_, bb second_property_ FROM CC ORDER BY 1 DESC";
+//	    }
+//
+//	    @Override
+//	    public List groupSql() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	    }
+//
+//	}));
+//    }
+//
+//    public void testThatSplitSqlCompositionForRetieverWithUnorderedSelectWorks() {
+//	System.out.println(DataMigrator.getSplitSql(new IRetriever() {
+//
+//	    @Override
+//	    public Map<String, String> resultFields() {
+//		return AbstractRetriever.map( //
+//			AbstractRetriever.field("firstProperty", "aa"), //
+//			AbstractRetriever.field("secondProperty", "bb") //
+//			);
+//	    }
+//
+//	    @Override
+//	    public String fromSql() {
+//		return "CC";
+//	    }
+//
+//	    @Override
+//	    public Result populateData(final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationErrorDao errorDao, final MigrationHistoryDao histDao, final MigrationRun migrationRun, final String subset)
+//		    throws Exception {
+//		return null;
+//	    }
+//
+//	    @Override
+//	    public Class type() {
+//		return null;
+//	    }
+//
+//	    @Override
+//	    public String splitProperty() {
+//		return "firstProperty";
+//	    }
+//
+//	    @Override
+//	    public String whereSql() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	    }
+//
+//	    @Override
+//	    public String selectSql() {
+//		return "SELECT aa first_property_, bb second_property_ FROM CC";
+//	    }
+//
+//	    @Override
+//	    public List groupSql() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	    }
+//
+//	    @Override
+//	    public List orderSql() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	    }
+//
+//	}));
+//    }
 
 }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.migration;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 
@@ -14,7 +16,15 @@ public class tMakeRetriever extends AbstractRetriever<TgVehicleMake> {
     }
 
     @Override
-    public String selectSql() {
-	return "SELECT MAKE key_, MAKE_DESC desc_ FROM MAKE";
+    public Map<String, String> resultFields() {
+	return map( //
+		field("key", "MAKE"), //
+		field("desc", "MAKE_DESC") //
+		);
+    }
+
+    @Override
+    public String fromSql() {
+	return "MAKE";
     }
 }

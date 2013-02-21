@@ -14,9 +14,6 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -114,56 +111,56 @@ public class DataMigrator {
 	return pq;
     }
 
-    public static String getSplitSql(final IRetriever ret) {
-	final String baseSql = ret.selectSql().toUpperCase();
-	final int orderByStart = baseSql.indexOf("ORDER BY");
-	final StringBuffer sb = new StringBuffer();
-	final String splitPropertyColumn = AbstractRetriever.encodePropertyName(ret.splitProperty());
-	sb.append("SELECT A." + splitPropertyColumn + ", COUNT(*) FROM (" + (orderByStart != -1 ? baseSql.substring(0, orderByStart) : baseSql) + ") A GROUP BY A."
-		+ splitPropertyColumn + " ORDER BY 2 DESC");
+//    public static String getSplitSql(final IRetriever ret) {
+//	final String baseSql = ret.selectSql().toUpperCase();
+//	final int orderByStart = baseSql.indexOf("ORDER BY");
+//	final StringBuffer sb = new StringBuffer();
+//	final String splitPropertyColumn = AbstractRetriever.encodePropertyName(ret.splitProperty());
+//	sb.append("SELECT A." + splitPropertyColumn + ", COUNT(*) FROM (" + (orderByStart != -1 ? baseSql.substring(0, orderByStart) : baseSql) + ") A GROUP BY A."
+//		+ splitPropertyColumn + " ORDER BY 2 DESC");
+//
+//	return sb.toString();
+//    }
 
-	return sb.toString();
-    }
+//    public static String getKeyUniquenessCheckSql(final IRetriever ret) {
+//	final int orderByStart = ret.selectSql().toUpperCase().indexOf("ORDER BY");
+//	final String baseSql = orderByStart != -1 ? ret.selectSql().toUpperCase().substring(0, orderByStart) : ret.selectSql().toUpperCase();
+//
+//	final List<String> keyPropColAliases = new ArrayList<String>();
+//	for (final String keyPropName : Finder.getFieldNames(Finder.getKeyMembers(ret.type()))) {
+//	    keyPropColAliases.add(/*AbstractRetriever.encodePropertyName*/(keyPropName));
+//	}
+//
+//	final StringBuffer sb = new StringBuffer();
+//	final StringBuffer sbOrderBy = new StringBuffer();
+//
+//	sb.append("SELECT * FROM (" + baseSql + ") MT WHERE 1 < (SELECT COUNT(*) FROM (" + baseSql + ") AA WHERE ");
+//	for (final Iterator<String> iterator = keyPropColAliases.iterator(); iterator.hasNext();) {
+//	    final String keyPropName = iterator.next();
+//	    sb.append("AA." + keyPropName + " = MT." + keyPropName + (iterator.hasNext() ? " AND " : ""));
+//	    sbOrderBy.append("MT." + keyPropName + (iterator.hasNext() ? ", " : ""));
+//	}
+//	sb.append(") ORDER BY " + sbOrderBy.toString());
+//
+//	return sb.toString();
+//    }
 
-    public static String getKeyUniquenessCheckSql(final IRetriever ret) {
-	final int orderByStart = ret.selectSql().toUpperCase().indexOf("ORDER BY");
-	final String baseSql = orderByStart != -1 ? ret.selectSql().toUpperCase().substring(0, orderByStart) : ret.selectSql().toUpperCase();
-
-	final List<String> keyPropColAliases = new ArrayList<String>();
-	for (final String keyPropName : Finder.getFieldNames(Finder.getKeyMembers(ret.type()))) {
-	    keyPropColAliases.add(AbstractRetriever.encodePropertyName(keyPropName));
-	}
-
-	final StringBuffer sb = new StringBuffer();
-	final StringBuffer sbOrderBy = new StringBuffer();
-
-	sb.append("SELECT * FROM (" + baseSql + ") MT WHERE 1 < (SELECT COUNT(*) FROM (" + baseSql + ") AA WHERE ");
-	for (final Iterator<String> iterator = keyPropColAliases.iterator(); iterator.hasNext();) {
-	    final String keyPropName = iterator.next();
-	    sb.append("AA." + keyPropName + " = MT." + keyPropName + (iterator.hasNext() ? " AND " : ""));
-	    sbOrderBy.append("MT." + keyPropName + (iterator.hasNext() ? ", " : ""));
-	}
-	sb.append(") ORDER BY " + sbOrderBy.toString());
-
-	return sb.toString();
-    }
-
-    public List<Pair<String, Long>> populateData(final IRetriever ret) throws Exception {
-	final List<Pair<String, Long>> result = new ArrayList<Pair<String, Long>>();
-	final String legacyDataSql = getSplitSql(ret);
-	final Connection conn = injector.getInstance(Connection.class);
-	final Statement st = conn.createStatement();
-	final ResultSet rs = st.executeQuery(legacyDataSql);
-
-	while (rs.next()) {
-	    result.add(new Pair<String, Long>(rs.getString(1), rs.getLong(2)));
-	}
-	rs.close();
-	st.close();
-	conn.close();
-
-	return result;
-    }
+//    public List<Pair<String, Long>> populateData(final IRetriever ret) throws Exception {
+//	final List<Pair<String, Long>> result = new ArrayList<Pair<String, Long>>();
+//	final String legacyDataSql = getSplitSql(ret);
+//	final Connection conn = injector.getInstance(Connection.class);
+//	final Statement st = conn.createStatement();
+//	final ResultSet rs = st.executeQuery(legacyDataSql);
+//
+//	while (rs.next()) {
+//	    result.add(new Pair<String, Long>(rs.getString(1), rs.getLong(2)));
+//	}
+//	rs.close();
+//	st.close();
+//	conn.close();
+//
+//	return result;
+//    }
 
     private final HibernateUtil hiberUtil;
     private final EntityFactory factory;
@@ -206,7 +203,7 @@ public class DataMigrator {
     private boolean validateRetrievalSql(final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) throws Exception {
 	System.out.print("Validating " + retriever.getClass().getSimpleName() + " ... ");
 	boolean foundErrors = false;
-	final String legacyDataSql = retriever.selectSql();
+	final String legacyDataSql = null; //retriever.selectSql();
 	if (!StringUtils.isEmpty(legacyDataSql)) {
 
 	    final Statement st = conn.createStatement();
@@ -219,7 +216,7 @@ public class DataMigrator {
 		final Set<String> propNames = new HashSet<String>();
 
 		for (int index = 1; index <= md.getColumnCount(); index++) {
-		    final String propName = AbstractRetriever.decodePropertyName(md.getColumnLabel(index));
+		    final String propName = /*AbstractRetriever.decodePropertyName*/(md.getColumnLabel(index));
 		    propNames.add(propName);
 
 		    try {
@@ -240,11 +237,11 @@ public class DataMigrator {
 		}
 
 
-		final ResultSet rs2 = st.executeQuery(getKeyUniquenessCheckSql(retriever));
+		final ResultSet rs2 = null; //st.executeQuery(getKeyUniquenessCheckSql(retriever));
 
 		if (rs2.next()) {
 		    foundErrors = true;
-		    logger.error("\n\tRetriever [" + retriever.getClass().getName() + "] for type [" + retriever.type().getName() + "] contains duplicates in terms of entity key " + keyPropNames + ". More details here:\n" + getKeyUniquenessCheckSql(retriever) + "\n");
+		    //logger.error("\n\tRetriever [" + retriever.getClass().getName() + "] for type [" + retriever.type().getName() + "] contains duplicates in terms of entity key " + keyPropNames + ". More details here:\n" + getKeyUniquenessCheckSql(retriever) + "\n");
 		}
 
 		rs2.close();
@@ -303,25 +300,25 @@ public class DataMigrator {
 		conn.close();
 		results1.add(result);
 	    } else {
-		final List<Task> tasks = new ArrayList<Task>();
-
-		for (final Iterator<Pair<Set<String>, Long>> iterator = DataMigrator.splitIntoBatches(populateData(ret), threadCount).iterator(); iterator.hasNext();) {
-		    final Connection conn = injector.getInstance(Connection.class);
-		    tasks.add(new Task("done.", injector, sFactory, conn, factory, migrationRun, (Class<? extends IRetriever<?>>) ret.getClass(), iterator.next().getKey().toArray(new String[] {})));
-		}
-
-		final ExecutorService exec = Executors.newFixedThreadPool(tasks.size());
-		final List<Future<String>> results = new ArrayList<Future<String>>(tasks.size());
-
-		for (final Task task : tasks) {
-		    results.add(exec.submit(task));
-		}
-
-		for (int index = 0; index < results.size(); index++) {
-		    System.out.println(ret.getClass().getSimpleName() + " ... waiting for task with index " + index + " ... " + results.get(index).get());
-		}
-
-		exec.shutdown(); // do not forget to shutdown the threads
+//		final List<Task> tasks = new ArrayList<Task>();
+//
+//		for (final Iterator<Pair<Set<String>, Long>> iterator = DataMigrator.splitIntoBatches(populateData(ret), threadCount).iterator(); iterator.hasNext();) {
+//		    final Connection conn = injector.getInstance(Connection.class);
+//		    tasks.add(new Task("done.", injector, sFactory, conn, factory, migrationRun, (Class<? extends IRetriever<?>>) ret.getClass(), iterator.next().getKey().toArray(new String[] {})));
+//		}
+//
+//		final ExecutorService exec = Executors.newFixedThreadPool(tasks.size());
+//		final List<Future<String>> results = new ArrayList<Future<String>>(tasks.size());
+//
+//		for (final Task task : tasks) {
+//		    results.add(exec.submit(task));
+//		}
+//
+//		for (int index = 0; index < results.size(); index++) {
+//		    System.out.println(ret.getClass().getSimpleName() + " ... waiting for task with index " + index + " ... " + results.get(index).get());
+//		}
+//
+//		exec.shutdown(); // do not forget to shutdown the threads
 
 	    }
 	}

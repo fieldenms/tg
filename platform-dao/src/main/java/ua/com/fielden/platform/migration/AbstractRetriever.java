@@ -7,6 +7,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashMap;
@@ -186,14 +187,14 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
     final private SortedMap<String, Pair<Class, Integer>> getResultEntityMetadata(final ResultSetMetaData md, final Class<?> entityType) throws Exception {
 	final SortedMap<String, Pair<Class, Integer>> props = new TreeMap<String, Pair<Class, Integer>>();
 	for (int index = 1; index <= md.getColumnCount(); index++) {
-	    final String propName = decodePropertyName(md.getColumnLabel(index));
+	    final String propName = /*decodePropertyName*/(md.getColumnLabel(index));
 	    final Class propType = PropertyTypeDeterminator.determinePropertyType(entityType, propName);
 	    props.put(propName, new Pair<Class, Integer>(propType, index));
 	}
 	return props;
     }
 
-    final private Map<String, Container> createContainers(final SortedMap<String, Pair<Class, Integer>> props, final Class<?> entityType) {
+    final public static Map<String, Container> createContainers(final SortedMap<String, Pair<Class, Integer>> props, final Class<?> entityType) {
 	final Map<String, Container> result = new HashMap<String, Container>();
 
 	SortedMap<String, Pair<Class, Integer>> propsGroup = new TreeMap<String, Pair<Class, Integer>>();
@@ -222,6 +223,11 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 	    }
 	}
 
+	if (groupProp != null) {
+	    final Class groupPropType = PropertyTypeDeterminator.determinePropertyType(entityType, groupProp);
+	    result.put(groupProp, new Container(groupProp, groupPropType, createContainers(propsGroup, groupPropType)));
+	}
+
 	return result;
     }
 
@@ -243,11 +249,17 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 	return new Pair<List<Container>, List<Container>>(keyProps, nonKeyProps);
     }
 
-    private static class Container {
+    public static class Container {
 	String propName;
 	Class propType;
 	Integer propValueIndex;
 	List<Container> compositeMembers = new ArrayList<Container>();
+
+	@Override
+	public String toString() {
+	    // TODO Auto-generated method stub
+	    return propName + " : " + propType + " : " + propValueIndex + ":\n" + compositeMembers;
+	}
 
 	public Container(final String propName, final Class propType, final Integer propValueIndex) {
 	    this.propName = propName;
@@ -265,7 +277,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 		if (keyPropContainer != null) {
 		    compositeMembers.add(keyPropContainer);
 		} else {
-		    throw new RuntimeException("missing part of composite key");
+		    throw new RuntimeException("missing part of composite key: [" + keyPropName + "]");
 		}
 	    }
 	}
@@ -303,22 +315,80 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 		    if (propValue != null) {
 			compositeMembersValues.add(propValue);
 		    } else {
-			return null;
+			compositeMembersValues.add(null);//return null;
 		    }
 		}
 		dynamicDao.setEntityType(propType);
 		return dynamicDao.findByKey(compositeMembersValues.toArray());
 	    }
 	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = 1;
+	    result = prime * result + ((compositeMembers == null) ? 0 : compositeMembers.hashCode());
+	    result = prime * result + ((propName == null) ? 0 : propName.hashCode());
+	    result = prime * result + ((propType == null) ? 0 : propType.hashCode());
+	    result = prime * result + ((propValueIndex == null) ? 0 : propValueIndex.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj) {
+		return true;
+	    }
+	    if (obj == null) {
+		return false;
+	    }
+	    if (!(obj instanceof Container)) {
+		return false;
+	    }
+	    final Container other = (Container) obj;
+	    if (compositeMembers == null) {
+		if (other.compositeMembers != null) {
+		    return false;
+		}
+	    } else if (!compositeMembers.equals(other.compositeMembers)) {
+		return false;
+	    }
+	    if (propName == null) {
+		if (other.propName != null) {
+		    return false;
+		}
+	    } else if (!propName.equals(other.propName)) {
+		return false;
+	    }
+	    if (propType == null) {
+		if (other.propType != null) {
+		    return false;
+		}
+	    } else if (!propType.equals(other.propType)) {
+		return false;
+	    }
+	    if (propValueIndex == null) {
+		if (other.propValueIndex != null) {
+		    return false;
+		}
+	    } else if (!propValueIndex.equals(other.propValueIndex)) {
+		return false;
+	    }
+	    return true;
+	}
     }
 
-    private String getSubsetSql(final String subset) {
-	final String baseSql = selectSql().toUpperCase();
-	final int orderByStart = baseSql.indexOf("ORDER BY");
-	final String unorderedSql = orderByStart != -1 ? baseSql.substring(0, orderByStart) : baseSql;
-	final String orderBySql = orderByStart != -1 ? baseSql.substring(orderByStart) : "";
-	final String splitPropertyColumn = AbstractRetriever.encodePropertyName(splitProperty());
-	return "SELECT * FROM (" + unorderedSql + ") A WHERE A." + splitPropertyColumn + " IN " + subset + " " + orderBySql;
+//    private String getSubsetSql(final String subset) {
+//	final String baseSql = selectSql().toUpperCase();
+//	final int orderByStart = baseSql.indexOf("ORDER BY");
+//	final String unorderedSql = orderByStart != -1 ? baseSql.substring(0, orderByStart) : baseSql;
+//	final String orderBySql = orderByStart != -1 ? baseSql.substring(orderByStart) : "";
+//	final String splitPropertyColumn = AbstractRetriever.encodePropertyName(splitProperty());
+//	return "SELECT * FROM (" + unorderedSql + ") A WHERE A." + splitPropertyColumn + " IN " + subset + " " + orderBySql;
+//    }
+
+    private String produceSqlStmt() {
+	return null;
     }
 
     /**
@@ -343,13 +413,13 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 	final Integer skippedCount = 0;
 	Integer updatedCount = 0;
 	Integer insertedCount = 0;
-	final String legacyDataSql = subset == null ? selectSql() : getSubsetSql(subset);
+	final String legacyDataSql = produceSqlStmt(); // final String legacyDataSql = subset == null ? selectSql() : getSubsetSql(subset);
 	if (!StringUtils.isEmpty(legacyDataSql)) {
 	    final Statement st = conn.createStatement();
+	    st.setFetchSize(100000);
 	    final ResultSet rs = st.executeQuery(legacyDataSql);
 	    final List<String> keyPropNames = Finder.getFieldNames(Finder.getKeyMembers(type()));
 	    final Pair<List<Container>, List<Container>> containers = reorderContainers(createContainers(getResultEntityMetadata(rs.getMetaData(), type()), type()), keyPropNames);
-
 	    while (rs.next()) {
 		retrievedCount = retrievedCount + 1;
 		try {
@@ -360,11 +430,14 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 			updatedCount = updatedCount + 1;
 		    }
 		} catch (final Exception ex) {
+		    System.out.println("============================");
+		    System.out.println(ex);
+		    System.out.println("============================");
 		    failedCount = failedCount + 1;
 		    final MigrationError error = ex instanceof Result ? (MigrationError) ((Result) ex).getInstance() : error(factory, null, null, null);
 		    final Exception resultEx = ex instanceof Result ? ((Result) ex).getEx() : ex;
 
-		    error.setRawData(produceInstanceRawDataStringRepresentation(rs, containers.getKey(), containers.getValue()));
+//		    error.setRawData(produceInstanceRawDataStringRepresentation(rs, containers.getKey(), containers.getValue()));
 		    error.setMigrationHistory(hist);
 		    error.setErrorNo(failedCount);
 		    error.setErrorType(resultEx.getClass().getName());
@@ -492,7 +565,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 	if (value == null) {
 	    return null;
 	} else {
-	    if (value instanceof String && StringUtils.isEmpty(((String) value).trim())) {
+	    if (value instanceof String && StringUtils.isEmpty(((String) value)/*.trim()*/)) {
 		return null;
 	    }
 
@@ -527,43 +600,43 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 	return pvr.get(propertyName).find(legacyValue);
     }
 
-    /**
-     * A helper method to decode column aliases as entity property names.
-     *
-     * @param columnAlias
-     * @return
-     */
-    public static String decodePropertyName(final String columnAlias) {
-	// replacing second underscore with dot to introduce dot.notation for potential sub-properties
-	final String preName = columnAlias.trim().toLowerCase().replace("__", "_.");
-	String name = !preName.endsWith("_") ? preName : preName.substring(0, preName.length() - 1);
-	int index = name.indexOf("_");
-	while (index >= 0) {
-	    name = name.substring(0, index) + name.substring(index + 1, index + 2).toUpperCase() + name.substring(index + 2);
-	    index = name.indexOf("_");
-	}
-
-	return name;
-    }
-
-    public static String encodePropertyName(final String propertyName) {
-	final char[] chars = propertyName.toCharArray();
-	final StringBuffer result = new StringBuffer();
-
-	for (int i = 0; i < chars.length; i++) {
-	    final char c = chars[i];
-	    if (Character.isUpperCase(c)) {
-		result.append("_");
-	    } else if (".".charAt(0) == c) {
-		result.append("__");
-	    }
-	    result.append(Character.toLowerCase(c));
-	}
-
-	result.append("_");
-
-	return result.toString().replace(".", "");
-    }
+//    /**
+//     * A helper method to decode column aliases as entity property names.
+//     *
+//     * @param columnAlias
+//     * @return
+//     */
+//    public static String decodePropertyName(final String columnAlias) {
+//	// replacing second underscore with dot to introduce dot.notation for potential sub-properties
+//	final String preName = columnAlias.trim().toLowerCase().replace("__", "_.");
+//	String name = !preName.endsWith("_") ? preName : preName.substring(0, preName.length() - 1);
+//	int index = name.indexOf("_");
+//	while (index >= 0) {
+//	    name = name.substring(0, index) + name.substring(index + 1, index + 2).toUpperCase() + name.substring(index + 2);
+//	    index = name.indexOf("_");
+//	}
+//
+//	return name;
+//    }
+//
+//    public static String encodePropertyName(final String propertyName) {
+//	final char[] chars = propertyName.toCharArray();
+//	final StringBuffer result = new StringBuffer();
+//
+//	for (int i = 0; i < chars.length; i++) {
+//	    final char c = chars[i];
+//	    if (Character.isUpperCase(c)) {
+//		result.append("_");
+//	    } else if (".".charAt(0) == c) {
+//		result.append("__");
+//	    }
+//	    result.append(Character.toLowerCase(c));
+//	}
+//
+//	result.append("_");
+//
+//	return result.toString().replace(".", "");
+//    }
 
     protected boolean updateOnly() {
 	return false;
@@ -590,5 +663,58 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 	    this.inserted = inserted;
 	    this.updated = updated;
 	}
+    }
+
+    @Override
+    public String whereSql() {
+	return null;
+    }
+
+    @Override
+    public List<String> groupSql() {
+	return null;
+    }
+
+    @Override
+    public List<String> orderSql() {
+	return null;
+    }
+
+    public static FieldMapping field(final String key, final String stmt) {
+	return new FieldMapping(key, stmt);
+    }
+
+    protected static class FieldMapping {
+	String key;
+	String stmt;
+
+	public FieldMapping(final String key, final String stmt) {
+	    this.key = key;
+	    this.stmt = stmt;
+	}
+
+	protected String getKey() {
+	    return key;
+	}
+
+	protected String getStmt() {
+	    return stmt;
+	}
+
+    }
+
+    public static Map<String, String> map(final FieldMapping... pairs) {
+	final Map<String, String> result = new HashMap<String, String>();
+	for (final FieldMapping pair : pairs) {
+	    if (result.containsKey(pair.getKey())) {
+		throw new IllegalArgumentException("Duplicate stmts for property [" + pair.getKey() + "]");
+	    }
+	    result.put(pair.getKey(), pair.getStmt());
+	}
+	return result;
+    }
+
+    public static List<String> list(final String... stmts) {
+	return Arrays.asList(stmts);
     }
 }
