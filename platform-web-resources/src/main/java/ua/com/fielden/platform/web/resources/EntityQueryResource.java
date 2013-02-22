@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -11,7 +13,9 @@ import org.restlet.resource.Post;
 import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
+import org.restlet.routing.Router;
 
+import ua.com.fielden.platform.dao.IComputationMonitor;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -19,6 +23,9 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.roa.HttpHeaders;
+import ua.com.fielden.platform.web.CompanionResourceFactory;
+
+import com.google.inject.Injector;
 
 /**
  * Represents a web resource mapped to URI /query/entity-alias-type. It handles POST requests provided with {@link QueryExecutionModel}
@@ -27,8 +34,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  *
  * @author TG Team
  */
-public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerResource {
-    private static final int DEFAULT_PAGE_CAPACITY = 25;
+public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerResource implements IComputationMonitor {
     private static final String FIRST = "first";
     // the following properties are determined from request
     private final Integer pageCapacity;
@@ -46,6 +52,11 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
     private final IEntityDao<T> dao;
     private final RestServerUtil restUtil;
 
+    /** The following fields are required to support companion resource. */
+    private final Router router;
+    private final CompanionResourceFactory coResourceFactory;
+    private AtomicBoolean stopped = new AtomicBoolean();
+
     /**
      * The main resource constructor accepting a DAO instance in addition to the standard {@link Resource} parameters.
      * <p>
@@ -56,7 +67,7 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
      * @param request
      * @param response
      */
-    public EntityQueryResource(final IEntityDao<T> dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public EntityQueryResource(final Router router, final Injector injector, final IEntityDao<T> dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	init(context, request, response);
 	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
@@ -74,6 +85,12 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
 	shouldReturnAll = "all".equalsIgnoreCase(pageCapacityParam);
 	shouldReturnFirst = FIRST.equalsIgnoreCase(pageNoParam);
 	shouldDelete = request.getResourceRef().getQueryAsForm().getFirstValue("deletion") != null;
+
+	// let's now create and route a companion resource factory
+	this.router = router;
+	final String companionToken = request.getResourceRef().getQueryAsForm().getFirstValue("co-token");
+	coResourceFactory = new CompanionResourceFactory(this, injector);
+	router.attach("/users/{username}/companions/" + companionToken, coResourceFactory);
     }
 
     /**
@@ -119,14 +136,12 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
 	    final QueryExecutionModel<T, EntityResultQueryModel<T>> qem = (QueryExecutionModel<T, EntityResultQueryModel<T>>) restUtil.restoreQueryExecutionModel(envelope);
 	    if (shouldDelete) {
 		dao.delete(qem.getQueryModel(), qem.getParamValues());
-		//getResponse().setEntity(restUtil.resultRepresentation( Result.successful(null)));
-		return restUtil.resultRepresentation( Result.successful(null));
+		return restUtil.resultRepresentation(Result.successful(null));
 	    } else if (shouldReturnCount) {
 		final int count = dao.count(qem.getQueryModel(), qem.getParamValues());
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.COUNT, count + "");
 		return new StringRepresentation("count");
 	    } else if (shouldReturnAll) {
-		//getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(qem)));
 		return restUtil.listRepresentation(dao.getAllEntities(qem));
 	    } else if (shouldReturnFirst) {
 		return restUtil.listRepresentation(dao.getFirstEntities(qem, pageCapacity));
@@ -134,13 +149,34 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
 		final IPage<T> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
-		//getResponse().setEntity(restUtil.listRepresentation(page.data()));
 		return restUtil.listRepresentation(page.data());
 	    }
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
-	    //getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
-	    return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
+	    if (stopped.get()) {
+		return restUtil.errorRepresentation("Query was cancelled.");
+	    } else {
+		return restUtil.errorRepresentation(ex);
+	    }
+	} finally {
+	    // need to detach companion resource
+	    router.detach(coResourceFactory);
 	}
+    }
+
+    @Override
+    public boolean stop() {
+	try {
+	    stopped.set(dao.stop());
+	    return stopped.get();
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    return false;
+	}
+    }
+
+    @Override
+    public Integer progress() {
+	return null;
     }
 }

@@ -89,4 +89,14 @@ public class GeneratedEntityControllerStub<T extends AbstractEntity<?>> implemen
 	return null;
     }
 
+    @Override
+    public boolean stop() {
+	return false;
+    }
+
+    @Override
+    public Integer progress() {
+	return null;
+    }
+
 }

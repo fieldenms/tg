@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -11,20 +13,25 @@ import org.restlet.resource.Post;
 import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
+import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.DynamicEntityDao;
+import ua.com.fielden.platform.dao.IComputationMonitor;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.roa.HttpHeaders;
+import ua.com.fielden.platform.web.CompanionResourceFactory;
+
+import com.google.inject.Injector;
 
 /**
  * Represents a web resource mapped to URI /query/generated-type.
  *
  * @author TG Team
  */
-public class GeneratedEntityQueryResource extends ServerResource {
+public class GeneratedEntityQueryResource extends ServerResource implements IComputationMonitor {
     private static final int DEFAULT_PAGE_CAPACITY = 25;
     private static final String FIRST = "first";
     // the following properties are determined from request
@@ -41,6 +48,11 @@ public class GeneratedEntityQueryResource extends ServerResource {
     private final DynamicEntityDao dao;
     private final RestServerUtil restUtil;
 
+    /** The following fields are required to support companion resource. */
+    private final Router router;
+    private final CompanionResourceFactory coResourceFactory;
+    private AtomicBoolean stopped = new AtomicBoolean();
+
     /**
      * The main resource constructor accepting a DAO instance in addition to the standard {@link Resource} parameters.
      *
@@ -49,7 +61,7 @@ public class GeneratedEntityQueryResource extends ServerResource {
      * @param request
      * @param response
      */
-    public GeneratedEntityQueryResource(final DynamicEntityDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public GeneratedEntityQueryResource(final Router router, final Injector injector, final DynamicEntityDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	init(context, request, response);
 	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
@@ -66,6 +78,12 @@ public class GeneratedEntityQueryResource extends ServerResource {
 	shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(pageCapacityParam) && !FIRST.equalsIgnoreCase(pageNoParam);
 	shouldReturnAll = "all".equalsIgnoreCase(pageCapacityParam);
 	shouldReturnFirst = FIRST.equalsIgnoreCase(pageNoParam);
+
+	// let's now create and route a companion resource factory
+	this.router = router;
+	final String companionToken = request.getResourceRef().getQueryAsForm().getFirstValue("co-token");
+	coResourceFactory = new CompanionResourceFactory(this, injector);
+	router.attach("/users/{username}/companions/" + companionToken, coResourceFactory);
     }
 
     /**
@@ -125,13 +143,34 @@ public class GeneratedEntityQueryResource extends ServerResource {
 		final IPage<?> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
-		//getResponse().setEntity(restUtil.listRepresentation(page.data()));
 		return restUtil.listRepresentation(page.data());
 	    }
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
-	    //getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
-	    return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
+	    if (stopped.get()) {
+		return restUtil.errorRepresentation("Query was cancelled.");
+	    } else {
+		return restUtil.errorRepresentation(ex);
+	    }
+	} finally {
+	    // need to detach companion resource
+	    router.detach(coResourceFactory);
 	}
+    }
+
+    @Override
+    public boolean stop() {
+	try {
+	    stopped.set(dao.stop());
+	    return stopped.get();
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    return false;
+	}
+    }
+
+    @Override
+    public Integer progress() {
+	return null;
     }
 }

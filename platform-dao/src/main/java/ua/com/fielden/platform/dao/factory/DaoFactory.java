@@ -4,6 +4,7 @@ import ua.com.fielden.platform.dao.DynamicEntityDao;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
 
 import com.google.inject.Injector;
 
@@ -19,11 +20,16 @@ public class DaoFactory implements IDaoFactory {
     protected DaoFactory() {
     }
 
+    @Override
     public IEntityDao<?> newDao(final Class<? extends AbstractEntity<?>> entityType) {
-	// TODO if default controller annotation is present on entity then take it instead of DynamicEntityDao
-	final DynamicEntityDao dao = injector.getInstance(DynamicEntityDao.class);
-	dao.setEntityType(entityType);
-	return dao;
+	final Class<? extends IEntityDao<? extends AbstractEntity<?>>> coType = CompanionObjectAutobinder.companionObjectType(entityType);
+	if (coType != null) {
+	    return injector.getInstance(coType);
+	} else {
+	    final DynamicEntityDao dao = injector.getInstance(DynamicEntityDao.class);
+	    dao.setEntityType(entityType);
+	    return dao;
+	}
     }
 
     public void setInjector(final Injector injector) {
@@ -31,6 +37,6 @@ public class DaoFactory implements IDaoFactory {
     }
 
     public Injector getInjector() {
-        return injector;
+	return injector;
     }
 }

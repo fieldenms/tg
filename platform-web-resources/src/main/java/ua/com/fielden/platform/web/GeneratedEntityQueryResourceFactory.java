@@ -4,6 +4,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
+import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.DynamicEntityDao;
 import ua.com.fielden.platform.security.provider.IUserController;
@@ -24,10 +25,12 @@ import com.google.inject.Injector;
 public class GeneratedEntityQueryResourceFactory extends Restlet {
     private final Injector injector;
     private final RestServerUtil restUtil;
+    private final Router router;
 
-    public GeneratedEntityQueryResourceFactory(final Injector injector) {
+    public GeneratedEntityQueryResourceFactory(final Injector injector, final Router router) {
 	this.injector = injector;
 	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+	this.router = router;
     }
 
     @Override
@@ -40,7 +43,7 @@ public class GeneratedEntityQueryResourceFactory extends Restlet {
 	    final String username = (String) request.getAttributes().get("username");
 	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	    new GeneratedEntityQueryResource(dao, restUtil, getContext(), request, response).handle();
+	    new GeneratedEntityQueryResource(router, injector, dao, restUtil, getContext(), request, response).handle();
 	}
     }
 }

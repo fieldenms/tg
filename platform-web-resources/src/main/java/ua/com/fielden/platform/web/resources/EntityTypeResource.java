@@ -121,7 +121,7 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends ServerResou
 	    return restUtil.listRepresentation(page.data());
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
-	    return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
+	    return restUtil.errorRepresentation(ex);
 	}
     }
 
@@ -133,11 +133,10 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends ServerResou
     public Representation put(final Representation envelope) throws ResourceException {
 	try {
 	    final T entity =  restUtil.restoreEntity(envelope, dao.getEntityType());
-	    // getResponse().setEntity(restUtil.singleRepresentation(dao.save(entity)));
 	    return restUtil.singleRepresentation(dao.save(entity));
 	} catch (final Exception ex) {
-	    //getResponse().setEntity(restUtil.errorRepresentation(ex.getMessage()));
-	    return restUtil.errorRepresentation(ex.getMessage());
+	    ex.printStackTrace();
+	    return restUtil.errorRepresentation(ex);
 	}
     }
 }

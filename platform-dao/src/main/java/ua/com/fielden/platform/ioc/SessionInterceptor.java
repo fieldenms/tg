@@ -27,7 +27,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
  * Please note that transaction can be started outside of this intercepter, which means it will not be committed within it, and the transaction originator is responsible for
  * commit. At the same time, if an exception occurs then transaction will be rollbacked.
  *
- * @author 01es
+ * @author TG Team
  *
  */
 public class SessionInterceptor implements MethodInterceptor {

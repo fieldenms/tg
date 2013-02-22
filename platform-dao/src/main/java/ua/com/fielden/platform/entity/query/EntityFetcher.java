@@ -34,12 +34,12 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 
 public class EntityFetcher {
-    private Session session;
-    private EntityFactory entityFactory;
-    private DomainMetadata domainMetadata;
+    private final Session session;
+    private final EntityFactory entityFactory;
+    private final DomainMetadata domainMetadata;
     private final IFilter filter;
     private final String username;
-    private Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = Logger.getLogger(this.getClass());
 
     public EntityFetcher(final Session session, final EntityFactory entityFactory, final DomainMetadata domainMetadata, final IFilter filter, final String username) {
 	this.session = session;

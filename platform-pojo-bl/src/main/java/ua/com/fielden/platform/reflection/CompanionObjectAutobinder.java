@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 import com.google.inject.Binder;
-import com.google.inject.Scopes;
 
 /**
  * A convenience class that assists in automation of binding companion object implementations to its declarations.
@@ -51,7 +50,7 @@ public class CompanionObjectAutobinder {
 		throw new IllegalArgumentException("Could not find RAO implementation for companion object " + name + ".", ex);
 	    }
 	    // perform binding
-	    binder.bind(co).to(raoType).in(Scopes.SINGLETON);
+	    binder.bind(co).to(raoType); // as of recently should not be a singleton!
 
 	}
     }
@@ -78,7 +77,7 @@ public class CompanionObjectAutobinder {
 		throw new IllegalArgumentException("Could not find DAO implementation for companion object " + name + ".", ex);
 	    }
 	    // perform binding
-	    binder.bind(co).to(daoType);
+	    binder.bind(co).to(daoType); // should never be a singleton!
 	}
     }
 

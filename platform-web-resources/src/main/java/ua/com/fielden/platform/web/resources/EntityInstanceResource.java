@@ -19,6 +19,7 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.IComputationMonitor;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
@@ -36,7 +37,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  *
  * @author TG Team
  */
-public class EntityInstanceResource<T extends AbstractEntity<?>> extends ServerResource {
+public class EntityInstanceResource<T extends AbstractEntity<?>> extends ServerResource implements IComputationMonitor {
     // the following properties are determined from request
     protected final Long entityId;
 
@@ -179,6 +180,18 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends ServerR
 
     public Long getEntityId() {
 	return entityId;
+    }
+
+    @Override
+    public boolean stop() {
+	// TODO Auto-generated method stub
+	return false;
+    }
+
+    @Override
+    public Integer progress() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 }

@@ -110,7 +110,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	/////////////// bind some required platform specific RAOs ///////////////
 	/////////////////////////////////////////////////////////////////////////
 	bind(IEntityAggregatesDao.class).to(EntityAggregatesRao.class).in(Scopes.SINGLETON);
-	bind(IGeneratedEntityController.class).to(GeneratedEntityRao.class);
+	bind(IGeneratedEntityController.class).to(GeneratedEntityRao.class); // should not be a singleton
 	// bind value matcher factory to support autocompleters and entity master factory
 	bind(IDaoFactory.class).to(RaoFactory.class).in(Scopes.SINGLETON);
 	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);

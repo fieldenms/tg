@@ -220,4 +220,14 @@ public class UserControllerForTestPurposes implements IUserController {
 	// TODO Auto-generated method stub
 	return null;
     }
+
+    @Override
+    public boolean stop() {
+	return true;
+    }
+
+    @Override
+    public Integer progress() {
+        return null;
+    }
 }

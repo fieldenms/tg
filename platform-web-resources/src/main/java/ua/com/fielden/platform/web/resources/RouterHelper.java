@@ -59,7 +59,7 @@ public final class RouterHelper {
     }
 
     public void registerGeneratedTypeResources(final Router router) {
-	router.attach("/users/{username}/query/generated-type", new GeneratedEntityQueryResourceFactory(injector));
+	router.attach("/users/{username}/query/generated-type", new GeneratedEntityQueryResourceFactory(injector, router));
 	router.attach("/users/{username}/export/generated-type", new GeneratedEntityQueryExportResourceFactory(injector));
     }
 
@@ -74,7 +74,7 @@ public final class RouterHelper {
 	final Restlet typeResource = new AttachmentTypeResourceFactory(location, injector, factory);
 	router.attach("/users/{username}/" + Attachment.class.getSimpleName(), typeResource);
 
-	final Restlet queryResource = new AttachmentQueryResourceFactory(injector);
+	final Restlet queryResource = new AttachmentQueryResourceFactory(injector, router);
 	router.attach("/users/{username}/query/" + Attachment.class.getSimpleName(), queryResource);
 
 	final Restlet queryExportResource = new EntityQueryExportResourceFactory<Attachment, IAttachmentController>(IAttachmentController.class, injector);
@@ -95,7 +95,7 @@ public final class RouterHelper {
 
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerTypeResource(final Router router, final Class<DAO> daoType) {
 	final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimize it
-	final Restlet typeResource = new EntityTypeResourceFactory<T, DAO>(daoType, injector, factory);
+	final Restlet typeResource = new EntityTypeResourceFactory<T, DAO>(daoType, injector, factory, router);
 	router.attach("/users/{username}/" + dao.getEntityType().getSimpleName(), typeResource);
 	router.attach("/users/{username}/query/" + dao.getEntityType().getSimpleName(), typeResource);
     }

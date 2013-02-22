@@ -39,147 +39,157 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
-    public boolean isStale(Long entityId, Long version) {
+    public boolean isStale(final Long entityId, final Long version) {
 	// TODO Auto-generated method stub
 	return false;
     }
 
     @Override
-    public SecondLevelEntity findById(Long id, fetch<SecondLevelEntity> fetchModel) {
+    public SecondLevelEntity findById(final Long id, final fetch<SecondLevelEntity> fetchModel) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public SecondLevelEntity findById(Long id) {
+    public SecondLevelEntity findById(final Long id) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public SecondLevelEntity findByKey(Object... keyValues) {
+    public SecondLevelEntity findByKey(final Object... keyValues) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public SecondLevelEntity findByKeyAndFetch(fetch<SecondLevelEntity> fetchModel, Object... keyValues) {
+    public SecondLevelEntity findByKeyAndFetch(final fetch<SecondLevelEntity> fetchModel, final Object... keyValues) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage<SecondLevelEntity> firstPage(int pageCapacity) {
+    public IPage<SecondLevelEntity> firstPage(final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage<SecondLevelEntity> getPage(int pageNo, int pageCapacity) {
+    public IPage<SecondLevelEntity> getPage(final int pageNo, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage<SecondLevelEntity> firstPage(QueryExecutionModel<SecondLevelEntity, ?> query, int pageCapacity) {
+    public IPage<SecondLevelEntity> firstPage(final QueryExecutionModel<SecondLevelEntity, ?> query, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage<SecondLevelEntity> firstPage(QueryExecutionModel<SecondLevelEntity, ?> model, QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, int pageCapacity) {
+    public IPage<SecondLevelEntity> firstPage(final QueryExecutionModel<SecondLevelEntity, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage<SecondLevelEntity> getPage(QueryExecutionModel<SecondLevelEntity, ?> query, int pageNo, int pageCapacity) {
+    public IPage<SecondLevelEntity> getPage(final QueryExecutionModel<SecondLevelEntity, ?> query, final int pageNo, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage<SecondLevelEntity> getPage(QueryExecutionModel<SecondLevelEntity, ?> query, int pageNo, int pageCount, int pageCapacity) {
+    public IPage<SecondLevelEntity> getPage(final QueryExecutionModel<SecondLevelEntity, ?> query, final int pageNo, final int pageCount, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public SecondLevelEntity save(SecondLevelEntity entity) {
+    public SecondLevelEntity save(final SecondLevelEntity entity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public void delete(SecondLevelEntity entity) {
+    public void delete(final SecondLevelEntity entity) {
 	// TODO Auto-generated method stub
 
     }
 
     @Override
-    public void delete(EntityResultQueryModel<SecondLevelEntity> model, Map<String, Object> paramValues) {
+    public void delete(final EntityResultQueryModel<SecondLevelEntity> model, final Map<String, Object> paramValues) {
 	// TODO Auto-generated method stub
 
     }
 
     @Override
-    public void delete(EntityResultQueryModel<SecondLevelEntity> model) {
+    public void delete(final EntityResultQueryModel<SecondLevelEntity> model) {
 	// TODO Auto-generated method stub
 
     }
 
     @Override
-    public boolean entityExists(SecondLevelEntity entity) {
+    public boolean entityExists(final SecondLevelEntity entity) {
 	// TODO Auto-generated method stub
 	return false;
     }
 
     @Override
-    public boolean entityExists(Long id) {
+    public boolean entityExists(final Long id) {
 	// TODO Auto-generated method stub
 	return false;
     }
 
     @Override
-    public boolean entityWithKeyExists(Object... keyValues) {
+    public boolean entityWithKeyExists(final Object... keyValues) {
 	// TODO Auto-generated method stub
 	return false;
     }
 
     @Override
-    public SecondLevelEntity getEntity(QueryExecutionModel<SecondLevelEntity, ?> model) {
+    public SecondLevelEntity getEntity(final QueryExecutionModel<SecondLevelEntity, ?> model) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public int count(EntityResultQueryModel<SecondLevelEntity> model, Map<String, Object> paramValues) {
+    public int count(final EntityResultQueryModel<SecondLevelEntity> model, final Map<String, Object> paramValues) {
 	// TODO Auto-generated method stub
 	return 0;
     }
 
     @Override
-    public int count(EntityResultQueryModel<SecondLevelEntity> model) {
+    public int count(final EntityResultQueryModel<SecondLevelEntity> model) {
 	// TODO Auto-generated method stub
 	return 0;
     }
 
     @Override
-    public List<SecondLevelEntity> getAllEntities(QueryExecutionModel<SecondLevelEntity, ?> query) {
+    public List<SecondLevelEntity> getAllEntities(final QueryExecutionModel<SecondLevelEntity, ?> query) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public byte[] export(QueryExecutionModel<SecondLevelEntity, ?> query, String[] propertyNames, String[] propertyTitles) throws IOException {
+    public byte[] export(final QueryExecutionModel<SecondLevelEntity, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public List<SecondLevelEntity> getFirstEntities(QueryExecutionModel<SecondLevelEntity, ?> query, int numberOfEntities) {
+    public List<SecondLevelEntity> getFirstEntities(final QueryExecutionModel<SecondLevelEntity, ?> query, final int numberOfEntities) {
 	// TODO Auto-generated method stub
 	return null;
+    }
+
+    @Override
+    public boolean stop() {
+	return true;
+    }
+
+    @Override
+    public Integer progress() {
+        return null;
     }
 
 }

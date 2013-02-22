@@ -4,6 +4,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
+import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -29,14 +30,16 @@ public class EntityTypeResourceFactory<T extends AbstractEntity<?>, DAO extends 
     private final Injector injector;
     private final EntityFactory factory;
     private final RestServerUtil restUtil;
+    private final Router router;
 
     /**
      * Instances of DAO and factory should be thread-safe as they are used by multiple instances of resources serving concurrent requests.
      */
-    public EntityTypeResourceFactory(final Class<DAO> daoType, final Injector injector, final EntityFactory factory) {
+    public EntityTypeResourceFactory(final Class<DAO> daoType, final Injector injector, final EntityFactory factory, final Router router) {
 	this.daoType = daoType;
 	this.injector = injector;
 	this.factory = factory;
+	this.router = router;
 	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
     }
 
@@ -52,7 +55,7 @@ public class EntityTypeResourceFactory<T extends AbstractEntity<?>, DAO extends 
 	if (Method.GET.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod()) || Method.PUT.equals(request.getMethod())) {
 	    new EntityTypeResource<T>(dao, factory, restUtil, getContext(), request, response).handle();
 	} else if (Method.POST.equals(request.getMethod())) {
-	    new EntityQueryResource<T>(dao, restUtil, getContext(), request, response).handle();
+	    new EntityQueryResource<T>(router, injector, dao, restUtil, getContext(), request, response).handle();
 	}
     }
 }

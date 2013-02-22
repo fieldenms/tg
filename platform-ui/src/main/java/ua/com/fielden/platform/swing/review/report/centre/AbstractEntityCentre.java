@@ -25,9 +25,11 @@ import net.miginfocom.swing.MigLayout;
 import org.jvnet.flamingo.common.ElementState;
 import org.jvnet.flamingo.common.icon.EmptyResizableIcon;
 
+import ua.com.fielden.platform.dao.IComputationMonitor;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.actions.ActionChanger;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.ActionChangeButton;
@@ -49,8 +51,8 @@ import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
- * Implements common functionality for all types of entity centres: entity centre with single analysis, entity locators, entity centres with multiple analysis.
- * When extending this class one must remember to layout components. It may be done using utility methods of the {@link EntityCentreLayoutUtility} class.
+ * Implements common functionality for all types of entity centres: entity centre with single analysis, entity locators, entity centres with multiple analysis. When extending this
+ * class one must remember to layout components. It may be done using utility methods of the {@link EntityCentreLayoutUtility} class.
  *
  * @author TG Team
  *
@@ -90,33 +92,36 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      */
     public AbstractEntityCentre(final AbstractEntityCentreModel<T, CDTME> model, final AbstractConfigurationView<? extends AbstractEntityCentre<T, CDTME>, ?> owner) {
 	super(model, owner);
-	//Initiates the paginator related properties.
+	// Initiates the paginator related properties.
 	final PaginatorModel paginatorModel = new PaginatorModel();
-	this.reviewProgressLayer = new BlockingIndefiniteProgressLayer(null, "");
+	// let's obtain computation monitor to enable users to cancel running computations
+	final IComputationMonitor monitor = DynamicEntityClassLoader.isEnhanced(model.getCriteria().getManagedType()) ? model.getCriteria().getGeneratedEntityController()
+		: model.getCriteria().companionObject();
+	this.reviewProgressLayer = new BlockingIndefiniteProgressLayer(null, "", monitor);
 	this.feedBack = new JLabel("Page 0 of 0");
 	this.pageHolderManager = paginatorModel;
 	this.paginator = new Paginator(paginatorModel, createPaginatorFeedback(), reviewProgressLayer);
-	//Initiates control panel actions
+	// Initiates control panel actions
 	this.defaultAction = createDefaultAction();
 	this.exportAction = createExportAction();
 	this.runAction = createRunAction();
 	this.customActionChanger = createCustomActionButton(createCustomActionList());
-	//Initiates the main parts of the entity centre.
+	// Initiates the main parts of the entity centre.
 	this.toolBar = createToolBar();
 	this.criteriaPanel = createCriteriaPanel();
 	this.actionPanel = createControlPanel();
-	//Adds listener that listens the current analysis change events.
+	// Adds listener that listens the current analysis change events.
 	addPropertyChangeListener(createCurrentAnalysisChangeListener());
-	//If "run automatically" parameter is set to true then load data after the centre has become visible.
+	// If "run automatically" parameter is set to true then load data after the centre has become visible.
 	if (getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().isRunAutomatically()) {
-	    //handle entity centre load event.
+	    // handle entity centre load event
 	    addLoadListener(new ILoadListener() {
 
 		private boolean handleFirstLoadEvent = true;
 
 		@Override
 		public void viewWasLoaded(final LoadEvent event) {
-		    if(handleFirstLoadEvent){
+		    if (handleFirstLoadEvent) {
 			handleFirstLoadEvent = false;
 			getRunAction().actionPerformed(null);
 			final ILoadListener refToThis = this;
@@ -135,7 +140,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 
     @Override
     public AbstractEntityCentreModel<T, CDTME> getModel() {
-	return (AbstractEntityCentreModel<T, CDTME>)super.getModel();
+	return (AbstractEntityCentreModel<T, CDTME>) super.getModel();
     }
 
     /**
@@ -268,7 +273,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     @SuppressWarnings("unchecked")
     protected StubCriteriaPanel createCriteriaPanel() {
 	final Map<String, IPropertyEditor> editors = getModel().getEntityInspectorModel().getEditors();
-	if(!editors.isEmpty()){
+	if (!editors.isEmpty()) {
 	    return new CriteriaDndPanel((EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>) getModel().getCriteria(), getModel().getEntityInspectorModel().getEditors());
 	}
 	return null;
@@ -280,34 +285,34 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      * @return
      */
     protected JPanel createControlPanel() {
-    
-        final List<JComponent> controlButtons = new ArrayList<JComponent>();
-        final StringBuffer columnConstraints = new StringBuffer("");
-    
-        if(getCriteriaPanel() != null && getCriteriaPanel().canConfigure()){
-            columnConstraints.append("[70::,fill]");
-            controlButtons.add(new JToggleButton(getCriteriaPanel().getSwitchAction()));
-        }
-        columnConstraints.append(addToComponents(controlButtons, "[120::,fill]", getCustomActionChanger()));
-    
-        final JPanel controlPanel = new JPanel(new MigLayout("fill, insets 0", "[70::,fill]" + columnConstraints.toString() + "20:push[][][][]20[]push[:70:,fill][:70:,fill]", "[c,fill]"));
-    
-        controlPanel.add(newButton(getDefaultAction(), true));
-        for(final JComponent component : controlButtons){
-            controlPanel.add(component);
-        }
-    
-        controlPanel.add(newButton(getPaginator().getFirst(), false));
-        controlPanel.add(newButton(getPaginator().getPrev(), false));
-        controlPanel.add(newButton(getPaginator().getNext(), false));
-        controlPanel.add(newButton(getPaginator().getLast(), false));
-        controlPanel.add(feedBack);
-    
-        controlPanel.add(newButton(getExportAction(), true));
-        controlPanel.add(newButton(getRunAction(), true));
-    
-        return controlPanel;
-    
+
+	final List<JComponent> controlButtons = new ArrayList<JComponent>();
+	final StringBuffer columnConstraints = new StringBuffer("");
+
+	if (getCriteriaPanel() != null && getCriteriaPanel().canConfigure()) {
+	    columnConstraints.append("[70::,fill]");
+	    controlButtons.add(new JToggleButton(getCriteriaPanel().getSwitchAction()));
+	}
+	columnConstraints.append(addToComponents(controlButtons, "[120::,fill]", getCustomActionChanger()));
+
+	final JPanel controlPanel = new JPanel(new MigLayout("fill, insets 0", "[70::,fill]" + columnConstraints.toString() + "20:push[][][][]20[]push[:70:,fill][:70:,fill]", "[c,fill]"));
+
+	controlPanel.add(newButton(getDefaultAction(), true));
+	for (final JComponent component : controlButtons) {
+	    controlPanel.add(component);
+	}
+
+	controlPanel.add(newButton(getPaginator().getFirst(), false));
+	controlPanel.add(newButton(getPaginator().getPrev(), false));
+	controlPanel.add(newButton(getPaginator().getNext(), false));
+	controlPanel.add(newButton(getPaginator().getLast(), false));
+	controlPanel.add(feedBack);
+
+	controlPanel.add(newButton(getExportAction(), true));
+	controlPanel.add(newButton(getRunAction(), true));
+
+	return controlPanel;
+
     }
 
     /**
@@ -334,7 +339,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      * Layouts the main parts and components of this entity centre.
      *
      */
-    protected void layoutComponents(){
+    protected void layoutComponents() {
 	final List<JComponent> components = new ArrayList<JComponent>();
 	final StringBuffer rowConstraints = new StringBuffer("");
 
@@ -343,7 +348,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 
 	//creates the criteria panel for entity centre
 	final TaskPanel taskPanel = getCriteriaPanel() == null ? null : new TaskPanel(new MigLayout("fill, insets 0"));
-	if(taskPanel != null){
+	if (taskPanel != null) {
 	    taskPanel.add(getCriteriaPanel(), "grow, wrap");
 	    taskPanel.setTitle("Selection criteria");
 	    taskPanel.setAnimated(false);
@@ -358,13 +363,11 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	removeAll();
 	setLayout(new MigLayout("fill, insets 5", "[:400:, fill, grow]", isEmpty(rowConstraints.toString()) ? "[fill, grow]" : rowConstraints.toString()));
 
-	for(int componentIndex = 0; componentIndex < components.size() - 1; componentIndex++){
+	for (int componentIndex = 0; componentIndex < components.size() - 1; componentIndex++) {
 	    add(components.get(componentIndex), "wrap");
 	}
-	add(components.get(components.size()-1));
+	add(components.get(components.size() - 1));
     }
-
-
 
     /**
      * Adds the component to the list of passed components if it is not null and returns component's constraints.
@@ -375,7 +378,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      * @return
      */
     public static String addToComponents(final List<JComponent> components, final String constraint, final JComponent component) {
-	if(component != null){
+	if (component != null) {
 	    components.add(component);
 	    return constraint;
 	}
@@ -387,7 +390,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      *
      * @return
      */
-    private Action createDefaultAction(){
+    private Action createDefaultAction() {
 	return new Command<Void>("Default") {
 
 	    private static final long serialVersionUID = -1287083156047119434L;
@@ -400,7 +403,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 
 	    @Override
 	    protected boolean preAction() {
-		if(ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()){
+		if (ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()) {
 		    throw new IllegalStateException("This action shouldn't be invoked when analysis is in WIZARD or not specified mode.");
 		}
 		return super.preAction() && getCriteriaPanel() != null;
@@ -420,7 +423,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      *
      * @return
      */
-    private Action createRunAction(){
+    private Action createRunAction() {
 	return new AbstractAction("Run") {
 
 	    private static final long serialVersionUID = -3516438577329734057L;
@@ -433,12 +436,12 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
-		try{
-		    if(ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()){
+		try {
+		    if (ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()) {
 			throw new IllegalStateException("This action shouldn't be invoked when analysis is not in REPORT or not specified mode.");
 		    }
 		    getCurrentAnalysisConfigurationView().getPreviousView().loadData();
-		}catch(final IllegalStateException exception){
+		} catch (final IllegalStateException exception) {
 		    new DialogWithDetails(null, "Exception in action", exception).setVisible(true);
 		}
 	    }
@@ -450,7 +453,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      *
      * @return
      */
-    private Action createExportAction(){
+    private Action createExportAction() {
 	return new AbstractAction("Export") {
 
 	    private static final long serialVersionUID = -3516438577329734057L;
@@ -463,12 +466,12 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
-		try{
-		    if(ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()){
+		try {
+		    if (ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()) {
 			throw new IllegalStateException("This action shouldn't be invoked when analysis is in WIZARD or not specified mode.");
 		    }
 		    getCurrentAnalysisConfigurationView().getPreviousView().exportData();
-		}catch(final IllegalStateException exception){
+		} catch (final IllegalStateException exception) {
 		    new DialogWithDetails(null, "Exception in action", exception).setVisible(true);
 		}
 	    }
@@ -506,8 +509,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	    @SuppressWarnings("rawtypes")
 	    @Override
 	    public void propertyChange(final PropertyChangeEvent evt) {
-		if("currentAnalysisConfigurationView".equals(evt.getPropertyName())){
-		    ((AbstractAnalysisConfigurationView)evt.getNewValue()).select();
+		if ("currentAnalysisConfigurationView".equals(evt.getPropertyName())) {
+		    ((AbstractAnalysisConfigurationView) evt.getNewValue()).select();
 		}
 	    }
 	};
@@ -515,6 +518,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 
     /**
      * Returns the button that may contain custom actions: configure, save, save as, remove and other actions)
+     *
      * @param customActionList
      *
      * @return
@@ -522,16 +526,16 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     private static JComponent createCustomActionButton(final List<Action> customActionList) {
 	//Initiates the list of all review actions (i.e. configure, save, save as, save as default, and remove actions)
 	final List<Action> actionList = new ArrayList<Action>();
-	for(final Action action : (customActionList == null ? new ArrayList<Action>() : customActionList)){
+	for (final Action action : (customActionList == null ? new ArrayList<Action>() : customActionList)) {
 	    addActionIfNotNull(actionList, action);
 	}
 
-	if(actionList.size() == 1){
+	if (actionList.size() == 1) {
 	    return newButton(actionList.get(0), true);
 	}
-	if(actionList.size() > 1){
+	if (actionList.size() > 1) {
 	    final List<ActionChanger<Void>> actionChangers = new ArrayList<ActionChanger<Void>>();
-	    for(final Action action : actionList){
+	    for (final Action action : actionList) {
 		addActionIfNotNull(actionChangers, actionChanger(action));
 	    }
 	    final ActionChangeButton button = new ActionChangeButton(actionChangers.get(0));
@@ -548,7 +552,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     /**
      * Wraps the action in the {@link ActionChanger} class and returns it. Throws {@link NullPointerException} if the specified action is null.
      *
-     * @param action - specified action to be wrapped around {@link ActionChanger}, can not be null.
+     * @param action
+     *            - specified action to be wrapped around {@link ActionChanger}, can not be null.
      * @return
      */
     private static ActionChanger<Void> actionChanger(final Action action) {
@@ -560,7 +565,6 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 		putValue(SHORT_DESCRIPTION, action.getValue(SHORT_DESCRIPTION));
 		putValue(LARGE_ICON_KEY, new EmptyResizableIcon(new Dimension(0, 0)));
 	    }
-
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
@@ -574,11 +578,13 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     /**
      * Adds the specified action to the list of actions if the action is not null.
      *
-     * @param actionList - specified list of actions to which specified action must be added.
-     * @param action - specified action to be added.
+     * @param actionList
+     *            - specified list of actions to which specified action must be added.
+     * @param action
+     *            - specified action to be added.
      */
     private static <T extends Action> void addActionIfNotNull(final List<T> actionList, final T action) {
-	if(actionList != null && action != null){
+	if (actionList != null && action != null) {
 	    actionList.add(action);
 	}
     }

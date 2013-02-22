@@ -37,7 +37,7 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
  * @param <VT>
  * @param <WT>
  */
-public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBasePanel & IReview, WT extends SelectableAndLoadBasePanel & IWizard> extends SelectableAndLoadBasePanel{
+public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBasePanel & IReview, WT extends SelectableAndLoadBasePanel & IWizard> extends SelectableAndLoadBasePanel {
 
     private static final long serialVersionUID = 362789325125491283L;
 
@@ -63,7 +63,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      *
      * @param model
      */
-    public AbstractConfigurationView(final AbstractConfigurationModel model, final BlockingIndefiniteProgressLayer progressLayer){
+    public AbstractConfigurationView(final AbstractConfigurationModel model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(new MigLayout("fill, insets 0", "[fill, grow]", "[fill, grow]"));
 	this.model = model;
 	this.progressLayer = progressLayer;
@@ -79,7 +79,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      *
      * @param l
      */
-    public void addOpenEventListener(final IAbstractConfigurationViewEventListener l){
+    public void addOpenEventListener(final IAbstractConfigurationViewEventListener l) {
 	listenerList.add(IAbstractConfigurationViewEventListener.class, l);
     }
 
@@ -88,7 +88,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      *
      * @param l
      */
-    public void removeOpenEventListener(final IAbstractConfigurationViewEventListener l){
+    public void removeOpenEventListener(final IAbstractConfigurationViewEventListener l) {
 	listenerList.remove(IAbstractConfigurationViewEventListener.class, l);
     }
 
@@ -136,7 +136,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     /**
      * Opens this {@link AbstractConfigurationView}. First it tries to open this in {@link ReportMode#REPORT} mode, if it fails, then it opens in {@link ReportMode#WIZARD} mode.
      */
-    public final void open(){
+    public final void open() {
 	openAction.actionPerformed(null);
     }
 
@@ -145,7 +145,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      *
      * @return
      */
-    public boolean isLoaded(){
+    public boolean isLoaded() {
 	return wasResized && wasChildLoaded;
     }
 
@@ -161,7 +161,8 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     /**
      * Override this to provide custom report view.
      *
-     * @param configurableView - view to configure.
+     * @param configurableView
+     *            - view to configure.
      * @return
      */
     abstract protected VT createConfigurableView();
@@ -169,14 +170,15 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     /**
      * Override this to provide custom wizard to configure report.
      *
-     * @param wizardView - wizard view to configure
+     * @param wizardView
+     *            - wizard view to configure
      * @return
      */
     abstract protected WT createWizardView();
 
     /**
-     * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined.
-     * Also if child component was also loaded then it fires the load event.
+     * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined. Also if child component was also loaded then it fires the
+     * load event.
      *
      * @return
      */
@@ -195,7 +197,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 			//The component was resized so lets see whether child was loaded if that is true then fire
 			//event that this component was loaded.
-			if(wasChildLoaded){
+			if (wasChildLoaded) {
 			    fireLoadEvent(new LoadEvent(AbstractConfigurationView.this));
 			}
 		    }
@@ -219,11 +221,11 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	    protected boolean preAction() {
 		setMessage("Opening...");
 		final boolean superResult = super.preAction();
-		if(!superResult){
+		if (!superResult) {
 		    return false;
 		}
-		for(final Result result : fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.PRE_OPEN))){
-		    if(!result.isSuccessful()){
+		for (final Result result : fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.PRE_OPEN))) {
+		    if (!result.isSuccessful()) {
 			return false;
 		    }
 		}
@@ -240,8 +242,8 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		super.postAction(value);
 		setMessage("");
 		fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.POST_OPEN));
-		for(final Result valueRes : value){
-		    if(!valueRes.isSuccessful()){
+		for (final Result valueRes : value) {
+		    if (!valueRes.isSuccessful()) {
 			getModel().setMode(ReportMode.WIZARD);
 			return;
 		    }
@@ -262,14 +264,14 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      *
      * @return
      */
-    private PropertyChangeListener createModeChangeListener(){
+    private PropertyChangeListener createModeChangeListener() {
 	return new PropertyChangeListener() {
 
 	    @Override
 	    public void propertyChange(final PropertyChangeEvent evt) {
-		if("mode".equals(evt.getPropertyName())){
-		    final ReportMode mode = (ReportMode)evt.getNewValue();
-		    switch(mode){
+		if ("mode".equals(evt.getPropertyName())) {
+		    final ReportMode mode = (ReportMode) evt.getNewValue();
+		    switch (mode) {
 		    case WIZARD:
 			previousWizard = createWizardView();
 			setView(previousWizard);
@@ -294,9 +296,9 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      *
      * @param component
      */
-    private void setView(final SelectableAndLoadBasePanel component){
+    private void setView(final SelectableAndLoadBasePanel component) {
 	removeAll();
-	if(component != null){
+	if (component != null) {
 	    addLoadListenerTo(component);
 	    add(component);
 	    component.select();
@@ -311,18 +313,18 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     /**
      * Fires component load event if this component was resized.
      */
-    private synchronized void fireChildNullLoaded(){
+    private synchronized void fireChildNullLoaded() {
 	if (!wasChildLoaded) {
 	    wasChildLoaded = true;
-	    if(wasResized){
+	    if (wasResized) {
 		fireLoadEvent(new LoadEvent(AbstractConfigurationView.this));
 	    }
 	}
     }
 
     /**
-     * Adds the {@link ILoadListener} to the specified component. That load listener determines when the specified component was loaded.
-     * Also if this component wasn't loaded yet it fires load event for this {@link AbstractConfigurationView} instance.
+     * Adds the {@link ILoadListener} to the specified component. That load listener determines when the specified component was loaded. Also if this component wasn't loaded yet it
+     * fires load event for this {@link AbstractConfigurationView} instance.
      *
      * @param component
      */
@@ -341,7 +343,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 			//The child was loaded so lets see whether this component was resized if that is true then fire
 			//event that this was loaded.
-			if(wasResized){
+			if (wasResized) {
 			    fireLoadEvent(new LoadEvent(AbstractConfigurationView.this));
 			}
 			// after this handler end its execution, lets remove it
@@ -364,9 +366,9 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      *
      * @param event
      */
-    private List<Result> fireOpenEvent(final AbstractConfigurationViewEvent event){
+    private List<Result> fireOpenEvent(final AbstractConfigurationViewEvent event) {
 	final List<Result> results = new ArrayList<Result>();
-	for(final IAbstractConfigurationViewEventListener listener : listenerList.getListeners(IAbstractConfigurationViewEventListener.class)){
+	for (final IAbstractConfigurationViewEventListener listener : listenerList.getListeners(IAbstractConfigurationViewEventListener.class)) {
 	    results.add(listener.abstractConfigurationViewEventPerformed(event));
 	}
 	return results;
@@ -380,7 +382,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      * @param <VT>
      * @param <WT>
      */
-    public static abstract class ConfigureAction extends ChangeModeAction{
+    public static abstract class ConfigureAction extends ChangeModeAction {
 
 	private static final long serialVersionUID = 1090639998966452323L;
 
@@ -402,7 +404,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      * @param <VT>
      * @param <WT>
      */
-    public static abstract class BuildAction extends ChangeModeAction{
+    public static abstract class BuildAction extends ChangeModeAction {
 
 	private static final long serialVersionUID = 1090639998966452323L;
 
@@ -424,7 +426,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      * @param <VT>
      * @param <WT>
      */
-    public static abstract class CancelAction extends ChangeModeAction{
+    public static abstract class CancelAction extends ChangeModeAction {
 
 	private static final long serialVersionUID = 1090639998966452323L;
 
@@ -446,7 +448,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      * @param <VT>
      * @param <WT>
      */
-    private static abstract class ChangeModeAction extends BlockingLayerCommand<Result>{
+    private static abstract class ChangeModeAction extends BlockingLayerCommand<Result> {
 
 	private static final long serialVersionUID = 1090639998966452323L;
 
@@ -489,11 +491,11 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		break;
 	    }
 	    setMessage(message);
-	    if(!super.preAction()){
+	    if (!super.preAction()) {
 		return false;
 	    }
 	    final Result result = getConfigurationView().getModel().canSetMode(reportMode);
-	    if(!result.isSuccessful()){
+	    if (!result.isSuccessful()) {
 		JOptionPane.showMessageDialog(getConfigurationView(), result.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
 		return false;
 	    }

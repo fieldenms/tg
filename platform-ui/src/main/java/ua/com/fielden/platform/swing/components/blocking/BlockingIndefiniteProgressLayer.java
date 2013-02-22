@@ -9,6 +9,7 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Point2D;
@@ -16,6 +17,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.Random;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -29,7 +31,10 @@ import net.miginfocom.swing.MigLayout;
 
 import org.jdesktop.jxlayer.JXLayer;
 import org.jdesktop.jxlayer.plaf.ext.LockableUI;
+import org.jdesktop.swingx.JXHyperlink;
 
+import ua.com.fielden.platform.dao.IComputationMonitor;
+import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
@@ -37,7 +42,7 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
  * used to lock/unlock and method {@link #isLocked()} to test locking. Method {@link #setText(String)} allows updating of the message displayed on the blocking layer during
  * blocking.
  *
- * @author 01es
+ * @author TG Team
  *
  */
 public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
@@ -55,13 +60,57 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
     private Integer count = null;
 
     /**
+     * Some processes can be cancelled by users. Thus, need to provide a button to trigger such an invent.
+     */
+    private final JXHyperlink btnCancel;
+
+    /**
      * Creates a blocking layer for the passed component, which will display <code>message</code> when blocking.
      *
      * @param component
      * @param message
      */
     public BlockingIndefiniteProgressLayer(final JComponent component, final String message) {
+	this(component, message, null);
+    }
+
+    /**
+     * Creates a blocking layer for the passed component, which will display <code>message</code> when blocking.
+     * If argument <code>monitor</code> is not <code>null</code> then a cancel action is created allowing users to cancel the computation is progress.
+     *
+     * @param component
+     * @param message
+     * @param monitor
+     */
+    public BlockingIndefiniteProgressLayer(final JComponent component, final String message, final IComputationMonitor monitor) {
 	super(component, new BlockingUi(message));
+	getGlassPane().setLayout(new MigLayout("fill", "[][c][]", "[t]"));
+
+	btnCancel = monitor != null ? new JXHyperlink(createCancelAction(monitor)) : null;
+
+    }
+
+    private Action createCancelAction(final IComputationMonitor monitor) {
+	final Command<Void> action = new Command<Void>("(cancel)") {
+	    private static final long serialVersionUID = 1L;
+
+	    @Override
+	    protected Void action(final ActionEvent event) throws Exception {
+		monitor.stop();
+		return null;
+	    }
+
+	    @Override
+	    protected void postAction(final Void nothig) {
+		super.postAction(nothig);
+	    }
+	};
+	//action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
+	//action.putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/password.png"));
+	//action.putValue(Action.SMALL_ICON, ResourceLoader.getIcon("images/password.png"));
+	action.putValue(Action.SHORT_DESCRIPTION, "Attempts to cancel currently running computations...");
+	action.setEnabled(true);
+	return action;
     }
 
     @Override
@@ -112,7 +161,7 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
      * Turns on "Incremental Locking" mode.
      *
      */
-    public void enableIncrementalLocking(){
+    public void enableIncrementalLocking() {
 	incrementalLocking = true;
 	count = 0;
     }
@@ -121,7 +170,7 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
      * Turns off "Incremental Locking" mode.
      *
      */
-    private void disableIncrementalLocking(){
+    private void disableIncrementalLocking() {
 	incrementalLocking = false;
 	count = null;
     }
@@ -133,6 +182,15 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
      */
     public boolean isIncrementalLocking() {
 	return incrementalLocking;
+    }
+
+    /**
+     * Indicates whether blocking panel has cancelling capability.
+     *
+     * @return
+     */
+    public boolean hasCancelCapability() {
+	return btnCancel != null;
     }
 
     /**
@@ -152,12 +210,25 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
 		// when the threshold value 0 is reached - "Incremental Locking" will be automatically turned off:
 		disableIncrementalLocking();
 		getUI().setLocked(false);
+		if (hasCancelCapability()) {
+		    getGlassPane().remove(btnCancel);
+		}
 	    } else {
 		getUI().setLocked(true);
+		if (hasCancelCapability()) {
+		    getGlassPane().add(btnCancel, "cell 1 1, gapy 80");
+		}
 	    }
 	} else {
 	    //	    System.out.println("Non-incremental locking: layer.setLocked(" + flag + ").");
 	    getUI().setLocked(flag);
+	    if (hasCancelCapability()) {
+		if (flag) {
+		    getGlassPane().add(btnCancel, "cell 1 1, gapy 80");
+		} else {
+		    getGlassPane().remove(btnCancel);
+		}
+	    }
 	}
     }
 
@@ -201,9 +272,6 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
 
     /**
      * UI for locking JComponent instances. Based on LockableUI.
-     *
-     * @author 01es
-     *
      */
     private static class BlockingUi extends LockableUI implements ActionListener {
 	/**
@@ -248,6 +316,7 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
 	 */
 	public void setText(final String text) {
 	    SwingUtilitiesEx.invokeLater(new Runnable() {
+		@Override
 		public void run() {
 		    message = text;
 		    setDirty(true);
@@ -299,6 +368,7 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
 	/**
 	 * Called to animate the rotation of the bar's colours
 	 */
+	@Override
 	public void actionPerformed(final ActionEvent e) {
 	    // rotate colours
 	    if (colorOffset == (numBars - 1)) {

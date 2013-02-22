@@ -185,4 +185,14 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
 	return null;
     }
 
+    @Override
+    public boolean stop() {
+	return true;
+    }
+
+    @Override
+    public Integer progress() {
+        return null;
+    }
+
 }

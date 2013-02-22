@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -52,10 +56,6 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
  * <p>
@@ -75,7 +75,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private Logger logger = Logger.getLogger(this.getClass());
 
-    private ThreadLocal<Session> threadLocalSession = new ThreadLocal<Session>();
+    private Session session;
 
     private DomainMetadata domainMetadata;
 
@@ -118,6 +118,30 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     protected void setDomainMetadata(final DomainMetadata domainMetadata) {
 	this.domainMetadata = domainMetadata;
+    }
+
+    /**
+     * Cancels currently running query.
+     *
+     * @return
+     */
+    @Override
+    public boolean stop() {
+	final Session sess = getSession();
+	try {
+	    sess.cancelQuery();
+	} catch (final Exception ex) {
+	    ex.printStackTrace();
+	}
+	return true;
+    }
+
+    /**
+     * By default all DAO computations are considered indefinite. Thus returning <code>null</code> as the result.
+     */
+    @Override
+    public Integer progress() {
+        return null;
     }
 
     @Override
@@ -337,11 +361,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
+    @SessionRequired
     public int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
 	return evalNumOfPages(model, paramValues, 1);
     }
 
     @Override
+    @SessionRequired
     public int count(final EntityResultQueryModel<T> model) {
 	return count(model, Collections.<String, Object> emptyMap());
     }
@@ -370,11 +396,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
+    @SessionRequired
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
 	return getEntitiesOnPage(query, null, null);
     }
 
     @Override
+    @SessionRequired
     public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
 	return getEntitiesOnPage(query, 0, numberOfEntities);
     }
@@ -383,6 +411,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by query with no filtering conditions. Useful for things like autocompleters.
      */
     @Override
+    @SessionRequired
     public IPage<T> firstPage(final int pageCapacity) {
 	return new EntityQueryPage(getDefaultQueryExecutionModel(), 0, pageCapacity, evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity));
     }
@@ -391,16 +420,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * Returns a first page holding up to <code>size</code> instance of entities retrieved by the provided query model. This allows a query based pagination.
      */
     @Override
+    @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
 	return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
     }
 
     @Override
+    @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
 	return getPage(model, pageNo, 0, pageCapacity);
     }
 
     @Override
+    @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
 	final int numberOfPages = pageCount > 0 ? pageCount : evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity);
 	final int pageNumber = pageNo < 0 ? numberOfPages - 1 : pageNo;
@@ -408,6 +440,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
+    @SessionRequired
     public T getEntity(final QueryExecutionModel<T, ?> model) {
 	final List<T> data = getFirstEntities(model, DEFAULT_PAGE_CAPACITY);
 	if (data.size() > 1) {
@@ -417,6 +450,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
+    @SessionRequired
     public IPage<T> getPage(final int pageNo, final int pageCapacity) {
 	final int numberOfPages = evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
 	final int pageNumber = pageNo < 0 ? numberOfPages - 1 : pageNo;
@@ -425,7 +459,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     public Session getSession() {
-	final Session session = threadLocalSession.get();
 	if (session == null) {
 	    throw new RuntimeException("Someone forgot to annotate some method with SessionRequired!");
 	}
@@ -434,7 +467,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     public void setSession(final Session session) {
-	threadLocalSession.set(session);
+	this.session = session;
     }
 
     /**
@@ -472,6 +505,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @throws IOException
      */
     @Override
+    @SessionRequired
     public byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
 	final HSSFWorkbook wb = new HSSFWorkbook();
 	final HSSFSheet sheet = wb.createSheet("Exported Data");

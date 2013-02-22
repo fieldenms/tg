@@ -15,7 +15,7 @@ import ua.com.fielden.platform.pagination.IPage;
  * @author TG Team
  *
  */
-public interface IGeneratedEntityController<T extends AbstractEntity<?>> {
+public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends IComputationMonitor {
 
     /**
      * Should return an entity type the DAO instance is managing.
@@ -172,4 +172,5 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> {
 	    final String[] propertyNames, //
 	    final String[] propertyTitles, //
 	    final List<byte[]> binaryTypes) throws IOException;
+
 }

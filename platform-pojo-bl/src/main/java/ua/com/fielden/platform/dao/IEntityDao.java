@@ -22,7 +22,7 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  *
  */
-public interface IEntityDao<T extends AbstractEntity<?>> {
+public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMonitor {
     static final int DEFAULT_PAGE_CAPACITY = 25;
 
 //    /**
@@ -252,7 +252,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> {
      */
     List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, int numberOfEntities);
 
-
     /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
      * <p>
@@ -267,4 +266,5 @@ public interface IEntityDao<T extends AbstractEntity<?>> {
      * @return
      */
     byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
+
 }

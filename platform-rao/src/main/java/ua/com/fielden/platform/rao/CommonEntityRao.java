@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Method;
@@ -43,6 +44,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntityDao<T> {
 
     protected final RestClientUtil restUtil;
+
+    /** Used to uniquely identify a companion resource. */
+    private String coToken;
 
     public CommonEntityRao(final RestClientUtil restUtil) {
 	this.restUtil = restUtil;
@@ -193,8 +197,9 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(query);
 	// create a request URI containing page capacity and number
+	coToken = makeCoToken();
 	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=" + pageInfo.pageCapacity + "&page-no=" + pageInfo.pageNumber
-		+ "&page-count=" + pageInfo.numberOfPages;
+		+ "&page-count=" + pageInfo.numberOfPages + "&co-token=" + coToken;
 	final Request request = new Request(Method.POST, uri, envelope);
 	// process request
 	final Pair<Response, Result> res = restUtil.process(request);
@@ -243,7 +248,8 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
      */
     private List<T> list(final EntityQueryPage page, final Integer pageNumber, final Integer pageCapacity) {
 	// create a request URI containing page capacity and number
-	final String url = restUtil.getUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=" + pageCapacity + "&page-no=" + pageNumber;
+	coToken = makeCoToken();
+	final String url = restUtil.getUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=" + pageCapacity + "&page-no=" + pageNumber + "&co-token=" + coToken;
 	final Request request = restUtil.newRequest(Method.GET, url);
 	// process request
 	final Pair<Response, Result> res = restUtil.process(request);
@@ -524,7 +530,8 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(query);
 	// create a request URI containing page capacity and number
-	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=all";
+	coToken = makeCoToken();
+	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=all" + "&co-token=" + coToken;
 	final Request request = new Request(Method.POST, uri, envelope);
 	// process request
 	final Pair<Response, Result> res = restUtil.process(request);
@@ -542,7 +549,8 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(query);
 	// create a request URI containing page capacity and number
-	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) +  "?page-capacity=" + numberOfEntities + "&page-no=first";
+	coToken = makeCoToken();
+	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) +  "?page-capacity=" + numberOfEntities + "&page-no=first" + "&co-token=" + coToken;
 	final Request request = new Request(Method.POST, uri, envelope);
 	// process request
 	final Pair<Response, Result> res = restUtil.process(request);
@@ -583,5 +591,32 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     @Override
     public User getUser() {
 	return restUtil.getUser();
+    }
+
+    @Override
+    public boolean stop() {
+	final String uri = restUtil.getBaseUri(getDefaultWebResourceType()) + "/companions/" + coToken;
+	final Request request = new Request(Method.POST, uri);
+	try {
+	    final Pair<Response, Result> res = restUtil.process(request);
+	    return true;
+	} catch (final Exception ex) {
+	    ex.printStackTrace();
+	    return false;
+	}
+    }
+
+    @Override
+    public Integer progress() {
+        return null;
+    }
+
+    /**
+     * Generates unique for a user token intended to register a companion web resource at the server end.
+     *
+     * @return
+     */
+    private String makeCoToken() {
+	return new DateTime().getMillis() + "";
     }
 }

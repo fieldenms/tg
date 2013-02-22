@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.rao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,6 +11,7 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Method;
@@ -33,9 +37,6 @@ import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 /**
  * This RAO is applicable for executing queries based on dynamically generated entity types.
  *
@@ -46,6 +47,8 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 
     private Class<T> entityType;
     private Class<? extends Comparable> keyType;
+    /** Used to uniquely identify a companion resource. */
+    private String coToken;
 
     protected final RestClientUtil restUtil;
     private final IAuthorisationModel authModel;
@@ -173,7 +176,8 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(qem, binaryTypes);
 	// create a request URI containing page capacity and number
-	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=all";
+	coToken = makeCoToken();
+	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=all" + "&co-token=" + coToken;
 	final Request request = new Request(Method.POST, uri, envelope);
 	// process request
 	final Pair<Response, Result> res = restUtil.process(request);
@@ -185,6 +189,15 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	    throw result;
 	}
 
+    }
+
+    /**
+     * Generates unique for a user token intended to register a companion web resource at the server end.
+     *
+     * @return
+     */
+    private String makeCoToken() {
+	return new DateTime().getMillis() + "";
     }
 
     /**
@@ -200,7 +213,8 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(qem, binaryTypes);
 	// create a request URI containing page capacity and number
-	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=" + numberOfEntities + "&page-no=first";
+	coToken = makeCoToken();
+	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=" + numberOfEntities + "&page-no=first" + "&co-token=" + coToken;
 	final Request request = new Request(Method.POST, uri, envelope);
 	// process request
 	final Pair<Response, Result> res = restUtil.process(request);
@@ -212,6 +226,26 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	    throw result;
 	}
     }
+
+    @Override
+    public boolean stop() {
+	final String uri = restUtil.getBaseUri(getDefaultWebResourceType()) + "/companions/" + coToken;
+	final Request request = new Request(Method.POST, uri);
+	try {
+	    final Pair<Response, Result> res = restUtil.process(request);
+	    System.out.println(res.getValue().getInstance());
+	    return true;
+	} catch (final Exception ex) {
+	    ex.printStackTrace();
+	    return false;
+	}
+    }
+
+    @Override
+    public Integer progress() {
+        return null;
+    }
+
 
     /**
      * Sends a POST request to /export/generated-type with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated types. The response
@@ -267,8 +301,9 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(query, binaryTypes);
 	// create a request URI containing page capacity and number
+	coToken = makeCoToken();
 	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=" + pageInfo.pageCapacity + "&page-no=" + pageInfo.pageNumber
-		+ "&page-count=" + pageInfo.numberOfPages;
+		+ "&page-count=" + pageInfo.numberOfPages + "&co-token=" + coToken;
 	final Request request = new Request(Method.POST, uri, envelope);
 	// process request
 	final Pair<Response, Result> res = restUtil.process(request);
@@ -464,4 +499,5 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	    return "Page " + (no() + 1) + " of " + numberOfPages;
 	}
     }
+
 }

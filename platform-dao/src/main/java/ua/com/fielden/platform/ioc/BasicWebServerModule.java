@@ -141,6 +141,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
 	// bind value matcher factory to support autocompleters
 	bind(IDaoFactory.class).toInstance(getDaoFactory());
+	// TODO is this binding really needed for the server side???
 	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
     }
 }
