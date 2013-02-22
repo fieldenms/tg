@@ -2,10 +2,13 @@ package ua.com.fielden.platform.dao;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -98,5 +101,25 @@ public class DomainMetadataAnalyser {
 
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
+    }
+
+    public Set<String> getLeafPropsFromFirstLevelProps(final String parentProp, final Class<? extends AbstractEntity<?>> entityType, final Set<String> firstLevelProps) {
+	final Set<String> result = new HashSet<String>();
+
+	for (final String prop : firstLevelProps) {
+	    final PropertyMetadata propMetadata = getPropPersistenceInfoExplicitly(entityType, prop);
+	    if (propMetadata.isEntityOfPersistedType()) {
+		final Set<String> keyProps = new HashSet<String>(Finder.getFieldNames(Finder.getKeyMembers(propMetadata.getJavaType())));
+		if (keyProps.size() > 1) {
+		    result.addAll(getLeafPropsFromFirstLevelProps(prop, propMetadata.getJavaType(), keyProps));
+		} else {
+		    result.add((parentProp != null ? (parentProp + ".") : "") + prop);
+		}
+	    } else {
+		result.add((parentProp != null ? (parentProp + ".") : "") + prop);
+	    }
+	}
+
+	return result;
     }
 }

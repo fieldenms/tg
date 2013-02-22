@@ -20,6 +20,8 @@ import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
+import ua.com.fielden.platform.dao.DomainMetadata;
+import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
@@ -181,17 +183,21 @@ public class DataMigrator {
 	this.histDao = injector.getInstance(MigrationHistoryDao.class);
 	this.errorDao = injector.getInstance(MigrationErrorDao.class);
 	this.runDao = injector.getInstance(MigrationRunDao.class);
+	final DomainMetadataAnalyser dma = new DomainMetadataAnalyser(injector.getInstance(DomainMetadata.class));
 
 	for (final Class<? extends IRetriever<? extends AbstractEntity<?>>> retrieverClass : retrieversClasses) {
-	    retrievers.add(injector.getInstance(retrieverClass));
+	    final IRetriever<? extends AbstractEntity<?>> ret = injector.getInstance(retrieverClass);
+	    System.out.println("================================ " + ret.getClass().getSimpleName() + "  =======================================");
+	    System.out.println(new RetrieverPropsValidator(dma, ret.type(), ret.resultFields().keySet()).validate());
+	    retrievers.add(ret);
 	}
-
-	validateRetrievalSql();
-
-	final Date now = new Date();
-	migrationRun = factory.newByKey(MigrationRun.class, migratorName + "_" + now.getTime());
-	migrationRun.setStarted(now);
-	runDao.save(migrationRun);
+	throw new IllegalStateException();
+//	validateRetrievalSql();
+//
+//	final Date now = new Date();
+//	migrationRun = factory.newByKey(MigrationRun.class, migratorName + "_" + now.getTime());
+//	migrationRun.setStarted(now);
+//	runDao.save(migrationRun);
     }
 
     /**

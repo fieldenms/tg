@@ -2,9 +2,12 @@ package ua.com.fielden.platform.entity.query;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.PropertyColumn;
@@ -134,6 +137,29 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
 	actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(TgBogie.class));
 
 	System.out.println(actual);
+//	final PropertyMetadata ppi = DOMAIN_METADATA_ANALYSER.getPropPersistenceInfoExplicitly(TgMakeCount.class, "key");
+//	System.out.println(ppi);
+	//assertTrue(actual.containsAll(expected));
+    }
+
+    @Test
+    @Ignore
+    public void test8() {
+	final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
+	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
+	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
+	expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PropertyCategory.PRIMITIVE_KEY));
+	expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
+
+	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
+	final Set<String> firstLevelProps = new HashSet<String>();
+	firstLevelProps.add("leased");
+	firstLevelProps.add("lastMeterReading");
+	firstLevelProps.add("lastFuelUsage");
+
+	final Set<String> result = DOMAIN_METADATA_ANALYSER.getLeafPropsFromFirstLevelProps(null, VEHICLE, firstLevelProps);
+
+	System.out.println(result);
 //	final PropertyMetadata ppi = DOMAIN_METADATA_ANALYSER.getPropPersistenceInfoExplicitly(TgMakeCount.class, "key");
 //	System.out.println(ppi);
 	//assertTrue(actual.containsAll(expected));
