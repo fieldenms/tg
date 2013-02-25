@@ -62,16 +62,23 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
 	return lm;
     }
 
+    private ILocatorDomainTreeManagerAndEnhancer retrieveGlobalLocator() {
+	final ILocatorDomainTreeManagerAndEnhancer l = lm.getGlobalRepresentation().getLocatorManagerByDefault(propertyType);
+	l.getFirstTick().checkedProperties(propertyType);
+	l.getSecondTick().checkedProperties(propertyType);
+	return l;
+    }
+
     private void assert_synchronised_with_GlobalRepresentation() {
 	// check if GLOBAL locator is synchronised with Global Representation type-related locator
-	assertFalse("Incorrect state.", lm.getLocatorManager(root, property) == lm.getGlobalRepresentation().getLocatorManagerByDefault(propertyType));
-	assertTrue("Incorrect state.", lm.getLocatorManager(root, property).equals(lm.getGlobalRepresentation().getLocatorManagerByDefault(propertyType)));
+	assertFalse("Incorrect state.", lm.getLocatorManager(root, property) == retrieveGlobalLocator());
+	assertTrue("Incorrect state.", lm.getLocatorManager(root, property).equals(retrieveGlobalLocator()));
     }
 
     private void assert_NOT_synchronised_with_GlobalRepresentation() {
 	// check if GLOBAL locator is synchronised with Global Representation type-related locator
-	assertFalse("Incorrect state.", lm.getLocatorManager(root, property) == lm.getGlobalRepresentation().getLocatorManagerByDefault(propertyType));
-	assertFalse("Incorrect state.", lm.getLocatorManager(root, property).equals(lm.getGlobalRepresentation().getLocatorManagerByDefault(propertyType)));
+	assertFalse("Incorrect state.", lm.getLocatorManager(root, property) == retrieveGlobalLocator());
+	assertFalse("Incorrect state.", lm.getLocatorManager(root, property).equals(retrieveGlobalLocator()));
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////

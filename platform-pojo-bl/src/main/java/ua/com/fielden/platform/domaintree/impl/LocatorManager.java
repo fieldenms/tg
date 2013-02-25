@@ -194,7 +194,12 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     }
 
     private ILocatorDomainTreeManagerAndEnhancer produceByDefault(final Class<?> root, final String property) {
-	return globalRepresentation.getLocatorManagerByDefault(propertyTypeForGlobalRepresentationLocator(root, property));
+	final Class<?> pType = propertyTypeForGlobalRepresentationLocator(root, property);
+	final ILocatorDomainTreeManagerAndEnhancer l = globalRepresentation.getLocatorManagerByDefault(pType);
+	// initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
+	l.getFirstTick().checkedProperties(pType);
+	l.getSecondTick().checkedProperties(pType);
+	return l;
     }
 
     private void checkEmptinessOfGlobalLocator(final Class<?> root, final String property) {
