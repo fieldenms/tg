@@ -57,8 +57,7 @@ public class MapUtils {
      * @return
      */
     public static double calcDistance(final double x1, final double y1, final double x2, final double y2) {
-	// return calcDistance0(x1, y1, x2, y2);
-	return distanceInMetersBetween(x1, y1, x2, y2);
+	return distanceInMetersBetween(y1, x1, y2, x2);
     }
 
 //    /**
@@ -80,7 +79,11 @@ public class MapUtils {
 
     public static void main(final String[] args) {
 	// довжина Яна Жижки -- має бути 87 метрів
-	System.out.println(distanceInMetersBetween(49.844157, 24.028371, 49.844209, 24.029567));
-	System.out.println(calcDistance(49.844157, 24.028371, 49.844209, 24.029567));
+	// System.out.println(distanceInMetersBetween(49.844157, 24.028371, 49.844209, 24.029567));
+	// System.out.println(calcDistance(49.844157, 24.028371, 49.844209, 24.029567));
+
+	System.out.println(calcDistance(49.864, 24.035, 49.864, 24.037));
+
+	System.out.println(calcDistance(24.035166, 49.864094, 24.036554, 49.864323));
     }
 }
