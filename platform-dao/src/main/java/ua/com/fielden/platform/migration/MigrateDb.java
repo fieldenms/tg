@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.log4j.xml.DOMConfigurator;
 import org.hibernate.Transaction;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -215,8 +214,6 @@ public class MigrateDb {
 	final String limitToParamArgument = cmdParams.get(CmdParams.LIMIT_TO);
 	final Class[] limitToRetrievers = limitToParamArgument == null ? retrieversClassesSequence
 		: decodeLimitToParameter(limitToParamArgument, retrieversClassesSequence).toArray(new Class[] {});
-
-	DOMConfigurator.configure("src/main/resources/log4j.xml");
 
 	final HibernateUtil hibernateUtil = injector.getInstance(HibernateUtil.class);
 	final EntityFactory factory = injector.getInstance(EntityFactory.class);

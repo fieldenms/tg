@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.lang.StringUtils;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError;
 import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
@@ -113,57 +115,6 @@ public class DataMigrator {
 	return pq;
     }
 
-//    public static String getSplitSql(final IRetriever ret) {
-//	final String baseSql = ret.selectSql().toUpperCase();
-//	final int orderByStart = baseSql.indexOf("ORDER BY");
-//	final StringBuffer sb = new StringBuffer();
-//	final String splitPropertyColumn = AbstractRetriever.encodePropertyName(ret.splitProperty());
-//	sb.append("SELECT A." + splitPropertyColumn + ", COUNT(*) FROM (" + (orderByStart != -1 ? baseSql.substring(0, orderByStart) : baseSql) + ") A GROUP BY A."
-//		+ splitPropertyColumn + " ORDER BY 2 DESC");
-//
-//	return sb.toString();
-//    }
-
-//    public static String getKeyUniquenessCheckSql(final IRetriever ret) {
-//	final int orderByStart = ret.selectSql().toUpperCase().indexOf("ORDER BY");
-//	final String baseSql = orderByStart != -1 ? ret.selectSql().toUpperCase().substring(0, orderByStart) : ret.selectSql().toUpperCase();
-//
-//	final List<String> keyPropColAliases = new ArrayList<String>();
-//	for (final String keyPropName : Finder.getFieldNames(Finder.getKeyMembers(ret.type()))) {
-//	    keyPropColAliases.add(/*AbstractRetriever.encodePropertyName*/(keyPropName));
-//	}
-//
-//	final StringBuffer sb = new StringBuffer();
-//	final StringBuffer sbOrderBy = new StringBuffer();
-//
-//	sb.append("SELECT * FROM (" + baseSql + ") MT WHERE 1 < (SELECT COUNT(*) FROM (" + baseSql + ") AA WHERE ");
-//	for (final Iterator<String> iterator = keyPropColAliases.iterator(); iterator.hasNext();) {
-//	    final String keyPropName = iterator.next();
-//	    sb.append("AA." + keyPropName + " = MT." + keyPropName + (iterator.hasNext() ? " AND " : ""));
-//	    sbOrderBy.append("MT." + keyPropName + (iterator.hasNext() ? ", " : ""));
-//	}
-//	sb.append(") ORDER BY " + sbOrderBy.toString());
-//
-//	return sb.toString();
-//    }
-
-//    public List<Pair<String, Long>> populateData(final IRetriever ret) throws Exception {
-//	final List<Pair<String, Long>> result = new ArrayList<Pair<String, Long>>();
-//	final String legacyDataSql = getSplitSql(ret);
-//	final Connection conn = injector.getInstance(Connection.class);
-//	final Statement st = conn.createStatement();
-//	final ResultSet rs = st.executeQuery(legacyDataSql);
-//
-//	while (rs.next()) {
-//	    result.add(new Pair<String, Long>(rs.getString(1), rs.getLong(2)));
-//	}
-//	rs.close();
-//	st.close();
-//	conn.close();
-//
-//	return result;
-//    }
-
     private final HibernateUtil hiberUtil;
     private final EntityFactory factory;
     private final List<IRetriever<? extends AbstractEntity<?>>> retrievers = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
@@ -187,17 +138,49 @@ public class DataMigrator {
 
 	for (final Class<? extends IRetriever<? extends AbstractEntity<?>>> retrieverClass : retrieversClasses) {
 	    final IRetriever<? extends AbstractEntity<?>> ret = injector.getInstance(retrieverClass);
-	    System.out.println("================================ " + ret.getClass().getSimpleName() + "  =======================================");
-	    System.out.println(new RetrieverPropsValidator(dma, ret.type(), ret.resultFields().keySet()).validate());
+	    logger.debug("Checking props for [" + ret.getClass().getSimpleName() + "]");
+	    final SortedMap<String,RetrievedPropValidationError> checkResult = new RetrieverPropsValidator(dma, ret.type(), ret.resultFields().keySet()).validate();
+	    if (checkResult.size() > 0) {
+		logger.error("The following issues have been revealed for props in [" + ret.getClass().getSimpleName() + "]:\n " + checkResult);
+	    }
 	    retrievers.add(ret);
 	}
+
+	validateRetrievalSql(dma);
 	throw new IllegalStateException();
-//	validateRetrievalSql();
-//
+
 //	final Date now = new Date();
 //	migrationRun = factory.newByKey(MigrationRun.class, migratorName + "_" + now.getTime());
 //	migrationRun.setStarted(now);
 //	runDao.save(migrationRun);
+    }
+
+    /**
+     * Checks the correctness of the legacy data retrieval sql syntax and column aliases.
+     *
+     * @return
+     * @throws Exception
+     */
+    private boolean validateRetrievalSqlForKeyFieldsUniqueness(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) throws Exception {
+	final Statement st = conn.createStatement();
+	final String sql = new RetrieverSqlProducer(dma, retriever).getKeyUniquenessViolationSql();
+	boolean result = false;
+	try {
+	    logger.debug("Checking uniqueness of key data for [" + retriever.getClass().getSimpleName() + "]");
+	    final ResultSet rs = st.executeQuery(sql);
+	    if (rs.next()) {
+		logger.error("There are duplicates in data of [" + retriever.getClass().getSimpleName() + "]");
+		result = true;
+	    }
+	    rs.close();
+	} catch (final Exception ex) {
+	    logger.error("Exception while checking [" + retriever.getClass().getSimpleName() + "]" + ex + " SQL:\n" + sql);
+	    result = true;
+	} finally {
+	    st.close();
+	}
+
+	return result;
     }
 
     /**
@@ -279,16 +262,15 @@ public class DataMigrator {
 	return sql;
     }
 
-    private void validateRetrievalSql() throws Exception {
+    private void validateRetrievalSql(final DomainMetadataAnalyser dma) throws Exception {
 	boolean foundErrors = false;
 	final Connection conn = injector.getInstance(Connection.class);
 	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
-	    if (validateRetrievalSql(ret, conn)) {
+	    if (validateRetrievalSqlForKeyFieldsUniqueness(dma, ret, conn)) {
 		foundErrors = true;
 	    }
     	}
 	conn.close();
-	final int index = 0;
 	if (foundErrors) {
 	    throw new RuntimeException("Validation detected errors. Pls consult the log file for details");
 	}
