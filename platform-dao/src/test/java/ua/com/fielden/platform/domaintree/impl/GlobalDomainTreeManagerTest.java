@@ -551,6 +551,27 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
     }
 
     @Test
+    public void test_that_CENTRE_removing_works_fine_for_centres_with_analyses() {
+	// create PRINCIPLE and REPORT report for USER2
+	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
+	nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
+	nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT");
+	nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").initAnalysisManagerByDefault("Analysis", AnalysisType.SIMPLE);
+	nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").acceptAnalysisManager("Analysis");
+	nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
+
+	// remove report
+	nonBaseMgr.removeEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
+	assertNull("Should be removed.", nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT"));
+
+	try {
+	    nonBaseMgr.removeEntityCentreManager(MENU_ITEM_TYPE, null);
+	    fail("Removing of not own reports should fail.");
+	} catch (final IllegalArgumentException e) {
+	}
+    }
+
+    @Test
     public void test_that_CENTRE_removing_works_fine_for_BASE_user() {
 	// create PRINCIPLE and REPORT report for USER1
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();

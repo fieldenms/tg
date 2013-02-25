@@ -779,8 +779,14 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    persistentCentres.remove(key(menuItemType, name));
 	    centresOwning.remove(key(menuItemType, name));
 
+	    final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title(menuItemType, name));
+	    final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
+
+	    // remove all analyses dependencies
+	    entityCentreAnalysisConfigController.delete(analysesForConcreteECCmodel(ecc));
+
 	    // remove an instance of EntityCentreConfig which should exist in DB
-	    entityCentreConfigController.delete(modelForCurrentUser(menuItemType.getName(), title(menuItemType, name)));
+	    entityCentreConfigController.delete(ecc);
 	}
 	return this;
     }
