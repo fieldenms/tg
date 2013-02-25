@@ -257,7 +257,13 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 		// Principle entity-centre should be initialised and then saved. This can be done naturally by base user.
 		// But if base user haven't done that yet, it will be done by non-base user automatically.
 		final boolean owning = currentUser().isBase();
-		init(menuItemType, name, new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{ add(root); }}), owning);
+
+		final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{ add(root); }});
+		// initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
+		c.getFirstTick().checkedProperties(root);
+		c.getSecondTick().checkedProperties(root);
+
+		init(menuItemType, name, c, owning);
 		// save a new instance of EntityCentreConfig
 		final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(menuItemTypeName));
 		ecc.setPrincipal(true);
