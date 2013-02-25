@@ -45,7 +45,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
      */
     public CentreConfigurationView(final CentreConfigurationModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
-	addOpenEventListener(createCentreOpenEventListener());
+	addConfigurationEventListener(createCentreOpenEventListener());
 	this.analysisToSelect = GridConfigurationModel.gridAnalysisName;
 	this.save = createSaveAction();
 	this.saveAs = createSaveAsAction();

@@ -53,7 +53,7 @@ public class LifecycleAnalysisConfigurationView<T extends AbstractEntity<?>> ext
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, detailsCache, detailsCustomiser, owner, progressLayer);
 	this.toolbarCustomiser = toolbarCustomiser == null ? new DefaultLifecycleAnalysisToolbarCustomiser<T>() : toolbarCustomiser;
-	addOpenEventListener(createOpenAnalysisEventListener());
+	addConfigurationEventListener(createOpenAnalysisEventListener());
     }
 
     public IToolbarCustomiser<LifecycleAnalysisView<T>> getToolbarCustomiser() {

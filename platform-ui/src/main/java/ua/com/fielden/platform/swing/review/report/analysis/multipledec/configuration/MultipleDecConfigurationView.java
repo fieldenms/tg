@@ -34,7 +34,7 @@ public class MultipleDecConfigurationView<T extends AbstractEntity<?>> extends A
 	super(model, detailsCache, detailsCustomiser, owner, progressLayer);
 	this.modelProvider = modelProvider;
 	this.decConfigurator = decConfigurator;
-	addOpenEventListener(createOpenAnalysisEventListener());
+	addConfigurationEventListener(createOpenAnalysisEventListener());
     }
 
     @Override

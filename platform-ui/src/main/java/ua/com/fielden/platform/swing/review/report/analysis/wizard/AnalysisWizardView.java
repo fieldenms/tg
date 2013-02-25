@@ -67,7 +67,7 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
 		if(getOwner().getModel().isFreeze()){
 		    getOwner().getModel().save();
 		}
-		return null;
+		return super.action(e);
 	    }
 
 	    @Override
@@ -107,7 +107,7 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
 		if(getOwner().getModel().isFreeze()){
 		    getOwner().getModel().discard();
 		}
-		return null;
+		return super.action(e);
 	    }
 
 	    @Override

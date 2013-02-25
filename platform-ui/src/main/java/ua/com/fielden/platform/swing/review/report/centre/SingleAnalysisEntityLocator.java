@@ -131,7 +131,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 	    @Override
 	    protected Result action(final ActionEvent e) throws Exception {
 		getOwner().getModel().freeze();
-		return null;
+		return super.action(e);
 	    }
 
 	    @Override

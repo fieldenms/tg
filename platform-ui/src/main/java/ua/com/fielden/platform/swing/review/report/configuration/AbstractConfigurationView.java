@@ -1,5 +1,25 @@
 package ua.com.fielden.platform.swing.review.report.configuration;
 
+import static ua.com.fielden.platform.swing.review.report.ReportMode.NOT_SPECIFIED;
+import static ua.com.fielden.platform.swing.review.report.ReportMode.REPORT;
+import static ua.com.fielden.platform.swing.review.report.ReportMode.WIZARD;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.BUILD;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.BUILD_FAILED;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.CANCEL;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.CANCEL_FAILED;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.CONFIGURE;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.CONFIGURE_FAILED;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.OPEN;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.OPEN_FAILED;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.POST_BUILD;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.POST_CANCEL;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.POST_CONFIGURE;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.POST_OPEN;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.PRE_BUILD;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.PRE_CANCEL;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.PRE_CONFIGURE;
+import static ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction.PRE_OPEN;
+
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
@@ -9,6 +29,7 @@ import java.awt.event.HierarchyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.Action;
@@ -28,7 +49,6 @@ import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
-
 /**
  * The holder for wizard and view panels. Provides functionality that allows one to switch view between report and wizard modes.
  *
@@ -79,7 +99,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      *
      * @param l
      */
-    public void addOpenEventListener(final IAbstractConfigurationViewEventListener l) {
+    public void addConfigurationEventListener(final IAbstractConfigurationViewEventListener l) {
 	listenerList.add(IAbstractConfigurationViewEventListener.class, l);
     }
 
@@ -88,7 +108,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      *
      * @param l
      */
-    public void removeOpenEventListener(final IAbstractConfigurationViewEventListener l) {
+    public void removeConfigurationEventListener(final IAbstractConfigurationViewEventListener l) {
 	listenerList.remove(IAbstractConfigurationViewEventListener.class, l);
     }
 
@@ -152,7 +172,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     @Override
     public void close() {
 	setSize(new Dimension(0, 0));
-	getModel().setMode(ReportMode.NOT_SPECIFIED);
+	getModel().setMode(NOT_SPECIFIED);
 	wasResized = false;
 	wasChildLoaded = false;
 	super.close();
@@ -224,7 +244,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		if (!superResult) {
 		    return false;
 		}
-		for (final Result result : fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.PRE_OPEN))) {
+		for (final Result result : fireConfigurationEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, PRE_OPEN))) {
 		    if (!result.isSuccessful()) {
 			return false;
 		    }
@@ -234,27 +254,27 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	    @Override
 	    protected List<Result> action(final ActionEvent e) throws Exception {
-		return fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.OPEN));
+		return fireConfigurationEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, OPEN));
 	    }
 
 	    @Override
 	    protected void postAction(final List<Result> value) {
 		super.postAction(value);
 		setMessage("");
-		fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.POST_OPEN));
+		fireConfigurationEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, POST_OPEN));
 		for (final Result valueRes : value) {
 		    if (!valueRes.isSuccessful()) {
-			getModel().setMode(ReportMode.WIZARD);
+			getModel().setMode(WIZARD);
 			return;
 		    }
 		}
-		getModel().setMode(ReportMode.REPORT);
+		getModel().setMode(REPORT);
 	    }
 
 	    @Override
 	    protected void handlePreAndPostActionException(final Throwable ex) {
 		super.handlePreAndPostActionException(ex);
-		fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.OPEN_FAILED));
+		fireConfigurationEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, OPEN_FAILED));
 	    }
 	};
     }
@@ -362,11 +382,11 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     }
 
     /**
-     * Fires the specified open event.
+     * Fires the abstract configuration event (i.e. open, cancel, build, configure).
      *
      * @param event
      */
-    private List<Result> fireOpenEvent(final AbstractConfigurationViewEvent event) {
+    private List<Result> fireConfigurationEvent(final AbstractConfigurationViewEvent event) {
 	final List<Result> results = new ArrayList<Result>();
 	for (final IAbstractConfigurationViewEventListener listener : listenerList.getListeners(IAbstractConfigurationViewEventListener.class)) {
 	    results.add(listener.abstractConfigurationViewEventPerformed(event));
@@ -392,7 +412,9 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	 * @param configurationView
 	 */
 	public ConfigureAction(final AbstractConfigurationView<?, ?> configurationView) {
-	    super(configurationView, ReportMode.WIZARD, ReportMode.REPORT);
+	    super(configurationView,//
+		    Arrays.asList(WIZARD, REPORT),
+		    Arrays.asList(PRE_CONFIGURE, CONFIGURE, POST_CONFIGURE, CONFIGURE_FAILED));
 	}
     }
 
@@ -414,7 +436,9 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	 * @param configurationView
 	 */
 	public BuildAction(final AbstractConfigurationView<?, ?> configurationView) {
-	    super(configurationView, ReportMode.REPORT, ReportMode.WIZARD);
+	    super(configurationView, //
+		    Arrays.asList(REPORT, WIZARD),//
+		    Arrays.asList(PRE_BUILD, BUILD, POST_BUILD, BUILD_FAILED));
 	}
     }
 
@@ -436,7 +460,9 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	 * @param configurationView
 	 */
 	public CancelAction(final AbstractConfigurationView<?, ?> configurationView) {
-	    super(configurationView, ReportMode.REPORT, ReportMode.WIZARD);
+	    super(configurationView, //
+		    Arrays.asList(REPORT, WIZARD),//
+		    Arrays.asList(PRE_CANCEL, CANCEL, POST_CANCEL, CANCEL_FAILED));
 	}
     }
 
@@ -454,8 +480,9 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	private final AbstractConfigurationView<?, ?> configurationView;
 	private final ReportMode reportMode;
-	//The report mode that is used when during the action processing the exception wsa thrown.
+	//The report mode that is used when during the action processing the exception was thrown.
 	private final ReportMode restorationMode;
+	private final AbstractConfigurationViewEventAction preEvent, event, postEvent, eventFailed;
 
 	/**
 	 * Initialises this {@link ChangeModeAction} {@link AbstractConfigurationView} instance and specified report mode to which configuration view must be changed.
@@ -463,11 +490,17 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	 * @param configurationView
 	 * @param reportMode
 	 */
-	public ChangeModeAction(final AbstractConfigurationView<?, ?> configurationView, final ReportMode reportMode, final ReportMode restorationMode) {
+	public ChangeModeAction(final AbstractConfigurationView<?, ?> configurationView,//
+		final List<ReportMode> reportModes,//
+		final List<AbstractConfigurationViewEventAction> configEvents) {
 	    super("", configurationView.getProgressLayer());
 	    this.configurationView = configurationView;
-	    this.reportMode = reportMode;
-	    this.restorationMode = restorationMode;
+	    this.reportMode = reportModes.get(0);
+	    this.restorationMode = reportModes.get(1);
+	    this.preEvent = configEvents.get(0);
+	    this.event = configEvents.get(1);
+	    this.postEvent = configEvents.get(2);
+	    this.eventFailed = configEvents.get(3);
 	}
 
 	/**
@@ -481,6 +514,11 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	@Override
 	protected boolean preAction() {
+	    for(final Result result : configurationView.fireConfigurationEvent(new AbstractConfigurationViewEvent(configurationView, preEvent))){
+		if(!result.isSuccessful()){
+		    return false;
+		}
+	    }
 	    String message = "";
 	    switch (reportMode) {
 	    case REPORT:
@@ -488,6 +526,8 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		break;
 	    case WIZARD:
 		message = "Loading wizard...";
+		break;
+	    default:
 		break;
 	    }
 	    setMessage(message);
@@ -503,8 +543,15 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	}
 
 	@Override
+	protected Result action(final ActionEvent e) throws Exception {
+	    configurationView.fireConfigurationEvent(new AbstractConfigurationViewEvent(configurationView, event));
+	    return Result.successful(configurationView);
+	}
+
+	@Override
 	protected void postAction(final Result value) {
 	    getConfigurationView().getModel().setMode(reportMode);
+	    configurationView.fireConfigurationEvent(new AbstractConfigurationViewEvent(configurationView, postEvent));
 	    super.postAction(value);
 	}
 
@@ -522,6 +569,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		@Override
 		protected Void action(final ActionEvent e) throws Exception {
 		    restoreAfterError();
+		    configurationView.fireConfigurationEvent(new AbstractConfigurationViewEvent(configurationView, eventFailed));
 		    return null;
 		}
 

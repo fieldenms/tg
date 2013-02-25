@@ -12,12 +12,15 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.DefaultUiModel;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.factory.IEntityCentreBuilder;
+import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
 import ua.com.fielden.platform.swing.review.report.events.CentreConfigurationEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.IAbstractConfigurationViewEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ICentreConfigurationEventListener;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 
@@ -70,12 +73,38 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
 	this.entityCentreConfigurationView = centreBuilder.createEntityCentre(menuItemClass, name, progressLayer);
 	this.entityCentreConfigurationView.addCentreConfigurationEventListener(createContreConfigurationListener());
+	this.entityCentreConfigurationView.addConfigurationEventListener(createConfigurationEventListener());
 	progressLayer.setView(entityCentreConfigurationView);
 	getHoldingPanel().removeAll();
 	getHoldingPanel().setLayout(new MigLayout("fill, insets 0", "[fill, grow]", "[c,grow,fill]"));
 	add(progressLayer);
 	getModel().setView(this);
 
+    }
+
+    /**
+     * Creates listener for cancel action. Closes this entity centre when user presses cancel and it is first time open.
+     *
+     * @return
+     */
+    private IAbstractConfigurationViewEventListener createConfigurationEventListener() {
+	return new IAbstractConfigurationViewEventListener() {
+
+	    @Override
+	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
+		switch(event.getEventAction()){
+		case PRE_CANCEL:
+		    if(entityCentreConfigurationView.getPreviousView() == null){
+			treeMenu.closeCurrentTab();
+			return new Result(new Exception("Can not cancel first time open entity centre"));
+		    }
+		    break;
+		default:
+		    break;
+		}
+		return Result.successful(event.getSource());
+	    }
+	};
     }
 
     @Override
@@ -173,6 +202,8 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 		    } else {
 			throw new IllegalStateException("The principle tree menu item can not be removed!");
 		    }
+		    break;
+		default:
 		    break;
 		}
 		return true;

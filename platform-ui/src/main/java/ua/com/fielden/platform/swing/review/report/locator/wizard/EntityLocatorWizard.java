@@ -76,7 +76,7 @@ public class EntityLocatorWizard<T extends AbstractEntity<?>, R extends Abstract
 		if(getOwner().getModel().isInFreezedPhase()){
 		    getOwner().getModel().save();
 		}
-		return null;
+		return super.action(e);
 	    }
 
 	    @Override
@@ -116,7 +116,7 @@ public class EntityLocatorWizard<T extends AbstractEntity<?>, R extends Abstract
 		if(getOwner().getModel().isInFreezedPhase()){
 		    getOwner().getModel().discard();
 		}
-		return null;
+		return super.action(e);
 	    }
 
 	    @Override

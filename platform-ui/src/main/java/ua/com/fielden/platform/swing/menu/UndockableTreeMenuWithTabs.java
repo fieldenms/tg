@@ -43,7 +43,7 @@ import ua.com.fielden.platform.swing.view.ICloseHook;
 
 import com.jidesoft.swing.JideTabbedPane;
 
-public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenuWithTabs<V> {
+public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenuWithTabs<V> {
 
     private static final long serialVersionUID = 2081673364500267565L;
 
@@ -104,11 +104,14 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 	    popupMenu.add(visibilityItem);
 	}
 	setCellRenderer(new FilterCellRenderer(getModel()) {
+
+	    private static final long serialVersionUID = -4546437533197407357L;
+
 	    @Override
 	    public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
 		super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 		final String oldText = TitlesDescsGetter.removeItalic(getText());
-		if (!isMenuItemVisible((TreeMenuItem) value)) {
+		if (!isMenuItemVisible((TreeMenuItem<?>) value)) {
 		    setText(TitlesDescsGetter.italic(oldText));
 		} else {
 		    setText(oldText);
@@ -168,8 +171,8 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 		    result = ((ICloseGuard) componentAt).canClose();
 		    if (result == null) {
 			if (componentAt instanceof BaseNotifPanel) {
-			    ((BaseNotifPanel) componentAt).getAssociatedTreeMenuItem().setState(TreeMenuItemState.ALL);
-			    ((BaseNotifPanel) componentAt).close();
+			    ((BaseNotifPanel<?>) componentAt).getAssociatedTreeMenuItem().setState(TreeMenuItemState.ALL);
+			    ((BaseNotifPanel<?>) componentAt).close();
 			}
 			tabPanel.removeTabAt(shiftTabCount);
 		    } else {
@@ -327,6 +330,8 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 	case ALL:
 	    openItem(item, dock);
 	    break;
+	default:
+	    break;
 	}
 
     }
@@ -410,9 +415,8 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public void selectItemWithView(final BaseNotifPanel view) {
+    public void selectItemWithView(final BaseNotifPanel<?> view) {
 	if (view.getAssociatedTreeMenuItem().getState() == TreeMenuItemState.DOCK) {
 	    super.selectItemWithView(view);
 	} else if (view.getAssociatedTreeMenuItem().getState() == TreeMenuItemState.UNDOCK) {
@@ -508,7 +512,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 	    if (!parentMenuItem.isVisible()) {
 		return false;
 	    }
-	    parentMenuItem = (TreeMenuItem) parentMenuItem.getParent();
+	    parentMenuItem = (TreeMenuItem<?>) parentMenuItem.getParent();
 	}
 	return true;
     }
@@ -574,7 +578,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
     }
 
     private boolean isSiblingVisible(final TreeMenuItem<?> menuItem) {
-	final TreeMenuItem parentItem = (TreeMenuItem) menuItem.getParent();
+	final TreeMenuItem<?> parentItem = (TreeMenuItem<?>) menuItem.getParent();
 	if (parentItem.getChildCount() > 0) {
 	    for (final Enumeration<?> childrenEnum = parentItem.children(); childrenEnum.hasMoreElements();) {
 		final TreeMenuItem<?> n = (TreeMenuItem<?>) childrenEnum.nextElement();
@@ -608,7 +612,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 	if ((lastPathComponent instanceof MiSaveAsConfiguration) || (lastPathComponent instanceof TreeMenuItemWrapper)) {
 	    return;
 	}
-	final TreeMenuItem<?> node = (TreeMenuItem) treePath.getLastPathComponent();
+	final TreeMenuItem<?> node = (TreeMenuItem<?>) treePath.getLastPathComponent();
 	node.setVisible(visible);
 	if (node.getChildCount() > 0) {
 	    for (final Enumeration<?> childrenEnum = node.children(); childrenEnum.hasMoreElements();) {

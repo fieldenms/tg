@@ -28,7 +28,7 @@ public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends
 	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
 	    final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, detailsCache, detailsCustomiser, owner, progressLayer);
-	addOpenEventListener(createOpenAnalysisEventListener());
+	addConfigurationEventListener(createOpenAnalysisEventListener());
     }
 
     @Override

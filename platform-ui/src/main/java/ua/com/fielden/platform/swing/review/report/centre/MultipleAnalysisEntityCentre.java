@@ -47,7 +47,9 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.MultipleAnalysisEntityCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
+import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.IAbstractConfigurationViewEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -166,7 +168,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    @Override
 	    protected Result action(final ActionEvent e) throws Exception {
 		getOwner().getModel().freez();
-		return null;
+		return super.action(e);
 	    }
 
 	    @Override
@@ -215,10 +217,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	return toolBar;
     }
 
-    private boolean isAnalysisSupported(final AnalysisType analysisType){
-	return getModel().getAnalysisBuilder().isSupported(analysisType);
-    }
-
     @Override
     protected List<Action> createCustomActionList() {
 	final List<Action> customActions = new ArrayList<Action>();
@@ -227,6 +225,10 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	customActions.add(getOwner().getSaveAs());
 	customActions.add(getOwner().getRemove());
 	return customActions;
+    }
+
+    private boolean isAnalysisSupported(final AnalysisType analysisType){
+        return getModel().getAnalysisBuilder().isSupported(analysisType);
     }
 
     /**
@@ -443,6 +445,26 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	}
     }
 
+    private IAbstractConfigurationViewEventListener createCancelCloseListener(final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> newAnalysis) {
+	return new IAbstractConfigurationViewEventListener() {
+
+	    @Override
+	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
+		switch(event.getEventAction()){
+		case PRE_CANCEL:
+		    if(newAnalysis.getPreviousView() == null){
+			closeCurrentAnalysis();
+			return new Result(new Exception("Can not cancel first time open analysis"));
+		    }
+		    break;
+		default:
+		    break;
+		}
+		return Result.successful(event.getSource());
+	    }
+	};
+    }
+
     /**
      * Returns an index of the first visible analysis.
      *
@@ -470,8 +492,11 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @return
      */
     private AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> createAnalysis(final String name, final AnalysisType type){
-	return getModel().getAnalysisBuilder()//
-		.createAnalysis(type, name, getOwner().getDetailsCache(name), this, getModel().getCriteria(), getReviewProgressLayer());    }
+	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> newAnalysis = getModel().getAnalysisBuilder()//
+		.createAnalysis(type, name, getOwner().getDetailsCache(name), this, getModel().getCriteria(), getReviewProgressLayer());
+	newAnalysis.addConfigurationEventListener(createCancelCloseListener(newAnalysis));
+	return newAnalysis;
+    }
 
     /**
      * Returns the close tab action.
@@ -485,13 +510,20 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
-		if(getModel().getName() == null){
-		    removeAction.actionPerformed(null);
-		}else{
-		    hideAnalysis(getCurrentAnalysisConfigurationView().getModel().getName());
-		}
+		closeCurrentAnalysis();
 	    }
 	};
+    }
+
+    /**
+     * Closese current analysis.
+     */
+    private void closeCurrentAnalysis(){
+	if(getModel().getName() == null){
+	    removeAction.actionPerformed(null);
+	}else{
+	    hideAnalysis(getCurrentAnalysisConfigurationView().getModel().getName());
+	}
     }
 
     /**
@@ -606,17 +638,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 		}
 	    }
 	};
-    }
-
-    /**
-     * Creates main details analysis configuration view.
-     *
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createGridAnalysis(){
-	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>)getModel().getAnalysisBuilder()//
-		.createAnalysis(null, null, getOwner().getDetailsCache(null), this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     /**

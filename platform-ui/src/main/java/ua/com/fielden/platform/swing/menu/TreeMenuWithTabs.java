@@ -43,7 +43,7 @@ import com.jidesoft.swing.JideTabbedPane;
  * @author TG Team
  *
  */
-public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
+public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -249,7 +249,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
 		// it cannot be associated with any of the menu item
 		if (shouldCheck(getSelectedIndex(), index)) {
 		    // a different tab is being selected and thus need to check whether the current one can be closed/left
-		    final BaseNotifPanel view = (BaseNotifPanel) tabPane.getComponentAt(getSelectedIndex());
+		    final BaseNotifPanel<?> view = (BaseNotifPanel<?>) tabPane.getComponentAt(getSelectedIndex());
 		    if (view.canLeave()) {
 			super.setSelectedIndex(index);
 		    } else {
@@ -286,7 +286,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
 	    public void actionPerformed(final ActionEvent e) {
 		final int selectedTabIndex = tabPane.getSelectedIndex();
 		if (selectedTabIndex > 0) {
-		    final BaseNotifPanel view = (BaseNotifPanel) tabPane.getComponentAt(selectedTabIndex);
+		    final BaseNotifPanel<?> view = (BaseNotifPanel<?>) tabPane.getComponentAt(selectedTabIndex);
 		    if (view.canClose() == null) {
 			view.close();
 			tabPane.removeTabAt(selectedTabIndex);
@@ -397,6 +397,9 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
 	if (treeMenuItem instanceof MiDashboard) {
 	    final MiDashboard miDashboard = (MiDashboard) treeMenuItem;
 	    final Command<Void> command = new BlockingLayerCommand<Void>("Refresh all", miDashboard.getView().getBlockingLayer()) {
+
+		private static final long serialVersionUID = -510484118651692975L;
+
 		@Override
 		protected boolean preAction() {
 		    return super.preAction();
@@ -523,8 +526,8 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
 			result = ((ICloseGuard) componentAt).canClose();
 			if (result == null) {
 			    if (componentAt instanceof BaseNotifPanel) {
-				((BaseNotifPanel) componentAt).getAssociatedTreeMenuItem().setState(TreeMenuItemState.ALL);
-				((BaseNotifPanel) componentAt).close();
+				((BaseNotifPanel<?>) componentAt).getAssociatedTreeMenuItem().setState(TreeMenuItemState.ALL);
+				((BaseNotifPanel<?>) componentAt).close();
 			    }
 			    tabPanel.removeTabAt(shiftTabCount);
 			} else {
@@ -580,7 +583,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
      *
      * @param view
      */
-    public void selectItemWithView(final BaseNotifPanel view) {
+    public void selectItemWithView(final BaseNotifPanel<?> view) {
 	for (int index = 0; index < tabPane.getTabCount(); index++) {
 	    if (tabPane.getComponentAt(index) == view) {
 		tabPane.setSelectedIndex(index);

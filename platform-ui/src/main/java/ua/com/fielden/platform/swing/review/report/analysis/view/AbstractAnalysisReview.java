@@ -129,7 +129,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	    @Override
 	    protected Result action(final ActionEvent e) throws Exception {
 		getOwner().getModel().freeze();
-		return null;
+		return super.action(e);
 	    }
 
 	    @Override

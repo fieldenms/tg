@@ -18,12 +18,15 @@ import javax.swing.SwingUtilities;
 import org.jfree.ui.RefineryUtilities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayerWithEntityLocator;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterUiWithEntityLocator;
+import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorConfigurationEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.IAbstractConfigurationViewEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorConfigurationEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -66,6 +69,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	this.locatorConfigurationView = new LocatorConfigurationView<VT, RT>(locatorConfigurationModel, progressLayer, isMulti);
 	this.locatorConfigurationView.addLocatorEventListener(createLocatorEventListener());
 	this.locatorConfigurationView.addLocatorConfigurationEventListener(createLocatorConfigurationListener());
+	this.locatorConfigurationView.addConfigurationEventListener(createCancelCloseListener());
 	this.autocompleterFocusListener = createComponentFocusListener();
 	progressLayer.setView(locatorConfigurationView);
 	getContentPane().add(progressLayer);
@@ -77,6 +81,31 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	addWindowListener(createWindowCloseHandler());
 	//setTitle(generateTitle(locatorType, locatorConfigurationModel.entityType, locatorConfigurationModel.name));
 
+    }
+
+    /**
+     * Creates the listener that close this first time opened entity locator dialog on cancel event.
+     *
+     * @return
+     */
+    private IAbstractConfigurationViewEventListener createCancelCloseListener() {
+	return new IAbstractConfigurationViewEventListener() {
+
+	    @Override
+	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
+		switch(event.getEventAction()){
+		case PRE_CANCEL:
+		    if (locatorConfigurationView.getPreviousView() == null) {
+			sendCloseEvent();
+			return new Result(new Exception("Can not cancel first time open entity locator"));
+		    }
+		    break;
+		default:
+		    break;
+		}
+		return Result.successful(event.getSource());
+	    }
+	};
     }
 
     /**
@@ -220,10 +249,17 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 
 	    @Override
 	    public void locatorActionPerformed(final LocatorEvent event) {
-		final WindowEvent wev = new WindowEvent(EntityLocatorDialog.this, WindowEvent.WINDOW_CLOSING);
-		Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(wev);
+		sendCloseEvent();
 	    }
 	};
+    }
+
+    /**
+     * Sends close event to this entity locator dialog.
+     */
+    private void sendCloseEvent(){
+	final WindowEvent wev = new WindowEvent(EntityLocatorDialog.this, WindowEvent.WINDOW_CLOSING);
+	Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(wev);
     }
 
     /**

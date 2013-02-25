@@ -77,7 +77,7 @@ public class EntityCentreWizard<T extends AbstractEntity<?>, C extends AbstractE
 		if(getOwner().getModel().isFreezed()){
 		    getOwner().getModel().save();
 		}
-		return null;
+		return super.action(e);
 	    }
 
 	    @Override
@@ -106,7 +106,7 @@ public class EntityCentreWizard<T extends AbstractEntity<?>, C extends AbstractE
 		    return false;
 		}
 		if(!getOwner().getModel().isFreezed()){
-		    JOptionPane.showMessageDialog(EntityCentreWizard.this, "This locator's wizard can not be canceled!", "Warning", JOptionPane.WARNING_MESSAGE);
+		    JOptionPane.showMessageDialog(EntityCentreWizard.this, "This entity centre wizard can not be canceled!", "Warning", JOptionPane.WARNING_MESSAGE);
 		    return false;
 		}
 		return true;
@@ -117,7 +117,7 @@ public class EntityCentreWizard<T extends AbstractEntity<?>, C extends AbstractE
 		if(getOwner().getModel().isFreezed()){
 		    getOwner().getModel().discard();
 		}
-		return null;
+		return super.action(e);
 	    }
 
 	    @Override

@@ -68,7 +68,7 @@ public class SingleAnalysisEntityCentre<T extends AbstractEntity<?>> extends Abs
 	    @Override
 	    protected Result action(final ActionEvent e) throws Exception {
 		getOwner().getModel().freez();
-		return null;
+		return super.action(e);
 	    }
 
 	    @Override

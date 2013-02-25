@@ -47,7 +47,7 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 
     public LocatorConfigurationView(final LocatorConfigurationModel<T, R> model, final BlockingIndefiniteProgressLayer progressLayer, final boolean isMultipleSelection) {
 	super(model, progressLayer);
-	addOpenEventListener(createOpenEventListener());
+	addConfigurationEventListener(createOpenEventListener());
 	this.isMultipleSelection = isMultipleSelection;
 	this.save = createSaveAction();
 	this.saveAsDefault = createSaveAsDefaultAction();
