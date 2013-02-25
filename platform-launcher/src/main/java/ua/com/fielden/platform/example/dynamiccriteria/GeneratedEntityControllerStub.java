@@ -89,4 +89,16 @@ public class GeneratedEntityControllerStub<T extends AbstractEntity<?>> implemen
 	return null;
     }
 
+    @Override
+    public boolean stop() {
+	// TODO Auto-generated method stub
+	return false;
+    }
+
+    @Override
+    public Integer progress() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
 }
