@@ -57,6 +57,24 @@ public interface IGlobalDomainTreeManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
+     * Returns <code>true</code> if current user <b>owns</b> specified <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.
+     * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
+     *
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
+     * Non-base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but cannot save/remove base user's reports (throws {@link IllegalArgumentException}).
+     * Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br><br>
+     *
+     * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}),
+     * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
+     * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
+     *
+     * @param menuItemType -- a menu item type relevant to an entity-centre manager.
+     * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
+     * @return
+     */
+    boolean isEntityCentreManagerOwner(final Class<?> menuItemType, final String name);
+
+    /**
      * Gets a current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *

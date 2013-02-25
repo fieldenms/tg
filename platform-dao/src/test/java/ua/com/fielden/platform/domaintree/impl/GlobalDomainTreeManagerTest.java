@@ -135,6 +135,23 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
     //////////////////////////////// ENTITY-CENTRES MANAGEMENT //////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Test
+    public void test_that_centre_owning_works() {
+	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
+	baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
+	baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null);
+
+	assertTrue("Should be owner.", baseMgr.isEntityCentreManagerOwner(MENU_ITEM_TYPE, null));
+
+	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
+	nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
+
+	assertFalse("Should be NOT owner.", nonBaseMgr.isEntityCentreManagerOwner(MENU_ITEM_TYPE, null));
+
+	nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "CENTRE");
+	assertTrue("Should be owner.", nonBaseMgr.isEntityCentreManagerOwner(MENU_ITEM_TYPE, "CENTRE"));
+    }
+
+    @Test
     public void test_that_PRINCIPLE_CENTRE_initialisation_and_uploading_works_fine_for_BASE_user() {
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
 	baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);

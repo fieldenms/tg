@@ -815,6 +815,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	return Collections.unmodifiableList(names);
     }
 
+    @Override
+    public boolean isEntityCentreManagerOwner(final Class<?> menuItemType, final String name) {
+        return centresOwning.get(key(menuItemType, name));
+    }
+
     /////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////// Master management /////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////
