@@ -95,7 +95,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 		switch(event.getEventAction()){
 		case PRE_CANCEL:
 		    if(entityCentreConfigurationView.getPreviousView() == null){
-			treeMenu.closeCurrentTab();
+			treeMenu.closeView(DynamicReportWrapper.this);
 			return new Result(new Exception("Can not cancel first time open entity centre"));
 		    }
 		    break;
@@ -193,11 +193,13 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 		    event.getSaveAsName());
 		    principleEntityCentreMenuItem.addItem(newTreeMenuItem);
 		    treeMenu.getModel().getOriginModel().reload(principleEntityCentreMenuItem);
-		    treeMenu.activateOrOpenItem(newTreeMenuItem);
+		    if (!event.isAfterClose()) {
+			treeMenu.activateOrOpenItem(newTreeMenuItem);
+		    }
 		    break;
 		case POST_REMOVE:
 		    if (event.getSource().getModel().getName() != null) {
-			treeMenu.closeCurrentTab();
+			treeMenu.closeView(DynamicReportWrapper.this);
 			treeMenu.getModel().getOriginModel().removeNodeFromParent(getAssociatedTreeMenuItem());
 		    } else {
 			throw new IllegalStateException("The principle tree menu item can not be removed!");

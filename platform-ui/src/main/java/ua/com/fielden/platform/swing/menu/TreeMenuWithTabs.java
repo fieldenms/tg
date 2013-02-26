@@ -14,6 +14,7 @@ import java.awt.event.MouseEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultSingleSelectionModel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.SingleSelectionModel;
@@ -287,18 +288,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 		final int selectedTabIndex = tabPane.getSelectedIndex();
 		if (selectedTabIndex > 0) {
 		    final BaseNotifPanel<?> view = (BaseNotifPanel<?>) tabPane.getComponentAt(selectedTabIndex);
-		    if (view.canClose() == null) {
-			view.close();
-			tabPane.removeTabAt(selectedTabIndex);
-			if (view.getAssociatedTreeMenuItem() != null) {
-			    view.getAssociatedTreeMenuItem().setState(TreeMenuItemState.ALL);
-			}
-		    } else {
-			view.notify(view.whyCannotClose(), MessageType.WARNING);
-		    }
-		}
-		if (tabPane.getTabCount() == 0) {
-		    tabPane.updateUI();
+		    closeViewInTab(view);
 		}
 	    }
 	};
@@ -317,6 +307,33 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
     @Override
     protected boolean canHideNode(final TreeMenuItem<?> item) {
 	return item.getView().canLeave();
+    }
+
+    private boolean closeViewInTab(final BaseNotifPanel<?> view){
+	final int tabIndex = viewItemTab(view);
+	if(tabIndex >= 0){
+	    final ICloseGuard unclosable = view.canClose();
+	    if (unclosable == null) {
+		view.close();
+		tabPane.removeTabAt(tabIndex);
+		if (view.getAssociatedTreeMenuItem() != null) {
+		    view.getAssociatedTreeMenuItem().setState(TreeMenuItemState.ALL);
+		}
+	    } else {
+		final String message = unclosable.whyCannotClose();
+		if (view.getNotifPanel().getParent() != null && message != null) {
+		    view.notify(message, MessageType.WARNING);
+		} else if (message != null) {
+		    JOptionPane.showMessageDialog(view, message, "Warning", JOptionPane.WARNING_MESSAGE);
+		}
+	    }
+	    if (tabPane.getTabCount() == 0) {
+		tabPane.updateUI();
+	    }
+	    return true;
+	} else {
+	    return false;
+	}
     }
 
     /**
@@ -429,13 +446,6 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 	}
     }
 
-//    /**
-//     * Updates view of the selected {@link TreeMenuItem}.
-//     */
-//    public void updateSelectedMenuItem() {
-//	selectMenuItem(getSelectedItem());
-//    }
-
     /**
      * Creates a menu item activation action, which reacts to enter key press on the node representing menu item and upon its double clicking.
      *
@@ -489,8 +499,18 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
      * @return
      */
     protected int menuItemTab(final TreeMenuItem<?> item) {
+	return viewItemTab(item.getView());
+    }
+
+    /**
+     * Check if the view is already present amongst tabs. If it is then the tab's index is returned. Otherwise, -1 is returned.
+     *
+     * @param item
+     * @return
+     */
+    protected int viewItemTab(final BaseNotifPanel<?> view){
 	for (int index = 0; index < tabPane.getTabCount(); index++) {
-	    if (tabPane.getComponentAt(index) == item.getView()) {
+	    if (tabPane.getComponentAt(index) == view) {
 		return index;
 	    }
 	}
@@ -523,6 +543,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 		    final Component componentAt = tabPanel.getComponentAt(shiftTabCount);
 		    ICloseGuard result = null;
 		    if (componentAt instanceof ICloseGuard) {
+			tabPanel.setSelectedComponent(componentAt);
 			result = ((ICloseGuard) componentAt).canClose();
 			if (result == null) {
 			    if (componentAt instanceof BaseNotifPanel) {
@@ -572,10 +593,10 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
     }
 
     /**
-     * Closes selected tab sheet
+     * Closes selected tab sheet, and returns value that indicates whether panel was found among tab sheets or not.
      */
-    public void closeCurrentTab() {
-	closeTabAction.actionPerformed(null);
+    public boolean closeView(final BaseNotifPanel<?> panel) {
+	return closeViewInTab(panel);
     }
 
     /**

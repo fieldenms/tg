@@ -71,6 +71,15 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
+     * Returns value that indicates whether current user owns this entity centre or not.
+     *
+     * @return
+     */
+    public boolean isEntityCentreOwner(){
+	return gdtm.isEntityCentreManagerOwner(menuItemType, getName());
+    }
+
+    /**
      * Discards changes in the entity centre.
      */
     public void discard(){

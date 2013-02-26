@@ -207,7 +207,10 @@ public class BaseFrame extends JFrame implements ICloseGuard {
      * @param guard
      */
     protected void notify(final ICloseGuard guard) {
-	JOptionPane.showMessageDialog(this, guard.whyCannotClose(), "Warning", JOptionPane.WARNING_MESSAGE);
+	final String message = guard.whyCannotClose();
+	if(message != null){
+	    JOptionPane.showMessageDialog(this, message, "Warning", JOptionPane.WARNING_MESSAGE);
+	}
     }
 
     @Override

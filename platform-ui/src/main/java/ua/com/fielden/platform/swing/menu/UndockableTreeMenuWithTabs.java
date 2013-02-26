@@ -18,6 +18,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTree;
@@ -33,6 +34,7 @@ import org.jfree.ui.RefineryUtilities;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
+import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.menu.filter.IFilter;
@@ -132,6 +134,39 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
 	getTabPane().getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_U, InputEvent.CTRL_DOWN_MASK), UNDOCK_SELECTED_TAB);
     }
 
+    @Override
+    public boolean closeView(final BaseNotifPanel<?> panel) {
+        if(!super.closeView(panel)){
+            return closeViewInFrame(panel);
+        }
+        return true;
+    }
+
+    private boolean closeViewInFrame(final BaseNotifPanel<?> panel) {
+	final int index = viewItemFrame(panel);
+	if(index >= 0){
+	    final UndockTreeMenuItemFrame frame = undockedFrames.get(index);
+	    final ICloseGuard unclosable = frame.canClose();
+	    if (unclosable == null) {
+		frame.close();
+		undockedFrames.remove(index);
+		if (panel.getAssociatedTreeMenuItem() != null) {
+		    panel.getAssociatedTreeMenuItem().setState(TreeMenuItemState.ALL);
+		}
+	    } else {
+		final String message = unclosable.whyCannotClose();
+		if (panel.getNotifPanel().getParent() != null && message != null) {
+		    panel.notify(message, MessageType.WARNING);
+		} else if (message != null) {
+		    JOptionPane.showMessageDialog(frame, message, "Warning", JOptionPane.WARNING_MESSAGE);
+		}
+	    }
+	    return true;
+	} else {
+	    return false;
+	}
+    }
+
     private static class HolderPanelWithUndockedFrame extends BasePanel {
 
 	private static final long serialVersionUID = -7128374800302043868L;
@@ -166,6 +201,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
 	    int shiftTabCount = 0;
 	    while (tabPanel.getTabCount() - shiftTabCount > 0) {
 		final Component componentAt = tabPanel.getComponentAt(shiftTabCount);
+		tabPanel.setSelectedComponent(componentAt);
 		ICloseGuard result;
 		if (componentAt instanceof ICloseGuard) {
 		    result = ((ICloseGuard) componentAt).canClose();
@@ -185,6 +221,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
 	    final Iterator<UndockTreeMenuItemFrame> frameIterator = undockableFrames.iterator();
 	    while (frameIterator.hasNext()) {
 		final UndockTreeMenuItemFrame undockedItem = frameIterator.next();
+		undockedItem.setVisible(true);
 		final ICloseGuard guard = undockedItem.canClose();
 		if (guard == null) {
 		    undockedItem.close();
@@ -301,8 +338,12 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
     }
 
     private int menuItemFrame(final TreeMenuItem<?> item) {
+	return viewItemFrame(item.getView());
+    }
+
+    private int viewItemFrame(final BaseNotifPanel<?> view){
 	for (int frameIndex = 0; frameIndex < undockedFrames.size(); frameIndex++) {
-	    if (undockedFrames.get(frameIndex).getView() == item.getView()) {
+	    if (undockedFrames.get(frameIndex).getView() == view) {
 		return frameIndex;
 	    }
 

@@ -7,7 +7,7 @@ import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreCo
 
 /**
  * An {@link EventObject} that is thrown when centre configuration related event occurred.
- * 
+ *
  * @author TG Team
  *
  */
@@ -17,7 +17,7 @@ public class CentreConfigurationEvent extends EventObject {
 
     /**
      * Represents the phases of the Centre configuration events: save, save as, remove.
-     * 
+     *
      * @author TG Team
      *
      */
@@ -43,33 +43,42 @@ public class CentreConfigurationEvent extends EventObject {
     private final Throwable exception;
 
     /**
+     * Indicates whether save as action was fired during close action or not.
+     */
+    private final boolean afterClose;
+
+    /**
      * Initiates this {@link CentreConfigurationEvent} with instance of {@link CentreConfigurationModel} where the event was generated and the {@link CentreConfigurationAction}.
-     * 
+     *
      * @param source
      * @param eventAction
      */
-    public CentreConfigurationEvent(final CentreConfigurationView<?, ?> source, final String saveAsName, final Throwable exception, final CentreConfigurationAction eventAction) {
+    public CentreConfigurationEvent(final CentreConfigurationView<?, ?> source, final String saveAsName, final Throwable exception, final boolean afterClose, final CentreConfigurationAction eventAction) {
 	super(source);
 	this.eventAction = eventAction;
 	switch(eventAction){
 	case PRE_SAVE_AS:
-	case SAVE_AS:
 	case POST_SAVE_AS:
+	case SAVE_AS:
 	    this.saveAsName = saveAsName;
 	    this.exception = null;
+	    this.afterClose = afterClose;
 	    break;
 	case SAVE_AS_FAILED:
 	    this.saveAsName = saveAsName;
 	    this.exception = exception;
+	    this.afterClose = afterClose;
 	    break;
 	case SAVE_FAILED:
 	case REMOVE_FAILED:
 	    this.saveAsName = null;
 	    this.exception = exception;
+	    this.afterClose = false;
 	    break;
 	default:
 	    this.exception = null;
 	    this.saveAsName = null;
+	    this.afterClose = false;
 	}
     }
 
@@ -80,7 +89,7 @@ public class CentreConfigurationEvent extends EventObject {
 
     /**
      * Returns the {@link CentreConfigurationAction} that indicates the type of generated event.
-     * 
+     *
      * @return
      */
     public CentreConfigurationAction getEventAction() {
@@ -89,7 +98,7 @@ public class CentreConfigurationEvent extends EventObject {
 
     /**
      * Returns the name of the save as configuration.
-     * 
+     *
      * @return
      */
     public String getSaveAsName() {
@@ -98,10 +107,19 @@ public class CentreConfigurationEvent extends EventObject {
 
     /**
      * Returns the exception that occurred during one of the centre configuration actions
-     * 
+     *
      * @return
      */
     public Throwable getException() {
 	return exception;
+    }
+
+    /**
+     * Returns value that indicates whether save as action fired up during close action or not.
+     *
+     * @return
+     */
+    public boolean isAfterClose() {
+	return afterClose;
     }
 }
