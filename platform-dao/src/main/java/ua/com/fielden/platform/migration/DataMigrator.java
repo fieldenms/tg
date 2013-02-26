@@ -189,6 +189,30 @@ public class DataMigrator {
      * @return
      * @throws Exception
      */
+    private boolean checkRetrievalSqlForSyntaxErrors(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) throws Exception {
+	final Statement st = conn.createStatement();
+	final String sql = new RetrieverSqlProducer(dma, retriever).getSql();
+	boolean result = false;
+	try {
+	    logger.debug("Checking sql syntax for [" + retriever.getClass().getSimpleName() + "]");
+	    final ResultSet rs = st.executeQuery(sql);
+	    rs.close();
+	} catch (final Exception ex) {
+	    logger.error("Exception while checking syntax for [" + retriever.getClass().getSimpleName() + "]" + ex + " SQL:\n" + sql);
+	    result = true;
+	} finally {
+	    st.close();
+	}
+
+	return result;
+    }
+
+    /**
+     * Checks the correctness of the legacy data retrieval sql syntax and column aliases.
+     *
+     * @return
+     * @throws Exception
+     */
     private boolean validateRetrievalSql(final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) throws Exception {
 	System.out.print("Validating " + retriever.getClass().getSimpleName() + " ... ");
 	boolean foundErrors = false;
@@ -267,6 +291,10 @@ public class DataMigrator {
 	final Connection conn = injector.getInstance(Connection.class);
 	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
 	    if (validateRetrievalSqlForKeyFieldsUniqueness(dma, ret, conn)) {
+		foundErrors = true;
+	    }
+
+	    if (checkRetrievalSqlForSyntaxErrors(dma, ret, conn)) {
 		foundErrors = true;
 	    }
     	}
