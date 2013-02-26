@@ -31,10 +31,10 @@
 		</dependency>
 		<!-- end of Kryo specific libs -->
 
-		<!-- Hibernate 3.2.6.ga conflicts with A 3.3.1, thus Guice packaged version 
+		<!-- Hibernate 3.2.6.ga conflicts with A 3.3.1, thus Guice packaged version
 			of ASM is used. -->
 		<!-- kryo depends on asm only for managing public fields -->
-		<!-- dependency> <groupId>asm</groupId> <artifactId>asm-all</artifactId> 
+		<!-- dependency> <groupId>asm</groupId> <artifactId>asm-all</artifactId>
 			<version>3.3.1</version> </dependency -->
 
 		<dependency>
@@ -91,7 +91,7 @@
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
-			<version>3.5-FINAL</version>
+			<version>3.9</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
