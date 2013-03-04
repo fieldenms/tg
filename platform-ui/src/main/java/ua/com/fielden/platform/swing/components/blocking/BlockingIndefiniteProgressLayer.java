@@ -56,7 +56,7 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
     /**
      * Locking "balance" count while "Incremental Locking" mode is turned on.
      */
-    private Integer count = null;
+    private int count = 0;
 
     /**
      * Some processes can be cancelled by users. Thus, need to provide a button to trigger such an invent.
@@ -171,7 +171,7 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
      */
     private void disableIncrementalLocking() {
 	incrementalLocking = false;
-	count = null;
+	count = 0;
     }
 
     /**
@@ -207,11 +207,7 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
 		throw new RuntimeException(s);
 	    } else if (count == 0) {
 		// when the threshold value 0 is reached - "Incremental Locking" will be automatically turned off:
-		disableIncrementalLocking();
-		getUI().setLocked(false);
-		if (hasCancelCapability()) {
-		    getGlassPane().remove(btnCancel);
-		}
+		unlock();
 	    } else {
 		getUI().setLocked(true);
 		if (hasCancelCapability()) {
@@ -228,6 +224,18 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
 		    getGlassPane().remove(btnCancel);
 		}
 	    }
+	}
+    }
+
+    /**
+     * Fully unlocks the panel even if it has an incremental nature.
+     */
+    public final void unlock() {
+	count = 0;
+	disableIncrementalLocking();
+	getUI().setLocked(false);
+	if (hasCancelCapability()) {
+	    getGlassPane().remove(btnCancel);
 	}
     }
 

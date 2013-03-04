@@ -2,6 +2,7 @@ package ua.com.fielden.platform.swing.actions;
 
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
+import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
@@ -124,6 +125,7 @@ public abstract class BlockingLayerCommand<T> extends Command<T> {
     public void setMessage(final String value) {
 	if (provider.getBlockingLayer() != null) {
 	    SwingUtilitiesEx.invokeLater(new Runnable() {
+		@Override
 		public void run() {
 		    provider.getBlockingLayer().setText(value);
 		}
@@ -133,5 +135,11 @@ public abstract class BlockingLayerCommand<T> extends Command<T> {
 
     public IBlockingLayerProvider getProvider() {
         return provider;
+    }
+
+    @Override
+    protected void handlePreAndPostActionException(final Throwable ex) {
+	super.handlePreAndPostActionException(ex);
+	provider.getBlockingLayer().unlock();
     }
 }

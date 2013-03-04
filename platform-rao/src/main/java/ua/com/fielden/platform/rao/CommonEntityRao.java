@@ -503,7 +503,8 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	requestContent.add(propertyTitles);
 	final Representation envelope = restUtil.represent(requestContent);
 	// create a request URI containing page capacity and number
-	final String uri = restUtil.getExportUri(getEntityType()) + "?type=excel";
+	coToken = makeCoToken();
+	final String uri = restUtil.getExportUri(getEntityType()) + "?type=excel" + "&co-token=" + coToken;;
 	// send request
 	final Response response = restUtil.send(new Request(Method.POST, uri, envelope));
 	if (!Status.SUCCESS_OK.equals(response.getStatus())) {

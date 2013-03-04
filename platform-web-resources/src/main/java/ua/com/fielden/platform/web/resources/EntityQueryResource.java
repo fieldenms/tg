@@ -133,6 +133,7 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
 	try {
+	    @SuppressWarnings("unchecked")
 	    final QueryExecutionModel<T, EntityResultQueryModel<T>> qem = (QueryExecutionModel<T, EntityResultQueryModel<T>>) restUtil.restoreQueryExecutionModel(envelope);
 	    if (shouldDelete) {
 		dao.delete(qem.getQueryModel(), qem.getParamValues());
@@ -154,7 +155,7 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
 	    if (stopped.get()) {
-		return restUtil.errorRepresentation("Query was cancelled.");
+		return restUtil.errorRepresentation("Request was cancelled.");
 	    } else {
 		return restUtil.errorRepresentation(ex);
 	    }

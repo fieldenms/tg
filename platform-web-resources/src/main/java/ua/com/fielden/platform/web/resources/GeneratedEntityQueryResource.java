@@ -32,7 +32,6 @@ import com.google.inject.Injector;
  * @author TG Team
  */
 public class GeneratedEntityQueryResource extends ServerResource implements IComputationMonitor {
-    private static final int DEFAULT_PAGE_CAPACITY = 25;
     private static final String FIRST = "first";
     // the following properties are determined from request
     private final Integer pageCapacity;
@@ -148,7 +147,7 @@ public class GeneratedEntityQueryResource extends ServerResource implements ICom
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
 	    if (stopped.get()) {
-		return restUtil.errorRepresentation("Query was cancelled.");
+		return restUtil.errorRepresentation("Request was cancelled.");
 	    } else {
 		return restUtil.errorRepresentation(ex);
 	    }

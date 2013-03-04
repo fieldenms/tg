@@ -60,7 +60,7 @@ public final class RouterHelper {
 
     public void registerGeneratedTypeResources(final Router router) {
 	router.attach("/users/{username}/query/generated-type", new GeneratedEntityQueryResourceFactory(injector, router));
-	router.attach("/users/{username}/export/generated-type", new GeneratedEntityQueryExportResourceFactory(injector));
+	router.attach("/users/{username}/export/generated-type", new GeneratedEntityQueryExportResourceFactory(injector, router));
     }
 
 
@@ -77,7 +77,7 @@ public final class RouterHelper {
 	final Restlet queryResource = new AttachmentQueryResourceFactory(injector, router);
 	router.attach("/users/{username}/query/" + Attachment.class.getSimpleName(), queryResource);
 
-	final Restlet queryExportResource = new EntityQueryExportResourceFactory<Attachment, IAttachmentController>(IAttachmentController.class, injector);
+	final Restlet queryExportResource = new EntityQueryExportResourceFactory<Attachment, IAttachmentController>(router, IAttachmentController.class, injector);
 	router.attach("/users/{username}/export/" + Attachment.class.getSimpleName(), queryExportResource);
 
 	final Restlet downloadResource = new AttachmentDownloadResourceFactory(location, injector);
@@ -102,7 +102,7 @@ public final class RouterHelper {
 
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerExportResource(final Router router, final Class<DAO> daoType) {
 	final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimize it
-	final Restlet queryExportResource = new EntityQueryExportResourceFactory<T, DAO>(daoType, injector);
+	final Restlet queryExportResource = new EntityQueryExportResourceFactory<T, DAO>(router, daoType, injector);
 	router.attach("/users/{username}/export/" + dao.getEntityType().getSimpleName(), queryExportResource);
     }
 
