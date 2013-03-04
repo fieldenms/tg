@@ -119,8 +119,37 @@
   \end{figure}
 
 
-  \subsection{Entity Query Language}
+  \subsection{Data Communication and Processing}
   
+  Despite a recent surge of NoSQL databases, the vast majority of Enterprise Applications depend on Relational Database Systems that provide the most adequate solution for managing data.
+  In fact, many researches show that NoSQL capabilities are mainly applicable in the domains where there is a lot of poorly structured data such as documents, while Enterprise domains are best represented with a proper model that captures structural aspects and relational dependencies.
+  Object-oriented programming languages serve as the most popular choice for developing Enterprise Applications that require efficient ways to communicate with relational databases.  
+  Current ORM solutions, which are used to resolve object-relational impedance mismatch, provide significantly less powerful query mechanisms than existing RDBMS systems.
+  The result of our research and development provides a way to overcome many limitations of data querying facilities offered by modern ORM frameworks.
+  
+  \subsubsection{ORM Approach}
+  The main emphasis in modern ORM frameworks is heavily shifted towards approaches for the best mapping of object-oriented concepts such as classes, inheritance, encapsulation to the relational concept (sets and relations).
+  This area is well developed and there are industry wide initiatives for producing an API standard similar to SQL.
+  One of such standards is Java Persistence API (JPA), which has a vibrant community and dynamic adaptation by many vendors.
+  
+  However, there is still a lot of debate about advantages and disadvantages of ORM solutions.
+  One of the weakest aspect of ORM remains its limitation of data querying capabilities that are significantly behind of its relational counter part -- Structured Query Language.
+  We believe that the reason for this lies in the way Enterprise Systems are structured:
+  \begin{itemize}
+   \item Front-end applications for the majority of users, which are frequently build using OOP languages and thus requiring an ORM framework. 
+   Usually, such applications have rather rudimentary support for analytical features.
+   \item External business intelligence tools that provide rich analytical capabilities, but completely ignore the application layer (i.e. the domain model expressed in object-oriented terms), and instead work directly with the underlying database.
+  \end{itemize}
+  Existing technologies such as Hibernate, EclipseLink, Microsoft Entity Framework have a limited data querying support.
+  And while ORM frameworks try to hide relational nature of databases, their querying mechanisms still very closely resemble relational operators from SQL.  
+  
+  The holistic approach to information system modelling is essential for making sustainable applications that could fulfil the needs of different groups of users.
+  One of the evident proofs of this is the emerging concept of \emph{Embedded Business Intelligence} that brings analytical capabilities back to the core system.
+  This concept offers instant decision making and immersive user experience, and its implementation requires a holistic information system design with proper domain modelling and information retrieval function.
+  A fully capable data querying mechanism is an inherent building block of such systems.
+  In our view this should be achieved by close integration between the domain model and the querying mechanism that would allow tapping into the knowledge it captures.
+  
+   \subsubsection{Entity Query Language}  
   The platform ensures effective technological support of the object-oriented programming approach, which underpins the provided development model.
   One of the principal solutions incorporated into the platform is the \emph{Entity Query Language} -- a declarative query language based on SQL that provides a number of significant enhancements. 
   The primary objective of these enhancements is the support for working with business entities in a natural (for object-oriented programming) way, which ensures effective and ergonomic means for implementing business solutions.
@@ -133,45 +162,102 @@
   The implementation of EQL as an internal DSL automatically takes advantage of modern Java IDEs, which provide code highlighting, code insight etc.
   This favourably differentiates EQL from alternatives such as Hibernate Query Language where queries are expressed as strings without any semantics for an IDE or compiler to validate them at design time.
   Thus, every EQL query is validated at design/compile time naturally fitting into Java's statically typed nature.
-  
-  An example of an EQL query is provided as code listing~\ref{lst:eql}.  
-  It calculates the average yearly (over the period from 2009 to 2011) maintenance cost of vehicles manufactured by ``MERCEDES'' and their model names starting with ``315'', ``316'' or ``VITO'', for every sector of division ``NORTH''\footnote{This example is specific to a certain fleet domain and the full comprehension of the query implies good understanding of that domain.}.  
 
-  \lstset{language=Java,morekeywords={val,select,where,prop,eq,and,begin,end,starts_with,any_of_values,values,or,yield_and_group,as,yield,begin_expr,sum_of,div,end_expr,model_as_aggregate,year_of,in},numbers=left, numberstyle=\tiny, basicstyle=\scriptsize, stepnumber=1, numbersep=5pt, keywordstyle=\color{dkgreen}, stringstyle=\color{blue}}
-  \begin{code}{EQL Query Example}{lst:eql}
-  \begin{lstlisting}
+  \paragraph{Object graph traversal.}
+  Object composition serves as the way for modelling relationships between domain entities in OOP.
+  Thus, if it is necessary to access an object property in the context of some other object the notion of \emph{dot-notated property path} is used, where the dot symbol (aka \emph{navigation operator}) separates properties from each other.
+  Dot-notated paths represent paths in object graphs stored in computer memory and provide an essential mechanism for accessing data represented as objects.
+  Therefore, traversal of dot-notated paths from the relational perspective is one of the key aspect for data querying.
+  
+  Current ORM frameworks translate dot-notated paths into a series of INNER JOIN operators, which are applicable only to non-collectional composition\footnote{Composition representing only many-to-one and one-to-one associations, many-to-zero and one-to-zero are also not supported.}.
+  Our model for relation traversal supports automatic selection of the most appropriate strategy -- INNER JOIN, OUTER JOIN, EXISTS and their combination.
+  This is achieved by close integration with the underlying domain model and its metadata in conjunction with high level query language (Entity Query Language).
+  
+  Another important advancement supported by the developed query mechanism is the transparent use of collectional properties (i.e. one-to-many relationship).
+  This provides a proper object-oriented approach to data query unlike existing ORM solutions that enforce the explicit use of set operators to achieve the same result.
+  The following example illustrates some of the described features.  
+  This query retrieves all Mercedes vehicles that consumed more UNLEADED fuel than PREMIUM over their lifetime.
+
+  \lstset{morekeywords={val,select,where,prop,eq,and,begin,end,starts_with,any_of_values,values,or,yield_and_group,as,yield,begin_expr,sum_of,div,end_expr,model,in,sumOf,with,gt,modelAs, modelAsAggregate, groupByAndYield, within, prevMonth},
+  numbers=left, numbers=left, numberstyle=\tiny, basicstyle=\scriptsize, stepnumber=1, numbersep=5pt, keywordstyle=\color{dkgreen}, stringstyle=\color{blue}}
+
+  \begin{code}{Entity Query Example}{lst:eql1}
+    \begin{lstlisting}
+select(Vehicle.class).
+where().
+  prop("vehModel.make").eq().val("MERCEDES").
+  and().
+  sumOf().prop("fuelUsages.qty").with().prop("fuelUsages.fuelType").eq().val("UNLEADED").
+    gt().
+  sumOf().prop("fuelUsages.qty").with().prop("fuelUsages.fuelType").eq().val("PREMIUM").
+model();
+    \end{lstlisting}
+   \end{code}
+
+  \paragraph{Relational concepts in object-oriented querying.}
+  One of the key requirements for more advanced data querying is the ability to base queries on the results of other queries (i.e. subqueries in the FROM clause).
+  Such support is well established in SQL, but is completely lacking in current ORM solutions.
+  The challenge to develop this mechanism is in bringing a pure relational concept of working with sets of tuples into the object-oriented domain model.
+  However, realising that any object can be decomposed into its properties, the notion of data tuple naturally translates into the tuple of properties from existing domain entities that preserve the knowledge of its type and metadata.
+  The following example illustrates the use of this functionality.
+  This query retrieves previous month maintenance cost, modelled by a separate non-persistent class PrevMonthMaintCost, for all Mercedes vehicles that exceeded the amount of 500.00.
+  
+  \begin{code}{Entity Query Example}{lst:eql2}
+    \begin{lstlisting}
+select(
     select(WorkOrder.class).
-    where().
-    prop("vehicle.model.make.key").eq().val("MERCEDES").and().
-    begin().
-      prop("vehicle.model.key").starts_with().any_of_values("315", "316").or().
-      prop("vehicle.model.key").eq().val("VITO").
-    end().and().
-    year_of().prop("actualStart").in().values(2009, 2010, 2011).and().
-    prop("vehicle.station.zone.sector.division.key").eq().val("NORTH").
-    yield_and_group().prop("vehicle.station.zone.sector").as("sector").
-    yield().
-      begin_expr().
-	sum_of().prop("actualCost").div().val(3).
-      end_expr().as("averageYearlyMaintenanceCostPerSector").
-    model_as_aggregate();
-  \end{lstlisting}
-  \end{code}
+    where().prop("transDate").within().prevMonth().
+    groupByAndYield().prop("vehicle").
+    yield().sumOf().prop("totalCost").as("cost").
+    model()  
+).
+where().
+  prop("cost").gt().val(500.00).
+  and().
+  prop("vehicle.vehModel.make").eq().val("MERCEDES").
+model(PrevMonthMaintCost.class);
+    \end{lstlisting}
+   \end{code}  
   
-  The above EQL query is interesting in many ways.
-  It shows proper support for working at the domain level referencing the nested structure of domain entities, multiple EQL constructs (aggregation, grouping, logical operations) and the capability of working with expressions\footnote{
-    Expressions in TG are implemented as an internal DSL for use by developers as well as external DSL for use directly from business applications by power users. 
-    All arithmetical operations, specially provided functions (e.g. year\_of(date)) and aggregations can be represented as type-safe expressions.
-  }
-  (summation of property actualCost divided by 3).  
   
-  A less obvious, but very powerful, feature demonstrated in this query is the ability to produce dynamically composed results that do not necessarily match any of the pre-built domain entity types.
-  This capability is critical for many real-life business requirements where some business logic or analysis may require ad-hoc data retrieval without modifying the domain itself.
-  The declarative nature of EQL significantly simplifies creation of complex queries with nested sub-queries, grouping and aggregation, which is extremely important for implementing analytical solutions.  
+%   An example of an EQL query is provided as code listing~\ref{lst:eql}.  
+%   It calculates the average yearly (over the period from 2009 to 2011) maintenance cost of vehicles manufactured by ``MERCEDES'' and their model names starting with ``315'', ``316'' or ``VITO'', for every sector of division ``NORTH''\footnote{This example is specific to a certain fleet domain and the full comprehension of the query implies good understanding of that domain.}.  
+% 
+%   \lstset{language=Java,morekeywords={val,select,where,prop,eq,and,begin,end,starts_with,any_of_values,values,or,yield_and_group,as,yield,begin_expr,sum_of,div,end_expr,model_as_aggregate,year_of,in},numbers=left, numberstyle=\tiny, basicstyle=\scriptsize, stepnumber=1, numbersep=5pt, keywordstyle=\color{dkgreen}, stringstyle=\color{blue}}
+%   \begin{code}{EQL Query Example}{lst:eql}
+%   \begin{lstlisting}
+%     select(WorkOrder.class).
+%     where().
+%     prop("vehicle.model.make.key").eq().val("MERCEDES").and().
+%     begin().
+%       prop("vehicle.model.key").starts_with().any_of_values("315", "316").or().
+%       prop("vehicle.model.key").eq().val("VITO").
+%     end().and().
+%     year_of().prop("actualStart").in().values(2009, 2010, 2011).and().
+%     prop("vehicle.station.zone.sector.division.key").eq().val("NORTH").
+%     yield_and_group().prop("vehicle.station.zone.sector").as("sector").
+%     yield().
+%       begin_expr().
+% 	sum_of().prop("actualCost").div().val(3).
+%       end_expr().as("averageYearlyMaintenanceCostPerSector").
+%     model_as_aggregate();
+%   \end{lstlisting}
+%   \end{code}
+%   
+%   The above EQL query is interesting in many ways.
+%   It shows proper support for working at the domain level referencing the nested structure of domain entities, multiple EQL constructs (aggregation, grouping, logical operations) and the capability of working with expressions\footnote{
+%     Expressions in TG are implemented as an internal DSL for use by developers as well as external DSL for use directly from business applications by power users. 
+%     All arithmetical operations, specially provided functions (e.g. year\_of(date)) and aggregations can be represented as type-safe expressions.
+%   }
+%   (summation of property actualCost divided by 3).  
+  
+%   A less obvious, but very powerful, feature demonstrated in this query is the ability to produce dynamically composed results that do not necessarily match any of the pre-built domain entity types.
+%   This capability is critical for many real-life business requirements where some business logic or analysis may require ad-hoc data retrieval without modifying the domain itself.
+%   The declarative nature of EQL significantly simplifies creation of complex queries with nested sub-queries, grouping and aggregation, which is extremely important for implementing analytical solutions.  
 
-  Entity Query Language fully reuses the metadata associated with domain entity types.
-  This facilitates dynamic optimisation of query execution at the databases level, which is possible due to semantic transition between the metadata of the domain and SQL.
-  For example, if some property of a domain entity, which represents a reference to another domain entity, is declared as required, then the query execution mechanism would recognise such references as SQL's \emph{INNER JOIN} instead of \emph{OUTER JOIN}, which significantly speeds up query execution.
+%   Entity Query Language fully reuses the metadata associated with domain entity types.
+%   This facilitates dynamic optimisation of query execution at the databases level, which is possible due to semantic transition between the metadata of the domain and SQL.
+%   For example, if some property of a domain entity, which represents a reference to another domain entity, is declared as required, then the query execution mechanism would recognise such references as SQL's \emph{INNER JOIN} instead of \emph{OUTER JOIN}, which significantly speeds up query execution.
 
   The EQL execution mechanism works equally well with small and large datasets by supporting partitioned data loading.
   This does not require any additional work on the part of developers -- they just need to provide the query and the system will automatically execute it with the necessary level of granularity.
