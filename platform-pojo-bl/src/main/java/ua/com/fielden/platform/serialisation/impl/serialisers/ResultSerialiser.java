@@ -26,24 +26,10 @@ public class ResultSerialiser extends SimpleSerializer<Result> {
 
     private final Serializer mesageSerialiser;
     private final Kryo kryo;
-    private final Field instanceField;
-    private final Field exField;
-    private final Field messageField;
 
     public ResultSerialiser(final Kryo kryo) {
 	mesageSerialiser = new StringSerializer();
 	this.kryo = kryo;
-
-	try {
-	    instanceField = Result.class.getDeclaredField("instance");
-	    instanceField.setAccessible(true);
-	    exField = Result.class.getDeclaredField("ex");
-	    exField.setAccessible(true);
-	    messageField = Result.class.getDeclaredField("message");
-	    messageField.setAccessible(true);
-	} catch (final Exception e) {
-	    throw new SerializationException("Could not obtain field for Result type.");
-	}
     }
 
     @Override
@@ -62,13 +48,16 @@ public class ResultSerialiser extends SimpleSerializer<Result> {
 	}
 
 	try {
+	    final Field messageField = Result.class.getDeclaredField("message");
+	    messageField.setAccessible(true);
 	    final Object msg = messageField.get(result);
 	    buffer.put(msg == null ? NULL : NOT_NULL);
 	    if (msg != null) {
-		kryo.writeObject(buffer, msg);
+		mesageSerialiser.writeObject(buffer, msg);
+		//kryo.writeObject(buffer, msg);
 	    }
 	} catch (final Exception e) {
-	    throw new SerializationException("Could not access property message from Result.");
+	    throw new SerializationException(e);
 	}
     }
 

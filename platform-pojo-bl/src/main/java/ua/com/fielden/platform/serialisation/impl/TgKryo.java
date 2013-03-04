@@ -161,7 +161,7 @@ public class TgKryo extends Kryo implements ISerialiser {
     /** Default buffer sizes for */
     private enum BUFFER_SIZE {
 	QUERY(1024), // 1Kb
-	DATA(1024 * 32), // 16Kb
+	DATA(1024 * 32), // 32Kb
 	INSTANCE(1024 * 16); // 16Kb
 
 	final int size;
