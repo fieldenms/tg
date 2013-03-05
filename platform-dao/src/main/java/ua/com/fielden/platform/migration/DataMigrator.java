@@ -2,7 +2,6 @@ package ua.com.fielden.platform.migration;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +15,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -31,8 +29,6 @@ import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.HibernateUtil;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
@@ -205,68 +201,6 @@ public class DataMigrator {
 	}
 
 	return result;
-    }
-
-    /**
-     * Checks the correctness of the legacy data retrieval sql syntax and column aliases.
-     *
-     * @return
-     * @throws Exception
-     */
-    private boolean validateRetrievalSql(final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) throws Exception {
-	System.out.print("Validating " + retriever.getClass().getSimpleName() + " ... ");
-	boolean foundErrors = false;
-	final String legacyDataSql = null; //retriever.selectSql();
-	if (!StringUtils.isEmpty(legacyDataSql)) {
-
-	    final Statement st = conn.createStatement();
-	    try {
-		final ResultSet rs = st.executeQuery(legacyDataSql);
-
-		final ResultSetMetaData md = rs.getMetaData();
-
-		final List<String> keyPropNames = Finder.getFieldNames(Finder.getKeyMembers(retriever.type()));
-		final Set<String> propNames = new HashSet<String>();
-
-		for (int index = 1; index <= md.getColumnCount(); index++) {
-		    final String propName = /*AbstractRetriever.decodePropertyName*/(md.getColumnLabel(index));
-		    propNames.add(propName);
-
-		    try {
-			PropertyTypeDeterminator.determinePropertyType(retriever.type(), propName);
-		    } catch (final Exception ex) {
-			foundErrors = true;
-			logger.error("\n\tEntity of type [" + retriever.type().getName() + "] doesn't have property [" + propName + "].\n\tPlease correct respective column alias in " + retriever.getClass().getName() + " selectSql() method.");
-		    }
-		}
-
-		rs.close();
-
-		for (final String keyPropName : keyPropNames) {
-		    if (!propNames.contains(keyPropName)) {
-			foundErrors = true;
-			logger.error("\n\tRetriever for type [" + retriever.type().getName() + "] doesn't have all key properties specified. These should be " + keyPropNames + ".\n\tPlease add missing properties in " + retriever.getClass().getName() + " selectSql() method.");
-		    }
-		}
-
-
-		final ResultSet rs2 = null; //st.executeQuery(getKeyUniquenessCheckSql(retriever));
-
-		if (rs2.next()) {
-		    foundErrors = true;
-		    //logger.error("\n\tRetriever [" + retriever.getClass().getName() + "] for type [" + retriever.type().getName() + "] contains duplicates in terms of entity key " + keyPropNames + ". More details here:\n" + getKeyUniquenessCheckSql(retriever) + "\n");
-		}
-
-		rs2.close();
-	    } catch (final Exception ex) {
-		foundErrors = true;
-		logger.error(retriever.getClass(), ex);
-	    } finally {
-		st.close();
-	    }
-	}
-	System.out.println("done.");
-	return foundErrors;
     }
 
     private void runSql(final List<String> ddl) throws Exception {

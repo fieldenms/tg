@@ -430,9 +430,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 			updatedCount = updatedCount + 1;
 		    }
 		} catch (final Exception ex) {
-		    System.out.println("============================");
 		    System.out.println(ex);
-		    System.out.println("============================");
 		    failedCount = failedCount + 1;
 		    final MigrationError error = ex instanceof Result ? (MigrationError) ((Result) ex).getInstance() : error(factory, null, null, null);
 		    final Exception resultEx = ex instanceof Result ? ((Result) ex).getEx() : ex;
@@ -599,44 +597,6 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 
 	return pvr.get(propertyName).find(legacyValue);
     }
-
-//    /**
-//     * A helper method to decode column aliases as entity property names.
-//     *
-//     * @param columnAlias
-//     * @return
-//     */
-//    public static String decodePropertyName(final String columnAlias) {
-//	// replacing second underscore with dot to introduce dot.notation for potential sub-properties
-//	final String preName = columnAlias.trim().toLowerCase().replace("__", "_.");
-//	String name = !preName.endsWith("_") ? preName : preName.substring(0, preName.length() - 1);
-//	int index = name.indexOf("_");
-//	while (index >= 0) {
-//	    name = name.substring(0, index) + name.substring(index + 1, index + 2).toUpperCase() + name.substring(index + 2);
-//	    index = name.indexOf("_");
-//	}
-//
-//	return name;
-//    }
-//
-//    public static String encodePropertyName(final String propertyName) {
-//	final char[] chars = propertyName.toCharArray();
-//	final StringBuffer result = new StringBuffer();
-//
-//	for (int i = 0; i < chars.length; i++) {
-//	    final char c = chars[i];
-//	    if (Character.isUpperCase(c)) {
-//		result.append("_");
-//	    } else if (".".charAt(0) == c) {
-//		result.append("__");
-//	    }
-//	    result.append(Character.toLowerCase(c));
-//	}
-//
-//	result.append("_");
-//
-//	return result.toString().replace(".", "");
-//    }
 
     protected boolean updateOnly() {
 	return false;
