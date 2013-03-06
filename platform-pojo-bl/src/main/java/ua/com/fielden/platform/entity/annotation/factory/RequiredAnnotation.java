@@ -13,6 +13,11 @@ public class RequiredAnnotation {
 	    public Class<? extends Annotation> annotationType() {
 		return Required.class;
 	    }
+
+	    @Override
+	    public String value() {
+		return "";
+	    }
 	};
     }
 }

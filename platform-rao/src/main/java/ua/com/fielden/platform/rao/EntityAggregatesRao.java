@@ -75,6 +75,11 @@ public class EntityAggregatesRao implements IEntityAggregatesDao {
     }
 
     @Override
+    public EntityAggregates getEntity(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model) {
+        return rao.getEntity(model);
+    }
+
+    @Override
     public List<EntityAggregates> getFirstEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel, final int numberOfEntities) {
 	return rao.getFirstEntities(aggregatesQueryModel, numberOfEntities);
     }

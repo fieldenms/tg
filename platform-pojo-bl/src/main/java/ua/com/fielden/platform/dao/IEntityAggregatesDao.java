@@ -29,10 +29,19 @@ public interface IEntityAggregatesDao {
     /**
      * Returns results from running given aggregation query.
      *
-     * @param aggregatesQueryModel
+     * @param model
      * @return
      */
-    List<EntityAggregates> getAllEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel);
+    List<EntityAggregates> getAllEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model);
+
+    /**
+     * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
+     * found then a null value is returned.
+     *
+     * @param model
+     * @return
+     */
+    EntityAggregates getEntity(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model);
 
     /**
      * Returns results from running given aggregation query.

@@ -25,6 +25,7 @@ public class Result extends RuntimeException {
 	message = null;
 	instance = null;
     }
+
     /**
      * Convenient factory method for creating a successful result.
      *
@@ -33,6 +34,52 @@ public class Result extends RuntimeException {
      */
     public static Result successful(final Object instance) {
 	return new Result(instance, "Successful");
+    }
+
+    /**
+     * Convenient factory method for creating a failure result.
+     *
+     * @param instance -- instance that is in error
+     * @param ex -- associated exception that caused failure
+     * @return
+     */
+    public static Result failure(final Object instance, final Exception ex) {
+	return new Result(instance, ex);
+    }
+
+    /**
+     * Convenient factory method for creating a failure result.
+     * Should be used when no particular exception is at fault.
+     *
+     * @param instance -- instance that is in error
+     * @param reason -- reason for failure.
+     * @return
+     */
+    public static Result failure(final Object instance, final String reason) {
+	return new Result(instance, new Exception(reason));
+    }
+
+
+    /**
+     * Convenient factory method for creating a failure result.
+     * In some cases there is no need to pass in an instance that is in error -- just an error itself.
+     *
+     * @param ex -- exception that caused the failure.
+     * @return
+     */
+    public static Result failure(final Exception ex) {
+	return new Result(null, ex);
+    }
+
+    /**
+     * Convenient factory method for creating a failure result.
+     * Should be used when neither an object in error nor the actual exception type are important.
+     *
+     * @param reason -- should describe the failure.
+     * @return
+     */
+    public static Result failure(final String reason) {
+	return new Result(null, new Exception(reason));
     }
 
     public Result(final Object instance, final String message, final Exception ex) {
