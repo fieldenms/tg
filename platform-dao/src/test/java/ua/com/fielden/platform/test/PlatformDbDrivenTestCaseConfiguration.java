@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.xml.DOMConfigurator;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 
@@ -113,6 +114,8 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
      */
     public PlatformDbDrivenTestCaseConfiguration() {
 	// instantiate all the factories and Hibernate utility
+	DOMConfigurator.configure("src/test/resources/log4j.xml");
+
 	final ProxyInterceptor interceptor = new ProxyInterceptor();
 	try {
 	    final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, DbVersion.H2);
