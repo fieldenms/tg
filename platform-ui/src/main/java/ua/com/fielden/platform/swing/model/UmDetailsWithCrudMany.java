@@ -397,9 +397,59 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
     }
 
     @Override
-    protected Action createSaveAction() {
-	final Command<Result> action = new Command<Result>("Save") {
+    protected SaveAction createSaveAction() {
+	final SaveAction action = new SaveAction();
+	action.setEnabled(true);
+	action.putValue(Action.SHORT_DESCRIPTION, "Save changes");
+	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_S);
+	return action;
+    }
+
+    /**
+     * Convenient method for updating an existing list of entities with a specified one.
+     * @return
+     */
+    private List<D> updateDetails(final D changedEntity) {
+	final List<D> data = new ArrayList<D>(getTableModel().instances());
+	boolean shouldAdd = true;
+	for (int index = 0; index < data.size(); index++) {
+	    final D entity = data.get(index);
+	    if (entity.equals(changedEntity)) {
+		data.set(index, changedEntity);
+		shouldAdd = false;
+		break;
+	    }
+	}
+	if (shouldAdd) {
+	    data.add(getManagedEntity());
+	}
+	return data;
+    }
+
+    public PropertyTableModel<D> getTableModel() {
+	return tableModel;
+    }
+
+    public ListSelectionListener getOnRowSelect() {
+	return onRowSelect;
+    }
+
+    protected void setModifying(final boolean isModifying) {
+	this.isModifying = isModifying;
+    }
+
+    /**
+     * Inner public class to be reused if necessary downstream for customizing save action.
+     *
+     * @author TG Team
+     *
+     */
+    public class SaveAction extends Command<Result> {
 	    private static final long serialVersionUID = 1L;
+
+	    public SaveAction() {
+		super("Save");
+	    }
 
 	    @Override
 	    protected boolean preAction() {
@@ -465,44 +515,6 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
 		}
 	    }
 
-	};
-	action.setEnabled(true);
-	action.putValue(Action.SHORT_DESCRIPTION, "Save changes");
-	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_S);
-	return action;
-    }
-
-    /**
-     * Convenient method for updating an existing list of entities with a specified one.
-     * @return
-     */
-    private List<D> updateDetails(final D changedEntity) {
-	final List<D> data = new ArrayList<D>(getTableModel().instances());
-	boolean shouldAdd = true;
-	for (int index = 0; index < data.size(); index++) {
-	    final D entity = data.get(index);
-	    if (entity.equals(changedEntity)) {
-		data.set(index, changedEntity);
-		shouldAdd = false;
-		break;
-	    }
 	}
-	if (shouldAdd) {
-	    data.add(getManagedEntity());
-	}
-	return data;
-    }
-
-    public PropertyTableModel<D> getTableModel() {
-	return tableModel;
-    }
-
-    public ListSelectionListener getOnRowSelect() {
-	return onRowSelect;
-    }
-
-    protected void setModifying(final boolean isModifying) {
-	this.isModifying = isModifying;
-    }
 
 }
