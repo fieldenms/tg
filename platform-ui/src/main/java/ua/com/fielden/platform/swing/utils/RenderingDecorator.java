@@ -65,7 +65,6 @@ public class RenderingDecorator {
      * @param row
      * @param column
      */
-    @SuppressWarnings("unchecked")
     public static void decorateRenderer(final JComponent component, final JTable table, boolean isSelected, final boolean hasFocus, final int row, final int column) {
 	if (component instanceof ValidationLayer) {
 	    decorateRenderer(((ValidationLayer) component).getView(), table, isSelected, hasFocus, row, column);

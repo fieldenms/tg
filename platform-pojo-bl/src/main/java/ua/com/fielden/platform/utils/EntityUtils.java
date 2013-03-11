@@ -73,6 +73,20 @@ public class EntityUtils {
     }
 
     /**
+     * Invokes method {@link #toString(Object, Class)} with the second argument being assigned as value's class.
+     *
+     * @param value
+     * @return
+     */
+    public static String toString(final Object value) {
+	if (value == null) {
+	    return "";
+	}
+	return toString(value, value.getClass());
+    }
+
+
+    /**
      * Null-safe comparator.
      *
      * @param o1
