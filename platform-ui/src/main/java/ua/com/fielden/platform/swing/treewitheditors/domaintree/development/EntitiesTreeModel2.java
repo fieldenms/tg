@@ -16,15 +16,19 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager.IPropertyCheckingListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation.IPropertyDisablementListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickManagerWithMutability;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -41,6 +45,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends MultipleCheckboxTreeModel2 {
+    private static final Logger logger = Logger.getLogger(EntitiesTreeModel2.class);
     private static final long serialVersionUID = -5156365765004770688L;
     public static final String ROOT_PROPERTY = "entities-root";
 
@@ -126,7 +131,7 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
 		createAndAddNode(root, property);
 		// in this case property can be "dummy" or under "common-properties" umbrella
 		if (isNotDummyAndNotCommonProperty(property)) { // Update the state of newly created node according to a property state in manager (ignore "dummy" due to its temporal nature)
-		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
+		    /* performance bottleneck */provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
 		}
 	    } else {
 		removeNode(root, property); // nothing to do with an useless item -- just remove it
@@ -216,15 +221,25 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
      * @param property
      */
     private void createAndAddNode(final Class<?> root, final String property) {
+	// logger.info("Started createAndAddNode for property [" + property + "].");
+	// logger.info("\tget parentNode.");
 	final EntitiesTreeNode2<DTM> parentNode = StringUtils.isEmpty(property) ? rootNode //
 		: !PropertyTypeDeterminator.isDotNotation(property) ? node(root, "", true) //
 			: node(root, PropertyTypeDeterminator.penultAndLast(property).getKey(), true);
-	final EntitiesTreeNode2<DTM> node = new EntitiesTreeNode2<DTM>(createUserObject(root, property));
+	// logger.info("\tcreate new user object.");
+	final EntitiesTreeUserObject<DTM> uo = createUserObject(root, property);
+	// logger.info("\tcreate new node.");
+	final EntitiesTreeNode2<DTM> node = new EntitiesTreeNode2<DTM>(uo);
+	// logger.info("\tput new node to cache.");
 	nodesCache.put(AbstractDomainTree.key(root, property), node);
 	if (isNotDummyAndNotCommonProperty(property)) {
 	    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
 	}
+	// logger.info("\tinsert new node into.");
+
+	// parentNode.add(node);
 	this.insertNodeInto(node, parentNode, parentNode.getChildCount());
+	// logger.info("Ended createAndAddNode for property [" + property + "].");
     }
 
     protected boolean isNotDummyAndNotCommonProperty(final String property) {
@@ -292,11 +307,11 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
 	final TreeCheckingModel firstCheckingModel = getCheckingModel(0);
 	final TreeCheckingModel secondCheckingModel = getCheckingModel(1);
 
-	provideCheckingForPath(firstCheckingModel, path, manager.getFirstTick().isChecked(root, property));
-	provideCheckingForPath(secondCheckingModel, path, manager.getSecondTick().isChecked(root, property));
+	provideCheckingForPath(firstCheckingModel, path, ((ITickManagerWithMutability) manager.getFirstTick()).isCheckedLightweight(root, property));
+	provideCheckingForPath(secondCheckingModel, path, ((ITickManagerWithMutability) manager.getSecondTick()).isCheckedLightweight(root, property));
 
-	provideEnablementForPath(firstCheckingModel, path, !manager.getRepresentation().getFirstTick().isDisabledImmutably(root, property));
-	provideEnablementForPath(secondCheckingModel, path, !manager.getRepresentation().getSecondTick().isDisabledImmutably(root, property));
+	provideEnablementForPath(firstCheckingModel, path, !((ITickRepresentationWithMutability) manager.getRepresentation().getFirstTick()).isDisabledImmutablyLightweight(root, property));
+	provideEnablementForPath(secondCheckingModel, path, !((ITickRepresentationWithMutability) manager.getRepresentation().getSecondTick()).isDisabledImmutablyLightweight(root, property));
     }
 
     /**
@@ -456,12 +471,17 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
 	    this.manager= manager;
 	    this.firstTickCaption = firstTickCaption;
 	    this.secondTickCaption = secondTickCaption;
+	    // logger.info("\t\tRetrieval of managedType.");
 	    final Class<?> managedRoot = EntitiesTreeModel2.ROOT_PROPERTY.equals(property) ? root : (manager instanceof IDomainTreeManagerAndEnhancer ? ((IDomainTreeManagerAndEnhancer)manager).getEnhancer().getManagedType(root) : (manager instanceof IAbstractAnalysisDomainTreeManager ? ((IAbstractAnalysisDomainTreeManager) manager).parentCentreDomainTreeManager().getEnhancer().getManagedType(root) : root));
+	    // logger.info("\t\textractTitleAndDesc.");
 	    final Pair<String, String> titleAndDesc = extractTitleAndDesc(root, managedRoot, property);
 	    toStringTitle = titleAndDesc.getKey();
 	    labelTooltip = titleAndDesc.getValue();
+	    // logger.info("\t\tcreateCriteriaCheckboxToolTipText.");
 	    firstTickTooltip = createCriteriaCheckboxToolTipText(root, managedRoot, property);
+	    // logger.info("\t\tcreateResultCheckboxToolTipText.");
 	    secondTickTooltip = createResultSetCheckboxToolTipText(root, managedRoot, property);
+	    // logger.info("\t\tend.");
 	}
 
 	@Override
@@ -481,21 +501,25 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
 	    return secondTickTooltip;
 	}
 
+	private static boolean isDisabled(final ITickRepresentation tr, final Class<?> root, final String property) {
+	    return !EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && ((ITickRepresentationWithMutability) tr).isDisabledImmutablyLightweight(root, AbstractDomainTree.reflectionProperty(property));
+	}
+
 	private String createCriteriaCheckboxToolTipText(final Class<?> root, final Class<?> managedRoot, final String property) {
-	    if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
+	    if (isDisabled(manager.getRepresentation().getFirstTick(), root, property)) { // no tooltip for disabled property
 		return null;
 	    }
 	    if (EntityUtils.isUnionEntityType(PropertyTypeDeterminator.transform(managedRoot, AbstractDomainTree.reflectionProperty(property)).getKey())) { // parent is union entity
-		return "<html>If not selected, then entities with <i><b>" + EntitiesTreeModel2.extractTitleAndDesc(root, managedRoot, property).getKey() + "</b></i> will be ignored</html>";
+		return "<html>If not selected, then entities with <i><b>" + toStringTitle + "</b></i> will be ignored</html>";
 	    }
-	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, managedRoot, property).getKey() + "</b> to/from " + firstTickCaption + "</html>";
+	    return "<html>Add/Remove <b>" + toStringTitle + "</b> to/from " + firstTickCaption + "</html>";
 	}
 
 	private String createResultSetCheckboxToolTipText(final Class<?> root, final Class<?> managedRoot, final String property) {
-	    if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
+	    if (isDisabled(manager.getRepresentation().getSecondTick(), root, property)) { // no tooltip for disabled property
 		return null;
 	    }
-	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, managedRoot, property).getKey() + "</b> to/from " + secondTickCaption + "</html>";
+	    return "<html>Add/Remove <b>" + toStringTitle + "</b> to/from " + secondTickCaption + "</html>";
 	}
     }
 
