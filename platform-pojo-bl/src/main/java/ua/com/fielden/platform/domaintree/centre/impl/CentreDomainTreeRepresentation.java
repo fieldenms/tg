@@ -85,22 +85,22 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	}
 
 	@Override
-	public boolean isDisabledImmutably(final Class<?> root, final String property) {
+	public boolean isDisabledImmutablyLightweight(final Class<?> root, final String property) {
 	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	    final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
 	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(KeyType.class, propertyType);
 
-	    return (super.isDisabledImmutably(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
+	    return (super.isDisabledImmutablyLightweight(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
 		    (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
 		    (!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION)) || // disable AGGREGATED_EXPRESSION properties for criteria tick
 		    isDisabledImmutablyPropertiesOfEntityType(propertyType, keyTypeAnnotation); // disable properties of "entity with AE key" type
 	}
 
 	@Override
-	public boolean isCheckedImmutably(final Class<?> root, final String property) {
+	public boolean isCheckedImmutablyLightweight(final Class<?> root, final String property) {
 	    // final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	    // final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
-	    return (super.isCheckedImmutably(root, property)); // check+disable manually checked properties
+	    return (super.isCheckedImmutablyLightweight(root, property)); // check+disable manually checked properties
 		    // there is no need to check and disable a critOnly criteria, leave a decision to the user --> (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())) // check+disable crit-only properties (the children should be excluded!)
 	}
 
@@ -211,13 +211,13 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	}
 
 	@Override
-	public boolean isDisabledImmutably(final Class<?> root, final String property) {
+	public boolean isDisabledImmutablyLightweight(final Class<?> root, final String property) {
 	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	    final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
 	    final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
 	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(KeyType.class, propertyType);
 
-	    return (super.isDisabledImmutably(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
+	    return (super.isDisabledImmutablyLightweight(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
 		    (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())) || // disable crit-only properties (the children should be excluded!)
 		    (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself
 		    // no need to disable synthetic stuff --> (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)

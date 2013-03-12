@@ -370,6 +370,12 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
+	public boolean isCheckedLightweight(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    return base.isCheckedLightweight(enhancerWithPropertiesPopulation.getManagedType(root), property);
+	}
+
+	@Override
 	public ITickManager check(final Class<?> root, final String property, final boolean check) {
 	    // inject an enhanced type into method implementation
 	    base.check(enhancerWithPropertiesPopulation.getManagedType(root), property, check);
@@ -535,6 +541,17 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    @Override
 	    public EnhancementSet disabledManuallyPropertiesMutable() {
 	        return base.disabledManuallyPropertiesMutable();
+	    }
+
+	    @Override
+	    public boolean isDisabledImmutablyLightweight(final Class<?> root, final String property) {
+		// inject an enhanced type into method implementation
+		return base.isDisabledImmutablyLightweight(enhancerWithPropertiesPopulation.getManagedType(root), property);
+	    }
+
+	    protected boolean isCheckedImmutablyLightweight(final Class<?> root, final String property) {
+		// inject an enhanced type into method implementation
+		return base.isCheckedImmutablyLightweight(enhancerWithPropertiesPopulation.getManagedType(root), property);
 	    }
 	}
 

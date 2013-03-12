@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.centre;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 
 /**
  * This interface defines how domain tree can be represented for <b>entity centres</b>. <br><br>
@@ -36,7 +37,7 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
      * @author TG Team
      *
      */
-    public interface IAddToCriteriaTickRepresentation extends ITickRepresentation {
+    public interface IAddToCriteriaTickRepresentation extends ITickRepresentationWithMutability {
 	/**
 	 * Gets a <b>default</b> <i>main</i> value of a criteria property. <br><br>
 	 *
@@ -118,6 +119,6 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
      * @author TG Team
      *
      */
-    public interface IAddToResultTickRepresentation extends IOrderingRepresentation, IWidthRepresentation, ITickRepresentation {
+    public interface IAddToResultTickRepresentation extends IOrderingRepresentation, IWidthRepresentation, ITickRepresentationWithMutability {
     }
 }

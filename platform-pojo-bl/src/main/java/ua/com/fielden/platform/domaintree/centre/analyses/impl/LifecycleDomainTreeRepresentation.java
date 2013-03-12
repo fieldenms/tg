@@ -61,12 +61,12 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
 	}
 
 	@Override
-	public boolean isDisabledImmutably(final Class<?> root, final String property) {
+	public boolean isDisabledImmutablyLightweight(final Class<?> root, final String property) {
 	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	    if (isEntityItself) { // "entities itself" should be enabled for lifecycle distribution
 		return false;
 	    }
-	    return super.isDisabledImmutably(root, property);
+	    return super.isDisabledImmutablyLightweight(root, property);
 	}
     }
 

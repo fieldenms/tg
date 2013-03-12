@@ -151,7 +151,7 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	}
 
 	@Override
-	public boolean isDisabledImmutably(final Class<?> root, final String property) {
+	public boolean isDisabledImmutablyLightweight(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    final Class<?> managedType = managedType(root);
 
@@ -161,7 +161,7 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	    final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, managedType, property);
 	    //final String origination = calculatedAnnotation != null ? Reflector.fromRelative2AbsotulePath(calculatedAnnotation.contextPath(), calculatedAnnotation.origination()) : null;
 
-	    return (super.isDisabledImmutably(managedType, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
+	    return (super.isDisabledImmutablyLightweight(managedType, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
 	    // TODO (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
 	    (isEntityItself) || // empty property means "entity itself" and it should be disabled for distribution
 	    (isCollectionOrInCollectionHierarchy(managedType, property)) || // disable properties in collectional hierarchy and collections itself
@@ -224,10 +224,10 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	}
 
 	@Override
-	public final boolean isDisabledImmutably(final Class<?> root, final String property) {
+	public final boolean isDisabledImmutablyLightweight(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    final Class<?> managedType = managedType(root);
-	    return (super.isDisabledImmutably(managedType, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
+	    return (super.isDisabledImmutablyLightweight(managedType, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
 		    !(isEnabledImmutably(root, property)); // provides "reversed" disabling -- disable all properties that is not enabled by "isEnabledImmutably(root, property)" contract
 
 	    //	    (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself

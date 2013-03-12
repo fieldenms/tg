@@ -178,6 +178,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @return
      */
     private static List<Field> constructKeysAndProperties(final Class<?> type) {
+	// logger().info("Started constructKeysAndProperties for [" + type.getSimpleName() + "].");
 	final List<Field> properties = Finder.findProperties(type);
 	// let's remove desc and key properties as they will be added separately a couple of lines below
 	for (final Iterator<Field> iter = properties.iterator(); iter.hasNext();) {
@@ -194,6 +195,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	fieldsAndKeys.addAll(keys);
 	fieldsAndKeys.add(Finder.getFieldByName(type, AbstractEntity.DESC));
 	fieldsAndKeys.addAll(properties);
+	// logger().info("Ended constructProperties for [" + type.getSimpleName() + "].");
 	return fieldsAndKeys;
     }
 
@@ -271,15 +273,21 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     @Override
     public boolean isExcludedImmutably(final Class<?> root, final String property) {
+	// logger().info("\t\tStarted isExcludedImmutably for property [" + property + "].");
 	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	// logger().info("\t\t\ttransform.");
 	final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(root, property);
+	// logger().info("\t\t\tpenultAndLast.");
 	final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
 	final Class<?> penultType = transformed.getKey();
 	final String lastPropertyName = transformed.getValue();
+	// logger().info("\t\t\tdetermineClass.");
 	final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determineClass(penultType, lastPropertyName, true, true);
+	// logger().info("\t\t\tgetOriginalType.");
 	final Class<?> notEnhancedRoot = DynamicEntityClassLoader.getOriginalType(root);
 	// final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
-	return 	manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
+	// logger().info("\t\t\tstarted conditions...");
+	final boolean excl = manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType) || // exclude "key" -- "key" is not of entity type
@@ -295,6 +303,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		!isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(notEnhancedRoot, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) notEnhancedRoot, penultPropertyName)) || // exclude link properties in one2many and one2one associations
 		!isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, root, penultPropertyName) || // exclude property if it is a child of other AE crit-only property (collection)
 		!isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : ""); // exclude property if it is an ascender (any level) of already excluded property
+	// logger().info("\t\tEnded isExcludedImmutably for property [" + property + "].");
+	return excl;
     }
 
     /**
@@ -374,12 +384,16 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    if (parentDtr != null) {
 		for (final IPropertyListener listener : parentDtr.propertyListeners) {
 		    if (!listener.isInternal()) {
+			// logger().info("Started external listener [" + listener + "] for property [" + property + "].");
 			listener.propertyStateChanged(root, property, added, null);
+			// logger().info("Ended external listener [" + listener + "] for property [" + property + "].");
 		    }
 		}
 		for (final IPropertyListener listener : parentDtr.propertyListeners) {
 		    if (listener.isInternal()) {
+			// logger().info("Started internal listener [" + listener + "] for property [" + property + "].");
 			listener.propertyStateChanged(root, property, added, null);
+			// logger().info("Ended internal listener [" + listener + "] for property [" + property + "].");
 		    }
 		}
 	    }
@@ -511,7 +525,15 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		if (!EntityUtils.isEntityType(root)) {
 		    throw new IllegalArgumentException("Can not add children properties to non-entity type [" + root.getSimpleName() + "] in path [" + root.getSimpleName() + "=>" + "" + "].");
 		}
-		includedProps.addAll(constructProperties(managedType, "", constructKeysAndProperties(managedType)));
+		// logger().info("Started constructKeysAndProperties for [" + managedType.getSimpleName() + "].");
+		final List<Field> fields = constructKeysAndProperties(managedType);
+		// logger().info("Ended constructKeysAndProperties for [" + managedType.getSimpleName() + "].");
+
+		// logger().info("Started constructProperties for [" + managedType.getSimpleName() + "].");
+		final List<String> props = constructProperties(managedType, "", fields);
+		// logger().info("Ended constructProperties for [" + managedType.getSimpleName() + "].");
+
+		includedProps.addAll(props);
 	    }
 	    enableListening(true);
 	    includedProperties.put(root, includedProps);
@@ -566,7 +588,22 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    if (shouldBeLoaded) { // the property is circular and has no children loaded -- it has to be done now
 		final int index = includedPropertiesMutable(managedType).indexOf(dummyMarker);
 		includedPropertiesMutable(managedType).remove(dummyMarker); // remove dummy property
-		includedPropertiesMutable(managedType).addAll(index, constructProperties(managedType, fromPath, constructKeysAndProperties(PropertyTypeDeterminator.determinePropertyType(managedType, fromPath))));
+
+		// logger().info("Started constructKeysAndProperties for [" + managedType.getSimpleName() + "] from = " + fromPath + ".");
+		final List<Field> fields = constructKeysAndProperties(PropertyTypeDeterminator.determinePropertyType(managedType, fromPath));
+		// logger().info("Ended constructKeysAndProperties for [" + managedType.getSimpleName() + "] from = " + fromPath + ".");
+
+		// logger().info("Started constructProperties for [" + managedType.getSimpleName() + "] from = " + fromPath + ".");
+		final List<String> props = constructProperties(managedType, fromPath, fields);
+		// logger().info("Ended constructProperties for [" + managedType.getSimpleName() + "] from = " + fromPath + ".");
+
+		// logger().info("Started includedPropertiesMutable.addAll for [" + managedType.getSimpleName() + "] from = " + fromPath + ".");
+
+		// enableListening(false);
+		includedPropertiesMutable(managedType).addAll(index, props);
+		// enableListening(true);
+
+		// logger().info("Ended includedPropertiesMutable.addAll for [" + managedType.getSimpleName() + "] from = " + fromPath + ".");
 	    }
 	    if (!EntityUtils.equalsEx(fromPath, toPath)) { // not the leaf is trying to be warmed up
 		final String part = "".equals(fromPath) ? toPath : toPath.replaceFirst(fromPath + ".", "");
@@ -602,6 +639,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param message
      */
     protected static void illegalExcludedProperties(final IDomainTreeRepresentation dtr, final Class<?> root, final String property, final String message) {
+	/* TODO HUGE PERFORMACE BOTTLENECK!! */
 	if (dtr.isExcludedImmutably(root, property)) {
 	    throw new IllegalArgumentException(message);
 	}
@@ -636,10 +674,16 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	@Override
-	public boolean isDisabledImmutably(final Class<?> root, final String property) {
+	public final boolean isDisabledImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not ask a 'disabled' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    return isDisabledImmutablyLightweight(root, property);
+	}
+
+	@Override
+	public boolean isDisabledImmutablyLightweight(final Class<?> root, final String property) {
+	    // I know that this property is not excluded. So there is no need to invoke heavy-weight method "illegalExcludedProperties"
 	    return disabledManuallyProperties.contains(key(root, property)) || // disable manually disabled properties
-		    isCheckedImmutably(root, property); // the checked by default properties should be disabled (immutable checking)
+		    isCheckedImmutablyLightweight(root, property); // the checked by default properties should be disabled (immutable checking)
 	}
 
 	@Override
@@ -682,6 +726,10 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	@Override
 	public boolean isCheckedImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    return isCheckedImmutablyLightweight(root, property);
+	}
+
+	protected boolean isCheckedImmutablyLightweight(final Class<?> root, final String property) {
 	    return false;
 	}
 

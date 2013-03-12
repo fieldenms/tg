@@ -96,7 +96,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      * @author TG Team
      *
      */
-    protected interface ITickManagerWithMutability extends ITickManager {
+    public interface ITickManagerWithMutability extends ITickManager {
 	/**
 	 * Getter of mutable "checked properties" cache for internal purposes.
 	 * <p>
@@ -116,6 +116,15 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	 * @return
 	 */
 	boolean isCheckedNaturally(final Class<?> root, final String property);
+
+	/**
+	 * TODO
+	 *
+	 * @param root
+	 * @param property
+	 * @return
+	 */
+	boolean isCheckedLightweight(final Class<?> root, final String property);
     }
 
     /**
@@ -132,6 +141,13 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	 * @return
 	 */
 	EnhancementSet disabledManuallyPropertiesMutable();
+
+	/**
+         * TODO
+         *
+         * @return
+         */
+        boolean isDisabledImmutablyLightweight(final Class<?> root, final String property);
     }
 
     /**
@@ -173,10 +189,19 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		if (!isDummyMarker(property)) {
 		    final String reflectionProperty = reflectionProperty(property);
 		    // update checked properties
-		    if (firstTickManager.isCheckedNaturally(root, reflectionProperty) && !firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+		    // logger().info("Started isCheckedNaturallyFirst for property [" + reflectionProperty + "].");
+		    final boolean isCheckedNaturallyFirst = firstTickManager.isCheckedNaturally(root, reflectionProperty);
+		    // logger().info("Ended isCheckedNaturallyFirst for property [" + reflectionProperty + "].");
+
+		    if (isCheckedNaturallyFirst && !firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
 			firstTickManager.insertCheckedProperty(root, reflectionProperty, firstTickManager.checkedPropertiesMutable(root).size()); // add it to the end of list
 		    }
-		    if (secondTickManager.isCheckedNaturally(root, reflectionProperty) && !secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+
+		    // logger().info("Started isCheckedNaturallySecond for property [" + reflectionProperty + "].");
+		    final boolean isCheckedNaturallySecond = secondTickManager.isCheckedNaturally(root, reflectionProperty);
+		    // logger().info("Ended isCheckedNaturallySecond for property [" + reflectionProperty + "].");
+
+		    if (isCheckedNaturallySecond && !secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
 			secondTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
 		    }
 		}
@@ -259,6 +284,10 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	@Override
 	public boolean isCheckedNaturally(final Class<?> root, final String property) {
 	    AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    return isCheckedNaturallyLightweight(root, property);
+	}
+
+	public boolean isCheckedNaturallyLightweight(final Class<?> root, final String property) {
 	    return isCheckedMutably(root, property) || // checked properties by a "contract"
 		    tr.isCheckedImmutably(root, property); // the checked by default properties should be checked (immutable checking)
 	}
@@ -270,6 +299,17 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		return isCheckedNaturally(root, property);
 	    } else {
 		AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+		return checkedPropertiesMutable(root).contains(property);
+	    }
+	}
+
+	@Override
+	public boolean isCheckedLightweight(final Class<?> root, final String property) {
+	    // I know that the parent is already loaded.
+	    if (checkedProperties.get(root) == null) { // not yet loaded
+		return isCheckedNaturallyLightweight(root, property);
+	    } else {
+		// I also know that this property is not excluded. So there is no need to invoke heavy-weight method "illegalExcludedProperties"
 		return checkedPropertiesMutable(root).contains(property);
 	    }
 	}

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.centre.analyses;
 
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 import ua.com.fielden.platform.domaintree.impl.IDomainTreeRepresentationWithMutability;
 
 /**
@@ -23,7 +24,7 @@ public interface IAbstractAnalysisDomainTreeRepresentation extends IDomainTreeRe
      * @author TG Team
      *
      */
-    public interface IAbstractAnalysisAddToDistributionTickRepresentation extends ITickRepresentation {
+    public interface IAbstractAnalysisAddToDistributionTickRepresentation extends ITickRepresentationWithMutability {
     }
 
     /**
@@ -35,6 +36,6 @@ public interface IAbstractAnalysisDomainTreeRepresentation extends IDomainTreeRe
      * @see IOrderingRepresentation
      *
      */
-    public interface IAbstractAnalysisAddToAggregationTickRepresentation extends IOrderingRepresentation, ITickRepresentation {
+    public interface IAbstractAnalysisAddToAggregationTickRepresentation extends IOrderingRepresentation, ITickRepresentationWithMutability {
     }
 }
