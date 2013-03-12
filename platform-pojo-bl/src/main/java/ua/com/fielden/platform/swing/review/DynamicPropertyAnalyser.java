@@ -115,7 +115,8 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 	    propertyName += "." + propertyNames[indexToStart];
 	}
 	// if property is of AbstractEntity type, then in context of collection it should be used with ".key":
-	final String name = propertyName.isEmpty() ? "" : (AbstractEntity.class.isAssignableFrom(getPropertyType()) ? (propertyName.substring(1) + ".key")
+	// if property is empty (collection itself has been chosen), then in context of collection it should be "key":
+	final String name = propertyName.isEmpty() ? AbstractEntity.KEY : (AbstractEntity.class.isAssignableFrom(getPropertyType()) ? (propertyName.substring(1) + "." + AbstractEntity.KEY)
 		: propertyName.substring(1));
 	return new Pair<String, String>(name, collectionName.isEmpty() ? "" : collectionName.substring(1));
     }

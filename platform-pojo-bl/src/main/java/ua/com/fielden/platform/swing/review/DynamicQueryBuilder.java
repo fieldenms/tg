@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -39,7 +41,6 @@ import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.DateRangeSelectorEnum;
 import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 /**
  * An utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
  *
@@ -91,9 +92,6 @@ public class DynamicQueryBuilder {
 		this.collectionContainerType = collectionalTypes.getKey();
 		this.collectionContainerParentType = collectionalTypes.getValue();
 		propertyNameWithinCollectionalHierarchy = analyser.getNamesWithinCollectionalHierarchy().getKey();
-		if (StringUtils.isEmpty(propertyNameWithinCollectionalHierarchy)) {
-		    throw new IllegalArgumentException("The property [" + this.propertyName + "] is a collection itself. It could not be used for quering.");
-		}
 		this.propertyNameOfCollectionParent = analyser.getNamesWithinCollectionalHierarchy().getValue();
 		this.collectionNameInItsParentTypeContext = analyser.getCollectionNameInItsParentTypeContext();
 		this.inNestedCollections = analyser.isInNestedCollections();

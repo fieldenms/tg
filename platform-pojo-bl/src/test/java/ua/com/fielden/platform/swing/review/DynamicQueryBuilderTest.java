@@ -491,11 +491,6 @@ public class DynamicQueryBuilderTest {
 	assertEquals("Incorrect condition building name.", alias + "." + propertyName, qp.getConditionBuildingName());
 
 	try {
-	    qp = new QueryProperty(klass, "entity1.entity3.coll");
-	    fail("The collection itself could not be used for quering.");
-	} catch (final Exception e) {
-	}
-	try {
 	    qp = new QueryProperty(klass, "entity1.coll.entity3.entities.entity2");
 	    fail("Properties in nested collections are not supported at this stage.");
 	} catch (final Exception e) {
@@ -511,18 +506,37 @@ public class DynamicQueryBuilderTest {
 	} catch (final Exception e) {
 	}
 
+	qp = new QueryProperty(klass, "entity1.entity3.coll");
+	assertTrue("Should be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
+	assertEquals("Incorrect condition building name.", "key", qp.getConditionBuildingName());
+
+	assertEquals("Incorrect collection container type.", CollectionParentEntity.class, qp.getCollectionContainerType());
+	assertEquals("Incorrect collection container parent type.", EntityForQueryPropertyTesting.class, qp.getCollectionContainerParentType());
+
+	assertEquals("Incorrect name of collection parent.", "entity1.entity3", qp.getPropertyNameOfCollectionParent());
+	assertEquals("Incorrect collection name in its parent type context.", "coll", qp.getCollectionNameInItsParentTypeContext());
+	assertFalse("Incorrect isInNestedCollections.", qp.isInNestedCollections());
+
 	qp = new QueryProperty(klass, "entity1.entity3.coll.strProp");
 	assertTrue("Should be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
 	assertEquals("Incorrect condition building name.", "strProp", qp.getConditionBuildingName());
+
 	assertEquals("Incorrect collection container type.", CollectionParentEntity.class, qp.getCollectionContainerType());
 	assertEquals("Incorrect collection container parent type.", EntityForQueryPropertyTesting.class, qp.getCollectionContainerParentType());
+
 	assertEquals("Incorrect name of collection parent.", "entity1.entity3", qp.getPropertyNameOfCollectionParent());
+	assertEquals("Incorrect collection name in its parent type context.", "coll", qp.getCollectionNameInItsParentTypeContext());
+	assertFalse("Incorrect isInNestedCollections.", qp.isInNestedCollections());
 
 	qp = new QueryProperty(klass, "entity2.entity1.entities.entity2.strProp");
 	assertTrue("Should be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
 	assertEquals("Incorrect condition building name.", "entity2.strProp", qp.getConditionBuildingName());
+
 	assertEquals("Incorrect collection container type.", EntityForQueryPropertyTesting.class, qp.getCollectionContainerType());
 	assertEquals("Incorrect collection container parent type.", EntityForQueryPropertyTesting.class, qp.getCollectionContainerParentType());
+
 	assertEquals("Incorrect name of collection parent.", "entity2.entity1", qp.getPropertyNameOfCollectionParent());
+	assertEquals("Incorrect collection name in its parent type context.", "entities", qp.getCollectionNameInItsParentTypeContext());
+	assertFalse("Incorrect isInNestedCollections.", qp.isInNestedCollections());
     }
 }
