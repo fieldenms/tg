@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -55,6 +51,10 @@ import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
@@ -442,7 +442,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public T getEntity(final QueryExecutionModel<T, ?> model) {
-	final List<T> data = getFirstEntities(model, DEFAULT_PAGE_CAPACITY);
+	final List<T> data = getFirstEntities(model, 2);
 	if (data.size() > 1) {
 	    throw new IllegalArgumentException("The provided query model leads to retrieval of more than one entity (" + data.size() + ").");
 	}
