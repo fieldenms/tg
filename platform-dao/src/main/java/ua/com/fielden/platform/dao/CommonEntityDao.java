@@ -244,7 +244,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 			//		    logger.error("is dirty: " + propName + " of " + getEntityType().getSimpleName() + " old = " + ((MetaProperty) obj).getOriginalValue() + " new = " + ((MetaProperty) obj).getValue());
 			final Object value = entity.get(propName);
 			// it is essential that if a property is of an entity type it should be re-associated with the current session before being set
-			// the easiest way to do that is to load entity be id using the current session
+			// the easiest way to do that is to load entity by id using the current session
 			if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
 			    persistedEntity.set(propName, getSession().load(((AbstractEntity) value).getType(), ((AbstractEntity) value).getId()));
 			} else {
