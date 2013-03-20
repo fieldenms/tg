@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-@SuppressWarnings("unchecked")
 public abstract class AbstractQueryPage<T extends AbstractEntity<?>> implements IPage<T> {
 
     private final int pageNumber;

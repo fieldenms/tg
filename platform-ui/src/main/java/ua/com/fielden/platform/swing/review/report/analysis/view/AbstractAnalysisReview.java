@@ -22,10 +22,10 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.pagination.IPageNavigationListener;
+import ua.com.fielden.platform.pagination.PageNavigationEvent;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.file.ExtensionFileFilter;
-import ua.com.fielden.platform.swing.pagination.model.development.IPageNavigationListener;
-import ua.com.fielden.platform.swing.pagination.model.development.PageNavigationEvent;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;

@@ -25,6 +25,8 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPageChangedListener;
+import ua.com.fielden.platform.pagination.PageChangedEvent;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -33,8 +35,6 @@ import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.egi.EgiPanel;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
-import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
-import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.OpenMasterClickAction;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
@@ -76,9 +76,16 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    @SuppressWarnings("unchecked")
 	    @Override
 	    public void pageChanged(final PageChangedEvent e) {
-		final List<AbstractEntity<?>> oldSelected = getEnhnacedSelectedEntities();
-		egiPanel.setData((IPage<T>) e.getNewPage());
-		selectEntities(oldSelected);
+		SwingUtilitiesEx.invokeLater(new Runnable() {
+
+		    @Override
+		    public void run() {
+			final List<AbstractEntity<?>> oldSelected = getEnhnacedSelectedEntities();
+			egiPanel.setData((IPage<T>) e.getNewPage());
+			selectEntities(oldSelected);
+		    }
+		});
+
 	    }
 	});
 

@@ -1,7 +1,6 @@
-package ua.com.fielden.platform.swing.pagination.model.development;
+package ua.com.fielden.platform.pagination;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.pagination.IPage;
 
 /**
  * Contract for Paginator. Declares API that supports multiple page by page review.
@@ -35,7 +34,7 @@ public interface IPaginatorModel {
      *
      * @return
      */
-    IPage<? extends AbstractEntity> getCurrentPage();
+    IPage<? extends AbstractEntity<?>> getCurrentPage();
 
     /**
      * Navigates the page of the current {@link PageHolder} to the first page.

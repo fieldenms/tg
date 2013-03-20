@@ -60,9 +60,10 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.gis.Point;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
-import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
-import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
+import ua.com.fielden.platform.pagination.IPageChangedListener;
+import ua.com.fielden.platform.pagination.PageChangedEvent;
+import ua.com.fielden.platform.pagination.PageHolder;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -141,7 +142,13 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
 	pageHolder.addPageChangedListener(new IPageChangedListener() {
 	    @Override
 	    public void pageChanged(final PageChangedEvent e) {
-		providePoints(createPoints((IPage<AbstractEntity<?>>) e.getNewPage()), shouldFitToBounds());
+		SwingUtilitiesEx.invokeLater(new Runnable() {
+
+		    @Override
+		    public void run() {
+			providePoints(createPoints((IPage<AbstractEntity<?>>) e.getNewPage()), shouldFitToBounds());
+		    }
+		});
 	    }
 	});
     }

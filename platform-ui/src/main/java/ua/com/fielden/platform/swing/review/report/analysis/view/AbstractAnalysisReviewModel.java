@@ -7,7 +7,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
+import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 

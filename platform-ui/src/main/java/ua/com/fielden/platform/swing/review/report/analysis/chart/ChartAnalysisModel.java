@@ -9,13 +9,14 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeMan
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPageChangedListener;
+import ua.com.fielden.platform.pagination.PageChangedEvent;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
-import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
-import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager> {
 
@@ -28,7 +29,13 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    @SuppressWarnings("unchecked")
 	    @Override
 	    public void pageChanged(final PageChangedEvent e) {
-		groupAnalysisDataProvider.setLoadedData(((IPage<T>)e.getNewPage()).data());
+		SwingUtilitiesEx.invokeLater(new Runnable() {
+
+		    @Override
+		    public void run() {
+			groupAnalysisDataProvider.setLoadedData(((IPage<T>)e.getNewPage()).data());
+		    }
+		});
 	    }
 	});
     }

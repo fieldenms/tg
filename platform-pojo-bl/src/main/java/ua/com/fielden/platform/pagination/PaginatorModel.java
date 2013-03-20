@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.pagination.model.development;
+package ua.com.fielden.platform.pagination;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -6,8 +6,6 @@ import java.util.Set;
 import javax.swing.event.EventListenerList;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.swing.pagination.Paginator;
 
 /**
  * The model for the {@link Paginator}. This model supports multiple pagination.
@@ -49,7 +47,7 @@ public class PaginatorModel implements IPaginatorModel, IPageHolderManager{
     }
 
     @Override
-    public IPage<? extends AbstractEntity> getCurrentPage() {
+    public IPage<? extends AbstractEntity<?>> getCurrentPage() {
 	return getCurrentPageHolder() == null ? null : getCurrentPageHolder().getPage();
     }
 

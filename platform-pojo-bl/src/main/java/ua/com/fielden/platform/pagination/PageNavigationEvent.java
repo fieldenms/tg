@@ -1,12 +1,12 @@
-package ua.com.fielden.platform.swing.pagination.model.development;
+package ua.com.fielden.platform.pagination;
 
 import java.util.EventObject;
 
-import ua.com.fielden.platform.swing.pagination.model.development.IPaginatorModel.PageNavigationPhases;
+import ua.com.fielden.platform.pagination.IPaginatorModel.PageNavigationPhases;
 
 /**
  * Encapsulates the page navigation event.
- * 
+ *
  * @author TG Team
  *
  */
@@ -18,7 +18,7 @@ public class PageNavigationEvent extends EventObject {
 
     /**
      * Initiates {@link PageNavigationEvent} with page holder which has thrown that event and {@link PageNavigationPhases} instance.
-     * 
+     *
      * @param source
      * @param pageNavigationPhases
      */
@@ -29,7 +29,7 @@ public class PageNavigationEvent extends EventObject {
 
     /**
      * Returns the page navigation phase. (See {@link PageNavigationPhases} for more information).
-     * 
+     *
      * @return
      */
     public PageNavigationPhases getPageNavigationPhases() {

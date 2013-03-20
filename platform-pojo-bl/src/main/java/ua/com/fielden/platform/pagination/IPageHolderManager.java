@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.pagination.model.development;
+package ua.com.fielden.platform.pagination;
 
 
 /**

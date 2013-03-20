@@ -9,15 +9,16 @@ import javax.swing.Icon;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPageChangedListener;
+import ua.com.fielden.platform.pagination.IPageHolderChangedListener;
+import ua.com.fielden.platform.pagination.IPaginatorModel;
+import ua.com.fielden.platform.pagination.IPaginatorModel.PageNavigationPhases;
+import ua.com.fielden.platform.pagination.PageChangedEvent;
+import ua.com.fielden.platform.pagination.PageHolderChangedEvent;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
-import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
-import ua.com.fielden.platform.swing.pagination.model.development.IPageHolderChangedListener;
-import ua.com.fielden.platform.swing.pagination.model.development.IPaginatorModel;
-import ua.com.fielden.platform.swing.pagination.model.development.IPaginatorModel.PageNavigationPhases;
-import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
-import ua.com.fielden.platform.swing.pagination.model.development.PageHolderChangedEvent;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -42,19 +43,29 @@ public class Paginator {
 	void enableFeedback(boolean enable);
     }
 
-    private final BlockingLayerCommand<List<? extends AbstractEntity>> prev, next, first, last;
+    private final BlockingLayerCommand<List<? extends AbstractEntity<?>>> prev, next, first, last;
 
     private final IPaginatorModel paginatorModel;
 
     private final IPageChangeFeedback feedback;
 
-    public Paginator(final IPaginatorModel paginatorModel, final IPageChangeFeedback feedback, final BlockingIndefiniteProgressLayer blockingLayer) {
+    public Paginator(final IPaginatorModel paginatorModel, final IPageChangeFeedback feedback, final BlockingIndefiniteProgressLayer blockingLayerProvider) {
+	this(paginatorModel, feedback, new IBlockingLayerProvider() {
+
+	    @Override
+	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
+		return blockingLayerProvider;
+	    }
+	});
+    }
+
+    public Paginator(final IPaginatorModel paginatorModel, final IPageChangeFeedback feedback, final IBlockingLayerProvider blockingLayerProvider) {
 	this.paginatorModel = paginatorModel;
 	this.feedback = feedback;
-	first = createActionFirst(blockingLayer);
-	prev = createActionPrev(blockingLayer);
-	next = createActionNext(blockingLayer);
-	last = createActionLast(blockingLayer);
+	first = createActionFirst(blockingLayerProvider);
+	prev = createActionPrev(blockingLayerProvider);
+	next = createActionNext(blockingLayerProvider);
+	last = createActionLast(blockingLayerProvider);
 
 	this.paginatorModel.addPageChangedListener(new IPageChangedListener() {
 
@@ -72,19 +83,19 @@ public class Paginator {
 	});
     }
 
-    public BlockingLayerCommand<List<? extends AbstractEntity>> getFirst() {
+    public BlockingLayerCommand<List<? extends AbstractEntity<?>>> getFirst() {
 	return first;
     }
 
-    public BlockingLayerCommand<List<? extends AbstractEntity>> getPrev() {
+    public BlockingLayerCommand<List<? extends AbstractEntity<?>>> getPrev() {
 	return prev;
     }
 
-    public BlockingLayerCommand<List<? extends AbstractEntity>> getNext() {
+    public BlockingLayerCommand<List<? extends AbstractEntity<?>>> getNext() {
 	return next;
     }
 
-    public BlockingLayerCommand<List<? extends AbstractEntity>> getLast() {
+    public BlockingLayerCommand<List<? extends AbstractEntity<?>>> getLast() {
 	return last;
     }
 
@@ -97,13 +108,13 @@ public class Paginator {
     /** Provides simple API to navigate page. */
     private interface IPageNavigator { void navigatePage(); }
     /** Creates action based on behaviour passed in parameters.*/
-    private BlockingLayerCommand<List<? extends AbstractEntity>> createAction(final BlockingIndefiniteProgressLayer blockingLayer, final IPageNavigator pageNavigator, final IGetter<String> pageMessage, final String iconPath, final String desc, final int mnemonicKey) {
-	final BlockingLayerCommand<List<? extends AbstractEntity>> action = new BlockingLayerCommand<List<? extends AbstractEntity>>("", blockingLayer) {
+    private BlockingLayerCommand<List<? extends AbstractEntity<?>>> createAction(final IBlockingLayerProvider blockingLayerProvider, final IPageNavigator pageNavigator, final IGetter<String> pageMessage, final String iconPath, final String desc, final int mnemonicKey) {
+	final BlockingLayerCommand<List<? extends AbstractEntity<?>>> action = new BlockingLayerCommand<List<? extends AbstractEntity<?>>>("", blockingLayerProvider) {
 	    private static final long serialVersionUID = 1L;
 
 	    @Override
 	    protected boolean preAction() {
-		blockingLayer.enableIncrementalLocking();
+		blockingLayerProvider.getBlockingLayer().enableIncrementalLocking();
 		setMessage(pageMessage.get());
 		setEnableActions(false, true);
 		paginatorModel.pageNavigationPhases(PageNavigationPhases.PRE_NAVIGATE);
@@ -111,15 +122,15 @@ public class Paginator {
 	    }
 
 	    @Override
-	    protected List<? extends AbstractEntity> action(final ActionEvent e) throws Exception {
+	    protected List<? extends AbstractEntity<?>> action(final ActionEvent e) throws Exception {
 		pageNavigator.navigatePage();
-		final List<? extends AbstractEntity> data = paginatorModel.getCurrentPage().data();
+		final List<? extends AbstractEntity<?>> data = paginatorModel.getCurrentPage().data();
 		paginatorModel.pageNavigationPhases(PageNavigationPhases.NAVIGATE);
 		return data;
 	    }
 
 	    @Override
-	    protected void postAction(final List<? extends AbstractEntity> data) {
+	    protected void postAction(final List<? extends AbstractEntity<?>> data) {
 		super.postAction(data);
 		setEnableActions(true, false);
 		paginatorModel.pageNavigationPhases(PageNavigationPhases.POST_NAVIGATE);
@@ -147,29 +158,29 @@ public class Paginator {
 	return action;
     }
 
-    private BlockingLayerCommand<List<? extends AbstractEntity>> createActionFirst(final BlockingIndefiniteProgressLayer blockingLayer) {
-	return createAction(blockingLayer,
+    private BlockingLayerCommand<List<? extends AbstractEntity<?>>> createActionFirst(final IBlockingLayerProvider blockingLayerProvider) {
+	return createAction(blockingLayerProvider,
 		new IPageNavigator() { public void navigatePage() { paginatorModel.firstPage(); } },
 		new IGetter<String>(){ public String get() { return "Loading first page..."; } },
 		"images/navigation/01-first.png", "Go to first page", KeyEvent.VK_HOME);
     }
 
-    private BlockingLayerCommand<List<? extends AbstractEntity>> createActionPrev(final BlockingIndefiniteProgressLayer blockingLayer) {
-	return createAction(blockingLayer,
+    private BlockingLayerCommand<List<? extends AbstractEntity<?>>> createActionPrev(final IBlockingLayerProvider blockingLayerProvider) {
+	return createAction(blockingLayerProvider,
 		new IPageNavigator() { public void navigatePage() { paginatorModel.prevPage(); } },
 		new IGetter<String>(){ public String get() { return "Loading previous " + paginatorModel.getCurrentPage().capacity() + " records..."; } },
 		"images/navigation/02-prev.png", "Go to previous page", KeyEvent.VK_PAGE_UP);
     }
 
-    private BlockingLayerCommand<List<? extends AbstractEntity>> createActionNext(final BlockingIndefiniteProgressLayer blockingLayer) {
-	return createAction(blockingLayer,
+    private BlockingLayerCommand<List<? extends AbstractEntity<?>>> createActionNext(final IBlockingLayerProvider blockingLayerProvider) {
+	return createAction(blockingLayerProvider,
 		new IPageNavigator() { public void navigatePage() { paginatorModel.nextPage(); } },
 		new IGetter<String>(){ public String get() { return "Loading next " + paginatorModel.getCurrentPage().capacity() + " records..."; } },
 		"images/navigation/03-next.png", "Go to next page", KeyEvent.VK_PAGE_DOWN);
     }
 
-    private BlockingLayerCommand<List<? extends AbstractEntity>> createActionLast(final BlockingIndefiniteProgressLayer blockingLayer) {
-	return createAction(blockingLayer,
+    private BlockingLayerCommand<List<? extends AbstractEntity<?>>> createActionLast(final IBlockingLayerProvider blockingLayerProvider) {
+	return createAction(blockingLayerProvider,
 		new IPageNavigator() { public void navigatePage() { paginatorModel.lastPage(); } },
 		new IGetter<String>(){ public String get() { return "Loading last page..."; } },
 		"images/navigation/04-last.png", "Go to last page", KeyEvent.VK_END);
@@ -188,7 +199,7 @@ public class Paginator {
 	}
     }
 
-    private void enable(final BlockingLayerCommand<List<? extends AbstractEntity>> action, final boolean enabled, final boolean locked){
+    private void enable(final BlockingLayerCommand<List<? extends AbstractEntity<?>>> action, final boolean enabled, final boolean locked){
 	if (action != null){
 	    action.setEnabled(enabled, locked);
 	}
