@@ -307,14 +307,6 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
         return (MultipleDecModel<T>)super.getModel();
     }
 
-    @Override
-    protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	if(getCentre().getCriteriaPanel() != null){
-            getCentre().getDefaultAction().setEnabled(enable);
-        }
-        getCentre().getRunAction().setEnabled(enable);
-    }
-
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
      *

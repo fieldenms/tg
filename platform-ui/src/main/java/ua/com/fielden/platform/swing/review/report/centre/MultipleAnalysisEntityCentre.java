@@ -477,7 +477,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	int index = analysisIndex;
 	for(; index < analysisKeys.size(); index++){
 	    final IAbstractAnalysisDomainTreeManager analysisManager = centreManager.getAnalysisManager(analysisKeys.get(index));
-	    if(analysisManager.isVisible()){
+	    if(analysisManager.isVisible() || analysisKeys.get(index).equals(getOwner().getAnalysisToSelect())){
 		return index;
 	    }
 	}
@@ -516,7 +516,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     }
 
     /**
-     * Closese current analysis.
+     * Closes current analysis.
      */
     private void closeCurrentAnalysis(){
 	if(getModel().getName() == null){

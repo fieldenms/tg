@@ -148,7 +148,19 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
      * @param enable
      * @param navigate
      */
-    abstract protected void enableRelatedActions(final boolean enable, final boolean navigate);
+    protected void enableRelatedActions(final boolean enable, final boolean navigate){
+	getCentre().getActionPanel().setEnabled(enable);
+	if (getCentre().getCriteriaPanel() != null) {
+	    getCentre().getDefaultAction().setEnabled(enable);
+	}
+	getCentre().getRunAction().setEnabled(enable);
+	if (getCentre().getCustomActionChanger() != null) {
+	    getCentre().getCustomActionChanger().setEnabled(enable);
+	}
+	if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {
+	    getCentre().getCriteriaPanel().getSwitchAction().setEnabled(enable);
+	}
+    }
 
     /**
      * Returns the {@link AbstractEntityCentre} that owns this analysis.

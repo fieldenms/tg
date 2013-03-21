@@ -266,14 +266,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
         return multipleChartPanel;
     }
 
-    @Override
-    protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-        if(getCentre().getCriteriaPanel() != null){
-            getCentre().getDefaultAction().setEnabled(enable);
-        }
-        getCentre().getRunAction().setEnabled(enable);
-    }
-
     @SuppressWarnings("unused")
     protected void performCustomAction(final AnalysisDataEvent<ChartMouseEvent> clickedData) {
         System.out.println("Custom lifecycle action");

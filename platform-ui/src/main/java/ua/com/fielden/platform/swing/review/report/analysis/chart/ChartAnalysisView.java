@@ -158,13 +158,10 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	if(getCentre().getCriteriaPanel() != null){
-	    getCentre().getDefaultAction().setEnabled(enable);
-	}
+	super.enableRelatedActions(enable, navigate);
 	if(!navigate){
 	    getCentre().getPaginator().setEnableActions(enable, !enable);
 	}
-	getCentre().getRunAction().setEnabled(enable);
     }
 
     /**

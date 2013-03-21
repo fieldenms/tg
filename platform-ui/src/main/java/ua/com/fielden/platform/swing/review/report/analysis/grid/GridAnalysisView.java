@@ -311,14 +311,11 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	if (getCentre().getCriteriaPanel() != null) {
-	    getCentre().getDefaultAction().setEnabled(enable);
-	}
+	super.enableRelatedActions(enable, navigate);
 	if (!navigate) {
 	    getCentre().getPaginator().setEnableActions(enable, !enable);
 	}
 	getCentre().getExportAction().setEnabled(enable);
-	getCentre().getRunAction().setEnabled(enable);
     }
 
     @Override

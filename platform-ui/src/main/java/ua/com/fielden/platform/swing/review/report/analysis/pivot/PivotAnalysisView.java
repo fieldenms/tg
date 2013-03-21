@@ -108,15 +108,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	return (PivotAnalysisModel<T>) super.getModel();
     }
 
-    @Override
-    protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	if (getCentre().getCriteriaPanel() != null) {
-	    getCentre().getDefaultAction().setEnabled(enable);
-	}
-	getCentre().getExportAction().setEnabled(enable);
-	getCentre().getRunAction().setEnabled(enable);
-    }
-
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
      *
@@ -138,7 +129,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		//Managing the paginator's enablements.
 		getCentre().getPaginator().setEnableActions(false, false);
 		//Managing load and export enablements.
-		getCentre().getExportAction().setEnabled(true);
+		getCentre().getExportAction().setEnabled(false);
 		getCentre().getRunAction().setEnabled(true);
 	    }
 	};
