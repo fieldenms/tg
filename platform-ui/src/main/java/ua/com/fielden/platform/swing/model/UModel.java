@@ -17,6 +17,7 @@ import ua.com.fielden.platform.swing.components.bind.development.BoundedValidati
 import ua.com.fielden.platform.swing.components.blocking.AdhocBlockingLayerProvider;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
+import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.ei.editors.development.ReadonlyEntityPropertyViewer;
@@ -443,6 +444,10 @@ public abstract class UModel<M extends AbstractEntity<?>, D extends AbstractEnti
 
     public void setBlockingLayer(final BlockingIndefiniteProgressLayer blockingLayer) {
 	blockingLayerProvider.setBlockingLayer(blockingLayer);
+    }
+
+    public IBlockingLayerProvider getBlockingLayerProvider() {
+        return blockingLayerProvider;
     }
 
     /**

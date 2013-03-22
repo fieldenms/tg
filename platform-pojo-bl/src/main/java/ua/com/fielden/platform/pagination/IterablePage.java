@@ -6,6 +6,14 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * A convenient abstraction that wraps <code>IPage</code> instance in order to make it iterable.
+ * <p>
+ * <b>IMPORTANT:</b> data used in the underlying pages should not be removed or mutated in a way that when calling <code>currentPage.next</code> it could return an empty page!
+ * <p/>
+ * As an example of this, consider db-aware implementation of {@link IPage} that is used for implementing pagination over a result set where the underlying SQL is
+ * constructed using the <code>offset</code> operator.
+ * Let's also consider that the original query identified two pages with two elements each, and our task is to iterated over all entries in those two pages to perform some operation to each entry.
+ * If that operation mutates the data in a way that it does not match the original selection criteria then after finishing with the first page,
+ * calling the next page would produce an empty page whereas in fact there are those two remaining records that still need to be processed.
  *
  * @author TG Team
  *
