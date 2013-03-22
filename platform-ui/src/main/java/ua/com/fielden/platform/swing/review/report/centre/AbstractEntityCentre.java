@@ -403,8 +403,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 
 	    @Override
 	    protected boolean preAction() {
-		if (ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()) {
-		    throw new IllegalStateException("This action shouldn't be invoked when analysis is in WIZARD or not specified mode.");
+		if (ReportMode.REPORT != getOwner().getModel().getMode()) {
+		    throw new IllegalStateException("This action shouldn't be invoked when centre is in the WIZARD or NOT_SPECIFIED mode.");
 		}
 		return super.preAction() && getCriteriaPanel() != null;
 	    }
@@ -438,9 +438,10 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	    public void actionPerformed(final ActionEvent e) {
 		try {
 		    if (ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()) {
-			throw new IllegalStateException("This action shouldn't be invoked when analysis is not in REPORT or not specified mode.");
+			throw new IllegalStateException("This action shouldn't be invoked when analysis is in the WIZARD or NOT_SPECIFIED mode.");
+		    } else if (getCurrentAnalysisConfigurationView().isLoaded()) {
+			getCurrentAnalysisConfigurationView().getPreviousView().loadData();
 		    }
-		    getCurrentAnalysisConfigurationView().getPreviousView().loadData();
 		} catch (final IllegalStateException exception) {
 		    new DialogWithDetails(null, "Exception in action", exception).setVisible(true);
 		}
@@ -468,9 +469,10 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	    public void actionPerformed(final ActionEvent e) {
 		try {
 		    if (ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()) {
-			throw new IllegalStateException("This action shouldn't be invoked when analysis is in WIZARD or not specified mode.");
+			throw new IllegalStateException("This action shouldn't be invoked when analysis is in WIZARD or NOT_SPECIFIED mode.");
+		    } else if (getCurrentAnalysisConfigurationView().isLoaded()) {
+			getCurrentAnalysisConfigurationView().getPreviousView().exportData();
 		    }
-		    getCurrentAnalysisConfigurationView().getPreviousView().exportData();
 		} catch (final IllegalStateException exception) {
 		    new DialogWithDetails(null, "Exception in action", exception).setVisible(true);
 		}
