@@ -37,10 +37,10 @@ public class MapUtils {
     /**
      * Calculates distance traveled between two sequential messages.
      *
-     * @param x1
-     * @param y1
-     * @param x2
-     * @param y2
+     * @param x1 = long1
+     * @param y1 = lat1
+     * @param x2 = long2
+     * @param y2 = lat2
      * @return
      */
     public static double calcDistance(final BigDecimal x1, final BigDecimal y1, final BigDecimal x2, final BigDecimal y2) {
@@ -50,10 +50,10 @@ public class MapUtils {
     /**
      * Calculates distance traveled between two sequential messages.
      *
-     * @param x1
-     * @param y1
-     * @param x2
-     * @param y2
+     * @param x1 = long1
+     * @param y1 = lat1
+     * @param x2 = long2
+     * @param y2 = lat2
      * @return
      */
     public static double calcDistance(final double x1, final double y1, final double x2, final double y2) {
@@ -81,6 +81,8 @@ public class MapUtils {
 	// довжина Яна Жижки -- має бути 87 метрів
 	// System.out.println(distanceInMetersBetween(49.844157, 24.028371, 49.844209, 24.029567));
 	// System.out.println(calcDistance(49.844157, 24.028371, 49.844209, 24.029567));
+
+	System.out.println(calcDistance(24.028371, 49.844157, 24.029567, 49.844209));
 
 	System.out.println(calcDistance(49.864, 24.035, 49.864, 24.037));
 
