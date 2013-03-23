@@ -3,10 +3,12 @@ package ua.com.fielden.platform.utils;
 import static java.text.NumberFormat.getNumberInstance;
 
 import java.math.BigDecimal;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
@@ -179,8 +181,9 @@ public class ConverterFactory {
     }
 
     private static class DateConverter extends Converter {
-
-	private static final SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy hh:mma");
+	private static final Locale ukrLocale = new Locale.Builder().setLanguage("uk").setRegion("UA").build();
+	private static final Locale defaultLocale = Locale.getDefault();
+	private static final DateFormat format = ukrLocale.equals(defaultLocale) ? new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") : new SimpleDateFormat("dd/MM/yyyy hh:mma");
 
 	@Override
 	public String convertToString(final Object value) {
