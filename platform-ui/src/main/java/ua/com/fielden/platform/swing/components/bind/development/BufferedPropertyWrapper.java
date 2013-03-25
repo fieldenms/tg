@@ -95,7 +95,6 @@ import com.jgoodies.binding.value.ValueModel;
  * @see ValueModel#getValue()
  * @see ValueModel#setValue(Object)
  */
-@SuppressWarnings("unchecked")
 @KeyType(String.class)
 public final class BufferedPropertyWrapper implements IBindingEntity, IOnCommitActionable, IRebindable { // extends AbstractEntity<String>
     private List<IPropertyConnector> connectors = new ArrayList<IPropertyConnector>();
@@ -224,6 +223,7 @@ public final class BufferedPropertyWrapper implements IBindingEntity, IOnCommitA
      *
      * @return the ValueModel that provides the unbuffered value
      */
+    @Override
     public IBindingEntity getSubjectBean() {
 	return subjectBean;
     }
@@ -382,6 +382,7 @@ public final class BufferedPropertyWrapper implements IBindingEntity, IOnCommitA
 	firePropertyChange(PROPERTYNAME_BUFFERING, oldValue, newValue);
     }
 
+    @Override
     public final PropertyChangeSupportEx getChangeSupport() {
 	return changeSupport;
     }
@@ -394,6 +395,7 @@ public final class BufferedPropertyWrapper implements IBindingEntity, IOnCommitA
      * @param propertyName
      * @param listener
      */
+    @Override
     public final synchronized void addPropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
 	if (listener == null) {
 	    throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
@@ -407,6 +409,7 @@ public final class BufferedPropertyWrapper implements IBindingEntity, IOnCommitA
     /**
      * Removes property change listener.
      */
+    @Override
     public final synchronized void removePropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
 	getChangeSupport().removePropertyChangeListener(propertyName, listener);
     }
@@ -524,6 +527,7 @@ public final class BufferedPropertyWrapper implements IBindingEntity, IOnCommitA
 	 * @param evt
 	 *            the property change event to be handled
 	 */
+	@Override
 	public void propertyChange(final PropertyChangeEvent evt) {
 	    if (Boolean.TRUE.equals(evt.getNewValue())) {
 		commit();
@@ -533,18 +537,22 @@ public final class BufferedPropertyWrapper implements IBindingEntity, IOnCommitA
 	}
     }
 
+    @Override
     public String getPropertyName() {
 	return propertyName;
     }
 
+    @Override
     public synchronized boolean addOnCommitAction(final IOnCommitAction onCommitAction) {
 	return onCommitActions.add(onCommitAction);
     }
 
+    @Override
     public synchronized boolean removeOnCommitAction(final IOnCommitAction onCommitAction) {
 	return onCommitActions.remove(onCommitAction);
     }
 
+    @Override
     public List<IOnCommitAction> getOnCommitActions() {
 	return Collections.unmodifiableList(onCommitActions);
     }
