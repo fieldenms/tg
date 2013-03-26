@@ -29,6 +29,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.components.ValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
@@ -335,6 +336,7 @@ public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity> {
 		if ((e.getKeyChar() == '\t' || e.getKeyCode() == KeyEvent.VK_ENTER) && !getEntityGridInspector().hasFocus()) {
 		    getEntityGridInspector().requestFocusInWindow();
 		    invokeWhenGainedFocus(getEntityGridInspector(), new Runnable() {
+			@Override
 			public void run() {
 			    getEntityGridInspector().removeEditor();
 			}
@@ -463,6 +465,7 @@ public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity> {
 	    if (decorateEditor()) {
 		// invoking decoration in this way, because otherwise editor is not decorated properly
 		invokeLater(new Runnable() {
+		    @Override
 		    public void run() {
 			RenderingDecorator.decorateEditor(editorComponent, table);
 		    }
@@ -509,7 +512,10 @@ public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity> {
 
 	private JComponent drawDataCell(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, final int column) {
 	    final int actualRow = TableModelWrapperUtils.getActualRowAt(table.getModel(), row);
-	    final T entity = getEntityGridInspector().getActualModel().instance(actualRow);
+	    final AbstractEntity<?> ent = getEntityGridInspector().getActualModel().instance(actualRow);
+
+	    final T entity = !DynamicEntityClassLoader.isEnhanced(ent.getClass()) ? (T)ent :
+		(T) ent.copy(DynamicEntityClassLoader.getOriginalType(ent.getClass()));
 
 	    JComponent rendererComponent = getCellRendererComponent(entity, value, isSelected, hasFocus, table, row, column);
 
