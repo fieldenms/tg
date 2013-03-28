@@ -105,6 +105,7 @@ public interface EntityQueryProgressiveInterfaces {
         IRoundFunctionArgument<T, ET> round();
         IConcatFunctionArgument<T, ET> concat();
         IFunctionLastArgument<T, ET> absOf();
+        IFunctionLastArgument<T, ET> dateOf();
     }
 
     interface IMultipleOperand<T, ET extends AbstractEntity<?>> //

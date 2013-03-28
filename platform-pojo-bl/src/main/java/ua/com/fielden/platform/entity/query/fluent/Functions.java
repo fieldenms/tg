@@ -15,6 +15,7 @@ public enum Functions {
 	DAY,
 	MONTH,
 	YEAR,
+	DATE,
 	ABS,
 	SUM,
 	MAX,

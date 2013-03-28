@@ -361,6 +361,10 @@ final class Tokens {
 	return add(TokenCategory.FUNCTION, Functions.YEAR);
     }
 
+    public Tokens dateOf() {
+	return add(TokenCategory.FUNCTION, Functions.DATE);
+    }
+
     public Tokens absOf() {
 	return add(TokenCategory.FUNCTION, Functions.ABS);
     }

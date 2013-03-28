@@ -129,6 +129,11 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
     }
 
     @Override
+    public IFunctionLastArgument<T, ET> dateOf() {
+	return new FunctionLastArgument<T, ET>(getTokens().dateOf(), getParent());
+    }
+
+    @Override
     public IFunctionLastArgument<T, ET> absOf() {
 	return new FunctionLastArgument<T, ET>(getTokens().absOf(), getParent());
     }

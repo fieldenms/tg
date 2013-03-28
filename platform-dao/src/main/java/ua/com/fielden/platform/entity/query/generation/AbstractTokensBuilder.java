@@ -82,6 +82,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case YEAR:
 	    setChild(new YearOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
+	case DATE:
+	    setChild(new DateOfBuilder(this, queryBuilder, getParamValues()));
+	    break;
 	case ABS:
 	    setChild(new AbsOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
