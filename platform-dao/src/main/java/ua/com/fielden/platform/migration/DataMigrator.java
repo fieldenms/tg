@@ -4,16 +4,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.concurrent.Callable;
 
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
@@ -29,87 +25,11 @@ import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.HibernateUtil;
-import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
 
 public class DataMigrator {
     private final Logger logger = Logger.getLogger(this.getClass());
-
-    static class Task implements Callable<String> {
-	private final String msg;
-
-	private final Injector injector;
-	private final EntityFactory factory;
-	private final SessionFactory sessionFactory;
-	private final String[] subsetItems;
-	private final Connection conn;
-	private final Class<? extends IRetriever<?>> retrieverClass;
-	private final MigrationRun migrationRun;
-
-	public Task(final String msg, final Injector injector, final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationRun migrationRun, final Class<? extends IRetriever<?>> retrieverClass, final String... subsetItems) {
-	    this.msg = msg;
-	    this.injector = injector;
-	    this.factory = factory;
-	    this.sessionFactory = sessionFactory;
-	    this.retrieverClass = retrieverClass;
-	    this.conn = conn;
-	    this.migrationRun = migrationRun;
-	    this.subsetItems = subsetItems == null ? new String[] {} : subsetItems;
-	}
-
-	@Override
-	public String call() throws Exception {
-	    final IRetriever<? extends AbstractEntity<?>> ret = injector.getInstance(retrieverClass);
-	    try {
-		ret.populateData(sessionFactory, conn, factory, injector.getInstance(MigrationErrorDao.class), injector.getInstance(MigrationHistoryDao.class), migrationRun, getSubsetCondition(subsetItems));
-		conn.close();
-	    } catch (final Exception e) {
-		return "Interrupted with exception: " + Arrays.asList(e.getStackTrace());
-	    }
-	    return msg;
-	}
-
-	private String getSubsetCondition(final String[] subsetItems) {
-	    if (subsetItems == null || subsetItems.length == 0) {
-		return null;
-	    } else {
-		final StringBuffer sb = new StringBuffer();
-		sb.append(" (");
-		for (final Iterator<String> iterator = Arrays.asList(subsetItems).iterator(); iterator.hasNext();) {
-		    final String subsetItem = iterator.next();
-		    sb.append("'" + subsetItem + "'");
-		    if (iterator.hasNext()) {
-			sb.append(",");
-		    }
-		}
-		sb.append(")");
-		return sb.toString();
-	    }
-	}
-    }
-
-    public static PriorityQueue<Pair<Set<String>, Long>> splitIntoBatches(final List<Pair<String, Long>> groupedItems, final int numberOfBatches) {
-	final PriorityQueue<Pair<Set<String>, Long>> pq = new PriorityQueue<Pair<Set<String>, Long>>(numberOfBatches, new Comparator<Pair<Set<String>, Long>>() {
-	    @Override
-	    public int compare(final Pair<Set<String>, Long> o1, final Pair<Set<String>, Long> o2) {
-		return o1.getValue().compareTo(o2.getValue());
-	    }
-	});
-
-	for (int i = 0; i < numberOfBatches; i++) {
-	    pq.add(new Pair<Set<String>, Long>(new HashSet<String>(), 0l));
-	}
-
-	for (final Pair<String, Long> pair : groupedItems) {
-	    final Pair<Set<String>, Long> bin = pq.poll();
-	    bin.getKey().add(pair.getKey());
-	    bin.setValue(bin.getValue() + pair.getValue());
-	    pq.add(bin);
-	}
-
-	return pq;
-    }
 
     private final HibernateUtil hiberUtil;
     private final EntityFactory factory;
@@ -119,33 +39,45 @@ public class DataMigrator {
     private final MigrationRunDao runDao;
     private final MigrationRun migrationRun;
     private final Injector injector;
-    private final int threadCount;
+    private final DomainMetadataAnalyser dma;
 
-    public DataMigrator(final Injector injector, final HibernateUtil hiberUtil, final EntityFactory factory, final String migratorName, final int threadCount, final Class... retrieversClasses)
+    private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class... retrieversClasses) {
+	final List<IRetriever<? extends AbstractEntity<?>>> result = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
+	for (final Class<? extends IRetriever<? extends AbstractEntity<?>>> retrieverClass : retrieversClasses) {
+	    result.add(injector.getInstance(retrieverClass));
+	}
+	return result;
+    }
+
+    public DataMigrator(final Injector injector, final HibernateUtil hiberUtil, final EntityFactory factory, final String migratorName, final Class... retrieversClasses)
 	    throws Exception {
-	this.threadCount = threadCount;
 	this.injector = injector;
 	this.factory = factory;
 	this.hiberUtil = hiberUtil;
 	this.histDao = injector.getInstance(MigrationHistoryDao.class);
 	this.errorDao = injector.getInstance(MigrationErrorDao.class);
 	this.runDao = injector.getInstance(MigrationRunDao.class);
-	final DomainMetadataAnalyser dma = new DomainMetadataAnalyser(injector.getInstance(DomainMetadata.class));
+	this.dma = new DomainMetadataAnalyser(injector.getInstance(DomainMetadata.class));
+	this.retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
 
-	for (final Class<? extends IRetriever<? extends AbstractEntity<?>>> retrieverClass : retrieversClasses) {
-	    final IRetriever<? extends AbstractEntity<?>> ret = injector.getInstance(retrieverClass);
+	new RetrieverDeadReferencesSeeker(dma).determineUsers(retrievers);
+
+	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
 	    logger.debug("Checking props for [" + ret.getClass().getSimpleName() + "]");
 	    final SortedMap<String,RetrievedPropValidationError> checkResult = new RetrieverPropsValidator(dma, ret.type(), ret.resultFields().keySet()).validate();
 	    if (checkResult.size() > 0) {
 		logger.error("The following issues have been revealed for props in [" + ret.getClass().getSimpleName() + "]:\n " + checkResult);
 	    }
-	    retrievers.add(ret);
 	}
+	final Connection conn = injector.getInstance(Connection.class);
 
-	validateRetrievalSql(dma);
-	throw new IllegalStateException();
+	checkEmptyStrings(dma, conn);
+	checkDataIntegrity(dma, conn);
+	//validateRetrievalSql(dma);
+	final Date now = new Date();
+	migrationRun = null;
+	throw new RuntimeException();
 
-//	final Date now = new Date();
 //	migrationRun = factory.newByKey(MigrationRun.class, migratorName + "_" + now.getTime());
 //	migrationRun.setStarted(now);
 //	runDao.save(migrationRun);
@@ -159,7 +91,7 @@ public class DataMigrator {
      */
     private boolean validateRetrievalSqlForKeyFieldsUniqueness(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) throws Exception {
 	final Statement st = conn.createStatement();
-	final String sql = new RetrieverSqlProducer(dma, retriever).getKeyUniquenessViolationSql();
+	final String sql = new RetrieverSqlProducer(dma).getKeyUniquenessViolationSql(retriever);
 	boolean result = false;
 	try {
 	    logger.debug("Checking uniqueness of key data for [" + retriever.getClass().getSimpleName() + "]");
@@ -187,7 +119,7 @@ public class DataMigrator {
      */
     private boolean checkRetrievalSqlForSyntaxErrors(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) throws Exception {
 	final Statement st = conn.createStatement();
-	final String sql = new RetrieverSqlProducer(dma, retriever).getSql();
+	final String sql = new RetrieverSqlProducer(dma).getSql(retriever);
 	boolean result = false;
 	try {
 	    logger.debug("Checking sql syntax for [" + retriever.getClass().getSimpleName() + "]");
@@ -199,6 +131,58 @@ public class DataMigrator {
 	} finally {
 	    st.close();
 	}
+
+	return result;
+    }
+
+    private boolean checkDataIntegrity(final DomainMetadataAnalyser dma, final Connection conn) throws Exception {
+	final Map<Class<? extends AbstractEntity<?>>, String> stmts = new RetrieverDeadReferencesSeeker(dma).determineUsers(retrievers);
+	final Statement st = conn.createStatement();
+	boolean result = false;
+	for (final Entry<Class<? extends AbstractEntity<?>>, String> entry : stmts.entrySet()) {
+	    try {
+		final ResultSet rs = st.executeQuery(entry.getValue());
+		rs.next();
+		final Integer count = rs.getInt(1);
+		if (count > 0) {
+		    logger.error("Dead references count for entity type [" + entry.getKey().getSimpleName() + "] is [" + count + "].\n" + entry.getValue() + "\n\n\n");
+		}
+		rs.close();
+	    } catch (final Exception ex) {
+		logger.error("Exception while counting dead references for entity type [" + entry.getKey().getSimpleName() + "]" + ex + " SQL:\n" + entry.getValue());
+		result = true;
+	    } finally {
+	    }
+
+	}
+	st.close();
+
+	return result;
+    }
+
+    private boolean checkEmptyStrings(final DomainMetadataAnalyser dma, final Connection conn) throws Exception {
+	final Set<String> stmts = new RetrieverEmptyStringsChecker(dma).getSqls(retrievers);
+	final Statement st = conn.createStatement();
+	boolean result = false;
+	for (final String sql : stmts) {
+	    try {
+		final ResultSet rs = st.executeQuery(sql);
+		rs.next();
+		final String retriever = rs.getString(1);
+		final String prop = rs.getString(2);
+		final Integer count = rs.getInt(3);
+		if (count > 0) {
+		    logger.error("Empty string reference count for property [" + prop +"] within retriever [" + retriever + "] is [" + count + "].\n");
+		}
+		rs.close();
+	    } catch (final Exception ex) {
+		logger.error("Exception while counting empty strings with SQL:\n" + sql);
+		result = true;
+	    } finally {
+	    }
+
+	}
+	st.close();
 
 	return result;
     }
@@ -239,41 +223,20 @@ public class DataMigrator {
     }
 
     public void populateData() throws Exception {
-	final List<Result> results1 = new ArrayList<Result>();
+	final List<Result> results = new ArrayList<Result>();
 
 	final SessionFactory sFactory = hiberUtil.getSessionFactory();
 
 	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
-	    if (ret.splitProperty() == null) {
+//	    if (ret.splitProperty() == null) {
 		final Connection conn = injector.getInstance(Connection.class);
 		final Result result = ret.populateData(sFactory, conn, factory, errorDao, histDao, migrationRun, null);
 		conn.close();
-		results1.add(result);
-	    } else {
-//		final List<Task> tasks = new ArrayList<Task>();
-//
-//		for (final Iterator<Pair<Set<String>, Long>> iterator = DataMigrator.splitIntoBatches(populateData(ret), threadCount).iterator(); iterator.hasNext();) {
-//		    final Connection conn = injector.getInstance(Connection.class);
-//		    tasks.add(new Task("done.", injector, sFactory, conn, factory, migrationRun, (Class<? extends IRetriever<?>>) ret.getClass(), iterator.next().getKey().toArray(new String[] {})));
-//		}
-//
-//		final ExecutorService exec = Executors.newFixedThreadPool(tasks.size());
-//		final List<Future<String>> results = new ArrayList<Future<String>>(tasks.size());
-//
-//		for (final Task task : tasks) {
-//		    results.add(exec.submit(task));
-//		}
-//
-//		for (int index = 0; index < results.size(); index++) {
-//		    System.out.println(ret.getClass().getSimpleName() + " ... waiting for task with index " + index + " ... " + results.get(index).get());
-//		}
-//
-//		exec.shutdown(); // do not forget to shutdown the threads
-
-	    }
+		results.add(result);
+//	    }
 	}
 
-	for (final Result result : results1) {
+	for (final Result result : results) {
 	    System.out.println("\n" + result.getMessage());
 	}
 

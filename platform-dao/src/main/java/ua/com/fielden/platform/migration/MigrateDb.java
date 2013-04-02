@@ -190,25 +190,6 @@ public class MigrateDb {
 	}
     }
 
-    private Integer decodeThreadsParameter(final String paramValue) {
-	if (paramValue == null) {
-	    return 1;
-	} else {
-
-	    try {
-		final Integer value = Integer.parseInt(paramValue.trim());
-		if (value > 0) {
-		    return value;
-		} else {
-		    throw new IllegalArgumentException("-threads parameter has incorrect argument (not positive number): " + paramValue);
-		}
-	    } catch (final NumberFormatException e) {
-		throw new IllegalArgumentException("-threads parameter has incorrect argument (not number): " + paramValue);
-	    }
-
-	}
-    }
-
     public void migrate(final String[] args, final Properties props, final List<String> ddl, final Class[] retrieversClassesSequence, final Injector injector) throws Exception {
 	final Map<CmdParams, String> cmdParams = retrieveCommandLineParams(args);
 	final String limitToParamArgument = cmdParams.get(CmdParams.LIMIT_TO);
@@ -229,7 +210,7 @@ public class MigrateDb {
 		System.out.println(ddlStmt);
 	    }
 	} else {
-	    new DataMigrator(injector, hibernateUtil, factory, "main", decodeThreadsParameter(cmdParams.get(CmdParams.THREADS)), limitToRetrievers).populateData();
+	    new DataMigrator(injector, hibernateUtil, factory, "main", limitToRetrievers).populateData();
 	}
 	// reset passwords
 	if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {
