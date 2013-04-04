@@ -17,6 +17,8 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Updater;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -32,23 +34,12 @@ public class RetrieverDeadReferencesSeeker {
 
     public Map<Class<? extends AbstractEntity<?>>, String> determineUsers(final List<IRetriever<? extends AbstractEntity<?>>> allRetrievers) {
 	final Map<Class<? extends AbstractEntity<?>>, String> result = new HashMap<Class<? extends AbstractEntity<?>>, String>();
-
 	final Map<EntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> grouped = groupRetrieversByType(allRetrievers);
-
-	for (final Entry<EntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> entry : grouped.entrySet()) {
-	    if (entry.getValue().size() > 1) {
-		System.out.println(entry.getKey().getType() + " - " + entry.getValue().size());
-	    }
-	}
 	final Map<Class<? extends AbstractEntity<?>>, List<EntityTypeReference>> doResult = do1(grouped);
 
 	for (final Entry<Class<? extends AbstractEntity<?>>, List<EntityTypeReference>> entry : doResult.entrySet()) {
-
 	    if (entry.getKey() != User.class) {
-//		System.out.println(" * " + entry.getKey().getSimpleName() + "\n"
-//			+ getUnionSql(entry.getValue(), entry.getKey(), grouped.get(dma.getEntityMetadata(entry.getKey()))));
 		result.put(entry.getKey(), getUnionSql(entry.getValue(), entry.getKey(), grouped.get(dma.getEntityMetadata(entry.getKey()))));
-//		System.out.println("\n\n\n");
 	    }
 	}
 
@@ -73,8 +64,13 @@ public class RetrieverDeadReferencesSeeker {
 	    criteria.put(keyProp, "TTT.\"" + keyProp + "\"");
 	}
 
-	sb.append(") AND NOT EXISTS (SELECT * " + rsp.getCoreSqlWithCriteria(referenceSources.iterator().next().retriever, criteria) + ")");
-
+//	sb.append(") AND NOT EXISTS (SELECT * " + rsp.getCoreSqlWithCriteria(referenceSources.iterator().next().retriever, criteria) + ")");
+	sb.append(")");
+	for (final RetrieverProps retrieverProps : referenceSources) {
+	    if (!AnnotationReflector.isAnnotationPresent(Updater.class, retrieverProps.retriever.getClass())) {
+		sb.append(" AND NOT EXISTS (SELECT * " + rsp.getCoreSqlWithCriteria(retrieverProps.retriever, criteria) + ")");
+	    }
+	}
 	return sb.toString();
     }
 

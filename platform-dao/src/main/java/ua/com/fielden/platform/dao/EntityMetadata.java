@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.dao;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedMap;
 
 import org.apache.commons.lang.StringUtils;
@@ -101,6 +104,16 @@ public class EntityMetadata<ET extends AbstractEntity<?>> {
 	result = prime * result + ((props == null) ? 0 : props.hashCode());
 	result = prime * result + ((table == null) ? 0 : table.hashCode());
 	result = prime * result + ((type == null) ? 0 : type.hashCode());
+	return result;
+    }
+
+    public Set<String> getNotNullableProps() {
+	final Set<String> result = new HashSet<String>();
+	for (final Entry<String, PropertyMetadata> entry : props.entrySet()) {
+	    if (!entry.getValue().isNullable()) {
+		result.add(entry.getKey());
+	    }
+	}
 	return result;
     }
 

@@ -47,7 +47,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("model", MODEL, false, hibType("long"), "MODEL_", PropertyCategory.ENTITY));
 	expected.add(ppi("price.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PRICE_", PropertyCategory.COMPONENT_DETAILS));
 	expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PURCHASEPRICE_", PropertyCategory.COMPONENT_DETAILS));
-	expected.add(ppi("fuelUsages", FUEL_USAGE, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
+	expected.add(ppi("fuelUsages", FUEL_USAGE, true, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
 	actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(VEHICLE));
@@ -78,7 +78,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
 	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
 	expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PropertyCategory.PRIMITIVE_KEY));
-	expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
+	expected.add(ppi("roles", UserAndRoleAssociation.class, true, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
 	actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(User.class));

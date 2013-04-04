@@ -40,6 +40,7 @@ public class DataMigrator {
     private final MigrationRun migrationRun;
     private final Injector injector;
     private final DomainMetadataAnalyser dma;
+    private final boolean includeDetails;
 
     private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class... retrieversClasses) {
 	final List<IRetriever<? extends AbstractEntity<?>>> result = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
@@ -49,7 +50,7 @@ public class DataMigrator {
 	return result;
     }
 
-    public DataMigrator(final Injector injector, final HibernateUtil hiberUtil, final EntityFactory factory, final String migratorName, final Class... retrieversClasses)
+    public DataMigrator(final Injector injector, final HibernateUtil hiberUtil, final EntityFactory factory, final boolean includeDetails, final Class... retrieversClasses)
 	    throws Exception {
 	this.injector = injector;
 	this.factory = factory;
@@ -59,12 +60,13 @@ public class DataMigrator {
 	this.runDao = injector.getInstance(MigrationRunDao.class);
 	this.dma = new DomainMetadataAnalyser(injector.getInstance(DomainMetadata.class));
 	this.retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
+	this.includeDetails = includeDetails;
 
 	new RetrieverDeadReferencesSeeker(dma).determineUsers(retrievers);
 
 	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
 	    logger.debug("Checking props for [" + ret.getClass().getSimpleName() + "]");
-	    final SortedMap<String,RetrievedPropValidationError> checkResult = new RetrieverPropsValidator(dma, ret.type(), ret.resultFields().keySet()).validate();
+	    final SortedMap<String,RetrievedPropValidationError> checkResult = new RetrieverPropsValidator(dma, ret).validate();
 	    if (checkResult.size() > 0) {
 		logger.error("The following issues have been revealed for props in [" + ret.getClass().getSimpleName() + "]:\n " + checkResult);
 	    }
@@ -72,8 +74,9 @@ public class DataMigrator {
 	final Connection conn = injector.getInstance(Connection.class);
 
 	checkEmptyStrings(dma, conn);
+	checkRequiredness(dma, conn);
 	checkDataIntegrity(dma, conn);
-	//validateRetrievalSql(dma);
+	validateRetrievalSql(dma);
 	final Date now = new Date();
 	migrationRun = null;
 	throw new RuntimeException();
@@ -97,7 +100,7 @@ public class DataMigrator {
 	    logger.debug("Checking uniqueness of key data for [" + retriever.getClass().getSimpleName() + "]");
 	    final ResultSet rs = st.executeQuery(sql);
 	    if (rs.next()) {
-		logger.error("There are duplicates in data of [" + retriever.getClass().getSimpleName() + "]");
+		logger.error("There are duplicates in data of [" + retriever.getClass().getSimpleName() + "].\n" + (includeDetails ? sql + "\n\n\n" : ""));
 		result = true;
 	    }
 	    rs.close();
@@ -145,7 +148,7 @@ public class DataMigrator {
 		rs.next();
 		final Integer count = rs.getInt(1);
 		if (count > 0) {
-		    logger.error("Dead references count for entity type [" + entry.getKey().getSimpleName() + "] is [" + count + "].\n" + entry.getValue() + "\n\n\n");
+		    logger.error("Dead references count for entity type [" + entry.getKey().getSimpleName() + "] is [" + count + "].\n" + (includeDetails ? entry.getValue() + "\n\n\n" : ""));
 		}
 		rs.close();
 	    } catch (final Exception ex) {
@@ -172,11 +175,38 @@ public class DataMigrator {
 		final String prop = rs.getString(2);
 		final Integer count = rs.getInt(3);
 		if (count > 0) {
-		    logger.error("Empty string reference count for property [" + prop +"] within retriever [" + retriever + "] is [" + count + "].\n");
+		    logger.error("Empty string reference count for property [" + prop +"] within retriever [" + retriever + "] is [" + count + "].\n" + (includeDetails ? sql + "\n\n\n" : ""));
 		}
 		rs.close();
 	    } catch (final Exception ex) {
 		logger.error("Exception while counting empty strings with SQL:\n" + sql);
+		result = true;
+	    } finally {
+	    }
+
+	}
+	st.close();
+
+	return result;
+    }
+
+    private boolean checkRequiredness(final DomainMetadataAnalyser dma, final Connection conn) throws Exception {
+	final Set<String> stmts = new RetrieverPropsRequirednessChecker(dma).getSqls(retrievers);
+	final Statement st = conn.createStatement();
+	boolean result = false;
+	for (final String sql : stmts) {
+	    try {
+		final ResultSet rs = st.executeQuery(sql);
+		rs.next();
+		final String retriever = rs.getString(1);
+		final String prop = rs.getString(2);
+		final Integer count = rs.getInt(3);
+		if (count > 0) {
+		    logger.error("Violated requiredness records count for property [" + prop +"] within retriever [" + retriever + "] is [" + count + "].\n" + (includeDetails ? sql + "\n\n\n" : ""));
+		}
+		rs.close();
+	    } catch (final Exception ex) {
+		logger.error("Exception while counting records with violated requiredness with SQL:\n" + sql);
 		result = true;
 	    } finally {
 	    }

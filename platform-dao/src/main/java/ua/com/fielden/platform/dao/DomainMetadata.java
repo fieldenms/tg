@@ -392,7 +392,7 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata getCollectionalPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
-	return new PropertyMetadata.Builder(field.getName(), determinePropertyType(entityType, field.getName()), false).type(COLLECTIONAL).build();
+	return new PropertyMetadata.Builder(field.getName(), determinePropertyType(entityType, field.getName()), true).type(COLLECTIONAL).build();
     }
 
     private MapEntityTo getMapEntityTo(final Class entityType) {

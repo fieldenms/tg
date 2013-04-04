@@ -114,7 +114,7 @@ public class MigrateDb {
     }
 
     private static enum CmdParams {
-	    LIMIT_TO("-limitTo"), RESET_PASSWORDS("-resetPasswords"), THREADS("-threads"), CREATE_DB_SCHEMA("-createSchema"), PRINT_DB_SCHEMA("-printSchema");
+	    LIMIT_TO("-limitTo"), RESET_PASSWORDS("-resetPasswords"), DETAILS("-details"), CREATE_DB_SCHEMA("-createSchema"), PRINT_DB_SCHEMA("-printSchema");
 
 	    private final String value;
 
@@ -149,13 +149,8 @@ public class MigrateDb {
 		result.put(CmdParams.CREATE_DB_SCHEMA, null);
 	    } else if (CmdParams.PRINT_DB_SCHEMA.value.equals(args[i])) {
 		result.put(CmdParams.PRINT_DB_SCHEMA, null);
-	    } else if (CmdParams.THREADS.value.equals(args[i])) {
-		i = i + 1;
-		if (i < args.length && !args[i].startsWith("-")) {
-		    result.put(CmdParams.THREADS, args[i]);
-		} else {
-		    throw new IllegalArgumentException("-threads requires one of the following argument... instead of " + args[i]);
-		}
+	    } else if (CmdParams.DETAILS.value.equals(args[i])) {
+		result.put(CmdParams.DETAILS, null);
 	    } else {
 		throw new IllegalArgumentException("Unrecognised command line parameter: " + args[i]);
 	    }
@@ -210,7 +205,7 @@ public class MigrateDb {
 		System.out.println(ddlStmt);
 	    }
 	} else {
-	    new DataMigrator(injector, hibernateUtil, factory, "main", limitToRetrievers).populateData();
+	    new DataMigrator(injector, hibernateUtil, factory, cmdParams.containsKey(CmdParams.DETAILS), limitToRetrievers).populateData();
 	}
 	// reset passwords
 	if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {
