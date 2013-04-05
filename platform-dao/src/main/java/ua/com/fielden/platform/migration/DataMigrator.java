@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.migration;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -41,6 +43,7 @@ public class DataMigrator {
     private final Injector injector;
     private final DomainMetadataAnalyser dma;
     private final boolean includeDetails;
+    private final Map<Class<?>, Map<Object, Integer>> cache = new HashMap<Class<?>, Map<Object, Integer>>();
 
     private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class... retrieversClasses) {
 	final List<IRetriever<? extends AbstractEntity<?>>> result = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
@@ -72,12 +75,12 @@ public class DataMigrator {
 	    }
 	}
 	final Connection conn = injector.getInstance(Connection.class);
-
-	checkEmptyStrings(dma, conn);
-	checkRequiredness(dma, conn);
-	checkDataIntegrity(dma, conn);
-	validateRetrievalSql(dma);
-	final Date now = new Date();
+	cache.put(retrievers.get(68).type(), new HashMap<Object, Integer>());
+	batchInsert(dma, retrievers.get(68), conn);
+//	checkEmptyStrings(dma, conn);
+//	checkRequiredness(dma, conn);
+//	checkDataIntegrity(dma, conn);
+//	validateRetrievalSql(dma);
 	migrationRun = null;
 	throw new RuntimeException();
 
@@ -258,12 +261,10 @@ public class DataMigrator {
 	final SessionFactory sFactory = hiberUtil.getSessionFactory();
 
 	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
-//	    if (ret.splitProperty() == null) {
-		final Connection conn = injector.getInstance(Connection.class);
-		final Result result = ret.populateData(sFactory, conn, factory, errorDao, histDao, migrationRun, null);
-		conn.close();
-		results.add(result);
-//	    }
+	    final Connection conn = injector.getInstance(Connection.class);
+	    final Result result = ret.populateData(sFactory, conn, factory, errorDao, histDao, migrationRun, null);
+	    conn.close();
+	    results.add(result);
 	}
 
 	for (final Result result : results) {
@@ -273,5 +274,64 @@ public class DataMigrator {
 	runSql(dataPostPopulateSql());
 	migrationRun.setFinished(new Date());
 	runDao.save(migrationRun);
+    }
+
+    private void batchInsert(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) throws Exception {
+	final Statement st = conn.createStatement();
+	final String sql = new RetrieverSqlProducer(dma).getSql(retriever);
+	final Map<Object, Integer> typeCache = cache.get(retriever.type());
+	Integer id = 0;
+	System.out.println(new Date());
+	try {
+	    final ResultSet rs = st.executeQuery(sql);
+	    final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
+	    final Connection conn2 = hiberUtil.getSessionFactory().getCurrentSession().connection();
+	    final PreparedStatement st2 = conn2.prepareStatement("INSERT INTO BATCHINSERT VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+	    while (rs.next()) {
+		id = id + 1;
+
+		typeCache.put(rs.getObject("key"), id);
+
+		st2.setInt(1, id);
+		st2.setObject(2, rs.getObject("key"));
+		st2.setObject(3, rs.getObject("labourHours"));
+		st2.setObject(4, rs.getObject("transDate"));
+		st2.setObject(5, rs.getObject("earlyStart"));
+		st2.setObject(6, rs.getObject("earlyFinish"));
+		st2.setObject(7, rs.getObject("actualStart"));
+		st2.setObject(8, rs.getObject("actualFinish"));
+		st2.setObject(9, rs.getObject("manpowerEst"));
+		st2.setObject(10, rs.getObject("manpowerAct"));
+		st2.setObject(11, rs.getObject("materialEst"));
+		st2.setObject(12, rs.getObject("materialAct"));
+		st2.setObject(13, rs.getObject("extMaterialEst"));
+		st2.setObject(14, rs.getObject("extMaterialAct"));
+		st2.setObject(15, rs.getObject("extManpowerEst"));
+		st2.setObject(16, rs.getObject("extManpowerAct"));
+		st2.setObject(17, rs.getObject("ancillaryEst"));
+		st2.setObject(18, rs.getObject("ancillaryAct"));
+		st2.setObject(19, rs.getObject("indChargesEst"));
+		st2.setObject(20, rs.getObject("indChargesAct"));
+		st2.setObject(21, rs.getObject("jobNo"));
+		st2.addBatch();
+
+		if ((id % 100) == 0) {
+		    st2.executeBatch();
+		}
+	    }
+	    if ((id % 100) != 0) {
+		st2.executeBatch();
+	    }
+
+	    tr.commit();
+	    st2.close();
+	    rs.close();
+	} catch (final Exception ex) {
+	    logger.error("Exception while checking syntax for [" + retriever.getClass().getSimpleName() + "]" + ex + " SQL:\n" + sql);
+	} finally {
+	    st.close();
+	}
+	System.out.println(new Date());
+	System.out.println(id + " vs " + typeCache.size());
     }
 }
