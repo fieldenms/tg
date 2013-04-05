@@ -9,11 +9,11 @@ import com.google.inject.Inject;
 
 /**
  * REST oriented authorisation model.
- * 
+ *
  * TODO If required from the performance perspective this implementation can be enhanced to cache authorisation results in a form of map between tokens and results.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class RestAuthorisationModel extends AbstractAuthorisationModel {
 

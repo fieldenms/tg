@@ -53,6 +53,24 @@ public class AuthorisationProcessTest {
     }
 
     @Test
+    public void test_that_authorised_method_with_unauthorised_subcalls_can_be_invoked() {
+	final ControlledMock controller = injector.getInstance(ControlledMock.class);
+	// method with permission to be invoked
+	try {
+	    controller.methodWithAccessAndUnauthorisedSubCalls();
+	} catch (final Exception ex) {
+	    ex.printStackTrace();
+	    fail("Authorisation logic should not have prevented method execution.");
+	}
+	// the next part check that the above call correctly finishes the authentication process
+	try {
+	    controller.methodWithNoAccess();
+	    fail("Authorisation logic should have prevented method execution.");
+	} catch (final Exception ex) {
+	}
+    }
+
+    @Test
     public void test_that_method_with_no_security_token_can_be_invoked() {
 	final ControlledMock controller = injector.getInstance(ControlledMock.class);
 	// method without an authorisation token at all

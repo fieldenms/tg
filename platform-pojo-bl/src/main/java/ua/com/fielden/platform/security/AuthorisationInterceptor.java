@@ -25,6 +25,7 @@ public class AuthorisationInterceptor implements MethodInterceptor {
 
     public void setInjector(final Injector injector) {
 	authModel = new ThreadLocal<IAuthorisationModel>() {
+		@Override
 		public IAuthorisationModel initialValue() {
 		    return injector.getInstance(IAuthorisationModel.class);
 		}
@@ -38,11 +39,7 @@ public class AuthorisationInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(final MethodInvocation invocation) throws Throwable {
 	if (getModel().isStarted()) { // this is a subsequent interception of the method requiring authentication, and thus there is no need to check access permission
-	    try {
-		return invocation.proceed();
-	    } finally {
-		getModel().stop();
-	    }
+	    return invocation.proceed();
 	} else { // this is the first intercepted method call requiring authorisation
 	    getModel().start();
 	    final Method method = invocation.getMethod();
