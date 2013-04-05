@@ -2,7 +2,10 @@ package ua.com.fielden.platform.domaintree.centre.impl;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
@@ -153,35 +156,78 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	    return this;
 	}
 
-	@Override
-	public int hashCode() {
-	    final int prime = 31;
-	    int result = super.hashCode();
-	    result = prime * result + ((propertiesDefaultValues1 == null) ? 0 : propertiesDefaultValues1.hashCode());
-	    result = prime * result + ((propertiesDefaultValues2 == null) ? 0 : propertiesDefaultValues2.hashCode());
-	    return result;
-	}
+//	@Override
+//	public int hashCode() {
+//	    final int prime = 31;
+//	    int result = super.hashCode();
+//	    result = prime * result + ((propertiesDefaultValues1 == null) ? 0 : propertiesDefaultValues1.hashCode());
+//	    result = prime * result + ((propertiesDefaultValues2 == null) ? 0 : propertiesDefaultValues2.hashCode());
+//	    return result;
+//	}
 
 	@Override
 	public boolean equals(final Object obj) {
-	    if (this == obj)
+	    if (this == obj) {
 		return true;
-	    if (!super.equals(obj))
+	    }
+	    if (!super.equals(obj)) {
 		return false;
-	    if (getClass() != obj.getClass())
+	    }
+	    if (getClass() != obj.getClass()) {
 		return false;
-	    final AddToCriteriaTick other = (AddToCriteriaTick) obj;
-	    if (propertiesDefaultValues1 == null) {
-		if (other.propertiesDefaultValues1 != null)
-		    return false;
-	    } else if (!propertiesDefaultValues1.equals(other.propertiesDefaultValues1))
-		return false;
-	    if (propertiesDefaultValues2 == null) {
-		if (other.propertiesDefaultValues2 != null)
-		    return false;
-	    } else if (!propertiesDefaultValues2.equals(other.propertiesDefaultValues2))
-		return false;
+	    }
+//	    final AddToCriteriaTick other = (AddToCriteriaTick) obj;
+//	    if (propertiesDefaultValues1 == null) {
+//		if (other.propertiesDefaultValues1 != null)
+//		    return false;
+//	    } else if (!propertiesDefaultValues1.equals(other.propertiesDefaultValues1))
+//		return false;
+//	    if (propertiesDefaultValues2 == null) {
+//		if (other.propertiesDefaultValues2 != null)
+//		    return false;
+//	    } else if (!propertiesDefaultValues2.equals(other.propertiesDefaultValues2))
+//		return false;
 	    return true;
+	}
+
+	@Override
+	public IAddToCriteriaTickRepresentation setValuesByDefault(final Class<?> root, final Map<String, Object> propertyValuePairs) {
+	    propertiesDefaultValues1.clear();
+	    for(final Map.Entry<String, Object> entry : propertyValuePairs.entrySet()){
+		propertiesDefaultValues1.put(key(root, entry.getKey()), entry.getValue());
+	    }
+	    return this;
+	}
+
+	@Override
+	public IAddToCriteriaTickRepresentation setValues2ByDefault(final Class<?> root, final Map<String, Object> propertyValuePairs) {
+	    propertiesDefaultValues2.clear();
+	    for(final Map.Entry<String, Object> entry : propertyValuePairs.entrySet()){
+		propertiesDefaultValues2.put(key(root, entry.getKey()), entry.getValue());
+	    }
+	    return this;
+	}
+
+	@Override
+	public Map<String, Object> getValuesByDefault(final Class<?> root) {
+	    final Map<String, Object> defaultValues = new HashMap<>();
+	    for(final Map.Entry<Pair<Class<?>, String>, Object> entry : propertiesDefaultValues1.entrySet()) {
+		if(EntityUtils.equalsEx(root, entry.getKey().getKey())){
+		    defaultValues.put(entry.getKey().getValue(), entry.getValue());
+		}
+	    }
+	    return Collections.unmodifiableMap(defaultValues);
+	}
+
+	@Override
+	public Map<String, Object> getValues2ByDefault(final Class<?> root) {
+	    final Map<String, Object> defaultValues = new HashMap<>();
+	    for(final Map.Entry<Pair<Class<?>, String>, Object> entry : propertiesDefaultValues2.entrySet()) {
+		if(EntityUtils.equalsEx(root, entry.getKey().getKey())){
+		    defaultValues.put(entry.getKey().getValue(), entry.getValue());
+		}
+	    }
+	    return Collections.unmodifiableMap(defaultValues);
 	}
     }
 
@@ -284,28 +330,37 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 
 	@Override
 	public boolean equals(final Object obj) {
-	    if (this == obj)
+	    if (this == obj) {
 		return true;
-	    if (!super.equals(obj))
+	    }
+	    if (!super.equals(obj)) {
 		return false;
-	    if (getClass() != obj.getClass())
+	    }
+	    if (getClass() != obj.getClass()) {
 		return false;
+	    }
 	    final AddToResultSetTick other = (AddToResultSetTick) obj;
 	    if (propertiesOrderingDisablement == null) {
-		if (other.propertiesOrderingDisablement != null)
+		if (other.propertiesOrderingDisablement != null) {
 		    return false;
-	    } else if (!propertiesOrderingDisablement.equals(other.propertiesOrderingDisablement))
+		}
+	    } else if (!propertiesOrderingDisablement.equals(other.propertiesOrderingDisablement)) {
 		return false;
+	    }
 	    if (propertiesWidths == null) {
-		if (other.propertiesWidths != null)
+		if (other.propertiesWidths != null) {
 		    return false;
-	    } else if (!propertiesWidths.equals(other.propertiesWidths))
+		}
+	    } else if (!propertiesWidths.equals(other.propertiesWidths)) {
 		return false;
+	    }
 	    if (rootsListsOfOrderings == null) {
-		if (other.rootsListsOfOrderings != null)
+		if (other.rootsListsOfOrderings != null) {
 		    return false;
-	    } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings))
+		}
+	    } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings)) {
 		return false;
+	    }
 	    return true;
 	}
     }

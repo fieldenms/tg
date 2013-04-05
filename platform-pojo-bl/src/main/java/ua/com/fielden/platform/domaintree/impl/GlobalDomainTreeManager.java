@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer.AddToCriteriaTickManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
@@ -923,5 +924,14 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    error("There are more than one entity-master instance for type [" + root.getSimpleName() + "] for current user [" + baseOfTheCurrentUser() + "].");
 	}
 	return this;
+    }
+
+    @Override
+    public void copyDefaults(final Class<?> menuItemType, final String name) {
+	final Class<?> root = validateMenuItemTypeRootType(menuItemType);
+	final IAddToCriteriaTickRepresentation ctr = currentCentres.get(key(menuItemType, name)).getRepresentation().getFirstTick();
+	final IAddToCriteriaTickRepresentation ptr = persistentCentres.get(key(menuItemType, name)).getRepresentation().getFirstTick();
+	ptr.setValuesByDefault(root, ctr.getValuesByDefault(root));
+	ptr.setValues2ByDefault(root, ctr.getValues2ByDefault(root));
     }
 }

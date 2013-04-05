@@ -99,6 +99,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	    isFreezed = false;
 	    isChanged = getModel().isChanged();
 	}
+	// Need to bring in default values unconditionally.
 	if (isChanged) {
 	    switch (JOptionPane.showConfirmDialog(null, "Would you like to save " + (isOwner ? "" : "as ") + "changes" + (!StringUtils.isEmpty(title) ? " for the " + title : "") + " before closing?", "Save report", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)) {
 	    case JOptionPane.YES_OPTION:

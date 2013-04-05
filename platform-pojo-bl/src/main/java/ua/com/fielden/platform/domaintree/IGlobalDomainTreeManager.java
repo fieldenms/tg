@@ -228,6 +228,16 @@ public interface IGlobalDomainTreeManager {
     boolean isChangedEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
+     * Copies default criteria values from the current model to the persistent model.
+     * This is required in order to maintain these values, which are defined as part of the business logic, between different versions of the configuration at runtime.
+     * Note that default values are not persistent and do not contribute to inequality between models.
+     *
+     * @param menuItemType
+     * @param name
+     */
+    void copyDefaults(final Class<?> menuItemType, final String name);
+
+    /**
      * Removes the <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>. Throws {@link IllegalArgumentException} when manager does not exist. The manager to be removed can be persisted or not (but should exist - at least locally).
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -526,11 +527,29 @@ public class CriteriaGeneratorTest {
 	criteriaEntity.set("topLevelEntity_critSingleEntity", entityFactory.newByKey(LastLevelEntity.class, "invalid key"));
 	final Result res = criteriaEntity.isValid();
 	assertFalse(res.isSuccessful());
-	assertEquals("The value for crit only single entity property is incorrect", null, cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSingleEntity"));
+	assertNull("The value for crit only single entity property is incorrect", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSingleEntity"));
 	criteriaEntity.set("topLevelEntity_critSingleEntity", entityFactory.newByKey(LastLevelEntity.class, "EntityKey"));
 	final Result newRes = criteriaEntity.isValid();
 	assertTrue(newRes.isSuccessful());
 	assertEquals("The value for crit only single entity property is incorrect", "EntityKey", ((LastLevelEntity)cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSingleEntity")).getKey());
+    }
+
+    @Test
+    public void test_that_setting_default_value_when_criterion_already_has_other_value_works() {
+	cdtm.getRepresentation().getFirstTick().setValueByDefault(TopLevelEntity.class, "stringProp", "default");
+	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
+	assertEquals("Value should have been set", "default", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
+	criteriaEntity.set("topLevelEntity_stringProp", "value");
+	assertEquals("Value should have been set", "value", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
+	criteriaEntity.set("topLevelEntity_stringProp", "default");
+	assertEquals("Value should have been set", "default", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
+    }
+
+    @Test
+    public void test_that_setting_default_value_when_criterion_has_no_value_works() {
+	assertEquals("Value should not be set", "", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
+	cdtm.getRepresentation().getFirstTick().setValueByDefault(TopLevelEntity.class, "stringProp", "default");
+	assertEquals("Value should have been set", "default", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
     }
 
     private void assertNewPropertyValues(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity, final List<Field> criteriaProperties) {

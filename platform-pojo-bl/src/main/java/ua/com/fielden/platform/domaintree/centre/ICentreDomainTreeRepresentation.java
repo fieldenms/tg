@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.domaintree.centre;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 
@@ -19,11 +21,13 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
     /**
      * Returns a tree representation for a <b>add to criteria</b> tick. See {@link IAddToCriteriaTickRepresentation} for more details.
      */
+    @Override
     IAddToCriteriaTickRepresentation getFirstTick();
 
     /**
      * Returns a tree representation for a <b>add to result-set</b> tick. See {@link IAddToResultTickRepresentation} for more details.
      */
+    @Override
     IAddToResultTickRepresentation getSecondTick();
 
     /**
@@ -108,6 +112,40 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
 	 * @return -- a criteria tick representation
 	 */
 	IAddToCriteriaTickRepresentation setValue2ByDefault(final Class<?> root, final String property, final Object value2);
+
+	/**
+	 * The same as {@link #setValueByDefault(Class, String, Object)} but for multiple properties.
+	 *
+	 * @param root
+	 * @param propertyValuePairs
+	 * @return
+	 */
+	IAddToCriteriaTickRepresentation setValuesByDefault(final Class<?> root, final Map<String, Object> propertyValuePairs);
+
+	/**
+	 * The same as {@link #setValue2ByDefault(Class, String, Object)} but for multiple properties.
+	 *
+	 * @param root
+	 * @param propertyValuePairs
+	 * @return
+	 */
+	IAddToCriteriaTickRepresentation setValues2ByDefault(final Class<?> root, final Map<String, Object> propertyValuePairs);
+
+	/**
+	 * The same as {@link #getValueByDefault(Class, String)} but for multiple properties.
+	 *
+	 * @param root
+	 * @return
+	 */
+	Map<String, Object> getValuesByDefault(final Class<?> root);
+
+	/**
+	 * The same as {@link #getValue2ByDefault(Class, String)} but for multiple properties.
+	 *
+	 * @param root
+	 * @return
+	 */
+	Map<String, Object> getValues2ByDefault(final Class<?> root);
     }
 
     /**

@@ -175,6 +175,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	@Override
 	public IAddToCriteriaTickManager check(final Class<?> root, final String property, final boolean check) {
 	    super.check(root, property, check);
+	    // TODO need to encapsulate logic for removing values as well as metadata associated with an unchecked property into a separate method.
+	    if (!check) {
+		propertiesValues1.remove(key(root, property));
+		propertiesValues2.remove(key(root, property));
+	    }
 	    return this;
 	}
 
@@ -283,12 +288,17 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
-	public IAddToCriteriaTickManager setValue(final Class<?> root, final String property, final Object value) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'value' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    final Object oldValue = getValue(root, property);
-	    propertiesValues1.put(key(root, property), value);
+	public IAddToCriteriaTickManager setValue(final Class<?> root, final String propertyName, final Object value) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, propertyName, "Could not set a 'value' for 'unchecked' property [" + propertyName + "] in type [" + root.getSimpleName() + "].");
+	    final Object oldValue = getValue(root, propertyName);
+	    final Object defaultValue = tr().getValueByDefault(root, propertyName);
+	    if (EntityUtils.equalsEx(value, defaultValue)) {
+		propertiesValues1.remove(key(root, propertyName));
+	    } else {
+		propertiesValues1.put(key(root, propertyName), value);
+	    }
 	    for (final IPropertyValueListener listener : propertyValueListeners) {
-		listener.propertyStateChanged(root, property, value, oldValue);
+		listener.propertyStateChanged(root, propertyName, value, oldValue);
 	    }
 	    return this;
 	}
@@ -309,13 +319,20 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
-	public IAddToCriteriaTickManager setValue2(final Class<?> root, final String property, final Object value2) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'value 2' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    illegalNonDoubleEditorAndNonBooleanProperties(root, property, "Could not set a 'value 2' for 'non-double (or boolean) editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    final Object oldValue2 = getValue2(root, property);
-	    propertiesValues2.put(key(root, property), value2);
+	public IAddToCriteriaTickManager setValue2(final Class<?> root, final String propertyName, final Object value2) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, propertyName, "Could not set a 'value 2' for 'unchecked' property [" + propertyName + "] in type [" + root.getSimpleName() + "].");
+	    illegalNonDoubleEditorAndNonBooleanProperties(root, propertyName, "Could not set a 'value 2' for 'non-double (or boolean) editor' property [" + propertyName + "] in type [" + root.getSimpleName() + "].");
+	    final Object oldValue2 = getValue2(root, propertyName);
+
+	    final Object defaultValue2 = tr().getValue2ByDefault(root, propertyName);
+	    if (EntityUtils.equalsEx(value2, defaultValue2)) {
+		propertiesValues2.remove(key(root, propertyName));
+	    } else {
+		propertiesValues2.put(key(root, propertyName), value2);
+	    }
+
 	    for (final IPropertyValueListener listener : propertyValue2Listeners) {
-		listener.propertyStateChanged(root, property, value2, oldValue2);
+		listener.propertyStateChanged(root, propertyName, value2, oldValue2);
 	    }
 	    return this;
 	}
@@ -621,68 +638,93 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
 	@Override
 	public boolean equals(final Object obj) {
-	    if (this == obj)
+	    if (this == obj) {
 		return true;
-	    if (!super.equals(obj))
+	    }
+	    if (!super.equals(obj)) {
 		return false;
-	    if (getClass() != obj.getClass())
+	    }
+	    if (getClass() != obj.getClass()) {
 		return false;
+	    }
 	    final AddToCriteriaTickManager other = (AddToCriteriaTickManager) obj;
 	    if (columnsNumber == null) {
-		if (other.columnsNumber != null)
+		if (other.columnsNumber != null) {
 		    return false;
-	    } else if (!columnsNumber.equals(other.columnsNumber))
+		}
+	    } else if (!columnsNumber.equals(other.columnsNumber)) {
 		return false;
+	    }
 	    if (locatorManager == null) {
-		if (other.locatorManager != null)
+		if (other.locatorManager != null) {
 		    return false;
-	    } else if (!locatorManager.equals(other.locatorManager))
+		}
+	    } else if (!locatorManager.equals(other.locatorManager)) {
 		return false;
+	    }
 	    if (propertiesAndBefore == null) {
-		if (other.propertiesAndBefore != null)
+		if (other.propertiesAndBefore != null) {
 		    return false;
-	    } else if (!propertiesAndBefore.equals(other.propertiesAndBefore))
+		}
+	    } else if (!propertiesAndBefore.equals(other.propertiesAndBefore)) {
 		return false;
+	    }
 	    if (propertiesDateMnemonics == null) {
-		if (other.propertiesDateMnemonics != null)
+		if (other.propertiesDateMnemonics != null) {
 		    return false;
-	    } else if (!propertiesDateMnemonics.equals(other.propertiesDateMnemonics))
+		}
+	    } else if (!propertiesDateMnemonics.equals(other.propertiesDateMnemonics)) {
 		return false;
+	    }
 	    if (propertiesDatePrefixes == null) {
-		if (other.propertiesDatePrefixes != null)
+		if (other.propertiesDatePrefixes != null) {
 		    return false;
-	    } else if (!propertiesDatePrefixes.equals(other.propertiesDatePrefixes))
+		}
+	    } else if (!propertiesDatePrefixes.equals(other.propertiesDatePrefixes)) {
 		return false;
+	    }
 	    if (propertiesExclusive1 == null) {
-		if (other.propertiesExclusive1 != null)
+		if (other.propertiesExclusive1 != null) {
 		    return false;
-	    } else if (!propertiesExclusive1.equals(other.propertiesExclusive1))
+		}
+	    } else if (!propertiesExclusive1.equals(other.propertiesExclusive1)) {
 		return false;
+	    }
 	    if (propertiesExclusive2 == null) {
-		if (other.propertiesExclusive2 != null)
+		if (other.propertiesExclusive2 != null) {
 		    return false;
-	    } else if (!propertiesExclusive2.equals(other.propertiesExclusive2))
+		}
+	    } else if (!propertiesExclusive2.equals(other.propertiesExclusive2)) {
 		return false;
+	    }
 	    if (propertiesNots == null) {
-		if (other.propertiesNots != null)
+		if (other.propertiesNots != null) {
 		    return false;
-	    } else if (!propertiesNots.equals(other.propertiesNots))
+		}
+	    } else if (!propertiesNots.equals(other.propertiesNots)) {
 		return false;
+	    }
 	    if (propertiesOrNulls == null) {
-		if (other.propertiesOrNulls != null)
+		if (other.propertiesOrNulls != null) {
 		    return false;
-	    } else if (!propertiesOrNulls.equals(other.propertiesOrNulls))
+		}
+	    } else if (!propertiesOrNulls.equals(other.propertiesOrNulls)) {
 		return false;
+	    }
 	    if (propertiesValues1 == null) {
-		if (other.propertiesValues1 != null)
+		if (other.propertiesValues1 != null) {
 		    return false;
-	    } else if (!propertiesValues1.equals(other.propertiesValues1))
+		}
+	    } else if (!propertiesValues1.equals(other.propertiesValues1)) {
 		return false;
+	    }
 	    if (propertiesValues2 == null) {
-		if (other.propertiesValues2 != null)
+		if (other.propertiesValues2 != null) {
 		    return false;
-	    } else if (!propertiesValues2.equals(other.propertiesValues2))
+		}
+	    } else if (!propertiesValues2.equals(other.propertiesValues2)) {
 		return false;
+	    }
 	    return true;
 	}
 
@@ -803,23 +845,30 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
 	@Override
 	public boolean equals(final Object obj) {
-	    if (this == obj)
+	    if (this == obj) {
 		return true;
-	    if (!super.equals(obj))
+	    }
+	    if (!super.equals(obj)) {
 		return false;
-	    if (getClass() != obj.getClass())
+	    }
+	    if (getClass() != obj.getClass()) {
 		return false;
+	    }
 	    final AddToResultTickManager other = (AddToResultTickManager) obj;
 	    if (propertiesWidths == null) {
-		if (other.propertiesWidths != null)
+		if (other.propertiesWidths != null) {
 		    return false;
-	    } else if (!propertiesWidths.equals(other.propertiesWidths))
+		}
+	    } else if (!propertiesWidths.equals(other.propertiesWidths)) {
 		return false;
+	    }
 	    if (rootsListsOfOrderings == null) {
-		if (other.rootsListsOfOrderings != null)
+		if (other.rootsListsOfOrderings != null) {
 		    return false;
-	    } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings))
+		}
+	    } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings)) {
 		return false;
+	    }
 	    return true;
 	}
     }
@@ -876,18 +925,23 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (!super.equals(obj))
+	}
+	if (!super.equals(obj)) {
 	    return false;
-	if (getClass() != obj.getClass())
+	}
+	if (getClass() != obj.getClass()) {
 	    return false;
+	}
 	final CentreDomainTreeManager other = (CentreDomainTreeManager) obj;
 	if (runAutomatically == null) {
-	    if (other.runAutomatically != null)
+	    if (other.runAutomatically != null) {
 		return false;
-	} else if (!runAutomatically.equals(other.runAutomatically))
+	    }
+	} else if (!runAutomatically.equals(other.runAutomatically)) {
 	    return false;
+	}
 	return true;
     }
 

@@ -912,6 +912,28 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 		return this;
 	    }
 
+	    @Override
+	    public IAddToCriteriaTickRepresentation setValuesByDefault(final Class<?> root, final Map<String, Object> propertyValuePairs) {
+		base().setValuesByDefault(root, propertyValuePairs);
+		return this;
+	    }
+
+	    @Override
+	    public IAddToCriteriaTickRepresentation setValues2ByDefault(final Class<?> root, final Map<String, Object> propertyValuePairs) {
+		base().setValues2ByDefault(root, propertyValuePairs);
+		return this;
+	    }
+
+	    @Override
+	    public Map<String, Object> getValuesByDefault(final Class<?> root) {
+		return base().getValuesByDefault(root);
+	    }
+
+	    @Override
+	    public Map<String, Object> getValues2ByDefault(final Class<?> root) {
+		return base().getValues2ByDefault(root);
+	    }
+
 	}
 
 	/**
@@ -1053,18 +1075,23 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (!super.equals(obj))
+	}
+	if (!super.equals(obj)) {
 	    return false;
-	if (getClass() != obj.getClass())
+	}
+	if (getClass() != obj.getClass()) {
 	    return false;
+	}
 	final CentreDomainTreeManagerAndEnhancer other = (CentreDomainTreeManagerAndEnhancer) obj;
 	if (persistentAnalyses == null) {
-	    if (other.persistentAnalyses != null)
+	    if (other.persistentAnalyses != null) {
 		return false;
-	} else if (!persistentAnalyses.equals(other.persistentAnalyses))
+	    }
+	} else if (!persistentAnalyses.equals(other.persistentAnalyses)) {
 	    return false;
+	}
 	return true;
     }
 }

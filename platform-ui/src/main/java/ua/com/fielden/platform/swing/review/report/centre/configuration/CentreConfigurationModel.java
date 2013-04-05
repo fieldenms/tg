@@ -143,6 +143,13 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
+     * See {@link IGlobalDomainTreeManager#copyDefaults(Class, String)}.
+     */
+    public void copyDefaults() {
+	gdtm.copyDefaults(menuItemType, getName());
+    }
+
+    /**
      * Heavy-weight operation that returns a list of non-principle entity centre names.
      *
      * @return
