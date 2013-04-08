@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 
@@ -54,17 +55,19 @@ public class EgiColoringScheme<T extends AbstractEntity> implements IEgiColoring
 	return this;
     }
 
+    @Override
     public Color getBgColour(final T entity, final String propertyName) {
 	final IColouringScheme<T> propColouringScheme = bgPropertyColouringSchemes.get(propertyName) != null ? //
 	bgPropertyColouringSchemes.get(propertyName): bgRowColouringScheme;
 	if (propColouringScheme == null) {
 	    return null;
 	} else {
-	    final Color propertyColor = propColouringScheme.getColor(entity);
+	    final T ent = ensureCorrectEntityType(entity);
+	    final Color propertyColor = propColouringScheme.getColor(ent);
 	    if (propertyColor != null) {
 		return propertyColor;
 	    } else {
-		return bgRowColouringScheme != null ? bgRowColouringScheme.getColor(entity) : null;
+		return bgRowColouringScheme != null ? bgRowColouringScheme.getColor(ent) : null;
 	    }
 	}
     }
@@ -75,13 +78,25 @@ public class EgiColoringScheme<T extends AbstractEntity> implements IEgiColoring
 	if (propColouringScheme == null) {
 	    return null;
 	} else {
-	    final Color propertyColour = propColouringScheme.getColor(entity);
+	    final T ent = ensureCorrectEntityType(entity);
+	    final Color propertyColour = propColouringScheme.getColor(ent);
 	    if (propertyColour != null) {
 		return propertyColour;
 	    } else {
-		return fgRowColouringScheme != null ? fgRowColouringScheme.getColor(entity) : null;
+		return fgRowColouringScheme != null ? fgRowColouringScheme.getColor(ent) : null;
 	    }
 	}
     }
+
+    private T ensureCorrectEntityType(final T entity) {
+	// TODO this conversion from enhanced entity to original is placed here to support execution of type-parameterised colouring schemes
+	// that would otherwise throw a runtime exception.
+	// However, this type compatibility problem exists only due to incompatibility of the original and enhanced types.
+	// Such situations may occur elsewhere, and thus needs to be resolved at the type level during generation of new types.
+	// This place is just a quick and dirty patch.
+	return !DynamicEntityClassLoader.isEnhanced(entity.getClass()) ? (T) entity :
+		(T) entity.copy(DynamicEntityClassLoader.getOriginalType(entity.getClass()));
+    }
+
 
 }

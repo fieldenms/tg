@@ -512,9 +512,9 @@ public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity> {
 
 	private JComponent drawDataCell(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, final int column) {
 	    final int actualRow = TableModelWrapperUtils.getActualRowAt(table.getModel(), row);
-	    final T ent = getEntityGridInspector().getActualModel().instance(actualRow);
+	    final T entity = getEntityGridInspector().getActualModel().instance(actualRow);
 
-	    JComponent rendererComponent = getCellRendererComponent(ent, value, isSelected, hasFocus, table, row, column);
+	    JComponent rendererComponent = getCellRendererComponent(entity, value, isSelected, hasFocus, table, row, column);
 
 	    if (rendererComponent == null) {
 		rendererComponent = (JComponent) new DefaultTableCellRenderer().getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
@@ -523,14 +523,6 @@ public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity> {
 		    RenderingDecorator.decorateRenderer(rendererComponent, table, isSelected, hasFocus, row, column);
 		}
 	    }
-
-	    // TODO this conversion from enhanced entity to original is placed here to support execution of type-parameterised colouring schemes
-	    // that would otherwise throw a runtime exception.
-	    // However, this type compatibility problem exists only due to incompatibility of the original and enhanced types.
-	    // Such situations may occur elsewhere, and thus needs to be resolved at the type level during generation of new types.
-	    // This place is just a quick and dirty patch.
-	    final T entity = !DynamicEntityClassLoader.isEnhanced(ent.getClass()) ? (T)ent :
-		(T) ent.copy(DynamicEntityClassLoader.getOriginalType(ent.getClass()));
 
 	    final Color fgColor = getEntityGridInspector().getActualModel().getEgiColoringScheme().getFgColour(entity, propertyName);
 	    if (fgColor != null) {
