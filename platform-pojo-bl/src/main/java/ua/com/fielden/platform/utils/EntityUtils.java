@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.utils;
 
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -13,6 +11,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -33,6 +34,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 public class EntityUtils {
     private final static Logger logger = Logger.getLogger(EntityUtils.class);
@@ -881,4 +883,13 @@ public class EntityUtils {
 
 	return result;
     }
+
+    public static SortedSet<String> getFirstLevelProps(final Set<String> allProps) {
+	final SortedSet<String> result = new TreeSet<String>();
+	for (final String prop : allProps) {
+	    result.add(splitPropByFirstDot(prop).getKey());
+	}
+	return result;
+    }
+
 }

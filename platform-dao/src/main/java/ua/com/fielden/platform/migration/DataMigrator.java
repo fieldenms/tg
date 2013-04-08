@@ -16,6 +16,8 @@ import java.util.SortedMap;
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
@@ -76,7 +78,7 @@ public class DataMigrator {
 	}
 	final Connection conn = injector.getInstance(Connection.class);
 	cache.put(retrievers.get(68).type(), new HashMap<Object, Integer>());
-	batchInsert(dma, retrievers.get(68), conn);
+	batchInsert(dma, retrievers.get(68), conn, 0);
 //	checkEmptyStrings(dma, conn);
 //	checkRequiredness(dma, conn);
 //	checkDataIntegrity(dma, conn);
@@ -276,43 +278,31 @@ public class DataMigrator {
 	runDao.save(migrationRun);
     }
 
-    private void batchInsert(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) throws Exception {
+    private int batchInsert(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn, final int startingId) throws Exception {
+	final RetrieverBatchStmtGenerator rbsg = new RetrieverBatchStmtGenerator(dma);
 	final Statement st = conn.createStatement();
 	final String sql = new RetrieverSqlProducer(dma).getSql(retriever);
 	final Map<Object, Integer> typeCache = cache.get(retriever.type());
-	Integer id = 0;
-	System.out.println(new Date());
+	Integer id = startingId;
+	final DateTime start = new DateTime();
 	try {
 	    final ResultSet rs = st.executeQuery(sql);
 	    final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
 	    final Connection conn2 = hiberUtil.getSessionFactory().getCurrentSession().connection();
-	    final PreparedStatement st2 = conn2.prepareStatement("INSERT INTO BATCHINSERT VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+	    final String insertSql = rbsg.generateInsertStmt(retriever);
+	    System.out.println(insertSql);
+	    final PreparedStatement st2 = conn2.prepareStatement(insertSql);
 	    while (rs.next()) {
 		id = id + 1;
-
 		typeCache.put(rs.getObject("key"), id);
-
 		st2.setInt(1, id);
-		st2.setObject(2, rs.getObject("key"));
-		st2.setObject(3, rs.getObject("labourHours"));
-		st2.setObject(4, rs.getObject("transDate"));
-		st2.setObject(5, rs.getObject("earlyStart"));
-		st2.setObject(6, rs.getObject("earlyFinish"));
-		st2.setObject(7, rs.getObject("actualStart"));
-		st2.setObject(8, rs.getObject("actualFinish"));
-		st2.setObject(9, rs.getObject("manpowerEst"));
-		st2.setObject(10, rs.getObject("manpowerAct"));
-		st2.setObject(11, rs.getObject("materialEst"));
-		st2.setObject(12, rs.getObject("materialAct"));
-		st2.setObject(13, rs.getObject("extMaterialEst"));
-		st2.setObject(14, rs.getObject("extMaterialAct"));
-		st2.setObject(15, rs.getObject("extManpowerEst"));
-		st2.setObject(16, rs.getObject("extManpowerAct"));
-		st2.setObject(17, rs.getObject("ancillaryEst"));
-		st2.setObject(18, rs.getObject("ancillaryAct"));
-		st2.setObject(19, rs.getObject("indChargesEst"));
-		st2.setObject(20, rs.getObject("indChargesAct"));
-		st2.setObject(21, rs.getObject("jobNo"));
+		st2.setInt(2, 0);
+		int index = 3;
+		for (final String propName : retriever.resultFields().keySet()) {
+		    System.out.println("index = " + index + " value = " + rs.getObject(index - 2));
+		    st2.setObject(index, rs.getObject(index - 2));
+		    index = index + 1;
+		}
 		st2.addBatch();
 
 		if ((id % 100) == 0) {
@@ -331,7 +321,8 @@ public class DataMigrator {
 	} finally {
 	    st.close();
 	}
-	System.out.println(new Date());
-	System.out.println(id + " vs " + typeCache.size());
+	final Period pd = new Period(start, new DateTime());
+	System.out.println("Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + typeCache.size());
+	return id;
     }
 }

@@ -663,8 +663,8 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 
     }
 
-    public static Map<String, String> map(final FieldMapping... pairs) {
-	final Map<String, String> result = new HashMap<String, String>();
+    public static SortedMap<String, String> map(final FieldMapping... pairs) {
+	final SortedMap<String, String> result = new TreeMap<String, String>();
 	for (final FieldMapping pair : pairs) {
 	    if (result.containsKey(pair.getKey())) {
 		throw new IllegalArgumentException("Duplicate stmts for property [" + pair.getKey() + "]");

@@ -46,7 +46,7 @@ final class RetrieverPropsValidator {
 
 	final Set<String> correctlySpelledProps = subtract(retrievedProps, incorrectlySpelledProps);
 	final Set<String> requiredProps = updater ? Collections.<String>emptySet() : subtract(dma.getEntityMetadata(entityType).getNotNullableProps(), new HashSet<String>(){{add("id"); add("version");}});
-	final Set<String> expectedProps = getExpectedSubprops(union(requiredProps, union(getFirstLevelProps(correctlySpelledProps), Finder.getFieldNames(Finder.getKeyMembers(entityType)))));
+	final Set<String> expectedProps = getExpectedSubprops(union(requiredProps, union(EntityUtils.getFirstLevelProps(correctlySpelledProps), Finder.getFieldNames(Finder.getKeyMembers(entityType)))));
 
 	result.putAll(markWithError(subtract(correctlySpelledProps, expectedProps), INAPPROPRIATE_BUT_PRESENT));
 	result.putAll(markWithError(subtract(expectedProps, correctlySpelledProps), REQUIRED_BUT_MISSING));
@@ -71,13 +71,6 @@ final class RetrieverPropsValidator {
 	return result;
     }
 
-    private Set<String> getFirstLevelProps(final Set<String> allProps) {
-	final Set<String> result = new HashSet<String>();
-	for (final String prop : allProps) {
-	    result.add(EntityUtils.splitPropByFirstDot(prop).getKey());
-	}
-	return result;
-    }
 
     private Set<String> getExpectedSubprops(final Set<String> firstLevelProps) {
 	return dma.getLeafPropsFromFirstLevelProps(null, entityType, firstLevelProps);

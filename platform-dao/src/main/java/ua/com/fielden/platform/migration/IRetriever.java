@@ -2,7 +2,7 @@ package ua.com.fielden.platform.migration;
 
 import java.sql.Connection;
 import java.util.List;
-import java.util.Map;
+import java.util.SortedMap;
 
 import org.hibernate.SessionFactory;
 
@@ -20,7 +20,7 @@ import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
  */
 public interface IRetriever<T extends AbstractEntity<?>> {
 
-    Map<String, String> resultFields();
+    SortedMap<String, String> resultFields();
 
     String fromSql();
 

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.migration;
 
-import java.util.Map;
+import java.util.SortedMap;
 
 import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
@@ -16,7 +16,7 @@ public class tMakeRetriever extends AbstractRetriever<TgVehicleMake> {
     }
 
     @Override
-    public Map<String, String> resultFields() {
+    public SortedMap<String, String> resultFields() {
 	return map( //
 		field("key", "MAKE"), //
 		field("desc", "MAKE_DESC") //

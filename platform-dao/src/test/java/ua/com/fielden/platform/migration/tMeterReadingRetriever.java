@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.migration;
 
 import java.util.List;
-import java.util.Map;
+import java.util.SortedMap;
 
 import ua.com.fielden.platform.sample.domain.ITgMeterReading;
 import ua.com.fielden.platform.sample.domain.TgMeterReading;
@@ -31,7 +31,7 @@ public class tMeterReadingRetriever extends AbstractRetriever<TgMeterReading> {
     }
 
     @Override
-    public Map<String, String> resultFields() {
+    public SortedMap<String, String> resultFields() {
 	return map( //
 		field("vehicle", "M.EQUIPNO"), //
 		field("readingDate", "M.LAST_READING_DATE"), //

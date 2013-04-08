@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.migration;
 
-import java.util.Map;
+import java.util.SortedMap;
 
 import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
@@ -16,7 +16,7 @@ public class tModelWithMakeNotPopulatedRetriever extends AbstractRetriever<TgVeh
     }
 
     @Override
-    public Map<String, String> resultFields() {
+    public SortedMap<String, String> resultFields() {
 	return map( //
 		field("key", "MODEL"), //
 		field("desc", "MODEL_DESC"), //

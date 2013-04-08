@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.migration;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -70,8 +70,8 @@ public class RetrieverSqlProducer {
 	return sb.toString();
     }
 
-    public Map<String, String> getSpecifiedPropsYields (final IRetriever<? extends AbstractEntity<?>> retriever, final Set<String> specifiedProps) {
-	final Map<String, String> result = new HashMap<String, String>();
+    public SortedMap<String, String> getSpecifiedPropsYields (final IRetriever<? extends AbstractEntity<?>> retriever, final Set<String> specifiedProps) {
+	final SortedMap<String, String> result = new TreeMap<String, String>();
 	for (final Map.Entry<String, String> resultField : retriever.resultFields().entrySet()) {
 	    if (specifiedProps.contains(resultField.getKey())) {
 		result.put(resultField.getKey(), resultField.getValue());
@@ -80,14 +80,14 @@ public class RetrieverSqlProducer {
 	return result;
     }
 
-    public String getAllYieldsSql(final Map<String, String> resultProps) {
+    public String getAllYieldsSql(final SortedMap<String, String> resultProps) {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("\nSELECT ALL ");
 	sb.append(getYieldsSql(resultProps));
 	return sb.toString();
     }
 
-    private String getYieldsSql(final Map<String, String> resultProps) {
+    private String getYieldsSql(final SortedMap<String, String> resultProps) {
 	final StringBuffer sb = new StringBuffer();
 	for (final Iterator<Entry<String, String>> iterator = resultProps.entrySet().iterator(); iterator.hasNext();) {
 	    final Map.Entry<String, String> keyPropName = iterator.next();
