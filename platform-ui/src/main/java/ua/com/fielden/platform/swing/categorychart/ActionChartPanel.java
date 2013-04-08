@@ -2,8 +2,6 @@ package ua.com.fielden.platform.swing.categorychart;
 
 import java.awt.event.ActionEvent;
 
-import javax.swing.event.EventListenerList;
-
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.JFreeChart;
@@ -12,6 +10,7 @@ import org.jfree.chart.renderer.category.CategoryItemRenderer;
 
 import ua.com.fielden.platform.equery.lifecycle.IProgressUpdater;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
+import ua.com.fielden.platform.swing.categorychart.ChartUpdateEvent.ChartUpdateAction;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 
@@ -28,7 +27,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
     private final IChartFactory<M, T> chartFactory;
     private final IBlockingLayerProvider provider;
 
-    private final EventListenerList listeners = new EventListenerList();
+    //private final EventListenerList listeners = new EventListenerList();
 
     private boolean labelVisible = false;
 
@@ -175,6 +174,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 			postAction.run();
 		    }
 		    super.postAction(value);
+		    fireChartUpdateEvent(new ChartUpdateEvent(ActionChartPanel.this, ChartUpdateAction.CHART_UPDATED_SUCCESSFUL));
 		} catch (final Exception e) {
 		    e.printStackTrace();
 		    // do nothing
@@ -191,6 +191,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
 		    postAction.run();
 		}
 		super.postAction(null);
+		fireChartUpdateEvent(new ChartUpdateEvent(ActionChartPanel.this, ChartUpdateAction.CHART_UPDATE_FAILED));
 	    }
 	};
 	bl.actionPerformed(null);
@@ -201,12 +202,41 @@ public class ActionChartPanel<M, T> extends ChartPanel {
     }
 
     /**
+     * Registers the listener that listens the chart update events.
+     *
+     * @param listener
+     */
+    public void addChartUpdateListener(final IChartUpdateListener listener){
+	listenerList.add(IChartUpdateListener.class, listener);
+    }
+
+    /**
+     * Unregisters the {@link IChartUpdateListener}.
+     *
+     * @param listener
+     */
+    public void removeChartUpdateListener(final IChartUpdateListener listener){
+	listenerList.remove(IChartUpdateListener.class, listener);
+    }
+
+    /**
+     * Fires the chart update event to the {@link IChartUpdateListener} listeners.
+     *
+     * @param event
+     */
+    private void fireChartUpdateEvent(final ChartUpdateEvent event){
+	for(final IChartUpdateListener listener : listenerList.getListeners(IChartUpdateListener.class)){
+	    listener.chartWasUpdated(event);
+	}
+    }
+
+    /**
      * Adds new {@link IChartPanelChangeListener} instance.
      *
      * @param listener
      */
     public void addChartPanelChangedListener(final IChartPanelChangeListener listener) {
-	listeners.add(IChartPanelChangeListener.class, listener);
+	listenerList.add(IChartPanelChangeListener.class, listener);
     }
 
     /**
@@ -215,7 +245,7 @@ public class ActionChartPanel<M, T> extends ChartPanel {
      * @param listener
      */
     public void removeChartPanelChangedListener(final IChartPanelChangeListener listener) {
-	listeners.remove(IChartPanelChangeListener.class, listener);
+	listenerList.remove(IChartPanelChangeListener.class, listener);
     }
 
     /**
@@ -223,11 +253,11 @@ public class ActionChartPanel<M, T> extends ChartPanel {
      *
      * @param event
      */
-    protected void fireChartPanelChangedListener(final ChartPanelChangedEventObject event) {
-	if (listeners == null) {
+    private void fireChartPanelChangedListener(final ChartPanelChangedEventObject event) {
+	if (listenerList == null) {
 	    return;
 	}
-	final Object[] listenersArray = listeners.getListenerList();
+	final Object[] listenersArray = listenerList.getListenerList();
 	for (int i = listenersArray.length - 2; i >= 0; i -= 2) {
 	    if (listenersArray[i] == IChartPanelChangeListener.class) {
 		((IChartPanelChangeListener) listenersArray[i + 1]).chartPanelChanged(event);

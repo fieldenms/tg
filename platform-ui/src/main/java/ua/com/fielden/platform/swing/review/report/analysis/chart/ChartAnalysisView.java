@@ -53,8 +53,10 @@ import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
 import ua.com.fielden.platform.swing.categorychart.ChartAnalysisAggregationListDragToSupport;
 import ua.com.fielden.platform.swing.categorychart.ChartPanelChangedEventObject;
+import ua.com.fielden.platform.swing.categorychart.ChartUpdateEvent;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
 import ua.com.fielden.platform.swing.categorychart.IChartPanelChangeListener;
+import ua.com.fielden.platform.swing.categorychart.IChartUpdateListener;
 import ua.com.fielden.platform.swing.categorychart.MultipleChartPanel;
 import ua.com.fielden.platform.swing.categorychart.SwitchChartsModel;
 import ua.com.fielden.platform.swing.chartscroll.CategoryChartScrollPanel;
@@ -67,6 +69,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.review.details.AnalysisDetailsData;
+import ua.com.fielden.platform.swing.review.development.DefaultLoadingNode;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
@@ -120,8 +123,13 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
      */
     private boolean split = false;
 
+    //Asynchronous loading related fields.
+    private final DefaultLoadingNode chartAnalysisLoadingNode;
+
     public ChartAnalysisView(final ChartAnalysisModel<T> model, final ChartAnalysisConfigurationView<T> owner) {
 	super(model, owner);
+	this.chartAnalysisLoadingNode = new DefaultLoadingNode();
+	addLoadingChild(chartAnalysisLoadingNode);
 	this.chartPanel = new MultipleChartPanel<List<T>, CategoryChartTypes>();
 	this.chartScroller = new CategoryChartScrollPanel(chartPanel, getModel().adtme().getVisibleDistributedValuesNumber());
 	this.distributionList = createDistributionList();
@@ -143,6 +151,12 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 	//Add the chart updater.
 	model.getChartAnalysisDataProvider().addAnalysisModelChangedListener(createModelUpdaterListener());
+    }
+
+    @Override
+    public void close() {
+	chartAnalysisLoadingNode.reset();
+	super.close();
     }
 
     @SuppressWarnings("unchecked")
@@ -519,6 +533,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		}
 	    } else {
 		panel = createChartPanel(true);
+		panel.addChartUpdateListener(createChartUpdatedListener());
 		chartPanel.addChartPanel(panel);
 	    }
 	    panel.setPostAction(postAction);
@@ -530,6 +545,17 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	}
 	chartPanel.revalidate();
 	chartPanel.repaint();
+    }
+
+    private IChartUpdateListener createChartUpdatedListener() {
+	return new IChartUpdateListener() {
+
+	    @Override
+	    public void chartWasUpdated(final ChartUpdateEvent event) {
+		event.getSource().removeChartUpdateListener(this);
+		chartAnalysisLoadingNode.tryLoading();
+	    }
+	};
     }
 
     private ActionChartPanel<List<T>, CategoryChartTypes> createChartPanel(final boolean all, final int... indexes) {

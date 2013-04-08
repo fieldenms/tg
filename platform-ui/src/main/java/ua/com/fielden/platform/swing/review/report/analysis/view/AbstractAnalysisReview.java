@@ -27,10 +27,10 @@ import ua.com.fielden.platform.pagination.PageNavigationEvent;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.file.ExtensionFileFilter;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
+import ua.com.fielden.platform.swing.review.development.DefaultLoadingNode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
-import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTME extends IAbstractAnalysisDomainTreeManager> extends AbstractEntityReview<T, CDTME> {
@@ -40,17 +40,18 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
     private final Action loadAction;
     private final Action exportAction;
 
-    private boolean wasLoaded;
+    private final DefaultLoadingNode resizingLoadingNode;
 
     public AbstractAnalysisReview(final AbstractAnalysisReviewModel<T, CDTME, ADTME> model, final AbstractAnalysisConfigurationView<T, CDTME, ADTME, ?> owner) {
 	super(model, owner);
 	this.loadAction = createLoadAction();
 	this.exportAction = createExportAction();
-	this.wasLoaded = false;
+	this.resizingLoadingNode = new DefaultLoadingNode();
 	this.getModel().setAnalysisView(this);
 	this.getModel().getPageHolder().addPageNavigationListener(createPageNavigationListener());
 	owner.getOwner().getPageHolderManager().addPageHolder(getModel().getPageHolder());
 	addComponentListener(createComponentWasResized());
+	addLoadingChild(resizingLoadingNode);
     }
 
     @SuppressWarnings("unchecked")
@@ -66,11 +67,6 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
     }
 
     @Override
-    public boolean isLoaded() {
-        return wasLoaded;
-    }
-
-    @Override
     public void select() {
 	getOwner().getOwner().getPageHolderManager().selectPageHolder(getModel().getPageHolder());
 	super.select();
@@ -78,7 +74,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 
     @Override
     public void close() {
-	wasLoaded = false;
+	resizingLoadingNode.reset();
 	setSize(new Dimension(0, 0));
 	super.close();
     }
@@ -321,10 +317,6 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	};
     }
 
-    //    public PageHolder<AbstractEntity> getPageHolder(){
-    //	return pageHolder;
-    //    }
-
     /**
      * Creates the page navigation listener that enables or disable buttons according to the page navigation phase.
      *
@@ -362,14 +354,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	    @Override
 	    public void componentResized(final ComponentEvent e) {
 		synchronized (AbstractAnalysisReview.this) {
-		    // should size change event be handled?
-		    if (!wasLoaded) {
-			// yes, so this one is first, lets handle it and set flag
-			// to indicate that we won't handle any more
-			// size changed events.
-			wasLoaded = true;
-			fireLoadEvent(new LoadEvent(AbstractAnalysisReview.this));
-		    }
+		    resizingLoadingNode.tryLoading();
 		}
 	    }
 	};

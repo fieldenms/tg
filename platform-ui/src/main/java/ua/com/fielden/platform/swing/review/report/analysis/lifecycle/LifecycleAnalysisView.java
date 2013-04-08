@@ -43,6 +43,8 @@ import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.categorychart.ActionChartPanel;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
+import ua.com.fielden.platform.swing.categorychart.ChartTypeChangedEvent;
+import ua.com.fielden.platform.swing.categorychart.ICurrentChartTypeChangedListener;
 import ua.com.fielden.platform.swing.categorychart.MultipleChartPanel;
 import ua.com.fielden.platform.swing.categorychart.SwitchChartsModel;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
@@ -57,6 +59,7 @@ import ua.com.fielden.platform.swing.components.bind.development.BoundedValidati
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
+import ua.com.fielden.platform.swing.review.development.DefaultLoadingNode;
 import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.configuration.LifecycleAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
@@ -116,6 +119,9 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
      */
     private final JSplitPane splitPane;
 
+    //Asynchronous loading related fields
+    protected final DefaultLoadingNode chartLoadingNode;
+
     /**
      * Initiates this {@link LifecycleAnalysisView}
      *
@@ -124,6 +130,9 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
      */
     public LifecycleAnalysisView(final LifecycleAnalysisModel<T> model, final LifecycleAnalysisConfigurationView<T> owner) {
 	super(model, owner);
+	this.chartLoadingNode = new DefaultLoadingNode();
+	addLoadingChild(chartLoadingNode);
+
 	this.addSelectionEventListener(createLifecycleAnalysisSelectionListener());
 
 	this.chartPanel = createChartPanel(0);
@@ -157,6 +166,23 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	});
 
 	layoutComponents();
+    }
+
+    private ICurrentChartTypeChangedListener createChartTypeChangedListener(final SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes> switchChartModel) {
+	return new ICurrentChartTypeChangedListener() {
+
+	    @Override
+	    public void chartTypeChanged(final ChartTypeChangedEvent event) {
+		switchChartModel.removeCurrentChartTypeChangedListener(this);
+		chartLoadingNode.tryLoading();
+	    }
+	};
+    }
+
+    @Override
+    public void close() {
+	chartLoadingNode.reset();
+	super.close();
     }
 
     @Override

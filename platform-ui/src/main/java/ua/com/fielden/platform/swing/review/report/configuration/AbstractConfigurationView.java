@@ -165,6 +165,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      *
      * @return
      */
+    @Override
     public boolean isLoaded() {
 	return wasResized && wasChildLoaded;
     }
@@ -261,7 +262,6 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	    protected void postAction(final List<Result> value) {
 		super.postAction(value);
 		setMessage("");
-		fireConfigurationEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, POST_OPEN));
 		for (final Result valueRes : value) {
 		    if (!valueRes.isSuccessful()) {
 			getModel().setMode(WIZARD);
@@ -269,6 +269,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		    }
 		}
 		getModel().setMode(REPORT);
+		fireConfigurationEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, POST_OPEN));
 	    }
 
 	    @Override
@@ -321,7 +322,9 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	if (component != null) {
 	    addLoadListenerTo(component);
 	    add(component);
-	    component.select();
+	    if (isVisible()) {
+		component.select();
+	    }
 	} else {
 	    fireChildNullLoaded();
 	}

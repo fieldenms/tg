@@ -23,6 +23,8 @@ import javax.swing.JToolBar;
 import javax.swing.SingleSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
@@ -373,6 +375,15 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      */
     private JideTabbedPane createReview() {
 	final JideTabbedPane tabPane = new JideTabbedPane();
+	tabPane.addChangeListener(new ChangeListener() {
+
+	    @SuppressWarnings({ "unchecked", "rawtypes" })
+	    @Override
+	    public void stateChanged(final ChangeEvent e) {
+		final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> analysis = (AbstractAnalysisConfigurationView) tabPane.getSelectedComponent();
+		setCurrentAnalysisConfigurationView(analysis);
+	    }
+	});
 	tabPane.setModel(createTabbedPaneModel(tabPane));
 	tabPane.setHideOneTab(true); // no need to show tab if there is only one
 	tabPane.setShowCloseButton(true);
@@ -623,18 +634,10 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
 	    private static final long serialVersionUID = -3273219271999879724L;
 
-	    @SuppressWarnings({ "unchecked", "rawtypes" })
 	    @Override
 	    public void setSelectedIndex(final int index) {
 		if(!isLoaded() || !getReviewProgressLayer().isLocked()){
 		    super.setSelectedIndex(index);
-		    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
-		    if (analysis.isLoaded()) {
-			setCurrentAnalysisConfigurationView(analysis);
-		    }
-		}else{
-		    JOptionPane.showMessageDialog(tabPane, "The " + tabPane.getTitleAt(index) + " analysis can not be selected right now, " +
-			    "because there is another action in progress!", "Information", JOptionPane.INFORMATION_MESSAGE);
 		}
 	    }
 	};
@@ -683,7 +686,11 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	protected final boolean preAction() {
 	    final boolean prevRes = super.preAction();
 	    if (!prevRes) {
-		return prevRes;
+		return false;
+	    }
+	    if (getReviewProgressLayer().isLocked()) {
+		JOptionPane.showMessageDialog(MultipleAnalysisEntityCentre.this, "This analysis can not be added right now.", "Informotaion", JOptionPane.WARNING_MESSAGE);
+		return false;
 	    }
 	    return AddTabOptions.ADD_TAB.equals(addTabDialog.showDialog(SwingUtilities.getWindowAncestor(MultipleAnalysisEntityCentre.this)));
 	}

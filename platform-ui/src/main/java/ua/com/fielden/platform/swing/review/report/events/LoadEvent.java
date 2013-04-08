@@ -2,11 +2,11 @@ package ua.com.fielden.platform.swing.review.report.events;
 
 import java.util.EventObject;
 
-import javax.swing.JComponent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ILoadingNode;
 
 /**
  * An {@link EventObject} that specifies the component that was loaded
- * 
+ *
  * @author TG Team
  *
  */
@@ -16,16 +16,10 @@ public class LoadEvent extends EventObject {
 
     /**
      * Initialises {@link LoadEvent} with loaded component
-     * 
+     *
      * @param source
      */
-    public LoadEvent(final JComponent component) {
-	super(component);
+    public LoadEvent(final ILoadingNode source) {
+	super(source);
     }
-
-    @Override
-    public JComponent getSource() {
-	return (JComponent)super.getSource();
-    }
-
 }
