@@ -422,6 +422,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Implements comparison based on the business key implementation.
      */
+    @Override
     public final int compareTo(final AbstractEntity<K> cmpTo) {
 	return getKey().compareTo(cmpTo.getKey());
     }
@@ -443,6 +444,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param propertyName
      * @param listener
      */
+    @Override
     public final synchronized void addPropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
 	if (listener == null) {
 	    throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
@@ -465,10 +467,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Removes property change listener.
      */
+    @Override
     public final synchronized void removePropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
 	changeSupport.removePropertyChangeListener(propertyName, listener);
     }
 
+    @Override
     public final PropertyChangeSupportEx getChangeSupport() {
 	return changeSupport;
     }
@@ -515,6 +519,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param propertyName
      * @return
      */
+    @Override
     public Object get(final String propertyName) {
 	try {
 	    return Finder.findFieldValueByName(this, propertyName);
@@ -529,6 +534,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param propertyName
      * @param value
      */
+    @Override
     public void set(final String propertyName, final Object value) {
 	try {
 	    final Class<?> propertyType = Finder.findFieldByName(getType(), propertyName).getType();
@@ -554,6 +560,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param name
      * @return
      */
+    @Override
     public final MetaProperty getProperty(final String name) {
 	return properties.get(name);
     }
@@ -890,6 +897,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Increases <code>lockCount</code> by one in a thread safe manner.
      */
+    @Override
     public final void lock() {
 	lock.lock();
 	lockCount++;
@@ -899,6 +907,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Decreases <code>lockCount</code> by one in a thread safe manner. Signals lock condition <code>validationInProgress</code> when <code>lockCount</code> reaches value zero.
      */
+    @Override
     public final void unlock() {
 	lock.lock();
 	lockCount = lockCount > 0 ? lockCount - 1 : 0;

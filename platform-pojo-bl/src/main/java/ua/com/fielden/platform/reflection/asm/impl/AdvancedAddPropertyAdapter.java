@@ -53,7 +53,7 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
     /**
      * {@inheritDoc}
      *
-     * Additionally, modifies and records the name of the currently being traversed class.
+     * Additionally, modifies and records the name of the class currently being traversed.
      */
     @Override
     public synchronized void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
@@ -347,10 +347,6 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 
     }
 
-    public static void main(final String[] args) {
-	System.out.println(Type.getDescriptor(float.class));
-    }
-
     private boolean bool;
 
     public boolean getBool() {
@@ -359,6 +355,10 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 
     public void setBool(final boolean value) {
 	bool = value;
+    }
+
+    public static void main(final String[] args) {
+	System.out.println(Type.getDescriptor(float.class));
     }
 
 }
