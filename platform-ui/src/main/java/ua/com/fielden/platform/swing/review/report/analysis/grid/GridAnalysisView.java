@@ -80,9 +80,9 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
 		    @Override
 		    public void run() {
-			final List<AbstractEntity<?>> oldSelected = getEnhnacedSelectedEntities();
+			final List<T> oldSelected = getEnhancedSelectedEntities();
 			egiPanel.setData((IPage<T>) e.getNewPage());
-			selectEntities(oldSelected);
+			selectEntities((List<AbstractEntity<?>>)oldSelected);
 		    }
 		});
 
@@ -165,7 +165,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     @SuppressWarnings("unchecked")
     public List<T> getSelectedEntities(){
 	final List<T> selectedAndNotEnhancedEntities = new ArrayList<>();
-	for(final AbstractEntity<?> selectedEntity : getEnhnacedSelectedEntities()){
+	for(final AbstractEntity<?> selectedEntity : getEnhancedSelectedEntities()){
 	    selectedAndNotEnhancedEntities.add((T)makeNotEnhanced(selectedEntity));
 	}
 	return selectedAndNotEnhancedEntities;
@@ -184,6 +184,16 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    nonEnhancedEntities.add((T)makeNotEnhanced(selectedEntity));
 	}
 	return nonEnhancedEntities;
+    }
+
+    /**
+     * Returns the list of enhanced entities in the entity grid inspector.
+     *
+     * @return
+     */
+    public List<T> getEnhancedEntities() {
+	final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
+	return tableModel.instances();
     }
 
     /**
@@ -213,8 +223,8 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      * @return
      */
     @SuppressWarnings("unchecked")
-    public List<AbstractEntity<?>> getEnhnacedSelectedEntities(){
-	final PropertyTableModel<AbstractEntity<?>> tableModel = (PropertyTableModel<AbstractEntity<?>>) getEgiPanel().getEgi().getActualModel();
+    public List<T> getEnhancedSelectedEntities(){
+	final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
 	return tableModel.getSelectedEntities();
     }
 

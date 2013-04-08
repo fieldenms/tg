@@ -123,7 +123,7 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      *
      * @return
      */
-    public final AbstractEntityCentre<T, CDTME> getOwner() {
+    public AbstractEntityCentre<T, CDTME> getOwner() {
 	return owner;
     }
 

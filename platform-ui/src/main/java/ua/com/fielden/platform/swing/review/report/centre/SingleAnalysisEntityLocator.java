@@ -4,10 +4,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -16,9 +13,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -32,20 +26,17 @@ import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.swing.egi.EntityGridInspector;
-import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisViewForLocator;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModelForLocator;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationViewForLocator;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
-import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent.LocatorAction;
-import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.jidesoft.grid.TableModelWrapperUtils;
 
 public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends AbstractSingleAnalysisEntityCentre<T, ILocatorDomainTreeManagerAndEnhancer> {
 
@@ -54,37 +45,12 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
     private final JPanel locatorPanel;
     private final Action closeAction;
     private final Action selectAction;
-    private final List<T> selectedEntities = new ArrayList<T>();
 
     public SingleAnalysisEntityLocator(final EntityLocatorModel<T> model, final LocatorConfigurationView<T, ?> owner) {
 	super(model, owner);
 	this.closeAction = createCloseAction();
 	this.selectAction = createSelectAction();
 	this.locatorPanel = createLocatorPanel();
-	addLoadListener(new ILoadListener() {
-
-	    @Override
-	    public void viewWasLoaded(final LoadEvent event) {
-		final EntityGridInspector<T> egi = getSingleAnalysis().getPreviousView().getEgiPanel().getEgi();
-		final ListSelectionListener listener = createEgiSelectionListener(egi, getOwner().isMultipleSelection());
-		egi.setSelectionMode(getOwner().isMultipleSelection() ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
-		egi.getSelectionModel().addListSelectionListener(listener);
-		egi.getColumnModel().getSelectionModel().addListSelectionListener(listener);
-		egi.addMouseListener(new MouseAdapter() {
-		    @Override
-		    public void mouseClicked(final MouseEvent e) {
-			if (e.getClickCount() == 2) {
-			    final int row = egi.rowAtPoint(e.getPoint());
-			    if (row >= 0) {
-				selectAction.actionPerformed(null);
-			    }
-			}
-		    }
-		});
-		removeLoadListener(this);
-	    }
-	});
-
 	layoutComponents();
     }
 
@@ -92,6 +58,10 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
     @Override
     public GridConfigurationView<T, ILocatorDomainTreeManagerAndEnhancer> getSingleAnalysis() {
         return (GridConfigurationView<T, ILocatorDomainTreeManagerAndEnhancer>)super.getSingleAnalysis();
+    }
+
+    public GridAnalysisViewForLocator<T> getAnalysisView(){
+	return (GridAnalysisViewForLocator<T>)getSingleAnalysis().getPreviousView();
     }
 
     @Override
@@ -106,7 +76,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
     }
 
     public List<T> getSelectedEntities() {
-	return Collections.unmodifiableList(selectedEntities);
+	return getAnalysisView().getEnhancedSelectedEntities();
     }
 
     public void addLocatorEventListener(final ILocatorEventListener l){
@@ -115,6 +85,14 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 
     public void removeLocatorEventListener(final ILocatorEventListener l){
 	listenerList.remove(ILocatorEventListener.class, l);
+    }
+
+    public Action getSelectAction() {
+	return selectAction;
+    }
+
+    public Action getCloseAction() {
+	return closeAction;
     }
 
     @Override
@@ -160,8 +138,8 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
      */
     @Override
     protected GridConfigurationView<T, ILocatorDomainTreeManagerAndEnhancer> createDefaultAnalysis(){
-	final GridConfigurationModel<T, ILocatorDomainTreeManagerAndEnhancer> configModel = GridConfigurationModel.createWithDefaultQueryCustomiser(getModel().getCriteria());
-	return GridConfigurationView.createMainDetailsWithDefaultCustomiser(configModel, getOwner().getDetailsCache(), null, this, getReviewProgressLayer());
+	final GridConfigurationModelForLocator<T> configModel = new GridConfigurationModelForLocator<>(getModel().getCriteria());
+	return new GridConfigurationViewForLocator<>(configModel, getOwner().getDetailsCache(), this, getReviewProgressLayer());
     }
 
     @Override
@@ -199,70 +177,6 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 
     private JPanel getLocatorPanel() {
 	return locatorPanel;
-    }
-
-    private ListSelectionListener createEgiSelectionListener(final EntityGridInspector<T> egi, final boolean isMultipleSelection) {
-	return new ListSelectionListener() {
-
-	    @Override
-	    public void valueChanged(final ListSelectionEvent e) {
-		if (!e.getValueIsAdjusting()) {
-		    if (e.getFirstIndex() < 0 || e.getLastIndex() < 0) {
-			return;
-		    }
-		    final int rows[] = isMultipleSelection ? new int[e.getLastIndex() - e.getFirstIndex() + 1] //
-			    : new int[e.getFirstIndex() == e.getLastIndex() ? 1 : 2];
-		    if (!isMultipleSelection) {
-			if (e.getFirstIndex() == e.getLastIndex()) {
-			    rows[0] = e.getFirstIndex();
-			} else {
-			    rows[0] = e.getFirstIndex();
-			    rows[1] = e.getLastIndex();
-			}
-		    } else {
-			for (int rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-			    rows[rowIndex] = e.getFirstIndex() + rowIndex;
-			}
-		    }
-		    final int actualRows[] = TableModelWrapperUtils.getActualRowsAt(egi.getModel(), rows, false);
-		    for (int rowIndex = 0; rowIndex < actualRows.length; rowIndex++) {
-			final T instance = egi.getActualModel().instance(actualRows[rowIndex]);
-			final boolean isSelected = egi.isRowSelected(rows[rowIndex]);
-			if (isSelected) {
-			    performSelection(instance);
-			} else {
-			    performDeselect(instance);
-			}
-		    }
-		    //TODO Please consider whether select or close actions should be configured according to the selected entities list.
-		    //if (selectedEntities.isEmpty()) {
-		    //	  selectAction.setEnabled(false);
-		    //} else {
-		    //	  selectAction.setEnabled(true);
-		    //}
-		}
-	    }
-
-	    private boolean isSelected(final T entityToCheck) {
-		return selectedEntities.contains(entityToCheck);
-	    }
-
-	    private void performDeselect(final T selectedObject) {
-		selectedEntities.remove(selectedObject);
-	    }
-
-	    private void performSelection(final T selectedObject) {
-		if (isMultipleSelection) {
-		    if (!isSelected(selectedObject)) {
-			selectedEntities.add(selectedObject);
-		    }
-		} else {
-		    selectedEntities.clear();
-		    selectedEntities.add(selectedObject);
-		}
-	    }
-
-	};
     }
 
     private void fireLocatorEvent(final LocatorEvent event){
@@ -369,7 +283,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
-		selectedEntities.clear();
+		getAnalysisView().resetLocatorSelection();
 		fireLocatorEvent(new LocatorEvent(SingleAnalysisEntityLocator.this, LocatorAction.CLOSE));
 	    }
 	};

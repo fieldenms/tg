@@ -53,6 +53,11 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
      */
     private int startSelectedIndex, endSelectedIndex, previousCaretPosition;
 
+    /**
+     * Determines whether user decided to accept selected entities or not.
+     */
+    private boolean isOk;
+
     public EntityLocatorDialog(final LocatorConfigurationModel<VT, RT> locatorConfigurationModel, final boolean isMulti){
 	//	this.textFieldLayer = new AutocompleterTextFieldLayerWithEntityLocator<VT>(entity, locatorConfigurationModel.name, //
 	//		textComponent, locatorConfigurationModel.entityFactory, createEntityLocatorValueMatcher(), entityMasterFactory,//
@@ -71,6 +76,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	this.locatorConfigurationView.addLocatorConfigurationEventListener(createLocatorConfigurationListener());
 	this.locatorConfigurationView.addConfigurationEventListener(createCancelCloseListener());
 	this.autocompleterFocusListener = createComponentFocusListener();
+	this.isOk = false;
 	progressLayer.setView(locatorConfigurationView);
 	getContentPane().add(progressLayer);
 
@@ -169,6 +175,15 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
     }
 
     /**
+     * Resets the locator's selection.
+     */
+    private void resetLocatorSelection(){
+	if(locatorConfigurationView.getPreviousView() != null){
+	    locatorConfigurationView.getPreviousView().getAnalysisView().resetLocatorSelection();
+	}
+    }
+
+    /**
      * Creates the {@link WindowListener} that handles entity locator's close event.
      *
      * @return
@@ -184,7 +199,6 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 		    isChanged = model.isChanged();
 		}
 		if (isChanged) {
-		    // TODO The logic should be revised after ILocatorManager enhancements!
 		    final boolean isFreezed = model.isInFreezedPhase();
 		    final Object options[] = { "Save", "Save as default", "No" };
 		    final int chosenOption = JOptionPane.showOptionDialog(EntityLocatorDialog.this, "This locator has been changed, would you like to save it?", "Save entity locator configuration", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
@@ -247,8 +261,14 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
     private ILocatorEventListener createLocatorEventListener() {
 	return new ILocatorEventListener() {
 
+	    @SuppressWarnings("incomplete-switch")
 	    @Override
 	    public void locatorActionPerformed(final LocatorEvent event) {
+		switch(event.getLocatorAction()){
+		case SELECT :
+		    isOk = true;
+		    break;
+		}
 		sendCloseEvent();
 	    }
 	};
@@ -272,9 +292,11 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	    @Override
 	    public void focusGained(final FocusEvent e) {
 		final List<VT> selectedEntities = getSelectedEntities();
-		if (selectedEntities.size() > 0) {
+		if (isOk && selectedEntities.size() > 0) {
 		    final Object selectedString = autocompleter.getAutocompleter().getSelectedHint(selectedEntities, startSelectedIndex, endSelectedIndex, previousCaretPosition);
 		    autocompleter.getAutocompleter().acceptHint(selectedString);
+		    resetLocatorSelection();
+		    isOk = false;
 		}
 	    }
 	};
