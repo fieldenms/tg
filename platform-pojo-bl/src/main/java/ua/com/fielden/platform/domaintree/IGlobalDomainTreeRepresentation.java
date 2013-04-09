@@ -28,7 +28,7 @@ public interface IGlobalDomainTreeRepresentation {
     /**
      * Sets a new locator manager by <b>default</b> for the specified property type. <br><br>
      *
-     * The method is concentrated on the "types" of properties that should be have locator managers assigned.
+     * The method is concentrated on the "type" of property that should have locator managers assigned.
      * If you want to get locator manager for "concrete" property type -- use {@link #getLocatorManagerByDefault(Class)} method. <br><br>
      *
      * Throws {@link IllegalArgumentException} when the property is not of {@link AbstractEntity} type.

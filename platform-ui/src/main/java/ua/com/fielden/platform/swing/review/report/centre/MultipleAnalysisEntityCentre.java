@@ -463,7 +463,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
 		switch(event.getEventAction()){
 		case PRE_CANCEL:
-		    if(newAnalysis.getPreviousView() == null){
+		    if(newAnalysis.isNewConfigurationView()){
 			removeAction.actionPerformed(null);
 			return new Result(new Exception("Can not cancel first time open analysis"));
 		    }

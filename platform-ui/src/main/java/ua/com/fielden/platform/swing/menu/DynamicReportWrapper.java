@@ -94,7 +94,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
 		switch(event.getEventAction()){
 		case PRE_CANCEL:
-		    if(entityCentreConfigurationView.getPreviousView() == null){
+		    if(entityCentreConfigurationView.isNewConfigurationView()){
 			treeMenu.closeView(DynamicReportWrapper.this);
 			return new Result(new Exception("Can not cancel first time open entity centre"));
 		    }

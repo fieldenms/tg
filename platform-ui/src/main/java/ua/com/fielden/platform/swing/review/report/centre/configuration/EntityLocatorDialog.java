@@ -101,7 +101,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
 		switch(event.getEventAction()){
 		case PRE_CANCEL:
-		    if (locatorConfigurationView.getPreviousView() == null) {
+		    if (locatorConfigurationView.isNewConfigurationView()) {
 			sendCloseEvent();
 			return new Result(new Exception("Can not cancel first time open entity locator"));
 		    }
@@ -227,6 +227,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 		} else {
 		    model.discard();
 		}
+		locatorConfigurationView.close();
 		dispose();
 		SwingUtilities.windowForComponent(autocompleter.getAutocompleter().getTextComponent()).setVisible(true);
 		autocompleter.getAutocompleter().getTextComponent().requestFocusInWindow();

@@ -79,6 +79,11 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     private boolean wasChildLoaded;
 
     /**
+     * Determines whether the entity centre was just opened and it's mode was set to {@link ReportMode#WIZARD}.
+     */
+    private boolean newConfigurationView;
+
+    /**
      * Initiates this {@link AbstractConfigurationView} with associated {@link AbstractConfigurationModel}.
      *
      * @param model
@@ -90,6 +95,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	this.openAction = createOpenAction();
 	wasResized = false;
 	wasChildLoaded = false;
+	newConfigurationView = false;
 	addComponentListener(createComponentWasResized());
 	model.addPropertyChangeListener(createModeChangeListener());
     }
@@ -128,6 +134,15 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      */
     public WT getPreviousWizard() {
 	return previousWizard;
+    }
+
+    /**
+     * Determines whether this entity centre was just opened and {@link ReportMode#WIZARD} was set.
+     *
+     * @return
+     */
+    public boolean isNewConfigurationView() {
+	return newConfigurationView;
     }
 
     /**
@@ -176,6 +191,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	getModel().setMode(NOT_SPECIFIED);
 	wasResized = false;
 	wasChildLoaded = false;
+	newConfigurationView = false;
 	super.close();
     }
 
@@ -264,6 +280,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		setMessage("");
 		for (final Result valueRes : value) {
 		    if (!valueRes.isSuccessful()) {
+			newConfigurationView = true;
 			getModel().setMode(WIZARD);
 			return;
 		    }
@@ -442,6 +459,12 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	    super(configurationView, //
 		    Arrays.asList(REPORT, WIZARD),//
 		    Arrays.asList(PRE_BUILD, BUILD, POST_BUILD, BUILD_FAILED));
+	}
+
+	@Override
+	protected void postAction(final Result value) {
+	    super.postAction(value);
+	    getConfigurationView().newConfigurationView = false;
 	}
     }
 
