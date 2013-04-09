@@ -148,7 +148,7 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
      * Determines whether managed entity should be restored by setting its properties to the original values.
      */
     protected boolean shouldRestore(final D managedEntity) {
-	return getManagedEntity().isPersisted() && getManagedEntity().isDirty();
+	return getManagedEntity().isPersisted() && (getManagedEntity().isDirty() || !getManagedEntity().isValid().isSuccessful());
     }
 
     @Override
