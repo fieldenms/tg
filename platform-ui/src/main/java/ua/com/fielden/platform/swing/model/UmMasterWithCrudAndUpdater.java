@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.model;
 
+import java.nio.channels.SeekableByteChannel;
+
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -38,12 +40,33 @@ public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity<?>, C 
 	return DateTimeFormat.forPattern("HH:mm:ss").print(new DateTime());
     }
 
+    /**
+     * Sets the specified entity instance and performs the owner notifications if it was provided.
+     * In cases this is not desired this method should be overridden.
+     * See {@link #setEntityWithoutNotification(AbstractEntity)} for more details.
+     */
     @Override
     public void setEntity(final T entity) {
 	super.setEntity(entity);
 	if (owner != null) {
 	    owner.notifyEntityChange(entity);
 	}
+    }
+
+    /**
+     * Method {@link #setEntity(AbstractEntity)} notifies view owner.
+     * However, a more fine-grain control might be desired.
+     * For example, if the owner should be notified only upon a successful save action then notification at any other time is inappropriate.
+     * In order to implement such support, method {@link #setEntity(AbstractEntity)} needs to be overridden and a call to this method is made.
+     * Additionally, method {@link #notifyActionStageChange(ua.com.fielden.platform.swing.model.UModel.ActionStage)} needs to be also overridden and when
+     * a necessary event is received call <code>owner.notifyEntityChange(getEntity())</code>.
+     * <p>
+     * Of course, any other customisation of the notification logic is allowed.
+     *
+     * @param entity
+     */
+    protected void setEntityWithoutNotification(final T entity) {
+	super.setEntity(entity);
     }
 
     protected abstract String defaultTitle();
