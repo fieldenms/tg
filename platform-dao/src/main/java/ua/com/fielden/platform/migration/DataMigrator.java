@@ -24,6 +24,7 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.migration.RetrieverBatchStmtGenerator.Container;
 import ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError;
 import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
@@ -77,15 +78,13 @@ public class DataMigrator {
 	    }
 	}
 	final Connection conn = injector.getInstance(Connection.class);
-	cache.put(retrievers.get(68).type(), new HashMap<Object, Integer>());
-	batchInsert(dma, retrievers.get(68), conn, 0);
-//	checkEmptyStrings(dma, conn);
-//	checkRequiredness(dma, conn);
-//	checkDataIntegrity(dma, conn);
-//	validateRetrievalSql(dma);
+	checkEmptyStrings(dma, conn);
+	checkRequiredness(dma, conn);
+	checkDataIntegrity(dma, conn);
+	validateRetrievalSql(dma);
+	batchInsert(dma, conn, 0);
 	migrationRun = null;
 	throw new RuntimeException();
-
 //	migrationRun = factory.newByKey(MigrationRun.class, migratorName + "_" + now.getTime());
 //	migrationRun.setStarted(now);
 //	runDao.save(migrationRun);
@@ -278,51 +277,58 @@ public class DataMigrator {
 	runDao.save(migrationRun);
     }
 
-    private int batchInsert(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn, final int startingId) throws Exception {
+    private void batchInsert(final DomainMetadataAnalyser dma, final Connection conn, final int startingId) throws Exception {
 	final RetrieverBatchStmtGenerator rbsg = new RetrieverBatchStmtGenerator(dma);
-	final Statement st = conn.createStatement();
-	final String sql = new RetrieverSqlProducer(dma).getSql(retriever);
-	final Map<Object, Integer> typeCache = cache.get(retriever.type());
+	final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
 	Integer id = startingId;
-	final DateTime start = new DateTime();
-	try {
-	    final ResultSet rs = st.executeQuery(sql);
-	    final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
-	    final Connection conn2 = hiberUtil.getSessionFactory().getCurrentSession().connection();
-	    final String insertSql = rbsg.generateInsertStmt(retriever);
-	    System.out.println(insertSql);
-	    final PreparedStatement st2 = conn2.prepareStatement(insertSql);
-	    while (rs.next()) {
-		id = id + 1;
-		typeCache.put(rs.getObject("key"), id);
-		st2.setInt(1, id);
-		st2.setInt(2, 0);
-		int index = 3;
-		for (final String propName : retriever.resultFields().keySet()) {
-		    System.out.println("index = " + index + " value = " + rs.getObject(index - 2));
-		    st2.setObject(index, rs.getObject(index - 2));
-		    index = index + 1;
-		}
-		st2.addBatch();
+	for (final IRetriever<? extends AbstractEntity<?>> retriever : retrievers) {
+	    final String sql = rsp.getSql(retriever);
 
-		if ((id % 100) == 0) {
+	    final Map<Object, Integer> existingTypeCache = cache.get(retriever.type());
+	    if (existingTypeCache == null) {
+		cache.put(retriever.type(), new HashMap<Object, Integer>());
+	    }
+	    final Map<Object, Integer> typeCache = cache.get(retriever.type());
+	    final DateTime start = new DateTime();
+	    final List<Container> containers = rbsg.produceContainers(retriever);
+	    final Statement st = conn.createStatement();
+	    try {
+		final ResultSet rs = st.executeQuery(sql);
+		final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
+		final Connection conn2 = hiberUtil.getSessionFactory().getCurrentSession().connection();
+		final String insertSql = rbsg.generateInsertStmt(retriever);
+		final PreparedStatement st2 = conn2.prepareStatement(insertSql);
+		while (rs.next()) {
+		    id = id + 1;
+		    typeCache.put(rs.getObject("key"), id);
+		    st2.setInt(1, id);
+		    st2.setInt(2, 0);
+		    int index = 3;
+		    for (final Object value : rbsg.transformValues(rs, containers, cache)) {
+			st2.setObject(index, value);
+			index = index + 1;
+		    }
+		    st2.addBatch();
+
+		    if ((id % 100) == 0) {
+			st2.executeBatch();
+		    }
+		}
+		if ((id % 100) != 0) {
 		    st2.executeBatch();
 		}
-	    }
-	    if ((id % 100) != 0) {
-		st2.executeBatch();
-	    }
 
-	    tr.commit();
-	    st2.close();
-	    rs.close();
-	} catch (final Exception ex) {
-	    logger.error("Exception while checking syntax for [" + retriever.getClass().getSimpleName() + "]" + ex + " SQL:\n" + sql);
-	} finally {
-	    st.close();
+		tr.commit();
+		st2.close();
+		rs.close();
+	    } catch (final Exception ex) {
+		logger.error("Exception while checking syntax for [" + retriever.getClass().getSimpleName() + "]" + ex + " SQL:\n" + sql);
+	    } finally {
+		st.close();
+	    }
+	    final Period pd = new Period(start, new DateTime());
+	    System.out.println(retriever.getClass().getSimpleName() + " -- duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + typeCache.size());
+
 	}
-	final Period pd = new Period(start, new DateTime());
-	System.out.println("Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + typeCache.size());
-	return id;
     }
 }
