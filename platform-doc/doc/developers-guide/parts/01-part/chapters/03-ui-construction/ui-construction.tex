@@ -430,6 +430,20 @@ public class WorkshopMasterView extends BaseNotifPanel<WorkshopMasterModel> {
   The master view holds the tree menu and the panel where menu specific views are displayed when menu items are activated.
   
 
+  \paragraph{Accessing master entity.} 
+  The constructor of the master model is responsible for construction of all sub-models.
+  This is done by constructing sub-models and placing them into the map of details models called \texttt{detailsModels}, where key is the sub-model type and value is its instance.
+  In all cases sub-models reference the master entity, and usually it is passed as an argument into the sub-model constructor.  
+  There is, however, a small ketch that should be avoided when doing so.
+  
+  The master entity instances is passed into the master model constructor and used as one of the super type constructor arguments.
+  There is a natural temptation to use the same argument when constructing sub-models.
+  However, the incoming entity instance is usually not initialised as required by UI models (e.i. object graph is not populated as required by the model).
+  Passing it as is into sub-models would lead to unexpected errors, related purely to the fact that some property has not been initialised.
+  Instead, master entity should be obtained by using getter \texttt{getEntity()}.
+  The returned instance would be the one already modified by the super constructor of the master model in accordance with the specified fetch model, and thus satisfying model's requirements.
+  
+  
 %\section{Configuration Management}
 
 
