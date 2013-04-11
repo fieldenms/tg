@@ -24,7 +24,6 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.migration.RetrieverBatchStmtGenerator.Container;
 import ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError;
 import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
@@ -68,8 +67,6 @@ public class DataMigrator {
 	this.retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
 	this.includeDetails = includeDetails;
 
-	new RetrieverDeadReferencesSeeker(dma).determineUsers(retrievers);
-
 	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
 	    logger.debug("Checking props for [" + ret.getClass().getSimpleName() + "]");
 	    final SortedMap<String,RetrievedPropValidationError> checkResult = new RetrieverPropsValidator(dma, ret).validate();
@@ -77,13 +74,21 @@ public class DataMigrator {
 		logger.error("The following issues have been revealed for props in [" + ret.getClass().getSimpleName() + "]:\n " + checkResult);
 	    }
 	}
+
+//	System.out.println(retrievers.get(6).getClass().getSimpleName());
+//	System.out.println(new RetrieverBatchStmtGenerator(null).produceKeyFieldsIndices(retrievers.get(6)));
+
 	final Connection conn = injector.getInstance(Connection.class);
-	checkEmptyStrings(dma, conn);
-	checkRequiredness(dma, conn);
-	checkDataIntegrity(dma, conn);
-	validateRetrievalSql(dma);
+//	checkEmptyStrings(dma, conn);
+//	checkRequiredness(dma, conn);
+//	checkDataIntegrity(dma, conn);
+//	validateRetrievalSql(dma);
+
+	final DateTime start = new DateTime();
 	batchInsert(dma, conn, 0);
-	migrationRun = null;
+	    final Period pd = new Period(start, new DateTime());
+	    System.out.println("Migration duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+//	migrationRun = null;
 	throw new RuntimeException();
 //	migrationRun = factory.newByKey(MigrationRun.class, migratorName + "_" + now.getTime());
 //	migrationRun.setStarted(now);
@@ -278,10 +283,10 @@ public class DataMigrator {
     }
 
     private void batchInsert(final DomainMetadataAnalyser dma, final Connection conn, final int startingId) throws Exception {
-	final RetrieverBatchStmtGenerator rbsg = new RetrieverBatchStmtGenerator(dma);
 	final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
 	Integer id = startingId;
 	for (final IRetriever<? extends AbstractEntity<?>> retriever : retrievers) {
+	    final RetrieverBatchStmtGenerator rbsg = new RetrieverBatchStmtGenerator(dma, retriever);
 	    final String sql = rsp.getSql(retriever);
 
 	    final Map<Object, Integer> existingTypeCache = cache.get(retriever.type());
@@ -290,28 +295,39 @@ public class DataMigrator {
 	    }
 	    final Map<Object, Integer> typeCache = cache.get(retriever.type());
 	    final DateTime start = new DateTime();
-	    final List<Container> containers = rbsg.produceContainers(retriever);
 	    final Statement st = conn.createStatement();
+	    final String insertSql = rbsg.getInsertStmt();
+	    final List<Integer> indexFields = rbsg.produceKeyFieldsIndices(retriever);
 	    try {
 		final ResultSet rs = st.executeQuery(sql);
 		final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
 		final Connection conn2 = hiberUtil.getSessionFactory().getCurrentSession().connection();
-		final String insertSql = rbsg.generateInsertStmt(retriever);
 		final PreparedStatement st2 = conn2.prepareStatement(insertSql);
 		while (rs.next()) {
 		    id = id + 1;
-		    typeCache.put(rs.getObject("key"), id);
+		    final List<Object> keyValue = new ArrayList<>();
+		    for (final Integer keyIndex : indexFields) {
+			keyValue.add(rs.getObject(keyIndex.intValue()));
+		    }
+
+		    typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
 		    st2.setInt(1, id);
 		    st2.setInt(2, 0);
 		    int index = 3;
-		    for (final Object value : rbsg.transformValues(rs, containers, cache)) {
+		    for (final Object value : rbsg.transformValues(rs, cache, id)) {
 			st2.setObject(index, value);
 			index = index + 1;
 		    }
 		    st2.addBatch();
 
 		    if ((id % 100) == 0) {
-			st2.executeBatch();
+			try {
+			    st2.executeBatch();
+			} catch (final Exception ex) {
+			    logger.error("Exception while performing batch insert of [" + retriever.getClass().getSimpleName() + "] " + ex + ". SQL:\n" + insertSql);
+			} finally {
+			    st2.clearBatch();
+			}
 		    }
 		}
 		if ((id % 100) != 0) {
@@ -322,7 +338,7 @@ public class DataMigrator {
 		st2.close();
 		rs.close();
 	    } catch (final Exception ex) {
-		logger.error("Exception while checking syntax for [" + retriever.getClass().getSimpleName() + "]" + ex + " SQL:\n" + sql);
+		logger.error("Exception while performing batch insert of [" + retriever.getClass().getSimpleName() + "] " + ex + ". SQL:\n" + insertSql);
 	    } finally {
 		st.close();
 	    }

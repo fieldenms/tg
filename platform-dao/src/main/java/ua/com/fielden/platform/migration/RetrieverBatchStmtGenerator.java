@@ -12,16 +12,23 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class RetrieverBatchStmtGenerator {
     private final DomainMetadataAnalyser dma;
+    private final IRetriever<? extends AbstractEntity<?>> retriever;
+    private final String insertStmt;
+    private final List<Container> containers;
 
-    public RetrieverBatchStmtGenerator(final DomainMetadataAnalyser dma) {
+    public RetrieverBatchStmtGenerator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever) {
 	this.dma = dma;
+	this.retriever = retriever;
+	this.insertStmt = generateInsertStmt();
+	this.containers = produceContainers();
     }
 
-    public String generateInsertStmt(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    private String generateInsertStmt() {
 	final StringBuffer sb = new StringBuffer();
 	final EntityMetadata<? extends AbstractEntity<?>> emd = dma.getEntityMetadata(retriever.type());
 	final SortedMap<String, PropertyMetadata> props = emd.getProps();
@@ -44,7 +51,7 @@ public class RetrieverBatchStmtGenerator {
 	return sb.toString();
     }
 
-    List<Container> produceContainers(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    private List<Container> produceContainers() {
 	final List<Container> result = new ArrayList<>();
 	final EntityMetadata<? extends AbstractEntity<?>> emd = dma.getEntityMetadata(retriever.type());
 	final SortedMap<String, PropertyMetadata> props = emd.getProps();
@@ -64,7 +71,22 @@ public class RetrieverBatchStmtGenerator {
 	return result;
     }
 
-    List<Object> transformValues(final ResultSet rs, final List<Container> containers, final Map<Class<?>, Map<Object, Integer>> cache) throws Exception {
+    public List<Integer> produceKeyFieldsIndices(final IRetriever<? extends AbstractEntity<?>> retriever) {
+	final List<Integer> result = new ArrayList<>();
+	final List<String> keyMembersFirstLevelProps = Finder.getFieldNames(Finder.getKeyMembers(retriever.type()));
+
+	int index = 1;
+	for (final String prop : retriever.resultFields().keySet()) {
+	    if (keyMembersFirstLevelProps.contains(EntityUtils.splitPropByFirstDot(prop).getKey())) {
+		result.add(index);
+	    }
+	    index = index + 1;
+	}
+
+	return result;
+    }
+
+    List<Object> transformValues(final ResultSet rs, final Map<Class<?>, Map<Object, Integer>> cache, final int id) throws Exception {
 	final List<Object> result = new ArrayList<>();
 	for (final Container container : containers) {
 	    final List<Object> values = new ArrayList<>();
@@ -94,5 +116,9 @@ public class RetrieverBatchStmtGenerator {
 	    this.propName = propName;
 	    this.propType = propType;
 	}
+    }
+
+    public String getInsertStmt() {
+	return insertStmt;
     }
 }
