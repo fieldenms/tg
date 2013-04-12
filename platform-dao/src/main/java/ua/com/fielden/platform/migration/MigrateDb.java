@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import org.hibernate.Transaction;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.security.provider.IUserController;
@@ -185,7 +186,7 @@ public class MigrateDb {
 	}
     }
 
-    public void migrate(final String[] args, final Properties props, final List<String> ddl, final Class[] retrieversClassesSequence, final Injector injector) throws Exception {
+    public void migrate(final String[] args, final Properties props, final List<String> ddl, final Class[] retrieversClassesSequence, final Injector injector, final Class<? extends AbstractEntity<?>> personClass) throws Exception {
 	final Map<CmdParams, String> cmdParams = retrieveCommandLineParams(args);
 	final String limitToParamArgument = cmdParams.get(CmdParams.LIMIT_TO);
 	final Class[] limitToRetrievers = limitToParamArgument == null ? retrieversClassesSequence
@@ -205,7 +206,7 @@ public class MigrateDb {
 		System.out.println(ddlStmt);
 	    }
 	} else {
-	    new DataMigrator(injector, hibernateUtil, factory, cmdParams.containsKey(CmdParams.DETAILS), limitToRetrievers).populateData();
+	    new DataMigrator(injector, hibernateUtil, factory, cmdParams.containsKey(CmdParams.DETAILS), personClass, limitToRetrievers);//.populateData();
 	}
 	// reset passwords
 	if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {

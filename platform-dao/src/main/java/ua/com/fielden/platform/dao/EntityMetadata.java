@@ -13,6 +13,8 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 public class EntityMetadata<ET extends AbstractEntity<?>> {
     private final String table;
@@ -73,6 +75,10 @@ public class EntityMetadata<ET extends AbstractEntity<?>> {
 
     public boolean isPure() {
 	return !isPersisted() && !isSynthetic();
+    }
+
+    public boolean isOneToOne() {
+	return isPersistedEntityType(getKeyType(type));
     }
 
     public String getTable() {

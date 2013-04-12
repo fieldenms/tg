@@ -29,6 +29,7 @@ import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.HibernateUtil;
+import ua.com.fielden.platform.security.user.User;
 
 import com.google.inject.Injector;
 
@@ -55,7 +56,7 @@ public class DataMigrator {
 	return result;
     }
 
-    public DataMigrator(final Injector injector, final HibernateUtil hiberUtil, final EntityFactory factory, final boolean includeDetails, final Class... retrieversClasses)
+    public DataMigrator(final Injector injector, final HibernateUtil hiberUtil, final EntityFactory factory, final boolean includeDetails, final Class<? extends AbstractEntity<?>> personClass, final Class... retrieversClasses)
 	    throws Exception {
 	this.injector = injector;
 	this.factory = factory;
@@ -85,11 +86,11 @@ public class DataMigrator {
 //	validateRetrievalSql(dma);
 
 	final DateTime start = new DateTime();
-	batchInsert(dma, conn, 0);
+	batchInsert(dma, conn, 0, personClass);
 	    final Period pd = new Period(start, new DateTime());
 	    System.out.println("Migration duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-//	migrationRun = null;
-	throw new RuntimeException();
+	migrationRun = null;
+	//throw new RuntimeException();
 //	migrationRun = factory.newByKey(MigrationRun.class, migratorName + "_" + now.getTime());
 //	migrationRun.setStarted(now);
 //	runDao.save(migrationRun);
@@ -282,9 +283,12 @@ public class DataMigrator {
 	runDao.save(migrationRun);
     }
 
-    private void batchInsert(final DomainMetadataAnalyser dma, final Connection conn, final int startingId) throws Exception {
+    private void batchInsert(final DomainMetadataAnalyser dma, final Connection conn, final int startingId, final Class<? extends AbstractEntity<?>> personClass) throws Exception {
 	final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
 	Integer id = startingId;
+	final Map<Object, Integer> userTypeCache = new HashMap<>();
+	cache.put(User.class, userTypeCache);
+
 	for (final IRetriever<? extends AbstractEntity<?>> retriever : retrievers) {
 	    final RetrieverBatchStmtGenerator rbsg = new RetrieverBatchStmtGenerator(dma, retriever);
 	    final String sql = rsp.getSql(retriever);
@@ -297,7 +301,7 @@ public class DataMigrator {
 	    final DateTime start = new DateTime();
 	    final Statement st = conn.createStatement();
 	    final String insertSql = rbsg.getInsertStmt();
-	    final List<Integer> indexFields = rbsg.produceKeyFieldsIndices(retriever);
+	    final List<Integer> indexFields = rbsg.produceKeyFieldsIndices();
 	    try {
 		final ResultSet rs = st.executeQuery(sql);
 		final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
@@ -309,11 +313,11 @@ public class DataMigrator {
 		    for (final Integer keyIndex : indexFields) {
 			keyValue.add(rs.getObject(keyIndex.intValue()));
 		    }
-
 		    typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
-		    st2.setInt(1, id);
-		    st2.setInt(2, 0);
-		    int index = 3;
+		    if (retriever.type().equals(personClass)) {
+			userTypeCache.put(rs.getObject("username"), id);
+		    }
+		    int index = 1;
 		    for (final Object value : rbsg.transformValues(rs, cache, id)) {
 			st2.setObject(index, value);
 			index = index + 1;

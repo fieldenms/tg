@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.SortedSet;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.EntityMetadata;
@@ -20,28 +21,56 @@ public class RetrieverBatchStmtGenerator {
     private final IRetriever<? extends AbstractEntity<?>> retriever;
     private final String insertStmt;
     private final List<Container> containers;
+    private List<PropertyMetadata> extraFields;
 
     public RetrieverBatchStmtGenerator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever) {
 	this.dma = dma;
 	this.retriever = retriever;
-	this.insertStmt = generateInsertStmt();
-	this.containers = produceContainers();
+	final EntityMetadata<? extends AbstractEntity<?>> emd = dma.getEntityMetadata(retriever.type());
+	final List<PropertyMetadata> fields = extractFields(emd);
+	this.extraFields = extractExtraFields(emd);
+	final List<PropertyMetadata> insertFields = new ArrayList<>();
+	insertFields.addAll(fields);
+	insertFields.addAll(extraFields);
+	this.insertStmt = generateInsertStmt(insertFields, emd.getTable());
+	this.containers = produceContainers(fields);
     }
 
-    private String generateInsertStmt() {
-	final StringBuffer sb = new StringBuffer();
-	final EntityMetadata<? extends AbstractEntity<?>> emd = dma.getEntityMetadata(retriever.type());
+    private List<PropertyMetadata> extractExtraFields(final EntityMetadata<? extends AbstractEntity<?>> emd) {
+	final List<PropertyMetadata> result = new ArrayList<>();
 	final SortedMap<String, PropertyMetadata> props = emd.getProps();
+	result.add(props.get("version"));
+	if (!emd.isOneToOne()) {
+	    result.add(props.get("id"));
+	}
+	return result;
+    }
+
+    private List<PropertyMetadata> extractFields(final EntityMetadata<? extends AbstractEntity<?>> emd) {
+	final List<PropertyMetadata> result = new ArrayList<>();
+	final SortedSet<String> fields = EntityUtils.getFirstLevelProps(retriever.resultFields().keySet());
+	final SortedMap<String, PropertyMetadata> props = emd.getProps();
+	for (final String string : fields) {
+	    result.add(props.get(string));
+	}
+	return result;
+    }
+
+    private String generateInsertStmt(final List<PropertyMetadata> fields, final String tableName) {
+	final StringBuffer sb = new StringBuffer();
+
 	sb.append("INSERT INTO ");
-	sb.append(emd.getTable());
-	sb.append(" (_ID, _VERSION, ");
+	sb.append(tableName);
+	sb.append(" (");
 	final StringBuffer sbValues = new StringBuffer();
-	sbValues.append(" VALUES(?, ?, ");
-	for (final Iterator<String> iterator = EntityUtils.getFirstLevelProps(retriever.resultFields().keySet()).iterator(); iterator.hasNext();) {
-	    final String propName = iterator.next();
-	    sb.append(props.get(propName).getColumn());
-	    sbValues.append("?");
+	sbValues.append(" VALUES(");
+	for (final Iterator<PropertyMetadata> iterator = fields.iterator(); iterator.hasNext();) {
+	    final PropertyMetadata propName = iterator.next();
+
+	    sb.append(propName.getColumn());
 	    sb.append(iterator.hasNext() ? ", " : "");
+
+	    sbValues.append("?");
 	    sbValues.append(iterator.hasNext() ? ", " : "");
 	}
 	sb.append(") ");
@@ -51,15 +80,14 @@ public class RetrieverBatchStmtGenerator {
 	return sb.toString();
     }
 
-    private List<Container> produceContainers() {
+    private List<Container> produceContainers(final List<PropertyMetadata> fields) {
 	final List<Container> result = new ArrayList<>();
-	final EntityMetadata<? extends AbstractEntity<?>> emd = dma.getEntityMetadata(retriever.type());
-	final SortedMap<String, PropertyMetadata> props = emd.getProps();
+
 	final Map<String, Container> map = new HashMap<>();
-	for (final String firstLevelProp : EntityUtils.getFirstLevelProps(retriever.resultFields().keySet())) {
-	    final Container container = new Container(firstLevelProp, props.get(firstLevelProp).getJavaType());
+	for (final PropertyMetadata firstLevelProp : fields) {
+	    final Container container = new Container(firstLevelProp.getName(), firstLevelProp.getJavaType());
 	    result.add(container);
-	    map.put(firstLevelProp, container);
+	    map.put(firstLevelProp.getName(), container);
 	}
 
 	int index = 1;
@@ -71,7 +99,7 @@ public class RetrieverBatchStmtGenerator {
 	return result;
     }
 
-    public List<Integer> produceKeyFieldsIndices(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    public List<Integer> produceKeyFieldsIndices() {
 	final List<Integer> result = new ArrayList<>();
 	final List<String> keyMembersFirstLevelProps = Finder.getFieldNames(Finder.getKeyMembers(retriever.type()));
 
@@ -94,6 +122,10 @@ public class RetrieverBatchStmtGenerator {
 		values.add(rs.getObject(index.intValue()));
 	    }
 	    result.add(transformValue(container.propType, values, cache));
+	}
+
+	for (final PropertyMetadata propMetadata : extraFields) {
+	    result.add(propMetadata.getName().equals("id") ? id : 0);
 	}
 
 	return result;
