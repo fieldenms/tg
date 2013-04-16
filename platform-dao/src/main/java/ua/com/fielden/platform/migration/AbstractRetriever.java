@@ -677,4 +677,10 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
     public static List<String> list(final String... stmts) {
 	return Arrays.asList(stmts);
     }
+
+    public String convertToBoolean(final String propName) {
+	return "COALESCE(CASE UPPER(LTRIM(RTRIM(" + propName + "))) WHEN '' THEN 'N' " + //
+		"WHEN 'A' THEN 'Y' WHEN 'Y' THEN 'Y' WHEN 'YES' THEN 'Y' WHEN '1' THEN 'Y' WHEN 'TRUE' THEN 'Y' WHEN 'T' THEN 'Y' " + //
+		"WHEN 'B' THEN 'N' WHEN 'N' THEN 'N' WHEN 'NO' THEN 'N' WHEN '0' THEN 'N' WHEN 'FALSE' THEN 'N' WHEN 'F' THEN 'N' ELSE NULL END, 'N')";
+    }
 }

@@ -79,11 +79,19 @@ public class DataMigrator {
 //	System.out.println(retrievers.get(6).getClass().getSimpleName());
 //	System.out.println(new RetrieverBatchStmtGenerator(null).produceKeyFieldsIndices(retrievers.get(6)));
 
+//	for (final EntityMetadata<? extends AbstractEntity<?>> emd : dma.getDomainMetadata().getEntityMetadataMap().values()) {
+//	    for (final PropertyMetadata pmd : emd.getProps().values()) {
+//		if (pmd.getJavaType() == boolean.class) {
+//		    System.out.println(emd.getType().getSimpleName() + "." + pmd.getName());
+//		}
+//	    }
+//	}
+
 	final Connection conn = injector.getInstance(Connection.class);
-//	checkEmptyStrings(dma, conn);
-//	checkRequiredness(dma, conn);
-//	checkDataIntegrity(dma, conn);
-//	validateRetrievalSql(dma);
+	checkEmptyStrings(dma, conn);
+	checkRequiredness(dma, conn);
+	checkDataIntegrity(dma, conn);
+	validateRetrievalSql(dma);
 
 	final DateTime start = new DateTime();
 	batchInsert(dma, conn, 0, personClass);
@@ -258,7 +266,8 @@ public class DataMigrator {
     	}
 	conn.close();
 	if (foundErrors) {
-	    throw new RuntimeException("Validation detected errors. Pls consult the log file for details");
+	    logger.error("\n\n\n======== Validation detected errors. Pls consult the log file for details ==========\n\n\n");
+	    //throw new RuntimeException("Validation detected errors. Pls consult the log file for details");
 	}
     }
 
