@@ -1,21 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="java" deleted="false" description="Generates a stub for the most ordinary entity property." enabled="true" name="tgprop">@IsProperty
-@MapTo
-@Title(value = "${Title}", desc = "${Desc}")
-private ${type} ${name};
-
-@Observable
-public ${enclosing_type} set${cursor}${name}(final ${type} ${name}) {
-	this.${name} = ${name};
-	return this;
-}
-
-public ${type} get${name}() {
-	return ${name};
-}
-${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
-          ua.com.fielden.platform.entity.annotation.Title,
-          ua.com.fielden.platform.entity.annotation.Observable,
-          ua.com.fielden.platform.entity.annotation.MapTo)}</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a calcualted property" enabled="true" name="tgprop-calculated">@IsProperty
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a calcualted property" enabled="true" name="tgprop-calculated">@IsProperty
 @Readonly
 @Calculated
 @Title(value = "${Title}", desc = "${Desc}")
@@ -24,12 +7,12 @@ private static ExpressionModel ${name}_ = expr().val(null).model();
 
 @Observable
 private ${enclosing_type} set${cursor} ${name}(final ${type} ${name}) {
-	this.${name} = ${name};
-	return this;
+    this.${name} = ${name};
+    return this;
 }
 
 public ${type} get${name}() {
-	return ${name};
+    return ${name};
 }
 
 ${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr,
@@ -40,54 +23,58 @@ ${imp:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Readonly,   
           ua.com.fielden.platform.entity.annotation.Calculated,
           ua.com.fielden.platform.entity.annotation.Title,
-   	  ua.com.fielden.platform.entity.query.model.ExpressionModel)}
+          ua.com.fielden.platform.entity.query.model.ExpressionModel)}
 </template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for collectional one-to-many association" enabled="true" name="tgprop-collectional">@IsProperty(${type}.class)
 @Title(value = "${Title}", desc = "${Desc}")
 private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();
 
 @Observable
 protected ${enclosing_type} set${cursor}${name}(final Set&lt;${type}&gt; ${name}) {
-	this.${name}.clear();
-	this.${name}.addAll(${name});
-	return this;
+    this.${name}.clear();
+    this.${name}.addAll(${name});
+    return this;
 }
 
 public Set&lt;${type}&gt; get${name}() {
-	return Collections.unmodifiableSet(${name});
+    return Collections.unmodifiableSet(${name});
 }
+	
 ${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
-          java.util.HashSet, java.util.Set, java.util.Collections)}</template><template autoinsert="true" context="java" deleted="false" description="Generates a collectional one-to-many association with mutators addTo and removeFrom" enabled="true" name="tgprop-collectional-with-mutation">@IsProperty(${type}.class)
+          java.util.HashSet, java.util.Set, java.util.Collections)}
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a collectional one-to-many association with mutators addTo and removeFrom" enabled="true" name="tgprop-collectional-with-mutation">@IsProperty(${type}.class)
 @Title(value = "${Title}", desc = "${Desc}")
 private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();
 
 @Observable
 protected ${enclosing_type} set${cursor}${name}(final Set&lt;${type}&gt; ${name}) {
-	this.${name}.clear();
-	this.${name}.addAll(${name});
-	return this;
+    this.${name}.clear();
+    this.${name}.addAll(${name});
+    return this;
 }
 
 @Observable
 protected ${enclosing_type} addTo${name}(final ${type} value) {
-	this.${name}.add(value);
-	return this;
+    this.${name}.add(value);
+    return this;
 }
 
 @Observable
 protected ${enclosing_type} removeFrom${name}(final ${type} value) {
-	this.${name}.remove(value);
-	return this;
+    this.${name}.remove(value);
+    return this;
 }
 
 public Set&lt;${type}&gt; get${name}() {
-	return Collections.unmodifiableSet(${name});
+    return Collections.unmodifiableSet(${name});
 }
+
 ${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
-          java.util.HashSet, java.util.Set, java.util.Collections)}</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a propery that should serve as one of composite key members" enabled="true" name="tgprop-composite-key">@IsProperty
+          java.util.HashSet, java.util.Set, java.util.Collections)}
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a propery that should serve as one of composite key members" enabled="true" name="tgprop-composite-key">@IsProperty
 @MapTo
 @Title(value = "${Title}", desc = "${Desc}")
 @CompositeKeyMember(${index})
@@ -95,18 +82,41 @@ private ${type} ${name};
 
 @Observable
 public ${enclosing_type} set${cursor}${name}(final ${type} ${name}) {
-	this.${name} = ${name};
-	return this;
+    this.${name} = ${name};
+    return this;
 }
 
 public ${type} get${name}() {
-	return ${name};
+    return ${name};
 }
+
 ${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
           ua.com.fielden.platform.entity.annotation.MapTo,
-	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember)}</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a pairt of comparable and dependent properties such as fromDate and toDate" enabled="true" name="tgprop-from-and-to">@IsProperty
+  	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember)}
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a property of an entity type" enabled="true" name="tgprop-entity">@IsProperty
+@MapTo
+@Title(value = "${Title}", desc = "${Desc}")
+private ${type} ${name};
+
+@Observable
+@EntityExists(${type}.class)
+public ${enclosing_type} set${cursor}${name}(final ${type} ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public ${type} get${name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+  	  ua.com.fielden.platform.entity.annotation.EntityExists,
+          ua.com.fielden.platform.entity.annotation.MapTo)}
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a pairt of comparable and dependent properties such as fromDate and toDate" enabled="true" name="tgprop-from-and-to">@IsProperty
 @MapTo
 @Dependent("${name2}")
 @Title(value = "${Title1}", desc = "${Desc1}")
@@ -121,48 +131,68 @@ private ${type} ${name2};
 @Observable
 @LeProperty("${name2}")
 public ${enclosing_type} set${cursor}${name1}(final ${type} ${name1}) {
-	this.${name1} = ${name1};
-	return this;
+    this.${name1} = ${name1};
+    return this;
 }
 
 public ${type} get${name1}() {
-	return ${name1};
+    return ${name1};
 }
 
 @Observable
 @GeProperty("${name1}")
 public ${enclosing_type} set${name2}(final ${type} ${name2}) {
-	this.${name2} = ${name2};
-	return this;
+    this.${name2} = ${name2};
+    return this;
 }
 
 public ${type} get${name2}() {
-	return ${name2};
+    return ${name2};
 }
+	
 ${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
           ua.com.fielden.platform.entity.annotation.MapTo,
           ua.com.fielden.platform.entity.annotation.Dependent,
           ua.com.fielden.platform.entity.validation.annotation.GeProperty,
-          ua.com.fielden.platform.entity.validation.annotation.LeProperty)}</template><template autoinsert="true" context="java-statements" deleted="false" description="Query stub for EntityAggregates" enabled="true" name="tgquery-aggregates">final AggregatedResultQueryModel query = select(${type}.class).yield().prop("prop1").as("myresult").modelAsAggregate();
+          ua.com.fielden.platform.entity.validation.annotation.LeProperty)}
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for the most ordinary entity property." enabled="true" name="tgprop-ordinary">@IsProperty
+@MapTo
+@Title(value = "${Title}", desc = "${Desc}")
+private ${type} ${name};
+
+@Observable
+public ${enclosing_type} set${cursor}${name}(final ${type} ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public ${type} get${name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.MapTo)}
+</template><template autoinsert="true" context="java-statements" deleted="false" description="Query stub for EntityAggregates" enabled="true" name="tgquery-aggregates">final AggregatedResultQueryModel query = select(${type}.class).yield().prop("prop1").as("myresult").modelAsAggregate();
 final fetch&lt;EntityAggregates&gt; fetch = fetch(EntityAggregates.class).with("prop1");
 final OrderingModel orderBy = orderBy().prop("prop1").asc().model();
-	final QueryExecutionModel&lt;EntityAggregates, AggregatedResultQueryModel&gt; qem = from(query).with(fetch).with(orderBy).model();
+final QueryExecutionModel&lt;EntityAggregates, AggregatedResultQueryModel&gt; qem = from(query).with(fetch).with(orderBy).model();
 
 ${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from,
                     ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch,
-                    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy,
+       	            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy,
                     ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select)}    
 
 ${:import(ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel,
-          ua.com.fielden.platform.entity.query.EntityAggregates,
-	  ua.com.fielden.platform.entity.query.model.OrderingModel,
+       	  ua.com.fielden.platform.entity.query.EntityAggregates,
+  	  ua.com.fielden.platform.entity.query.model.OrderingModel,
 	  ua.com.fielden.platform.entity.query.fluent.fetch,
 	  ua.com.fielden.platform.dao.QueryExecutionModel
-)}</template>
-
-<template autoinsert="true" context="java-statements" deleted="false" description="Query stub for Entity" enabled="true" name="tgquery-entity">final EntityResultQueryModel&lt;${type}&gt; query = select(${type}.class).model();
+)}
+</template><template autoinsert="true" context="java-statements" deleted="false" description="Query stub for Entity" enabled="true" name="tgquery-entity">final EntityResultQueryModel&lt;${type}&gt; query = select(${type}.class).model();
 final fetch&lt;${type}&gt; fetch = fetch(${type}.class).with("prop1");
 final OrderingModel orderBy = orderBy().prop("prop1").asc().model();
 final QueryExecutionModel&lt;${type}, EntityResultQueryModel&lt;${type}&gt;&gt; qem = from(query).with(fetch).with(orderBy).model();
@@ -170,18 +200,18 @@ final QueryExecutionModel&lt;${type}, EntityResultQueryModel&lt;${type}&gt;&gt; 
 ${imst:importStatic('ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*')}    
 
 ${:import(ua.com.fielden.platform.entity.query.model.EntityResultQueryModel,
-	  ua.com.fielden.platform.entity.query.model.OrderingModel,
+          ua.com.fielden.platform.entity.query.model.OrderingModel,
 	  ua.com.fielden.platform.entity.query.fluent.fetch,
 	  ua.com.fielden.platform.dao.QueryExecutionModel
-)}</template>
-
-<template autoinsert="true" context="java" deleted="false" description="Import of query related classes and static methods" enabled="true" name="tgquery-import">${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr,
-		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond,
-		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from,
-		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy,
-		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch,
-		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll,
-		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly,
+)}
+</template><template autoinsert="true" context="java" deleted="false" description="Imports EQL related classes and static methods" enabled="true" name="tgquery-fix-imports">
+${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr,
+        		    ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly,
                     ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select)}   
 
 ${:import(ua.com.fielden.platform.entity.query.model.EntityResultQueryModel,
@@ -190,4 +220,5 @@ ${:import(ua.com.fielden.platform.entity.query.model.EntityResultQueryModel,
 	  ua.com.fielden.platform.entity.query.model.OrderingModel,
 	  ua.com.fielden.platform.entity.query.fluent.fetch,
 	  ua.com.fielden.platform.dao.QueryExecutionModel
-)}</template></templates>
+)}
+</template></templates>
