@@ -73,7 +73,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
     /**
      * Class representing the type of the instances used for autocomplition.
      */
-    private final Class<T> lookupCass;
+    private final Class<T> lookupClass;
     /**
      * List of property expressions used during autocomplition. The first expression is always used for selection -- it appears in the text filed upon selection.
      */
@@ -88,23 +88,23 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
      *            -- used for value separation in case of multi-value selection support; if this values is empty or null then multi-selection is turned off.
      * @param customListCellRenderer
      *            -- the name says it all
-     * @param lookupCass
+     * @param lookupClass
      *            -- representing the type of the instances used for autocomplition
      * @param expression
      *            -- a property from class <code>lookupCass</code> that is used for display when lookup value(s) is(are) selected; if it is null then toString() is is used on the
      *            lookup value(e) itself.
      */
-    public AutocompleterLogic(final AutocompleterTextFieldLayer<T> layeredTextComponent, final String separator, final ListCellRenderer customListCellRenderer, final Class<T> lookupCass, final String expression) {
+    public AutocompleterLogic(final AutocompleterTextFieldLayer<T> layeredTextComponent, final String separator, final ListCellRenderer customListCellRenderer, final Class<T> lookupClass, final String expression) {
 	super(layeredTextComponent.getView(), customListCellRenderer);
 	this.layeredTextComponent = layeredTextComponent;
 
-	this.lookupCass = lookupCass;
+	this.lookupClass = lookupClass;
 	try {
 	    // here "entity" is used as a place holder for the provided entity instance
 	    propertyExpression = StringUtils.isEmpty(expression.trim()) ? null : ExpressionFactory.createExpression(("entity." + expression.trim()));
 	} catch (final Exception e) {
 	    e.printStackTrace();
-	    throw new IllegalArgumentException("Failed to create expression " + expression + " for type " + lookupCass.getName() + ": " + e.getMessage());
+	    throw new IllegalArgumentException("Failed to create expression " + expression + " for type " + lookupClass.getName() + ": " + e.getMessage());
 	}
 
 	// When popup is displayed and user clicks on the text component then popup automatically hides, which leads to stale Accept state of the SmartButton.
@@ -409,7 +409,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 	if (getList().getSelectedValues().length > 0) {
 	    final StringBuffer buffer = new StringBuffer();
 	    for (final Object element : getList().getSelectedValues()) {
-		buffer.append(value(lookupCass.cast(element)) + (isMultiValued() ? valueSeparator : ""));
+		buffer.append(value(lookupClass.cast(element)) + (isMultiValued() ? valueSeparator : ""));
 	    }
 	    final String selectedWord = buffer.toString().substring(0, isMultiValued() ? buffer.toString().length() - 1 : buffer.toString().length());
 	    // calculate caret position
@@ -437,7 +437,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 	if (selectedEntities.size() > 0) {
 	    final StringBuffer buffer = new StringBuffer();
 	    for (final Object element : selectedEntities) {
-		buffer.append(value(lookupCass.cast(element)) + (isMultiValued() ? valueSeparator : ""));
+		buffer.append(value(lookupClass.cast(element)) + (isMultiValued() ? valueSeparator : ""));
 	    }
 	    final String selectedWord = buffer.toString().substring(0, isMultiValued() ? buffer.toString().length() - 1 : buffer.toString().length());
 	    // calculate caret position
@@ -668,7 +668,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 	return layeredTextComponent;
     }
 
-    public Class<T> getLookupCass() {
-	return lookupCass;
+    public Class<T> getLookupClass() {
+	return lookupClass;
     }
 }

@@ -161,7 +161,7 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
 	    final JLabel label = jlProperties[exprIndex];
 	    final FontMetrics fm = SwingUtilities2.getFontMetrics(label, label.getFont());
 	    final String clippedString = SwingUtilities2.clipStringIfNecessary(label, fm, exprValue, preferredWidth);
-	    label.setText(isPropertyHighlighted(exprProperties[exprIndex]) ? matchValue(clippedString, pattern) : TitlesDescsGetter.addHtmlTag(clippedString));
+	    label.setText(isPropertyHighlighted(exprProperties[exprIndex]) ? matchValue(exprValue, clippedString, pattern) : TitlesDescsGetter.addHtmlTag(clippedString));
 	}
 	return this;
     }
@@ -223,23 +223,32 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
      *
      * @param value
      *            - value to highlight.
+     * @param clippedString
      * @param pattern
      *            - {@link Pattern} to which value value should be matched.
      * @return
      */
-    private String matchValue(final String value, final Pattern pattern) {
+    private String matchValue(final String value, final String clippedString, final Pattern pattern) {
+	String  suffix = "";
+	String body = clippedString;
+	if(clippedString.endsWith("...")){
+	    suffix = "...";
+	    body = clippedString.substring(0, clippedString.length() - 3);
+	}
 	final String fullNameUpper = value.toUpperCase();
 	final Matcher matcher = pattern.matcher(fullNameUpper);
 	final StringBuffer buffer = new StringBuffer();
 	buffer.append("<html>");
-	if (matcher.find()) {
-	    buffer.append(value.substring(0, matcher.start()));
+	if (matcher.find() && matcher.start() < body.length()) {
+	    buffer.append(body.substring(0, matcher.start()));
 	    buffer.append("<font bgcolor=#fffec7>");
-	    buffer.append(value.substring(matcher.start(), matcher.end()));
+	    final int endIndex = matcher.end() <= body.length() ? matcher.end() : body.length();
+	    buffer.append(body.substring(matcher.start(), endIndex));
 	    buffer.append("</font>");
-	    buffer.append(value.substring(matcher.end()));
+	    buffer.append(body.substring(endIndex));
+	    buffer.append(suffix);
 	} else {
-	    buffer.append(value);
+	    buffer.append(clippedString);
 	}
 	buffer.append("</html>");
 	return buffer.toString();
