@@ -65,14 +65,6 @@ public class DataMigrator {
 	    }
 	}
 
-	//	for (final EntityMetadata<? extends AbstractEntity<?>> emd : dma.getDomainMetadata().getEntityMetadataMap().values()) {
-	//	    for (final PropertyMetadata pmd : emd.getProps().values()) {
-	//		if (pmd.getJavaType() == boolean.class) {
-	//		    System.out.println(emd.getType().getSimpleName() + "." + pmd.getName());
-	//		}
-	//	    }
-	//	}
-
 	final Connection conn = injector.getInstance(Connection.class);
 	checkEmptyStrings(dma, conn);
 	checkRequiredness(dma, conn);
@@ -258,7 +250,7 @@ public class DataMigrator {
 	}
     }
 
-    private Integer batchInsert(final DomainMetadataAnalyser dma, final Connection conn, final int startingId, final Class<? extends AbstractEntity<?>> personClass)
+    private Integer batchInsert(final DomainMetadataAnalyser dma, final Connection legacyConn, final int startingId, final Class<? extends AbstractEntity<?>> personClass)
 	    throws Exception {
 	final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
 	Integer id = startingId;
@@ -275,81 +267,81 @@ public class DataMigrator {
 	    }
 	    final Map<Object, Integer> typeCache = cache.get(retriever.type());
 	    final DateTime start = new DateTime();
-	    final Statement st = conn.createStatement();
+	    final Statement legacyStmt = legacyConn.createStatement();
 	    final String insertSql = rbsg.getInsertStmt();
 	    final List<Integer> indexFields = rbsg.produceKeyFieldsIndices();
-	    try {
-		final ResultSet rs = st.executeQuery(sql);
-		final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
-		final Connection conn2 = hiberUtil.getSessionFactory().getCurrentSession().connection();
-		final PreparedStatement st2 = conn2.prepareStatement(insertSql);
-		int batchId = 0;
-		final List<List<Object>> batchValues = new ArrayList<>();
-		while (rs.next()) {
-		    id = id + 1;
-		    batchId = batchId + 1;
-		    final List<Object> keyValue = new ArrayList<>();
-		    for (final Integer keyIndex : indexFields) {
-			keyValue.add(rs.getObject(keyIndex.intValue()));
-		    }
-		    typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
-		    if (retriever.type().equals(personClass)) {
-			userTypeCache.put(rs.getObject("username"), id);
-		    }
-		    int index = 1;
-		    final List<Object> currTransformedValues = rbsg.transformValues(rs, cache, id);
-		    batchValues.add(currTransformedValues);
-		    for (final Object value : currTransformedValues) {
-			st2.setObject(index, value);
-			index = index + 1;
-		    }
-		    st2.addBatch();
+	    final ResultSet legacyRs = legacyStmt.executeQuery(sql);
+	    final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
+	    final Connection targetConn = hiberUtil.getSessionFactory().getCurrentSession().connection();
+	    final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql);
+	    int batchId = 0;
+	    final List<List<Object>> batchValues = new ArrayList<>();
 
-		    if ((batchId % 100) == 0) {
-			repeatAction(st2, batchValues, exceptions);
-			batchValues.clear();
-			st2.clearBatch();
-		    }
+	    while (legacyRs.next()) {
+		id = id + 1;
+		batchId = batchId + 1;
+		final List<Object> keyValue = new ArrayList<>();
+		for (final Integer keyIndex : indexFields) {
+		    keyValue.add(legacyRs.getObject(keyIndex.intValue()));
 		}
-
-		if ((batchId % 100) != 0) {
-		    repeatAction(st2, batchValues, exceptions);
+		typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
+		if (retriever.type().equals(personClass)) {
+		    userTypeCache.put(legacyRs.getObject("username"), id);
 		}
+		int index = 1;
+		final List<Object> currTransformedValues = rbsg.transformValues(legacyRs, cache, id);
+		batchValues.add(currTransformedValues);
+		for (final Object value : currTransformedValues) {
+		    insertStmt.setObject(index, value);
+		    index = index + 1;
+		}
+		insertStmt.addBatch();
 
-		tr.commit();
-		st2.close();
-		rs.close();
-	    } catch (final Exception ex) {
-		final Integer prevValue = exceptions.get(ex.toString());
-		exceptions.put(ex.toString(), (prevValue != null ? prevValue : 0) + 1);
-		//logger.error("Exception while performing batch insert of [" + retriever.getClass().getSimpleName() + "] " + ex + ". SQL:\n" + insertSql);
-	    } finally {
-		st.close();
-	    }
-	    final Period pd = new Period(start, new DateTime());
-	    System.out.println(retriever.getClass().getSimpleName() + " -- duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis()
-		    + " ms. Entities count: " + typeCache.size());
-	    if (exceptions.size() > 0) {
-		System.out.println("       " + retriever.getClass().getSimpleName() + " -- SQL: " + insertSql);
-		System.out.println("       " + retriever.getClass().getSimpleName() + " -- exceptions: ");
-		for (final Entry<String, Integer> entry : exceptions.entrySet()) {
-		    System.out.println("                 (" + entry.getValue() + ") -- " + entry.getKey());
+		if ((batchId % 100) == 0) {
+		    repeatAction(insertStmt, batchValues, exceptions);
+		    batchValues.clear();
+		    insertStmt.clearBatch();
 		}
 	    }
 
+	    if ((batchId % 100) != 0) {
+		repeatAction(insertStmt, batchValues, exceptions);
+	    }
+
+	    tr.commit();
+	    insertStmt.close();
+	    legacyRs.close();
+	    legacyStmt.close();
+
+	    System.out.println(generateFinalMessage(start, retriever.getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
 	}
+
 	return id;
     }
 
-    private void repeatAction(final PreparedStatement st2, final List<List<Object>> batchValues, final Map<String, Integer> exceptions) throws SQLException {
+    private String generateFinalMessage(final DateTime start, final String retrieverName, final int entitiesCount, final String insertSql, final Map<String, Integer> exceptions) {
+	final Period pd = new Period(start, new DateTime());
+	final StringBuffer sb = new StringBuffer();
+	sb.append(retrieverName + " -- duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + entitiesCount + "\n");
+	if (exceptions.size() > 0) {
+	    sb.append("       " + retrieverName + " -- SQL: " + insertSql + "\n");
+	    sb.append("       " + retrieverName + " -- exceptions:\n");
+	    for (final Entry<String, Integer> entry : exceptions.entrySet()) {
+		sb.append("                 (" + entry.getValue() + ") -- " + entry.getKey() + "\n");
+	    }
+	}
+	return sb.toString();
+    }
+
+    private void repeatAction(final PreparedStatement stmt, final List<List<Object>> batchValues, final Map<String, Integer> exceptions) throws SQLException {
 	try {
-	    st2.executeBatch();
+	    stmt.executeBatch();
 	} catch (final BatchUpdateException ex) {
 	    int updateIndex = 0;
 	    int errorCount = 0;
 	    for (final int updateCount : ex.getUpdateCounts()) {
 		if (updateCount != 1) {
-		    System.out.println(" EXCEPTION ==== " + batchValues.get(updateIndex));
+		    System.out.println("  " + batchValues.get(updateIndex));
 		    errorCount = errorCount + 1;
 		}
 		updateIndex = updateIndex + 1;
