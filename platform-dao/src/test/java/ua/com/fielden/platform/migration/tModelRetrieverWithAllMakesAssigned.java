@@ -33,9 +33,4 @@ public class tModelRetrieverWithAllMakesAssigned extends AbstractRetriever<TgVeh
     public String whereSql() {
 	return "MAKE IS NOT NULL";
     }
-
-    @Override
-    public String splitProperty() {
-	return "make";
-    }
 }

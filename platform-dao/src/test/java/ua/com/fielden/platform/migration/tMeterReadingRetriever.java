@@ -26,11 +26,6 @@ public class tMeterReadingRetriever extends AbstractRetriever<TgMeterReading> {
     }
 
     @Override
-    public String splitProperty() {
-	return "vehicle";
-    }
-
-    @Override
     public SortedMap<String, String> resultFields() {
 	return map( //
 		field("vehicle", "M.EQUIPNO"), //

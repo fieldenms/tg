@@ -28,9 +28,4 @@ public class tModelRetriever extends AbstractRetriever<TgVehicleModel> {
     public String fromSql() {
 	return "MODEL";
     }
-
-    @Override
-    public String splitProperty() {
-	return "make";
-    }
 }

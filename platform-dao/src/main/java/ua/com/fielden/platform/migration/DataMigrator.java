@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.migration;
 
+import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -281,8 +283,11 @@ public class DataMigrator {
 		final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
 		final Connection conn2 = hiberUtil.getSessionFactory().getCurrentSession().connection();
 		final PreparedStatement st2 = conn2.prepareStatement(insertSql);
+		int batchId = 0;
+		final List<List<Object>> batchValues = new ArrayList<>();
 		while (rs.next()) {
 		    id = id + 1;
+		    batchId = batchId + 1;
 		    final List<Object> keyValue = new ArrayList<>();
 		    for (final Integer keyIndex : indexFields) {
 			keyValue.add(rs.getObject(keyIndex.intValue()));
@@ -292,26 +297,23 @@ public class DataMigrator {
 			userTypeCache.put(rs.getObject("username"), id);
 		    }
 		    int index = 1;
-		    for (final Object value : rbsg.transformValues(rs, cache, id)) {
+		    final List<Object> currTransformedValues = rbsg.transformValues(rs, cache, id);
+		    batchValues.add(currTransformedValues);
+		    for (final Object value : currTransformedValues) {
 			st2.setObject(index, value);
 			index = index + 1;
 		    }
 		    st2.addBatch();
 
-		    if ((id % 100) == 0) {
-			try {
-			    st2.executeBatch();
-			} catch (final Exception ex) {
-			    final Integer prevValue = exceptions.get(ex.toString());
-			    exceptions.put(ex.toString(), (prevValue != null ? prevValue : 0) + 1);
-			    //logger.error("Exception while performing batch insert of [" + retriever.getClass().getSimpleName() + "] " + ex + ". SQL:\n" + insertSql);
-			} finally {
-			    st2.clearBatch();
-			}
+		    if ((batchId % 100) == 0) {
+			repeatAction(st2, batchValues, exceptions);
+			batchValues.clear();
+			st2.clearBatch();
 		    }
 		}
-		if ((id % 100) != 0) {
-		    st2.executeBatch();
+
+		if ((batchId % 100) != 0) {
+		    repeatAction(st2, batchValues, exceptions);
 		}
 
 		tr.commit();
@@ -337,5 +339,24 @@ public class DataMigrator {
 
 	}
 	return id;
+    }
+
+    private void repeatAction(final PreparedStatement st2, final List<List<Object>> batchValues, final Map<String, Integer> exceptions) throws SQLException {
+	try {
+	    st2.executeBatch();
+	} catch (final BatchUpdateException ex) {
+	    int updateIndex = 0;
+	    int errorCount = 0;
+	    for (final int updateCount : ex.getUpdateCounts()) {
+		if (updateCount != 1) {
+		    System.out.println(" EXCEPTION ==== " + batchValues.get(updateIndex));
+		    errorCount = errorCount + 1;
+		}
+		updateIndex = updateIndex + 1;
+	    }
+
+	    final Integer prevValue = exceptions.get(ex.toString());
+	    exceptions.put(ex.toString(), (prevValue != null ? prevValue : 0) + errorCount);
+	}
     }
 }
