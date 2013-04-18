@@ -15,7 +15,7 @@ import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.components.textfield.UpperCaseTextField;
 import ua.com.fielden.platform.swing.components.textfield.caption.CaptionTextFieldLayer;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
@@ -53,7 +53,7 @@ public class AutocompleterMultiExample {
 		    }
 		};
 
-		final TwoPropertyListCellRenderer<DemoEntity> cellRenderer = new TwoPropertyListCellRenderer<DemoEntity>("name", "desc");
+		final MultiplePropertiesListCellRenderer<DemoEntity> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEntity>("name", "desc");
 		final AutocompleterTextFieldLayer<DemoEntity> autocompleter = new AutocompleterTextFieldLayer<DemoEntity>(new UpperCaseTextField(), matcher, DemoEntity.class, "name", cellRenderer, "caption...", ";");
 		cellRenderer.setAuto(autocompleter.getAutocompleter());
 

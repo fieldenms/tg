@@ -48,7 +48,7 @@ import ua.com.fielden.platform.swing.components.bind.formatters.DateFormatter1;
 import ua.com.fielden.platform.swing.components.bind.formatters.EmptyDateFormatterWithIndependentTimePortion;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayerWithEntityLocator;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
 import ua.com.fielden.platform.swing.components.textfield.UpperCaseTextField;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
@@ -327,40 +327,14 @@ public class ComponentFactory {
      * @param valueSeparator
      * @return
      */
-    private static <T> AutocompleterTextFieldLayer<T> createUnBoundAutocompleter(final String caption, final Class<T> lookupClass, final String expression, final String secExpression, final IValueMatcher<T> valueMatcher, final String valueSeparator) {
-	final TwoPropertyListCellRenderer<T> cellRenderer = new TwoPropertyListCellRenderer<T>(expression, secExpression);
+    private static <T> AutocompleterTextFieldLayer<T> createUnBoundAutocompleter(final String caption, final Class<T> lookupClass, final String expression, final String[] secExpressions, final IValueMatcher<T> valueMatcher, final String valueSeparator) {
+	final MultiplePropertiesListCellRenderer<T> cellRenderer = new MultiplePropertiesListCellRenderer<T>(expression, secExpressions);
 	final JTextField textField = new UpperCaseTextField();
 	enhanceTextFieldByDeprecatingPreferredSize(textField);
 	final AutocompleterTextFieldLayer<T> autocompleter = new AutocompleterTextFieldLayer<T>(textField, valueMatcher, lookupClass, expression, cellRenderer, caption, valueSeparator);
 	cellRenderer.setAuto(autocompleter.getAutocompleter());
 	return autocompleter;
     }
-
-    //    /**
-    //     * Creates not assigned to any property Autocompleter. This autocompleter is ctrl+Click action sensitive.
-    //     *
-    //     * @param lookupClass
-    //     * @param expression
-    //     * @param secExpression
-    //     * @param valueSeparator
-    //     * @param entityFactory
-    //     *            TODO
-    //     * @param acceptableValues
-    //     *            -
-    //     *
-    //     * @param <T>
-    //     * @return
-    //     */
-    //    private static <T> AutocompleterTextFieldLayer<T> createUnBoundOptionAutocompleter(final IBindingEntity entity, final String caption, final Class<T> lookupClass, final String expression, final String secExpression, final IValueMatcher<T> valueMatcher, final IEntityMasterManager entityMasterFactory, final String valueSeparator, final EntityFactory entityFactory, final IValueMatcherFactory vmf, final IDaoFactory daoFactory, final ILocatorConfigurationController locatorController, final ILocatorConfigurationRetriever locatorRetriever, final String propertyName) {
-    //	final TwoPropertyListCellRenderer<T> cellRenderer = new TwoPropertyListCellRenderer<T>(expression, secExpression);
-    //	final JTextField textField = new UpperCaseTextField();
-    //	enhanceTextFieldByDeprecatingPreferredSize(textField);
-    //	final LocatorManager locatorManager = new LocatorManager(locatorController, locatorRetriever, lookupClass, entity.getClass(), propertyName);
-    //	final OptionAutocompleterTextFieldLayer<T> autocompleter = new OptionAutocompleterTextFieldLayer<T>(entity, propertyName, textField, entityFactory, valueMatcher, entityMasterFactory, expression, cellRenderer, caption, valueSeparator, vmf, daoFactory, locatorManager);
-    //	cellRenderer.setAuto(autocompleter.getAutocompleter());
-    //	return autocompleter;
-    //    }
-
 
     /**
      * Creates not assigned to any property Autocompleter with entity locator.
@@ -385,10 +359,10 @@ public class ComponentFactory {
 	    final Class<VT> entityType,//
 	    final String propertyName,//
 	    final String expression,//
-	    final String secExpression,//
+	    final String[] secExpressions,//
 	    final String caption,//
 	    final String valueSeparator){
-	final TwoPropertyListCellRenderer<VT> cellRenderer = new TwoPropertyListCellRenderer<VT>(expression, secExpression);
+	final MultiplePropertiesListCellRenderer<VT> cellRenderer = new MultiplePropertiesListCellRenderer<VT>(expression, secExpressions);
 	final JTextField textField = new UpperCaseTextField();
 	enhanceTextFieldByDeprecatingPreferredSize(textField);
 	final EntityLocatorDialog<VT, RT> entityLocatorDialog = new EntityLocatorDialog<VT, RT>(locatorConfigurationModel, !StringUtils.isEmpty(valueSeparator));
@@ -790,8 +764,8 @@ public class ComponentFactory {
      *            - if true -> you can use commit()/flush() methods in {@link BoundedValidationLayer}. else - these methods will throw exceptions.
      * @return
      */
-    public static BoundedValidationLayer<AutocompleterTextFieldLayer> createOnFocusLostAutocompleter(final IBindingEntity entity, final String propertyName, final String caption, final Class lookupClass, final String expression, final String secExpression, final String valueSeparator, final IValueMatcher valueMatcher, final String originalToolTipText, final boolean stringBinding, final IOnCommitAction... actions) {
-	final AutocompleterTextFieldLayer autocompleter = createUnBoundAutocompleter(caption, lookupClass, expression, secExpression, valueMatcher, valueSeparator);
+    public static BoundedValidationLayer<AutocompleterTextFieldLayer> createOnFocusLostAutocompleter(final IBindingEntity entity, final String propertyName, final String caption, final Class lookupClass, final String expression, final String[] secExpressions, final String valueSeparator, final IValueMatcher valueMatcher, final String originalToolTipText, final boolean stringBinding, final IOnCommitAction... actions) {
+	final AutocompleterTextFieldLayer autocompleter = createUnBoundAutocompleter(caption, lookupClass, expression, secExpressions, valueMatcher, valueSeparator);
 	final BoundedValidationLayer<AutocompleterTextFieldLayer> autocompleterValidationLayer = createBoundedValidationLayer(autocompleter, originalToolTipText);
 	Binder.bindOnFocusLostAutocompleter(autocompleterValidationLayer, entity, propertyName, stringBinding, originalToolTipText, actions);
 	if (!autocompleterValidationLayer.canCommit()) {
@@ -863,7 +837,7 @@ public class ComponentFactory {
 	    final Class<VT> entityType,//
 	    final IValueMatcher<VT> valueMatcher, //
 	    final String expression,//
-	    final String secExpression,//
+	    final String[] secExpressions,//
 	    final String caption,//
 	    final String valueSeparator,//
 	    //Binder related properties
@@ -875,7 +849,7 @@ public class ComponentFactory {
 		entityType,//
 		propertyName,//
 		expression,//
-		secExpression,//
+		secExpressions,//
 		caption,//
 		valueSeparator);
 	final BoundedValidationLayer<AutocompleterTextFieldLayerWithEntityLocator<VT>> autocompleterValidationLayer = createBoundedValidationLayer(autocompleter, originalToolTipText);
@@ -901,9 +875,9 @@ public class ComponentFactory {
      * @param valueSeparator
      * @return
      */
-    public static <T> BoundedValidationLayer<AutocompleterTextFieldLayer<T>> createTriggeredAutocompleter(final IBindingEntity entity, final String propertyName, final String caption, final ValueModel triggerChannel, final Class<T> lookupClass, final String expression, final String secExpression, final String valueSeparator, final IValueMatcher<T> valueMatcher, final String originalToolTipText, final boolean stringBinding, final IOnCommitAction... actions) {
+    public static <T> BoundedValidationLayer<AutocompleterTextFieldLayer<T>> createTriggeredAutocompleter(final IBindingEntity entity, final String propertyName, final String caption, final ValueModel triggerChannel, final Class<T> lookupClass, final String expression, final String[] secExpressions, final String valueSeparator, final IValueMatcher<T> valueMatcher, final String originalToolTipText, final boolean stringBinding, final IOnCommitAction... actions) {
 
-	final AutocompleterTextFieldLayer<T> autocompleter = ComponentFactory.createUnBoundAutocompleter(caption, lookupClass, expression, secExpression, valueMatcher, valueSeparator);
+	final AutocompleterTextFieldLayer<T> autocompleter = ComponentFactory.createUnBoundAutocompleter(caption, lookupClass, expression, secExpressions, valueMatcher, valueSeparator);
 	final BoundedValidationLayer<AutocompleterTextFieldLayer<T>> autocompleterValidationLayer = createBoundedValidationLayer(autocompleter, originalToolTipText);
 	Binder.bindTriggeredAutocompleter(autocompleterValidationLayer, entity, propertyName, triggerChannel, stringBinding, actions);
 	return autocompleterValidationLayer;

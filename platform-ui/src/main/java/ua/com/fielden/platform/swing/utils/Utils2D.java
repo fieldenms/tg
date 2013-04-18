@@ -3,7 +3,6 @@ package ua.com.fielden.platform.swing.utils;
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -29,11 +28,36 @@ public class Utils2D {
     public static String abbreviate(final Graphics2D g2, final String text, final int fitToWidth) {
 	// define how many characters in the caption can be drawn
 	final FontMetrics fm = g2.getFontMetrics();
-	Rectangle2D textBounds = fm.getStringBounds(text, g2);
+	return abbreviate(fm, text, fitToWidth);
+    }
+
+    /**
+     * Calculates the number of characters that can fit into the specified width.
+     *
+     * @param fm
+     * @param text
+     * @param fitToWidth
+     * @return
+     */
+    public static int getCharCountThatFits(final FontMetrics fm, final String text, final int fitToWidth){
+	int textWidth = fm.stringWidth(text);
 	int count = text.length();
-	while ((textBounds.getWidth() > fitToWidth) && (count > 4)) {
-	    textBounds = fm.getStringBounds(text.substring(0, count--), g2);
+	while ((textWidth > fitToWidth) && (count > 4)) {
+	    textWidth = fm.stringWidth(text.substring(0, count--));
 	}
+	return count;
+    }
+
+    /**
+     * Abbreviates the text to fit into the specified width (the number of pixels) by substituting a non-fitting portion with triple dots.
+     *
+     * @param fm
+     * @param text
+     * @param fitToWidth
+     * @return
+     */
+    public static String abbreviate(final FontMetrics fm, final String text, final int fitToWidth) {
+	final int count = getCharCountThatFits(fm, text, fitToWidth);
 	return count == text.length() ? text : StringUtils.abbreviate(text, count);
     }
 

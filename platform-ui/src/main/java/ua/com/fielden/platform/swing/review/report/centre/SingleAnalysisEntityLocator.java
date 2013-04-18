@@ -22,9 +22,7 @@ import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisViewForLocator;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModelForLocator;
@@ -36,6 +34,7 @@ import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent.LocatorAction;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends AbstractSingleAnalysisEntityCentre<T, ILocatorDomainTreeManagerAndEnhancer> {
@@ -192,10 +191,10 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
      */
     private JPanel createLocatorPanel() {
 
-	final Class<?> managedType = getModel().getCriteria().getManagedType();
+	final Class<T> managedType = getModel().getCriteria().getManagedType();
 	final ILocatorDomainTreeManager ldtm = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
 
-	final boolean containDesc = AnnotationReflector.isAnnotationPresent(DescTitle.class, managedType);
+	final boolean containDesc = EntityUtils.hasDescProperty(managedType);
 
 	final JPanel locatorPanel = new JPanel(new MigLayout("fill, insets 0", "[fill]" + (containDesc ? "[fill]" : "") + "push[][]", "[fill,grow]" + (containDesc ? "[fill,grow]" : "")));
 

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.EnumValueMatcher;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.components.textfield.UpperCaseTextField;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
@@ -47,7 +47,7 @@ public class AutocompleterEnumMultiExample {
 		    }
 		};
 
-		final TwoPropertyListCellRenderer<DemoEnum> cellRenderer = new TwoPropertyListCellRenderer<DemoEnum>("name()", "toString()");
+		final MultiplePropertiesListCellRenderer<DemoEnum> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEnum>("name()", "toString()");
 		final AutocompleterTextFieldLayer<DemoEnum> autocompleter = new AutocompleterTextFieldLayer<DemoEnum>(new UpperCaseTextField(), matcher, DemoEnum.class, "name()", cellRenderer, "caption...", ";");
 		cellRenderer.setAuto(autocompleter.getAutocompleter());
 

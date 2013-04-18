@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.ei.editors.development;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +31,6 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 
 public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEditor {
 
@@ -141,14 +142,6 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	getValueMatcher().setBindedEntity(entity);
     }
 
-    public void highlightFirstHintValue(final boolean highlight) {
-	getEditor().getView().highlightFirstHintValue(highlight);
-    }
-
-    public void highlightSecondHintValue(final boolean highlight) {
-	getEditor().getView().highlightSecondHintValue(highlight);
-    }
-
     private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditorWithLocator(//
 	    final AbstractEntity bindingEntity,//
 	    final String bindingPropertyName,//
@@ -162,7 +155,8 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	if (!AbstractEntity.class.isAssignableFrom(entityType)) {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + entityType + ".");
 	}
-	return ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, locatorConfigurationModel, entityType, getValueMatcher(), "key", "desc", caption, isSingle ? null : ",", toolTip, stringBinding);
+	final String[] secExpressions = EntityUtils.hasDescProperty(entityType) ? new String[] {"desc"} : null;
+	return ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, locatorConfigurationModel, entityType, getValueMatcher(), "key", secExpressions, caption, isSingle ? null : ",", toolTip, stringBinding);
     }
 
     private static class EntityLocatorValueMatcher<T extends AbstractEntity<?>, R extends AbstractEntity<?>> implements IValueMatcher<T>{
@@ -261,8 +255,9 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		final fetch<?> finalFetchModel = fetchModel != null ? fetchModel : fetchKeyAndDescOnly(entityType);
 		return EntityUtils.makeNotEnhanced(criteria.runLocatorQuery(getPageSize(), value, finalFetchModel, dependentValues.toArray(new Pair[0])));
 	    }else{
-		bindedPropertyEditor.getEditor().getView().highlightFirstHintValue(true);
-		bindedPropertyEditor.getEditor().getView().highlightSecondHintValue(false);
+		bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("key", true);
+		if(EntityUtils.hasDescProperty(entityType))
+		bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("desc", false);
 		if(fetchModel == null){
 		    return autocompleterValueMatcher.findMatches(value);
 		} else {
@@ -282,14 +277,20 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	    if(bindedPropertyEditor != null && ldtme.isUseForAutocompletion()){
 		boolean highlightKey = true;
 		boolean highlightDesc = false;
-		switch(ldtme.getSearchBy()){
+		switch (ldtme.getSearchBy()) {
 		case DESC:
 		    highlightKey = false;
 		case DESC_AND_KEY:
 		    highlightDesc = true;
+		    break;
+		default:
+		    break;
 		}
-		bindedPropertyEditor.getEditor().getView().highlightFirstHintValue(highlightKey);
-		bindedPropertyEditor.getEditor().getView().highlightSecondHintValue(highlightDesc);
+
+		bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("key", highlightKey);
+		if (EntityUtils.hasDescProperty(entityType)) {
+		    bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("desc", highlightDesc);
+		}
 	    }
 	}
 

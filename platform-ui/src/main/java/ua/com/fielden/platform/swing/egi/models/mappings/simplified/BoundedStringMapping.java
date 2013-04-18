@@ -20,6 +20,7 @@ import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuild
 import ua.com.fielden.platform.swing.egi.models.mappings.AbstractLabelPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.models.mappings.AggregationFunction;
 import ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Class, representing mapping of some {@link String} property of some {@link AbstractEntity} class to column of related {@link EntityGridInspector}. Uses
@@ -85,8 +86,9 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
     @Override
     public EditorComponent<BoundedValidationLayer<AutocompleterTextFieldLayer>, JTextField> createBoundedEditorFor(final T entity) {
 	final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
+	final String[] secExpressions = EntityUtils.hasDescProperty(valueClass) ? new String[] {"desc"} : null;
 
-	final BoundedValidationLayer<AutocompleterTextFieldLayer> boundedLayer = ComponentFactory.createOnFocusLostAutocompleter(entity, originalPropertyName, "", valueClass, "key", "desc", (String) null, valueMatcher, (String) null, stringBinding, onCommitActionWrappers); //
+	final BoundedValidationLayer<AutocompleterTextFieldLayer> boundedLayer = ComponentFactory.createOnFocusLostAutocompleter(entity, originalPropertyName, "", valueClass, "key", secExpressions, (String) null, valueMatcher, (String) null, stringBinding, onCommitActionWrappers); //
 	boundedLayer.getView().getView().addKeyListener(new KeyAdapter() {
 	    @Override
 	    public void keyReleased(final KeyEvent e) {

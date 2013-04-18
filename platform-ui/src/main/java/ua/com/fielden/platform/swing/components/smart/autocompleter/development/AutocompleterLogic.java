@@ -23,6 +23,8 @@ import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.commons.jexl.Expression;
 import org.apache.commons.jexl.ExpressionFactory;
@@ -31,19 +33,22 @@ import org.apache.commons.jexl.JexlHelper;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.IntRange;
 
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.components.smart.development.State;
 import ua.com.fielden.platform.swing.components.textfield.caption.CaptionTextFieldLayer;
+
+import com.jidesoft.hints.AbstractIntelliHints;
 
 
 /**
  * <code>AutocompleterLogic</code> extends {@link AbstractListIntelliHints} by providing custom list with renderer for instances of AbstractEntity interface.
- * 
+ *
  * Method {@link #findMatches(String)} needs to be implemented in order to provide the list of values used for autocompletion. Method {@link #cancelFindMatches(String)} should be
  * implemented to provide a custom logic for cancelling findMatches operation. For example, for Hibernate it can be something like session.cancelQuery(); Please note that this
  * method executes on EDT and therefore should not contain lengthy operations.
- * 
+ *
  * However, it should be a rare need to directly extends <code>AutocompleterLogic</code>. See {@link CaptionTextFieldLayer} for more details.
- * 
+ *
  * @author 01es
  */
 public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints implements FocusListener {
@@ -76,7 +81,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Creates a completion for OverlayableTextField with the specified value separator.
-     * 
+     *
      * @param layeredTextComponent
      *            -- layer, which implements smart button behaviour
      * @param separator
@@ -124,6 +129,18 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 	// this code could not be put into createList() method simply because valueSeparator is not initialise yet when super constructor is invoked
 	final ListSelectionModel model = getList().getSelectionModel();
 	model.setSelectionMode(isMultiValued() ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
+
+	getScroll().getViewport().addChangeListener(createViewportSizeChangeListener());
+    }
+
+    private ChangeListener createViewportSizeChangeListener() {
+	return new ChangeListener() {
+
+	    @Override
+	    public void stateChanged(final ChangeEvent e) {
+		getHintsCellRenderer().setPreferredWidth(getList().getWidth());
+	    }
+	};
     }
 
     @Override
@@ -154,7 +171,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * This method should be implemented to provide logic for obtaining a list of matching to <code>value</code> entities.
-     * 
+     *
      * @param value
      * @return
      */
@@ -162,13 +179,19 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * This method should be implemented to provide a custom logic for cancelling findMatches operation. For example, for Hibernate it can be something like session.cancelQuery();
-     * 
+     *
      * Please note that this method executes on EDT and therefore should not contain lengthy operations.
-     * 
+     *
      * @param value
      * @return
      */
     protected void cancelFindMatches() {
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected MultiplePropertiesListCellRenderer<T> getHintsCellRenderer() {
+        return (MultiplePropertiesListCellRenderer<T>)super.getHintsCellRenderer();
     }
 
     /**
@@ -264,7 +287,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Cancels SwingWorkder performing value matching.
-     * 
+     *
      * @param worker
      * @param otfField
      */
@@ -289,9 +312,10 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Creates the list to display the hints with a custom renderer.
-     * 
+     *
      * @return the list.
      */
+    @SuppressWarnings("rawtypes")
     @Override
     protected JList createList(final ListCellRenderer cellRenderer) {
 	final JList list = new JList() {
@@ -311,6 +335,11 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 		    return super.getPreferredScrollableViewportSize();
 		}
 	    }
+
+	    @Override
+	    public boolean getScrollableTracksViewportWidth() {
+	        return true;
+	    }
 	};
 	if (cellRenderer != null) {
 	    list.setCellRenderer(cellRenderer);
@@ -321,7 +350,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
     /**
      * Gets the delegate keystrokes. Since we know the hints popup is a JList, we return twelve keystrokes so that they can be delegate to the JList. Those keystrokes are DOWN, UP,
      * PAGE_DOWN, PAGE_UP, HOME, END and the same ones but with SHIFT_DOWN_MASK.
-     * 
+     *
      * @return the keystokes that will be delegated to the JList when hints popup is visible.
      */
     @Override
@@ -363,7 +392,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Sets the list data.
-     * 
+     *
      * @param entities
      */
     @SuppressWarnings("unchecked")
@@ -393,7 +422,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Returns text that is composed based on the existing one and selected from the entity locator dialog box. Also it updates the caret position in the text component.
-     * 
+     *
      * @param selectedEntities
      *            - entities selected in the entity locator.
      * @param startSelectedIndex
@@ -430,7 +459,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
     /**
      * Returns text that consists of parts of text and selectedWord. When the startSelectedIndex and endSelectedIndex are equal then selectedWord will be insert at
      * previousCaretPosition otherwise the text that is between startSelectedIndex and endSelectedIndex in the text parameter will be replaced with selectedWord.
-     * 
+     *
      * @param text
      * @param selectedWord
      * @param startSelectedIndex
@@ -455,11 +484,11 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Evaluates property expression for the passed instance.
-     * 
+     *
      * If <code>propertyExpression</code> is null then it return instance itself. This is useful when it is necessary to make autocompleter for enumerations etc.
-     * 
+     *
      * This method can be conveniently used to obtain value of the property, which is associated with this instance of the autocompleter logic.
-     * 
+     *
      * @param expressionIndex
      * @return
      */
@@ -510,7 +539,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Assembles words based on current list of words, just selected word and caret position, which determines where selected word needs to be placed.
-     * 
+     *
      * @param words
      *            -- a string representing list of words separate by the specified separator.
      * @param selectedWord
@@ -537,7 +566,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Calculates the position of the word in the list of words pointed to by the specified caret position.
-     * 
+     *
      * @param words
      *            -- a string representing list of words separate by the specified separator
      * @param caretPos
@@ -546,7 +575,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
      *            -- separator, can be "," or anything else.
      * @return the IntRange, where getMinimumInteger() is the index of the first character in the word and getMaximumInteger() point to right index of the character next to the
      *         last character in the word (this is convenient as all string routines use the right non-inclusive right index).
-     * 
+     *
      *         Example 1:</br> range = wordRange("01234;567;89", 3, ";"); In this case range.getMinimumInteger() == 0, and range.getMaximumInteger() == 5. So,
      *         "01234;567;89".substring(range.getMinimumInteger(), range.getMaximumInteger()) equals "0123" </br> Example 2:</br> range = wordRange("01234,567,89", 6, ","); In this
      *         case range.getMinimumInteger() == 6, and range.getMaximumInteger() == 9. So, "01234,567,89".substring(range.getMinimumInteger(), range.getMaximumInteger()) equals
@@ -571,7 +600,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * This is a convenience method for extracting a word at the specified caret position.
-     * 
+     *
      * @param words
      * @param caretPos
      * @param separator
@@ -584,7 +613,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Checks if it used case sensitive search. By default it's false.
-     * 
+     *
      * @return if it's case sensitive.
      */
     public boolean isCaseSensitive() {
@@ -593,7 +622,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Sets the case sensitive flag. By default, it's false meaning it's a case insensitive search.
-     * 
+     *
      * @param caseSensitive
      */
     public void setCaseSensitive(final boolean caseSensitive) {
@@ -602,7 +631,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Returns true if the component was configured to support wiled card (default).
-     * 
+     *
      * @return
      */
     public boolean hasWhildcardSupport() {
@@ -611,7 +640,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Allows overriding of the default support for wild card.
-     * 
+     *
      * @param whildcardSupport
      */
     public void setWhildcardSupport(final boolean whildcardSupport) {
@@ -620,7 +649,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 
     /**
      * Determines whether autocompleter was configured to serve for multiple value selection.
-     * 
+     *
      * @return
      */
     public boolean isMultiValued() {

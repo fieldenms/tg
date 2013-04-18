@@ -27,7 +27,7 @@ import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.example.swing.components.autocompleter.DemoEntity;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
 import ua.com.fielden.platform.swing.components.textfield.UpperCaseTextField;
 import ua.com.fielden.platform.swing.components.textfield.caption.CaptionTextFieldLayer;
@@ -95,7 +95,7 @@ public class DatePickerLayerDemo {
 	    }
 	};
 
-	final TwoPropertyListCellRenderer<DemoEntity> cellRenderer = new TwoPropertyListCellRenderer<DemoEntity>("name", "desc");
+	final MultiplePropertiesListCellRenderer<DemoEntity> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEntity>("name", "desc");
 	final AutocompleterTextFieldLayer<DemoEntity> autocompleter = new AutocompleterTextFieldLayer<DemoEntity>(new UpperCaseTextField(), matcher, DemoEntity.class, "name", cellRenderer, "caption...", ";");
 	cellRenderer.setAuto(autocompleter.getAutocompleter());
 	return autocompleter;

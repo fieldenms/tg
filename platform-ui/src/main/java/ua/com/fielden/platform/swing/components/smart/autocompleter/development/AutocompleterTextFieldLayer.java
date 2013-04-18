@@ -6,13 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JTextField;
-import javax.swing.ListCellRenderer;
 
 import org.apache.commons.lang.StringUtils;
 import org.jdesktop.jxlayer.JXLayer;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 
 /**
  * This an autocompleter component, which is a JTextField wrapped into JXLayer. It utilises an instance of ValueMatcher to search for matching values.
@@ -59,7 +58,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 	    final IValueMatcher<T> valueMatcher,//
 	    final Class<T> lookupClass, //
 	    final String expression, //
-	    final ListCellRenderer cellRenderer,//
+	    final MultiplePropertiesListCellRenderer<T> cellRenderer,//
 	    final String caption, //
 	    final String valueSeparator) {//
 	this(textComponent, valueMatcher, lookupClass, expression, cellRenderer, caption, valueSeparator, Settings.WILD_CARD_SUPPORT, Settings.CASE_SENSISTIVE);
@@ -88,7 +87,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 	    final IValueMatcher<T> valueMatcher,//
 	    final Class<T> lookupClass, //
 	    final String expression, //
-	    final ListCellRenderer cellRenderer,//
+	    final MultiplePropertiesListCellRenderer<T> cellRenderer,//
 	    final String caption, //
 	    final String valueSeparator,//
 	    final Settings... settings) { //
@@ -168,15 +167,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 	getView().setEditable(flag);
     }
 
-    public void highlightFirstHintValue(final boolean highlight) {
-	if (getAutocompleter().getHintsCellRenderer() instanceof TwoPropertyListCellRenderer) {
-	    ((TwoPropertyListCellRenderer<T>) getAutocompleter().getHintsCellRenderer()).setHighlightFirstValue(highlight);
-	}
-    }
-
-    public void highlightSecondHintValue(final boolean highlight) {
-	if (getAutocompleter().getHintsCellRenderer() instanceof TwoPropertyListCellRenderer) {
-	    ((TwoPropertyListCellRenderer<T>) getAutocompleter().getHintsCellRenderer()).setHighlightSecondValue(highlight);
-	}
+    public void setPropertyToHighlight(final String exprProperty, final boolean highlight) {
+	getAutocompleter().getHintsCellRenderer().setPropertyToHighlight(exprProperty, highlight);
     }
 }

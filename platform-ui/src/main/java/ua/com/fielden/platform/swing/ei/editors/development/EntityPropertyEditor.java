@@ -12,6 +12,7 @@ import ua.com.fielden.platform.swing.components.bind.development.ComponentFactor
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Editor for an entity property of non-collectional types.
@@ -65,7 +66,7 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
 	final EntityType entityTypeAnnotation = AnnotationReflector.getPropertyAnnotation(EntityType.class, entity.getType(), propertyName);
 	final boolean isSingle = metaProp.isCollectional() ? false : true;
 	final boolean stringBinding = isSingle ? false : String.class.isAssignableFrom(propertyAnnotation.value());
-	final Class<?> elementType = isSingle ? metaProp.getType() : (stringBinding ? DynamicEntityClassLoader.getOriginalType(entityTypeAnnotation.value()) : propertyAnnotation.value());
+	final Class elementType = isSingle ? metaProp.getType() : (stringBinding ? DynamicEntityClassLoader.getOriginalType(entityTypeAnnotation.value()) : propertyAnnotation.value());
 	if(!AbstractEntity.class.isAssignableFrom(elementType)){
 	    throw new IllegalArgumentException("The property: " + propertyName + " of " + entity.getType().getSimpleName() + " type, can not be bind to the autocompleter!");
 	}
@@ -82,18 +83,15 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
 	return editor;
     }
 
-    private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditor(final AbstractEntity<?> bindingEntity, final String bindingPropertyName, final Class<?> elementType, final String caption, final String tooltip, final boolean isSingle, final boolean stringBinding) {
+    private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditor(final AbstractEntity<?> bindingEntity, final String bindingPropertyName, final Class elementType, final String caption, final String tooltip, final boolean isSingle, final boolean stringBinding) {
 	if (!AbstractEntity.class.isAssignableFrom(elementType)) {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + elementType + ".");
 	}
-	return ComponentFactory.createOnFocusLostAutocompleter(bindingEntity, bindingPropertyName, caption, elementType, "key", "desc", isSingle ? null : ",", getValueMatcher(), tooltip, stringBinding);
+	final String[] secExpressions = EntityUtils.hasDescProperty(elementType) ? new String[] {"desc"} : null;
+	return ComponentFactory.createOnFocusLostAutocompleter(bindingEntity, bindingPropertyName, caption, elementType, "key", secExpressions, isSingle ? null : ",", getValueMatcher(), tooltip, stringBinding);
     }
 
-    public void highlightFirstHintValue(final boolean highlight) {
-	getEditor().getView().highlightFirstHintValue(highlight);
-    }
-
-    public void highlightSecondHintValue(final boolean highlight) {
-	getEditor().getView().highlightSecondHintValue(highlight);
+    public void setPropertyToHighlight(final String property, final boolean highlight) {
+	getEditor().getView().setPropertyToHighlight(property, highlight);
     }
 }

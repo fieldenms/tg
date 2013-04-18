@@ -4,7 +4,7 @@ import javax.swing.JTextField;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.EntityLocatorDialog;
 
 public class AutocompleterTextFieldLayerWithEntityLocator<T extends AbstractEntity<?>> extends AutocompleterTextFieldLayer<T> {
@@ -24,7 +24,7 @@ public class AutocompleterTextFieldLayerWithEntityLocator<T extends AbstractEnti
 	    final JTextField textComponent,//
 	    final IValueMatcher<T> valueMatcher,//
 	    final String expression,//
-	    final TwoPropertyListCellRenderer<T> cellRenderer, //
+	    final MultiplePropertiesListCellRenderer<T> cellRenderer, //
 	    final String caption,//
 	    final String valueSeparator) {//
 	this(entityLocatorDialog, lookUpClass, textComponent, valueMatcher, expression, cellRenderer, caption, valueSeparator, Settings.WILD_CARD_SUPPORT, Settings.CASE_SENSISTIVE);
@@ -54,23 +54,11 @@ public class AutocompleterTextFieldLayerWithEntityLocator<T extends AbstractEnti
 	    final JTextField textComponent,//
 	    final IValueMatcher<T> valueMatcher,//
 	    final String expression,//
-	    final TwoPropertyListCellRenderer<T> cellRenderer, //
+	    final MultiplePropertiesListCellRenderer<T> cellRenderer, //
 	    final String caption,//
 	    final String valueSeparator,//
 	    final Settings... settings) { //
 	super(textComponent, valueMatcher, lookUpClass, expression, cellRenderer, caption, valueSeparator, settings);
 	new AutocompleterUiWithEntityLocator<T>(entityLocatorDialog, this, caption);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void highlightFirstHintValue(final boolean highlight) {
-	((TwoPropertyListCellRenderer<T>) getAutocompleter().getHintsCellRenderer()).setHighlightFirstValue(highlight);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void highlightSecondHintValue(final boolean highlight) {
-	((TwoPropertyListCellRenderer<T>) getAutocompleter().getHintsCellRenderer()).setHighlightSecondValue(highlight);
     }
 }

@@ -82,6 +82,7 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
      *
      * @return the list.
      */
+    @SuppressWarnings({ "rawtypes", "unused" })
     protected JList createList(final ListCellRenderer cellRenderer) {
 	return new JList() {
 	    private static final long serialVersionUID = 1L;
@@ -99,6 +100,11 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
 		} else {
 		    return super.getPreferredScrollableViewportSize();
 		}
+	    }
+
+	    @Override
+	    public boolean getScrollableTracksViewportWidth() {
+	        return true;
 	    }
 	};
     }
@@ -119,6 +125,15 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
      */
     protected JList getList() {
 	return _list;
+    }
+
+    /**
+     * Returns the {@link JideScrollPane} instance that contains the hint component.
+     *
+     * @return
+     */
+    protected JideScrollPane getScroll(){
+	return _scroll;
     }
 
     /**
