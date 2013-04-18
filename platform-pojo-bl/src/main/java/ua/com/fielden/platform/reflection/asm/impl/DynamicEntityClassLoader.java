@@ -137,6 +137,25 @@ public class DynamicEntityClassLoader extends ClassLoader {
 	return this;
     }
 
+    public DynamicEntityClassLoader modifySupertypeName(final String newSupertypeName) {
+	if (StringUtils.isEmpty(newSupertypeName)) {
+	    throw new IllegalStateException("New supertype name is 'null' or empty.");
+	}
+	if (currentType == null || currentName == null) {
+	    throw new IllegalStateException("Current type or name are not specified.");
+	}
+	try {
+	    final ClassReader cr = new ClassReader(currentType);
+	    final ClassWriter cw = new ClassWriter(0);
+	    final AdvancedChangeSupertypeAdapter cv = new AdvancedChangeSupertypeAdapter(newSupertypeName.replace('.', '/'), cw); //
+	    cr.accept(cv, ClassReader.EXPAND_FRAMES);
+	    currentType = cw.toByteArray();
+	} catch (final Exception e) {
+	    throw new IllegalStateException(e);
+	}
+	return this;
+    }
+
     /**
      * Modifies type's properties with the specified information.
      *

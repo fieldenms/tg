@@ -84,10 +84,6 @@ public class Entity extends AbstractEntity<String> {
     @IsProperty(Entity.class)
     private PropertyDescriptor<Entity> propertyDescriptor;
 
-    protected Entity() {
-
-    }
-
     public Integer getFirstProperty() {
 	return firstProperty;
     }

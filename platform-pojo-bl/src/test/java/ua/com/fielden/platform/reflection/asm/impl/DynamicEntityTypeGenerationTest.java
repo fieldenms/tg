@@ -95,6 +95,20 @@ public class DynamicEntityTypeGenerationTest {
     }
 
     @Test
+    public void should_support_supertype_modification() throws Exception {
+	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
+	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).
+		modifyTypeName(Entity.class.getName() + "_enhanced").
+		modifySupertypeName(Entity.class.getName()).
+		endModification();
+	assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced"));
+	assertEquals("Incorrect inheritance.", Entity.class, newType.getSuperclass());
+	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(), newType);
+
+	assertEquals("The type of properties (previously of root type) also becomes changed.", Entity.class.getName() + "_enhanced", newType.getDeclaredField("entity").getType().getName());
+    }
+
+    @Test
     public void test_type_name_modification_after_properties_addition() throws Exception {
 	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
 	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd1).modifyTypeName(Entity.class.getName() + "_enhanced").endModification();
