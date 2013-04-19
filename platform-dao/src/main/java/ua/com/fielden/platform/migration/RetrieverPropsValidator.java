@@ -13,8 +13,6 @@ import org.apache.commons.collections.CollectionUtils;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Updater;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import static ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError.INAPPROPRIATE_BUT_PRESENT;
@@ -31,7 +29,7 @@ final class RetrieverPropsValidator {
 	this.dma = dma;
 	this.entityType = ret.type();
 	this.retrievedProps = ret.resultFields().keySet();
-	this.updater = AnnotationReflector.isAnnotationPresent(Updater.class, ret.getClass());
+	this.updater = ret.isUpdater();
     }
 
     public enum RetrievedPropValidationError {

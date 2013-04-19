@@ -29,4 +29,6 @@ public interface IRetriever<T extends AbstractEntity<?>> {
      * @return
      */
     Class<T> type();
+
+    boolean isUpdater();
 }

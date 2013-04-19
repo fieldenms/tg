@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Transaction;
 import org.joda.time.DateTime;
@@ -50,6 +51,7 @@ public class DataMigrator {
 
     public DataMigrator(final Injector injector, final HibernateUtil hiberUtil, final EntityFactory factory, final boolean includeDetails, final Class<? extends AbstractEntity<?>> personClass, final Class... retrieversClasses)
 	    throws Exception {
+	final DateTime start = new DateTime();
 	this.injector = injector;
 	this.factory = factory;
 	this.hiberUtil = hiberUtil;
@@ -65,14 +67,22 @@ public class DataMigrator {
 	    }
 	}
 
-	final Connection conn = injector.getInstance(Connection.class);
-	checkEmptyStrings(dma, conn);
-	checkRequiredness(dma, conn);
-	checkDataIntegrity(dma, conn);
-	validateRetrievalSql(dma);
+	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
+	    cache.put(ret.type(), new HashMap<Object, Integer>());
+	}
+	cache.put(User.class, new HashMap<Object, Integer>());
 
-	final DateTime start = new DateTime();
-	final Integer finalId = batchInsert(dma, conn, 0, personClass);
+
+	final Connection conn = injector.getInstance(Connection.class);
+//	checkEmptyStrings(dma, conn);
+//	checkRequiredness(dma, conn);
+//	checkDataIntegrity(dma, conn);
+//	validateRetrievalSql(dma);
+
+
+	final Integer initialId = getLastId();
+
+	final Integer finalId = batchInsert(dma, conn, initialId, personClass);
 	final Period pd = new Period(start, new DateTime());
 
 	runSql(new ArrayList<String>() {
@@ -232,6 +242,20 @@ public class DataMigrator {
 	tr.commit();
     }
 
+    private Integer getLastId() throws Exception {
+	Integer result = null;
+	final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
+	final Connection targetConn = hiberUtil.getSessionFactory().getCurrentSession().connection();
+	final Statement st = targetConn.createStatement();
+	final ResultSet rs = st.executeQuery("SELECT NEXT_VALUE FROM UNIQUE_ID");
+	rs.next();
+	result = rs.getInt(1);
+	st.close();
+	targetConn.close();
+	return result;
+
+    }
+
     private void validateRetrievalSql(final DomainMetadataAnalyser dma) throws Exception {
 	boolean foundErrors = false;
 	final Connection conn = injector.getInstance(Connection.class);
@@ -250,27 +274,34 @@ public class DataMigrator {
 	}
     }
 
-    private Integer batchInsert(final DomainMetadataAnalyser dma, final Connection legacyConn, final int startingId, final Class<? extends AbstractEntity<?>> personClass)
-	    throws Exception {
+    private Integer batchInsert(final DomainMetadataAnalyser dma, final Connection legacyConn, final int startingId, final Class<? extends AbstractEntity<?>> personClass) throws Exception {
 	final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
 	Integer id = startingId;
-	final Map<Object, Integer> userTypeCache = new HashMap<>();
-	cache.put(User.class, userTypeCache);
+	final Map<Object, Integer> userTypeCache = cache.get(User.class);
+	final Statement legacyStmt = legacyConn.createStatement();
 
 	for (final IRetriever<? extends AbstractEntity<?>> retriever : retrievers) {
-	    final RetrieverBatchStmtGenerator rbsg = new RetrieverBatchStmtGenerator(dma, retriever);
-	    final String sql = rsp.getSql(retriever);
-	    final Map<String, Integer> exceptions = new HashMap<>();
-	    final Map<Object, Integer> existingTypeCache = cache.get(retriever.type());
-	    if (existingTypeCache == null) {
-		cache.put(retriever.type(), new HashMap<Object, Integer>());
+	    final ResultSet legacyRs = legacyStmt.executeQuery(rsp.getSql(retriever));
+
+	    if (retriever.isUpdater()) {
+		performBatchUpdates(new RetrieverBatchUpdateStmtGenerator(dma, retriever), legacyRs);
+	    } else {
+		id = performBatchInserts(new RetrieverBatchStmtGenerator(dma, retriever), legacyRs, id, personClass, userTypeCache);
 	    }
-	    final Map<Object, Integer> typeCache = cache.get(retriever.type());
-	    final DateTime start = new DateTime();
-	    final Statement legacyStmt = legacyConn.createStatement();
+
+	    legacyRs.close();
+	}
+	legacyStmt.close();
+
+	return id;
+    }
+
+    private void performBatchUpdates(final RetrieverBatchUpdateStmtGenerator rbsg, final ResultSet legacyRs) throws Exception {
 	    final String insertSql = rbsg.getInsertStmt();
 	    final List<Integer> indexFields = rbsg.produceKeyFieldsIndices();
-	    final ResultSet legacyRs = legacyStmt.executeQuery(sql);
+	    final DateTime start = new DateTime();
+	    final Map<String, List<List<Object>>> exceptions = new HashMap<>();
+	    final Map<Object, Integer> typeCache = cache.get(rbsg.getRetriever().type());
 	    final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
 	    final Connection targetConn = hiberUtil.getSessionFactory().getCurrentSession().connection();
 	    final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql);
@@ -278,16 +309,12 @@ public class DataMigrator {
 	    final List<List<Object>> batchValues = new ArrayList<>();
 
 	    while (legacyRs.next()) {
-		id = id + 1;
 		batchId = batchId + 1;
 		final List<Object> keyValue = new ArrayList<>();
 		for (final Integer keyIndex : indexFields) {
 		    keyValue.add(legacyRs.getObject(keyIndex.intValue()));
 		}
-		typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
-		if (retriever.type().equals(personClass)) {
-		    userTypeCache.put(legacyRs.getObject("username"), id);
-		}
+		final int id = typeCache.get(keyValue.size() == 1 ? keyValue.get(0) : keyValue);
 		int index = 1;
 		final List<Object> currTransformedValues = rbsg.transformValues(legacyRs, cache, id);
 		batchValues.add(currTransformedValues);
@@ -310,45 +337,92 @@ public class DataMigrator {
 
 	    tr.commit();
 	    insertStmt.close();
-	    legacyRs.close();
-	    legacyStmt.close();
 
-	    System.out.println(generateFinalMessage(start, retriever.getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
-	}
+	    System.out.println(generateFinalMessage(start, rbsg.getRetriever().getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
 
-	return id;
     }
 
-    private String generateFinalMessage(final DateTime start, final String retrieverName, final int entitiesCount, final String insertSql, final Map<String, Integer> exceptions) {
+    private Integer performBatchInserts(final RetrieverBatchStmtGenerator rbsg, final ResultSet legacyRs, final int startingId, final Class<? extends AbstractEntity<?>> personClass, final Map<Object, Integer> userTypeCache) throws Exception {
+	    final String insertSql = rbsg.getInsertStmt();
+	    final List<Integer> indexFields = rbsg.produceKeyFieldsIndices();
+	    final DateTime start = new DateTime();
+	    final Map<String, List<List<Object>>> exceptions = new HashMap<>();
+	    final Map<Object, Integer> typeCache = cache.get(rbsg.getRetriever().type());
+	    final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
+	    final Connection targetConn = hiberUtil.getSessionFactory().getCurrentSession().connection();
+	    final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql);
+	    int batchId = 0;
+	    final List<List<Object>> batchValues = new ArrayList<>();
+	    Integer id = startingId;
+
+	    while (legacyRs.next()) {
+		id = id + 1;
+		batchId = batchId + 1;
+		final List<Object> keyValue = new ArrayList<>();
+		for (final Integer keyIndex : indexFields) {
+		    keyValue.add(legacyRs.getObject(keyIndex.intValue()));
+		}
+		typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
+		if (rbsg.getRetriever().type().equals(personClass)) {
+		    userTypeCache.put(legacyRs.getObject("username"), id);
+		}
+		int index = 1;
+		final List<Object> currTransformedValues = rbsg.transformValuesForInsert(legacyRs, cache, id);
+		batchValues.add(currTransformedValues);
+		for (final Object value : currTransformedValues) {
+		    insertStmt.setObject(index, value);
+		    index = index + 1;
+		}
+		insertStmt.addBatch();
+
+		if ((batchId % 100) == 0) {
+		    repeatAction(insertStmt, batchValues, exceptions);
+		    batchValues.clear();
+		    insertStmt.clearBatch();
+		}
+	    }
+
+	    if ((batchId % 100) != 0) {
+		repeatAction(insertStmt, batchValues, exceptions);
+	    }
+
+	    tr.commit();
+	    insertStmt.close();
+
+	    System.out.println(generateFinalMessage(start, rbsg.getRetriever().getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
+	    return id;
+    }
+
+    private String generateFinalMessage(final DateTime start, final String retrieverName, final int entitiesCount, final String insertSql, final Map<String, List<List<Object>>> exceptions) {
 	final Period pd = new Period(start, new DateTime());
 	final StringBuffer sb = new StringBuffer();
 	sb.append(retrieverName + " -- duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + entitiesCount + "\n");
 	if (exceptions.size() > 0) {
-	    sb.append("       " + retrieverName + " -- SQL: " + insertSql + "\n");
-	    sb.append("       " + retrieverName + " -- exceptions:\n");
-	    for (final Entry<String, Integer> entry : exceptions.entrySet()) {
-		sb.append("                 (" + entry.getValue() + ") -- " + entry.getKey() + "\n");
+	    sb.append(StringUtils.repeat(" ", retrieverName.length()) + " -- SQL: " + insertSql + "\n");
+	    sb.append(StringUtils.repeat(" ", retrieverName.length()) + " -- exceptions:\n");
+	    for (final Entry<String, List<List<Object>>> entry : exceptions.entrySet()) {
+		sb.append("                 (" + entry.getValue().size() + ") -- " + entry.getKey() + "\n");
 	    }
 	}
 	return sb.toString();
     }
 
-    private void repeatAction(final PreparedStatement stmt, final List<List<Object>> batchValues, final Map<String, Integer> exceptions) throws SQLException {
+    private void repeatAction(final PreparedStatement stmt, final List<List<Object>> batchValues, final Map<String, List<List<Object>>> exceptions) throws SQLException {
 	try {
 	    stmt.executeBatch();
 	} catch (final BatchUpdateException ex) {
 	    int updateIndex = 0;
-	    int errorCount = 0;
+	    final List<List<Object>> existingValue = exceptions.get(ex.toString());
+	    if (existingValue == null) {
+		exceptions.put(ex.toString(), new ArrayList<List<Object>>());
+	    }
+	    final List<List<Object>> exValues = exceptions.get(ex.toString());
 	    for (final int updateCount : ex.getUpdateCounts()) {
 		if (updateCount != 1) {
-		    System.out.println("  " + batchValues.get(updateIndex));
-		    errorCount = errorCount + 1;
+		    exValues.add(batchValues.get(updateIndex));
 		}
 		updateIndex = updateIndex + 1;
 	    }
-
-	    final Integer prevValue = exceptions.get(ex.toString());
-	    exceptions.put(ex.toString(), (prevValue != null ? prevValue : 0) + errorCount);
 	}
     }
 }

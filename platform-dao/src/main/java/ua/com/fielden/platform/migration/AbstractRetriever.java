@@ -7,6 +7,8 @@ import java.util.TreeMap;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Updater;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 /**
  * A base class for all concrete retrievers.
@@ -83,5 +85,10 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 	return "COALESCE(CASE UPPER(LTRIM(RTRIM(" + propName + "))) WHEN '' THEN 'N' " + //
 		"WHEN 'A' THEN 'Y' WHEN 'Y' THEN 'Y' WHEN 'YES' THEN 'Y' WHEN '1' THEN 'Y' WHEN 'TRUE' THEN 'Y' WHEN 'T' THEN 'Y' " + //
 		"WHEN 'B' THEN 'N' WHEN 'N' THEN 'N' WHEN 'NO' THEN 'N' WHEN '0' THEN 'N' WHEN 'FALSE' THEN 'N' WHEN 'F' THEN 'N' ELSE NULL END, 'N')";
+    }
+
+    @Override
+    public final boolean isUpdater() {
+	return AnnotationReflector.isAnnotationPresent(Updater.class, getClass());
     }
 }
