@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.test.ioc;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
@@ -40,6 +43,11 @@ import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.provider.UserController;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
+import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.serialisation.impl.TgKryo0;
 import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.platform.test.domain.entities.daos.BogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IBogieDao;
@@ -133,5 +141,15 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 
 	bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
 	}).to(EntityWithMoneyDao.class);
+
+	bind(ISerialisationClassProvider.class).toInstance(new ISerialisationClassProvider() {
+
+	    @Override
+	    public List<Class<?>> classes() {
+		return new ArrayList<>();
+	    }
+	});
+	bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
+	bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
     }
 }

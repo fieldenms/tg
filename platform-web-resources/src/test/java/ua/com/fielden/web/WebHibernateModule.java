@@ -19,8 +19,10 @@ import ua.com.fielden.platform.security.provider.UserController;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.serialisation.impl.TgKryo0;
 import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntityDao;
@@ -50,6 +52,7 @@ public class WebHibernateModule extends CommonFactoryModule {
 	super.configure();
 	bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
 	bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
+	bind(ISerialiser0.class).to(TgKryo0.class);
 	bind(ISerialiser.class).to(TgKryo.class);
 	// bind DAO
 	bind(IInspectedEntityDao.class).to(InspectedEntityDao.class);
