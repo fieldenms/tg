@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
@@ -20,7 +19,6 @@ public class RetrieverBatchUpdateStmtGenerator extends AbstractRetrieverBatchStm
     protected  List<PropertyMetadata> getInsertFields(final List<PropertyMetadata> fields) {
 	final List<PropertyMetadata> result = new ArrayList<>();
 	result.addAll(fields);
-	//insertFields.addAll(extraFields);
 	return result;
     }
 
@@ -42,14 +40,13 @@ public class RetrieverBatchUpdateStmtGenerator extends AbstractRetrieverBatchStm
 	return sb.toString();
     }
 
-    List<Object> transformValues(final ResultSet rs, final Map<Class<?>, Map<Object, Integer>> cache, final int id) throws Exception {
+    List<Object> transformValues(final ResultSet rs, final IdCache cache, final int id) throws Exception {
 	final List<Object> result = new ArrayList<>();
 	for (final Container container : getContainers()) {
 	    final List<Object> values = new ArrayList<>();
 	    for (final Integer index : container.indices) {
 		values.add(rs.getObject(index.intValue()));
 	    }
-	    // TODO exclude key fields
 	    result.add(transformValue(container.propType, values, cache));
 	}
 	result.add(id);

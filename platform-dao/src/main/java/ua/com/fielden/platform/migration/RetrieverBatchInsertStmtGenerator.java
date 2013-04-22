@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
@@ -12,10 +11,10 @@ import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public class RetrieverBatchStmtGenerator extends AbstractRetrieverBatchStmtGenerator {
+public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStmtGenerator {
     private List<PropertyMetadata> extraFields;
 
-    public RetrieverBatchStmtGenerator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever) {
+    public RetrieverBatchInsertStmtGenerator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever) {
 	super(dma, retriever);
 	this.extraFields = extractSystemFields(getEmd());
     }
@@ -63,7 +62,7 @@ public class RetrieverBatchStmtGenerator extends AbstractRetrieverBatchStmtGener
 	return sb.toString();
     }
 
-    List<Object> transformValuesForInsert(final ResultSet rs, final Map<Class<?>, Map<Object, Integer>> cache, final int id) throws Exception {
+    List<Object> transformValuesForInsert(final ResultSet rs, final IdCache cache, final int id) throws Exception {
 	final List<Object> result = new ArrayList<>();
 	for (final Container container : getContainers()) {
 	    final List<Object> values = new ArrayList<>();

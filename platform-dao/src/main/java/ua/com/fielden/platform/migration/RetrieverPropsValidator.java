@@ -69,7 +69,6 @@ final class RetrieverPropsValidator {
 	return result;
     }
 
-
     private Set<String> getExpectedSubprops(final Set<String> firstLevelProps) {
 	return dma.getLeafPropsFromFirstLevelProps(null, entityType, firstLevelProps);
     }

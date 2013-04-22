@@ -115,7 +115,7 @@ public class MigrateDb {
     }
 
     private static enum CmdParams {
-	    LIMIT_TO("-limitTo"), RESET_PASSWORDS("-resetPasswords"), DETAILS("-details"), CREATE_DB_SCHEMA("-createSchema"), PRINT_DB_SCHEMA("-printSchema");
+	    LIMIT_TO("-limitTo"), RESET_PASSWORDS("-resetPasswords"), DETAILS("-details"), CREATE_DB_SCHEMA("-createSchema"), PRINT_DB_SCHEMA("-printSchema"), SKIP_VALIDATIONS("-skipValidations");
 
 	    private final String value;
 
@@ -144,6 +144,8 @@ public class MigrateDb {
 		} else {
 		    throw new IllegalArgumentException("-limitTo requires one of the following argument... instead of " + args[i]);
 		}
+	    } else if (CmdParams.SKIP_VALIDATIONS.value.equals(args[i])) {
+		result.put(CmdParams.SKIP_VALIDATIONS, null);
 	    } else if (CmdParams.RESET_PASSWORDS.value.equals(args[i])) {
 		result.put(CmdParams.RESET_PASSWORDS, null);
 	    } else if (CmdParams.CREATE_DB_SCHEMA.value.equals(args[i])) {
@@ -206,7 +208,7 @@ public class MigrateDb {
 		System.out.println(ddlStmt);
 	    }
 	} else {
-	    new DataMigrator(injector, hibernateUtil, factory, cmdParams.containsKey(CmdParams.DETAILS), personClass, limitToRetrievers);//.populateData();
+	    new DataMigrator(injector, hibernateUtil, factory, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), personClass, limitToRetrievers);//.populateData();
 	}
 	// reset passwords
 	if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {
