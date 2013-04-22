@@ -22,6 +22,7 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
+import ua.com.fielden.platform.dao.DynamicEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError;
@@ -39,7 +40,6 @@ public class DataMigrator {
     private final Injector injector;
     private final DomainMetadataAnalyser dma;
     private final boolean includeDetails;
-    private boolean skipValidations;
     private final IdCache cache;
     private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class... retrieversClasses) {
 	final List<IRetriever<? extends AbstractEntity<?>>> result = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
@@ -59,9 +59,8 @@ public class DataMigrator {
 	this.dma = new DomainMetadataAnalyser(injector.getInstance(DomainMetadata.class));
 	this.retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
 	this.includeDetails = includeDetails;
-	this.skipValidations = skipValidations;
 	final Connection conn = injector.getInstance(Connection.class);
-	this.cache = new IdCache(hiberUtil, dma);
+	this.cache = new IdCache(hiberUtil, injector.getInstance(DynamicEntityDao.class), dma);
 
 	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
 	    if (!ret.isUpdater()) {
