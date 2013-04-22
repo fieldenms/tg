@@ -77,8 +77,8 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
 	final List<MainMenuItem> developmentMainMenuItems = new ArrayList<MainMenuItem>(new MainMenuStructureFactory(factory).pushAll(entity.getMenuItems()).build());
 	final List<MainMenuItem> updatedMainMenuItems = new ArrayList<MainMenuItem>();
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "MAINTAIN VERSIONS for all ECC, ELC, EMC");
-	maintainConfigurationVersions();
+	// newMessageAndNewSt = info(newMessageAndNewSt, "MAINTAIN VERSIONS for all ECC, ELC, EMC");
+	// maintainConfigurationVersions();
 
 	newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all ECC, ECAC");
 	final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac = select(EntityCentreAnalysisConfig.class).model();
