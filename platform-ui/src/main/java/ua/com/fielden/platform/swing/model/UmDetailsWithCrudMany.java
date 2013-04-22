@@ -15,6 +15,7 @@ import ua.com.fielden.platform.dao.IMasterDetailsDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.bind.development.Binder;
@@ -359,7 +360,7 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
 		if (!getManagedEntity().isPersisted()) {
 		    return true;
 		} else {
-		    return JOptionPane.showConfirmDialog(getView(), "Entity " + getManagedEntity() + " will be deleted. Proceed?", "Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+		    return JOptionPane.showConfirmDialog(getView(), TitlesDescsGetter.getEntityTitleAndDesc(getManagedEntity().getType()).getKey() + " " + getManagedEntity() + " will be deleted. Proceed?", "Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
 		}
 	    }
 
@@ -445,76 +446,76 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
      *
      */
     public class SaveAction extends Command<Result> {
-	    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-	    public SaveAction() {
-		super("Save");
-	    }
-
-	    @Override
-	    protected boolean preAction() {
-		notifyActionStageChange(ActionStage.SAVE_PRE_ACTION);
-		getCancelAction().setEnabled(false);
-
-		lockBlockingLayerIfProvided(true);
-		setMessageForBlockingLayerIfProvided("Saving...");
-
-		return super.preAction();
-	    }
-
-	    @Override
-	    protected Result action(final ActionEvent arg0) throws Exception {
-		notifyActionStageChange(ActionStage.SAVE_ACTION);
-		try {
-		    // wait for all the values entered into controls to be flushed (committed)
-		    final Result res = getManagedEntity().isValid();
-		    if (res.isSuccessful()) {
-			setManagedEntity(getCompanion().saveDetails(getEntity(), getManagedEntity()));
-			return new Result(getManagedEntity(), "All is cool.");
-		    } else {
-			return res;
-		    }
-		} catch (final Exception ex) {
-		    return new Result(getEntity(), ex);
-		}
-	    }
-
-	    @Override
-	    protected void postAction(final Result result) {
-		try {
-		    if (result.isSuccessful()) {
-			// before re-associating data with the model change set the flag to indicate that all entity changes are completed, which ensures correct row change event execution
-			isModifying = false;
-			if (getView() != null) {
-			    getView().notify("", MessageType.NONE);
-			}
-			final List<D> data = updateDetails(getManagedEntity());
-			getTableModel().clearInstances();
-			getTableModel().addInstances(data);
-			getTableModel().fireTableDataChanged();
-			final int row = data.indexOf(getManagedEntity());
-			if (row >= 0) {
-			    getTableModel().selectRow(row);
-			} else {
-			    setManagedEntity(determineManagedEntity(data));
-			}
-			setState(UmState.VIEW);
-			notifyActionStageChange(ActionStage.SAVE_POST_ACTION_SUCCESSFUL);
-		    } else {
-			if (getView() != null) {
-			    getView().notify(result.getMessage(), MessageType.ERROR);
-			} else {
-			    new DialogWithDetails(null, "Save", result.getEx()).setVisible(true);
-			}
-			getCancelAction().setEnabled(true);
-			super.postAction(result);
-			notifyActionStageChange(ActionStage.SAVE_POST_ACTION_FAILED);
-		    }
-		} finally {
-		    lockBlockingLayerIfProvided(false);
-		}
-	    }
-
+	public SaveAction() {
+	    super("Save");
 	}
+
+	@Override
+	protected boolean preAction() {
+	    notifyActionStageChange(ActionStage.SAVE_PRE_ACTION);
+	    getCancelAction().setEnabled(false);
+
+	    lockBlockingLayerIfProvided(true);
+	    setMessageForBlockingLayerIfProvided("Saving...");
+
+	    return super.preAction();
+	}
+
+	@Override
+	protected Result action(final ActionEvent arg0) throws Exception {
+	    notifyActionStageChange(ActionStage.SAVE_ACTION);
+	    try {
+		// wait for all the values entered into controls to be flushed (committed)
+		final Result res = getManagedEntity().isValid();
+		if (res.isSuccessful()) {
+		    setManagedEntity(getCompanion().saveDetails(getEntity(), getManagedEntity()));
+		    return new Result(getManagedEntity(), "All is cool.");
+		} else {
+		    return res;
+		}
+	    } catch (final Exception ex) {
+		return new Result(getEntity(), ex);
+	    }
+	}
+
+	@Override
+	protected void postAction(final Result result) {
+	    try {
+		if (result.isSuccessful()) {
+		    // before re-associating data with the model change set the flag to indicate that all entity changes are completed, which ensures correct row change event execution
+		    isModifying = false;
+		    if (getView() != null) {
+			getView().notify("", MessageType.NONE);
+		    }
+		    final List<D> data = updateDetails(getManagedEntity());
+		    getTableModel().clearInstances();
+		    getTableModel().addInstances(data);
+		    getTableModel().fireTableDataChanged();
+		    final int row = data.indexOf(getManagedEntity());
+		    if (row >= 0) {
+			getTableModel().selectRow(row);
+		    } else {
+			setManagedEntity(determineManagedEntity(data));
+		    }
+		    setState(UmState.VIEW);
+		    notifyActionStageChange(ActionStage.SAVE_POST_ACTION_SUCCESSFUL);
+		} else {
+		    if (getView() != null) {
+			getView().notify(result.getMessage(), MessageType.ERROR);
+		    } else {
+			new DialogWithDetails(null, "Save", result.getEx()).setVisible(true);
+		    }
+		    getCancelAction().setEnabled(true);
+		    super.postAction(result);
+		    notifyActionStageChange(ActionStage.SAVE_POST_ACTION_FAILED);
+		}
+	    } finally {
+		lockBlockingLayerIfProvided(false);
+	    }
+	}
+
+    }
 
 }
