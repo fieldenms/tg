@@ -6,7 +6,6 @@ import java.util.Set;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeRepresentation;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
 /**
  * A domain tree manager for sentinel analyses.
@@ -141,7 +140,7 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
      *
      */
     public static class SentinelDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<SentinelDomainTreeManager> {
-	public SentinelDomainTreeManagerSerialiser(final TgKryo kryo) {
+	public SentinelDomainTreeManagerSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

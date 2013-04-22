@@ -18,12 +18,17 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeVersionMaintainer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
 import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
@@ -41,19 +46,26 @@ import com.google.inject.Inject;
 public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu {
     private final IMainMenuItemController mmiController;
     private final IEntityCentreConfigController eccController;
+    private final IEntityLocatorConfigController elcController;
+    private final IEntityMasterConfigController emcController;
     private final IEntityCentreAnalysisConfig ecacController;
     private final IMainMenuItemInvisibilityController mmiiController;
     private final EntityFactory factory;
     private final Logger logger = Logger.getLogger(getClass());
 
+    private final DomainTreeVersionMaintainer versionMaintainer;
+
     @Inject
-    public MainMenuDao(final IFilter filter, final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory) {
+    public MainMenuDao(final IFilter filter, final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IEntityLocatorConfigController elcController, final IEntityMasterConfigController emcController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory, final ISerialiser serialiser, final ISerialiser0 serialiser0) {
         super(filter);
 	this.mmiController = mmiController;
 	this.eccController = eccController;
+	this.elcController = elcController;
+	this.emcController = emcController;
 	this.ecacController = ecacController;
 	this.mmiiController = mmiiController;
 	this.factory = factory;
+	this.versionMaintainer = new DomainTreeVersionMaintainer(serialiser, serialiser0, elcController, eccController, emcController);
     }
 
     @Override
@@ -64,6 +76,9 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
 	newMessageAndNewSt = info(newMessageAndNewSt, "BUILD DEVELOPMENT ITEMS");
 	final List<MainMenuItem> developmentMainMenuItems = new ArrayList<MainMenuItem>(new MainMenuStructureFactory(factory).pushAll(entity.getMenuItems()).build());
 	final List<MainMenuItem> updatedMainMenuItems = new ArrayList<MainMenuItem>();
+
+	newMessageAndNewSt = info(newMessageAndNewSt, "MAINTAIN VERSIONS for all ECC, ELC, EMC");
+	maintainConfigurationVersions();
 
 	newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all ECC, ECAC");
 	final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac = select(EntityCentreAnalysisConfig.class).model();
@@ -253,6 +268,66 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
 	    centresKeysAndBodies.put(new EntityCentreConfigKey(ecc.getOwner(), ecc.getTitle(), ecc.getMenuItem().getKey(), analyseNames), new EntityCentreConfigBody(ecc.isPrincipal(), ecc.getConfigBody()));
 	}
 	return centresKeysAndBodies;
+    }
+
+    /**
+     * Maintains versions of all centres, locators and masters.
+     */
+    protected void maintainConfigurationVersions() {
+	System.err.println("Started centres maintenance...");
+	int i = 0;
+	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(select(EntityCentreConfig.class).model()).model());
+	for (final EntityCentreConfig ecc : eccs) {
+	    System.err.println("\tECC... " + (++i * 100.0 / eccs.size()) + "%");
+	    try {
+		versionMaintainer.maintainCentreVersion(ecc);
+	    } catch (final Exception e) {
+		e.printStackTrace();
+		final String message = "Unable to maintain entity-centre instance version for [" + ecc.toString() + "].";
+		error(message);
+	    }
+	}
+	System.err.println("Ended centres maintenance.");
+
+	System.err.println("Started locators maintenance...");
+	i = 0;
+	final List<EntityLocatorConfig> elcs = elcController.getAllEntities(from(select(EntityLocatorConfig.class).model()).model());
+	for (final EntityLocatorConfig elc : elcs) {
+	    System.err.println("\tELC... " + (++i * 100.0 / elcs.size()) + "%");
+	    try {
+		versionMaintainer.maintainLocatorVersion(elc);
+	    } catch (final Exception e) {
+		e.printStackTrace();
+		final String message = "Unable to maintain default entity-locator instance version for [" + elc.toString() + "].";
+		error(message);
+	    }
+	}
+	System.err.println("Ended locators maintenance.");
+
+	System.err.println("Started masters maintenance...");
+	i = 0;
+	final List<EntityMasterConfig> emcs = emcController.getAllEntities(from(select(EntityMasterConfig.class).model()).model());
+	for (final EntityMasterConfig emc : emcs) {
+	    System.err.println("\tEMC... " + (++i * 100.0 / emcs.size()) + "%");
+	    try {
+		versionMaintainer.maintainMasterVersion(emc);
+	    } catch (final Exception e) {
+		e.printStackTrace();
+		final String message = "Unable to maintain entity-master instance version for [" + emc.toString() + "].";
+		error(message);
+	    }
+	}
+	System.err.println("Ended masters maintenance.");
+    }
+
+    /**
+     * Logs and throws an {@link IllegalArgumentException} error with specified message.
+     *
+     * @param message
+     */
+    private void error(final String message) {
+	logger.error(message);
+	// throw new IllegalArgumentException(message);
     }
 
     /**

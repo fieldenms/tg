@@ -19,6 +19,7 @@ import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAn
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
+import ua.com.fielden.platform.domaintree.testing.TgKryo0ForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -27,6 +28,7 @@ import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -43,6 +45,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
  */
 public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTestCase {
     private final EntityFactory entityFactory = getInstance(EntityFactory.class);
+    private final ISerialiser0 serialiser0 = new TgKryo0ForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
     private final ISerialiser serialiser = new TgKryoForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
     private final IUserDao userDao = getInstance(IUserDao.class);
 
@@ -59,7 +62,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
     }
 
     private GlobalDomainTreeManager createGlobalDomainTreeManager(final String userName) {
-	return new GlobalDomainTreeManager(serialiser, entityFactory, createUserProvider(userName), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IEntityMasterConfigController.class), getInstance(IEntityLocatorConfigController.class)) {
+	return new GlobalDomainTreeManager(serialiser, serialiser0, entityFactory, createUserProvider(userName), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IEntityMasterConfigController.class), getInstance(IEntityLocatorConfigController.class)) {
 	    @Override
 	    protected void validateMenuItemType(final Class<?> menuItemType) { // no menu item validation due to non-existence of MiWithConfigurationSupport at platform-dao (it exists only on platform-ui level)
 	    }

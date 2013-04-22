@@ -11,30 +11,31 @@ import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeRepresentatio
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer0;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 
 import com.esotericsoftware.kryo.Kryo;
 
 /**
- * Criteria (entity-centre) domain tree manager with "power" of managing domain with calculated properties. The calculated properties can be managed exactly as simple properties.<br>
+ * WARNING: this is an OLD version!
  *
  * @author TG Team
  *
  */
-public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManagerAndEnhancer implements ILocatorDomainTreeManagerAndEnhancer {
-    public LocatorDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, new LocatorDomainTreeManager(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), new HashMap<String, IAbstractAnalysisDomainTreeManager>());
+@Deprecated
+public class LocatorDomainTreeManagerAndEnhancer0 extends CentreDomainTreeManagerAndEnhancer0 implements ILocatorDomainTreeManagerAndEnhancer {
+    public LocatorDomainTreeManagerAndEnhancer0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+	this(serialiser, new LocatorDomainTreeManager0(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer0(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), new HashMap<String, IAbstractAnalysisDomainTreeManager>());
     }
 
-    public LocatorDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final LocatorDomainTreeManager base, final DomainTreeEnhancer enhancer, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses, final Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses) {
+    protected LocatorDomainTreeManagerAndEnhancer0(final ISerialiser serialiser, final LocatorDomainTreeManager0 base, final DomainTreeEnhancer0 enhancer, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses, final Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses) {
 	super(serialiser, base, enhancer, persistentAnalyses, currentAnalyses, freezedAnalyses);
     }
 
     @Override
-    protected DomainTreeRepresentationAndEnhancer createRepresentation(final AbstractDomainTreeRepresentation base) {
-	return new LocatorDomainTreeRepresentationAndEnhancer(base);
+    protected DomainTreeRepresentationAndEnhancer0 createRepresentation(final AbstractDomainTreeRepresentation base) {
+	return new LocatorDomainTreeRepresentationAndEnhancer0(base);
     }
 
     @Override
@@ -75,35 +76,43 @@ public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManager
      * @author TG Team
      *
      */
-    protected class LocatorDomainTreeRepresentationAndEnhancer extends CentreDomainTreeRepresentationAndEnhancer implements ILocatorDomainTreeRepresentation {
-	protected LocatorDomainTreeRepresentationAndEnhancer(final AbstractDomainTreeRepresentation base) {
+    protected class LocatorDomainTreeRepresentationAndEnhancer0 extends CentreDomainTreeRepresentationAndEnhancer0 implements ILocatorDomainTreeRepresentation {
+	protected LocatorDomainTreeRepresentationAndEnhancer0(final AbstractDomainTreeRepresentation base) {
 	    super(base);
 	}
     }
 
     /**
-     * A specific Kryo serialiser for {@link LocatorDomainTreeManagerAndEnhancer}.
+     * WARNING: this is an OLD version!
      *
      * @author TG Team
      *
      */
-    public static class LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser extends TgSimpleSerializer<LocatorDomainTreeManagerAndEnhancer> {
-	public LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(final ISerialiser kryo) {
+    @Deprecated
+    public static class LocatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser extends TgSimpleSerializer<LocatorDomainTreeManagerAndEnhancer0> {
+	/**
+	 * WARNING: this is an OLD version!
+	 *
+	 * @author TG Team
+	 *
+	 */
+	@Deprecated
+	public LocatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(final ISerialiser kryo) {
 	    super((Kryo) kryo);
 	}
 
 	@Override
-	public LocatorDomainTreeManagerAndEnhancer read(final ByteBuffer buffer) {
-	    final LocatorDomainTreeManager base = readValue(buffer, LocatorDomainTreeManager.class);
-	    final DomainTreeEnhancer enhancer = readValue(buffer, DomainTreeEnhancer.class);
+	public LocatorDomainTreeManagerAndEnhancer0 read(final ByteBuffer buffer) {
+	    final LocatorDomainTreeManager0 base = readValue(buffer, LocatorDomainTreeManager0.class);
+	    final DomainTreeEnhancer0 enhancer = readValue(buffer, DomainTreeEnhancer0.class);
 	    final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses = readValue(buffer, HashMap.class);
 	    final Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses = readValue(buffer, HashMap.class);
 	    final Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses = readValue(buffer, HashMap.class);
-	    return new LocatorDomainTreeManagerAndEnhancer((ISerialiser) kryo, base, enhancer, persistentAnalyses, currentAnalyses, freezedAnalyses);
+	    return new LocatorDomainTreeManagerAndEnhancer0((ISerialiser) kryo, base, enhancer, persistentAnalyses, currentAnalyses, freezedAnalyses);
 	}
 
 	@Override
-	public void write(final ByteBuffer buffer, final LocatorDomainTreeManagerAndEnhancer manager) {
+	public void write(final ByteBuffer buffer, final LocatorDomainTreeManagerAndEnhancer0 manager) {
 	    writeValue(buffer, manager.base());
 	    writeValue(buffer, manager.enhancer());
 	    writeValue(buffer, manager.persistentAnalyses());

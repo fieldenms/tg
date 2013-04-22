@@ -14,10 +14,11 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import com.esotericsoftware.kryo.Kryo;
 
 /**
  * A base class for representations and managers with useful utility methods.
@@ -293,16 +294,16 @@ public abstract class AbstractDomainTree {
      *
      */
     protected abstract static class AbstractDomainTreeSerialiser<T> extends TgSimpleSerializer<T> {
-	private final TgKryo kryo;
+	private final ISerialiser kryo;
 	private final EntityFactory factory;
 
-	public AbstractDomainTreeSerialiser(final TgKryo kryo) {
-	    super(kryo);
+	public AbstractDomainTreeSerialiser(final ISerialiser kryo) {
+	    super((Kryo) kryo);
 	    this.kryo = kryo;
 	    this.factory = kryo.factory();
 	}
 
-	protected TgKryo kryo() {
+	protected ISerialiser kryo() {
 	    return kryo;
 	}
 

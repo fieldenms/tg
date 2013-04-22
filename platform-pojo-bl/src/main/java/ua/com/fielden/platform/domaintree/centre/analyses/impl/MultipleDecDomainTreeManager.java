@@ -10,7 +10,6 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IMultipleDecDomainTree
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager.AnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager.AnalysisAddToDistributionTickManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
 /**
  * A domain tree manager for multiple dec analyis.
@@ -64,7 +63,7 @@ public class MultipleDecDomainTreeManager extends AbstractAnalysisDomainTreeMana
      *
      */
     public static class MultipleDecDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<MultipleDecDomainTreeManager> {
-	public MultipleDecDomainTreeManagerSerialiser(final TgKryo kryo) {
+	public MultipleDecDomainTreeManagerSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

@@ -7,7 +7,6 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeRep
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -69,7 +68,7 @@ public class AnalysisDomainTreeRepresentation extends AbstractAnalysisDomainTree
      *
      */
     public static class AnalysisDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<AnalysisDomainTreeRepresentation> {
-	public AnalysisDomainTreeRepresentationSerialiser(final TgKryo kryo) {
+	public AnalysisDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

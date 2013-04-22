@@ -15,7 +15,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -540,7 +539,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
      *
      */
     protected abstract static class AbstractAnalysisDomainTreeManagerSerialiser<T extends AbstractAnalysisDomainTreeManager> extends AbstractDomainTreeManagerSerialiser<T> {
-	public AbstractAnalysisDomainTreeManagerSerialiser(final TgKryo kryo) {
+	public AbstractAnalysisDomainTreeManagerSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

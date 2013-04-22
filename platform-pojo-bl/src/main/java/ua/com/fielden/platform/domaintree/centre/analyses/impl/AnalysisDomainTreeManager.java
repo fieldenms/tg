@@ -9,7 +9,6 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeRep
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisAddToAggregationTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisAddToDistributionTickRepresentation;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
 /**
  * A domain tree manager for analyses.
@@ -105,7 +104,7 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
      *
      */
     public static class AnalysisDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<AnalysisDomainTreeManager> {
-	public AnalysisDomainTreeManagerSerialiser(final TgKryo kryo) {
+	public AnalysisDomainTreeManagerSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

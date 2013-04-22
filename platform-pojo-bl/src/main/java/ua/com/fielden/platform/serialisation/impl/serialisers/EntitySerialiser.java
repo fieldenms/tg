@@ -47,9 +47,9 @@ public final class EntitySerialiser extends Serializer {
     private final List<CachedProperty> properties;
     private final EntityFactory factory; // is used during read (i.e. deserialisation)
 
-    private final TgKryo kryo;
+    private final Kryo kryo;
 
-    public EntitySerialiser(final TgKryo kryo, final Class<AbstractEntity> type, final EntityFactory factory) {
+    public EntitySerialiser(final Kryo kryo, final Class<AbstractEntity> type, final EntityFactory factory) {
 	this.kryo = kryo;
 	this.type = type;
 	this.factory = factory;

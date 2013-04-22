@@ -4,8 +4,9 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.Currency;
 
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.types.Money;
+
+import com.esotericsoftware.kryo.Kryo;
 
 /**
  * Serialises {@link Money} instances. Only properties amount, currency and taxPercentage are take into account during serialisation.
@@ -15,7 +16,7 @@ import ua.com.fielden.platform.types.Money;
  */
 public class MoneySerialiser extends TgSimpleSerializer<Money> {
 
-    public MoneySerialiser(final TgKryo kryo) {
+    public MoneySerialiser(final Kryo kryo) {
 	super(kryo);
     }
 

@@ -31,8 +31,10 @@ import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.UserController;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.serialisation.impl.TgKryo0;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
@@ -107,6 +109,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 	bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
 	// serialisation related binding
 	bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON); // FleetSerialisationClassProvider.class
+	bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
 	bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON); //
 
 	// bind DAO and any other implementations of the required application controllers

@@ -16,7 +16,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
 /**
  * Abstract domain tree manager for all TG trees. Includes support for checking and functions managing. <br><br>
@@ -507,7 +506,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      *
      */
     protected abstract static class AbstractDomainTreeManagerSerialiser<T extends AbstractDomainTreeManager> extends AbstractDomainTreeSerialiser<T> {
-	public AbstractDomainTreeManagerSerialiser(final TgKryo kryo) {
+	public AbstractDomainTreeManagerSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

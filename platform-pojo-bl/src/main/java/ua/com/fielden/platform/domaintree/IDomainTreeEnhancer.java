@@ -1,11 +1,15 @@
 package ua.com.fielden.platform.domaintree;
 
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This interface defines how domain can be enhanced via <b>calculated properties</b> management. <br><br>
@@ -138,4 +142,10 @@ public interface IDomainTreeEnhancer extends IRootTyped {
 
     @Override
     public int hashCode();
+
+    Map<Class<?>, List<CalculatedProperty>> calculatedProperties();
+
+    Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays();
+
+    EntityFactory getFactory();
 }

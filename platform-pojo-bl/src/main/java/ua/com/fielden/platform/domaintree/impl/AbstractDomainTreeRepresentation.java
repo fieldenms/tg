@@ -34,7 +34,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -863,7 +862,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      *
      */
     protected abstract static class AbstractDomainTreeRepresentationSerialiser<T extends AbstractDomainTreeRepresentation> extends AbstractDomainTreeSerialiser<T> {
-	public AbstractDomainTreeRepresentationSerialiser(final TgKryo kryo) {
+	public AbstractDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

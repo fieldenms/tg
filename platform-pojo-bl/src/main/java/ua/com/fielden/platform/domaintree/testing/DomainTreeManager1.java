@@ -6,7 +6,6 @@ import java.util.Set;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
 public class DomainTreeManager1 extends AbstractDomainTreeManager {
     /**
@@ -55,7 +54,7 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
      *
      */
     public static class DomainTreeManagerForTestSerialiser extends AbstractDomainTreeManagerSerialiser<DomainTreeManager1> {
-	public DomainTreeManagerForTestSerialiser(final TgKryo kryo) {
+	public DomainTreeManagerForTestSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

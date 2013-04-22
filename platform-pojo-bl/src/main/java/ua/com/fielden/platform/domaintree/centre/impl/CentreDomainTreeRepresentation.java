@@ -26,7 +26,6 @@ import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -372,7 +371,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
      *
      */
     public static class CentreDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<CentreDomainTreeRepresentation> {
-	public CentreDomainTreeRepresentationSerialiser(final TgKryo kryo) {
+	public CentreDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

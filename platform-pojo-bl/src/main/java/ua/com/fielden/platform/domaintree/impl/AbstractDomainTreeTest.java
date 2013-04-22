@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,6 +63,7 @@ import com.google.inject.Injector;
  */
 public abstract class AbstractDomainTreeTest {
     private static final String CREATE_DTM_FOR = "createDtm_for_";
+    private static final String CREATE_SERIALISER_FOR = "createSerialiser_for_";
     private static final String CREATE_IRRELEVANT_DTM_FOR = "createIrrelevantDtm_for_";
     private static final String PERFORM_AFTER_DESERIALISATION_PROCESS_FOR = "performAfterDeserialisationProcess_for_";
     private static final String PERFORM_ADDITIONAL_INITIALISATION_PROCESS_FOR = "performAdditionalInitialisationProcess_for_";
@@ -91,11 +93,13 @@ public abstract class AbstractDomainTreeTest {
 	add(ITickRepresentation.class); //
 	add(ITickManager.class); //
     }};
-    private final static ISerialiser serialiser = createSerialiser(createFactory());
-    private final static ISerialiser otherSerialiser = createSerialiser(createFactory());
+    private static ISerialiser serialiser;
+    private static ISerialiser otherSerialiser;
     private static Object irrelevantDtm;
     private static byte[] managerArray = null;
     private Object dtm = null;
+    private static Class<? extends AbstractDomainTreeTest> testCaseClass1;
+    protected static Class<?> classToBeTested = Object.class;
 
     private static EntityFactory createFactory() {
 	final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
@@ -156,6 +160,7 @@ public abstract class AbstractDomainTreeTest {
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     protected static final void initialiseDomainTreeTest(final Class<? extends AbstractDomainTreeTest> testCaseClass) throws Exception {
+	testCaseClass1 = testCaseClass;
 	try {
 	    // uncomment following code to enable different LEVEL OF LOADING for all domain tree tests
 //	    final Field loadingLevelField = AbstractDomainTreeRepresentation.class.getDeclaredField("LOADING_LEVEL");
@@ -163,6 +168,16 @@ public abstract class AbstractDomainTreeTest {
 //	    loadingLevelField.setAccessible(true);
 //	    loadingLevelField.set(null, Integer.MAX_VALUE);
 //	    loadingLevelField.setAccessible(isAccessible);
+
+	    Method serialiserCreator;
+	    try {
+		serialiserCreator = Reflector.getMethod(testCaseClass, CREATE_SERIALISER_FOR + testCaseClass.getSimpleName(), EntityFactory.class);
+	    } catch (final NoSuchMethodException ex) { // legal situation -- the method can be not present
+		serialiserCreator = null;
+	    }
+	    final EntityFactory factory = createFactory();
+	    serialiser = serialiserCreator == null ? createSerialiser(factory) : (ISerialiser) serialiserCreator.invoke(null, factory);
+	    otherSerialiser = serialiserCreator == null ? createSerialiser(factory) : (ISerialiser) serialiserCreator.invoke(null, factory);
 
 	    irrelevantDtm = Reflector.getMethod(testCaseClass, CREATE_IRRELEVANT_DTM_FOR + testCaseClass.getSimpleName()).invoke(null);
 
@@ -173,7 +188,7 @@ public abstract class AbstractDomainTreeTest {
 	    } catch (final NoSuchMethodException ex) { // legal situation -- the method can be not present
 	    }
 	    Reflector.getMethod(testCaseClass, MANAGE_TESTING_DTM_FOR + testCaseClass.getSimpleName(), Object.class).invoke(null, dtm);
-	    managerArray = serialiser().serialise(dtm);
+	    managerArray = dtm == null ? null : serialiser().serialise(dtm);
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw e;
@@ -182,7 +197,7 @@ public abstract class AbstractDomainTreeTest {
 
     @Before
     public final void initEachTest() throws Exception {
-	dtm = otherSerialiser.deserialise(managerArray, Object.class);
+	dtm = managerArray == null ? null : otherSerialiser.deserialise(managerArray, classToBeTested);
 	Reflector.getMethod(getClass(), PERFORM_AFTER_DESERIALISATION_PROCESS_FOR + getClass().getSimpleName(), Object.class).invoke(null, dtm);
     }
 
@@ -288,6 +303,9 @@ public abstract class AbstractDomainTreeTest {
 
     @Test
     public final void test_that_serialisation_copying_and_equality_works() throws Exception {
+	if (dtm == null) {
+	    return;
+	}
 	// at first the fullness and correctness of dtm() should be checked
 	assertTrue("After test initialisation all the fields of the manager should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
 	Reflector.getMethod(getClass(), ASSERT_INNER_CROSS_REFERENCES_FOR + getClass().getSimpleName(), Object.class).invoke(null, dtm);
@@ -296,7 +314,7 @@ public abstract class AbstractDomainTreeTest {
 	final byte[] array = serialiser().serialise(dtm);
 	assertNotNull("Serialised byte array should not be null.", array);
 
-	Object dtmCopy = otherSerialiser.deserialise(array, Object.class);
+	Object dtmCopy = otherSerialiser.deserialise(array, classToBeTested);
 	Reflector.getMethod(getClass(), PERFORM_AFTER_DESERIALISATION_PROCESS_FOR + getClass().getSimpleName(), Object.class).invoke(null, dtmCopy);
 	assertNotNull("Deserialised instance should not be null.", dtmCopy);
 	// after deserialisation the instance should be fully defined (even for transient fields).

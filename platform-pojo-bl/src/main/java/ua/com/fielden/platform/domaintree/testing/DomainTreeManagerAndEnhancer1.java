@@ -3,14 +3,14 @@ package ua.com.fielden.platform.domaintree.testing;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class DomainTreeManagerAndEnhancer1 extends AbstractDomainTreeManagerAndEnhancer {
 
@@ -21,7 +21,7 @@ public class DomainTreeManagerAndEnhancer1 extends AbstractDomainTreeManagerAndE
 	this(new DomainTreeManager1(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)));
     }
 
-    protected DomainTreeManagerAndEnhancer1(final AbstractDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
+    protected DomainTreeManagerAndEnhancer1(final AbstractDomainTreeManager base, final DomainTreeEnhancer enhancer) {
 	super(base, enhancer);
     }
 
@@ -32,8 +32,8 @@ public class DomainTreeManagerAndEnhancer1 extends AbstractDomainTreeManagerAndE
      *
      */
     public static class DomainTreeManagerAndEnhancerForTestSerialiser extends TgSimpleSerializer<DomainTreeManagerAndEnhancer1> {
-	public DomainTreeManagerAndEnhancerForTestSerialiser(final TgKryo kryo) {
-	    super(kryo);
+	public DomainTreeManagerAndEnhancerForTestSerialiser(final ISerialiser kryo) {
+	    super((Kryo) kryo);
 	}
 
 	@Override

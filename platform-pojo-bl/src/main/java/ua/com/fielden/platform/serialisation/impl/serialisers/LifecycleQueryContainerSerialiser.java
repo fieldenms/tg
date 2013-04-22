@@ -9,11 +9,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class LifecycleQueryContainerSerialiser extends TgSimpleSerializer<LifecycleQueryContainer> {
 
-    public LifecycleQueryContainerSerialiser(final TgKryo kryo) {
+    public LifecycleQueryContainerSerialiser(final Kryo kryo) {
 	super(kryo);
     }
 

@@ -490,9 +490,11 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
 	this.enhancer = enhancer;
     }
 
-    protected DomainTreeEnhancer enhancer() {
-	if (enhancer instanceof DomainTreeEnhancer) {
-	    return (DomainTreeEnhancer) enhancer;
+    protected Object enhancer() {
+	if (enhancer instanceof DomainTreeEnhancer0) {
+	    return enhancer;
+	} else if (enhancer instanceof DomainTreeEnhancer) {
+	    return enhancer;
 	} else if (enhancer instanceof DomainTreeEnhancerWithPropertiesPopulation) {
 	    return ((DomainTreeEnhancerWithPropertiesPopulation) enhancer).baseEnhancer();
 	} else {
@@ -620,7 +622,8 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
     private static void validateCalculatedPropertyKey1(final CalculatedProperty calculatedPropertyToCheck, final String newPathAndName) {
 	final Class<?> root = calculatedPropertyToCheck.getRoot();
 
-	final ICalculatedProperty calculatedProperty = calculatedPropertyToCheck.enhancer().calculatedProperty(root, newPathAndName);
+	final ICalculatedProperty calculatedProperty =
+		(calculatedPropertyToCheck.enhancer() instanceof DomainTreeEnhancer) ? ( ((DomainTreeEnhancer) calculatedPropertyToCheck.enhancer()).calculatedProperty(root, newPathAndName)) : ((DomainTreeEnhancer0) calculatedPropertyToCheck.enhancer()).calculatedProperty(root, newPathAndName);
 	if (calculatedProperty != null) {
 	    if (calculatedProperty == calculatedPropertyToCheck) {
 		// this is the same property!

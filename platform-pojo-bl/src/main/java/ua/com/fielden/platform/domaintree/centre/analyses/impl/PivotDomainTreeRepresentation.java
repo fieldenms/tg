@@ -11,7 +11,6 @@ import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -187,7 +186,7 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
      *
      */
     public static class PivotDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<PivotDomainTreeRepresentation> {
-	public PivotDomainTreeRepresentationSerialiser(final TgKryo kryo) {
+	public PivotDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

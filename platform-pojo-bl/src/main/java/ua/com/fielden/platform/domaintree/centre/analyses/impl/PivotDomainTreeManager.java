@@ -16,7 +16,6 @@ import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
 /**
  * A domain tree manager for pivot analyses.
@@ -334,7 +333,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
      *
      */
     public static class PivotDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<PivotDomainTreeManager> {
-	public PivotDomainTreeManagerSerialiser(final TgKryo kryo) {
+	public PivotDomainTreeManagerSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

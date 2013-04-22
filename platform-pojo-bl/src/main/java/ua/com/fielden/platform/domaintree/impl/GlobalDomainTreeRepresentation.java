@@ -13,8 +13,11 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
 
 /**
  * A global domain tree implementation.
@@ -27,12 +30,14 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
     private final EntityFactory factory;
     private final IUserProvider userProvider;
     private final IEntityLocatorConfigController elcController;
+    private final DomainTreeVersionMaintainer versionMaintainer;
 
-    public GlobalDomainTreeRepresentation(final ISerialiser serialiser, final EntityFactory factory, final IUserProvider userProvider, final IEntityLocatorConfigController entityLocatorConfigController) {
+    public GlobalDomainTreeRepresentation(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IEntityCentreConfigController entityCentreConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
 	super(serialiser);
 	this.factory = factory;
 	this.userProvider = userProvider;
 	this.elcController = entityLocatorConfigController;
+	this.versionMaintainer = new DomainTreeVersionMaintainer(serialiser, serialiser0, elcController, entityCentreConfigController, entityMasterConfigController);
     }
 
     @Override
@@ -46,7 +51,7 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
 	if (elcController.entityWithKeyExists(baseOfTheCurrentUser, propertyTypeName)) { // the persistence layer contains a default locator for "propertyType", so it should be retrieved and deserialised
 	    final EntityLocatorConfig elc = elcController.findByKey(baseOfTheCurrentUser, propertyTypeName);
 	    try {
-		return getSerialiser().deserialise(elc.getConfigBody(), ILocatorDomainTreeManagerAndEnhancer.class);
+		return versionMaintainer.maintainLocatorVersion(elc); // getSerialiser().deserialise(elc.getConfigBody(), ILocatorDomainTreeManagerAndEnhancer.class);
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		final String message = "Unable to deserialise a default locator instance for type [" + propertyType.getSimpleName() + "] for base user [" + baseOfTheCurrentUser + "] of current user [" + currentUser + "].";
@@ -78,5 +83,9 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
 	elc.setConfigBody(body);
 	elcController.save(elc);
 	return this;
+    }
+
+    protected DomainTreeVersionMaintainer versionMaintainer() {
+	return versionMaintainer;
     }
 }

@@ -5,13 +5,12 @@ import java.nio.ByteBuffer;
 import javax.swing.RowSorter.SortKey;
 import javax.swing.SortOrder;
 
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
-
+import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.serialize.IntSerializer;
 
 public class SortKeySerialiser extends TgSimpleSerializer<SortKey> {
 
-    public SortKeySerialiser(final TgKryo kryo) {
+    public SortKeySerialiser(final Kryo kryo) {
 	super(kryo);
     }
 

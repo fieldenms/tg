@@ -7,21 +7,22 @@ import java.util.Set;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.domaintree.impl.LocatorManager;
+import ua.com.fielden.platform.domaintree.impl.LocatorManager0;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * Entity master domain tree manager. Includes locators management logic. <br><br>
+ * WARNING: this is an OLD version!
  *
  * @author TG Team
  *
  */
-public class MasterDomainTreeManager extends AbstractDomainTree implements IMasterDomainTreeManager, ILocatorManager {
-    private final LocatorManager locatorManager;
+@Deprecated
+public class MasterDomainTreeManager0 extends AbstractDomainTree implements IMasterDomainTreeManager, ILocatorManager {
+    private final LocatorManager0 locatorManager;
 
-    public LocatorManager locatorManager() {
+    public LocatorManager0 locatorManager() {
 	return locatorManager;
     }
 
@@ -31,8 +32,8 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
      * @param serialiser
      * @param rootTypes
      */
-    public MasterDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, new LocatorManager(serialiser, rootTypes));
+    public MasterDomainTreeManager0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+	this(serialiser, new LocatorManager0(serialiser, rootTypes));
     }
 
     /**
@@ -41,7 +42,7 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
      * @param serialiser
      * @param locatorManager
      */
-    public MasterDomainTreeManager(final ISerialiser serialiser, final LocatorManager locatorManager) {
+    protected MasterDomainTreeManager0(final ISerialiser serialiser, final LocatorManager0 locatorManager) {
 	super(serialiser);
 	this.locatorManager = locatorManager;
     }
@@ -103,24 +104,32 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
     }
 
     /**
-     * A specific Kryo serialiser for {@link MasterDomainTreeManager}.
+     * WARNING: this is an OLD version!
      *
      * @author TG Team
      *
      */
-    public static class MasterDomainTreeManagerSerialiser extends AbstractDomainTreeSerialiser<MasterDomainTreeManager> {
-	public MasterDomainTreeManagerSerialiser(final ISerialiser kryo) {
+    @Deprecated
+    public static class MasterDomainTreeManager0Serialiser extends AbstractDomainTreeSerialiser<MasterDomainTreeManager0> {
+	/**
+	 * WARNING: this is an OLD version!
+	 *
+	 * @author TG Team
+	 *
+	 */
+	@Deprecated
+	public MasterDomainTreeManager0Serialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 
 	@Override
-	public MasterDomainTreeManager read(final ByteBuffer buffer) {
-	    final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
-	    return new MasterDomainTreeManager(kryo(), locatorManager);
+	public MasterDomainTreeManager0 read(final ByteBuffer buffer) {
+	    final LocatorManager0 locatorManager = readValue(buffer, LocatorManager0.class);
+	    return new MasterDomainTreeManager0(kryo(), locatorManager);
 	}
 
 	@Override
-	public void write(final ByteBuffer buffer, final MasterDomainTreeManager manager) {
+	public void write(final ByteBuffer buffer, final MasterDomainTreeManager0 manager) {
 	    writeValue(buffer, manager.locatorManager);
 	}
     }
@@ -141,7 +150,7 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
 	    return false;
 	if (getClass() != obj.getClass())
 	    return false;
-	final MasterDomainTreeManager other = (MasterDomainTreeManager) obj;
+	final MasterDomainTreeManager0 other = (MasterDomainTreeManager0) obj;
 	if (locatorManager == null) {
 	    if (other.locatorManager != null)
 		return false;

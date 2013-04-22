@@ -7,7 +7,6 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomai
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
 /**
  * Test implementation of abstract analysis manager.
@@ -80,7 +79,7 @@ public class AbstractAnalysisDomainTreeManager1 extends AbstractAnalysisDomainTr
      *
      */
     public static class AbstractAnalysisDomainTreeManager1Serialiser extends AbstractAnalysisDomainTreeManagerSerialiser<AbstractAnalysisDomainTreeManager1> {
-	public AbstractAnalysisDomainTreeManager1Serialiser(final TgKryo kryo) {
+	public AbstractAnalysisDomainTreeManager1Serialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

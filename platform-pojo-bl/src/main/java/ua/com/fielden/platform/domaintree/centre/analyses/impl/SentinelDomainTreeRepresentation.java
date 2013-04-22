@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -118,7 +117,7 @@ public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresen
      *
      */
     public static class SentinelDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<SentinelDomainTreeRepresentation> {
-	public SentinelDomainTreeRepresentationSerialiser(final TgKryo kryo) {
+	public SentinelDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

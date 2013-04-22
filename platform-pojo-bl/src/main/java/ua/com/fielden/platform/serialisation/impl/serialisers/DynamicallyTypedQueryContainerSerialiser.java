@@ -6,7 +6,8 @@ import java.util.List;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
+
+import com.esotericsoftware.kryo.Kryo;
 
 /**
  * Serialises {@link DynamicallyTypedQueryContainer} instances with dynamic loading of associated types upon deserialisation
@@ -17,7 +18,7 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
  */
 public class DynamicallyTypedQueryContainerSerialiser extends TgSimpleSerializer<DynamicallyTypedQueryContainer> {
 
-    public DynamicallyTypedQueryContainerSerialiser(final TgKryo kryo) {
+    public DynamicallyTypedQueryContainerSerialiser(final Kryo kryo) {
 	super(kryo);
     }
 

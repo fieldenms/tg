@@ -11,16 +11,13 @@ import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToResultTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.centre.IWidthManager;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
-import ua.com.fielden.platform.domaintree.impl.LocatorManager;
+import ua.com.fielden.platform.domaintree.impl.LocatorManager0;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -31,17 +28,13 @@ import ua.com.fielden.snappy.MnemonicEnum;
 import com.esotericsoftware.kryo.Kryo;
 
 /**
- * Criteria (entity centre) domain tree manager. Includes support for checking (from base {@link AbstractDomainTreeManager}). <br><br>
- *
- * Includes implementation of "checking" logic, that contain: <br>
- * a) default mutable state management; <br>
- * a) manual state management; <br>
- * b) resolution of conflicts with excluded, disabled etc. properties; <br>
+ * WARNING: this is an OLD version!
  *
  * @author TG Team
  *
  */
-public class CentreDomainTreeManager extends AbstractDomainTreeManager implements ICentreDomainTreeManager {
+@Deprecated
+public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implements ICentreDomainTreeManager {
     private Boolean runAutomatically;
 
     /**
@@ -50,8 +43,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param serialiser
      * @param rootTypes
      */
-    public CentreDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, new CentreDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManager(serialiser, rootTypes), new AddToResultTickManager(), null);
+    public CentreDomainTreeManager0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+	this(serialiser, new CentreDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManager0(serialiser, rootTypes), new AddToResultTickManager(), null);
     }
 
     /**
@@ -62,7 +55,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param firstTick
      * @param secondTick
      */
-    public CentreDomainTreeManager(final ISerialiser serialiser, final CentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Boolean runAutomatically) {
+    protected CentreDomainTreeManager0(final ISerialiser serialiser, final CentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager0 firstTick, final AddToResultTickManager secondTick, final Boolean runAutomatically) {
 	super(serialiser, dtr, firstTick, secondTick);
 	this.runAutomatically = runAutomatically;
     }
@@ -88,12 +81,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     }
 
     /**
-     * A first tick manager for entity centres specific. <br><br>
+     * WARNING: this is an OLD version!
      *
      * @author TG Team
      *
      */
-    public static class AddToCriteriaTickManager extends TickManager implements IAddToCriteriaTickManager, ILocatorManager {
+    @Deprecated
+    public static class AddToCriteriaTickManager0 extends TickManager implements IAddToCriteriaTickManager, ILocatorManager {
 
 	private final transient ISerialiser serialiser;
 	private final EnhancementPropertiesMap<Object> propertiesValues1;
@@ -111,15 +105,15 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
 	private Integer columnsNumber;
 
-	private final LocatorManager locatorManager;
+	private final LocatorManager0 locatorManager;
 
 	private final transient List<IPropertyValueListener> propertyValueListeners, propertyValue2Listeners;
 
 	/**
 	 * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr", "tr" and "serialiser" fields.
 	 */
-	public AddToCriteriaTickManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	    this(AbstractDomainTree.<List<String>>createRootsMap(), serialiser, AbstractDomainTree.<Object>createPropertiesMap(), AbstractDomainTree.<Object>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum>createPropertiesMap(), AbstractDomainTree.<MnemonicEnum>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), null, new LocatorManager(serialiser, rootTypes));
+	public AddToCriteriaTickManager0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+	    this(AbstractDomainTree.<List<String>>createRootsMap(), serialiser, AbstractDomainTree.<Object>createPropertiesMap(), AbstractDomainTree.<Object>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum>createPropertiesMap(), AbstractDomainTree.<MnemonicEnum>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), null, new LocatorManager0(serialiser, rootTypes));
 	}
 
 	/**
@@ -127,7 +121,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	 *
 	 * @param serialiser
 	 */
-	public AddToCriteriaTickManager(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager locatorManager) {
+	protected AddToCriteriaTickManager0(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager0 locatorManager) {
 	    super(checkedProperties);
 	    this.serialiser = serialiser;
 
@@ -249,7 +243,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    return locatorManager.locatorKeys();
 	}
 
-	protected Integer columnsNumber() {
+	public Integer columnsNumber() {
 	    return columnsNumber;
 	}
 
@@ -568,15 +562,23 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	/**
-	 * A specific Kryo serialiser for {@link AddToCriteriaTickManager}.
+	 * WARNING: this is an OLD version!
 	 *
 	 * @author TG Team
 	 *
 	 */
-	public static class AddToCriteriaTickManagerSerialiser extends TgSimpleSerializer<AddToCriteriaTickManager> {
+	@Deprecated
+	public static class AddToCriteriaTickManager0Serialiser extends TgSimpleSerializer<AddToCriteriaTickManager0> {
 	    private final ISerialiser kryo;
 
-	    public AddToCriteriaTickManagerSerialiser(final ISerialiser kryo) {
+	    /**
+	     * WARNING: this is an OLD version!
+	     *
+	     * @author TG Team
+	     *
+	     */
+	    @Deprecated
+	    public AddToCriteriaTickManager0Serialiser(final ISerialiser kryo) {
 		super((Kryo) kryo);
 		this.kryo = kryo;
 	    }
@@ -586,7 +588,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    }
 
 	    @Override
-	    public AddToCriteriaTickManager read(final ByteBuffer buffer) {
+	    public AddToCriteriaTickManager0 read(final ByteBuffer buffer) {
 		final EnhancementRootsMap<List<String>> checkedProperties = readValue(buffer, EnhancementRootsMap.class);
 		final EnhancementPropertiesMap<Object> propertiesValues1 = readValue(buffer, EnhancementPropertiesMap.class);
 		final EnhancementPropertiesMap<Object> propertiesValues2 = readValue(buffer, EnhancementPropertiesMap.class);
@@ -598,12 +600,12 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 		final EnhancementPropertiesMap<Boolean> propertiesOrNulls = readValue(buffer, EnhancementPropertiesMap.class);
 		final EnhancementPropertiesMap<Boolean> propertiesNots = readValue(buffer, EnhancementPropertiesMap.class);
 		final Integer columnsNumber = readValue(buffer, Integer.class);
-		final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
-		return new AddToCriteriaTickManager(checkedProperties, kryo(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
+		final LocatorManager0 locatorManager = readValue(buffer, LocatorManager0.class);
+		return new AddToCriteriaTickManager0(checkedProperties, kryo(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
 	    }
 
 	    @Override
-	    public void write(final ByteBuffer buffer, final AddToCriteriaTickManager manager) {
+	    public void write(final ByteBuffer buffer, final AddToCriteriaTickManager0 manager) {
 		writeValue(buffer, manager.checkedProperties());
 		writeValue(buffer, manager.propertiesValues1);
 		writeValue(buffer, manager.propertiesValues2);
@@ -648,7 +650,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    if (getClass() != obj.getClass()) {
 		return false;
 	    }
-	    final AddToCriteriaTickManager other = (AddToCriteriaTickManager) obj;
+	    final AddToCriteriaTickManager0 other = (AddToCriteriaTickManager0) obj;
 	    if (columnsNumber == null) {
 		if (other.columnsNumber != null) {
 		    return false;
@@ -729,148 +731,44 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    return true;
 	}
 
-	public LocatorManager locatorManager() {
+	public LocatorManager0 locatorManager() {
 	    return locatorManager;
 	}
-    }
 
-    /**
-     * A second tick manager for entity centres specific. <br><br>
-     *
-     * @author TG Team
-     *
-     */
-    public static class AddToResultTickManager extends TickManager implements IAddToResultTickManager {
-	private final EnhancementPropertiesMap<Integer> propertiesWidths;
-	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
-
-	/**
-	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr" fields.
-	 */
-	public AddToResultTickManager() {
-	    super();
-	    propertiesWidths = createPropertiesMap();
-	    rootsListsOfOrderings = createRootsMap();
+	public Map<Pair<Class<?>, String>, Object> propertiesValues1() {
+	    return propertiesValues1;
 	}
 
-	@Override
-	protected IAddToResultTickRepresentation tr() {
-	    return (IAddToResultTickRepresentation) super.tr();
+	public Map<Pair<Class<?>, String>, Object> propertiesValues2() {
+	    return propertiesValues2;
 	}
 
-	@Override
-	public List<Pair<String, Ordering>> orderedProperties(final Class<?> root) {
-	    if (rootsListsOfOrderings.containsKey(root)) {
-		return rootsListsOfOrderings.get(root);
-	    } else {
-		final List<Pair<String, Ordering>> orderedPropertiesByDefault = new ArrayList<Pair<String, Ordering>>(tr().orderedPropertiesByDefault(root));
-		final List<Pair<String, Ordering>> orderedPropertiesByDefaultWithoutUnchecked = new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault);
-		for (final Pair<String, Ordering> propAndOrdering : orderedPropertiesByDefault) {
-		    if (!isChecked(root, propAndOrdering.getKey())) {
-			orderedPropertiesByDefaultWithoutUnchecked.remove(propAndOrdering);
-		    }
-		}
-		return orderedPropertiesByDefaultWithoutUnchecked;
-	    }
+	public Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1() {
+	    return propertiesExclusive1;
 	}
 
-	@Override
-	public IOrderingManager toggleOrdering(final Class<?> root, final String property) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not toggle 'ordering' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    if (!rootsListsOfOrderings.containsKey(root)) {
-		rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(orderedProperties(root)));
-	    }
-	    final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(root));
-	    for (final Pair<String, Ordering> pair : list) {
-		if (pair.getKey().equals(property)) {
-		    final int index = rootsListsOfOrderings.get(root).indexOf(pair);
-		    if (Ordering.ASCENDING.equals(pair.getValue())) {
-			rootsListsOfOrderings.get(root).get(index).setValue(Ordering.DESCENDING);
-		    } else { // Ordering.DESCENDING
-			rootsListsOfOrderings.get(root).remove(index);
-		    }
-		    return this;
-		}
-	    } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
-	    rootsListsOfOrderings.get(root).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
-	    return this;
+	public Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2() {
+	    return propertiesExclusive2;
 	}
 
-	@Override
-	protected void removeCheckedProperty(final Class<?> root, final String property) {
-	    super.removeCheckedProperty(root, property);
-
-	    if (rootsListsOfOrderings.containsKey(root)) {
-		final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(root));
-		for (final Pair<String, Ordering> pair : list) {
-		    if (pair.getKey().equals(property)) {
-			final int index = rootsListsOfOrderings.get(root).indexOf(pair);
-			rootsListsOfOrderings.get(root).remove(index); // removes an ordering associated with just unchecked property
-			return;
-		    }
-		}
-	    }
+	public Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes() {
+	    return propertiesDatePrefixes;
 	}
 
-	@Override
-	public boolean addPropertyOrderingListener(final IPropertyOrderingListener listener) {
-	    throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
+	public Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics() {
+	    return propertiesDateMnemonics;
 	}
 
-	@Override
-	public boolean removePropertyOrderingListener(final IPropertyOrderingListener listener) {
-	    throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
+	public Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore() {
+	    return propertiesAndBefore;
 	}
 
-	@Override
-	public int getWidth(final Class<?> root, final String property) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'width' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return (propertiesWidths.containsKey(key(root, property))) ? propertiesWidths.get(key(root, property)) : tr().getWidthByDefault(root, property);
+	public Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls() {
+	    return propertiesOrNulls;
 	}
 
-	@Override
-	public IWidthManager setWidth(final Class<?> root, final String property, final int width) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'width' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    propertiesWidths.put(key(root, property), width);
-	    return this;
-	}
-
-	@Override
-	public int hashCode() {
-	    final int prime = 31;
-	    int result = super.hashCode();
-	    result = prime * result + ((propertiesWidths == null) ? 0 : propertiesWidths.hashCode());
-	    result = prime * result + ((rootsListsOfOrderings == null) ? 0 : rootsListsOfOrderings.hashCode());
-	    return result;
-	}
-
-	@Override
-	public boolean equals(final Object obj) {
-	    if (this == obj) {
-		return true;
-	    }
-	    if (!super.equals(obj)) {
-		return false;
-	    }
-	    if (getClass() != obj.getClass()) {
-		return false;
-	    }
-	    final AddToResultTickManager other = (AddToResultTickManager) obj;
-	    if (propertiesWidths == null) {
-		if (other.propertiesWidths != null) {
-		    return false;
-		}
-	    } else if (!propertiesWidths.equals(other.propertiesWidths)) {
-		return false;
-	    }
-	    if (rootsListsOfOrderings == null) {
-		if (other.rootsListsOfOrderings != null) {
-		    return false;
-		}
-	    } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings)) {
-		return false;
-	    }
-	    return true;
+	public Map<Pair<Class<?>, String>, Boolean> propertiesNots() {
+	    return propertiesNots;
 	}
     }
 
@@ -890,27 +788,35 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     }
 
     /**
-     * A specific Kryo serialiser for {@link CentreDomainTreeManager}.
+     * WARNING: this is an OLD version!
      *
      * @author TG Team
      *
      */
-    public static class CentreDomainTreeManagerSerialiser extends AbstractDomainTreeManagerSerialiser<CentreDomainTreeManager> {
-	public CentreDomainTreeManagerSerialiser(final ISerialiser kryo) {
+    @Deprecated
+    public static class CentreDomainTreeManager0Serialiser extends AbstractDomainTreeManagerSerialiser<CentreDomainTreeManager0> {
+	/**
+	 * WARNING: this is an OLD version!
+	 *
+	 * @author TG Team
+	 *
+	 */
+	@Deprecated
+	public CentreDomainTreeManager0Serialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 
 	@Override
-	public CentreDomainTreeManager read(final ByteBuffer buffer) {
+	public CentreDomainTreeManager0 read(final ByteBuffer buffer) {
 	    final CentreDomainTreeRepresentation dtr = readValue(buffer, CentreDomainTreeRepresentation.class);
-	    final AddToCriteriaTickManager firstTick = readValue(buffer, AddToCriteriaTickManager.class);
+	    final AddToCriteriaTickManager0 firstTick = readValue(buffer, AddToCriteriaTickManager0.class);
 	    final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
 	    final Boolean runAutomatically = readValue(buffer, Boolean.class);
-	    return new CentreDomainTreeManager(kryo(), dtr, firstTick, secondTick, runAutomatically);
+	    return new CentreDomainTreeManager0(kryo(), dtr, firstTick, secondTick, runAutomatically);
 	}
 
 	@Override
-	public void write(final ByteBuffer buffer, final CentreDomainTreeManager manager) {
+	public void write(final ByteBuffer buffer, final CentreDomainTreeManager0 manager) {
 	    super.write(buffer, manager);
 	    writeValue(buffer, manager.runAutomatically);
 	}
@@ -935,7 +841,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	if (getClass() != obj.getClass()) {
 	    return false;
 	}
-	final CentreDomainTreeManager other = (CentreDomainTreeManager) obj;
+	final CentreDomainTreeManager0 other = (CentreDomainTreeManager0) obj;
 	if (runAutomatically == null) {
 	    if (other.runAutomatically != null) {
 		return false;

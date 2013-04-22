@@ -3,7 +3,6 @@ package ua.com.fielden.platform.domaintree.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
@@ -22,27 +21,36 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
+import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
+import ua.com.fielden.platform.domaintree.testing.TgKryo0ForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
- * A test for {@link DomainTreeEnhancer}.
+ * WARNING: this is an OLD version!
  *
  * @author TG Team
  *
  */
-public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
+@Deprecated
+public class DomainTreeEnhancer0Test extends AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
     protected IDomainTreeEnhancer dtm() {
 	return (IDomainTreeEnhancer) just_a_dtm();
+    }
+
+    protected static ISerialiser createSerialiser_for_DomainTreeEnhancer0Test(final EntityFactory factory) {
+	return new TgKryo0ForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
     }
 
     @BeforeClass
@@ -58,23 +66,12 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	/////////////////////////////////////////////////////////////////
 	//////////////////////// IMPORTANT //////////////////////////////
 	/////////////////////////////////////////////////////////////////
-	initialiseDomainTreeTest(DomainTreeEnhancerTest.class);
+	initialiseDomainTreeTest(DomainTreeEnhancer0Test.class);
+	classToBeTested = DomainTreeEnhancer0.class;
     }
 
-    protected static Object createDtm_for_DomainTreeEnhancerTest() {
-	final DomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser(), createRootTypes_for_DomainTreeEnhancerTest());
-	assertEquals("Incorrect count of enhanced types byte arrays.", 1, dte.getManagedTypeArrays(EnhancingMasterEntity.class).size());
-
-	final DomainTreeEnhancer similarlyCreatedDte = new DomainTreeEnhancer(serialiser(), createRootTypes_for_DomainTreeEnhancerTest());
-	assertTrue("Similarly created instance should be equal to the original instance.", EntityUtils.equalsEx(dte, similarlyCreatedDte));
-
-	similarlyCreatedDte.apply();
-	assertTrue("Similarly created instance after apply() should be equal to the original instance.", EntityUtils.equalsEx(dte, similarlyCreatedDte));
-
-	final DomainTreeEnhancer dtmCopy0 = EntityUtils.deepCopy(dte, serialiser());
-	final DomainTreeEnhancer dtmCopy1 = EntityUtils.deepCopy(dtmCopy0, serialiser());
-	assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(dtmCopy1, dtmCopy0));
-	assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(dtmCopy0, dte));
+    protected static Object createDtm_for_DomainTreeEnhancer0Test() {
+	final DomainTreeEnhancer0 dte = new DomainTreeEnhancer0(serialiser(), createRootTypes_for_DomainTreeEnhancer0Test());
 
 	dte.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "1 * integerProp", "Old single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dte.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "2 * integerProp", "Old double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
@@ -83,27 +80,26 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	dte.apply();
 
 	assertEquals("Incorrect count of enhanced types byte arrays.", 6, dte.getManagedTypeArrays(EnhancingMasterEntity.class).size());
-
 	return dte;
     }
 
-    protected static Object createIrrelevantDtm_for_DomainTreeEnhancerTest() {
+    protected static Object createIrrelevantDtm_for_DomainTreeEnhancer0Test() {
 	return null;
     }
 
-    protected static Set<Class<?>> createRootTypes_for_DomainTreeEnhancerTest() {
+    protected static Set<Class<?>> createRootTypes_for_DomainTreeEnhancer0Test() {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
 	rootTypes.add(EnhancingMasterEntity.class);
 	return rootTypes;
     }
 
-    protected static void manageTestingDTM_for_DomainTreeEnhancerTest(final Object obj) {
+    protected static void manageTestingDTM_for_DomainTreeEnhancer0Test(final Object obj) {
     }
 
-    protected static void performAfterDeserialisationProcess_for_DomainTreeEnhancerTest(final Object obj) {
+    protected static void performAfterDeserialisationProcess_for_DomainTreeEnhancer0Test(final Object obj) {
     }
 
-    protected static void assertInnerCrossReferences_for_DomainTreeEnhancerTest(final Object obj) {
+    protected static void assertInnerCrossReferences_for_DomainTreeEnhancer0Test(final Object obj) {
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
@@ -502,7 +498,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     public void test_that_self_type_properties_will_not_be_adapted() {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
 	rootTypes.add(EnhancingMasterEntity.class);
-	final IDomainTreeEnhancer dm = new DomainTreeEnhancer(serialiser(), rootTypes);
+	final IDomainTreeEnhancer dm = new DomainTreeEnhancer0(serialiser(), rootTypes);
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "oldSingle");
@@ -510,7 +506,8 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "oldTriple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "oldQuadruple");
 	checkDomainPreparedForEnhancements(dm);
-	assertEquals("Incorrect count of enhanced types byte arrays.", 1, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
+
+	assertEquals("Incorrect count of enhanced types byte arrays.", 0, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
 
 	// modify domain
 

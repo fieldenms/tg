@@ -21,7 +21,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.types.ICategorizer;
 import ua.com.fielden.platform.types.ICategory;
 import ua.com.fielden.platform.utils.Pair;
@@ -243,7 +242,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
      *
      */
     public static class LifecycleDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<LifecycleDomainTreeManager> {
-	public LifecycleDomainTreeManagerSerialiser(final TgKryo kryo) {
+	public LifecycleDomainTreeManagerSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

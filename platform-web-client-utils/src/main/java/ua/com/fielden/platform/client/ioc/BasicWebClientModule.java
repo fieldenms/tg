@@ -30,8 +30,10 @@ import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.serialisation.impl.TgKryo0;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigRao;
@@ -105,6 +107,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	bind(IReferenceDependancyController.class).to(ReferenceDependancyController.class);
 	// serialisation related binding
 	bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON);
+	bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
 	bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
 	/////////////////////////////////////////////////////////////////////////
 	/////////////// bind some required platform specific RAOs ///////////////

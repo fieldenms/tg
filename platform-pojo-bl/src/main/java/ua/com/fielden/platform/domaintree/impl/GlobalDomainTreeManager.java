@@ -29,6 +29,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -59,6 +60,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final IEntityCentreConfigController entityCentreConfigController;
     private final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController;
     private final IEntityMasterConfigController entityMasterConfigController;
+    private final DomainTreeVersionMaintainer versionMaintainer;
 
     private final EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> persistentCentres;
     private final transient EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> currentCentres;
@@ -71,7 +73,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private Map<Class<?>, Map<String, List<String>>> initialCacheOfNonPrincipleItems = null;
 
     @Inject
-    public GlobalDomainTreeManager(final ISerialiser serialiser, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfigController entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
+    public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfigController entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
 	super(serialiser);
 	this.factory = factory;
 	this.userProvider = userProvider;
@@ -79,8 +81,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	this.entityCentreConfigController = entityCentreConfigController;
 	this.entityCentreAnalysisConfigController = entityCentreAnalysisConfigController;
 	this.entityMasterConfigController = entityMasterConfigController;
-	this.gdtr = new GlobalDomainTreeRepresentation(serialiser, factory, userProvider, entityLocatorConfigController);
-
+	final GlobalDomainTreeRepresentation gdtr0 = new GlobalDomainTreeRepresentation(serialiser, serialiser0, factory, userProvider, entityCentreConfigController, entityMasterConfigController, entityLocatorConfigController);
+	this.versionMaintainer = gdtr0.versionMaintainer();
+	this.gdtr = gdtr0;
 	// lazy stuff
 	this.persistentCentres = createPropertiesMap();
 	this.currentCentres = createPropertiesMap();
@@ -440,7 +443,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
 	final boolean owning = ecc.getOwner().equals(currentUser());
 	try {
-	    init(menuItemType, name, getSerialiser().deserialise(ecc.getConfigBody(), ICentreDomainTreeManagerAndEnhancer.class), owning);
+	    init(menuItemType, name, versionMaintainer.maintainCentreVersion(ecc), owning);
 	    return;
 	} catch (final Exception e) {
 	    e.printStackTrace();
@@ -459,7 +462,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private void retrieveAndInitMaster(final Class<?> root, final EntityResultQueryModel<EntityMasterConfig> model) {
 	final EntityMasterConfig emc = entityMasterConfigController.getEntity(from(model).model());
 	try {
-	    initMaster(root, getSerialiser().deserialise(emc.getConfigBody(), IMasterDomainTreeManager.class));
+	    initMaster(root, versionMaintainer.maintainMasterVersion(emc));
 	    return;
 	} catch (final Exception e) {
 	    e.printStackTrace();
@@ -492,6 +495,20 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final IGlobalDomainTreeRepresentation globalRepresentation = this.getGlobalRepresentation();
 	initLocatorManagerCrossReferences(locatorManager, globalRepresentation);
 	return mgr;
+    }
+
+    public static void initLocatorManagerCrossReferences(final LocatorManager0 locatorManager, final IGlobalDomainTreeRepresentation globalRepresentation) {
+	// initialise the references on this instance in its children
+	try {
+	    final Field dtrField = Finder.findFieldByName(LocatorManager0.class, "globalRepresentation");
+	    final boolean isAccessible = dtrField.isAccessible();
+	    dtrField.setAccessible(true);
+	    dtrField.set(locatorManager, globalRepresentation);
+	    dtrField.setAccessible(isAccessible);
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    error(e.getMessage());
+	}
     }
 
     public static void initLocatorManagerCrossReferences(final LocatorManager locatorManager, final IGlobalDomainTreeRepresentation globalRepresentation) {

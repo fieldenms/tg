@@ -2,8 +2,7 @@ package ua.com.fielden.platform.serialisation.impl.serialisers;
 
 import java.nio.ByteBuffer;
 
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
-
+import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.serialize.SimpleSerializer;
 
 /**
@@ -17,9 +16,9 @@ public abstract class TgSimpleSerializer<T> extends SimpleSerializer<T> {
     private static final byte NULL = 12;
     private static final byte NOT_NULL = 13;
 
-    protected final TgKryo kryo;
+    protected final Kryo kryo;
 
-    protected TgSimpleSerializer(final TgKryo kryo) {
+    protected TgSimpleSerializer(final Kryo kryo) {
 	this.kryo = kryo;
     }
 

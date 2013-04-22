@@ -13,7 +13,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -157,7 +156,7 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
      *
      */
     public static class LifecycleDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<LifecycleDomainTreeRepresentation> {
-	public LifecycleDomainTreeRepresentationSerialiser(final TgKryo kryo) {
+	public LifecycleDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 

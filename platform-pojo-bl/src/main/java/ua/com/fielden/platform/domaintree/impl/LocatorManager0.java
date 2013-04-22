@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer0;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -30,20 +30,21 @@ import ua.com.fielden.platform.utils.Pair;
 
 
 /**
- * A locator manager mixin implementation (save, init, discard locators etc.).
+ * WARNING: this is an OLD version!
  *
  * @author TG Team
  *
  */
-public class LocatorManager extends AbstractDomainTree implements ILocatorManager {
+@Deprecated
+public class LocatorManager0 extends AbstractDomainTree implements ILocatorManager {
     private final transient Logger logger = Logger.getLogger(getClass());
     // this instance should be initialised using Reflection when GlobalDomainTreeManager creates/deserialises the instance of LocatorManager
     private final transient IGlobalDomainTreeRepresentation globalRepresentation;
     private final EnhancementLinkedRootsSet rootTypes;
-    private final EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer> persistentLocators;
+    private final EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer0> persistentLocators;
     /** Do <b>NOT</b> use this field directly! Please use currentAnalyses() method instead. */
-    private final transient EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer> currentLocators;
-    private final transient EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer> freezedLocators;
+    private final transient EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer0> currentLocators;
+    private final transient EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer0> freezedLocators;
     private final transient EnhancementSet locatorsInEditingMode;
     /** Do <b>NOT</b> use this field directly! Please use currentAnalyses() method instead. */
     private final transient EnhancementSet locatorsWithLocalType;
@@ -53,19 +54,19 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
      *
      * @return
      */
-    private EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer> currentLocators() {
+    private EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer0> currentLocators() {
 	if (currentLocators == null) {
 	    try {
-		final Field currentLocatorsField = Finder.findFieldByName(LocatorManager.class, "currentLocators");
+		final Field currentLocatorsField = Finder.findFieldByName(LocatorManager0.class, "currentLocators");
 		final boolean isAccessible = currentLocatorsField.isAccessible();
 		currentLocatorsField.setAccessible(true);
-		currentLocatorsField.set(this, AbstractDomainTree.<LocatorDomainTreeManagerAndEnhancer>createPropertiesMap());
+		currentLocatorsField.set(this, AbstractDomainTree.<LocatorDomainTreeManagerAndEnhancer0>createPropertiesMap());
 		currentLocatorsField.setAccessible(isAccessible);
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new IllegalStateException(e);
 	    }
-	    for (final Entry<Pair<Class<?>, String>, LocatorDomainTreeManagerAndEnhancer> entry : this.persistentLocators.entrySet()) {
+	    for (final Entry<Pair<Class<?>, String>, LocatorDomainTreeManagerAndEnhancer0> entry : this.persistentLocators.entrySet()) {
 		persistent_to_current(entry.getKey().getKey(), entry.getKey().getValue()); // should be initialised with copies of persistent locators
 	    }
 	}
@@ -75,7 +76,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     private EnhancementSet locatorsWithLocalType() {
 	if (locatorsWithLocalType == null) {
 	    try {
-		final Field locatorsWithLocalTypeField = LocatorManager.class.getDeclaredField("locatorsWithLocalType");
+		final Field locatorsWithLocalTypeField = LocatorManager0.class.getDeclaredField("locatorsWithLocalType");
 		final boolean isAccessible = locatorsWithLocalTypeField.isAccessible();
 		locatorsWithLocalTypeField.setAccessible(true);
 		locatorsWithLocalTypeField.set(this, createSet());
@@ -92,8 +93,8 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     /**
      * A locator <i>manager</i> constructor (save, int, discard locators, etc.) for the first time instantiation.
      */
-    public LocatorManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, rootTypes, AbstractDomainTree.<LocatorDomainTreeManagerAndEnhancer>createPropertiesMap());
+    public LocatorManager0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+	this(serialiser, rootTypes, AbstractDomainTree.<LocatorDomainTreeManagerAndEnhancer0>createPropertiesMap());
     }
 
     /**
@@ -101,7 +102,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
      *
      * @param serialiser
      */
-    protected LocatorManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Pair<Class<?>, String>, LocatorDomainTreeManagerAndEnhancer> persistentLocators) {
+    protected LocatorManager0(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Pair<Class<?>, String>, LocatorDomainTreeManagerAndEnhancer0> persistentLocators) {
 	super(serialiser);
 
 	// this instance should be initialised using Reflection when GlobalDomainTreeManager creates/deserialises the instance of LocatorManager
@@ -193,9 +194,9 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
         return DynamicEntityClassLoader.getOriginalType(propertyType);
     }
 
-    private LocatorDomainTreeManagerAndEnhancer produceByDefault(final Class<?> root, final String property) {
+    private LocatorDomainTreeManagerAndEnhancer0 produceByDefault(final Class<?> root, final String property) {
 	final Class<?> pType = propertyTypeForGlobalRepresentationLocator(root, property);
-	final LocatorDomainTreeManagerAndEnhancer l = (LocatorDomainTreeManagerAndEnhancer) globalRepresentation.getLocatorManagerByDefault(pType);
+	final LocatorDomainTreeManagerAndEnhancer0 l = (LocatorDomainTreeManagerAndEnhancer0) globalRepresentation.getLocatorManagerByDefault(pType);
 	// initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
 	l.getFirstTick().checkedProperties(pType);
 	l.getSecondTick().checkedProperties(pType);
@@ -208,7 +209,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	}
     }
 
-    private static void moveMgrCopy(final ISerialiser serialiser, final EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer> from, final EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer> to, final Class<?> root, final String property) {
+    private static void moveMgrCopy(final ISerialiser serialiser, final EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer0> from, final EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer0> to, final Class<?> root, final String property) {
 	if (from.containsKey(key(root, property))) {
 	    to.put(key(root, property), EntityUtils.deepCopy(from.get(key(root, property)), serialiser));
 	} else {
@@ -353,30 +354,38 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     }
 
     /**
-     * A specific Kryo serialiser for {@link LocatorManager}.
+     * WARNING: this is an OLD version!
      *
      * @author TG Team
      *
      */
-    public static class LocatorManagerSerialiser extends AbstractDomainTreeSerialiser<LocatorManager> {
-	public LocatorManagerSerialiser(final ISerialiser kryo) {
+    @Deprecated
+    public static class LocatorManager0Serialiser extends AbstractDomainTreeSerialiser<LocatorManager0> {
+	/**
+	 * WARNING: this is an OLD version!
+	 *
+	 * @author TG Team
+	 *
+	 */
+	@Deprecated
+	public LocatorManager0Serialiser(final ISerialiser kryo) {
 	    super(kryo);
 	}
 
 	@Override
-	public LocatorManager read(final ByteBuffer buffer) {
+	public LocatorManager0 read(final ByteBuffer buffer) {
 	    final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-	    final EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer> persistentLocators = readValue(buffer, EnhancementPropertiesMap.class);
+	    final EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer0> persistentLocators = readValue(buffer, EnhancementPropertiesMap.class);
 
-//	    for (final LocatorDomainTreeManagerAndEnhancer loc : persistentLocators.values()) {
+//	    for (final LocatorDomainTreeManagerAndEnhancer0 loc : persistentLocators.values()) {
 //		EntityUtils.deepCopy(loc, kryo());
 //	    }
 
-	    return new LocatorManager(kryo(), rootTypes, persistentLocators);
+	    return new LocatorManager0(kryo(), rootTypes, persistentLocators);
 	}
 
 	@Override
-	public void write(final ByteBuffer buffer, final LocatorManager manager) {
+	public void write(final ByteBuffer buffer, final LocatorManager0 manager) {
 	    writeValue(buffer, manager.rootTypes);
 	    writeValue(buffer, manager.persistentLocators);
 	}
@@ -404,7 +413,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	    return false;
 	if (getClass() != obj.getClass())
 	    return false;
-	final LocatorManager other = (LocatorManager) obj;
+	final LocatorManager0 other = (LocatorManager0) obj;
 	if (persistentLocators == null) {
 	    if (other.persistentLocators != null)
 		return false;
@@ -422,7 +431,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	return globalRepresentation;
     }
 
-    public EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer> persistentLocators() {
+    public EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer0> persistentLocators() {
 	return persistentLocators;
     }
 }
