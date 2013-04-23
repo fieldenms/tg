@@ -19,6 +19,7 @@ import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.dev
 import ua.com.fielden.platform.swing.components.textfield.UpperCaseTextField;
 import ua.com.fielden.platform.swing.components.textfield.caption.CaptionTextFieldLayer;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * <code>AutocompleterMultiExample</> demonstrates how to use {@link CaptionTextFieldLayer} for selection of multiple values.
@@ -53,7 +54,7 @@ public class AutocompleterMultiExample {
 		    }
 		};
 
-		final MultiplePropertiesListCellRenderer<DemoEntity> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEntity>("name", "desc");
+		final MultiplePropertiesListCellRenderer<DemoEntity> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEntity>("name", new Pair[] {new Pair<String, String>("Description", "desc")});
 		final AutocompleterTextFieldLayer<DemoEntity> autocompleter = new AutocompleterTextFieldLayer<DemoEntity>(new UpperCaseTextField(), matcher, DemoEntity.class, "name", cellRenderer, "caption...", ";");
 		cellRenderer.setAuto(autocompleter.getAutocompleter());
 

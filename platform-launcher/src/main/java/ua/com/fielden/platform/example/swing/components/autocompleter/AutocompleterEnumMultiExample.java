@@ -17,6 +17,7 @@ import ua.com.fielden.platform.swing.components.smart.autocompleter.development.
 import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.components.textfield.UpperCaseTextField;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * <code>AutocompleterEnumMultiExample</> demonstrates the use of {@link EnumValueMatcher}.
@@ -47,7 +48,7 @@ public class AutocompleterEnumMultiExample {
 		    }
 		};
 
-		final MultiplePropertiesListCellRenderer<DemoEnum> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEnum>("name()", "toString()");
+		final MultiplePropertiesListCellRenderer<DemoEnum> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEnum>("name()", new Pair[] {new Pair<String, String>("string", "toString()")});
 		final AutocompleterTextFieldLayer<DemoEnum> autocompleter = new AutocompleterTextFieldLayer<DemoEnum>(new UpperCaseTextField(), matcher, DemoEnum.class, "name()", cellRenderer, "caption...", ";");
 		cellRenderer.setAuto(autocompleter.getAutocompleter());
 

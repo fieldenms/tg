@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.swing.egi.models.mappings;
 
-import ua.com.fielden.platform.swing.egi.EgiPanel;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 
 /**

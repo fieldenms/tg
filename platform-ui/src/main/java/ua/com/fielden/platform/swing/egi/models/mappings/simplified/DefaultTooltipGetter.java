@@ -8,13 +8,12 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * This class assumes that property of each instance may also be {@link AbstractEntity} that is why it should be used carefully
- * 
+ *
  * @author Yura
- * 
+ *
  * @param <T>
- * @param <K>
  */
-public class DefaultTooltipGetter<T extends AbstractEntity> implements ITooltipGetter<T> {
+public class DefaultTooltipGetter<T extends AbstractEntity<?>> implements ITooltipGetter<T> {
 
     private final String propertyName;
 
@@ -43,12 +42,11 @@ public class DefaultTooltipGetter<T extends AbstractEntity> implements ITooltipG
 	}
     }
 
-    @SuppressWarnings("unchecked")
     private String getCorrectTooltip(final AbstractEntity<?> entity) {
 	final Object value = isEmpty(propertyName) ? entity.getDesc() : entity.get(propertyName);
 	final Class<?> valueType = isEmpty(propertyName) ? String.class : PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName);
 	if (value instanceof AbstractEntity) {
-	    return value != null ? ((AbstractEntity) value).getDesc() : null;
+	    return value != null ? ((AbstractEntity<?>) value).getDesc() : null;
 	} else {
 	    final String tooltip = EntityUtils.formatTooltip(value, valueType);
 	    return isEmpty(tooltip) ? null : tooltip;

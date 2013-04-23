@@ -20,6 +20,7 @@ import ua.com.fielden.platform.swing.components.smart.autocompleter.development.
 import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.components.textfield.caption.CaptionTextFieldLayer;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * <code>AutocompleterMultiExample</> demonstrates how to use {@link CaptionTextFieldLayer} for selection of multiple values.
@@ -52,7 +53,7 @@ public class AutocompleterForPropertyDescriptorsMultiExample {
 		    }
 		};
 
-		final MultiplePropertiesListCellRenderer<PropertyDescriptor<DemoEntity>> cellRenderer = new MultiplePropertiesListCellRenderer<PropertyDescriptor<DemoEntity>>("key", "desc");
+		final MultiplePropertiesListCellRenderer<PropertyDescriptor<DemoEntity>> cellRenderer = new MultiplePropertiesListCellRenderer<PropertyDescriptor<DemoEntity>>("key", new Pair[] {new Pair<String, String>("Description", "desc")});
 		final AutocompleterTextFieldLayer<PropertyDescriptor<DemoEntity>> autocompleter = new AutocompleterTextFieldLayer(new JTextField(), matcher, PropertyDescriptor.class, "key", cellRenderer, "caption...", ",");
 		cellRenderer.setAuto(autocompleter.getAutocompleter());
 

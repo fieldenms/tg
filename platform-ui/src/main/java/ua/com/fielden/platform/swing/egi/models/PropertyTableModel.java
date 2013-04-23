@@ -51,7 +51,7 @@ import com.jidesoft.grid.NavigableModel;
  *
  * @author TG Team
  */
-@SuppressWarnings({ "serial", "unchecked" })
+@SuppressWarnings({ "serial", "rawtypes"})
 public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableModel implements NavigableModel, HierarchicalTableModel, HierarchicalTableComponentFactory {
 
     /**
@@ -243,6 +243,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      *
      * @param instances
      */
+    @SuppressWarnings("unchecked")
     public PropertyTableModel<T> addInstances(final T... instances) {
 	final List<T> currInstances = instances();
 	currInstances.addAll(asList(instances));
@@ -264,6 +265,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	return this;
     }
 
+    @SuppressWarnings("unchecked")
     private void regroup(final List<T> newInstances) {
 	groups.clear();
 	groups.addAll(groupingAlgorithm.group(newInstances));
@@ -308,6 +310,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	return this;
     }
 
+    @SuppressWarnings("unchecked")
     public void removeInstances(final T... instances) {
 	final List<T> instancesToRemove = asList(instances);
 	final List<T> currInstances = instances();
