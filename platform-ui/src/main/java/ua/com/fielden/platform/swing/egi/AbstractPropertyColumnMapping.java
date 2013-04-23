@@ -110,7 +110,7 @@ public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity> {
 	this.columnClass = columnClass;
 	this.size = prefSize;
 	this.headerTooltip = headerTooltip;
-	this.tooltipGetter = tooltipGetter != null ? tooltipGetter : new DefaultTooltipGetter<T>(propertyName);
+	this.tooltipGetter = tooltipGetter != null ? tooltipGetter : new DefaultTooltipGetter(propertyName);
 	this.clickAction = clickAction;
 
 	this.columnTotals = columnTotals;

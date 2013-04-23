@@ -7,13 +7,14 @@ import java.util.Date;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.types.Money;
@@ -27,6 +28,7 @@ import ua.com.fielden.platform.types.Money;
 @KeyType(String.class)
 @MapEntityTo("INSPECTED_ENTITIES")
 @DescTitle("Description")
+@CompanionObject(IInspectedEntityDao.class)
 public class InspectedEntity extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

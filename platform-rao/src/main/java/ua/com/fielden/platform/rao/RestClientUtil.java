@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.provider.IUserController;
@@ -164,7 +165,7 @@ public final class RestClientUtil implements IUserProvider {
      */
     public String getQueryUri(final Class<? extends AbstractEntity> type, final WebResourceType rt) {
 	if (type.getName().contains(DynamicTypeNamingService.APPENDIX)) {
-	    return getBaseUri(rt) + "/query/generated-type";
+	    return getBaseUri(rt) + "/query/generated-type/" + DynamicEntityClassLoader.getOriginalType(type).getName();
 	} else {
 	    return getBaseUri(rt) + "/query/" + type.getSimpleName();
 	}
@@ -178,7 +179,7 @@ public final class RestClientUtil implements IUserProvider {
      */
     public String getExportUri(final Class<? extends AbstractEntity> type) {
 	if (type.getName().contains(DynamicTypeNamingService.APPENDIX)) {
-	    return getBaseUri(WebResourceType.VERSIONED) + "/export/generated-type";
+	    return getBaseUri(WebResourceType.VERSIONED) + "/export/generated-type/" + DynamicEntityClassLoader.getOriginalType(type).getName();
 	} else {
 	    return getBaseUri(WebResourceType.VERSIONED) + "/export/" + type.getSimpleName();
 	}

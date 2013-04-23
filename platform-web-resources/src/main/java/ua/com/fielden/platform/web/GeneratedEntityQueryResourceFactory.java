@@ -7,6 +7,9 @@ import org.restlet.data.Method;
 import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.DynamicEntityDao;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -38,12 +41,19 @@ public class GeneratedEntityQueryResourceFactory extends Restlet {
 	super.handle(request, response);
 
 	if (Method.POST.equals(request.getMethod())) {
-	    final DynamicEntityDao dao = injector.getInstance(DynamicEntityDao.class);
-
 	    final String username = (String) request.getAttributes().get("username");
 	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	    new GeneratedEntityQueryResource(router, injector, dao, restUtil, getContext(), request, response).handle();
+	    try {
+		final String origEntityTypeName = (String) request.getAttributes().get("type");
+		final Class<? extends AbstractEntity<?>> origEntityType = (Class<? extends AbstractEntity<?>>) Class.forName(origEntityTypeName);
+		final IEntityDao companion = injector.getInstance(ICompanionObjectFinder.class).find(origEntityType);
+		new GeneratedEntityQueryResource(router, injector, companion, restUtil, getContext(), request, response).handle();
+
+	    } catch (final ClassNotFoundException ex) {
+		ex.printStackTrace();
+		response.setEntity(restUtil.errorRepresentation(ex));
+	    }
 	}
     }
 }

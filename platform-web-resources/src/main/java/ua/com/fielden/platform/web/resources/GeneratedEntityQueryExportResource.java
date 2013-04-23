@@ -20,6 +20,7 @@ import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.DynamicEntityDao;
 import ua.com.fielden.platform.dao.IComputationMonitor;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -34,7 +35,7 @@ import com.google.inject.Injector;
  */
 public class GeneratedEntityQueryExportResource extends ServerResource implements IComputationMonitor {
 
-    private final DynamicEntityDao dao;
+    private final IEntityDao companion;
     private final RestServerUtil restUtil;
 
     /** The following fields are required to support companion resource. */
@@ -50,11 +51,11 @@ public class GeneratedEntityQueryExportResource extends ServerResource implement
      * @param request
      * @param response
      */
-    public GeneratedEntityQueryExportResource(final Router router, final Injector injector, final DynamicEntityDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public GeneratedEntityQueryExportResource(final Router router, final Injector injector, final IEntityDao companion, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	init(context, request, response);
 	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
-	this.dao = dao;
+	this.companion = companion;
 	this.restUtil = restUtil;
 
 	// let's now create and route a companion resource factory
@@ -74,10 +75,10 @@ public class GeneratedEntityQueryExportResource extends ServerResource implement
 	try {
 	    final List<?> list = restUtil.restoreList(envelope);
 	    final QueryExecutionModel<?, EntityResultQueryModel<?>> qem = (QueryExecutionModel<?, EntityResultQueryModel<?>>) ((DynamicallyTypedQueryContainer)list.get(0)).getQem();
-	    dao.setEntityType(qem.getQueryModel().getResultType());
+
 	    final String[] propertyNames = (String[]) list.get(1);
 	    final String[] propertyTitles = (String[]) list.get(2);
-	    final byte[] export = dao.export(qem, propertyNames, propertyTitles);
+	    final byte[] export = companion.export(qem, propertyNames, propertyTitles);
 	    //getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(export), MediaType.APPLICATION_OCTET_STREAM));
 	    return new InputRepresentation(new ByteArrayInputStream(export), MediaType.APPLICATION_OCTET_STREAM);
 	} catch (final Exception ex) {
@@ -97,7 +98,7 @@ public class GeneratedEntityQueryExportResource extends ServerResource implement
     @Override
     public boolean stop() {
 	try {
-	    stopped.set(dao.stop());
+	    stopped.set(companion.stop());
 	    return stopped.get();
 	} catch (final Exception e) {
 	    e.printStackTrace();

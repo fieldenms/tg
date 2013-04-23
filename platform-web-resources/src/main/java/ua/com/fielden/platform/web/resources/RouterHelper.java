@@ -59,8 +59,8 @@ public final class RouterHelper {
     }
 
     public void registerGeneratedTypeResources(final Router router) {
-	router.attach("/users/{username}/query/generated-type", new GeneratedEntityQueryResourceFactory(injector, router));
-	router.attach("/users/{username}/export/generated-type", new GeneratedEntityQueryExportResourceFactory(injector, router));
+	router.attach("/users/{username}/query/generated-type/{type}", new GeneratedEntityQueryResourceFactory(injector, router));
+	router.attach("/users/{username}/export/generated-type/{type}", new GeneratedEntityQueryExportResourceFactory(injector, router));
     }
 
 

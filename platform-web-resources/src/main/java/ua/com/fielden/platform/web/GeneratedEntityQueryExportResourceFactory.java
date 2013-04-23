@@ -7,10 +7,14 @@ import org.restlet.data.Method;
 import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.DynamicEntityDao;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.GeneratedEntityQueryExportResource;
+import ua.com.fielden.platform.web.resources.GeneratedEntityQueryResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import com.google.inject.Injector;
@@ -43,8 +47,19 @@ public class GeneratedEntityQueryExportResourceFactory extends Restlet {
 
 	    final String username = (String) request.getAttributes().get("username");
 	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+	    
+	    try {
+		final String origEntityTypeName = (String) request.getAttributes().get("type");
+		final Class<? extends AbstractEntity<?>> origEntityType = (Class<? extends AbstractEntity<?>>) Class.forName(origEntityTypeName);
+		final IEntityDao companion = injector.getInstance(ICompanionObjectFinder.class).find(origEntityType);
+		new GeneratedEntityQueryExportResource(router, injector, companion, restUtil, getContext(), request, response).handle();
 
-	    new GeneratedEntityQueryExportResource(router, injector, dao, restUtil, getContext(), request, response).handle();
+	    } catch (final ClassNotFoundException ex) {
+		ex.printStackTrace();
+		response.setEntity(restUtil.errorRepresentation(ex));
+	    }
+
+	    //new GeneratedEntityQueryExportResource(router, injector, dao, restUtil, getContext(), request, response).handle();
 	}
     }
 }

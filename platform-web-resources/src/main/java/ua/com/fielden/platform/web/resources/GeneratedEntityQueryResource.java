@@ -17,6 +17,7 @@ import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.DynamicEntityDao;
 import ua.com.fielden.platform.dao.IComputationMonitor;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -44,7 +45,7 @@ public class GeneratedEntityQueryResource extends ServerResource implements ICom
     /** Indicates whether response should return only first items (number limited by page capacity. */
     private final boolean shouldReturnFirst;
 
-    private final DynamicEntityDao dao;
+    private final IEntityDao companion; // not typed deliberately
     private final RestServerUtil restUtil;
 
     /** The following fields are required to support companion resource. */
@@ -60,11 +61,12 @@ public class GeneratedEntityQueryResource extends ServerResource implements ICom
      * @param request
      * @param response
      */
-    public GeneratedEntityQueryResource(final Router router, final Injector injector, final DynamicEntityDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public GeneratedEntityQueryResource(final Router router, final Injector injector, final IEntityDao companion, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	init(context, request, response);
 	setNegotiated(false);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
-	this.dao = dao;
+	//this.dao = dao;
+	this.companion = companion;
 	this.restUtil = restUtil;
 
 	final String pageCapacityParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
@@ -127,19 +129,18 @@ public class GeneratedEntityQueryResource extends ServerResource implements ICom
     public Representation post(final Representation envelope) throws ResourceException {
 	try {
 	    final QueryExecutionModel<?, EntityResultQueryModel<?>> qem = (QueryExecutionModel<?, EntityResultQueryModel<?>>) restUtil.restoreQueryExecutionModelForGeneratedType(envelope);
-	    dao.setEntityType(qem.getQueryModel().getResultType());
 
 	    if (shouldReturnCount) {
-		final int count = dao.count(qem.getQueryModel(), qem.getParamValues());
+		final int count = companion.count(qem.getQueryModel(), qem.getParamValues());
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.COUNT, count + "");
 		return new StringRepresentation("count");
 	    } else if (shouldReturnAll) {
 		//getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(qem)));
-		return restUtil.listRepresentation(dao.getAllEntities(qem));
+		return restUtil.listRepresentation(companion.getAllEntities(qem));
 	    } else if (shouldReturnFirst) {
-		return restUtil.listRepresentation(dao.getFirstEntities(qem, pageCapacity));
+		return restUtil.listRepresentation(companion.getFirstEntities(qem, pageCapacity));
 	    } else {
-		final IPage<?> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
+		final IPage<?> page = companion.getPage(qem, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
 		return restUtil.listRepresentation(page.data());
@@ -160,7 +161,7 @@ public class GeneratedEntityQueryResource extends ServerResource implements ICom
     @Override
     public boolean stop() {
 	try {
-	    stopped.set(dao.stop());
+	    stopped.set(companion.stop());
 	    return stopped.get();
 	} catch (final Exception e) {
 	    e.printStackTrace();
