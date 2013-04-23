@@ -91,7 +91,7 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
 	    if (values.size() == 1 && values.get(0) != null  && result == null) {
 		System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values.get(0));
 	    }
-	    if (values.size() > 1 && result == null) {
+	    if (values.size() > 1 && !containsOnlyNull(values) && result == null) {
 		System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values);
 	    }
 
@@ -99,6 +99,15 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
 	} else {
 	    return values.get(0);
 	}
+    }
+
+    private boolean containsOnlyNull(final List<Object> values) {
+	for (final Object object : values) {
+	    if (object != null) {
+		return false;
+	    }
+	}
+	return true;
     }
 
     public static class Container {
