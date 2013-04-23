@@ -60,14 +60,13 @@ public class IdCache {
 	} else {
 	    final List<Object> result = new ArrayList<>();
 	    for (final String field : fields) {
-		result.add(entity.get(field));
+		result.add(entity.get(field).toString());
 	    }
 	    return result;
 	}
     }
 
     private Map<Object, Integer> retrieveData(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
-	System.out.println("___ RETRIEVING DATA FOR CACHE FOR " + entityType.getSimpleName());
 	final Map<Object, Integer> result = new HashMap<>();
 	dynamicDao.setEntityType(entityType);
 	final List<AbstractEntity> entities = dynamicDao.getAllEntities(from(select(entityType).model()).model());

@@ -85,10 +85,16 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
 
     protected Object transformValue(final Class type, final List<Object> values, final IdCache cache) throws Exception {
 	if (EntityUtils.isPersistedEntityType(type)) {
-	    final Object result = cache.getCacheForType(type).get(values.size() == 1 ? values.get(0) : values);
+	    final Map<Object, Integer> cacheForType = cache.getCacheForType(type);
+	    final Object entityKeyObject = values.size() == 1 ? values.get(0) : values;
+	    final Object result = cacheForType.get(entityKeyObject);
 	    if (values.size() == 1 && values.get(0) != null  && result == null) {
 		System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values.get(0));
 	    }
+	    if (values.size() > 1 && result == null) {
+		System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values);
+	    }
+
 	    return result;
 	} else {
 	    return values.get(0);
