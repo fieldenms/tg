@@ -6,11 +6,13 @@ package ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.de
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,10 +29,16 @@ import org.apache.commons.jexl.ExpressionFactory;
 import org.apache.commons.jexl.JexlContext;
 import org.apache.commons.jexl.JexlHelper;
 
+import com.jidesoft.swing.StyledLabel;
+import com.jidesoft.swing.StyledLabelBuilder;
+
 import sun.swing.SwingUtilities2;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterLogic;
 import ua.com.fielden.platform.swing.components.smart.development.Hover;
+import ua.com.fielden.platform.swing.utils.DummyBuilder;
+import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This list cell renderer is designed to represent instances with two specified in the constructor properties: First property is in bold and located above the second property; the
@@ -52,46 +60,80 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
     private final Color hoverSelectedColour = new Color(hoverColour.getRed(), hoverColour.getGreen(), hoverColour.getBlue(), 255);
 
     private final String[] exprProperties;
-    private final Map<String, Boolean> exprHighlightMap = new HashMap<>();
+    private final List<Boolean> exprHighlights = new ArrayList<>();
+    private final List<Pair<String, String>> titleExprToDisplay;
 
     /**
      * Defines the preferred width for pop up component. And it is used for determining the cell renderer text.
      */
     private int preferredWidth = 150;
 
-    public MultiplePropertiesListCellRenderer(final String mainExpression, final String... secondaryExpressions) {
+    private int firstColumnPrefWidth = 0;
+
+    public MultiplePropertiesListCellRenderer(final String mainExpression, final Pair<String, String>... secondaryExpressions) {
 	// create expression for mainExpression
-	final int secondaryExpressionLength = secondaryExpressions == null ? 0 : secondaryExpressions.length;
-	propertyExpressions = new Expression[1 + secondaryExpressionLength];
-	exprProperties = new String[1 + secondaryExpressionLength];
-	jlProperties = new JLabel[1 + secondaryExpressionLength];
+	titleExprToDisplay = new ArrayList<>();
+	titleExprToDisplay.add(new Pair<>("dummy", mainExpression));
+	if (secondaryExpressions != null) {
+	    titleExprToDisplay.addAll(Arrays.asList(secondaryExpressions));
+	}
+	propertyExpressions = new Expression[titleExprToDisplay.size()];
+	exprProperties = new String[titleExprToDisplay.size()];
+	jlProperties = new JLabel[titleExprToDisplay.size()];
 	try {
 	    propertyExpressions[0] = ExpressionFactory.createExpression(("entity." + mainExpression.trim()));
 	    jlProperties[0] = createMainLabel();
 	    exprProperties[0] = mainExpression;
-	    exprHighlightMap.put(mainExpression, Boolean.TRUE);
+	    exprHighlights.add(true);
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new IllegalArgumentException("Failed to create expression " + mainExpression + ": " + e.getMessage());
 	}
 	// create expressions for secondaryExpressions
 	String rowConstraint = "";
-	for (int exprIndex = 0; exprIndex < secondaryExpressionLength; exprIndex++) {
+	final List<JLabel> titleLabels = new ArrayList<>();
+	for (int exprIndex = 1; exprIndex < titleExprToDisplay.size(); exprIndex++) {
 	    try {
-		propertyExpressions[exprIndex + 1] = ExpressionFactory.createExpression(("entity." + secondaryExpressions[exprIndex]));
-		rowConstraint += "[]";
-		jlProperties[exprIndex + 1] = createSecondartLabel();
-		exprProperties[exprIndex + 1] = secondaryExpressions[exprIndex];
-		exprHighlightMap.put(secondaryExpressions[exprIndex], Boolean.FALSE);
+		// create label for the current property title and calculate its preferred width
+		final String title = titleExprToDisplay.get(exprIndex).getKey();
+		final JLabel titleLabel = crateTitleLabel(title);
+		final FontMetrics fm = SwingUtilities2.getFontMetrics(titleLabel, titleLabel.getFont());
+		final int titleWidth = SwingUtilities2.stringWidth(titleLabel, fm, title);
+		firstColumnPrefWidth = firstColumnPrefWidth < titleWidth ? titleWidth : firstColumnPrefWidth;
+		titleLabels.add(titleLabel);
+
+		// calculate label for the current expression
+		final String expressionValue = secondaryExpressions[exprIndex - 1].getValue();
+		propertyExpressions[exprIndex] = ExpressionFactory.createExpression(("entity." + expressionValue));
+		rowConstraint += "[c]";
+		jlProperties[exprIndex] = createSecondartLabel();
+		exprProperties[exprIndex] = expressionValue;
+		exprHighlights.add(false);
 	    } catch (final Exception e) {
 		e.printStackTrace();
-		throw new IllegalArgumentException("Failed to create expression " + secondaryExpressions[exprIndex] + ": " + e.getMessage());
+		throw new IllegalArgumentException("Failed to create expression " + secondaryExpressions[exprIndex - 1] + ": " + e.getMessage());
 	    }
 	}
 
-	setLayout(new MigLayout("fill, insets " + insets, "[]", "[]" + rowConstraint + insets)); // there will be a gap after each entry in the list
-	for (int compIndex = 0; compIndex < jlProperties.length - 1; compIndex++) {
+	// Make two column layout and add all labels to it. :" + firstColumnPrefWidth + ":
+	final boolean skipTitles = titleExprToDisplay.size() <= 2;
+	if (skipTitles) {
+	    firstColumnPrefWidth = 0;
+	    setLayout(new MigLayout("debug, fill, insets " + insets, "[grow]", "[c]" + rowConstraint + insets)); // there will be a gap after each entry in the list
+	    add(jlProperties[0], "wrap");
+	} else {
+	    setLayout(new MigLayout("debug, fill, insets " + insets, "[right]rel[grow]", "[c]" + rowConstraint + insets)); // there will be a gap after each entry in the list
+	    add(jlProperties[0], "skip 1, wrap");
+	}
+
+	for (int compIndex = 1; compIndex < jlProperties.length - 1; compIndex++) {
+	    if (!skipTitles) {
+		add(titleLabels.get(compIndex - 1));
+	    }
 	    add(jlProperties[compIndex], "grow, wrap");
+	}
+	if (!skipTitles) {
+	    add(titleLabels.get(titleLabels.size() - 1));
 	}
 	add(jlProperties[jlProperties.length - 1], "grow");
 
@@ -99,6 +141,7 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
 
     private JLabel createMainLabel() {
 	final JLabel jlName = new JLabel();
+	jlName.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 	jlName.setText("text");
 	jlName.setFont(jlName.getFont().deriveFont(jlName.getFont().getStyle() | Font.BOLD));
 	jlName.setBorder(new EmptyBorder(0, insets, 0, 0));
@@ -110,9 +153,16 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
 	final JLabel jlDesc = new JLabel();
 	jlDesc.setText("text");
 	jlDesc.setBorder(new EmptyBorder(0, insets, 0, 0));
-	jlDesc.setFont(new Font("DejaVu Sans", Font.PLAIN, 10));
+	jlDesc.setFont(new Font("SansSerif", Font.PLAIN, 10));
 	jlDesc.setPreferredSize(new Dimension(preferredWidth, 13));
 	return jlDesc;
+    }
+
+    private JLabel crateTitleLabel(final String caption) {
+	final StyledLabel styledLabel = StyledLabelBuilder.createStyledLabel(caption + ":");//  add().createLabel();
+	styledLabel.setFont(new Font("SansSerif", Font.BOLD, 10));
+	styledLabel.setForeground(new Color(0x646464));
+	return styledLabel;
     }
 
     @SuppressWarnings("unchecked")
@@ -127,6 +177,7 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
 	}
     }
 
+    @Override
     public Component getListCellRendererComponent(final JList<? extends T> list, final T value, final int index, final boolean isSelected, final boolean cellHasFocus) {
 	if (isSelected) {
 	    if (Hover.index(list) == index) {
@@ -198,8 +249,8 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
      * @return
      */
     public boolean isPropertyHighlighted(final String exprProperty) {
-	if (exprHighlightMap.containsKey(exprProperty)) {
-	    return exprHighlightMap.get(exprProperty);
+	if (containsExpression(exprProperty)) {
+	    return exprHighlights.get(indexOfExpression(exprProperty));
 	}
 	throw new IllegalArgumentException("The expression " + exprProperty + " is not included in to this cell renderer");
     }
@@ -211,11 +262,24 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
      * @param highlight
      */
     public void setPropertyToHighlight(final String exprProperty, final boolean highlight) {
-	if (exprHighlightMap.containsKey(exprProperty)) {
-	    exprHighlightMap.put(exprProperty, highlight);
+	if (containsExpression(exprProperty)) {
+	    exprHighlights.set(indexOfExpression(exprProperty), highlight);
 	    return;
 	}
 	throw new IllegalArgumentException("The expression " + exprProperty + " is not included in to this cell renderer");
+    }
+
+    private boolean containsExpression(final String expression) {
+	return indexOfExpression(expression) >= 0;
+    }
+
+    private int indexOfExpression(final String expression) {
+	for (int index = 0; index < titleExprToDisplay.size(); index++) {
+	    if (EntityUtils.equalsEx(expression, titleExprToDisplay.get(index).getValue())) {
+		return index;
+	    }
+	}
+	return -1;
     }
 
     /**
@@ -229,9 +293,9 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
      * @return
      */
     private String matchValue(final String value, final String clippedString, final Pattern pattern) {
-	String  suffix = "";
+	String suffix = "";
 	String body = clippedString;
-	if(clippedString.endsWith("...")){
+	if (clippedString.endsWith("...")) {
 	    suffix = "...";
 	    body = clippedString.substring(0, clippedString.length() - 3);
 	}
@@ -291,55 +355,55 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
      *
      * @param preferredWidth
      */
-    public void setPreferredWidth(final int preferredWidth){
-	this.preferredWidth = preferredWidth - insets * 3;
+    public void setPreferredWidth(final int preferredWidth) {
+	this.preferredWidth = preferredWidth - firstColumnPrefWidth - insets * 5;
     }
 
-//    /**
-//     * Updates the preferred width of the renderer according to the new list model.
-//     *
-//     * @param entities
-//     */
-//    public void updatePreferredWidth(final List<T> entities) {
-//	int maxWidth = 150;
-//	for(final T entity : entities) {
-//	    final int nextElemWidth = calculateElementWidth(entity);
-//	    if(maxWidth < nextElemWidth) {
-//		maxWidth = nextElemWidth;
-//	    }
-//	}
-//	if (entities.isEmpty()) {
-//	    System.out.println("list size updated -- " + preferredWidth);
-//	    this.preferredWidth = maxWidth;
-//	}
-//    }
-//
-//    /**
-//     * Calculates the preferred width for entity.
-//     *
-//     * @param entity
-//     * @return
-//     */
-//    private int calculateElementWidth(final T entity) {
-//	final int textCompWidth = auto.getTextComponent().getWidth() - insets * 3;
-//	final BasicLabelUI lableUi = new BasicLabelUI();
-//	jlProperties[0].setText(value(entity, 0));
-//	final int mainLabelWidth = lableUi.getPreferredSize(jlProperties[0]).width - insets;
-//	int maxSecLabelWidth = 0;
-//	for (int lbIndex = 1; lbIndex < jlProperties.length; lbIndex++) {
-//	    jlProperties[lbIndex].setText(value(entity, lbIndex));
-//	    final int labelWidth = lableUi.getPreferredSize(jlProperties[lbIndex]).width - insets;
-//	    if (maxSecLabelWidth < labelWidth) {
-//		maxSecLabelWidth = labelWidth;
-//	    }
-//	}
-//	if (mainLabelWidth > textCompWidth) {
-//	    return mainLabelWidth;
-//	} else if (maxSecLabelWidth > textCompWidth) {
-//	    return textCompWidth;
-//	} else {
-//	    return -1;
-//	}
-//    }
+    //    /**
+    //     * Updates the preferred width of the renderer according to the new list model.
+    //     *
+    //     * @param entities
+    //     */
+    //    public void updatePreferredWidth(final List<T> entities) {
+    //	int maxWidth = 150;
+    //	for(final T entity : entities) {
+    //	    final int nextElemWidth = calculateElementWidth(entity);
+    //	    if(maxWidth < nextElemWidth) {
+    //		maxWidth = nextElemWidth;
+    //	    }
+    //	}
+    //	if (entities.isEmpty()) {
+    //	    System.out.println("list size updated -- " + preferredWidth);
+    //	    this.preferredWidth = maxWidth;
+    //	}
+    //    }
+    //
+    //    /**
+    //     * Calculates the preferred width for entity.
+    //     *
+    //     * @param entity
+    //     * @return
+    //     */
+    //    private int calculateElementWidth(final T entity) {
+    //	final int textCompWidth = auto.getTextComponent().getWidth() - insets * 3;
+    //	final BasicLabelUI lableUi = new BasicLabelUI();
+    //	jlProperties[0].setText(value(entity, 0));
+    //	final int mainLabelWidth = lableUi.getPreferredSize(jlProperties[0]).width - insets;
+    //	int maxSecLabelWidth = 0;
+    //	for (int lbIndex = 1; lbIndex < jlProperties.length; lbIndex++) {
+    //	    jlProperties[lbIndex].setText(value(entity, lbIndex));
+    //	    final int labelWidth = lableUi.getPreferredSize(jlProperties[lbIndex]).width - insets;
+    //	    if (maxSecLabelWidth < labelWidth) {
+    //		maxSecLabelWidth = labelWidth;
+    //	    }
+    //	}
+    //	if (mainLabelWidth > textCompWidth) {
+    //	    return mainLabelWidth;
+    //	} else if (maxSecLabelWidth > textCompWidth) {
+    //	    return textCompWidth;
+    //	} else {
+    //	    return -1;
+    //	}
+    //    }
 
 }

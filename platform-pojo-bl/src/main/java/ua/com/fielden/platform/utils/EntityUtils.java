@@ -30,6 +30,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
@@ -890,6 +891,16 @@ public class EntityUtils {
 	    result.add(splitPropByFirstDot(prop).getKey());
 	}
 	return result;
+    }
+
+    /**
+     * A convenient method for constructing a pair of property and its title as defined at the entity type level.
+     * @param entityType
+     * @param propName
+     * @return
+     */
+    public static Pair<String, String> titleAndProp(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
+	return new Pair<>(TitlesDescsGetter.getTitleAndDesc(propName, entityType).getKey(), propName);
     }
 
 }

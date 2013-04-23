@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
@@ -41,7 +42,11 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
      *
      * @return
      */
-    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName, final ICriteriaGenerator criteriaGenerator){
+    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForCentre(//
+	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, //
+	    final String propertyName, //
+	    final ICriteriaGenerator criteriaGenerator, //
+	    final Pair<String, String>... titleExprToDisplay){
 	final String criteriaPropertyName = CriteriaReflector.getCriteriaProperty(criteria.getClass(), propertyName);
 	final IValueMatcher<?> valueMatcher = criteria.getValueMatcher(propertyName);
 	final MetaProperty metaProp = criteria.getProperty(propertyName);
@@ -55,10 +60,17 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		criteriaGenerator,//
 		valueMatcher,//
 		LabelAndTooltipExtractor.createCaption(metaProp.getTitle()),//
-		LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()));
+		LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()),//
+		titleExprToDisplay);
     }
 
-    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForMaster(final AbstractEntity<?> entity, final String propertyName, final ILocatorManager locatorManager, final ICriteriaGenerator criteriaGenerator, final IValueMatcher<?> valueMatcher){
+    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForMaster(//
+	    final AbstractEntity<?> entity, //
+	    final String propertyName, //
+	    final ILocatorManager locatorManager, //
+	    final ICriteriaGenerator criteriaGenerator, //
+	    final IValueMatcher<?> valueMatcher, //
+	    final Pair<String, String>... titleExprToDisplay){
 	//createEditor(entity, propertyName, property.getType(), "", property.getDesc(), entity.getEntityFactory(), entityMasterFactory, vmf, daoFactory, locatorController, locatorRetriever);
 	final MetaProperty metaProp = entity.getProperty(propertyName);
 	final String toolTip = metaProp.getDesc();
@@ -72,7 +84,8 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		criteriaGenerator,//
 		valueMatcher,//
 		"",//
-		toolTip);
+		toolTip,//
+		titleExprToDisplay);
     }
 
     private static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocator(final AbstractEntity<?> entity, //
@@ -83,7 +96,8 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	    final ICriteriaGenerator criteriaGenerator, //
 	    final IValueMatcher<?> valueMatcher, //
 	    final String caption, //
-	    final String toolTip){
+	    final String toolTip, //
+	    final Pair<String, String>... titleExprToDisplay){
 	final MetaProperty metaProp = entity.getProperty(propertyName);
 	final IsProperty propertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, entity.getType(), propertyName);
 	final EntityType entityTypeAnnotation = AnnotationReflector.getPropertyAnnotation(EntityType.class, entity.getType(), propertyName);
@@ -103,7 +117,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		entity.getEntityFactory(),//
 		criteriaGenerator);
 
-	return new EntityPropertyEditorWithLocator(entity, propertyName, locatorConfigurationModel, elementType, valueMatcher, caption, toolTip);
+	return new EntityPropertyEditorWithLocator(entity, propertyName, locatorConfigurationModel, elementType, valueMatcher, caption, toolTip, titleExprToDisplay);
     }
 
     private static boolean isSingle(final AbstractEntity<?> entity, final String propertyName){
@@ -118,11 +132,19 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public EntityPropertyEditorWithLocator(final AbstractEntity<?> entity, final String propertyName, final LocatorConfigurationModel locatorConfigurationModel, final Class<?> elementType, final IValueMatcher<?> valueMatcher, final String caption, final String toolTip) {
+    public EntityPropertyEditorWithLocator(//
+	    final AbstractEntity<?> entity, //
+	    final String propertyName, //
+	    final LocatorConfigurationModel locatorConfigurationModel, //
+	    final Class<?> elementType, //
+	    final IValueMatcher<?> valueMatcher, //
+	    final String caption, //
+	    final String toolTip, //
+	    final Pair<String, String>... titleExprToDisplay) {
 	super(entity, propertyName, new EntityLocatorValueMatcher(valueMatcher, locatorConfigurationModel.getLocatorManager(), locatorConfigurationModel.getCriteriaGenerator(), locatorConfigurationModel.getEntityType(), locatorConfigurationModel.getRootType(), locatorConfigurationModel.getName()));
 	getValueMatcher().setBindedEntity(entity);
 	editor = createEditorWithLocator(entity, propertyName, locatorConfigurationModel, elementType,//
-		caption, toolTip, isSingle(entity, propertyName), isStringBinded(entity, propertyName));
+		caption, toolTip, isSingle(entity, propertyName), isStringBinded(entity, propertyName), titleExprToDisplay);
 	getValueMatcher().setBindedPropertyEditor(this);
     }
 
@@ -150,12 +172,17 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	    final String caption,//
 	    final String toolTip,//
 	    final boolean isSingle,//
-	    final boolean stringBinding//
-	    ){
+	    final boolean stringBinding,//
+	    final Pair<String, String>... titleExprToDisplay){
 	if (!AbstractEntity.class.isAssignableFrom(entityType)) {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + entityType + ".");
 	}
-	final String[] secExpressions = EntityUtils.hasDescProperty(entityType) ? new String[] {"desc"} : null;
+	final Pair<String, String>[] secExpressions;
+	if(titleExprToDisplay.length == 0){
+	    secExpressions = EntityUtils.hasDescProperty(entityType) ? new Pair[] {new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc("desc", entityType).getKey(), "desc")} : null;
+	} else {
+	    secExpressions = titleExprToDisplay;
+	}
 	return ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, locatorConfigurationModel, entityType, getValueMatcher(), "key", secExpressions, caption, isSingle ? null : ",", toolTip, stringBinding);
     }
 
@@ -256,8 +283,9 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		return EntityUtils.makeNotEnhanced(criteria.runLocatorQuery(getPageSize(), value, finalFetchModel, dependentValues.toArray(new Pair[0])));
 	    }else{
 		bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("key", true);
-		if(EntityUtils.hasDescProperty(entityType))
-		bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("desc", false);
+		if(EntityUtils.hasDescProperty(entityType)) {
+		    bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("desc", false);
+		}
 		if(fetchModel == null){
 		    return autocompleterValueMatcher.findMatches(value);
 		} else {

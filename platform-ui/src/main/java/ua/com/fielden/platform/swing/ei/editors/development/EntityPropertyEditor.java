@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
@@ -13,6 +14,7 @@ import ua.com.fielden.platform.swing.components.smart.autocompleter.development.
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Editor for an entity property of non-collectional types.
@@ -32,9 +34,9 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
      * @param valueMatcher
      * @return
      */
-    public static EntityPropertyEditor createEntityPropertyEditorForMaster(final AbstractEntity<?> entity, final String propertyName, final IValueMatcher<?> valueMatcher){
+    public static EntityPropertyEditor createEntityPropertyEditorForMaster(final AbstractEntity<?> entity, final String propertyName, final IValueMatcher<?> valueMatcher, final Pair<String, String>... titleExprToDisplay){
 	final MetaProperty metaProp = entity.getProperty(propertyName);
-	return new EntityPropertyEditor(entity, propertyName, "", metaProp.getDesc(), valueMatcher);
+	return new EntityPropertyEditor(entity, propertyName, "", metaProp.getDesc(), valueMatcher, titleExprToDisplay);
     }
 
     /**
@@ -44,10 +46,10 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
      * @param propertyName
      * @return
      */
-    public static EntityPropertyEditor createEntityPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName){
+    public static EntityPropertyEditor createEntityPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName, final Pair<String, String>... titleExprToDisplay){
 	final MetaProperty metaProp = criteria.getProperty(propertyName);
 	final IValueMatcher<?> valueMatcher = criteria.getValueMatcher(propertyName);
-	return new EntityPropertyEditor(criteria, propertyName, LabelAndTooltipExtractor.createCaption(metaProp.getTitle()), LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()), valueMatcher);
+	return new EntityPropertyEditor(criteria, propertyName, LabelAndTooltipExtractor.createCaption(metaProp.getTitle()), LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()), valueMatcher, titleExprToDisplay);
     }
 
     /**
@@ -59,7 +61,7 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
      * @param toolTip
      * @param valueMatcher
      */
-    public EntityPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final String caption, final String toolTip, final IValueMatcher<?> valueMatcher){
+    public EntityPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final String caption, final String toolTip, final IValueMatcher<?> valueMatcher, final Pair<String, String>... titleExprToDisplay){
 	super(entity, propertyName, valueMatcher);
 	final MetaProperty metaProp = entity.getProperty(propertyName);
 	final IsProperty propertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, entity.getType(), propertyName);
@@ -70,7 +72,7 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
 	if(!AbstractEntity.class.isAssignableFrom(elementType)){
 	    throw new IllegalArgumentException("The property: " + propertyName + " of " + entity.getType().getSimpleName() + " type, can not be bind to the autocompleter!");
 	}
-	editor = createEditor(entity, propertyName, elementType, caption, toolTip, isSingle, stringBinding);
+	editor = createEditor(entity, propertyName, elementType, caption, toolTip, isSingle, stringBinding, titleExprToDisplay);
     }
 
     @Override
@@ -83,11 +85,16 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
 	return editor;
     }
 
-    private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditor(final AbstractEntity<?> bindingEntity, final String bindingPropertyName, final Class elementType, final String caption, final String tooltip, final boolean isSingle, final boolean stringBinding) {
+    private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditor(final AbstractEntity<?> bindingEntity, final String bindingPropertyName, final Class elementType, final String caption, final String tooltip, final boolean isSingle, final boolean stringBinding, final Pair<String, String>... titleExprToDisplay) {
 	if (!AbstractEntity.class.isAssignableFrom(elementType)) {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + elementType + ".");
 	}
-	final String[] secExpressions = EntityUtils.hasDescProperty(elementType) ? new String[] {"desc"} : null;
+	final Pair<String, String>[] secExpressions;
+	if(titleExprToDisplay.length == 0){
+	    secExpressions = EntityUtils.hasDescProperty(elementType) ? new Pair[] {new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc("desc", elementType).getKey(), "desc")} : null;
+	} else {
+	    secExpressions = titleExprToDisplay;
+	}
 	return ComponentFactory.createOnFocusLostAutocompleter(bindingEntity, bindingPropertyName, caption, elementType, "key", secExpressions, isSingle ? null : ",", getValueMatcher(), tooltip, stringBinding);
     }
 

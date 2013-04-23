@@ -40,8 +40,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterLogic;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.components.textfield.IntegerTextField;
 import ua.com.fielden.platform.swing.components.textfield.Options;
 import ua.com.fielden.platform.swing.components.textfield.UpperCaseTextField;
@@ -65,23 +63,6 @@ import com.jidesoft.swing.StyledLabelBuilder;
  *
  */
 public class DummyBuilder {
-
-    public static <T extends AbstractEntity<?>> AutocompleterTextFieldLayer<T> ac(final String caption, final Class<T> type, final String key, final String desc, final IValueMatcher<T> valueMatcher) {
-	final MultiplePropertiesListCellRenderer<T> cellRenderer = new MultiplePropertiesListCellRenderer<T>(key, desc);
-	final AutocompleterTextFieldLayer<T> ac = new AutocompleterTextFieldLayer<T>(new UpperCaseTextField(), valueMatcher, type, key, cellRenderer, caption, ",");
-	cellRenderer.setAuto(ac.getAutocompleter());
-	return ac;
-    }
-
-    /**
-     * Creates single-value autocompleter
-     */
-    public static <T extends AbstractEntity<?>> AutocompleterTextFieldLayer<T> svac(final String caption, final Class<T> entityClass, final IValueMatcher<T> valueMatcher) {
-	final MultiplePropertiesListCellRenderer<T> cellRenderer = new MultiplePropertiesListCellRenderer<T>("key", "desc");
-	final AutocompleterTextFieldLayer<T> ac = new AutocompleterTextFieldLayer<T>(new UpperCaseTextField(), valueMatcher, entityClass, "key", cellRenderer, caption, null);
-	cellRenderer.setAuto(ac.getAutocompleter());
-	return ac;
-    }
 
     /**
      * Creates StyledLabel (JIDE) for criteria property ("name: ").
@@ -255,6 +236,7 @@ public class DummyBuilder {
 
 	    };
 
+	    @Override
 	    public void valueChanged(final ListSelectionEvent e) {
 		if (!e.getValueIsAdjusting()) {
 		    rowExpand.actionPerformed(null);
@@ -307,6 +289,7 @@ public class DummyBuilder {
 		final Document document = e.getDocument();
 		if (document.getLength() > maxCharacters) {
 		    SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 			    try {
 				document.remove(e.getOffset(), document.getLength() - maxCharacters);
