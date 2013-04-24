@@ -14,7 +14,7 @@ public class TgBogieLocation extends AbstractUnionEntity {
 
     private static final long serialVersionUID = 7362243737334921917L;
 
-    @IsProperty
+    @IsProperty(linkProperty = "bogie")
     @MapTo
     @Title(value = "Wagon slot", desc = "Wagon slot")
     private TgWagonSlot wagonSlot;
