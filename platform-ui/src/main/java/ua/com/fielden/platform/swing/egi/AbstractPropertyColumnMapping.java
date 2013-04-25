@@ -49,7 +49,7 @@ import com.jidesoft.grid.TableModelWrapperUtils;
  * mapping for each {@link EntityGridInspector} <br>
  * Note : to enable header tool-tip on column, represented by this class, {@link #getHeaderTooltip()} should be overridden
  *
- * @author Yura
+ * @author TG Team
  *
  * @param <T>
  *            - type of entity, property of which is mapped
@@ -571,6 +571,11 @@ public abstract class AbstractPropertyColumnMapping<T extends AbstractEntity> {
      */
     public void setColumnTotals(final ColumnTotals columnTotals) {
 	this.columnTotals = columnTotals;
+    }
+
+    @Override
+    public String toString() {
+        return "Property name: " + propertyName + "\tColumn class: " + columnClass.getName();
     }
 
 }

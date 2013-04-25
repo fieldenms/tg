@@ -34,7 +34,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  * Read-only mapping for {@link AbstractEntity} properties.
  * <p>
  *
- * @author 01es, Yura
+ * @author TG Team
  *
  * @param <T>
  * @param <K>
@@ -400,7 +400,7 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
      * Optimised {@link JCheckBox} for rendering
      *
      * @see javax.swing.table.DefaultTableCellRenderer
-     * @author Yura
+     * @author TG Team
      */
     public static class RendererCheckBox extends JCheckBox {
 

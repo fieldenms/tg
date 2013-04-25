@@ -40,23 +40,38 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      *
      * @param entityMasterFactory
      *            -- the factory that knows all about entity masters
+     * @param entityType
+     *            -- entity type what gets double clicked
      * @param propertyName
-     *            -- property name that gers associated with this action
+     *            -- property name that gets associated with this action
      * @param ownerView
      *            -- an instance of {@link GridAnalysisView} that should be used as the owner of a corresponding entity master instance.
      * @param provider
-     *            -- blocking layer provider that provides a way to block relevan UI components and display progress upon opening of entity masters.
+     *            -- blocking layer provider that provides a way to block relevant UI components and display progress upon opening of entity masters.
      */
-    private OpenMasterClickAction(final IEntityMasterManager entityMasterFactory, final String propertyName, final GridAnalysisView<?, ?> ownerView, final IBlockingLayerProvider provider) {
+    private OpenMasterClickAction(//
+	    final IEntityMasterManager entityMasterFactory, //
+	    final Class<?> entityType, //
+	    final String propertyName, //
+	    final GridAnalysisView<?, ?> ownerView, //
+	    final IBlockingLayerProvider provider) {
 	super("Double-click facility", provider);
 	this.propertyName = propertyName;
 	this.entityMasterFactory = entityMasterFactory;
 	this.ownerView = ownerView;
 	// initialise trimmedPropertyName property that is used as the basis for invoking entity master
 	//this.trimmedPropertyName = propertyName.trim();
-	if (isEmpty(propertyName) || KEY.equals(propertyName)) {
+	if (isEmpty(propertyName)) {
 	    // this means we should open master for the entity represented by clicked row
 	    this.trimmedPropertyName = "";
+	} else if (KEY.equals(propertyName)) { // need to check what type property key has
+	    final Class<?> type = PropertyTypeDeterminator.determinePropertyType(entityType, KEY);
+	    if (AbstractEntity.class.isAssignableFrom(type)) {
+		this.trimmedPropertyName = KEY;
+	    } else {
+		this.trimmedPropertyName = "";
+	    }
+
 	} else if (propertyName.endsWith("." + KEY)) {
 	    // this means we should simply skip ".key" suffix, and this is how we obtain desired property name
 	    this.trimmedPropertyName = propertyName.substring(0, propertyName.length() - 4);
@@ -73,8 +88,12 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      * @param propertyName
      * @param ownerView
      */
-    private OpenMasterClickAction(final IEntityMasterManager entityMasterFactory, final String propertyName, final GridAnalysisView<?, ?> ownerView) {
-	this(entityMasterFactory, propertyName, ownerView, new IBlockingLayerProvider() {
+    private OpenMasterClickAction(//
+	    final IEntityMasterManager entityMasterFactory, //
+	    final Class<?> entityType, //
+	    final String propertyName, //
+	    final GridAnalysisView<?, ?> ownerView) {
+	this(entityMasterFactory, entityType, propertyName, ownerView, new IBlockingLayerProvider() {
 	    @Override
 	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
 		return ownerView != null ? ownerView.getBlockingLayer() : null;
@@ -90,8 +109,12 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      * @param propertyName
      * @param provider
      */
-    private OpenMasterClickAction(final IEntityMasterManager entityMasterFactory, final String propertyName, final IBlockingLayerProvider provider) {
-	this(entityMasterFactory, propertyName, null, provider);
+    private OpenMasterClickAction(//
+	    final IEntityMasterManager entityMasterFactory, //
+	    final Class<?> entityType, //
+	    final String propertyName,//
+	    final IBlockingLayerProvider provider) {
+	this(entityMasterFactory, entityType, propertyName, null, provider);
     }
 
     @Override
@@ -138,28 +161,28 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      * This factory method enhances {@link AbstractPropertyColumnMapping}s by associating property mappings with an instance of {@link OpenMasterClickAction}.
      *
      * @param mappings
-     * @param entityClass
+     * @param entityType
      * @param entityMasterFactory
      * @param ownerView
      */
-    public static void enhanceWithClickAction(final Iterable<? extends AbstractPropertyColumnMapping<?>> mappings, final Class<?> entityClass, final IEntityMasterManager entityMasterFactory, final GridAnalysisView<?, ?> ownerView) {
+    public static void enhanceWithClickAction(final Iterable<? extends AbstractPropertyColumnMapping<?>> mappings, final Class<?> entityType, final IEntityMasterManager entityMasterFactory, final GridAnalysisView<?, ?> ownerView) {
 	for (final AbstractPropertyColumnMapping<?> mapping : mappings) {
-	    if (propertyIsOfAbstractEntityType(entityClass, mapping.getPropertyName())) {
-		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, mapping.getPropertyName(), ownerView));
+	    if (propertyIsOfAbstractEntityType(entityType, mapping.getPropertyName())) {
+		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, mapping.getPropertyName(), ownerView));
 	    } else {
-		final String propertyOwner = findClosesEntity(entityClass, mapping.getPropertyName());
-		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, propertyOwner, ownerView));
+		final String propertyOwner = findClosesEntity(entityType, mapping.getPropertyName());
+		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, propertyOwner, ownerView));
 	    }
 	}
     }
 
-    public static void enhanceWithBlockingLayer(final Iterable<? extends AbstractPropertyColumnMapping<?>> mappings, final Class<?> entityClass, final IEntityMasterManager entityMasterFactory, final IBlockingLayerProvider provider) {
+    public static void enhanceWithBlockingLayer(final Iterable<? extends AbstractPropertyColumnMapping<?>> mappings, final Class<?> entityType, final IEntityMasterManager entityMasterFactory, final IBlockingLayerProvider provider) {
 	for (final AbstractPropertyColumnMapping<?> mapping : mappings) {
-	    if (propertyIsOfAbstractEntityType(entityClass, mapping.getPropertyName())) {
-		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, mapping.getPropertyName(), provider));
+	    if (propertyIsOfAbstractEntityType(entityType, mapping.getPropertyName())) {
+		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, mapping.getPropertyName(), provider));
 	    } else {
-		final String propertyOwner = findClosesEntity(entityClass, mapping.getPropertyName());
-		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, propertyOwner, provider));
+		final String propertyOwner = findClosesEntity(entityType, mapping.getPropertyName());
+		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, propertyOwner, provider));
 	    }
 	}
     }
