@@ -139,7 +139,10 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 		setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value));
 		break;
 	    case COND_TOKENS: //
-		tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value).getModel()));
+		tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, false).getModel()));
+		break;
+	    case NEGATED_COND_TOKENS: //
+		tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, true).getModel()));
 		break;
 	    case LOGICAL_OPERATOR:
 		setChild(new CompoundConditionBuilder(this, queryBuilder, getParamValues(), cat, value));

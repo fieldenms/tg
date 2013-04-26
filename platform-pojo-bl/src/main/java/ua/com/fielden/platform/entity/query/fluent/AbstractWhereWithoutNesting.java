@@ -17,4 +17,8 @@ implements IWhereWithoutNesting<T1, T2, ET> {
     public T2 condition(final ConditionModel condition) {
 	return copy(getParent2(), getTokens().cond(condition));
     }
+
+    public T2 negatedCondition(final ConditionModel condition) {
+	return copy(getParent2(), getTokens().negatedCond(condition));
+    }
 }

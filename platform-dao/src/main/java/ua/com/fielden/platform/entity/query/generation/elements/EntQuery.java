@@ -379,7 +379,7 @@ public class EntQuery implements ISingleOperand {
 	logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
 	final List<CompoundCondition> others = new ArrayList();
 	others.add(new CompoundCondition(LogicalOperator.AND, originalConditions));
-	return originalConditions.ignore() ? new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition).getModel()) : new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition).getModel(), others);
+	return originalConditions.ignore() ? new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel()) : new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel(), others);
 	} else {
 	    return originalConditions;
 	}

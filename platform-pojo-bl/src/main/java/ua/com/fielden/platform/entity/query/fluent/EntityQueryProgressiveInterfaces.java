@@ -329,6 +329,7 @@ public interface EntityQueryProgressiveInterfaces {
     extends IComparisonOperand<T1, ET>, //
     /*    */IExistenceOperator<T2> {
         T2 condition(ConditionModel condition);
+        T2 negatedCondition(ConditionModel condition);
     }
 
     interface ICompoundCondition<T1, T2> //

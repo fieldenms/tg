@@ -45,6 +45,7 @@ public class FluencyApiTest extends TestCase {
     private static String beginExpr = "beginExpr";
     private static String expr = "expr";
     private static String condition = "condition";
+    private static String negatedCondition = "negatedCondition";
     private static String join = "join";
     private static String as = "as";
     private static String asRequired = "asRequired";
@@ -120,19 +121,19 @@ public class FluencyApiTest extends TestCase {
     public void test_IWhere0(){
 	checkFluency( //
 		select(TgVehicle.class).where(), //
-		array(condition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(condition, negatedCondition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IWhere1(){
 	checkFluency( //
 		select(TgVehicle.class).where().begin(), //
-		array(condition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(condition, negatedCondition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IWhere2(){
 	checkFluency( //
 		select(TgVehicle.class).where().begin().begin(), //
-		array(condition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(condition, negatedCondition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IWhere3(){

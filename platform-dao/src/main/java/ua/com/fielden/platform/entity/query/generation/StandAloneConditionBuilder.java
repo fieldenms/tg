@@ -13,9 +13,11 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.utils.Pair;
 
 public class StandAloneConditionBuilder extends AbstractTokensBuilder {
+    private final boolean negated;
 
-    public StandAloneConditionBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final ConditionModel exprModel) {
+    public StandAloneConditionBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final ConditionModel exprModel, final boolean negated) {
 	super(null, queryBuilder, paramValues);
+	this.negated = negated;
 	setChild(new ConditionBuilder(this, queryBuilder, paramValues));
 
 	for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
@@ -45,7 +47,7 @@ public class StandAloneConditionBuilder extends AbstractTokensBuilder {
 	    final CompoundCondition subsequentCompoundCondition = (CompoundCondition) iterator.next().getValue();
 	    otherConditions.add(subsequentCompoundCondition);
 	}
-	return new GroupedConditions(false, firstCondition, otherConditions);
+	return new GroupedConditions(negated, firstCondition, otherConditions);
     }
 
     @Override

@@ -193,6 +193,10 @@ final class Tokens {
 	return add(TokenCategory.COND_TOKENS, conditionModel);
     }
 
+    public Tokens negatedCond(final ConditionModel conditionModel) {
+	return add(TokenCategory.NEGATED_COND_TOKENS, conditionModel);
+    }
+
     public Tokens as(final String yieldAlias) {
 	return add(TokenCategory.AS_ALIAS, yieldAlias);
     }
