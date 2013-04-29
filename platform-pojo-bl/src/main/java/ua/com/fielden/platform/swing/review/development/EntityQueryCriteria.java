@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review.development;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -46,8 +48,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 @KeyType(String.class)
 public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
@@ -215,9 +215,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param managedTypeArray
      * @return
      */
-    public final List<T> run(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final Class<T> managedType, final byte[] managedTypeArray){
+    public final List<T> run(final ICentreDomainTreeManagerAndEnhancer cdtmeWithWhichAnalysesQueryHaveBeenCreated, final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final Class<T> managedType, final byte[] managedTypeArray){
 	generatedEntityController.setEntityType(managedType);
-	final List<byte[]> byteArrayList = getByteArrayForManagedType();
+	// TODO here cdtme from this instance is magically DIFFERENT from cdtme, on which query has been created. So byte arrays will be taken from original Cdtme. Should that Cdtmes be the same??
+	// TODO here cdtme from this instance is magically DIFFERENT from cdtme, on which query has been created. So byte arrays will be taken from original Cdtme. Should that Cdtmes be the same??
+	// TODO here cdtme from this instance is magically DIFFERENT from cdtme, on which query has been created. So byte arrays will be taken from original Cdtme. Should that Cdtmes be the same??
+	final List<byte[]> byteArrayList = cdtmeWithWhichAnalysesQueryHaveBeenCreated == null ? getByteArrayForManagedType() : toByteArray(/*getCentreDomainTreeMangerAndEnhancer()*/cdtmeWithWhichAnalysesQueryHaveBeenCreated.getEnhancer().getManagedTypeArrays(getEntityClass())); // getByteArrayForManagedType();
 	byteArrayList.add(managedTypeArray);
  	return generatedEntityController.getAllEntities(queryModel, byteArrayList);
     }

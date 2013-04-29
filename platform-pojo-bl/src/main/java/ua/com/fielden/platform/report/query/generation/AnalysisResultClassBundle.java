@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
@@ -19,8 +20,10 @@ public class AnalysisResultClassBundle<T extends AbstractEntity<?>> {
     private final Class<T> generatedClass;
     private final byte[] generatedClassRepresentation;
     private final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queries;
+    private final ICentreDomainTreeManagerAndEnhancer cdtmeWithWhichAnalysesQueryHaveBeenCreated;
 
-    public AnalysisResultClassBundle(final Class<T> generatedClass, final byte[] generatedClassRepresentation, final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queries){
+    public AnalysisResultClassBundle(final ICentreDomainTreeManagerAndEnhancer cdtmeWithWhichAnalysesQueryHaveBeenCreated, final Class<T> generatedClass, final byte[] generatedClassRepresentation, final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queries){
+	this.cdtmeWithWhichAnalysesQueryHaveBeenCreated = cdtmeWithWhichAnalysesQueryHaveBeenCreated;
 	this.generatedClass = generatedClass;
 	this.generatedClassRepresentation = generatedClassRepresentation;
 	this.queries = new ArrayList<>();
@@ -39,5 +42,9 @@ public class AnalysisResultClassBundle<T extends AbstractEntity<?>> {
 
     public List<QueryExecutionModel<T, EntityResultQueryModel<T>>> getQueries() {
 	return queries;
+    }
+
+    public ICentreDomainTreeManagerAndEnhancer getCdtmeWithWhichAnalysesQueryHaveBeenCreated() {
+	return cdtmeWithWhichAnalysesQueryHaveBeenCreated;
     }
 }

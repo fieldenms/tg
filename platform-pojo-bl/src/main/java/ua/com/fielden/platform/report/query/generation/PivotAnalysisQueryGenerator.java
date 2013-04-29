@@ -36,7 +36,7 @@ public class PivotAnalysisQueryGenerator<T extends AbstractEntity<?>> extends Gr
 	    groups.add(groupProperty);
 	    resultQueryList.add(createQueryAndGroupBy(classBundle.getGeneratedClass(), groups));
 	}
-	return new AnalysisResultClassBundle<>(classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), resultQueryList);
+	return new AnalysisResultClassBundle<>(getCdtme(), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), resultQueryList);
     }
 
 }

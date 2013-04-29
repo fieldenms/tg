@@ -69,7 +69,7 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
 		    .with(DynamicParamBuilder.buildParametersMap(enhancedType(), paramMap)).model();
 	    queryModels.add(totalQuery);
 	}
-	return new AnalysisResultClassBundle<>(null, null, queryModels);
+	return new AnalysisResultClassBundle<>(cdtme, null, null, queryModels);
     }
 
     /**
