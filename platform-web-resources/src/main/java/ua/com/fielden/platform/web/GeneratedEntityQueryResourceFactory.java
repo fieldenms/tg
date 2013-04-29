@@ -48,7 +48,7 @@ public class GeneratedEntityQueryResourceFactory extends Restlet {
 		final String origEntityTypeName = (String) request.getAttributes().get("type");
 		final Class<? extends AbstractEntity<?>> origEntityType = (Class<? extends AbstractEntity<?>>) Class.forName(origEntityTypeName);
 		final IEntityDao companion = injector.getInstance(ICompanionObjectFinder.class).find(origEntityType);
-		new GeneratedEntityQueryResource(router, injector, companion, restUtil, getContext(), request, response).handle();
+		new GeneratedEntityQueryResource(router, injector, companion == null ? injector.getInstance(DynamicEntityDao.class) : companion, restUtil, getContext(), request, response).handle();
 
 	    } catch (final ClassNotFoundException ex) {
 		ex.printStackTrace();
