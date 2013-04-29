@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.algorithm.vectormath;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
- * A simple vector representation with known math operations 
- * (like add, subtract, cross product etc) in Cartesian coordinate system. 
- * 
+ * A simple vector representation with known math operations
+ * (like add, subtract, cross product etc) in Cartesian coordinate system.
+ *
  * @author TG Team
- * 
+ *
  * @see http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
  * @see http://www.mathsisfun.com/algebra/vectors.html
  *
@@ -15,9 +16,13 @@ import java.math.BigDecimal;
 public class Vector {
     private final BigDecimal x, y;
 
+    private static BigDecimal sc(final BigDecimal num) {
+	return num.setScale(15, RoundingMode.HALF_UP);
+    }
+
     public Vector(final BigDecimal x, final BigDecimal y) {
-	this.x = x;
-	this.y = y;
+	this.x = sc(x);
+	this.y = sc(y);
     }
 
     public BigDecimal getX() {
@@ -27,11 +32,11 @@ public class Vector {
     public BigDecimal getY() {
         return y;
     }
-    
+
     public Vector add(final Vector that) {
 	return new Vector(this.x.add(that.x), this.y.add(that.y));
     }
-    
+
     public Vector negate() {
 	return new Vector(this.x.negate(), this.y.negate());
     }
@@ -43,24 +48,26 @@ public class Vector {
     public Vector mult(final BigDecimal scalar) {
 	return new Vector(this.x.multiply(scalar), this.y.multiply(scalar));
     }
-    
+
     /**
      * A cross product operation.
      * <p>
      * <code>this</code> is a primary vector (right-handed forefinger) and
-     * <code>that</code> is a secondary vector (right-handed middle finger) 
-     * and a result vector (right-handed middle finger).
+     * <code>that</code> is a secondary vector (right-handed middle finger)
+     * and a result vector (right-handed thumb).
      * <p>
      * If result is equal zero -- two vectors are parallel (or even collinear).
      * If result is lower than zero then angle between vectors is in (180; 360) range.
      * If result is upper than zero then angle between vectors is in (0; 180) range.
-     *  
+     *
      * @param that
      * @return
      */
     public BigDecimal crossProduct(final Vector that) {
-	return (this.x.multiply(that.y)).
-		subtract(this.y.multiply(that.x));
+	return sc(
+		(this.x.multiply(that.y)).
+		subtract(this.y.multiply(that.x))
+		);
     }
 
     @Override

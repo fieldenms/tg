@@ -1,29 +1,34 @@
 /**
- * 
+ *
  */
 package ua.com.fielden.platform.algorithm.vectormath;
 
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.junit.Test;
 
 /**
  * A test for {@link Vector}.
- * 
+ *
  * @author TG Team
  *
  */
 public class VectorTest {
     public VectorTest() {
     }
-    
+
     private final Vector v1 = v(1, 2),
 	    		v2 = v(3, 1);
-    
+
+    private static BigDecimal v(final int x) {
+	return BigDecimal.valueOf(x).setScale(15, RoundingMode.HALF_UP);
+    }
+
     private static Vector v(final int x, final int y) {
-	return new Vector(BigDecimal.valueOf(x), BigDecimal.valueOf(y));
+	return new Vector(v(x), v(y));
     }
 
     @Test
@@ -43,19 +48,19 @@ public class VectorTest {
 
     @Test
     public void test_scalar_multiplication() {
-	assertEquals("Should be equal.", v(3, 6), v1.mult(BigDecimal.valueOf(3)));
+	assertEquals("Should be equal.", v(3, 6), v1.mult(v(3)));
     }
 
     @Test
     public void test_cross_product() {
-	assertEquals("Should be equal.", BigDecimal.valueOf(0), v(1, 1).crossProduct(v(1, 1)));
-	assertEquals("Should be equal.", BigDecimal.valueOf(1), v(1, 1).crossProduct(v(0, 1)));
-	assertEquals("Should be equal.", BigDecimal.valueOf(2), v(1, 1).crossProduct(v(-1, 1)));
-	assertEquals("Should be equal.", BigDecimal.valueOf(1), v(1, 1).crossProduct(v(-1, 0)));
-	assertEquals("Should be equal.", BigDecimal.valueOf(0), v(1, 1).crossProduct(v(-1, -1)));
-	assertEquals("Should be equal.", BigDecimal.valueOf(-1), v(1, 1).crossProduct(v(0, -1)));
-	assertEquals("Should be equal.", BigDecimal.valueOf(-2), v(1, 1).crossProduct(v(1, -1)));
-	assertEquals("Should be equal.", BigDecimal.valueOf(-1), v(1, 1).crossProduct(v(1, 0)));
+	assertEquals("Should be equal.", v(0), v(1, 1).crossProduct(v(1, 1)));
+	assertEquals("Should be equal.", v(1), v(1, 1).crossProduct(v(0, 1)));
+	assertEquals("Should be equal.", v(2), v(1, 1).crossProduct(v(-1, 1)));
+	assertEquals("Should be equal.", v(1), v(1, 1).crossProduct(v(-1, 0)));
+	assertEquals("Should be equal.", v(0), v(1, 1).crossProduct(v(-1, -1)));
+	assertEquals("Should be equal.", v(-1), v(1, 1).crossProduct(v(0, -1)));
+	assertEquals("Should be equal.", v(-2), v(1, 1).crossProduct(v(1, -1)));
+	assertEquals("Should be equal.", v(-1), v(1, 1).crossProduct(v(1, 0)));
     }
 
 }
