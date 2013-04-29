@@ -81,6 +81,10 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    includeIdAndVersionOnly();
 	}
 
+	if (EntityUtils.isUnionEntityType(getEntityType())) {
+ 	    includeAllFirstLevelProps();
+	}
+
 	with(AbstractEntity.KEY, true);
 
 	if (EntityUtils.hasDescProperty(getEntityType())) {

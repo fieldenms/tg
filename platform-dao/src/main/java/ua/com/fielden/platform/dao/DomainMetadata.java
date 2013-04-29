@@ -426,6 +426,7 @@ public class DomainMetadata {
 
     private <PT extends AbstractEntity<?>> ISubsequentCompletedAndYielded<PT> generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp) {
 	final IFromAlias<PT> modelInProgress = select((Class<PT>) currProp.getType());
+//	final ISubsequentCompletedAndYielded<PT> modelInProgress = select((Class<PT>) currProp.getType()).yield().prop("key").as("key");
 	ISubsequentCompletedAndYielded<PT> m = null;
 	for (final Field field : unionProps) {
 	    if (m == null) {
