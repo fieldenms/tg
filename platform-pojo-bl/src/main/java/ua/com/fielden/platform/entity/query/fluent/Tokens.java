@@ -425,6 +425,10 @@ final class Tokens {
 	return add(TokenCategory.ARITHMETICAL_OPERATOR, ArithmeticalOperator.MULT);
     }
 
+    public Tokens modulo() {
+	return add(TokenCategory.ARITHMETICAL_OPERATOR, ArithmeticalOperator.MOD);
+    }
+
     public Tokens asc() {
 	return add(TokenCategory.SORT_ORDER, QueryTokens.ASC);
     }

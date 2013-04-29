@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 public enum ArithmeticalOperator {
-    ADD("+"), SUB("-"), DIV("/"), MULT("*");
+    ADD("+"), SUB("-"), DIV("/"), MULT("*"), MOD("%");
 
     private final String value;
 

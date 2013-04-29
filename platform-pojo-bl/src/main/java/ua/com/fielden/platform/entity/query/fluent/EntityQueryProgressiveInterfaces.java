@@ -245,6 +245,7 @@ public interface EntityQueryProgressiveInterfaces {
         T sub();
         T mult();
         T div();
+        T mod();
     }
 
     interface IBeginExpression<T> {

@@ -29,4 +29,9 @@ abstract class AbstractArithmeticalOperator<T> extends AbstractQueryLink impleme
     public T div() {
 	return copy(getParent(), getTokens().divide());
     }
+
+    @Override
+    public T mod() {
+	return copy(getParent(), getTokens().modulo());
+    }
 }
