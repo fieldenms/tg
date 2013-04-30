@@ -60,7 +60,7 @@ public class DataMigrator {
 	this.retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
 	this.includeDetails = includeDetails;
 	final Connection conn = injector.getInstance(Connection.class);
-	this.cache = new IdCache(hiberUtil, injector.getInstance(DynamicEntityDao.class), dma);
+	this.cache = new IdCache(injector.getInstance(DynamicEntityDao.class), dma);
 
 	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
 	    if (!ret.isUpdater()) {
