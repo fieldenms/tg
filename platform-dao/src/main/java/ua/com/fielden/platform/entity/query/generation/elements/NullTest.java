@@ -3,6 +3,8 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.utils.EntityUtils;
+
 
 
 public class NullTest extends AbstractCondition {
@@ -11,6 +13,13 @@ public class NullTest extends AbstractCondition {
 
     @Override
     public String sql() {
+	if (operand instanceof EntProp) {
+	    final EntProp prop = (EntProp) operand;
+	    if (EntityUtils.isUnionEntityType(prop.getPropType())) {
+		return "(location__workshop" + (negated ? " IS NOT NULL" : " IS NULL") + " AND location__wagonslot" + (negated ? " IS NOT NULL" : " IS NULL") + ")";
+	    }
+	}
+
 	return operand.sql() + (negated ? " IS NOT NULL" : " IS NULL");
     }
 

@@ -15,6 +15,7 @@ import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
@@ -314,10 +315,37 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore
     public void test_query_with_union_entity_property_fetching() {
 	final String workshopKey = "WSHOP1";
 	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
-	assertEquals(workshopKey, bogieDao.getEntity(from(qry).with(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("workshop"))).model()).getLocation().getWorkshop().getKey());
+	final QueryExecutionModel<TgBogie, EntityResultQueryModel<TgBogie>> model = from(qry).with(fetchOnly(TgBogie.class).with("id").with("key").with("location", fetchOnly(TgBogieLocation.class).with("workshop"))).model();
+	final TgBogieLocation location = bogieDao.getEntity(model).getLocation();
+	assertNotNull(location);
+	assertNotNull(location.getWorkshop());
+	assertEquals(workshopKey, location.getWorkshop().getKey());
+    }
+
+    @Test
+    public void test_query_with_usual_entity_property_fetching() {
+	final String workshopKey = "orgunit5";
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("station.name").eq().val(workshopKey).model();
+	final QueryExecutionModel<TgVehicle, EntityResultQueryModel<TgVehicle>> model = from(qry).with(fetchOnly(TgVehicle.class).with("id").with("key").with("station", fetchOnly(TgOrgUnit5.class).with("name"))).model();
+	final TgOrgUnit5 location = vehicleDao.getEntity(model).getStation();
+	assertNotNull(location);
+	assertEquals(workshopKey, location.getName());
+    }
+
+    @Test
+    @Ignore
+    public void test_query_with_union_entity_property_fetching2() {
+	final String workshopKey = "WSHOP1";
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
+	final QueryExecutionModel<TgBogie, EntityResultQueryModel<TgBogie>> model = from(qry).with(fetchOnly(TgBogie.class).with("id").with("key").with("location", fetch(TgBogieLocation.class).with("workshop"))).model();
+	final TgBogieLocation location = bogieDao.getEntity(model).getLocation();
+	assertNotNull(location);
+	assertNotNull(location.getWorkshop());
+	assertEquals(workshopKey, location.getWorkshop().getKey());
     }
 
     @Test
