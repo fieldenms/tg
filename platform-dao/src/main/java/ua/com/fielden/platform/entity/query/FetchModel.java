@@ -71,7 +71,9 @@ public class FetchModel<T extends AbstractEntity<?>> {
     private void includeAllFirstLevelPrimPropsAndKey() {
 	for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType())) {
 	    if (!ppi.isCalculated()) {
-		with(ppi.getName(), !(ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || ppi.getType().equals(PropertyCategory.ENTITY_KEY)));
+		with(ppi.getName(), !(ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || ppi.getType().equals(PropertyCategory.ENTITY_KEY) //
+			|| ppi.getType().equals(PropertyCategory.UNION_ENTITY_DETAILS) //
+			|| ppi.getType().equals(PropertyCategory.UNION_ENTITY_HEADER)));
 	    }
 	}
     }

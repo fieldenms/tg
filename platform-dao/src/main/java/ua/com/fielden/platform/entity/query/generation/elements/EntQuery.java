@@ -219,6 +219,7 @@ public class EntQuery implements ISingleOperand {
 	    final Set<Yield> toBeRemoved = new HashSet<Yield>();
 	    for (final Yield yield : yields.getYields()) {
 		if (!fetchModel.containsProp(yield.getAlias())) {
+//		    System.out.println("--------------------- removing according to fetch: " + yield.getAlias());
 		    toBeRemoved.add(yield);
 		}
 	    }

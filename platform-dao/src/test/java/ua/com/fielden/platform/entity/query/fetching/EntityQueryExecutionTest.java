@@ -285,6 +285,13 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore
+    public void test_query_with_union_property_null_test_condition() {
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location").isNull().model();
+	assertEquals(bogieDao.findByKey("BOGIE1"), bogieDao.getEntity(from(qry).model()));
+    }
+
+    @Test
     public void test_query_with_union_property_subproperties_via_query_based_source() {
 	final EntityResultQueryModel<TgBogie> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
 	assertEquals(bogieDao.findByKey("BOGIE1"), bogieDao.getEntity(from(qry).model()));
@@ -304,6 +311,13 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
 	final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.key").eq().val(workshopKey).model();
 	assertEquals(bogieDao.getEntity(from(expQry).model()), bogieDao.getEntity(from(qry).model()));
+    }
+
+    @Test
+    public void test_query_with_union_entity_property_fetching() {
+	final String workshopKey = "WSHOP1";
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
+	assertEquals(workshopKey, bogieDao.getEntity(from(qry).with(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("workshop"))).model()).getLocation().getWorkshop().getKey());
     }
 
     @Test
