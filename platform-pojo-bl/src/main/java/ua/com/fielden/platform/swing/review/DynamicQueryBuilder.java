@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.ArrayList;
@@ -15,20 +16,19 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator2;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator3;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition1;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition2;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionCompoundCondition;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere1;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere2;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere3;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -75,7 +75,12 @@ public class DynamicQueryBuilder {
 	/** The type of collection which contain this property. If this property is not in collection hierarchy it should be null. */
 	private final Class<? extends AbstractEntity<?>> collectionContainerType, collectionContainerParentType;
 	private final String propertyNameOfCollectionParent, collectionNameInItsParentTypeContext;
-	private final Boolean inNestedCollections;
+	/** Union entity related properties */
+	private final boolean inUnionHierarchy;
+	private final String unionParent;
+	private final String unionGroup;
+	/** Determines the union and collection nested properties*/
+	private final Boolean inNestedUnionAndCollections;
 
 	public QueryProperty(final Class<?> entityClass, final String propertyName) {
 	    this.entityClass = entityClass;
@@ -84,27 +89,38 @@ public class DynamicQueryBuilder {
 	    if (!isSupported(analyser.getPropertyType())) {
 		throw new UnsupportedTypeException(analyser.getPropertyType());
 	    }
+	    this.inNestedUnionAndCollections = analyser.isUnionCollectionIntersects();
+	    if(this.inNestedUnionAndCollections){
+		throw new IllegalArgumentException("The nested collection or union properties are not supported yet! Please remove property [" + this.propertyName + "] from criteria.");
+	    }
 	    this.type = analyser.getPropertyType();
-
 	    final Pair<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> collectionalTypes = analyser.getCollectionContainerAndItsParentType();
 	    final String propertyNameWithinCollectionalHierarchy;
-	    if (collectionalTypes != null) {
+	    this.inUnionHierarchy = analyser.isInUnionHierarchy();
+	    if(this.inUnionHierarchy) {
+		this.collectionContainerType = null;
+		this.collectionContainerParentType = null;
+		propertyNameWithinCollectionalHierarchy = null;
+		this.propertyNameOfCollectionParent = null;
+		this.collectionNameInItsParentTypeContext = null;
+		this.unionParent = analyser.getUnionParent();
+		this.unionGroup = analyser.getUnionGroup();
+	    } else if (collectionalTypes != null) {
 		this.collectionContainerType = collectionalTypes.getKey();
 		this.collectionContainerParentType = collectionalTypes.getValue();
 		propertyNameWithinCollectionalHierarchy = analyser.getNamesWithinCollectionalHierarchy().getKey();
 		this.propertyNameOfCollectionParent = analyser.getNamesWithinCollectionalHierarchy().getValue();
 		this.collectionNameInItsParentTypeContext = analyser.getCollectionNameInItsParentTypeContext();
-		this.inNestedCollections = analyser.isInNestedCollections();
-		if (this.isInNestedCollections()) {
-		    throw new IllegalArgumentException("Properties in nested collections are not supported yet. Please remove property [" + this.propertyName + "] from criteria.");
-		}
+		this.unionParent = null;
+		this.unionGroup = null;
 	    } else {
 		this.collectionContainerType = null;
 		this.collectionContainerParentType = null;
 		propertyNameWithinCollectionalHierarchy = null;
 		this.propertyNameOfCollectionParent = null;
 		this.collectionNameInItsParentTypeContext = null;
-		this.inNestedCollections = null;
+		this.unionParent = null;
+		this.unionGroup = null;
 	    }
 	    this.conditionBuildingName = isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL() ? propertyNameWithinCollectionalHierarchy : ALIAS + "." + analyser.getCriteriaFullName();
 
@@ -285,8 +301,35 @@ public class DynamicQueryBuilder {
 	 *
 	 * @return
 	 */
-	public Boolean isInNestedCollections() {
-	    return inNestedCollections;
+	public Boolean isInNestedUnionAndCollections() {
+	    return inNestedUnionAndCollections;
+	}
+
+	/**
+	 * Returns value that indicates whether property is in union hierarchy or not.
+	 *
+	 * @return
+	 */
+	public boolean isInUnionHierarchy() {
+	    return inUnionHierarchy;
+	}
+
+	/**
+	 * Returns union property parent name that is instance of {@link AbstractUnionEntity} class.
+	 *
+	 * @return
+	 */
+	public String getUnionParent() {
+	    return unionParent;
+	}
+
+	/**
+	 * Returns the {@link AbstractEntity} property name that is in union.
+	 *
+	 * @return
+	 */
+	public String getUnionGroup() {
+	    return unionGroup;
 	}
 
 	/**
@@ -427,12 +470,13 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static <ET extends AbstractEntity<?>> ICompleted<ET> buildConditions(final IJoin<ET> query, final List<QueryProperty> properties) {
-	final IWhere1<ET> whereAtGroup1 = query.where().begin();
-	ICompoundCondition1<ET> compoundConditionAtGroup1 = null;
+	final IStandAloneConditionOperand<ET> condOperand = EntityQueryUtils.<ET>cond();
+	IStandAloneConditionCompoundCondition<ET> compoundCondition = null;
 
 	// create empty map consisting of [collectionType => (ANY properties, ALL properties)] entries, which forms exactly one entry for one collectional hierarchy
 	final Map<Class<? extends AbstractEntity<?>>, CollectionProperties> collectionalProperties = new LinkedHashMap<Class<? extends AbstractEntity<?>>, CollectionProperties>();
-
+	// map for union properties.
+	final Map<String, Map<String, List<QueryProperty>>> unionProperties = new LinkedHashMap<>();
 	// traverse all properties to enhance resulting query
 	for (final QueryProperty property : properties) {
 	    if (!property.shouldBeIgnored()) {
@@ -442,21 +486,67 @@ public class DynamicQueryBuilder {
 			collectionalProperties.put(ccType, new CollectionProperties(ccType));
 		    }
 		    collectionalProperties.get(ccType).add(property);
+		} else if (property.isInUnionHierarchy()) { // creates the union properties map
+		    Map<String, List<QueryProperty>> unionSubGroup = unionProperties.get(property.getUnionParent());
+		    if (unionSubGroup == null) {
+			unionSubGroup = new LinkedHashMap<>();
+			unionProperties.put(property.getUnionParent(), unionSubGroup);
+		    }
+		    List<QueryProperty> groupProps = unionSubGroup.get(property.getUnionGroup());
+		    if (groupProps == null) {
+			groupProps = new ArrayList<>();
+			unionSubGroup.put(property.getUnionGroup(), groupProps);
+		    }
+		    groupProps.add(property);
 		} else { // main query should be enhanced in case of simple property
-		    compoundConditionAtGroup1 = buildCondition(getWhereAtGroup1(compoundConditionAtGroup1, whereAtGroup1), property, false);
+		    compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildCondition(property, false));
 		}
 	    }
+	}
+	//enhances query with union property condition
+	for(final Map<String, List<QueryProperty>> unionGroup : unionProperties.values()) {
+	    compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildUnion(unionGroup));
 	}
 	// enhance main model with collectional hierarchies models
 	for (final CollectionProperties collectionProperties : collectionalProperties.values()) {
 	    if (collectionProperties.hasAggregatedCondition()) {
-		compoundConditionAtGroup1 = buildCollection(getWhereAtGroup1(compoundConditionAtGroup1, whereAtGroup1), collectionProperties, ALIAS);
+		compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildCollection(collectionProperties, ALIAS));
 	    } else {
 		// TODO
 		logger.warn("There are no aggregated conditions for collection [" + collectionProperties + "] in type " + collectionProperties + ". All FILTERING conditions (if any) will be disregarded.");
 	    }
 	}
-	return compoundConditionAtGroup1 == null ? query : compoundConditionAtGroup1.end();
+	return compoundCondition == null ? query : query.where().condition(compoundCondition.model());
+    }
+
+    /**
+     * Creates condition model for union group.
+     *
+     * @param unionGroup
+     * @return
+     */
+    private static <ET extends AbstractEntity<?>> ConditionModel buildUnion(final Map<String, List<QueryProperty>> unionGroup) {
+	final IStandAloneConditionOperand<ET> condOperand = EntityQueryUtils.<ET>cond();
+	IStandAloneConditionCompoundCondition<ET> compoundCondition = null;
+	for(final List<QueryProperty> properties : unionGroup.values()){
+	    compoundCondition = getConditionOperatorOr(condOperand, compoundCondition).condition(buildUnionGroup(properties));
+	}
+	return compoundCondition.model();
+    }
+
+    /**
+     * Creates condition model for union sub group.
+     *
+     * @param properties
+     * @return
+     */
+    private static <ET extends AbstractEntity<?>> ConditionModel buildUnionGroup(final List<QueryProperty> properties) {
+	final IStandAloneConditionOperand<ET> condOperand = EntityQueryUtils.<ET> cond();
+	IStandAloneConditionCompoundCondition<ET> compoundCondition = null;
+	for (final QueryProperty qp : properties) {
+	    compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildCondition(qp, false));
+	}
+	return compoundCondition.model();
     }
 
     /**
@@ -553,7 +643,7 @@ public class DynamicQueryBuilder {
      * @param entry -- an entry consisting of [collectionType => (anyProperties, allProperties)] which forms exactly one collectional hierarchy
      * @return
      */
-    private static <ET extends AbstractEntity<?>> ICompoundCondition1<ET> buildCollection(final IWhere1<ET> whereAtGroup1, final CollectionProperties collectionProperties, final String alias) {
+    private static <ET extends AbstractEntity<?>> ConditionModel buildCollection(final CollectionProperties collectionProperties, final String alias) {
 	// e.g. : "WorkOrder.vehicle.statusChanges.[vehicleKey/status.active]". Then:
 	// property.getCollectionContainerType() == VehicleStatusChange.class
 	// property.getCollectionContainerParentType() == Vehicle.class
@@ -564,43 +654,49 @@ public class DynamicQueryBuilder {
 	final String nameOfCollectionController = collectionProperties.getNameOfCollectionController();
 	final String mainModelProperty = collectionProperties.getPropertyNameOfCollectionParent().isEmpty() ? alias : alias + "." + collectionProperties.getPropertyNameOfCollectionParent();
 
-	final IWhere2<ET> collectionBegin = whereAtGroup1.begin();
-	ICompoundCondition2<ET> compoundConditionAtGroup2 = null;
+	final IStandAloneConditionOperand<ET> collectionBegin = cond();
+	IStandAloneConditionCompoundCondition<ET>  compoundCondition = null;
 	// enhance collection by ANY part
 	if (!collectionProperties.getAnyProperties().isEmpty()) {
 	    final Iterator<QueryProperty> anyIter = collectionProperties.getAnyProperties().iterator();
-	    ICompoundCondition1<? extends AbstractEntity<?>> anyExists_withDirectConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), anyIter.next(), false);
+	    IStandAloneConditionCompoundCondition<AbstractEntity<?>> anyExists_withDirectConditions = cond().condition(buildCondition(anyIter.next(), false));
 	    while (anyIter.hasNext()) { // enhance EXISTS model with appropriate condition
-		anyExists_withDirectConditions = buildCondition(anyExists_withDirectConditions.and(), anyIter.next(), false);
+		anyExists_withDirectConditions = anyExists_withDirectConditions.and().condition(buildCondition(anyIter.next(), false));
 	    }
-	    // enhance main model by EXISTS model relevant to ANY properties in collectional hierarchy
-	    compoundConditionAtGroup2 = getWhereAtGroup2(compoundConditionAtGroup2, collectionBegin).begin()//
-		    .exists(anyExists_withDirectConditions.end().model())//
-		    .end();
+
+	    final ICompoundCondition0<? extends AbstractEntity<?>> subModel = createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().condition(anyExists_withDirectConditions.model());
+
+	    compoundCondition = getConditionOperator(collectionBegin, compoundCondition).condition(cond().exists(subModel.model()).model());
 	}
 	// enhance collection by ALL part
 	if (!collectionProperties.getAllProperties().isEmpty()) {
 	    final Iterator<QueryProperty> allIter = collectionProperties.getAllProperties().iterator();
 	    final EntityResultQueryModel<?> allNotExists_withNoConditions = createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).model();
 	    final QueryProperty firstProperty = allIter.next();
-	    ICompoundCondition1<? extends AbstractEntity<?>> allExists_withDirectConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), firstProperty, false);
-	    ICompoundCondition1<? extends AbstractEntity<?>> allNotExists_withNegatedConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), firstProperty, true);
+	    IStandAloneConditionCompoundCondition<AbstractEntity<?>> allExists_withDirectConditions = cond().condition(buildCondition(firstProperty, false));
+	    //createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin();
+	    IStandAloneConditionCompoundCondition<AbstractEntity<?>> allNotExists_withNegatedConditions = cond().condition(buildCondition(firstProperty, true));
+	    //createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin();
 	    while (allIter.hasNext()) { // enhance EXISTS / NOT_EXISTS model with appropriate direct / negated condition
 		final QueryProperty nextProperty = allIter.next();
-		allExists_withDirectConditions = buildCondition(allExists_withDirectConditions.and(), nextProperty, false);
-		allNotExists_withNegatedConditions = buildCondition(allNotExists_withNegatedConditions.or(), nextProperty, true);
+		allExists_withDirectConditions = allExists_withDirectConditions.and().condition(buildCondition(nextProperty, false));
+		allNotExists_withNegatedConditions = allNotExists_withNegatedConditions.or().condition(buildCondition(nextProperty, true));
 	    }
+
+	    final ICompoundCondition0<? extends AbstractEntity<?>> subModel_allExists = createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().condition(allExists_withDirectConditions.model());
+	    final ICompoundCondition0<? extends AbstractEntity<?>> subModel_allNotExists = createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().condition(allNotExists_withNegatedConditions.model());
+
 	    // enhance main model by EXISTS / NOT_EXISTS models relevant to ALL properties in collectional hierarchy
-	    compoundConditionAtGroup2 = getWhereAtGroup2(compoundConditionAtGroup2, collectionBegin).begin()//
-		    .notExists(allNotExists_withNoConditions)// entities with empty collection should be included!
+	    compoundCondition = getConditionOperator(collectionBegin, compoundCondition).condition(
+		    cond().notExists(allNotExists_withNoConditions)// entities with empty collection should be included!
 		    .or()//
-		    .exists(allExists_withDirectConditions.end().model()).and().notExists(allNotExists_withNegatedConditions.end().model())//
-		    .end();
+		    .exists(subModel_allExists.model()).and().notExists(subModel_allNotExists.model())//
+		    .model());
 	}
-	if (compoundConditionAtGroup2 == null) {
+	if (compoundCondition == null) {
 	    throw new RuntimeException("Collection of type " + collectionContainerType + " did not alter query.");
 	}
-	return compoundConditionAtGroup2.end();
+	return compoundCondition.model();
     }
 
     /**
@@ -617,33 +713,19 @@ public class DynamicQueryBuilder {
 	if (filteringProperties.isEmpty()) {
 	    return submodelThroghLinkProperty;
 	}
-	ICompoundCondition1<ET> subModel = buildCondition(submodelThroghLinkProperty.and().begin(), filteringProperties.get(0), false); // enhance sub-model with first FILTERING property
+	IStandAloneConditionCompoundCondition<ET> aloneCompCond = EntityQueryUtils.<ET>cond().condition(buildCondition(filteringProperties.get(0), false)); // enhance sub-model with first FILTERING property
 	for (int i = 1; i < filteringProperties.size(); i++) {
-	    subModel = buildCondition(subModel.and(), filteringProperties.get(i), false); // enhance sub-model with rest FILTERING properties
+	    aloneCompCond = aloneCompCond.and().condition(buildCondition(filteringProperties.get(i), false)); // enhance sub-model with rest FILTERING properties
 	}
-	return subModel.end();
+	return submodelThroghLinkProperty.and().condition(aloneCompCond.model());
     }
 
-    /**
-     * Helper method to form IWhereAtGroup1 instance from "compoundConditionAtGroup1" and "whereAtGroup1".
-     *
-     * @param compoundConditionAtGroup1
-     * @param Equery
-     * @return
-     */
-    private static <ET extends AbstractEntity<?>> IWhere1<ET> getWhereAtGroup1(final ICompoundCondition1<ET> compoundConditionAtGroup1, final IWhere1<ET> whereAtGroup1) {
-	return compoundConditionAtGroup1 == null ? whereAtGroup1 : compoundConditionAtGroup1.and();
+    private static <ET extends AbstractEntity<?>> IStandAloneConditionOperand<ET> getConditionOperator(final IStandAloneConditionOperand<ET> collectionBegin, final IStandAloneConditionCompoundCondition<ET> compoundCondition) {
+	return compoundCondition == null ? collectionBegin : compoundCondition.and();
     }
 
-    /**
-     * Helper method to form IWhereAtGroup2 instance from "compoundConditionAtGroup2" and "whereAtGroup2".
-     *
-     * @param compoundConditionAtGroup1
-     * @param Equery
-     * @return
-     */
-    private static <ET extends AbstractEntity<?>> IWhere2<ET> getWhereAtGroup2(final ICompoundCondition2<ET> compoundConditionAtGroup2, final IWhere2<ET> whereAtGroup2) {
-	return compoundConditionAtGroup2 == null ? whereAtGroup2 : compoundConditionAtGroup2.and();
+    private static <ET extends AbstractEntity<?>> IStandAloneConditionOperand<ET> getConditionOperatorOr(final IStandAloneConditionOperand<ET> collectionBegin, final IStandAloneConditionCompoundCondition<ET> compoundCondition) {
+	return compoundCondition == null ? collectionBegin : compoundCondition.or();
     }
 
     /**
@@ -654,25 +736,26 @@ public class DynamicQueryBuilder {
      * @param isNegated -- indicates whether appropriate condition should be negated
      * @return
      */
-    private static <ET extends AbstractEntity<?>> ICompoundCondition1<ET> buildCondition(final IWhere1<ET> where, final QueryProperty property, final boolean isNegated) {
+    private static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final boolean isNegated) {
 	final boolean orNull = Boolean.TRUE.equals(property.getOrNull());
 	final boolean not = Boolean.TRUE.equals(property.getNot());
 	final String propertyName = property.getConditionBuildingName();
 	// IMPORTANT : in order not to make extra joins properties like "alias.key", "alias.property1.key" and so on will be enhanced by
 	// conditions like "alias is [not] null", "alias.property1 is [not] null" and so on (respectively).
-	final IComparisonOperator2<ET> sc = where.begin().prop(getPropertyNameWithoutKeyPart(propertyName));
+	final IStandAloneConditionComparisonOperator<ET>  sc = EntityQueryUtils.<ET>cond().prop(getPropertyNameWithoutKeyPart(propertyName));
 	// indicates whether a condition should be negated
 	final boolean negate = not ^ isNegated;
 	if (property.isEmpty()) {
 	    if (!orNull) {
 		throw new RuntimeException("Should have at least NULL condition.");
 	    }
-	    return negate ? sc.isNotNull().end() : sc.isNull().end();
+	    return negate ? sc.isNotNull().model() : sc.isNull().model();
 	} else {
 	    // indicates whether nulls should be considered in a query
 	    final boolean considerNulls = negate ^ orNull;
-	    final IWhere2<ET> whereAtGroup2 = considerNulls ? sc.isNull().or() : sc.isNotNull().and();
-	    return buildAtomicCondition(property, negate ? whereAtGroup2.notBegin() : whereAtGroup2.begin()).end();
+	    final IStandAloneConditionOperand<ET> whereAtGroup2 = considerNulls ? sc.isNull().or() : sc.isNotNull().and();
+	    final ConditionModel subModel = buildAtomicCondition(property);
+	    return negate ? whereAtGroup2.negatedCondition(subModel).model() : whereAtGroup2.condition(subModel).model();
 	}
     }
 
@@ -685,31 +768,32 @@ public class DynamicQueryBuilder {
      * @param propertyName
      * @return
      */
-    private static <ET extends AbstractEntity<?>> ICompoundCondition2<ET> buildAtomicCondition(final QueryProperty property, final IWhere3<ET> conditionGroup) {
+    @SuppressWarnings("unchecked")
+    private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property) {
 	final String propertyName = property.getConditionBuildingName();
 
 	if (EntityUtils.isRangeType(property.getType())) {
 	    if (EntityUtils.isDate(property.getType()) && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
 		// left boundary should be inclusive and right -- exclusive!
 		final Pair<Date, Date> fromAndTo = getDateValuesFrom(property.getDatePrefix(), property.getDateMnemonic(), property.getAndBefore());
-		return conditionGroup.prop(propertyName).ge().iVal(fromAndTo.getKey()).and().prop(propertyName).lt().iVal(fromAndTo.getValue()).end();
+		return cond().prop(propertyName).ge().iVal(fromAndTo.getKey()).and().prop(propertyName).lt().iVal(fromAndTo.getValue()).model();
 	    } else {
-		final IComparisonOperator3<ET> scag = conditionGroup.prop(propertyName);
-		final IComparisonOperator3<ET> scag2 = Boolean.TRUE.equals(property.getExclusive()) ? //
+		final IStandAloneConditionComparisonOperator<ET> scag = EntityQueryUtils.<ET>cond().prop(propertyName);
+		final IStandAloneConditionComparisonOperator<ET> scag2 = Boolean.TRUE.equals(property.getExclusive()) ? //
 			/*      */scag.gt().iVal(property.getValue()).and().prop(propertyName) // exclusive
 			: scag.ge().iVal(property.getValue()).and().prop(propertyName); // inclusive
 			return Boolean.TRUE.equals(property.getExclusive2()) ? //
-				/*      */scag2.lt().iVal(property.getValue2()).end() // exclusive
-				: scag2.le().iVal(property.getValue2()).end(); // inclusive
+				/*      */scag2.lt().iVal(property.getValue2()).model() // exclusive
+				: scag2.le().iVal(property.getValue2()).model(); // inclusive
 	    }
 	} else if (EntityUtils.isBoolean(property.getType())) {
 	    final boolean is = (Boolean) property.getValue();
 	    final boolean isNot = (Boolean) property.getValue2();
-	    return is && !isNot ? conditionGroup.prop(propertyName).eq().val(true).end() : !is && isNot ? conditionGroup.prop(propertyName).eq().val(false).end() : null;
+	    return is && !isNot ? cond().prop(propertyName).eq().val(true).model() : !is && isNot ? cond().prop(propertyName).eq().val(false).model() : null;
 	} else if (EntityUtils.isString(property.getType())) {
-	    return conditionGroup.prop(propertyName).iLike().anyOfValues(prepare((String) property.getValue())).end();
+	    return cond().prop(propertyName).iLike().anyOfValues((Object[])prepare((String) property.getValue())).model();
 	} else if (EntityUtils.isEntityType(property.getType())) {
-	    return conditionGroup.prop(propertyName).iLike().anyOfValues(prepare((List<String>) property.getValue())).end();
+	    return cond().prop(propertyName).iLike().anyOfValues((Object[])prepare((List<String>) property.getValue())).model();
 	} else {
 	    throw new UnsupportedTypeException(property.getType());
 	}

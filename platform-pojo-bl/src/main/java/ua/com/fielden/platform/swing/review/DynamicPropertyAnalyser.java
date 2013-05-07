@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -89,6 +90,98 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 	    }
 	}
 	return collCount > 1;
+    }
+
+    /**
+     * Determines next cases:
+     * <ul>
+     * <li>whether union is in collection</li>
+     * <li>whether collection is in union</li>
+     * <li>whether unions are nested</li>
+     * <li>whether collections are nested</li>
+     * </ul>
+     *
+     * @return
+     */
+    public boolean isUnionCollectionIntersects() {
+	if (propertyFields == null) {
+	    return false;
+	}
+	int collCount = 0;
+	int unionCount = 0;
+	for (int i = 0; i < propertyFields.length; i++) {
+	    if (Collection.class.isAssignableFrom(propertyFields[i].getType())) {
+		collCount++;
+	    } else if (AbstractUnionEntity.class.isAssignableFrom(propertyFields[i].getType())) {
+		unionCount++;
+	    }
+	}
+	return (collCount + unionCount) > 1;
+    }
+
+    /**
+     *
+     *
+     * @return
+     */
+    public boolean isInUnionHierarchy() {
+	if(propertyFields == null) {
+	    return false;
+	}
+	if (!AbstractUnionEntity.class.isAssignableFrom(getPropertyField().getType())) {
+	    for (int index = 0; index < propertyFields.length - 1; index++) {
+		if (AbstractUnionEntity.class.isAssignableFrom(propertyFields[index].getType())) {
+		    return true;
+		}
+	    }
+	}
+	return false;
+    }
+
+    /**
+     * Returns the parent of the analysing property that is union entity.
+     *
+     * @return
+     */
+    public String getUnionParent() {
+	if (isInUnionHierarchy()) {
+	    String parentName = "";
+	    for (int index = getUnionEntityIndex(); index >= 0; index--) {
+		parentName = "." + propertyFields[index].getName() + parentName;
+	    }
+	    return parentName.isEmpty() ? "" : parentName.substring(1);
+	}
+	return null;
+    }
+
+    /**
+     * Returns the {@link AbstractEntity} property name that is in union.
+     *
+     * @return
+     */
+    public String getUnionGroup(){
+	if(isInUnionHierarchy()){
+	    String parentName = "";
+	    for (int index = getUnionEntityIndex() + 1; index >= 0; index--) {
+		parentName = "." + propertyFields[index].getName() + parentName;
+	    }
+	    return parentName.isEmpty() ? "" : parentName.substring(1);
+	}
+	return null;
+    }
+
+    /**
+     * Returns the index of the union entity.
+     *
+     * @return
+     */
+    private int getUnionEntityIndex() {
+	for (int index = 0; index < propertyFields.length - 1 ; index++) {
+	    if (AbstractUnionEntity.class.isAssignableFrom(propertyFields[index].getType())) {
+		    return index;
+	    }
+	}
+	return -1;
     }
 
     /**

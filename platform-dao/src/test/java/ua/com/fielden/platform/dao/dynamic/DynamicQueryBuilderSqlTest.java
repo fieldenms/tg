@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dao.dynamic;
 
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.createQuery;
 import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
@@ -36,6 +37,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
@@ -55,6 +57,7 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
+@SuppressWarnings({ "serial", "unchecked" })
 public class DynamicQueryBuilderSqlTest {
     private final static ISerialiser serialiser = createSerialiser(createFactory());
 
@@ -101,7 +104,8 @@ public class DynamicQueryBuilderSqlTest {
 
 	final Configuration hibConf = new Configuration();
 
-	final Map<Class, Class> hibTypeMap = new HashMap<Class, Class>();
+	@SuppressWarnings("rawtypes")
+	final Map<Class, Class> hibTypeMap = new HashMap<>();
 	hibTypeMap.put(boolean.class, YesNoType.class);
 	hibTypeMap.put(Boolean.class, YesNoType.class);
 	hibTypeMap.put(Date.class, DateTimeType.class);
@@ -301,11 +305,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(cbn).isNotNull().and() //
-		/*    */.begin().prop(cbn).ge().iVal(from).and().prop(cbn).lt().iVal(to).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(cbn).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).ge().iVal(from).and().prop(cbn).lt().iVal(to).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -332,11 +336,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(cbn).isNotNull().and() //
-		/*    */.begin().prop(cbn).ge().iVal(null).and().prop(cbn).lt().iVal(to).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(cbn).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).ge().iVal(null).and().prop(cbn).lt().iVal(to).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -363,11 +367,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(cbn).isNotNull().and() //
-		/*    */.begin().prop(cbn).ge().iVal(from).and().prop(cbn).lt().iVal(null).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(cbn).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).ge().iVal(from).and().prop(cbn).lt().iVal(null).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -383,11 +387,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(cbn).isNotNull().and() //
-		/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(cbn).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -404,11 +408,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(cbn).isNotNull().and() //
-		/*    */.begin().prop(cbn).gt().iVal(3).and().prop(cbn).le().iVal(7).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(cbn).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).gt().iVal(3).and().prop(cbn).le().iVal(7).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -425,11 +429,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(cbn).isNotNull().and() //
-		/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).lt().iVal(7).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(cbn).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).lt().iVal(7).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -447,11 +451,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(cbn).isNotNull().and() //
-		/*    */.begin().prop(cbn).gt().iVal(3).and().prop(cbn).lt().iVal(7).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(cbn).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).gt().iVal(3).and().prop(cbn).lt().iVal(7).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -478,11 +482,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(cbn).isNotNull().and() //
-		/*    */.begin().prop(cbn).eq().val(false).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(cbn).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).eq().val(false).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -497,11 +501,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(cbn).isNotNull().and() //
-		/*    */.begin().prop(cbn).eq().val(true).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(cbn).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).eq().val(true).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -528,11 +532,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(cbn).isNotNull().and() //
-		/*    */.begin().prop(cbn).iLike().anyOfValues(DynamicQueryBuilder.prepare((String) property.getValue())).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(cbn).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).iLike().anyOfValues((Object[])DynamicQueryBuilder.prepare((String) property.getValue())).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -547,11 +551,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
-		/*    */.begin().prop(cbn).iLike().anyOfValues(DynamicQueryBuilder.prepare((List<String>) property.getValue())).end() //
-		/*  */.end() //s
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).iLike().anyOfValues((Object[])DynamicQueryBuilder.prepare((List<String>) property.getValue())).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -572,10 +576,10 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNull() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNull() //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -592,10 +596,10 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull() //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -614,11 +618,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
-		/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
+		/*    */.condition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -636,11 +640,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNull().or() //
-		/*    */.notBegin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNull().or() //
+		/*    */.negatedCondition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -658,11 +662,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNull().or() //
-		/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNull().or() //
+		/*    */.condition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -681,11 +685,11 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn = property.getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
-		/*    */.notBegin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
-		/*  */.end() //
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
+		/*    */.negatedCondition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).model()) //
+		/*  */.model()) //
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -710,13 +714,13 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbn3 = queryProperties.get("dateProp").getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().end().and() // integerProp
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().and() // bigDecimalProp
-		/*    */.begin().prop(cbn1).ge().iVal(3).and().prop(cbn1).le().iVal(7).end() //
-		/*  */.end().and() //
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end() // dateProp
-		/**/.end(); //
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().model()).and() // integerProp
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().and() // bigDecimalProp
+		/*    */.condition(cond().prop(cbn1).ge().iVal(3).and().prop(cbn1).le().iVal(7).model()) //
+		/*  */.model()).and() //
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().model()) // dateProp
+		/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -751,22 +755,22 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbnFiltering2 = queryProperties.get("collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin() // collection begins
-		/*    */.begin() // ANY block begins
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond() // collection begins
+		/*    */.condition(cond() // ANY block begins
 		/*      */.exists( //
 			/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-			/*          */.begin() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-			/*          */.end().and() //
-			/*          */.begin() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end() //
-			/*          */.end().model() //
+			/*          */.condition(cond() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+			/*          */.model()).and() //
+			/*          */.condition(cond() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().model()) //
+			/*          */.model()).model() //
 			/*      */) //
-			/*    */.end() // ANY block ends
-			/*  */.end() // collection ends
-			/**/.end(); //
+			/*    */.model()) // ANY block ends
+			/*  */.model()) // collection ends
+			/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -788,24 +792,24 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbnFiltering2 = queryProperties.get("collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin() // collection begins
-		/*    */.begin() // ANY block begins
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond() // collection begins
+		/*    */.condition(cond() // ANY block begins
 		/*      */.exists( //
 			/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-			/*          */.begin() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-			/*          */.end().and() //
-			/*          */.begin() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().end().and() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().end() //
-			/*          */.end().model() //
+			/*          */.condition(cond() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+			/*          */.model()).and() //
+			/*          */.condition(cond() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().model()).and() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().model()).and() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().model()) //
+			/*          */.model()).model() //
 			/*      */) //
-			/*    */.end() // ANY block ends
-			/*  */.end() // collection ends
-			/**/.end(); //
+			/*    */.model()) // ANY block ends
+			/*  */.model()) // collection ends
+			/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -823,41 +827,41 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbnFiltering2 = queryProperties.get("collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin() // collection begins
-		/*    */.begin() // ALL block begins
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond() // collection begins
+		/*    */.condition(cond() // ALL block begins
 		/*      */.notExists( //
 			/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-			/*          */.begin() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-			/*          */.end().model() //
+			/*          */.condition(cond() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+			/*          */.model()).model() //
 			/*      */) //
 			/*      */.or() //
 			/*      */.exists( //
 				/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-				/*          */.begin() //
-				/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-				/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-				/*          */.end().and() //
-				/*          */.begin() //
-				/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end() //
-				/*          */.end().model() //
+				/*          */.condition(cond() //
+				/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+				/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+				/*          */.model()).and() //
+				/*          */.condition(cond() //
+				/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().model()) //
+				/*          */.model()).model() //
 				/*      */) //
 				/*      */.and() //
 				/*      */.notExists( //
 					/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-					/*          */.begin() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-					/*          */.end().and() //
-					/*          */.begin() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end() //
-					/*          */.end().model() //
+					/*          */.condition(cond() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+					/*          */.model()).and() //
+					/*          */.condition(cond() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().model()) //
+					/*          */.model()).model() //
 					/*      */) //
-					/*    */.end() // ALL block ends
-					/*  */.end() // collection ends
-					/**/.end(); //
+					/*    */.model()) // ALL block ends
+					/*  */.model()) // collection ends
+					/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -880,45 +884,45 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbnFiltering2 = queryProperties.get("collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin() // collection begins
-		/*    */.begin() // ALL block begins
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond() // collection begins
+		/*    */.condition(cond() // ALL block begins
 		/*      */.notExists( //
 			/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-			/*          */.begin() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-			/*          */.end().model() //
+			/*          */.condition(cond() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+			/*          */.model()).model() //
 			/*      */) //
 			/*      */.or() //
 			/*      */.exists( //
 				/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-				/*          */.begin() //
-				/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-				/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-				/*          */.end().and() //
-				/*          */.begin() //
-				/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
-				/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
-				/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
-				/*          */.end().model() //
+				/*          */.condition(cond() //
+				/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+				/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+				/*          */.model()).and() //
+				/*          */.condition(cond() //
+				/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().model()).and() //
+				/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().model()).and() //
+				/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().model()) //
+				/*          */.model()).model() //
 				/*      */) //
 				/*      */.and() //
 				/*      */.notExists( //
 					/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-					/*          */.begin() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-					/*          */.end().and() //
-					/*          */.begin() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end().or() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end().or() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNotNull().end() //
-					/*          */.end().model() //
+					/*          */.condition(cond() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+					/*          */.model()).and() //
+					/*          */.condition(cond() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().model()).or() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().model()).or() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn2)).isNotNull().model()) //
+					/*          */.model()).model() //
 					/*      */) //
-					/*    */.end() // ALL block ends
-					/*  */.end() // collection ends
-					/**/.end(); //
+					/*    */.model()) // ALL block ends
+					/*  */.model()) // collection ends
+					/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -946,61 +950,61 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbnFiltering2 = queryProperties.get("collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
-		/*  */.begin() // collection begins
-		/*    */.begin() // ANY block begins
+		/**/iJoin.where().condition(cond() //
+		/*  */.condition(cond() // collection begins
+		/*    */.condition(cond() // ANY block begins
 		/*      */.exists( //
 			/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-			/*          */.begin() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-			/*          */.end().and() //
-			/*          */.begin() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn4)).isNull().end().and() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn5)).isNull().end() //
-			/*          */.end().model() //
+			/*          */.condition(cond() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+			/*          */.model()).and() //
+			/*          */.condition(cond() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn4)).isNull().model()).and() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn5)).isNull().model()) //
+			/*          */.model()).model() //
 			/*      */) //
-			/*    */.end() // ANY block ends
+			/*    */.model()) // ANY block ends
 			/*    */
 			/*    */.and() //
 			/*    */
-			/*    */.begin() // ALL block begins
+			/*    */.condition(cond() // ALL block begins
 			/*      */.notExists( //
 				/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-				/*          */.begin() //
-				/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-				/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-				/*          */.end().model() //
+				/*          */.condition(cond() //
+				/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+				/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+				/*          */.model()).model() //
 				/*      */) //
 				/*      */.or() //
 				/*      */.exists( //
 					/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-					/*          */.begin() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-					/*          */.end().and() //
-					/*          */.begin() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
-					/*          */.end().model() //
+					/*          */.condition(cond() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+					/*          */.model()).and() //
+					/*          */.condition(cond() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().model()).and() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().model()).and() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().model()) //
+					/*          */.model()).model() //
 					/*      */) //
 					/*      */.and() //
 					/*      */.notExists( //
 						/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
-						/*          */.begin() //
-						/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-						/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-						/*          */.end().and() //
-						/*          */.begin() //
-						/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end().or() //
-						/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end().or() //
-						/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNotNull().end() //
-						/*          */.end().model() //
+						/*          */.condition(cond() //
+						/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+						/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+						/*          */.model()).and() //
+						/*          */.condition(cond() //
+						/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().model()).or() //
+						/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().model()).or() //
+						/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn2)).isNotNull().model()) //
+						/*          */.model()).model() //
 						/*      */) //
-						/*    */.end() // ALL block ends
-						/*  */.end() // collection ends
-						/**/.end(); //
+						/*    */.model()) // ALL block ends
+						/*  */.model()) // collection ends
+						/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -1056,54 +1060,54 @@ public class DynamicQueryBuilderSqlTest {
 	final String cbnFiltering2 = queryProperties.get("entityProp.collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
-		/**/iJoin.where().begin() //
+		/**/iJoin.where().condition(cond() //
 		/*                          simple properties below                             */
 		/*                          simple properties below                             */
 		/*                          simple properties below                             */
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn02)).isNull().end().and() // integerProp
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn01)).isNotNull().and() // bigDecimalProp
-		/*    */.begin().prop(cbn01).ge().iVal(3).and().prop(cbn01).le().iVal(7).end() //
-		/*  */.end().and() //
-		/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn03)).isNotNull().end().and() // dateProp
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn02)).isNull().model()).and() // integerProp
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn01)).isNotNull().and() // bigDecimalProp
+		/*    */.condition(cond().prop(cbn01).ge().iVal(3).and().prop(cbn01).le().iVal(7).model()) //
+		/*  */.model()).and() //
+		/*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn03)).isNotNull().model()).and() // dateProp
 		/*  */
 		/*                          master collection below                             */
 		/*                          master collection below                             */
 		/*                          master collection below                             */
 		/*  */
-		/*  */.begin() // collection begins
-		/*    */.begin() // ANY block begins
+		/*  */.condition(cond() // collection begins
+		/*    */.condition(cond() // ANY block begins
 		/*      */.exists( //
-			/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().begin()
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn4)).isNull().end().and() //
-			/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn5)).isNull().end() //
-			/*          */.end().model() //
+			/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().condition(cond()
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn4)).isNull().model()).and() //
+			/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn5)).isNull().model()) //
+			/*          */.model()).model() //
 			/*      */) //
-			/*    */.end() // ANY block ends
+			/*    */.model()) // ANY block ends
 			/*    */
 			/*    */.and() //
 			/*    */
-			/*    */.begin() // ALL block begins
+			/*    */.condition(cond() // ALL block begins
 			/*      */.notExists( //
 				/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).model() //
 				/*      */) //
 				/*      */.or() //
 				/*      */.exists( //
-					/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().begin()
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
-					/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
-					/*          */.end().model() //
+					/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().condition(cond()
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().model()).and() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().model()).and() //
+					/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().model()) //
+					/*          */.model()).model() //
 					/*      */) //
 					/*      */.and() //
 					/*      */.notExists( //
-						/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().begin()
-						/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end().or() //
-						/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end().or() //
-						/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNotNull().end() //
-						/*          */.end().model() //
+						/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().condition(cond()
+						/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().model()).or() //
+						/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().model()).or() //
+						/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn2)).isNotNull().model()) //
+						/*          */.model()).model() //
 						/*      */) //
-						/*    */.end() // ALL block ends
-						/*  */.end() // collection ends
+						/*    */.model()) // ALL block ends
+						/*  */.model()) // collection ends
 						/**/
 						/**/
 						/**/.and() //
@@ -1112,63 +1116,149 @@ public class DynamicQueryBuilderSqlTest {
 						/*                           slave collection below                             */
 						/*                           slave collection below                             */
 						/**/
-						/*  */.begin() // collection begins
-						/*    */.begin() // ANY block begins
+						/*  */.condition(cond() // collection begins
+						/*    */.condition(cond() // ANY block begins
 						/*      */.exists( //
 							/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
-							/*          */.begin() //
-							/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-							/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-							/*          */.end().and() //
-							/*          */.begin() //
-							/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn9)).isNull().end().and() //
-							/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn10)).isNull().end() //
-							/*          */.end().model() //
+							/*          */.condition(cond() //
+							/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+							/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+							/*          */.model()).and() //
+							/*          */.condition(cond() //
+							/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn9)).isNull().model()).and() //
+							/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn10)).isNull().model()) //
+							/*          */.model()).model() //
 							/*      */) //
-							/*    */.end() // ANY block ends
+							/*    */.model()) // ANY block ends
 							/*    */
 							/*    */.and() //
 							/*    */
-							/*    */.begin() // ALL block begins
+							/*    */.condition(cond() // ALL block begins
 							/*      */.notExists( //
 								/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
-								/*          */.begin() //
-								/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-								/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-								/*          */.end().model() //
+								/*          */.condition(cond() //
+								/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+								/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+								/*          */.model()).model() //
 								/*      */) //
 								/*      */.or() //
 								/*      */.exists( //
 									/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
-									/*          */.begin() //
-									/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-									/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-									/*          */.end().and() //
-									/*          */.begin() //
-									/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn8)).isNull().end().and() //
-									/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn6)).isNull().end().and() //
-									/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn7)).isNull().end() //
-									/*          */.end().model() //
+									/*          */.condition(cond() //
+									/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+									/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+									/*          */.model()).and() //
+									/*          */.condition(cond() //
+									/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn8)).isNull().model()).and() //
+									/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn6)).isNull().model()).and() //
+									/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn7)).isNull().model()) //
+									/*          */.model()).model() //
 									/*      */) //
 									/*      */.and() //
 									/*      */.notExists( //
 										/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
-										/*          */.begin() //
-										/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-										/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
-										/*          */.end().and() //
-										/*          */.begin() //
-										/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn8)).isNotNull().end().or() //
-										/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn6)).isNotNull().end().or() //
-										/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn7)).isNotNull().end() //
-										/*          */.end().model() //
+										/*          */.condition(cond() //
+										/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().model()).and() // FILTERING
+										/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().model()) // FILTERING
+										/*          */.model()).and() //
+										/*          */.condition(cond() //
+										/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn8)).isNotNull().model()).or() //
+										/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn6)).isNotNull().model()).or() //
+										/*            */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn7)).isNotNull().model()) //
+										/*          */.model()).model() //
 										/*      */) //
-										/*    */.end() // ALL block ends
-										/*  */.end() // collection ends
-										/**/.end(); //
+										/*    */.model()) // ALL block ends
+										/*  */.model()) // collection ends
+										/**/.model()); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
+    }
+
+    @Test
+    public void test_union_entity_query_composition(){
+	final List<String> propertyNames = Arrays.asList(new String[] { //
+		"", //
+		"desc", //
+		"location", //
+		"location.workshop", //
+		"location.workshop.desc", //
+		"location.wagonSlot", //
+		"location.wagonSlot.wagon", //
+		"location.wagonSlot.position", //
+
+	});
+	final Map<String, QueryProperty> unionProps = new LinkedHashMap<>();
+	for (final String propertyName : propertyNames) {
+	    final QueryProperty qp = new QueryProperty(TgBogie.class, propertyName);
+	    unionProps.put(propertyName, qp);
+	    qp.setValue(getEmptyValue(qp.getType(), qp.isSingle()));
+	    qp.setValue2(getEmptyValue(qp.getType(), qp.isSingle()));
+	}
+
+	QueryProperty property = null;
+
+	property = unionProps.get("");
+	property.setValue(Arrays.asList("some val 1", "some val 2"));
+
+	property = unionProps.get("desc");
+	property.setValue("Some string value");
+
+	property = unionProps.get("location");
+	property.setValue(Arrays.asList("some val 1", "some val 2"));
+
+	property = unionProps.get("location.workshop");
+	property.setValue(Arrays.asList("some val 1", "some val 2"));
+
+	property = unionProps.get("location.workshop.desc");
+	property.setValue("Some string value");
+
+	property = unionProps.get("location.wagonSlot");
+	property.setValue(Arrays.asList("some val 1", "some val 2"));
+
+	property = unionProps.get("location.wagonSlot.wagon");
+	property.setValue(Arrays.asList("some val 1", "some val 2"));
+
+	property = unionProps.get("location.wagonSlot.position");
+	property.setValue(3);
+	property.setValue2(7);
+
+	final ICompleted<? extends AbstractEntity<?>> expected = //
+		/**/select(TgBogie.class).as(alias).where().condition(cond() //
+		/*  */.condition(cond().prop(alias).isNotNull().and() //
+		/*    */.condition(cond().prop(alias + ".key").iLike().anyOfValues(new Object[] {"some val 1", "some val 2"}).model())//
+		/*  */.model()).and()//
+		/*  */.condition(cond().prop(alias + ".desc").isNotNull().and() //
+		/*    */.condition(cond().prop(alias + ".desc").iLike().anyOfValues(new Object[] {"Some string value"}).model()) //
+		/*  */.model()).and()//
+		/*  */.condition(cond().prop(alias + ".location").isNotNull().and() //
+		/*    */.condition(cond().prop(alias + ".location.key").iLike().anyOfValues(new Object[] {"some val 1", "some val 2"}).model())//
+		/*  */.model()).and()//
+		/*    */.condition(cond()//
+		/*	*/.condition(cond()//
+		/*	  */.condition(cond().prop(alias + ".location.workshop").isNotNull().and()//
+		/*	    */.condition(cond().prop(alias + ".location.workshop.key").iLike().anyOfValues(new Object[] {"some val 1", "some val 2"}).model())//
+		/*	  */.model()).and()//
+		/*	  */.condition(cond().prop(alias + ".location.workshop.desc").isNotNull().and()//
+		/*	    */.condition(cond().prop(alias + ".location.workshop.desc").iLike().anyOfValues(new Object[] {"Some string value"}).model())
+		/*	  */.model())//
+		/*	*/.model())//
+		/*    */.or()//
+		/*	*/.condition(cond()//
+		/*	  */.condition(cond().prop(alias + ".location.wagonSlot").isNotNull().and()//
+		/*	    */.condition(cond().prop(alias + ".location.wagonSlot.key").iLike().anyOfValues(new Object[] {"some val 1", "some val 2"}).model())//
+		/*	  */.model()).and()//
+		/*	  */.condition(cond().prop(alias + ".location.wagonSlot.wagon").isNotNull().and()//
+		/*	    */.condition(cond().prop(alias + ".location.wagonSlot.wagon.key").iLike().anyOfValues(new Object[] {"some val 1", "some val 2"}).model())//
+		/*	  */.model()).and()//
+		/*	  */.condition(cond().prop(alias + ".location.wagonSlot.position").isNotNull().and()//
+		/*	    */.condition(cond().prop(alias + ".location.wagonSlot.position").ge().iVal(3).and().prop(alias + ".location.wagonSlot.position").le().iVal(7).model())//
+		/*	  */.model())//
+		/*	*/.model())//
+		/*    */.model())//
+		/**/.model()); //
+	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(TgBogie.class, new ArrayList<QueryProperty>(unionProps.values()));
+	assertEquals("Incorrect query model for union entities has been built.", expected.model(), actual.model());
     }
 }

@@ -4,10 +4,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -109,22 +106,6 @@ public class DynamicCriteriaPropertyAnalyser {
     }
 
     /**
-     * Returns value that indicates whether specified {@code propertyName} is among list of {@code unionProperties} fields.
-     *
-     * @param propertyName
-     * @param unionProperties
-     * @return
-     */
-    protected boolean isPropertyAmongUnion(final String propertyName, final List<Field> unionProperties) {
-	for (final Field field : unionProperties) {
-	    if (field.getName().equals(propertyName)) {
-		return true;
-	    }
-	}
-	return false;
-    }
-
-    /**
      * Returns value that indicates whether this property was marked with specified annotation.
      *
      * @param annotationClass
@@ -152,33 +133,6 @@ public class DynamicCriteriaPropertyAnalyser {
 	    return null;
 	}
 	return propertyTypes[propertyTypes.length - 1];
-    }
-
-    /**
-     * Returns the declaring class for the property name specified with {@code propertyNameIndex}.
-     *
-     * @param propertyNameIndex
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    protected List<Class<?>> getDeclaringClasses(final int propertyNameIndex) {
-	final List<Class<?>> declaringClasses = new ArrayList<Class<?>>();
-	if (propertyNames == null || propertyNameIndex > propertyNames.length - 1) {
-	    return null;
-	}
-	final Class<?> declaringClass = propertyTypes[propertyNameIndex];
-	if (AbstractUnionEntity.class.isAssignableFrom(declaringClass)) {
-	    final List<Field> unionProperties = AbstractUnionEntity.unionProperties((Class<AbstractUnionEntity>) declaringClass);
-	    final List<String> commonProperties = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) declaringClass);
-	    if (!isPropertyAmongUnion(propertyNames[propertyNameIndex], unionProperties) && commonProperties.contains(propertyNames[propertyNameIndex])) {
-		for (final Field unionField : unionProperties) {
-		    declaringClasses.add(unionField.getType());
-		}
-		return declaringClasses;
-	    }
-	}
-	declaringClasses.add(declaringClass);
-	return declaringClasses;
     }
 
     /**
