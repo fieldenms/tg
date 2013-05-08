@@ -16,7 +16,8 @@ public class NullTest extends AbstractCondition {
 	if (operand instanceof EntProp) {
 	    final EntProp prop = (EntProp) operand;
 	    if (EntityUtils.isUnionEntityType(prop.getPropType())) {
-		return "(location__workshop" + (negated ? " IS NOT NULL" : " IS NULL") + " AND location__wagonslot" + (negated ? " IS NOT NULL" : " IS NULL") + ")";
+		return negated ? "(location__workshop" + " IS NOT NULL" + " OR location__wagonslot" + " IS NOT NULL" + ")" : //
+		    "(location__workshop" + " IS NULL" + " AND location__wagonslot" + " IS NULL" + ")";
 	    }
 	}
 
