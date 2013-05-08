@@ -54,13 +54,13 @@ import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.UNION;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_AS_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_AS_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_HEADER;
@@ -181,7 +181,7 @@ public class DomainMetadata {
 	if (isOneToOne(entityType)) {
 	    switch (entityCategory) {
 	    case PERSISTED:
-		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(ENTITY_KEY).build();
+		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(ENTITY_AS_KEY).build();
 	    case QUERY_BASED:
 		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).hibType(TypeFactory.basic("long")).type(SYNTHETIC).build();
 	    default:
@@ -191,7 +191,7 @@ public class DomainMetadata {
 	    switch (entityCategory) {
 	    case PERSISTED:
 		final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
-		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PRIMITIVE_KEY).build();
+		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PRIMITIVE_AS_KEY).build();
 	    case QUERY_BASED:
 		return null; //FIXME
 	    case UNION:

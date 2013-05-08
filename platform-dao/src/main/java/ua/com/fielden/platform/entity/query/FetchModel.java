@@ -12,12 +12,16 @@ import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
-import ua.com.fielden.platform.utils.EntityUtils;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 public class FetchModel<T extends AbstractEntity<?>> {
     private final fetch<T> originalFetch;
     private final Map<String, fetch<? extends AbstractEntity<?>>> entityProps = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
     private final Set<String> primProps = new HashSet<String>();
+
     private DomainMetadataAnalyser domainMetadataAnalyser;
 
     public FetchModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
@@ -36,7 +40,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 		includeKeyAndDescOnly();
 		break;
 	    case NONE:
-		if (EntityUtils.isPersistedEntityType(getEntityType())) {
+		if (isPersistedEntityType(getEntityType())) {
 		    includeIdAndVersionOnly();
 		}
 		break;
@@ -49,9 +53,13 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    }
 	}
 
-	for (final String propName : originalFetch.getIncudedProps()) {
-	    with(propName, false);
-	}
+//	if (!EntityAggregates.class.equals(getEntityType())) {
+//	    includeAllListedProps(originalFetch.getIncudedProps());
+//	} else {
+	    for (final String propName : originalFetch.getIncudedProps()) {
+		with(propName, false);
+	    }
+//	}
 
 	for (final Entry<String, fetch<? extends AbstractEntity<?>>> entry : originalFetch.getIncludedPropsWithModels().entrySet()) {
 	    with(entry.getKey(), entry.getValue());
@@ -68,28 +76,55 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	}
     }
 
+    private void includeAllListedProps(final Set<String> props) {
+	System.out.println(getEntityType().getSimpleName() + "          " + props);
+	for (final String prop : props) {
+	    final PropertyMetadata ppi = domainMetadataAnalyser.getInfoForDotNotatedProp(getEntityType(), prop);
+	    if (ppi == null) {
+		System.out.println("============ " + getEntityType().getSimpleName() + " ... " + prop);
+	    }
+	    if (!ppi.isCalculated()) {
+		final boolean skipEntities = !(
+			ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || //
+			ppi.getType().equals(PropertyCategory.ENTITY_AS_KEY) || //
+			ppi.getType().equals(PropertyCategory.UNION_ENTITY_DETAILS) || //
+			ppi.getType().equals(PropertyCategory.UNION_ENTITY_HEADER));
+		with(ppi.getName(), skipEntities);
+	    }
+
+	    if (ppi.isUnionEntity()) {
+		System.out.println("  ============ union " + ppi.getName());
+		with("location.workshop", false);
+	    }
+	}
+    }
+
+
     private void includeAllFirstLevelPrimPropsAndKey() {
 	for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType())) {
 	    if (!ppi.isCalculated()) {
-		with(ppi.getName(), !(ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || ppi.getType().equals(PropertyCategory.ENTITY_KEY) //
-			|| ppi.getType().equals(PropertyCategory.UNION_ENTITY_DETAILS) //
-			|| ppi.getType().equals(PropertyCategory.UNION_ENTITY_HEADER)));
+		final boolean skipEntities = !(
+			ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || //
+			ppi.getType().equals(PropertyCategory.ENTITY_AS_KEY) || //
+			ppi.getType().equals(PropertyCategory.UNION_ENTITY_DETAILS) || //
+			ppi.getType().equals(PropertyCategory.UNION_ENTITY_HEADER));
+		with(ppi.getName(), skipEntities);
 	    }
 	}
     }
 
     private void includeKeyAndDescOnly() {
-	if (EntityUtils.isPersistedEntityType(getEntityType())) {
+	if (isPersistedEntityType(getEntityType())) {
 	    includeIdAndVersionOnly();
 	}
 
-	if (EntityUtils.isUnionEntityType(getEntityType())) {
- 	    includeAllFirstLevelProps();
+	if (isUnionEntityType(getEntityType())) {
+	    includeAllFirstLevelProps();
 	}
 
 	with(AbstractEntity.KEY, true);
 
-	if (EntityUtils.hasDescProperty(getEntityType())) {
+	if (hasDescProperty(getEntityType())) {
 	    with(AbstractEntity.DESC, true);
 	}
     }
@@ -154,7 +189,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    } else {
 		if (AbstractEntity.class.isAssignableFrom(propType)/* && !ppi.isId()*/) {
 		    if (!skipEntities) {
-			addEntityPropsModel(propName, new fetch(propType, FetchCategory.MINIMAL));
+			addEntityPropsModel(propName, fetch(propType));
 		    }
 		} else {
 		    final String singleSubpropertyOfCompositeUserTypeProperty = ppi.getSinglePropertyOfCompositeUserType();
@@ -169,9 +204,8 @@ public class FetchModel<T extends AbstractEntity<?>> {
     }
 
     private void addEntityPropsModel(final String propName, final fetch<?> model) {
-	    final fetch<?> existingFetch = entityProps.get(propName);
-	    entityProps.put(propName, existingFetch != null ? existingFetch.unionWith(model) : model);
-
+	final fetch<?> existingFetch = entityProps.get(propName);
+	entityProps.put(propName, existingFetch != null ? existingFetch.unionWith(model) : model);
     }
 
     private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
@@ -197,5 +231,25 @@ public class FetchModel<T extends AbstractEntity<?>> {
 
     public Class<T> getEntityType() {
 	return originalFetch.getEntityType();
+    }
+
+    public Set<String> getPrimProps() {
+	return primProps;
+    }
+
+    @Override
+    public String toString() {
+	final StringBuffer sb = new StringBuffer();
+	sb.append("Fetch model:\n------------------------------------------------\n");
+	sb.append(primProps);
+	if (entityProps.size() > 0) {
+	    sb.append("\n------------------------------------------------");
+	    for (final Entry<String, fetch<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
+		sb.append("\n" + fetchEntry.getKey() + " <<< " + fetchEntry.getValue());
+		sb.append("\n------------------------------------------------");
+	    }
+	}
+
+	return sb.toString();
     }
 }

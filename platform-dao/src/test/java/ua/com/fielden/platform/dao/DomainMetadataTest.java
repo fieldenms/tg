@@ -6,10 +6,12 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
@@ -90,6 +92,15 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
 	System.out.println(entityMetadata.getModels());
 	assertNull(entityMetadata.getProps().get("datePeriod"));
+    }
+
+    @Test
+    public void test_props_of_union_entity() throws Exception {
+	final EntityMetadata<TgBogie> entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgBogie.class);
+
+	assertNotNull(entityMetadata.getProps().get("location"));
+	assertNotNull(entityMetadata.getProps().get("location.workshop"));
+	assertNotNull(entityMetadata.getProps().get("location.wagonSlot"));
     }
 
 }

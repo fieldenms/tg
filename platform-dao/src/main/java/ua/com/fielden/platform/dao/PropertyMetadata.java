@@ -240,13 +240,13 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 		return true;
 	    }
 	}, //
-	PRIMITIVE_KEY {
+	PRIMITIVE_AS_KEY {
 	    @Override
 	    boolean affectsMappings() {
 		return true;
 	    }
 	}, //
-	ENTITY_KEY {
+	ENTITY_AS_KEY {
 	    @Override
 	    boolean affectsMappings() {
 		return true;

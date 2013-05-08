@@ -13,6 +13,7 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
@@ -20,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 
 public class FetchModelTest extends BaseEntQueryTCase {
 
@@ -217,4 +220,25 @@ public class FetchModelTest extends BaseEntQueryTCase {
 	assertTrue(fetchModel.containsProp("qty"));
     }
 
+    @Test
+    public void test_a() {
+	final fetch<TgBogie> fetch1 = fetchOnly(TgBogie.class).with("id").with("key").with("location", fetchOnly(TgBogieLocation.class).with("workshop"));
+	final fetch<TgBogie> fetch2 = fetch(TgBogie.class).with("location", fetchOnly(TgBogieLocation.class).with("workshop"));
+	final FetchModel<TgBogie> fetchModel1 = new FetchModel<TgBogie>(fetch1, DOMAIN_METADATA_ANALYSER);
+	final FetchModel<TgBogie> fetchModel2 = new FetchModel<TgBogie>(fetch2, DOMAIN_METADATA_ANALYSER);
+	System.out.println(fetchModel1);
+	System.out.println("\n\n");
+	System.out.println(fetchModel2);
+    }
+
+    @Test
+    public void test_b() {
+	final fetch<TgVehicle> fetch1 = fetchOnly(TgVehicle.class).with("id").with("key").with("station", fetchOnly(TgOrgUnit5.class));
+	final fetch<TgVehicle> fetch2 = fetch(TgVehicle.class).with("station", fetchOnly(TgOrgUnit5.class));
+	final FetchModel<TgVehicle> fetchModel1 = new FetchModel<TgVehicle>(fetch1, DOMAIN_METADATA_ANALYSER);
+	final FetchModel<TgVehicle> fetchModel2 = new FetchModel<TgVehicle>(fetch2, DOMAIN_METADATA_ANALYSER);
+	System.out.println(fetchModel1);
+	System.out.println("\n\n");
+	System.out.println(fetchModel2);
+    }
 }
