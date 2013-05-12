@@ -108,8 +108,8 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_simple_query_model_01() {
 	assertModelsEquals( //
-		conditions(new NullTest(prop("model"), true), //
-			compound(_and, new NullTest(prop("station"), false))), //
+		conditions(new NullTest(prop("model"), true, DOMAIN_METADATA_ANALYSER), //
+			compound(_and, new NullTest(prop("station"), false, DOMAIN_METADATA_ANALYSER))), //
 		conditions(where_veh.prop("model").isNotNull().and().prop("station").isNull()));
     }
 
@@ -137,8 +137,8 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	paramValues.put("eqclass", "CL1");
 
 	assertModelsEquals(//
-		conditions(new NullTest(prop("model"), true), //
-			compound(_and, new NullTest(val("CL1"), false))), //
+		conditions(new NullTest(prop("model"), true, DOMAIN_METADATA_ANALYSER), //
+			compound(_and, new NullTest(val("CL1"), false, DOMAIN_METADATA_ANALYSER))), //
 		conditions(where_veh.prop("model").isNotNull().and().param("eqclass").isNull(), paramValues));
     }
 
@@ -146,8 +146,8 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_simple_query_model_04() {
 	assertModelsEquals(//
 		conditions(group(false, //
-			new NullTest(prop("model"), true), //
-			compound(_and, new NullTest(prop("station"), false)))), //
+			new NullTest(prop("model"), true, DOMAIN_METADATA_ANALYSER), //
+			compound(_and, new NullTest(prop("station"), false, DOMAIN_METADATA_ANALYSER)))), //
 		conditions(where_veh.begin().prop("model").isNotNull().and().prop("station").isNull().end()));
     }
 
@@ -155,16 +155,16 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_simple_query_model_05() {
 	assertModelsEquals( //
 	conditions(group(false, //
-		new NullTest(prop("model"), true), //
-		compound(_and, new NullTest(prop("station"), false))), //
-		compound(_and, new NullTest(prop("price"), true))), //
+		new NullTest(prop("model"), true, DOMAIN_METADATA_ANALYSER), //
+		compound(_and, new NullTest(prop("station"), false, DOMAIN_METADATA_ANALYSER))), //
+		compound(_and, new NullTest(prop("price"), true, DOMAIN_METADATA_ANALYSER))), //
 		conditions(where_veh.begin().prop("model").isNotNull().and().prop("station").isNull().end().and().prop("price").isNotNull()));
     }
 
     @Test
     public void test_simple_query_model_06() {
 	assertModelsEquals(//
-	conditions(new NullTest(prop("model"), true), //
+	conditions(new NullTest(prop("model"), true, DOMAIN_METADATA_ANALYSER), //
 		compound(_and, new ExistenceTest(false, entSubQry(select(VEHICLE).model())))), //
 		conditions(where_veh.prop("model").isNotNull().and().exists(select(VEHICLE).model())));
     }
@@ -172,29 +172,29 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_simple_query_model_07() {
 	assertModelsEquals(//
-	conditions(group(false, new NullTest(prop("model"), true), //
-		compound(_or, new NullTest(prop("station"), true)))), //
+	conditions(group(false, new NullTest(prop("model"), true, DOMAIN_METADATA_ANALYSER), //
+		compound(_or, new NullTest(prop("station"), true, DOMAIN_METADATA_ANALYSER)))), //
 		conditions(where_veh.anyOfProps("model", "station").isNotNull()));
     }
 
     @Test
     public void test_simple_query_model_08() {
 	assertModelsEquals(//
-	conditions(new NullTest(expression(prop("price"), compound(_add, prop("purchasePrice"))), false)), //
+	conditions(new NullTest(expression(prop("price"), compound(_add, prop("purchasePrice"))), false, DOMAIN_METADATA_ANALYSER)), //
 		conditions(where_veh.beginExpr().prop("price").add().prop("purchasePrice").endExpr().isNull()));
     }
 
     @Test
     public void test_simple_query_model_09() {
 	assertModelsEquals(//
-	conditions(new NullTest(expression(prop("price.amount"), compound(_add, prop("purchasePrice.amount"))), false)), //
+	conditions(new NullTest(expression(prop("price.amount"), compound(_add, prop("purchasePrice.amount"))), false, DOMAIN_METADATA_ANALYSER)), //
 		conditions(where_veh.expr(expr().prop("price.amount").add().prop("purchasePrice.amount").model()).isNull()));
     }
 
     @Test
     public void test_simple_query_model_10() {
 	assertModelsEquals(//
-	conditions(new NullTest(expression(prop("model"), compound(_add, expression(prop("model"), compound(_mult, prop("station"))))), false)), //
+	conditions(new NullTest(expression(prop("model"), compound(_add, expression(prop("model"), compound(_mult, prop("station"))))), false, DOMAIN_METADATA_ANALYSER)), //
 		conditions(where_veh.expr(expr().prop("model").add().expr(expr().prop("model").mult().prop("station").model()).model()).isNull()));
     }
 

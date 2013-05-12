@@ -261,14 +261,14 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private NullTest getPlainNullTest() {
 	final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
-	return new NullTest(operand, (Boolean) secondValue());
+	return new NullTest(operand, (Boolean) secondValue(), getQueryBuilder().getDomainMetadataAnalyser());
     }
 
     private GroupedConditions getMultipleNullTest() {
 	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
-	    conditions.add(new NullTest(operand, (Boolean) secondValue()));
+	    conditions.add(new NullTest(operand, (Boolean) secondValue(), getQueryBuilder().getDomainMetadataAnalyser()));
 	}
 	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
 	return getGroup(conditions, logicalOperator);

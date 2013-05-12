@@ -286,9 +286,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test_query_with_union_property_null_test_condition() {
-	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location").isNull().model();
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location").isNotNull().model();
 	assertEquals(bogieDao.findByKey("BOGIE1"), bogieDao.getEntity(from(qry).model()));
     }
 
