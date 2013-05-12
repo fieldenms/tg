@@ -315,7 +315,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test_query_with_union_entity_property_fetching() {
 	final String workshopKey = "WSHOP1";
 	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
@@ -337,7 +336,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test_query_with_union_entity_property_fetching2() {
 	final String workshopKey = "WSHOP1";
 	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();

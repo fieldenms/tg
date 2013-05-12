@@ -62,6 +62,14 @@ public class FetchModel<T extends AbstractEntity<?>> {
 //	}
 
 	for (final Entry<String, fetch<? extends AbstractEntity<?>>> entry : originalFetch.getIncludedPropsWithModels().entrySet()) {
+	    if (!EntityAggregates.class.equals(getEntityType())) {
+		final PropertyMetadata ppi = domainMetadataAnalyser.getInfoForDotNotatedProp(getEntityType(), entry.getKey());
+		if (ppi.isUnionEntity()) {
+		    for (final PropertyMetadata pmd : ppi.getComponentTypeSubprops()) {
+			with(pmd.getName(), false);
+		    }
+		}
+	    }
 	    with(entry.getKey(), entry.getValue());
 	}
     }
@@ -183,6 +191,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	} else {
 	    final PropertyMetadata ppi = getPropMetadata(propName);
 	    final Class propType = ppi.getJavaType();
+	    //System.out.println("===================== " + ppi);
 
 	    if (propName.equals("key") && ppi.isVirtual()) {
 		includeAllCompositeKeyMembers();
@@ -191,6 +200,8 @@ public class FetchModel<T extends AbstractEntity<?>> {
 		    if (!skipEntities) {
 			addEntityPropsModel(propName, fetch(propType));
 		    }
+		} else if (ppi.isUnionEntity()) {
+		    System.out.println("                   " + ppi.getName());
 		} else {
 		    final String singleSubpropertyOfCompositeUserTypeProperty = ppi.getSinglePropertyOfCompositeUserType();
 		    if (singleSubpropertyOfCompositeUserTypeProperty != null) {
