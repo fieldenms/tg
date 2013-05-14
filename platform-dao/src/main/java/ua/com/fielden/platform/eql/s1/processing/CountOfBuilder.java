@@ -15,6 +15,6 @@ public class CountOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new CountOf(getModelForSingleOperand(firstCat(), firstValue()), distinct, getDbVersion());
+	return new CountOf(getModelForSingleOperand(firstCat(), firstValue()), distinct);
     }
 }

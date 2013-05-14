@@ -13,6 +13,6 @@ public class DateOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new DateOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
+	return new DateOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

@@ -12,6 +12,6 @@ public class HourOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new HourOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
+	return new HourOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

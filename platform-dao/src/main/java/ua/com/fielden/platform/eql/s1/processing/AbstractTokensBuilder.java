@@ -7,7 +7,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.Functions;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -225,7 +224,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case COUNT_ALL:
 	    return new CountAll();
 	case NOW:
-	    return new Now(getDbVersion());
+	    return new Now();
 
 	default:
 	    throw new RuntimeException("Unrecognised zero agrument function: " + function);
@@ -399,9 +398,5 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
     public Map<String, Object> getParamValues() {
 	return paramValues;
-    }
-
-    public DbVersion getDbVersion() {
-	return getQueryBuilder().getDbVersion();
     }
 }

@@ -3,15 +3,12 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
 
-
-public class Concat extends AbstractFunction implements ISingleOperand {
+public class Concat extends AbstractFunction {
 
     private final List<ISingleOperand> operands;
 
-    public Concat(final List<ISingleOperand> operands, final DbVersion dbVersion) {
-	super(dbVersion);
+    public Concat(final List<ISingleOperand> operands) {
 	this.operands = operands;
     }
 

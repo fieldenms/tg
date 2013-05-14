@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.s1.elements.EntQuery;
@@ -19,13 +18,11 @@ import ua.com.fielden.platform.eql.s1.elements.QueryCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
-    private final DbVersion dbVersion;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final IFilter filter;
     private final String username;
 
     public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-	this.dbVersion = domainMetadataAnalyser.getDomainMetadata().getDbVersion();
 	this.domainMetadataAnalyser = domainMetadataAnalyser;
 	this.filter = filter;
 	this.username = username;
@@ -132,10 +129,6 @@ public class EntQueryGenerator {
 	    }
 	}
 	return orderBy.getModel();
-    }
-
-    public DbVersion getDbVersion() {
-	return dbVersion;
     }
 
     public DomainMetadataAnalyser getDomainMetadataAnalyser() {

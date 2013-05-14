@@ -12,6 +12,6 @@ public class YearOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new YearOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
+	return new YearOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
-import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
-import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
+import ua.com.fielden.platform.eql.s1.elements.CompoundCondition;
+import ua.com.fielden.platform.eql.s1.elements.GroupedConditions;
+import ua.com.fielden.platform.eql.s1.elements.ICondition;
 import ua.com.fielden.platform.utils.Pair;
 
 public class GroupedConditionsBuilder extends AbstractTokensBuilder {

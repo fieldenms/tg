@@ -12,6 +12,6 @@ public class AbsOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new AbsOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
+	return new AbsOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

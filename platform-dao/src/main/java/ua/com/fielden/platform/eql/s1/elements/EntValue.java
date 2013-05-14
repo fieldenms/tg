@@ -8,7 +8,6 @@ import java.util.List;
 public class EntValue implements ISingleOperand {
     private final Object value;
     private final boolean ignoreNull;
-    private String sqlParamName;
 
     public EntValue(final Object value) {
 	this(value, false);
@@ -72,14 +71,6 @@ public class EntValue implements ISingleOperand {
     @Override
     public boolean ignore() {
 	return ignoreNull && value == null;
-    }
-
-    public String getSqlParamName() {
-        return sqlParamName;
-    }
-
-    public void setSqlParamName(final String sqlParamName) {
-        this.sqlParamName = sqlParamName;
     }
 
     public Object getValue() {

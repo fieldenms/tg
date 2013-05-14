@@ -12,6 +12,6 @@ public class IfNullBuilder extends TwoArgumentsFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new IfNull(getModelForSingleOperand(firstCat(), firstValue()), getModelForSingleOperand(secondCat(), secondValue()), getDbVersion());
+	return new IfNull(getModelForSingleOperand(firstCat(), firstValue()), getModelForSingleOperand(secondCat(), secondValue()));
     }
 }

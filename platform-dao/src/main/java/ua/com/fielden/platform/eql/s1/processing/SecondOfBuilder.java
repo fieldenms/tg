@@ -12,6 +12,6 @@ public class SecondOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new SecondOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
+	return new SecondOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

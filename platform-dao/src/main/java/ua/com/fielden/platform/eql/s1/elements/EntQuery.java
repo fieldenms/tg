@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -88,23 +87,6 @@ public class EntQuery implements ISingleOperand {
 
     private boolean mainSourceIsQueryBased() {
 	return getSources().getMain() instanceof QueryBasedSource;
-    }
-
-
-    private void assignSqlParamNames() {
-        int paramCount = 0;
-        for (final EntValue value : getAllValues()) {
-            paramCount = paramCount + 1;
-            value.setSqlParamName("P" + paramCount);
-        }
-    }
-
-    public Map<String, Object> getValuesForSqlParams() {
-        final Map<String, Object> result = new HashMap<String, Object>();
-        for (final EntValue value : getAllValues()) {
-            result.put(value.getSqlParamName(), value.getValue());
-        }
-        return result;
     }
 
     private Conditions enhanceConditions(final Conditions originalConditions, final IFilter filter, final String username, final ISource mainSource, final EntQueryGenerator generator, final Map<String, Object> paramValues) {

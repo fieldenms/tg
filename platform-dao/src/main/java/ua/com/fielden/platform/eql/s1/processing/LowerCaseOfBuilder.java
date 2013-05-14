@@ -12,6 +12,6 @@ public class LowerCaseOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new LowerCaseOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
+	return new LowerCaseOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

@@ -13,6 +13,6 @@ public class SumOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new SumOf(getModelForSingleOperand(firstCat(), firstValue()), distinct, getDbVersion());
+	return new SumOf(getModelForSingleOperand(firstCat(), firstValue()), distinct);
     }
 }

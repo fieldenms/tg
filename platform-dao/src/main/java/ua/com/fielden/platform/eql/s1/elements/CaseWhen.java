@@ -6,7 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.utils.Pair;
 
 
-public class CaseWhen implements ISingleOperand {
+public class CaseWhen extends AbstractFunction {
 
     private List<Pair<ICondition, ISingleOperand>> whenThenPairs = new ArrayList<Pair<ICondition, ISingleOperand>>();
     private final ISingleOperand elseOperand;

@@ -12,6 +12,6 @@ public class MaxOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new MaxOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
+	return new MaxOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

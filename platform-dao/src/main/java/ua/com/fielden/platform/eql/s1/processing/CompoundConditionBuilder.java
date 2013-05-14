@@ -4,8 +4,8 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
-import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
+import ua.com.fielden.platform.eql.s1.elements.CompoundCondition;
+import ua.com.fielden.platform.eql.s1.elements.ICondition;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundConditionBuilder extends AbstractTokensBuilder {
