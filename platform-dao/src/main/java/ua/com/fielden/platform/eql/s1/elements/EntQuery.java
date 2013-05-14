@@ -31,9 +31,6 @@ public class EntQuery implements ISingleOperand {
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final Map<String, Object> paramValues;
 
-
-    private EntQuery master;
-
     transient private final Logger logger = Logger.getLogger(this.getClass());
 
     private boolean isSubQuery() {
@@ -46,39 +43,6 @@ public class EntQuery implements ISingleOperand {
 
     private boolean isResultQuery() {
         return QueryCategory.RESULT_QUERY.equals(category);
-    }
-
-    /**
-     * modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for
-     * unresolved only; if at some master the property of this subquery is resolved - it should be removed from here
-     */
-    private List<EntProp> unresolvedProps = new ArrayList<EntProp>();
-
-    private int getMasterIndex() {
-        int masterIndex = 0;
-        EntQuery currMaster = this.master;
-        while (currMaster != null) {
-            masterIndex = masterIndex + 1;
-            currMaster = currMaster.master;
-        }
-        return masterIndex;
-    }
-
-    private boolean onlyOneYieldAndWithoutAlias() {
-        return yields.size() == 1 && yields.getFirstYield().getAlias().equals("");
-    }
-
-    private boolean idAliasEnhancementRequired() {
-        return onlyOneYieldAndWithoutAlias() && persistedType;
-    }
-
-    private boolean allPropsYieldEnhancementRequired() {
-        return yields.size() == 0 && !isSubQuery() && //
-        ((mainSourceIsTypeBased() && persistedType) || mainSourceIsQueryBased());
-    }
-
-    private boolean idPropYieldEnhancementRequired() {
-        return yields.size() == 0 && persistedType && isSubQuery();
     }
 
     private boolean mainSourceIsTypeBased() {
@@ -124,17 +88,6 @@ public class EntQuery implements ISingleOperand {
 
         this.paramValues = paramValues;
     }
-
-    private void setMaster(final EntQuery master) {
-        this.master = master;
-    }
-
-    private void associateSubqueriesWithMasterQuery(final List<EntQuery> immediateSubqueries) {
-        for (final EntQuery entQuery : immediateSubqueries) {
-            entQuery.setMaster(this);
-        }
-    }
-
 
     /**
      * By immediate props here are meant props used within this query and not within it's (nested) subqueries.
@@ -200,14 +153,6 @@ public class EntQuery implements ISingleOperand {
 
     public OrderBys getOrderings() {
         return orderings;
-    }
-
-    public EntQuery getMaster() {
-        return master;
-    }
-
-    public List<EntProp> getUnresolvedProps() {
-        return unresolvedProps;
     }
 
     @Override
