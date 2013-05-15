@@ -69,7 +69,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
 	final MetaProperty property = entity.getProperty(propertyName);
 	// check if entity is not in the initialisation mode during which no property validation should be performed
 	if (entity.isInitialising()) {
-	    logger.debug("Skip further logic: Initialisation of entity " + entity + " is in progress.");
+	    logger.debug("Skip further logic: Initialisation of entity " + (AbstractUnionEntity.class.isAssignableFrom(entity.getClass()) ? entity.getClass() : entity) + " is in progress.");
 	    return proceed(invocation, property);
 	}
 	// check if entity can be modified at all

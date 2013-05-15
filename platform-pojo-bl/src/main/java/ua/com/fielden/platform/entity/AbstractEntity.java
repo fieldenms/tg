@@ -570,8 +570,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
-     * This setter is responsible for meta-property creation. It is envisaged that IPropertyFactory will be provided as an injection. An thus, meta-property instantiation should
-     * happen straight after entity creation.
+     * This setter is responsible for meta-property creation. It is envisaged that {@link IMetaPropertyFactory} is be provided as an injection.
+     * An thus, meta-property instantiation should happen immediately after entity creation when being created via IoC mechanism.
      *
      * @param metaPropertyFactory
      */
@@ -607,6 +607,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		final Class<?> propertyAnnotationType = isPropertyAnnotation.value();
 
 		// perform some early runtime validation whether property was defined correctly
+		// TODO this kind of validation should really be implemented as part of the compilation process
 		if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
 		    final String error = "Property " + field.getName() + " in " + getType() + " is collectional (or property descriptor), but has missing type argument, which should be specified as part of annotation IsProperty.";
 		    logger.error(error);

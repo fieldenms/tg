@@ -12,6 +12,7 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -103,20 +104,24 @@ public class EntityMasterManager implements IEntityMasterManager {
 	}
 	// searching in cache first ...
 
-	final IEntityMasterCache cache = getEntityMasterCache((Class<T>) entity.getType());
+	final Class<T> entityType = AbstractUnionEntity.class.isAssignableFrom(entity.getType()) ? //
+			      (Class<T>) ((AbstractUnionEntity) entity).activeEntity().getType() : //
+			      (Class<T>) entity.getType();
+
+	final IEntityMasterCache cache = getEntityMasterCache(entityType);
 	BaseFrame frame = cache.get(entity.getId());
 	if (frame == null) {
 	    // if not found in cache, then creating new master frame and putting it to the cache
-	    final IEntityMasterFactory<T, DAO> factory = factories.get(entity.getType());
+	    final IEntityMasterFactory<T, DAO> factory = factories.get(entityType);
 	    if (factory == null) {
-		throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " domain entity.");
+		throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey() + " domain entity.");
 	    }
-	    IMasterDomainTreeManager masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entity.getType());
+	    IMasterDomainTreeManager masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entityType);
 	    if (masterDomainTreeManager == null) {
-		gdtm.initMasterDomainTreeManager(entity.getType());
-		masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entity.getType());
+		gdtm.initMasterDomainTreeManager(entityType);
+		masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entityType);
 	    }
-	    frame = factory.createMasterFrame(getEntityProducer((Class<T>) entity.getType()), //
+	    frame = factory.createMasterFrame(getEntityProducer(entityType), //
 		    cache, //
 		    entity, //
 		    vmf, //
@@ -134,7 +139,7 @@ public class EntityMasterManager implements IEntityMasterManager {
 
 			@Override
 			protected Void action(final ActionEvent e) throws Exception {
-			    gdtm.saveMasterDomainTreeManager(entity.getType());
+			    gdtm.saveMasterDomainTreeManager(entityType);
 			    return null;
 			}
 		    }.actionPerformed(null);
