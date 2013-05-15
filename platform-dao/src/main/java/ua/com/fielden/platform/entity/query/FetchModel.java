@@ -84,28 +84,36 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	}
     }
 
-    private void includeAllListedProps(final Set<String> props) {
-	System.out.println(getEntityType().getSimpleName() + "          " + props);
-	for (final String prop : props) {
-	    final PropertyMetadata ppi = domainMetadataAnalyser.getInfoForDotNotatedProp(getEntityType(), prop);
-	    if (ppi == null) {
-		System.out.println("============ " + getEntityType().getSimpleName() + " ... " + prop);
-	    }
-	    if (!ppi.isCalculated()) {
-		final boolean skipEntities = !(
-			ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || //
-			ppi.getType().equals(PropertyCategory.ENTITY_AS_KEY) || //
-			ppi.getType().equals(PropertyCategory.UNION_ENTITY_DETAILS) || //
-			ppi.getType().equals(PropertyCategory.UNION_ENTITY_HEADER));
-		with(ppi.getName(), skipEntities);
-	    }
-
-	    if (ppi.isUnionEntity()) {
-		System.out.println("  ============ union " + ppi.getName());
-		with("location.workshop", false);
+    private void includeAllUnionEntityKeyMembers() {
+	for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType())) {
+	    if (ppi.isEntityOfPersistedType()) {
+		with(ppi.getName(), false);
 	    }
 	}
     }
+
+//    private void includeAllListedProps(final Set<String> props) {
+//	System.out.println(getEntityType().getSimpleName() + "          " + props);
+//	for (final String prop : props) {
+//	    final PropertyMetadata ppi = domainMetadataAnalyser.getInfoForDotNotatedProp(getEntityType(), prop);
+//	    if (ppi == null) {
+//		System.out.println("============ " + getEntityType().getSimpleName() + " ... " + prop);
+//	    }
+//	    if (!ppi.isCalculated()) {
+//		final boolean skipEntities = !(
+//			ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || //
+//			ppi.getType().equals(PropertyCategory.ENTITY_AS_KEY) || //
+//			ppi.getType().equals(PropertyCategory.UNION_ENTITY_DETAILS) || //
+//			ppi.getType().equals(PropertyCategory.UNION_ENTITY_HEADER));
+//		with(ppi.getName(), skipEntities);
+//	    }
+//
+//	    if (ppi.isUnionEntity()) {
+//		System.out.println("  ============ union " + ppi.getName());
+//		with("location.workshop", false);
+//	    }
+//	}
+//    }
 
 
     private void includeAllFirstLevelPrimPropsAndKey() {
@@ -191,10 +199,11 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	} else {
 	    final PropertyMetadata ppi = getPropMetadata(propName);
 	    final Class propType = ppi.getJavaType();
-	    //System.out.println("===================== " + ppi);
-
 	    if (propName.equals("key") && ppi.isVirtual()) {
 		includeAllCompositeKeyMembers();
+	    } else if (propName.equals("key") && isUnionEntityType(getEntityType())) {
+		primProps.add("key");
+		includeAllUnionEntityKeyMembers();
 	    } else {
 		if (AbstractEntity.class.isAssignableFrom(propType)/* && !ppi.isId()*/) {
 		    if (!skipEntities) {

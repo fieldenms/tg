@@ -314,6 +314,21 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    public void test_query_with_union_entity_property_fetching_keys() {
+	final String workshopKey = "WSHOP1";
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
+	final QueryExecutionModel<TgBogie, EntityResultQueryModel<TgBogie>> model =
+		from(qry).with(fetchOnly(TgBogie.class).with("id").with("key").with("location", fetchOnly(TgBogieLocation.class).with("key"))).model();
+	final TgBogieLocation location = bogieDao.getEntity(model).getLocation();
+	assertNotNull(location);
+	assertNotNull(location.getKey());
+	assertNotNull(location.getWorkshop());
+	assertNotNull(location.getWorkshop().getId());
+	assertNotNull(location.getWorkshop().getDesc());
+	assertEquals(workshopKey, location.getWorkshop().getKey());
+    }
+
+    @Test
     public void test_query_with_union_entity_property_fetching() {
 	final String workshopKey = "WSHOP1";
 	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
