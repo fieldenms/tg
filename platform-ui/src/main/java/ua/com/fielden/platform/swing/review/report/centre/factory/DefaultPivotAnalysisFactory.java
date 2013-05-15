@@ -15,6 +15,7 @@ import ua.com.fielden.platform.swing.review.details.DefaultGroupingAnalysisDetai
 import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.details.customiser.MapBasedDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisViewCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
@@ -60,5 +61,10 @@ public class DefaultPivotAnalysisFactory<T extends AbstractEntity<?>> implements
     public IAnalysisFactory<T, PivotAnalysisConfigurationView<T>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
 	this.detailsCustomiser = detailsCustomiser;
 	return this;
+    }
+
+    @Override
+    public IAnalysisFactory<T, PivotAnalysisConfigurationView<T>> setAnalysisViewCustomiser(final IAnalysisViewCustomiser<?> analysisViewCustomiser) {
+	throw new UnsupportedOperationException("The analysis view customiser can not be set for pivot analysis factory.");
     }
 }

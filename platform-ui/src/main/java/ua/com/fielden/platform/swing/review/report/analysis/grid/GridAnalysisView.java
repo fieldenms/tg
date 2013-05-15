@@ -103,6 +103,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	this.addSelectionEventListener(createGridAnalysisSelectionListener());
 
 	layoutView();
+	getOwner().getAnalysisViewCustomiser().customiseView(this);
     }
 
     protected EgiPanel<T> createEgiPanel() {

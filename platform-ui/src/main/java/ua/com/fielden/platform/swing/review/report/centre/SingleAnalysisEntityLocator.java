@@ -138,7 +138,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
     @Override
     protected GridConfigurationView<T, ILocatorDomainTreeManagerAndEnhancer> createDefaultAnalysis(){
 	final GridConfigurationModelForLocator<T> configModel = new GridConfigurationModelForLocator<>(getModel().getCriteria());
-	return new GridConfigurationViewForLocator<>(configModel, getOwner().getDetailsCache(), this, getReviewProgressLayer());
+	return new GridConfigurationViewForLocator<>(configModel, this, getReviewProgressLayer());
     }
 
     @Override

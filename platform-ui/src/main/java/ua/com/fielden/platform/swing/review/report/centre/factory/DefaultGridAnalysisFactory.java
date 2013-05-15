@@ -9,6 +9,7 @@ import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisViewCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
@@ -22,6 +23,8 @@ public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements 
 
     private IToolbarCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>> toolbarCustomiser;
 
+    private IAnalysisViewCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>> analysisViewCustomiser;
+
     private IAnalysisQueryCustomiser<T, GridAnalysisModel<T,ICentreDomainTreeManagerAndEnhancer>> queryCustomiser;
 
     @Override
@@ -31,7 +34,7 @@ public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements 
 	    final String name, //
 	    final Map<Object, DetailsFrame> detailsCache, //
 	    final BlockingIndefiniteProgressLayer progressLayer) {
-	return GridConfigurationView.createMainDetailsWithSpecificCustomiser(createAnalysisModel(criteria), detailsCache, null, owner, toolbarCustomiser, progressLayer);
+	return GridConfigurationView.createCustomisableConfigView(createAnalysisModel(criteria), owner, toolbarCustomiser, analysisViewCustomiser, progressLayer);
     }
 
     protected GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> createAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria){
@@ -47,21 +50,24 @@ public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements 
 
     @SuppressWarnings("unchecked")
     @Override
+    public IAnalysisFactory<T, GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>> setAnalysisViewCustomiser(final IAnalysisViewCustomiser<?> analysisViewCustomiser) {
+	this.analysisViewCustomiser = (IAnalysisViewCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>>)analysisViewCustomiser;
+	return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
     public IAnalysisFactory<T, GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>> setQueryCustomiser(final IAnalysisQueryCustomiser<T, ?> queryCustomiser) {
 	this.queryCustomiser = (IAnalysisQueryCustomiser<T, GridAnalysisModel<T,ICentreDomainTreeManagerAndEnhancer>>)queryCustomiser;
 	return this;
     }
 
-    public IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> getQueryCustomiser() {
-	return queryCustomiser;
-    }
-
-    public IToolbarCustomiser<GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer>> getToolbarCustomiser() {
-	return toolbarCustomiser;
-    }
-
     @Override
     public IAnalysisFactory<T, GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
 	throw new UnsupportedOperationException("The details are not supported yet for the main grid analysis");
+    }
+
+    protected IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> getQueryCustomiser() {
+	return queryCustomiser;
     }
 }

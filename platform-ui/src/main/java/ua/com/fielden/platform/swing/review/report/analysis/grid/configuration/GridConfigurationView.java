@@ -10,6 +10,8 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.DefaultGridAnalysisToolbarCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.DefaultGridAnalysisViewCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisViewCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
@@ -19,43 +21,77 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
 
     private static final long serialVersionUID = -7385497832761082274L;
 
-
     private final IToolbarCustomiser<GridAnalysisView<T, CDTME>> toolbarCustomiser;
 
-    /**
-     * Creates and returns main details analysis with default analysis customiser.
-     *
-     * @param model
-     * @param owner
-     * @param progressLayer
-     * @return
-     */
-    public static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationView<T, CDTME> createMainDetailsWithDefaultCustomiser( //
-	    	    final GridConfigurationModel<T, CDTME> model, //
-	    	    final Map<Object, DetailsFrame> detailsCache, //
-	    	    final IDetailsCustomiser detailsCustomiser, //
-		    final AbstractEntityCentre<T, CDTME> owner, //
-		    final BlockingIndefiniteProgressLayer progressLayer){
-	 return new GridConfigurationView<>(model, detailsCache, detailsCustomiser, owner, null, progressLayer);
-    }
+    private final IAnalysisViewCustomiser<GridAnalysisView<T, CDTME>> analysisViewCustomiser;
 
     /**
-     * Creates and returns main details analysis with specified analysis customiser.
+     * Creates the {@link GridConfigurationView} without details support.
      *
      * @param model
      * @param owner
      * @param toolbarCustomiser
+     * @param analysisViewCustomiser
      * @param progressLayer
      * @return
      */
-    public static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationView<T, CDTME> createMainDetailsWithSpecificCustomiser( //
-	     	    final GridConfigurationModel<T, CDTME> model, //
-	     	    final Map<Object, DetailsFrame> detailsCache, //
-	     	    final IDetailsCustomiser detailsCustomiser, //
-		    final AbstractEntityCentre<T, CDTME> owner, //
-		    final IToolbarCustomiser<GridAnalysisView<T, CDTME>> toolbarCustomiser,//
-		    final BlockingIndefiniteProgressLayer progressLayer){
-	 return new GridConfigurationView<>(model, detailsCache, detailsCustomiser, owner, toolbarCustomiser, progressLayer);
+    public static <E extends AbstractEntity<?>, C extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationView<E, C> createDefaultConfigView(//
+	    final GridConfigurationModel<E, C> model, //
+	    final AbstractEntityCentre<E, C> owner, //
+	    final BlockingIndefiniteProgressLayer progressLayer) {
+	return new GridConfigurationView<>(model,owner, progressLayer);
+    }
+
+    /**
+     * Creates the {@link GridConfigurationView} instance with both customiser: tool bar and view customisers.
+     *
+     * @param model
+     * @param owner
+     * @param toolbarCustomiser
+     * @param analysisViewCustomiser
+     * @param progressLayer
+     * @return
+     */
+    public static <E extends AbstractEntity<?>, C extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationView<E, C> createCustomisableConfigView(//
+	    final GridConfigurationModel<E, C> model, //
+	    final AbstractEntityCentre<E, C> owner, //
+	    final IToolbarCustomiser<GridAnalysisView<E, C>> toolbarCustomiser, //
+	    final IAnalysisViewCustomiser<GridAnalysisView<E, C>> analysisViewCustomiser, //
+	    final BlockingIndefiniteProgressLayer progressLayer) {
+	return new GridConfigurationView<>(model, owner, toolbarCustomiser, analysisViewCustomiser, progressLayer);
+    }
+
+
+    /**
+     * Initiates new {@link GridConfigurationView} with tool bar and view customisers.
+     *
+     * @param model
+     * @param owner
+     * @param toolbarCustomiser
+     * @param analysisViewCustomiser
+     * @param progressLayer
+     */
+   protected GridConfigurationView(//
+	   final GridConfigurationModel<T, CDTME> model, //
+	    final AbstractEntityCentre<T, CDTME> owner, //
+	    final IToolbarCustomiser<GridAnalysisView<T, CDTME>> toolbarCustomiser, //
+	    final IAnalysisViewCustomiser<GridAnalysisView<T, CDTME>> analysisViewCustomiser, //
+	    final BlockingIndefiniteProgressLayer progressLayer) {
+	this(model, null, null, owner, toolbarCustomiser, analysisViewCustomiser, progressLayer);
+   }
+
+    /**
+     * Initialises new {@link GridConfigurationView} without details cache and customisers (e.a. tool bar and view customiser).
+     *
+     * @param model
+     * @param owner
+     * @param progressLayer
+     */
+    protected GridConfigurationView(//
+	    final GridConfigurationModel<T, CDTME> model, //
+	    final AbstractEntityCentre<T, CDTME> owner, //
+	    final BlockingIndefiniteProgressLayer progressLayer) {
+	this(model, null, null, owner, null, null, progressLayer);
     }
 
     /**
@@ -66,19 +102,25 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
      * @param toolbarCustomiser
      * @param progressLayer
      */
-    protected GridConfigurationView(//
+    private GridConfigurationView(//
 	    final GridConfigurationModel<T, CDTME> model, //
 	    final Map<Object, DetailsFrame> detailsCache, //
 	    final IDetailsCustomiser detailsCustomiser, //
 	    final AbstractEntityCentre<T, CDTME> owner, //
 	    final IToolbarCustomiser<GridAnalysisView<T, CDTME>> toolbarCustomiser, //
+	    final IAnalysisViewCustomiser<GridAnalysisView<T, CDTME>> analysisViewCustomiser, //
 	    final BlockingIndefiniteProgressLayer progressLayer){
 	super(model, detailsCache, detailsCustomiser, owner, progressLayer);
 	this.toolbarCustomiser = toolbarCustomiser == null ? new DefaultGridAnalysisToolbarCustomiser<T, CDTME>() : toolbarCustomiser;
+	this.analysisViewCustomiser = analysisViewCustomiser == null ? new DefaultGridAnalysisViewCustomiser<T, CDTME>() : analysisViewCustomiser;
     }
 
     public IToolbarCustomiser<GridAnalysisView<T, CDTME>> getToolbarCustomiser() {
 	return toolbarCustomiser;
+    }
+
+    public IAnalysisViewCustomiser<GridAnalysisView<T, CDTME>> getAnalysisViewCustomiser() {
+	return analysisViewCustomiser;
     }
 
     @Override
@@ -95,7 +137,7 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
     protected AnalysisWizardView<T, CDTME> createWizardView() {
 	throw new UnsupportedOperationException("Main details can not be configured!");
     }
-    
+
     @Override
     public void close() {
 	if (getPreviousView() != null) {

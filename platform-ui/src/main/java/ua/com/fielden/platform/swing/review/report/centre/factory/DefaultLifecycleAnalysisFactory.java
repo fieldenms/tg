@@ -9,6 +9,7 @@ import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisViewCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.configuration.LifecycleAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.configuration.LifecycleAnalysisConfigurationView;
@@ -44,5 +45,10 @@ public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implem
     @Override
     public IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
 	throw new UnsupportedOperationException("The details are not supported yet for the default lifecycle analysis.");
+    }
+
+    @Override
+    public IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> setAnalysisViewCustomiser(final IAnalysisViewCustomiser<?> analysisViewCustomiser) {
+	throw new UnsupportedOperationException("The analysis view customiser can not be set for lifecycle analysis factory.");
     }
 }

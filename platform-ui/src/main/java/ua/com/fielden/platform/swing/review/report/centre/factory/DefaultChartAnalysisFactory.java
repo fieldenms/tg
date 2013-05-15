@@ -17,6 +17,7 @@ import ua.com.fielden.platform.swing.review.details.customiser.MapBasedDetailsCu
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisViewCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAnalysisQueryCustomiser;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
@@ -61,6 +62,11 @@ public class DefaultChartAnalysisFactory<T extends AbstractEntity<?>> implements
     public IAnalysisFactory<T, ChartAnalysisConfigurationView<T>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
 	this.detailsCustomiser = detailsCustomiser;
 	return this;
+    }
+
+    @Override
+    public IAnalysisFactory<T, ChartAnalysisConfigurationView<T>> setAnalysisViewCustomiser(final IAnalysisViewCustomiser<?> analysisViewCustomiser) {
+	throw new UnsupportedOperationException("The analysis view customiser can not be set for chart analysis factory.");
     }
 
 }

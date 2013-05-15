@@ -11,6 +11,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisViewCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAnalysisQueryCustomiser;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
@@ -47,6 +48,14 @@ public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends Abstrac
      * @param returns self
      */
     IAnalysisFactory<T, A> setToolbarCustomiser(final IToolbarCustomiser<?> toolbarCustomiser);
+
+    /**
+     * Specifies the {@link IAnalysisViewCustomiser} instance for this analysis factory.
+     *
+     * @param analysisViewCustomiser
+     * @return
+     */
+    IAnalysisFactory<T, A> setAnalysisViewCustomiser(final IAnalysisViewCustomiser<?> analysisViewCustomiser);
 
     /**
      * Specifies the {@link IAnalysisQueryCustomiser} instance for this analysis factory.

@@ -8,6 +8,7 @@ import ua.com.fielden.platform.swing.review.details.AnalysisDetailsData;
 import ua.com.fielden.platform.swing.review.details.DefaultGroupingAnalysisDetails;
 import ua.com.fielden.platform.swing.review.details.customiser.IDetailsCustomiser;
 import ua.com.fielden.platform.swing.review.details.customiser.MapBasedDetailsCustomiser;
+import ua.com.fielden.platform.swing.review.report.analysis.customiser.IAnalysisViewCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.customiser.IToolbarCustomiser;
 import ua.com.fielden.platform.swing.review.report.analysis.multipledec.configuration.MultipleDecConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAnalysisQueryCustomiser;
@@ -44,5 +45,10 @@ public abstract class DefaultMultipleDecAnalysisFactory<T extends AbstractEntity
     public IAnalysisFactory<T, MultipleDecConfigurationView<T>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
 	this.detailsCustomiser = detailsCustomiser;
 	return this;
+    }
+
+    @Override
+    public IAnalysisFactory<T, MultipleDecConfigurationView<T>> setAnalysisViewCustomiser(final IAnalysisViewCustomiser<?> analysisViewCustomiser) {
+	throw new UnsupportedOperationException("The analysis view customiser can not be set for multiple dec analysis factory.");
     }
 }
