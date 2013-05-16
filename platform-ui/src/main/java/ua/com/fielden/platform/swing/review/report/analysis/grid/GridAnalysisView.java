@@ -58,6 +58,16 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     private final Action openMasterAndEditEntityCommand;
     private final Action deleteEntityCommand;
 
+    private IUmViewOwner customUmViewOwner;
+
+    public IUmViewOwner getCustomUmViewOwner() {
+        return customUmViewOwner;
+    }
+
+    public void setCustomUmViewOwner(final IUmViewOwner customUmViewOwner) {
+        this.customUmViewOwner = customUmViewOwner;
+    }
+
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final GridConfigurationView<T, CDTME> owner) {
 	super(model, owner);
 	this.egiPanel = createEgiPanel();
@@ -308,7 +318,9 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     @Override
     public <E extends AbstractEntity<?>> void notifyEntityChange(final E entity) {
-	if (entity.isPersisted()) {
+	if (customUmViewOwner != null) {
+	    customUmViewOwner.notifyEntityChange(entity);
+	} else if (entity.isPersisted()) {
 	    SwingUtilitiesEx.invokeLater(new Runnable() {
 		@SuppressWarnings("unchecked")
 		@Override
@@ -317,7 +329,6 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 		}
 	    });
 	}
-
     }
 
     @Override
