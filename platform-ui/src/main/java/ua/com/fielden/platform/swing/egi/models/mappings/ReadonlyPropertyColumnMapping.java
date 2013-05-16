@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.egi.models.mappings;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Rectangle;
@@ -28,7 +30,6 @@ import ua.com.fielden.platform.utils.ConverterFactory;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.EntityUtils.ShowingStrategy;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * Read-only mapping for {@link AbstractEntity} properties.
@@ -133,11 +134,21 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
 
     @Override
     public JComponent getCellRendererComponent(final T entity, final Object value, final boolean isSelected, final boolean hasFocus, final JTable table, final int row, final int column) {
-	if (entity instanceof EntityAggregates || isEmpty(getPropertyName())) {
+	if (!shouldUseMetaProperty(entity)) {
 	    return getEntityCellRendererComponent(entity);
 	} else {
 	    return getAbstractEntityCellRendererComponent(entity, value, isSelected, hasFocus, table, row, column);
 	}
+    }
+
+    /**
+     *
+     *
+     * @param entity
+     * @return
+     */
+    private boolean shouldUseMetaProperty(final T entity){
+	return !(entity instanceof EntityAggregates || isEmpty(getPropertyName()) || !entity.isEnhanced());
     }
 
     /**
