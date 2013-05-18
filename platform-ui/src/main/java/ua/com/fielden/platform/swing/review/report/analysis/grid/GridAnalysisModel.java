@@ -72,6 +72,10 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	}
 
 	public void scheduleDeltaRetrieval() {
+	    scheduleDeltaRetrieval(transactionEntityDeltaDelay());
+	}
+
+	public void scheduleDeltaRetrieval(final long delay) {
 	    if (timer != null) {
 		System.err.println("One more task is trying to be schedulled, when other task exists ==> ignored.");
 		return;
@@ -107,7 +111,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		    }
 		}
 	    };
-	    timer.schedule(deltaRetrivalTask, TRANSACTION_ENTITY_DELTA_DELAY);
+	    timer.schedule(deltaRetrivalTask, delay);
 	}
 
 	public IPage<T> produceEnhancedPage(final IPage<T> retrievedPage) {
@@ -123,6 +127,14 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		timer.cancel();
 	    }
 	}
+    }
+
+    protected long initialTransactionEntityDeltaDelay() {
+	return TRANSACTION_ENTITY_DELTA_DELAY;
+    }
+
+    protected long transactionEntityDeltaDelay() {
+	return TRANSACTION_ENTITY_DELTA_DELAY;
     }
 
     protected static <T extends AbstractEntity<?>> IPage<T> createSinglePage(final IPage<T> retrievedPage, final Collection<T> entities) {
@@ -253,8 +265,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	}
     }
 
-    @SuppressWarnings("unchecked")
-    private IPage<T> page(final Result result) {
+    protected IPage<T> page(final Result result) {
 	return (IPage<T>) result.getInstance();
     }
 
@@ -277,7 +288,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    }
 	    now = new Date();
 	    final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = enhanceByTransactionDateBoundaries(analysisQueries, null, now);
-	    result = runQuery(getUpdatedCriteria(), queries);
+	    result = runQuery((EntityUtils.equalsEx(analysisQueries, queries)) ? getCriteria() : getUpdatedCriteria(), queries);
 	} else {
 	    result = runQuery(getCriteria(), analysisQueries);
 	    now = null;
@@ -288,7 +299,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
 	    if (AnnotationReflector.isTransactionEntity(getCriteria().getEntityClass())) {
 		deltaRetriever = new DeltaRetriever(loadedPage, createComparator(), now);
-		deltaRetriever.scheduleDeltaRetrieval();
+		deltaRetriever.scheduleDeltaRetrieval(initialTransactionEntityDeltaDelay());
 	    }
 	}
 	return result;
