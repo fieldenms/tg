@@ -681,12 +681,14 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
     }
 
     protected void fitToBounds() {
-	// fit all coordinates to the bounds calculated by existing points
-	webEngine.executeScript("document.viewBounds = new google.maps.LatLngBounds()");
-	for (final P point : points) {
-	    webEngine.executeScript("document.viewBounds.extend(new google.maps.LatLng(" + point.getLatitude() + "," + point.getLongitude() + "))");
+	if (points != null && !points.isEmpty()) {
+	    // fit all coordinates to the bounds calculated by existing points
+	    webEngine.executeScript("document.viewBounds = new google.maps.LatLngBounds()");
+	    for (final P point : points) {
+		webEngine.executeScript("document.viewBounds.extend(new google.maps.LatLng(" + point.getLatitude() + "," + point.getLongitude() + "))");
+	    }
+	    webEngine.executeScript("document.map.fitBounds(document.viewBounds)");
 	}
-	webEngine.executeScript("document.map.fitBounds(document.viewBounds)");
     }
 
     public void providePoints(final List<P> points, final boolean fitToBounds) {
