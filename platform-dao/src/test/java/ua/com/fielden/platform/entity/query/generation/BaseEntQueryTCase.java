@@ -76,6 +76,7 @@ public class BaseEntQueryTCase {
     protected static final Class<String> STRING = String.class;
     protected static final Class<Date> DATE = Date.class;
     protected static final Class<Long> LONG = Long.class;
+    protected static final Class<Integer> INTEGER = Integer.class;
     protected static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
     protected static final Class<BigDecimal> BIG_DECIMAL = BigDecimal.class;
     protected static final Type H_LONG = Hibernate.LONG;

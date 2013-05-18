@@ -134,7 +134,7 @@ public class EntQuery implements ISingleOperand {
 	return getSources().getMain() instanceof QueryBasedSource;
     }
 
-    private void enhanceYieldsModel() {
+    private void enhanceYieldsModel(final FetchModel fetchModel) {
 	// enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
 	if (idAliasEnhancementRequired()) {
 	    final Yield idModel = new Yield(yields.getFirstYield().getOperand(), AbstractEntity.ID);
@@ -147,7 +147,12 @@ public class EntQuery implements ISingleOperand {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
 	    if (mainSourceIsTypeBased()) {
 		for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
-		    final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
+		    final boolean skipProperty = ppi.isSynthetic() || //
+			    ppi.isVirtual() || //
+			    ppi.isCollection() || //
+			    (ppi.isAggregatedExpression() && !isResultQuery()) //
+			     || (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
+			    ;
 		    if (!skipProperty) {
 			yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
 		    }
@@ -450,7 +455,7 @@ public class EntQuery implements ISingleOperand {
 	    source.populateSourceItems(sourceAndItsJoinType.getValue());
 	}
 
-	enhanceYieldsModel(); //!! adds new properties in yield section
+	enhanceYieldsModel(fetchModel); //!! adds new properties in yield section
 	//System.out.println("                         1------------------ " + yields.getYields());
 	adjustYieldsModelAccordingToFetchModel(fetchModel);
 	//System.out.println("                         2------------------ " + yields.getYields());

@@ -29,6 +29,10 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 /**
  * This is a helper class to provide :
@@ -217,8 +221,8 @@ public class Finder {
      */
     public static List<Field> findLifecycleProperties(final Class<? extends AbstractEntity> clazz) {
 	final List<Field> properties = findProperties(clazz, Monitoring.class);
-	properties.remove(getFieldByName(clazz, AbstractEntity.KEY));
-	properties.remove(getFieldByName(clazz, AbstractEntity.DESC));
+	properties.remove(getFieldByName(clazz, KEY));
+	properties.remove(getFieldByName(clazz, DESC));
 	final List<Field> keys = getKeyMembers(clazz);
 	properties.removeAll(keys);
 	return properties;
@@ -288,7 +292,7 @@ public class Finder {
 	// if there where no fields annotated with CompositeKeyMember then this
 	// entity uses a non-composite (simple) key.
 	if (keyMembers.size() == 0) {
-	    keyMembers.add(getFieldByName(type, AbstractEntity.KEY));
+	    keyMembers.add(getFieldByName(type, KEY));
 	}
 	return keyMembers;
     }
@@ -551,7 +555,7 @@ public class Finder {
 	    if (unionProperties.contains(property)) { // union properties:
 		field = getFieldByName(value.getClass(), property);
 		valueToRetrieveFrom = value;
-	    } else if (commonProperties.contains(property) || AbstractEntity.KEY.equals(property) || AbstractEntity.ID.equals(property) || AbstractEntity.DESC.equals(property)) { // common property:
+	    } else if (commonProperties.contains(property) || COMMON_PROPS.contains(property) || ID.equals(property)) { // common property:
 		final AbstractEntity<?> activeEntity = value.activeEntity();
 		field = getFieldByName(activeEntity.getClass(), property);
 		valueToRetrieveFrom = activeEntity;
@@ -560,6 +564,7 @@ public class Finder {
 	    }
 	    return getFieldValue(field, valueToRetrieveFrom);
 	} catch (final Exception e) {
+	    e.printStackTrace();
 	    throw new RuntimeException("Property [" + property + "] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.");
 	}
     }
@@ -709,7 +714,7 @@ public class Finder {
 	    if (field.getName().equals(property.getName())) {
 		Class<?> fieldType = field.getType();
 		Class<?> propertyType = property.getType();
-		if (AbstractEntity.KEY.equals(field.getName())) {
+		if (KEY.equals(field.getName())) {
 		    final Class<AbstractEntity> fieldOwner = (Class<AbstractEntity>) field.getDeclaringClass();
 		    final Class<AbstractEntity> propertyOwner = (Class<AbstractEntity>) property.getDeclaringClass();
 
@@ -935,6 +940,6 @@ public class Finder {
     public static boolean isOne2One_association(final Class<?> type, final String dotNotationExp) {
 	final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
 	final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
-	return EntityUtils.isEntityType(propertyType) && DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, AbstractEntity.KEY)).equals(masterType);
+	return EntityUtils.isEntityType(propertyType) && DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, KEY)).equals(masterType);
     }
 }

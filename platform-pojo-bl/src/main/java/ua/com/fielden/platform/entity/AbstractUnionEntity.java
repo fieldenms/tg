@@ -109,7 +109,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 	final List<Field> fields = Finder.findRealProperties(getType());
 	final List<Class<? extends AbstractEntity>> propertyTypes = new ArrayList<Class<? extends AbstractEntity>>();
 	for (final Field field : fields) {
-	    if (!KEY.equals(field.getName()) && !DESC.equals(field.getName())) {
+	    if (!COMMON_PROPS.contains(field.getName())) {
 		// union entities should not have properties that are not of entity type
 		if (!AbstractEntity.class.isAssignableFrom(field.getType())) {
 		    throw new IllegalStateException("Union entity should not contain properties of ordinary type."); // kind one error
@@ -151,7 +151,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     public final AbstractEntity<?> activeEntity() {
 	final Map<String, MetaProperty> properties = getProperties();
 	for (final MetaProperty property : properties.values()) {
-	    if (!KEY.equals(property.getName()) && !DESC.equals(property.getName())) { // there should be no other properties of ordinary types
+	    if (!COMMON_PROPS.contains(property.getName())) { // there should be no other properties of ordinary types
 		final AbstractEntity<?> value = (AbstractEntity<?>) get(property.getName());
 		if (value != null) {
 		    return value;

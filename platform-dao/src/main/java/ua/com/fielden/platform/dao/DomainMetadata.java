@@ -6,9 +6,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -42,6 +44,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
 
@@ -57,6 +60,7 @@ import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTI
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_AS_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION_COMMON;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE;
@@ -110,15 +114,37 @@ public class DomainMetadata {
 	this.hibTypesInjector = hibTypesInjector;
 	for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
 	    try {
-		entityMetadataMap.put(entityType, generateEntityMetadata(entityType));
+		entityMetadataMap.put(entityType, generateEntityMetadata(entityType, false));
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new IllegalStateException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
 	    }
 	}
+
+	//enhanceWithCalcProps(entityMetadataMap.values());
+    }
+
+    public void enhanceWithCalcProps(final Collection<EntityMetadata> entityMetadatas) {
+	for (final EntityMetadata emd : entityMetadatas) {
+	    if (emd.isPersisted()) {
+		try {
+		    final PropertyMetadata pmd = getVirtualPropInfoForReferenceCount(DynamicEntityClassLoader.getOriginalType(emd.getType()));
+		    safeMapAdd(emd.getProps(), pmd);
+		} catch (final Exception e) {
+		    // TODO Auto-generated catch block
+		    e.printStackTrace();
+		}
+	    }
+	}
     }
 
     public <ET extends AbstractEntity<?>> EntityMetadata<ET> generateEntityMetadata(final Class<ET> entityType) throws Exception {
+	final EntityMetadata<ET> result = generateEntityMetadata(entityType, true);
+	//enhanceWithCalcProps(new HashSet<EntityMetadata>(){{add(result);}});
+	return result;
+    }
+
+    private <ET extends AbstractEntity<?>> EntityMetadata<ET> generateEntityMetadata(final Class<ET> entityType, final boolean enhanceWithCalcProps) throws Exception {
 
 	final String tableClause = getTableClause(entityType);
 	if (tableClause != null) {
@@ -233,7 +259,7 @@ public class DomainMetadata {
 		} else if (!field.isAnnotationPresent(CritOnly.class)) {
 		    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
 		} else {
-
+		    System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
 		}
 	    }
 	}
@@ -361,6 +387,28 @@ public class DomainMetadata {
 	return new PropertyMetadata.Builder("key", String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType)).hibType(Hibernate.STRING).type(VIRTUAL_OVERRIDE).build();
     }
 
+    private PropertyMetadata getVirtualPropInfoForReferenceCount(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+	return new PropertyMetadata.Builder("referencesCount", Integer.class, true).expression(dmeg.getReferencesCountPropForEntity(getReferences(entityType))).hibType(Hibernate.INTEGER).type(EXPRESSION_COMMON).build();
+    }
+
+    public Set<Pair<Class<? extends AbstractEntity<?>>, String>> getReferences(final Class<? extends AbstractEntity<?>> entityType) {
+	final Set<Pair<Class<? extends AbstractEntity<?>>, String>> result = new HashSet<>();
+	// TODO take into account only PERSISTED props of PERSISTED entities
+//	System.out.println("      getting references for entity: " + entityType.getSimpleName());
+	for (final EntityMetadata<? extends AbstractEntity<?>> entityMetadata : entityMetadataMap.values()) {
+	    if (entityMetadata.isPersisted()) {
+//		System.out.println("                  inspecting props of entity: " + entityMetadata.getType().getSimpleName());
+
+		for (final PropertyMetadata pmd : entityMetadata.getProps().values()) {
+		    if (pmd.isEntityOfPersistedType() && pmd.affectsMapping() && pmd.getJavaType().equals(entityType)) {
+//			System.out.println("                            [" + pmd.getName() + "]");
+			result.add(new Pair(entityMetadata.getType(), pmd.getName()));
+		    }
+		}
+	    }
+	}
+	return result;
+    }
 
     private PropertyMetadata getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
 	final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(calculatedPropfield.getAnnotation(Calculated.class).category());

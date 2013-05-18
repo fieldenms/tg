@@ -23,6 +23,7 @@ import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLL
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION_COMMON;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
@@ -109,6 +110,10 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public boolean isCollection() {
 	return type.equals(COLLECTIONAL);
+    }
+
+    public boolean isCommonCalculated() {
+	return type.equals(EXPRESSION_COMMON);
     }
 
     public boolean isId() {
@@ -295,6 +300,12 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	    }
 	}, //
 	SYNTHETIC {
+	    @Override
+	    boolean affectsMappings() {
+		return false;
+	    }
+	}, //
+	EXPRESSION_COMMON {
 	    @Override
 	    boolean affectsMappings() {
 		return false;

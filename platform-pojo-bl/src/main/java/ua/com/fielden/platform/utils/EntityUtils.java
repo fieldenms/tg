@@ -35,6 +35,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
+import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 public class EntityUtils {
@@ -753,7 +754,7 @@ public class EntityUtils {
 	}
 
 	for (final MetaProperty meta : instance.getProperties().values()) {
-	    if (meta != null && !(("desc".equals(meta.getName()) || "key".equals(meta.getName())) && instance instanceof AbstractUnionEntity) ) {
+	    if (meta != null && !(COMMON_PROPS.contains(meta.getName()) && instance instanceof AbstractUnionEntity)) {
 		final Object newOriginalValue = instance.get(meta.getName());
 		meta.setOriginalValue(newOriginalValue);
 		if (!meta.isCollectional()) {

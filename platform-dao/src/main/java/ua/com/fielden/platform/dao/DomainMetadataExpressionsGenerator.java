@@ -3,6 +3,7 @@ package ua.com.fielden.platform.dao;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -12,11 +13,14 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class DomainMetadataExpressionsGenerator {
 
@@ -63,7 +67,7 @@ public class DomainMetadataExpressionsGenerator {
 		exprField.setAccessible(true);
 		return (ExpressionModel) exprField.get(null);
 	    } catch (final Exception e) {
-		throw new IllegalStateException("Hard-coded expression model for prop [" + calculatedPropfield.getName() + "] is missing!");
+		throw new IllegalStateException("Hard-coded expression model for prop [" + calculatedPropfield.getName() + "] is missing! ---" + e);
 	    }
 	}
     }
@@ -77,7 +81,27 @@ public class DomainMetadataExpressionsGenerator {
 	}
     }
 
-    private Class<? extends AbstractEntity<?>> getRootType(final Calculated calcAnnotation) throws ClassNotFoundException {
+    public Class<? extends AbstractEntity<?>> getRootType(final Calculated calcAnnotation) throws ClassNotFoundException {
 	return (Class<? extends AbstractEntity<?>>) ClassLoader.getSystemClassLoader().loadClass(calcAnnotation.rootTypeName());
     }
+
+    private PrimitiveResultQueryModel getReferenceCountForSingleProp(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
+	return select(entityType).where().prop(propName).eq().extProp("id").yield().countAll().modelAsPrimitive();
+    }
+
+    ExpressionModel getReferencesCountPropForEntity(final Set<Pair<Class<? extends AbstractEntity<?>>, String>> references) {
+	if (references.size() == 0) {
+	    return expr().val(0).model();
+	}
+
+	final Iterator<Pair<Class<? extends AbstractEntity<?>>, String>> iterator = references.iterator();
+	final Pair<Class<? extends AbstractEntity<?>>,String> firstEntry = iterator.next();
+	IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(getReferenceCountForSingleProp(firstEntry.getKey(), firstEntry.getValue()));
+	for (; iterator.hasNext();) {
+	    final Pair<Class<? extends AbstractEntity<?>>,String> entry = iterator.next();
+	    expressionModelInProgress = expressionModelInProgress.add().model(getReferenceCountForSingleProp(entry.getKey(), entry.getValue()));
+	}
+	return expressionModelInProgress.model();
+    }
+
 }

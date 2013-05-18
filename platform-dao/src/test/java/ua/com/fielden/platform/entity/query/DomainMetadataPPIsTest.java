@@ -31,6 +31,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyCategory.PRIMITIVE_AS_KEY));
 	expected.add(ppi("desc", STRING, true, hibType("string"), "DESC_", PropertyCategory.PRIMITIVE));
 	expected.add(ppi("make", MAKE, false, hibType("long"), "MAKE_", PropertyCategory.ENTITY));
+//	expected.add(ppi("referencesCount", INTEGER, false, hibType("integer"), Collections.<PropertyColumn> emptyList(), PropertyCategory.EXPRESSION_COMMON));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
 	actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(MODEL));

@@ -249,6 +249,32 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @IsProperty
     @MapTo("DESC_")
     private String desc;
+//    @IsProperty
+//    @Title(value = "Has references?", desc = "Desc")
+//    private boolean referenced;
+//    @IsProperty
+//    @Title(value = "References Count", desc = "Desc")
+//    private Integer referencesCount;
+//
+//    @Observable
+//    public AbstractEntity setReferencesCount(final Integer referencesCount) {
+//	this.referencesCount = referencesCount;
+//	return this;
+//    }
+//
+//    public Integer getReferencesCount() {
+//	return referencesCount;
+//    }
+//
+//    @Observable
+//    public AbstractEntity setReferenced(final boolean referenced) {
+//	this.referenced = referenced;
+//	return this;
+//    }
+//
+//    public boolean getReferenced() {
+//	return referenced;
+//    }
 
     /** Convenient constants to reference properties by name */
     public static final String ID = "id";
@@ -256,6 +282,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     public static final String KEY = "key";
     public static final String GETKEY = "getKey()";
     public static final String DESC = "desc";
+    public static Set<String> COMMON_PROPS = new HashSet<>();
+    {
+	COMMON_PROPS.add(KEY);
+	COMMON_PROPS.add(DESC);
+	COMMON_PROPS.add("referencesCount");
+	COMMON_PROPS.add("referenced");
+    }
 
     /**
      * Provides property change support.
