@@ -34,10 +34,6 @@ public class EntityMetadata<ET extends AbstractEntity<?>> {
 	this(null, null, type, props);
     }
 
-//    private static List<EntityResultQueryModel<ET>> produceModelIfAny(final Class<? extends AbstractEntity<?>> type) {
-//	return new ArrayList<EntityResultQueryModel<? extends AbstractEntity<?>>>();
-//    }
-
     private EntityMetadata(final String table, final List<EntityResultQueryModel<ET>> models, final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
 	super();
 	this.table = table;
@@ -67,14 +63,6 @@ public class EntityMetadata<ET extends AbstractEntity<?>> {
 	sb.append(")");
 
 	return sb.toString();
-    }
-
-    public boolean isSynthetic() {
-	return models.size() == 1;
-    }
-
-    public boolean isPure() {
-	return !isPersisted() && !isSynthetic();
     }
 
     public boolean isOneToOne() {

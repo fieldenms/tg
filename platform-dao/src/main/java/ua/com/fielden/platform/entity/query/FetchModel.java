@@ -12,6 +12,10 @@ import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -138,10 +142,10 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    includeAllFirstLevelProps();
 	}
 
-	with(AbstractEntity.KEY, true);
+	with(KEY, true);
 
 	if (hasDescProperty(getEntityType())) {
-	    with(AbstractEntity.DESC, true);
+	    with(DESC, true);
 	}
     }
 
@@ -156,8 +160,8 @@ public class FetchModel<T extends AbstractEntity<?>> {
     }
 
     private void includeIdAndVersionOnly() {
-	with(AbstractEntity.ID, true);
-	with(AbstractEntity.VERSION, true);
+	with(ID, true);
+	with(VERSION, true);
     }
 
     public boolean containsProp(final String propName) {
