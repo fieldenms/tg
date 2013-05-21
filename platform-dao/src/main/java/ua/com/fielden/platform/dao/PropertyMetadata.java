@@ -52,6 +52,10 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	nullable = builder.nullable;
 	expressionModel = builder.expressionModel;
 	aggregatedExpression = builder.aggregatedExpression;
+	if (!isCollection() && expressionModel == null && (columns == null || columns.size() == 0)) {
+	    System.out.println(" ----------------" + type + " ------------- " +  name + " == " + javaType + " -------------------------------------------------------");
+	    //throw new RuntimeException(" ----------------" + type + " ------------- " +  name + " == " + javaType + " -------------------------------------------------------");
+	}
     }
 
     public String ddl() {

@@ -159,6 +159,8 @@ public class DomainMetadata {
 	if (isUnionEntityType(entityType)) {
 	    return new EntityMetadata<ET>(getUnionEntityModels(entityType), entityType, generatePropertyMetadatasForEntity(entityType,  UNION));
 	} else {
+	    System.out.println(" -------------------+++++++++++----------------   " + entityType.getSimpleName());
+
 	    return new EntityMetadata<ET>(entityType, generatePropertyMetadatasForEntity(entityType,  PURE));
 	}
     }
