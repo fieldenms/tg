@@ -18,17 +18,7 @@ public class EntityInfo {
     public Object resolve(final String dotNotatedPropName) {
 	final Pair<String, String> parts = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
 	final AbstractPropInfo foundPart = props.get(parts.getKey());
-
-	if (foundPart != null) {
-
-//	    if (foundPart instanceof PrimTypePropInfo) {
-//		return foundPart;
-//	    }
-//	    return parts.getValue() != null ? ((EntityTypePropInfo) foundPart).getPropEntityInfo().resolve(parts.getValue()) : foundPart;
-	    return foundPart.resolve(parts.getValue());
-	} else {
-	    return null;
-	}
+	return foundPart == null ? null : foundPart.resolve(parts.getValue());
     }
 
     protected SortedMap<String, AbstractPropInfo> getProps() {

@@ -61,19 +61,28 @@ public class PropResolutionTest {
 	final EntityInfo tgAverageFuelUsage = new EntityInfo(TgAverageFuelUsage.class);
 
 	tgPersonName.getProps().put("key", new PrimTypePropInfo("key", tgPersonName, String.class));
+	tgAuthor.getProps().put("key", new PrimTypePropInfo("key", tgAuthor, String.class));
 	tgAuthor.getProps().put("name", new EntityTypePropInfo("name", tgAuthor, tgPersonName));
 	tgAuthor.getProps().put("surname", new PrimTypePropInfo("surname", tgAuthor, String.class));
+	tgAuthorship.getProps().put("key", new PrimTypePropInfo("key", tgAuthorship, String.class));
 	tgAuthorship.getProps().put("author", new EntityTypePropInfo("author", tgAuthorship, tgAuthor));
 	tgAuthorship.getProps().put("bookTitle", new PrimTypePropInfo("bookTitle", tgAuthorship, String.class));
 
-	System.out.println(tgAuthorship.resolve("author"));
 	System.out.println(tgAuthorship.resolve("author1"));
-	System.out.println(tgAuthorship.resolve("author.name.key"));
-	System.out.println(tgAuthorship.resolve("author.name"));
-	System.out.println(tgAuthorship.resolve("author.name1"));
 	System.out.println(tgAuthorship.resolve("author1.name"));
 	System.out.println(tgAuthorship.resolve("author.name.key1"));
+	System.out.println(tgAuthorship.resolve("author.name1"));
+	System.out.println("-----------------------------------");
+	System.out.println(tgAuthorship.resolve("key"));
+	System.out.println(tgAuthorship.resolve("author"));
+	System.out.println(tgAuthorship.resolve("author.name"));
+	System.out.println(tgAuthorship.resolve("author.name.key"));
 	System.out.println(tgAuthorship.resolve("author.surname"));
 	System.out.println(tgAuthorship.resolve("bookTitle"));
+	System.out.println("-----------------------------------");
+	System.out.println(tgAuthor.resolve("key"));
+	System.out.println(tgAuthor.resolve("name"));
+	System.out.println(tgAuthor.resolve("name.key"));
+	System.out.println(tgAuthor.resolve("surname"));
     }
 }
