@@ -891,6 +891,15 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore
+    public void test_with_empty_values() {
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").in().values().model();
+	final List<TgVehicle> values = vehicleDao.getAllEntities(from(model).model());
+	// TODO should get exception here
+	assertEquals("Incorrect count", 2, values.size());
+    }
+
+    @Test
     public void test7() {
 	final AggregatedResultQueryModel model = select(TgVehicle.class).as("v").where().prop("v.key").in().values("CAR1", "CAR2").and().prop("v.price.amount").ge().val(100). //
 	yield().prop("v.price.amount").as("pa").yield().prop("v.lastMeterReading").as("lmr").modelAsAggregate();

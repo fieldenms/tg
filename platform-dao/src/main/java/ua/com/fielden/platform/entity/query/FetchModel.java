@@ -17,7 +17,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
@@ -46,6 +48,8 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	    case NONE:
 		if (isPersistedEntityType(getEntityType())) {
 		    includeIdAndVersionOnly();
+		} else if (isEntityType(getKeyType(getEntityType()))) {
+		    with(ID, true);
 		}
 		break;
 	    default:
