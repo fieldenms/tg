@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.eql.meta;
 
+import java.util.Date;
+
 import org.junit.Test;
 
 import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
@@ -36,6 +39,7 @@ public class PropResolutionTest {
 	final EntityInfo tgPersonName = new EntityInfo(TgPersonName.class);
 	final EntityInfo tgAuthor = new EntityInfo(TgAuthor.class);
 	final EntityInfo tgAuthorship = new EntityInfo(TgAuthorship.class);
+	final EntityInfo tgAuthorRoyalty = new EntityInfo(TgAuthorRoyalty.class);
 	final EntityInfo tgBogie = new EntityInfo(TgBogie.class);
 	final EntityInfo tgBogieClass = new EntityInfo(TgBogieClass.class);
 	final EntityInfo tgWagon = new EntityInfo(TgWagon.class);
@@ -67,6 +71,8 @@ public class PropResolutionTest {
 	tgAuthorship.getProps().put("key", new PrimTypePropInfo("key", tgAuthorship, String.class));
 	tgAuthorship.getProps().put("author", new EntityTypePropInfo("author", tgAuthorship, tgAuthor));
 	tgAuthorship.getProps().put("bookTitle", new PrimTypePropInfo("bookTitle", tgAuthorship, String.class));
+	tgAuthorRoyalty.getProps().put("authorship", new EntityTypePropInfo("authorship", tgAuthorRoyalty, tgAuthorship));
+	tgAuthorRoyalty.getProps().put("paymentDate", new PrimTypePropInfo("paymentDate", tgAuthorRoyalty, Date.class));
 
 	System.out.println(tgAuthorship.resolve("author1"));
 	System.out.println(tgAuthorship.resolve("author1.name"));
@@ -84,5 +90,10 @@ public class PropResolutionTest {
 	System.out.println(tgAuthor.resolve("name"));
 	System.out.println(tgAuthor.resolve("name.key"));
 	System.out.println(tgAuthor.resolve("surname"));
+
+	System.out.println(tgAuthorRoyalty.resolve("authorship.bookTitle"));
+	System.out.println(tgAuthorRoyalty.resolve("authorship.author.surname"));
+	System.out.println(tgAuthorRoyalty.resolve("authorship.author.name.key"));
+	System.out.println(tgAuthorRoyalty.resolve("paymentDate"));
     }
 }

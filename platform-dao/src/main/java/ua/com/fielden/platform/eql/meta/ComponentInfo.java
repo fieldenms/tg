@@ -7,11 +7,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-public class EntityInfo implements IResolvable {
-    private final Class<? extends AbstractEntity<?>> javaType;
+public class ComponentInfo implements IResolvable {
+    private final Class<?> javaType;
     private final SortedMap<String, AbstractPropInfo> props = new TreeMap<>();
 
-    public EntityInfo(final Class<? extends AbstractEntity<?>> javaType) {
+    public ComponentInfo(final Class<? extends AbstractEntity<?>> javaType) {
 	this.javaType = javaType;
     }
 
@@ -25,7 +25,7 @@ public class EntityInfo implements IResolvable {
 	return props;
     }
 
-    protected Class<? extends AbstractEntity<?>> getJavaType() {
+    protected Class<?> getJavaType() {
         return javaType;
     }
 

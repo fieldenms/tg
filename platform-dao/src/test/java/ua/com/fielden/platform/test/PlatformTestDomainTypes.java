@@ -13,6 +13,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
@@ -60,6 +61,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
 	add(TgPersonName.class);
 	add(TgAuthor.class);
 	add(TgAuthorship.class);
+	add(TgAuthorRoyalty.class);
 	add(TgBogie.class);
 	add(TgBogieClass.class);
 	add(TgWagon.class);

@@ -19,7 +19,7 @@ public class EntityTypePropInfo extends AbstractPropInfo  {
     }
 
     @Override
-    Object resolve(final String dotNotatedSubPropName) {
+    public Object resolve(final String dotNotatedSubPropName) {
 	return dotNotatedSubPropName != null ? getPropEntityInfo().resolve(dotNotatedSubPropName) : this;
     }
 }
