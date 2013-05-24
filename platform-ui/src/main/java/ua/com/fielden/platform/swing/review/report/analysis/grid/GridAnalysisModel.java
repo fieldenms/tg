@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid;
 
+import static ua.com.fielden.platform.report.query.generation.GridAnalysisQueryGenerator.property;
+import static ua.com.fielden.platform.report.query.generation.GridAnalysisQueryGenerator.where;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -7,6 +10,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
@@ -22,13 +26,18 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.report.query.generation.AbstractQueryComposer;
 import ua.com.fielden.platform.report.query.generation.GridAnalysisQueryGenerator;
+import ua.com.fielden.platform.report.query.generation.IQueryComposer;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.review.DynamicPropertyAnalyser;
@@ -41,7 +50,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReviewModel<T, CDTME, IAbstractAnalysisDomainTreeManager> {
     private final long TRANSACTION_ENTITY_DELTA_DELAY = 6000;
     /** holds the last executed query */
-    private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries;
+    private Pair<IQueryComposer<T>, IQueryComposer<T>> analysisQueries;
     private final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser;
 
     /******* Delta related stuff ********/
@@ -226,7 +235,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * @param queries
      * @return
      */
-    protected Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> enhanceByTransactionDateBoundaries(final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries, final Date oldNow, final Date now) {
+    protected Pair<IQueryComposer<T>, IQueryComposer<T>> enhanceByTransactionDateBoundaries(final Date oldNow, final Date now) {
 	// queries.getKey()!   .getQueryModel(). setParam transDate (left == null ? [---, right] : [left, right])
 	if (queryCustomiser.getQueryGenerator(this) instanceof GridAnalysisQueryGenerator) {
 	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> qGenerator = (GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>) queryCustomiser.getQueryGenerator(this);
@@ -253,7 +262,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    }
 
 	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> newQGenerator = new GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(root, cdtmaeCopy);
-	    final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> newQueries = newQGenerator.generateQueryModel().getQueries();
+	    final List<IQueryComposer<T>> newQueries = newQGenerator.generateQueryModel().getQueries();
 	    if (newQueries.size() == 2) {
 		// TODO total query should remain the same (to get updated totals) and other query should be filtered by transaction date (from NOW)
 		return new Pair<>(newQueries.get(0), newQueries.get(1));
@@ -287,7 +296,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 		deltaRetriever.stop();
 	    }
 	    now = new Date();
-	    final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = enhanceByTransactionDateBoundaries(analysisQueries, null, now);
+	    final Pair<IQueryComposer<T>, IQueryComposer<T>> queries = enhanceByTransactionDateBoundaries(null, now);
 	    result = runQuery((EntityUtils.equalsEx(analysisQueries, queries)) ? getCriteria() : getUpdatedCriteria(), queries);
 	} else {
 	    result = runQuery(getCriteria(), analysisQueries);
@@ -323,14 +332,14 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * @param analysisQueries
      * @return
      */
-    private Result runQuery(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> analysisQueries) {
+    private Result runQuery(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final Pair<IQueryComposer<T>, IQueryComposer<T>> analysisQueries) {
 	final int pageSize = getAnalysisView().getPageSize();
 	final IPage<T> newPage;
 	try {
 	    if(analysisQueries.getValue() == null) {
-		newPage = criteria.firstPage(analysisQueries.getKey(), pageSize);
+		newPage = criteria.firstPage(analysisQueries.getKey().composeQuery(), pageSize);
 	    } else {
-		newPage = criteria.firstPage(analysisQueries.getKey(), analysisQueries.getValue(), pageSize);
+		newPage = criteria.firstPage(analysisQueries.getKey().composeQuery(), analysisQueries.getValue().composeQuery(), pageSize);
 	    }
 	} catch (final Result ex) {
 	    return ex;
@@ -353,8 +362,54 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	}
     }
 
-    protected T getEntityById(final Long id) {
-	return getCriteria().getEntityById(id);
+    /**
+     * Returns entities by their id's using the current query and fetch model.
+     * Returns empty list if there are entities those satisfies current query model.
+     *
+     * @param entities
+     * @return
+     */
+    protected List<T> getUpdatedEntitiesById(final List<Long> ids) {
+	final boolean isSynthetic = Reflector.isSynthetic(getCriteria().getEntityClass());
+	final boolean isEntityKey = EntityUtils.isEntityType(AnnotationReflector.getKeyType(getCriteria().getEntityClass()));
+	if (analysisQueries != null) {
+	    if(!isSynthetic && !ids.isEmpty()) {
+		return getCriteria().getAllEntities(previousQueryWithIdParam("id", ids).composeQuery());
+	    } else if(isSynthetic && isEntityKey && !ids.isEmpty()) {
+		return getCriteria().getAllEntities(previousQueryWithIdParam("key.id", ids).composeQuery());
+	    } else if(isSynthetic && !isEntityKey && ids.isEmpty()){
+		reExecuteAnalysisQuery();
+	    }
+	}
+	return new ArrayList<>();
+    }
+
+    private IQueryComposer<T> previousQueryWithIdParam(final String idParam, final List<Long> ids) {
+	if(analysisQueries != null && analysisQueries.getKey().getQuery() != null) {
+	    return new AbstractQueryComposer<T>() {
+
+		@Override
+		public ICompleted<T> getQuery() {
+		    return where(analysisQueries.getKey().getQuery()).prop(property(idParam)).in().values(ids.toArray());
+		}
+
+		@Override
+		public fetch<T> getFetch() {
+		    return analysisQueries.getKey().getFetch();
+		}
+
+		@Override
+		public OrderingModel getOrdering() {
+		    return null;
+		}
+
+		@Override
+		public Map<String, Object> getParams() {
+		    return analysisQueries.getKey().getParams();
+		}
+	    };
+	}
+	throw new IllegalStateException("The previous analysis query wasn't specified!");
     }
 
     private Result canCreateQuery() {
@@ -363,7 +418,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     @Override
     protected Result exportData(final String fileName) throws IOException {
-	final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel;
+	final IQueryComposer<T> queryModel;
 	try {
 	    queryModel = createQueryExecutionModel().getKey();
 	} catch(final Result result){
@@ -377,7 +432,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    propertyNames.add(propertyAnalyser.getCriteriaFullName());
 	    propertyTitles.add(mapping.getPropertyTitle());
 	}
-	getCriteria().export(fileName, queryModel, propertyNames.toArray(new String[] {}), propertyTitles.toArray(new String[] {}));
+	getCriteria().export(fileName, queryModel.composeQuery(), propertyNames.toArray(new String[] {}), propertyTitles.toArray(new String[] {}));
 	return Result.successful(this);
     }
 
@@ -396,12 +451,12 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      *
      * @return
      */
-    public final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> createQueryExecutionModel(){
+    public final Pair<IQueryComposer<T>, IQueryComposer<T>> createQueryExecutionModel(){
 	final Result queryGenerationResult = canCreateQuery();
 	if(!queryGenerationResult.isSuccessful()){
 	    throw queryGenerationResult;
 	}
-	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = queryCustomiser.getQueryGenerator(this).generateQueryModel().getQueries();
+	final List<IQueryComposer<T>> queries = queryCustomiser.getQueryGenerator(this).generateQueryModel().getQueries();
 	if (queries.size() == 2) {
 	    return new Pair<>(queries.get(0), queries.get(1));
 	} else {
@@ -419,7 +474,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
     }
 
     protected Result getDelta(final Date old, final Date oldNow) {
-	final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = enhanceByTransactionDateBoundaries(analysisQueries, old, oldNow);
+	final Pair<IQueryComposer<T>, IQueryComposer<T>> queries = enhanceByTransactionDateBoundaries(old, oldNow);
 	final Result result = runQuery(getUpdatedCriteria(), queries);
 	return result;
     }

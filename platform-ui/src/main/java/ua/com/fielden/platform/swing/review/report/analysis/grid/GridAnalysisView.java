@@ -8,6 +8,7 @@ import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.Action;
@@ -44,6 +45,7 @@ import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigu
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManager> implements IUmViewOwner, IBlockingLayerProvider {
@@ -57,16 +59,6 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     private final Action openMasterWithNewEntityCommand;
     private final Action openMasterAndEditEntityCommand;
     private final Action deleteEntityCommand;
-
-    private IUmViewOwner customUmViewOwner;
-
-    public IUmViewOwner getCustomUmViewOwner() {
-        return customUmViewOwner;
-    }
-
-    public void setCustomUmViewOwner(final IUmViewOwner customUmViewOwner) {
-        this.customUmViewOwner = customUmViewOwner;
-    }
 
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final GridConfigurationView<T, CDTME> owner) {
 	super(model, owner);
@@ -233,7 +225,6 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      *
      * @return
      */
-    @SuppressWarnings("unchecked")
     public List<T> getEnhancedSelectedEntities(){
 	final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
 	return tableModel.getSelectedEntities();
@@ -269,13 +260,17 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	tableModel.deselectRows2();
     }
 
+    public void updateEntry(final T entity) {
+	updateEntries(Arrays.asList(entity));
+    }
+
     /**
      * Updates the specified entity in the grid inspector.
      *
      * @param entity
      */
-    public void updateEntry(final T entity) {
-	new BlockingLayerCommand<T>(null, getBlockingLayer()) {
+    public void updateEntries(final List<T> entities) {
+	new BlockingLayerCommand<List<T>>(null, getBlockingLayer()) {
 
 	    private static final long serialVersionUID = 5213912604843799656L;
 
@@ -289,22 +284,33 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    }
 
 	    @Override
-	    protected T action(final ActionEvent e) throws Exception {
-		return getModel().getEntityById(entity.getId());
+	    protected List<T> action(final ActionEvent e) throws Exception {
+		final List<Long> ids = new ArrayList<>();
+		for(final T entity : entities) {
+		    if(entity.getId() != null){
+			ids.add(entity.getId());
+		    }
+		}
+		return getModel().getUpdatedEntitiesById(ids);
 	    }
 
 	    @Override
-	    protected void postAction(final T value) {
+	    protected void postAction(final List<T> updatedEntities) {
 		final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
-		if (value != null) {
-		    tableModel.refresh(value);
-		    final int row = tableModel.getRowOf(value);
-		    if (row >= 0) {
-			tableModel.selectRow(row);
+		final List<T> entitiesToRemove = new ArrayList<>();
+		final List<T> entitiesToRefresh = new ArrayList<>();
+		for(final T entity : entities) {
+		    final int indexOf = EntityUtils.indexOfById(updatedEntities, entity);
+		    if(indexOf == -1) {
+			entitiesToRemove.add(entity);
+		    } else {
+			entitiesToRefresh.add(updatedEntities.get(indexOf));
 		    }
 		}
+		tableModel.removeInstances(entitiesToRemove);
+		tableModel.refresh(entitiesToRefresh);
 		enableRelatedActions(true, false);
-		super.postAction(value);
+		super.postAction(updatedEntities);
 	    };
 
 	    @Override
@@ -312,20 +318,19 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 		super.handlePreAndPostActionException(ex);
 		enableRelatedActions(true, false);
 	    }
+
 	}.actionPerformed(null);
 
     }
 
     @Override
     public <E extends AbstractEntity<?>> void notifyEntityChange(final E entity) {
-	if (customUmViewOwner != null) {
-	    customUmViewOwner.notifyEntityChange(entity);
-	} else if (entity.isPersisted()) {
+	if (entity.isPersisted()) {
 	    SwingUtilitiesEx.invokeLater(new Runnable() {
-		@SuppressWarnings("unchecked")
 		@Override
 		public void run() {
-		    updateEntry((T) entity);
+		    final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
+		    updateEntries(tableModel.instancesForComponent(entity));
 		}
 	    });
 	}

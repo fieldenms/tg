@@ -3,11 +3,9 @@ package ua.com.fielden.platform.report.query.generation;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class MultipleDimensionCubeQueryGenerator<T extends AbstractEntity<?>> extends GroupAnalysisQueryGenerator<T> {
 
@@ -32,7 +30,7 @@ public class MultipleDimensionCubeQueryGenerator<T extends AbstractEntity<?>> ex
 	final List<String> rowDistributionProperties = adtm().getFirstTick().usedProperties(getRoot());
 	final List<String> columnDistributionProperties = adtm().getFirstTick().getSecondUsageManager().usedProperties(getRoot());
 
-	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> resultQueryList = new ArrayList<>();
+	final List<IQueryComposer<T>> resultQueryList = new ArrayList<>();
 	final List<String> rowGroups = new ArrayList<>();
 	for(int rowIndex = -1; rowIndex < rowDistributionProperties.size(); rowIndex++){
 	    if(rowIndex >= 0){

@@ -3,11 +3,9 @@ package ua.com.fielden.platform.report.query.generation;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class ChartAnalysisQueryGenerator<T extends AbstractEntity<?>> extends GroupAnalysisQueryGenerator<T> {
 
@@ -25,7 +23,7 @@ public class ChartAnalysisQueryGenerator<T extends AbstractEntity<?>> extends Gr
 		adtm().getSecondTick().checkedProperties(getRoot()),//
 		adtm().getFirstTick().usedProperties(getRoot()),//
 		adtm().getSecondTick().usedProperties(getRoot()));
-	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> result = new ArrayList<>();
+	final List<IQueryComposer<T>> result = new ArrayList<>();
 	result.add(createQueryAndGroupBy(classBundle.getGeneratedClass(), adtm().getFirstTick().usedProperties(getRoot())));
 	return new AnalysisResultClassBundle<>(getCdtme(), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), result);
     }

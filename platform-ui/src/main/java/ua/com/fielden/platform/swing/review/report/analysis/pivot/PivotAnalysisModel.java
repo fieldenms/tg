@@ -284,7 +284,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
      * @return
      */
     private List<T> getGroupList(final AnalysisResultClassBundle<T> classBundle, final int index){
-	return getCriteria().run(classBundle.getCdtmeWithWhichAnalysesQueryHaveBeenCreated(), classBundle.getQueries().get(index), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation());
+	return getCriteria().run(classBundle.getCdtmeWithWhichAnalysesQueryHaveBeenCreated(), classBundle.getQueries().get(index).composeQuery(), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation());
     }
 
     private class PivotTreeTableModelEx extends PivotTreeTableModel {

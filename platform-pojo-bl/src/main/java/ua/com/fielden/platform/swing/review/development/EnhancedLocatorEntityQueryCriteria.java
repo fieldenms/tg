@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.swing.review.development;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
 import java.lang.reflect.Field;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
@@ -30,8 +31,6 @@ import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, DAO> {
 
     private static final long serialVersionUID = -9199540944743417928L;
@@ -45,7 +44,6 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
     public final List<T> runLocatorQuery(final int resultSize, final Object kerOrDescValue, final fetch<?> fetch, final Pair<String, Object>... otherPropValues) {
 	final Class<?> root = getEntityClass();
 	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
 	final SearchBy searchBy = getCentreDomainTreeMangerAndEnhancer().getSearchBy();
 	ICompoundCondition0<T> compondCondition = null;
 

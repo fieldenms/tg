@@ -262,7 +262,7 @@ public class DashboardRow<T extends AbstractEntity<?>> {
 	final IReportQueryGenerator<T> analysisQueryGenerator = new ChartAnalysisQueryGenerator<>(rootType, cdtme, sentinelManager());
 	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria = criteriaGenerator.generateCentreQueryCriteria(rootType, cdtme);
 	final AnalysisResultClassBundle<T> classBundle = analysisQueryGenerator.generateQueryModel();
-	return criteria.run(classBundle.getQueries().get(0), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), Integer.MAX_VALUE);
+	return criteria.run(classBundle.getQueries().get(0).composeQuery(), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), Integer.MAX_VALUE);
     }
 
     public TrafficLightsModel getModel() {

@@ -13,7 +13,10 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.swing.review.DynamicParamBuilder;
@@ -46,7 +49,7 @@ public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> i
     }
 
     @SuppressWarnings("unchecked")
-    protected QueryExecutionModel<T, EntityResultQueryModel<T>> createQueryAndGroupBy(final Class<T> genClass, final List<String> distributionProperties){
+    protected IQueryComposer<T> createQueryAndGroupBy(final Class<T> genClass, final List<String> distributionProperties){
 	final Class<T> managedType = (Class<T>)getCdtme().getEnhancer().getManagedType(getRoot());
 	final List<String> aggregationProperties = adtm().getSecondTick().usedProperties(getRoot());
 
@@ -55,7 +58,7 @@ public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> i
 
 	//Create base sub-query and query models.
 	final EntityResultQueryModel<T> subQueryModel = DynamicQueryBuilder.createQuery(managedType, ReportQueryGenerationUtils.createQueryProperties(getRoot(), getCdtme())).model();
-	//TODO the DynamicQueryBuilder.createAggregationQuery method must not receive genClass this is interim solution in order to distinguish money properties and add .mount prefix. 
+	//TODO the DynamicQueryBuilder.createAggregationQuery method must not receive genClass this is interim solution in order to distinguish money properties and add .mount prefix.
 	final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, distributionProperties, genClass, yieldMap).modelAsEntity(genClass);
 
 	final List<Pair<String, Ordering>> analysisOrderingProperties = new ArrayList<>();
@@ -76,7 +79,7 @@ public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> i
 	.with(DynamicFetchBuilder.createFetchOnlyModel(genClass, new HashSet<String>(yieldMap.values())))//
 	.with(DynamicParamBuilder.buildParametersMap(managedType, paramMap)).model();
 
-	return resultQuery;
+	return createQueryComposer(resultQuery);
     }
 
     /**
@@ -88,8 +91,48 @@ public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> i
     private Map<String, String> createAnalysisPropertyMap(final List<String> properties) {
 	final Map<String, String> propertiesMap = new LinkedHashMap<>();
 	for(final String property : properties){
-	    propertiesMap.put(property, AnalysisResultClass.getAnalysisPropertyName(property));
+	    propertiesMap.put(property, getAnalysisPropertyName(property));
 	}
 	return propertiesMap;
+    }
+
+    /**
+     * Returns the name of the property generated with {@link AnalysisResultClass} for the specified analysis property name.
+     *
+     * @param property
+     * @return
+     */
+    private String getAnalysisPropertyName(final String property) {
+	return AnalysisResultClass.getAnalysisPropertyName(property);
+    }
+
+    private IQueryComposer<T> createQueryComposer(final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery) {
+	return new IQueryComposer<T>() {
+
+	    @Override
+	    public ICompleted<T> getQuery() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	    }
+
+	    @Override
+	    public fetch<T> getFetch() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	    }
+
+	    @Override
+	    public OrderingModel getOrdering() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	    }
+
+	    @Override
+	    public Map<String, Object> getParams() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	    }
+
+	    @Override
+	    public QueryExecutionModel<T, EntityResultQueryModel<T>> composeQuery() {
+		return resultQuery;
+	    }
+	};
     }
 }

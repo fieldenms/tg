@@ -80,7 +80,7 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	final AnalysisResultClassBundle<T> classBundle = chartAnalysisQueryGenerator.generateQueryModel();
 
-	final IPage<T> result = getCriteria().run(classBundle.getQueries().get(0), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), getAnalysisView().getPageSize());
+	final IPage<T> result = getCriteria().run(classBundle.getQueries().get(0).composeQuery(), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), getAnalysisView().getPageSize());
 	groupAnalysisDataProvider.setUsedProperties(distributionProperties, aggregationProperties);
 	getPageHolder().newPage(result);
 	return Result.successful(result);

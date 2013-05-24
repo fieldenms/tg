@@ -137,7 +137,7 @@ public class ChartAnalysisQueryGenerationTest {
 		.with(orderingModel)//
 		.with(fetchModel).model();
 
-	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0));
+	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0).composeQuery());
 
 	firstTick.use(MasterDomainEntity.class, "firstGroup", false);
 
@@ -180,7 +180,7 @@ public class ChartAnalysisQueryGenerationTest {
 		.with(orderingModel)//
 		.with(fetchModel).model();
 
-	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0));
+	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0).composeQuery());
 
 	firstTick.use(MasterDomainEntity.class, "entityProp.entityProp.secondGroup", false);
 
@@ -226,7 +226,7 @@ public class ChartAnalysisQueryGenerationTest {
 	final QueryExecutionModel<MasterDomainEntity, EntityResultQueryModel<MasterDomainEntity>> resultQuery = from(queryModel)
 		.with(orderingModel)//
 		.with(fetchModel).model();
-	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0));
+	Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0).composeQuery());
 
 
 	firstTick.use(MasterDomainEntity.class, "entityProp.entityProp.simpleEntityProp", false);

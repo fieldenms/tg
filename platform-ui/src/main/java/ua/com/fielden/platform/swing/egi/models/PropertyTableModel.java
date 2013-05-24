@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals.GRA
 import java.awt.Component;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -22,6 +23,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.helpers.DateTimeDateFormat;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
@@ -32,12 +34,14 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.coloring.EgiColoringScheme;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
 import ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.jidesoft.grid.HierarchicalTable;
 import com.jidesoft.grid.HierarchicalTableComponentFactory;
@@ -291,14 +295,25 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      * @return
      */
     public PropertyTableModel<T> refresh(final T instance) {
+	return refresh(Arrays.asList(instance));
+    }
+
+    /**
+     * Refreshes each instance from instances in this table model see {@link #refresh(AbstractEntity)}.
+     *
+     * @param instances
+     * @return
+     */
+    public PropertyTableModel<T> refresh(final List<T> entities) {
 	final List<T> instances = new ArrayList<T>();
 	for (final List<T> group : groups) {
 	    for (final T currElem : group) {
-		// if currElem is equal to the one to be refreshed, then simply adding last one to the instances list
+		// if currElem is among entities to be refreshed, then simply adding that entity to the instances list
 		// it is considered that entity ID is assigned from the same set for all entity types.
 		// therefore condition currElem.getType().equals(instance.getType()) is not requried
-		if (areEqual(instance, currElem)) {
-		    instances.add(instance);
+		final int indexOf = EntityUtils.indexOfById(entities, currElem);
+		if (indexOf != -1) {
+		    instances.add(entities.get(indexOf));
 		} else {
 		    // otherwise adding currElem
 		    instances.add(currElem);
@@ -310,14 +325,27 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	return this;
     }
 
+    /**
+     * See {@link #removeInstances(List)}.
+     *
+     * @param instances
+     */
     @SuppressWarnings("unchecked")
     public void removeInstances(final T... instances) {
-	final List<T> instancesToRemove = asList(instances);
+	removeInstances(asList(instances));
+    }
+
+    /**
+     * Removes the specified instance from table model.
+     *
+     * @param instancesToRemove
+     */
+    public void removeInstances(final List<T> instancesToRemove) {
 	final List<T> currInstances = instances();
 	for (final Iterator<T> iter = currInstances.iterator(); iter.hasNext();) {
 	    final T instance = iter.next();
 	    for (final T instanceToRemove : instancesToRemove) {
-		if (areEqual(instance, instanceToRemove)) {
+		if (EntityUtils.areEqual(instance, instanceToRemove)) {
 		    iter.remove();
 		    break;
 		}
@@ -325,6 +353,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	}
 
 	regroup(currInstances);
+
     }
 
     /**
@@ -573,38 +602,10 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
     }
 
     public void select(final T instance) {
-	if (getIndexOf(instance) != -1) {
-	    selectRow(getIndexOf(instance));
+	final int indexOf = EntityUtils.indexOfById(instances(), instance);
+	if (indexOf != -1) {
+	    selectRow(indexOf);
 	}
-    }
-
-    /**
-     * Returns index of the passed instance in instance list. If passed instance is not in the list, then -1 value is returned.
-     *
-     * @param instance
-     * @return
-     */
-    public int getIndexOf(final T instance) {
-	final List<T> instances = instances();
-	for (int index = 0; index < instances.size(); index++) {
-	    final T currElem = instances.get(index);
-	    if (areEqual(instance, currElem)) {
-		return index;
-	    }
-	}
-
-	return -1;//instances().indexOf(instance);
-    }
-
-    /**
-     * A method that compares two instances by their ID if present, otherwise uses their equality.
-     *
-     * @param instance
-     * @param currElem
-     * @return
-     */
-    private boolean areEqual(final T instance, final T currElem) {
-	return (instance.getId() != null && instance.getId().equals(currElem.getId())) || (instance.getId() == null && instance.equals(currElem));
     }
 
     /**
@@ -614,7 +615,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      * @return
      */
     public int getRowOf(final T instance) {
-	return getRow(getIndexOf(instance));
+	return getRow(EntityUtils.indexOfById(instances(), instance));
     }
 
     /**
@@ -659,6 +660,63 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
     public T instance(final int row) {
 	final int instanceIndex = getIndex(row);
 	return instanceIndex != -1 ? instances().get(instanceIndex) : null;
+    }
+
+    /**
+     * Returns the list of this table model instances those have component equal to the given value.
+     *
+     * @param value
+     * @return
+     */
+    public <E extends AbstractEntity<?>> List<T> instancesForComponent(final E value) {
+	final List<T> instancesWithComponent = new ArrayList<>();
+
+	for (final List<T> group : groups) {
+	    for (final T currElem : group) {
+
+		if(EntityUtils.areEqual(currElem, value) || instanceContainsComponent(currElem, value)) {
+		    instancesWithComponent.add(currElem);
+		}
+	    }
+	}
+
+	return instancesWithComponent;
+    }
+
+    /**
+     * Returns the value that indicates whether given instance has {@link AbstractEntity} property equal to the given component or not.
+     *
+     * @param instance
+     * @param component
+     * @return
+     */
+    private boolean instanceContainsComponent(final AbstractEntity<?> instance, final AbstractEntity<?> component) {
+	for(int column = 0; column < getColumnCount(); column++) {
+	    if (componentForPropertyIsEqualInstance(component, propertyColumnMappings.get(column).getPropertyName(), instance)) {
+		return true;
+	    }
+	}
+	return false;
+    }
+
+    /**
+     * Returns value that indicates whether given instance has property or sub-property equal to the component.
+     *
+     * @param component
+     * @param propertyName
+     * @param instance
+     * @return
+     */
+    private boolean componentForPropertyIsEqualInstance(final AbstractEntity<?> component, final String propertyName, final AbstractEntity<?> instance) {
+	final Object value = StringUtils.isEmpty(propertyName) ? instance : instance.get(propertyName);
+	if(value instanceof AbstractEntity) {
+	    return EntityUtils.areEqual(component, (AbstractEntity)value);
+	} else {
+	    return componentForPropertyIsEqualInstance(//
+		    component, //
+		    PropertyTypeDeterminator.isDotNotation(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : "" ,//
+		    instance);
+	}
     }
 
     /**

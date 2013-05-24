@@ -49,7 +49,7 @@ public class MultipleDecModel<T extends AbstractEntity<?>> extends AbstractAnaly
 
 	final AnalysisResultClassBundle<T> classBundle = chartAnalysisQueryGenerator.generateQueryModel();
 
-	final List<T> result = getCriteria().run(classBundle.getCdtmeWithWhichAnalysesQueryHaveBeenCreated(), classBundle.getQueries().get(0), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation());
+	final List<T> result = getCriteria().run(classBundle.getCdtmeWithWhichAnalysesQueryHaveBeenCreated(), classBundle.getQueries().get(0).composeQuery(), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation());
 	multipleDecDataProvider.setUsedProperties(distributionProperties, aggregationProperties);
 	SwingUtilitiesEx.invokeLater(new Runnable() {
 

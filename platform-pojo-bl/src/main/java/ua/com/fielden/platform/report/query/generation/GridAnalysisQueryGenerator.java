@@ -1,34 +1,27 @@
 package ua.com.fielden.platform.report.query.generation;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
-
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.swing.review.DynamicParamBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -51,23 +44,15 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
 
     @Override
     public AnalysisResultClassBundle<T> generateQueryModel() {
-	final IAddToResultTickManager resultTickManager = cdtme.getSecondTick();
-	final IAddToCriteriaTickManager criteriaTickManager = cdtme.getFirstTick();
-	final IDomainTreeEnhancer enhancer = cdtme.getEnhancer();
-	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(entityClass(), resultTickManager, enhancer);
-	final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(entityClass(), enhancedType(), criteriaTickManager);
-	final EntityResultQueryModel<T> notOrderedQuery = createQuery().model();
-	final List<QueryExecutionModel<T, EntityResultQueryModel<T>>> queryModels = new ArrayList<>();
-	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
-		.with(DynamicOrderingBuilder.createOrderingModel(enhancedType(), resultTickManager.orderedProperties(root)))//
-		.with(DynamicFetchBuilder.createFetchOnlyModel(enhancedType(), separatedFetch.getKey()))//
-		.with(DynamicParamBuilder.buildParametersMap(enhancedType(), paramMap)).model();
-	queryModels.add(resultQuery);
-	if (!separatedFetch.getValue().isEmpty()) {
-	    final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = from(notOrderedQuery)//
-		    .with(DynamicFetchBuilder.createTotalFetchModel(enhancedType(), separatedFetch.getValue()))//
-		    .with(DynamicParamBuilder.buildParametersMap(enhancedType(), paramMap)).model();
-	    queryModels.add(totalQuery);
+	final ICompleted<T> query = createQuery();
+	final fetch<T> fetchModel = createFetchModel();
+	final fetch<T> totalFetchModel = createTotalFetchModel();
+	final OrderingModel ordering = createOrderingModel();
+	final Map<String, Object> propValues = createParamValues();
+	final List<IQueryComposer<T>> queryModels = new ArrayList<>();
+	queryModels.add(createQueryComposer(query, fetchModel, ordering, propValues));
+	if (totalFetchModel != null) {
+	    queryModels.add(createQueryComposer(query, totalFetchModel, null, propValues));
 	}
 	return new AnalysisResultClassBundle<>(cdtme, null, null, queryModels);
     }
@@ -98,7 +83,52 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
      * @return
      */
     public ICompleted<T> createQuery(){
-	return DynamicQueryBuilder.createQuery(enhancedType(), createQueryProperties());
+	return DynamicQueryBuilder.createQuery(enhancedType(), ReportQueryGenerationUtils.createQueryProperties(root, cdtme));
+    }
+
+    /**
+     * Returns the {@link fetch} instance that is used for query generation.
+     *
+     * @return
+     */
+    public fetch<T> createFetchModel() {
+	final IAddToResultTickManager resultTickManager = cdtme.getSecondTick();
+	final IDomainTreeEnhancer enhancer = cdtme.getEnhancer();
+	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(entityClass(), resultTickManager, enhancer);
+	return DynamicFetchBuilder.createFetchOnlyModel(enhancedType(), separatedFetch.getKey());
+    }
+
+    /**
+     * Returns the {@link fetch} model instance for summary query. If there are no total properties then null will be returned.
+     *
+     * @return
+     */
+    public fetch<T> createTotalFetchModel() {
+	final IAddToResultTickManager resultTickManager = cdtme.getSecondTick();
+	final IDomainTreeEnhancer enhancer = cdtme.getEnhancer();
+	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(entityClass(), resultTickManager, enhancer);
+	return separatedFetch.getValue().isEmpty() ? null : DynamicFetchBuilder.createTotalFetchModel(enhancedType(), separatedFetch.getValue());
+    }
+
+    /**
+     * Creates the {@link OrderingModel} instance that is used for query generation.
+     *
+     * @return
+     */
+    public OrderingModel createOrderingModel() {
+	final IAddToResultTickManager resultTickManager = cdtme.getSecondTick();
+	return DynamicOrderingBuilder.createOrderingModel(enhancedType(), resultTickManager.orderedProperties(root));
+    }
+
+    /**
+     * Returns the map between parameter name and it's value needed for query generation.
+     *
+     * @return
+     */
+    public Map<String, Object> createParamValues() {
+	final IAddToCriteriaTickManager criteriaTickManager = cdtme.getFirstTick();
+	final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(entityClass(), enhancedType(), criteriaTickManager);
+	return DynamicParamBuilder.buildParametersMap(enhancedType(), paramMap);
     }
 
     /**
@@ -125,54 +155,45 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
 	return DynamicQueryBuilder.createConditionProperty(propertyName);
     }
 
-    /**
-     * Converts existing properties model (which has separate properties for from/to, is/isNot and so on)
-     * into new properties model (which has single abstraction for one criterion).
-     *
-     * @param properties
-     * @return
-     */
-    private final List<QueryProperty> createQueryProperties() {
-        final List<QueryProperty> queryProperties = new ArrayList<QueryProperty>();
-        for (final String actualProperty : cdtme.getFirstTick().checkedProperties(entityClass())) {
-            if (!AbstractDomainTree.isPlaceholder(actualProperty)) {
-        	queryProperties.add(createQueryProperty(actualProperty));
-            }
-        }
-        return queryProperties;
-    }
-
-    /**
-     * Converts existing properties model (which has separate properties for from/to, is/isNot and so on)
-     * into new properties model (which has single abstraction for one criterion).
-     *
-     * @param properties
-     * @return
-     */
-    private QueryProperty createQueryProperty(final String actualProperty) {
-	final IAddToCriteriaTickManager tickManager = cdtme.getFirstTick();
-	final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(enhancedType(), actualProperty);
-
-	queryProperty.setValue(tickManager.getValue(entityClass(), actualProperty));
-	if (AbstractDomainTree.isDoubleCriterionOrBoolean(enhancedType(), actualProperty)) {
-	    queryProperty.setValue2(tickManager.getValue2(entityClass(), actualProperty));
-	}
-	if (AbstractDomainTree.isDoubleCriterion(enhancedType(), actualProperty)) {
-	    queryProperty.setExclusive(tickManager.getExclusive(entityClass(), actualProperty));
-	    queryProperty.setExclusive2(tickManager.getExclusive2(entityClass(), actualProperty));
-	}
-	final Class<?> propertyType = StringUtils.isEmpty(actualProperty) ? enhancedType() : PropertyTypeDeterminator.determinePropertyType(enhancedType(), actualProperty);
-	if (EntityUtils.isDate(propertyType)) {
-	    queryProperty.setDatePrefix(tickManager.getDatePrefix(entityClass(), actualProperty));
-	    queryProperty.setDateMnemonic(tickManager.getDateMnemonic(entityClass(), actualProperty));
-	    queryProperty.setAndBefore(tickManager.getAndBefore(entityClass(), actualProperty));
-	}
-	queryProperty.setOrNull(tickManager.getOrNull(entityClass(), actualProperty));
-	queryProperty.setNot(tickManager.getNot(entityClass(), actualProperty));
-	return queryProperty;
-    }
-
     public CDTME getCdtme() {
-	return cdtme;
+        return cdtme;
+    }
+
+    /**
+     * Creates query composer for the specified query ,fetch model, ordering model and map between parameter names and their values.
+     *
+     * @param query
+     * @param fetchModel
+     * @param ordering
+     * @param paramValues
+     * @return
+     */
+    private IQueryComposer<T> createQueryComposer(//
+	    final ICompleted<T> query, //
+	    final fetch<T> fetchModel, //
+	    final OrderingModel ordering, //
+	    final Map<String, Object> paramValues) {
+	return new AbstractQueryComposer<T>() {
+
+	    @Override
+	    public ICompleted<T> getQuery() {
+		return query;
+	    }
+
+	    @Override
+	    public fetch<T> getFetch() {
+		return fetchModel;
+	    }
+
+	    @Override
+	    public OrderingModel getOrdering() {
+		return ordering;
+	    }
+
+	    @Override
+	    public Map<String, Object> getParams() {
+		return paramValues;
+	    }
+	};
     }
 }

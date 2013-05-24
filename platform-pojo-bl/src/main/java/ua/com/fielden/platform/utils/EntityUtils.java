@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.utils;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -35,8 +38,6 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
-import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 public class EntityUtils {
     private final static Logger logger = Logger.getLogger(EntityUtils.class);
@@ -124,7 +125,58 @@ public class EntityUtils {
     }
 
     /**
-     * this method chooses appropriate Converter for any types of property. Even for properties of [AbstractEntity's descendant type] or List<[AbstractEntity's descendant type]> or
+     * Null-safe equals based on the {@link AbstractEntity}'s id property.
+     * If id property is not present in both entities then default equals for entities will be called.
+     *
+     * @param entity1
+     * @param entity2
+     * @return
+     */
+    public static boolean areEqual(final AbstractEntity<?> entity1, final AbstractEntity<?> entity2) {
+	if (entity1 != null && entity2 != null) {
+	    if (entity1.getId() == null && entity2.getId() == null) {
+		return entity1.equals(entity2);
+	    } else {
+		return safeEquals(entity1.getId(), entity2.getId());
+	    }
+	}
+	return entity1 == entity2;
+    }
+
+    /**
+     * Returns value that indicates whether entity is among entities. The equality comparison is based on {@link #areEquals(AbstractEntity, AbstractEntity)} method
+     *
+     * @param entities
+     * @param entity
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> boolean containsById(final List<T> entities, final T entity) {
+	for (final AbstractEntity<?> e : entities) {
+	    if(areEqual(e, entity)) {
+		return true;
+	    }
+	}
+	return false;
+    }
+
+    /**
+     * Returns index of the entity in the entities list. The equality comparison is based on the {@link #areEquals(AbstractEntity, AbstractEntity)} method.
+     *
+     * @param entities
+     * @param entity
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> int indexOfById(final List<T> entities, final T entity) {
+	for (int index = 0; index < entities.size(); index++) {
+	    if(areEqual(entities.get(index), entity)) {
+		return index;
+	    }
+	}
+	return -1;
+    }
+
+    /**
+     * This method chooses appropriate Converter for any types of property. Even for properties of [AbstractEntity's descendant type] or List<[AbstractEntity's descendant type]> or
      * List<String>
      *
      * @param entity
