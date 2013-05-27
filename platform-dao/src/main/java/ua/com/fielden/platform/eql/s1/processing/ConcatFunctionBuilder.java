@@ -8,6 +8,7 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.Concat;
 import ua.com.fielden.platform.eql.s1.elements.ISingleOperand;
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ConcatFunctionBuilder extends AbstractTokensBuilder {
@@ -27,7 +28,7 @@ public class ConcatFunctionBuilder extends AbstractTokensBuilder {
 	    getTokens().remove(getSize() - 1);
 	}
 	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-	final List<ISingleOperand> items = new ArrayList<ISingleOperand>();
+	final List<ISingleOperand<? extends ISingleOperand2>> items = new ArrayList<>();
 	final Pair<TokenCategory, Object> firstOperandPair = iterator.next();
 	items.add(getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue()));
 

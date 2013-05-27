@@ -2,13 +2,15 @@ package ua.com.fielden.platform.eql.s1.elements;
 
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
-abstract class SingleOperandFunction extends AbstractFunction {
 
-    private final ISingleOperand operand;
+abstract class SingleOperandFunction<S2 extends ISingleOperand2> extends AbstractFunction<S2> {
 
-    public SingleOperandFunction(final ISingleOperand operand) {
+    private final ISingleOperand<? extends ISingleOperand2> operand;
+
+    public SingleOperandFunction(final ISingleOperand<? extends ISingleOperand2> operand) {
 	this.operand = operand;
     }
 
@@ -62,7 +64,7 @@ abstract class SingleOperandFunction extends AbstractFunction {
 	return false;
     }
 
-    public ISingleOperand getOperand() {
+    public ISingleOperand<? extends ISingleOperand2> getOperand() {
         return operand;
     }
 }

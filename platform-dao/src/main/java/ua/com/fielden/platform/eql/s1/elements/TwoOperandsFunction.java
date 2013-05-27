@@ -3,12 +3,15 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.IElement2;
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
-abstract class TwoOperandsFunction extends AbstractFunction {
-    private final ISingleOperand operand1;
-    private final ISingleOperand operand2;
 
-    public TwoOperandsFunction(final ISingleOperand operand1, final ISingleOperand operand2) {
+abstract class TwoOperandsFunction<S2 extends IElement2> extends AbstractFunction<S2> {
+    private final ISingleOperand<? extends ISingleOperand2> operand1;
+    private final ISingleOperand<? extends ISingleOperand2> operand2;
+
+    public TwoOperandsFunction(final ISingleOperand<? extends ISingleOperand2> operand1, final ISingleOperand<? extends ISingleOperand2> operand2) {
 	this.operand1 = operand1;
 	this.operand2 = operand2;
     }
@@ -42,11 +45,11 @@ abstract class TwoOperandsFunction extends AbstractFunction {
 	return false;
     }
 
-    public ISingleOperand getOperand1() {
+    public ISingleOperand<? extends ISingleOperand2> getOperand1() {
         return operand1;
     }
 
-    public ISingleOperand getOperand2() {
+    public ISingleOperand<? extends ISingleOperand2> getOperand2() {
         return operand2;
     }
 

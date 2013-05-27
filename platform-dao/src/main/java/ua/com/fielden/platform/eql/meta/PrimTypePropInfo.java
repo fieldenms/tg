@@ -13,7 +13,6 @@ public class PrimTypePropInfo extends AbstractPropInfo {
 	this.propType = propType;
     }
 
-
     protected Class getPropType() {
         return propType;
     }

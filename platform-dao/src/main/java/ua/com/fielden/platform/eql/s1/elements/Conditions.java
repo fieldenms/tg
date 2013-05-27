@@ -4,20 +4,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.eql.s2.elements.ICondition2;
 
 
 
-public class Conditions extends AbstractCondition {
-    private final ICondition firstCondition;
+public class Conditions extends AbstractCondition<ua.com.fielden.platform.eql.s2.elements.Conditions> {
+    private final ICondition<? extends ICondition2> firstCondition;
     private final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
 
-    public Conditions(final ICondition firstCondition, final List<CompoundCondition> otherConditions) {
+    public Conditions(final ICondition<? extends ICondition2> firstCondition, final List<CompoundCondition> otherConditions) {
 	this.firstCondition = firstCondition;
 	this.otherConditions.addAll(otherConditions);
     }
 
-    public Conditions(final ICondition firstCondition) {
+    public Conditions(final ICondition<? extends ICondition2> firstCondition) {
 	this.firstCondition = firstCondition;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.Conditions transform() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
     private List<List<ICondition>> formConditionIntoLogicalGroups() {

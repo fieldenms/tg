@@ -3,18 +3,25 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
-public class LikeTest extends AbstractCondition {
-    private final ISingleOperand leftOperand;
-    private final ISingleOperand rightOperand;
+
+public class LikeTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.elements.LikeTest> {
+    private final ISingleOperand<? extends ISingleOperand2> leftOperand;
+    private final ISingleOperand<? extends ISingleOperand2> rightOperand;
     private final boolean negated;
     private final boolean caseInsensitive;
 
-    public LikeTest(final ISingleOperand leftOperand, final ISingleOperand rightOperand, final boolean negated, final boolean caseInsensitive) {
+    public LikeTest(final ISingleOperand<? extends ISingleOperand2> leftOperand, final ISingleOperand<? extends ISingleOperand2> rightOperand, final boolean negated, final boolean caseInsensitive) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;
 	this.negated = negated;
 	this.caseInsensitive = caseInsensitive;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.LikeTest transform() {
+	return new ua.com.fielden.platform.eql.s2.elements.LikeTest(leftOperand.transform(), rightOperand.transform(), negated, caseInsensitive);
     }
 
     @Override

@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 
-public class EntValue implements ISingleOperand {
+public class EntValue implements ISingleOperand<ua.com.fielden.platform.eql.s2.elements.EntValue> {
     private final Object value;
     private final boolean ignoreNull;
 
@@ -21,6 +21,11 @@ public class EntValue implements ISingleOperand {
 	    // TODO Uncomment when yieldNull() operator is implemented and all occurences of yield().val(null) are corrected.
 //	    throw new IllegalStateException("Value can't be null"); //
 	}
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.EntValue transform() {
+	return new ua.com.fielden.platform.eql.s2.elements.EntValue(value, ignoreNull);
     }
 
     @Override

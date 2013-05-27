@@ -3,13 +3,24 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
-public class Concat extends AbstractFunction {
 
-    private final List<ISingleOperand> operands;
+public class Concat extends AbstractFunction<ua.com.fielden.platform.eql.s2.elements.Concat> {
 
-    public Concat(final List<ISingleOperand> operands) {
+    private final List<ISingleOperand<? extends ISingleOperand2>> operands;
+
+    public Concat(final List<ISingleOperand<? extends ISingleOperand2>> operands) {
 	this.operands = operands;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.Concat transform() {
+	final List<ISingleOperand2> transformed = new ArrayList<>();
+	for (final ISingleOperand<? extends ISingleOperand2> operand : operands) {
+	    transformed.add(operand.transform());
+	}
+	return new ua.com.fielden.platform.eql.s2.elements.Concat(transformed);
     }
 
     @Override
@@ -44,7 +55,7 @@ public class Concat extends AbstractFunction {
 	return false;
     }
 
-    public List<ISingleOperand> getOperands() {
+    public List<ISingleOperand<? extends ISingleOperand2>> getOperands() {
         return operands;
     }
 

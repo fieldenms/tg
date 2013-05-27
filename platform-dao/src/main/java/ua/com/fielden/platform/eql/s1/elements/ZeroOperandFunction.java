@@ -3,9 +3,11 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.IElement2;
 
 
-abstract class ZeroOperandFunction extends AbstractFunction {
+
+abstract class ZeroOperandFunction<S2 extends IElement2> extends AbstractFunction<S2> {
 
     private final String functionName;
 

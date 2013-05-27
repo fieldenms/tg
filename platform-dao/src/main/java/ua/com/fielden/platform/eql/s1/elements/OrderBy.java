@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
+
 
 public class OrderBy {
-    private final ISingleOperand operand;
+    private final ISingleOperand<? extends ISingleOperand2> operand;
     private final String yieldName;
     private Yield yield;
     private final boolean desc;
@@ -12,7 +14,7 @@ public class OrderBy {
 	return (yieldName == null ? operand : yieldName ) + (desc ? " DESC" : " ASC");
     }
 
-    public OrderBy(final ISingleOperand operand, final boolean desc) {
+    public OrderBy(final ISingleOperand<? extends ISingleOperand2> operand, final boolean desc) {
 	super();
 	this.operand = operand;
 	this.yieldName = null;
@@ -26,7 +28,7 @@ public class OrderBy {
 	this.desc = desc;
     }
 
-    public ISingleOperand getOperand() {
+    public ISingleOperand<? extends ISingleOperand2> getOperand() {
         return operand;
     }
 

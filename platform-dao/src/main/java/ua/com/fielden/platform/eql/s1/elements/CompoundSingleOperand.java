@@ -1,19 +1,20 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
 import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
 public class CompoundSingleOperand {
-    private final ISingleOperand operand;
+    private final ISingleOperand<? extends ISingleOperand2> operand;
     private final ArithmeticalOperator operator;
 
-    public CompoundSingleOperand(final ISingleOperand operand, final ArithmeticalOperator operator) {
+    public CompoundSingleOperand(final ISingleOperand<? extends ISingleOperand2> operand, final ArithmeticalOperator operator) {
 	super();
 	this.operand = operand;
 	this.operator = operator;
     }
 
-    public ISingleOperand getOperand() {
+    public ISingleOperand<? extends ISingleOperand2> getOperand() {
         return operand;
     }
     public ArithmeticalOperator getOperator() {

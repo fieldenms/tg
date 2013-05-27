@@ -3,13 +3,25 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
-public class OperandsBasedSet implements ISetOperand{
-    private final List<ISingleOperand> operands;
 
-    public OperandsBasedSet(final List<ISingleOperand> operands) {
+public class OperandsBasedSet implements ISetOperand<ua.com.fielden.platform.eql.s2.elements.OperandsBasedSet>{
+    private final List<ISingleOperand<? extends ISingleOperand2>> operands;
+
+    public OperandsBasedSet(final List<ISingleOperand<? extends ISingleOperand2>> operands) {
 	super();
 	this.operands = operands;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.OperandsBasedSet transform() {
+	final List<ISingleOperand2> transformedOperands = new ArrayList<>();
+	for (final ISingleOperand<? extends ISingleOperand2> singleOperand : operands) {
+	    transformedOperands.add(singleOperand.transform());
+	}
+
+	return new ua.com.fielden.platform.eql.s2.elements.OperandsBasedSet(transformedOperands);
     }
 
     @Override

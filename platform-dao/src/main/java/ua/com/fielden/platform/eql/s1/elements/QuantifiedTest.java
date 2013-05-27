@@ -4,18 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
-public class QuantifiedTest extends AbstractCondition {
-    private final ISingleOperand leftOperand;
+public class QuantifiedTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.elements.QuantifiedTest> {
+    private final ISingleOperand<ISingleOperand2> leftOperand;
     private final EntQuery rightOperand;
     private final Quantifier quantifier;
     private final ComparisonOperator operator;
 
-    public QuantifiedTest(final ISingleOperand leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final EntQuery rightOperand) {
+    public QuantifiedTest(final ISingleOperand<ISingleOperand2> leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final EntQuery rightOperand) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;
 	this.operator = operator;
 	this.quantifier = quantifier;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.QuantifiedTest transform() {
+	return new ua.com.fielden.platform.eql.s2.elements.QuantifiedTest(leftOperand.transform(), operator, quantifier, rightOperand.transform());
     }
 
     @Override

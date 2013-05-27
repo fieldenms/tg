@@ -1,20 +1,20 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
+
 
 public class Yield {
-    private final ISingleOperand operand;
+    private final ISingleOperand<? extends ISingleOperand2> operand;
     private final String alias;
     private final boolean requiredHint;
-    private ResultQueryYieldDetails info;
 
-
-    public Yield(final ISingleOperand operand, final String alias, final boolean requiredHint) {
+    public Yield(final ISingleOperand<? extends ISingleOperand2> operand, final String alias, final boolean requiredHint) {
 	this.operand = operand;
 	this.alias = alias;
 	this.requiredHint = requiredHint;
     }
 
-    public Yield(final ISingleOperand operand, final String alias) {
+    public Yield(final ISingleOperand<? extends ISingleOperand2> operand, final String alias) {
 	this(operand, alias, false);
     }
 
@@ -23,16 +23,12 @@ public class Yield {
 	return alias;//sql();
     }
 
-    public ISingleOperand getOperand() {
+    public ISingleOperand<? extends ISingleOperand2> getOperand() {
 	return operand;
     }
 
     public String getAlias() {
 	return alias;
-    }
-
-    public boolean isCompositePropertyHeader() {
-	return info != null && info.isCompositeProperty();
     }
 
     @Override
@@ -71,14 +67,6 @@ public class Yield {
 	    return false;
 	}
 	return true;
-    }
-
-    public ResultQueryYieldDetails getInfo() {
-	return info;
-    }
-
-    public void setInfo(final ResultQueryYieldDetails info) {
-	this.info = info;
     }
 
     protected boolean isRequiredHint() {

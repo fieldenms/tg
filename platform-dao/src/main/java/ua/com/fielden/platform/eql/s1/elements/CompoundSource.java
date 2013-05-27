@@ -6,7 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 
 
-public class CompoundSource implements IElement {
+public class CompoundSource implements IElement<ua.com.fielden.platform.eql.s2.elements.CompoundSource> {
     private final ISource source;
     private final JoinType joinType;
     private final Conditions joinConditions;
@@ -16,6 +16,12 @@ public class CompoundSource implements IElement {
 	this.source = source;
 	this.joinType = joinType;
 	this.joinConditions = joinConditions;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.CompoundSource transform() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
     @Override

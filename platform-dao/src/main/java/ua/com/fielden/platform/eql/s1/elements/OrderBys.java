@@ -3,11 +3,20 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OrderBys implements IElement {
+public class OrderBys implements IElement<ua.com.fielden.platform.eql.s2.elements.OrderBys> {
     private final List<OrderBy> models;
 
     public OrderBys(final List<OrderBy> models) {
 	this.models = models;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.OrderBys transform() {
+	final List<ua.com.fielden.platform.eql.s2.elements.OrderBy> transformed = new ArrayList<>();
+	for (final OrderBy orderBy : models) {
+	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.OrderBy(orderBy.getOperand().transform(), orderBy.isDesc()));
+	}
+	return new ua.com.fielden.platform.eql.s2.elements.OrderBys(transformed);
     }
 
     @Override

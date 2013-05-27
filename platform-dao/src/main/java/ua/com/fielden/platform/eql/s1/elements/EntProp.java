@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class EntProp implements ISingleOperand {
+public class EntProp implements ISingleOperand<ua.com.fielden.platform.eql.s2.elements.EntProp> {
     private String name;
     private boolean external;
 
@@ -15,6 +15,10 @@ public class EntProp implements ISingleOperand {
 
     public EntProp(final String name) {
         this(name, false);
+    }
+
+    public ua.com.fielden.platform.eql.s2.elements.EntProp transform() {
+	return null;
     }
 
     @Override
@@ -37,6 +41,10 @@ public class EntProp implements ISingleOperand {
 
     public String getName() {
         return name;
+    }
+
+    public boolean isExternal() {
+        return external;
     }
 
     @Override
@@ -72,17 +80,5 @@ public class EntProp implements ISingleOperand {
             return false;
         }
         return true;
-    }
-
-    public void setName(final String name) {
-        this.name = name;
-    }
-
-    public boolean isExternal() {
-        return external;
-    }
-
-    public void setExternal(final boolean external) {
-        this.external = external;
     }
 }

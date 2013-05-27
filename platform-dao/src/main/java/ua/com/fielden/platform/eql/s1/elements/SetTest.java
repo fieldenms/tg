@@ -3,17 +3,23 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.ISetOperand2;
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
-
-public class SetTest extends AbstractCondition {
-    private final ISingleOperand leftOperand;
-    private final ISetOperand rightOperand;
+public class SetTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.elements.SetTest> {
+    private final ISingleOperand<ISingleOperand2> leftOperand;
+    private final ISetOperand<ISetOperand2> rightOperand;
     private final boolean negated;
 
-    public SetTest(final ISingleOperand leftOperand, final boolean negated, final ISetOperand rightOperand) {
+    public SetTest(final ISingleOperand<ISingleOperand2> leftOperand, final boolean negated, final ISetOperand<ISetOperand2> rightOperand) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;
 	this.negated = negated;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.SetTest transform() {
+	return new ua.com.fielden.platform.eql.s2.elements.SetTest(leftOperand.transform(), negated, rightOperand.transform());
     }
 
     @Override

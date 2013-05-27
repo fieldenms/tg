@@ -9,10 +9,20 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 
-public class Yields implements IElement {
+public class Yields implements IElement<ua.com.fielden.platform.eql.s2.elements.Yields> {
     private final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
 
     public Yields() {
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.Yields transform() {
+	final List<ua.com.fielden.platform.eql.s2.elements.Yield> transformed = new ArrayList<>();
+	final ua.com.fielden.platform.eql.s2.elements.Yields result = new ua.com.fielden.platform.eql.s2.elements.Yields();
+	for (final Yield yield : yields.values()) {
+	    result.addYield(new ua.com.fielden.platform.eql.s2.elements.Yield(yield.getOperand().transform(), yield.getAlias(), yield.isRequiredHint()));
+	}
+	return result;
     }
 
     public void addYield(final Yield yield) {
@@ -69,9 +79,9 @@ public class Yields implements IElement {
     public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
 	for (final Yield yield : yields.values()) {
-	    if (!yield.isCompositePropertyHeader()) {
+//	    if (!yield.isCompositePropertyHeader()) {
 		result.addAll(yield.getOperand().getAllValues());
-	    }
+//	    }
 	}
 	return result;
     }
@@ -80,9 +90,9 @@ public class Yields implements IElement {
     public List<EntQuery> getLocalSubQueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	for (final Yield yield : yields.values()) {
-	    if (!yield.isCompositePropertyHeader()) {
+//	    if (!yield.isCompositePropertyHeader()) {
 		result.addAll(yield.getOperand().getLocalSubQueries());
-	    }
+//	    }
 	}
 	return result;
     }
@@ -91,9 +101,9 @@ public class Yields implements IElement {
     public List<EntProp> getLocalProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
 	for (final Yield yield : yields.values()) {
-	    if (!yield.isCompositePropertyHeader()) {
+//	    if (!yield.isCompositePropertyHeader()) {
 		result.addAll(yield.getOperand().getLocalProps());
-	    }
+//	    }
 	}
 	return result;
     }

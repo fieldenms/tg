@@ -50,9 +50,9 @@ public class QueryBasedSource extends AbstractSource {
     private boolean getYieldNullability(final String yieldAlias) {
 	final boolean result = false;
 	for (final Yield yield : yieldsMatrix.get(yieldAlias)) {
-	    if (yield.getInfo().isNullable()) {
+//	    if (yield.getInfo().isNullable()) {
 		return true;
-	    }
+//	    }
 	}
 	return result;
     }

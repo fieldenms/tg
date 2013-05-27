@@ -1,15 +1,17 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
+
 
 public class GroupBy {
-    private final ISingleOperand operand;
+    private final ISingleOperand<? extends ISingleOperand2> operand;
 
-    public GroupBy(final ISingleOperand operand) {
+    public GroupBy(final ISingleOperand<? extends ISingleOperand2> operand) {
 	super();
 	this.operand = operand;
     }
 
-    public ISingleOperand getOperand() {
+    public ISingleOperand<? extends ISingleOperand2> getOperand() {
         return operand;
     }
 

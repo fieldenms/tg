@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.ICondition2;
 
-public abstract class AbstractCondition implements ICondition {
+
+public abstract class AbstractCondition<S2 extends ICondition2> implements ICondition<S2> {
 
     protected abstract List<IElement> getCollection();
 

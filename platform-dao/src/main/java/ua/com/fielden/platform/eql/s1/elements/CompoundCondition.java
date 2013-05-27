@@ -1,18 +1,19 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.eql.s2.elements.ICondition2;
 
 
 
 public class CompoundCondition {
     private final LogicalOperator logicalOperator;
-    private final ICondition condition;
+    private final ICondition<? extends ICondition2> condition;
 
 //    public String sql() {
 //	return " " + logicalOperator + " " + condition.sql();
 //    }
 
-    public CompoundCondition(final LogicalOperator logicalOperator, final ICondition condition) {
+    public CompoundCondition(final LogicalOperator logicalOperator, final ICondition<? extends ICondition2> condition) {
 	this.logicalOperator = logicalOperator;
 	this.condition = condition;
     }
@@ -21,7 +22,7 @@ public class CompoundCondition {
         return logicalOperator;
     }
 
-    public ICondition getCondition() {
+    public ICondition<? extends ICondition2> getCondition() {
         return condition;
     }
 

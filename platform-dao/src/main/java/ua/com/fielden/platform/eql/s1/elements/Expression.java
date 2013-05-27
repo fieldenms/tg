@@ -3,16 +3,27 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
-public class Expression implements ISingleOperand {
 
-    private final ISingleOperand first;
+public class Expression implements ISingleOperand<ua.com.fielden.platform.eql.s2.elements.Expression> {
+
+    private final ISingleOperand<? extends ISingleOperand2> first;
     private final List<CompoundSingleOperand> items;
 
-    public Expression(final ISingleOperand first, final List<CompoundSingleOperand> items) {
+    public Expression(final ISingleOperand<? extends ISingleOperand2> first, final List<CompoundSingleOperand> items) {
 	super();
 	this.first = first;
 	this.items = items;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.Expression transform() {
+	final List<ua.com.fielden.platform.eql.s2.elements.CompoundSingleOperand> transformed = new ArrayList<>();
+	for (final CompoundSingleOperand item : items) {
+	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.CompoundSingleOperand(item.getOperand().transform(), item.getOperator()));
+	}
+	return new ua.com.fielden.platform.eql.s2.elements.Expression(first.transform(), transformed);
     }
 
     @Override

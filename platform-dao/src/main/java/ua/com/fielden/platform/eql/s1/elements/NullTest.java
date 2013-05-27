@@ -3,15 +3,22 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
-public class NullTest extends AbstractCondition {
-    private final ISingleOperand operand;
+
+public class NullTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.elements.NullTest> {
+    private final ISingleOperand<ISingleOperand2> operand;
     private final boolean negated;
 
-    public NullTest(final ISingleOperand operand, final boolean negated) {
+    public NullTest(final ISingleOperand<ISingleOperand2> operand, final boolean negated) {
 	this.operand = operand;
 	this.negated = negated;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.NullTest transform() {
+	return new ua.com.fielden.platform.eql.s2.elements.NullTest(operand.transform(), negated);
     }
 
     @Override

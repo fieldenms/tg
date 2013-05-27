@@ -19,6 +19,8 @@ import ua.com.fielden.platform.eql.s1.elements.ISingleOperand;
 import ua.com.fielden.platform.eql.s1.elements.Now;
 import ua.com.fielden.platform.eql.s1.elements.OperandsBasedSet;
 import ua.com.fielden.platform.eql.s1.elements.QueryBasedSet;
+import ua.com.fielden.platform.eql.s2.elements.ISetOperand2;
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
@@ -231,7 +233,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	}
     }
 
-    protected ISingleOperand getModelForSingleOperand(final TokenCategory cat, final Object value) {
+    protected ISingleOperand<? extends ISingleOperand2> getModelForSingleOperand(final TokenCategory cat, final Object value) {
 	switch (cat) {
 	case PROP:
 	    return new EntProp((String) value);
@@ -261,8 +263,8 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	}
     }
 
-    protected List<ISingleOperand> getModelForArrayParam(final TokenCategory cat, final Object value) {
-	final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
+    protected List<ISingleOperand<? extends ISingleOperand2>> getModelForArrayParam(final TokenCategory cat, final Object value) {
+	final List<ISingleOperand<? extends ISingleOperand2>> result = new ArrayList<>();
 	final Object paramValue = getParamValue((String) value);
 
 	if (!(paramValue instanceof List)) {
@@ -309,7 +311,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	return value;
     }
 
-    protected ISetOperand getModelForSetOperand(final TokenCategory cat, final Object value) {
+    protected ISetOperand<? extends ISetOperand2> getModelForSetOperand(final TokenCategory cat, final Object value) {
 	TokenCategory singleCat;
 
 	switch (cat) {
@@ -334,7 +336,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
 	}
 
-	final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
+	final List<ISingleOperand<? extends ISingleOperand2>> result = new ArrayList<>();
 
 	for (final Object singleValue : (List<Object>) value) {
 	    if (singleCat == PARAM || singleCat == IPARAM) {
@@ -347,12 +349,12 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	return new OperandsBasedSet(result);
     }
 
-    protected ISingleOperand getModelForSingleOperand(final Pair<TokenCategory, Object> pair) {
+    protected ISingleOperand<? extends ISingleOperand2> getModelForSingleOperand(final Pair<TokenCategory, Object> pair) {
 	return getModelForSingleOperand(pair.getKey(), pair.getValue());
     }
 
-    protected List<ISingleOperand> getModelForMultipleOperands(final TokenCategory cat, final Object value) {
-	final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
+    protected List<ISingleOperand<? extends ISingleOperand2>> getModelForMultipleOperands(final TokenCategory cat, final Object value) {
+	final List<ISingleOperand<? extends ISingleOperand2>> result = new ArrayList<>();
 
 	TokenCategory singleCat;
 

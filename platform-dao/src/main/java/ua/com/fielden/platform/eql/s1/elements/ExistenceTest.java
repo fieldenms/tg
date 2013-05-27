@@ -5,13 +5,18 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class ExistenceTest extends AbstractCondition {
+public class ExistenceTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.elements.ExistenceTest> {
     private final boolean negated;
     private final EntQuery subQuery;
 
     public ExistenceTest(final boolean negated, final EntQuery subQuery) {
 	this.negated = negated;
 	this.subQuery = subQuery;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.ExistenceTest transform() {
+	return new ua.com.fielden.platform.eql.s2.elements.ExistenceTest(negated, subQuery.transform());
     }
 
     @Override

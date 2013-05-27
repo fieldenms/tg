@@ -24,6 +24,7 @@ import ua.com.fielden.platform.eql.s1.elements.NullTest;
 import ua.com.fielden.platform.eql.s1.elements.QuantifiedTest;
 import ua.com.fielden.platform.eql.s1.elements.Quantifier;
 import ua.com.fielden.platform.eql.s1.elements.SetTest;
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.entity.query.fluent.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.LogicalOperator.OR;
@@ -233,7 +234,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getMultipleQuantifiedTest() {
-	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> operands = getModelForMultipleOperands(firstCat(), firstValue());
 	final EntQuery secondOperand = (EntQuery) getModelForSingleOperand(thirdCat(), thirdValue());
 	final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
 	final List<ICondition> conditions = new ArrayList<ICondition>();
@@ -265,7 +266,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getMultipleNullTest() {
-	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> operands = getModelForMultipleOperands(firstCat(), firstValue());
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new NullTest(operand, (Boolean) secondValue()));
@@ -275,8 +276,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getMultipleVsMultipleComparisonTest() {
-	final List<ISingleOperand> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
-	final List<ISingleOperand> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
 
 	final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
 	final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
@@ -296,7 +297,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getMultipleVsSingleComparisonTest() {
-	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> operands = getModelForMultipleOperands(firstCat(), firstValue());
 	final ISingleOperand singleOperand = getModelForSingleOperand(thirdCat(), thirdValue());
 	final ComparisonOperator operator = (ComparisonOperator) secondValue();
 
@@ -309,7 +310,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getSingleVsMultipleComparisonTest() {
-	final List<ISingleOperand> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
 	final ISingleOperand singleOperand = getModelForSingleOperand(firstCat(), firstValue());
 	final ComparisonOperator operator = (ComparisonOperator) secondValue();
 
@@ -340,8 +341,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getMultipleVsMultipleLikeTest() {
-	final List<ISingleOperand> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
-	final List<ISingleOperand> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
 
 	final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
 	final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
@@ -359,8 +360,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getMultipleVsMultipleILikeTest() {
-	final List<ISingleOperand> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
-	final List<ISingleOperand> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
 
 	final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
 	final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
@@ -378,7 +379,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getMultipleVsSingleLikeTest() {
-	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> operands = getModelForMultipleOperands(firstCat(), firstValue());
 	final ISingleOperand singleOperand = getModelForSingleOperand(thirdCat(), thirdValue());
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
@@ -389,7 +390,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getMultipleVsSingleILikeTest() {
-	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> operands = getModelForMultipleOperands(firstCat(), firstValue());
 	final ISingleOperand singleOperand = new LowerCaseOf(getModelForSingleOperand(thirdCat(), thirdValue()));
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
@@ -401,7 +402,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
 
     private GroupedConditions getSingleVsMultipleLikeTest() {
-	final List<ISingleOperand> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
 	final ISingleOperand singleOperand = getModelForSingleOperand(firstCat(), firstValue());
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
@@ -412,7 +413,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getSingleVsMultipleILikeTest() {
-	final List<ISingleOperand> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
 	final ISingleOperand singleOperand = new LowerCaseOf(getModelForSingleOperand(firstCat(), firstValue()));
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
@@ -433,7 +434,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getMultipleSetTest() {
-	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> operands = getModelForMultipleOperands(firstCat(), firstValue());
 	final ISetOperand setOperand = getModelForSetOperand(thirdCat(), thirdValue());
 
 	final List<ICondition> conditions = new ArrayList<ICondition>();
@@ -445,7 +446,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private GroupedConditions getMultipleExistenceTest() {
-	final List<ISingleOperand> operands = getModelForMultipleOperands(secondCat(), secondValue());
+	final List<? extends ISingleOperand<? extends ISingleOperand2>> operands = getModelForMultipleOperands(secondCat(), secondValue());
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new ExistenceTest((Boolean) firstValue(), (EntQuery) operand));

@@ -18,7 +18,7 @@ import ua.com.fielden.platform.eql.s1.processing.EntQueryBlocks;
 import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator;
 import ua.com.fielden.platform.eql.s1.processing.StandAloneConditionBuilder;
 
-public class EntQuery implements ISingleOperand {
+public class EntQuery implements ISingleOperand<ua.com.fielden.platform.eql.s2.elements.EntQuery> {
 
     private final boolean persistedType;
     private final Sources sources;
@@ -32,6 +32,13 @@ public class EntQuery implements ISingleOperand {
     private final Map<String, Object> paramValues;
 
     transient private final Logger logger = Logger.getLogger(this.getClass());
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.EntQuery transform() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
 
     private boolean isSubQuery() {
         return QueryCategory.SUB_QUERY.equals(category);

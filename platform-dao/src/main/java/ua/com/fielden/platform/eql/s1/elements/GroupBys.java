@@ -4,11 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class GroupBys implements IElement {
+public class GroupBys implements IElement<ua.com.fielden.platform.eql.s2.elements.GroupBys> {
     private final List<GroupBy> groups;
 
     public GroupBys(final List<GroupBy> groups) {
 	this.groups = groups;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.GroupBys transform() {
+	final List<ua.com.fielden.platform.eql.s2.elements.GroupBy> transformed = new ArrayList<>();
+	for (final GroupBy groupBy : groups) {
+	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.GroupBy(groupBy.getOperand().transform()));
+	}
+	return new ua.com.fielden.platform.eql.s2.elements.GroupBys(transformed);
     }
 
     @Override

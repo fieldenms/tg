@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.utils.Pair;
 
 
-public class Sources implements IElement {
+public class Sources implements IElement<ua.com.fielden.platform.eql.s2.elements.Sources> {
     private final ISource main;
     private final List<CompoundSource> compounds;
 
@@ -15,6 +15,12 @@ public class Sources implements IElement {
 	super();
 	this.main = main;
 	this.compounds = compounds;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.Sources transform() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
     @Override

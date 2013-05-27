@@ -4,12 +4,17 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class QueryBasedSet implements ISetOperand {
+public class QueryBasedSet implements ISetOperand<ua.com.fielden.platform.eql.s2.elements.QueryBasedSet> {
     private final EntQuery model;
 
     public QueryBasedSet(final EntQuery model) {
 	super();
 	this.model = model;
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.QueryBasedSet transform() {
+	return new ua.com.fielden.platform.eql.s2.elements.QueryBasedSet(model.transform());
     }
 
     @Override
@@ -62,4 +67,5 @@ public class QueryBasedSet implements ISetOperand {
 	// TODO Auto-generated method stub
 	return false;
     }
+
 }

@@ -3,24 +3,35 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.ICondition2;
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
 
 
-public class CaseWhen extends AbstractFunction {
+public class CaseWhen extends AbstractFunction<ua.com.fielden.platform.eql.s2.elements.CaseWhen> {
 
-    private List<Pair<ICondition, ISingleOperand>> whenThenPairs = new ArrayList<Pair<ICondition, ISingleOperand>>();
-    private final ISingleOperand elseOperand;
+    private List<Pair<ICondition<? extends ICondition2>, ISingleOperand<? extends ISingleOperand2>>> whenThenPairs = new ArrayList<>();
+    private final ISingleOperand<? extends ISingleOperand2> elseOperand;
 
-    public CaseWhen(final List<Pair<ICondition, ISingleOperand>> whenThenPairs, final ISingleOperand elseOperand) {
+    public CaseWhen(final List<Pair<ICondition<? extends ICondition2>, ISingleOperand<? extends ISingleOperand2>>> whenThenPairs, final ISingleOperand<? extends ISingleOperand2> elseOperand) {
 	super();
 	this.whenThenPairs.addAll(whenThenPairs);
 	this.elseOperand = elseOperand;
     }
 
     @Override
+    public ua.com.fielden.platform.eql.s2.elements.CaseWhen transform() {
+	final List<Pair<ICondition2, ISingleOperand2>> transformedWhenThenPairs = new ArrayList<>();
+	for (final Pair<ICondition<? extends ICondition2>, ISingleOperand<? extends ISingleOperand2>> pair : whenThenPairs) {
+	    transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(pair.getKey().transform(), pair.getValue().transform()));
+	}
+	return new ua.com.fielden.platform.eql.s2.elements.CaseWhen(transformedWhenThenPairs, elseOperand.transform());
+    }
+
+    @Override
     public List<EntQuery> getLocalSubQueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
-	for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
+	for (final Pair<ICondition<? extends ICondition2>, ISingleOperand<? extends ISingleOperand2>> whenThen : whenThenPairs) {
 	    result.addAll(whenThen.getKey().getLocalSubQueries());
 	    result.addAll(whenThen.getValue().getLocalSubQueries());
 	}
@@ -33,7 +44,7 @@ public class CaseWhen extends AbstractFunction {
     @Override
     public List<EntProp> getLocalProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
-	for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
+	for (final Pair<ICondition<? extends ICondition2>, ISingleOperand<? extends ISingleOperand2>> whenThen : whenThenPairs) {
 	    result.addAll(whenThen.getKey().getLocalProps());
 	    result.addAll(whenThen.getValue().getLocalProps());
 	}
@@ -46,7 +57,7 @@ public class CaseWhen extends AbstractFunction {
     @Override
     public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
+	for (final Pair<ICondition<? extends ICondition2>, ISingleOperand<? extends ISingleOperand2>> whenThen : whenThenPairs) {
 	    result.addAll(whenThen.getKey().getAllValues());
 	    result.addAll(whenThen.getValue().getAllValues());
 	}

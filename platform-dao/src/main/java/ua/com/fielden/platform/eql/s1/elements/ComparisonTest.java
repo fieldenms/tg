@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
-public class ComparisonTest extends AbstractCondition {
-    private final ISingleOperand leftOperand;
-    private final ISingleOperand rightOperand;
+public class ComparisonTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.elements.ComparisonTest> {
+    private final ISingleOperand<ISingleOperand2> leftOperand;
+    private final ISingleOperand<ISingleOperand2> rightOperand;
     private final ComparisonOperator operator;
 
     @Override
@@ -16,10 +17,14 @@ public class ComparisonTest extends AbstractCondition {
         return leftOperand + " " + operator + " " + rightOperand;
     }
 
-    public ComparisonTest(final ISingleOperand leftOperand, final ComparisonOperator operator, final ISingleOperand rightOperand) {
+    public ComparisonTest(final ISingleOperand<ISingleOperand2> leftOperand, final ComparisonOperator operator, final ISingleOperand<ISingleOperand2> rightOperand) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;
 	this.operator = operator;
+    }
+
+    public ua.com.fielden.platform.eql.s2.elements.ComparisonTest transform() {
+	return new ua.com.fielden.platform.eql.s2.elements.ComparisonTest(leftOperand.transform(), operator, rightOperand.transform());
     }
 
     @Override
