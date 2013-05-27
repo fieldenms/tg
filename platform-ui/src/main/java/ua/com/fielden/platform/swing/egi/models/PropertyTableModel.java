@@ -549,7 +549,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      * @param row
      * @return
      */
-    private T getEntityAt(final int row) {
+    public T getEntityAt(final int row) {
 	return row < 0 || isGroupTotalsRow(row) || isGrandTotalsRow(row) ? null : instance(getActualRowAt(getEntityGridInspector().getModel(), row));
     }
 

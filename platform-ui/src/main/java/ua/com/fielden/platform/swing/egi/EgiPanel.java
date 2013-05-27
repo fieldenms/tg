@@ -657,4 +657,8 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	    return getInsets();
 	}
     }
+
+    public JScrollPane getEgiScrollPane() {
+	return egiScrollPane;
+    }
 }
