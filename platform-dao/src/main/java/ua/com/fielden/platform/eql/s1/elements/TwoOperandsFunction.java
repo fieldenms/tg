@@ -33,14 +33,6 @@ abstract class TwoOperandsFunction<S2 extends IElement2> extends AbstractFunctio
     }
 
     @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	result.addAll(operand1.getAllValues());
-	result.addAll(operand2.getAllValues());
-	return result;
-    }
-
-    @Override
     public boolean ignore() {
 	return false;
     }

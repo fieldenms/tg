@@ -21,8 +21,8 @@ public class LikeTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.e
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.LikeTest transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.LikeTest(leftOperand.transform(null), rightOperand.transform(null), negated, caseInsensitive);
+    public ua.com.fielden.platform.eql.s2.elements.LikeTest transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.LikeTest(leftOperand.transform(resolver), rightOperand.transform(resolver), negated, caseInsensitive);
     }
 
     @Override

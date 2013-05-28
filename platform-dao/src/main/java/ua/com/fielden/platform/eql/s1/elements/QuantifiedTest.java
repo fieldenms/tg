@@ -21,8 +21,8 @@ public class QuantifiedTest extends AbstractCondition<ua.com.fielden.platform.eq
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.QuantifiedTest transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.QuantifiedTest(leftOperand.transform(null), operator, quantifier, rightOperand.transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.QuantifiedTest transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.QuantifiedTest(leftOperand.transform(resolver), operator, quantifier, rightOperand.transform(resolver));
     }
 
     @Override

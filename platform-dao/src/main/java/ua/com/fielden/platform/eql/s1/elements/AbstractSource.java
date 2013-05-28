@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
+import ua.com.fielden.platform.eql.s2.elements.ISource2;
 
-public abstract class AbstractSource implements ISource {
+public abstract class AbstractSource<S2 extends ISource2> implements ISource<S2> {
 
     protected final boolean persistedType;
 

@@ -19,7 +19,7 @@ public class EntProp implements ISingleOperand<ua.com.fielden.platform.eql.s2.el
         this(name, false);
     }
 
-    public ua.com.fielden.platform.eql.s2.elements.EntProp transform(TransformatorToS2 resolver) {
+    public ua.com.fielden.platform.eql.s2.elements.EntProp transform(final TransformatorToS2 resolver) {
 	return null;
     }
 
@@ -33,12 +33,6 @@ public class EntProp implements ISingleOperand<ua.com.fielden.platform.eql.s2.el
     public List<EntQuery> getLocalSubQueries() {
         //return isExpression() ? expression.getLocalSubQueries() : Collections.<EntQuery> emptyList();
         return Collections.<EntQuery> emptyList();
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-        //return isExpression() ? expression.getAllValues() : Collections.<EntValue> emptyList();
-        return Collections.<EntValue> emptyList();
     }
 
     public String getName() {

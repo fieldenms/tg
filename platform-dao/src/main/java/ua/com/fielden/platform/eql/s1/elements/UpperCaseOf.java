@@ -10,7 +10,7 @@ public class UpperCaseOf extends SingleOperandFunction<ua.com.fielden.platform.e
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.UpperCaseOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.UpperCaseOf(getOperand().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.UpperCaseOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.UpperCaseOf(getOperand().transform(resolver));
     }
 }

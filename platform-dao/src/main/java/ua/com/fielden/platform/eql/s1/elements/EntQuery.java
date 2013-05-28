@@ -35,11 +35,10 @@ public class EntQuery implements ISingleOperand<ua.com.fielden.platform.eql.s2.e
     transient private final Logger logger = Logger.getLogger(this.getClass());
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.EntQuery transform(TransformatorToS2 resolver) {
+    public ua.com.fielden.platform.eql.s2.elements.EntQuery transform(final TransformatorToS2 resolver) {
 	// TODO Auto-generated method stub
 	return null;
     }
-
 
     private boolean isSubQuery() {
         return QueryCategory.SUB_QUERY.equals(category);
@@ -130,17 +129,6 @@ public class EntQuery implements ISingleOperand<ua.com.fielden.platform.eql.s2.e
     @Override
     public List<EntQuery> getLocalSubQueries() {
         return Arrays.asList(new EntQuery[] { this });
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-        final List<EntValue> result = new ArrayList<EntValue>();
-        result.addAll(sources.getAllValues());
-        result.addAll(conditions.getAllValues());
-        result.addAll(groups.getAllValues());
-        result.addAll(orderings.getAllValues());
-        result.addAll(yields.getAllValues());
-        return result;
     }
 
     public Sources getSources() {

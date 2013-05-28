@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.s2.elements;
 import java.util.List;
 
 
-public interface ISource {
+public interface ISource2 {
     /**
      * Represents business alias of the query source
      *

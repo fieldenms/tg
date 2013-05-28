@@ -16,10 +16,10 @@ public class Concat extends AbstractFunction<ua.com.fielden.platform.eql.s2.elem
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.Concat transform(TransformatorToS2 resolver) {
+    public ua.com.fielden.platform.eql.s2.elements.Concat transform(final TransformatorToS2 resolver) {
 	final List<ISingleOperand2> transformed = new ArrayList<>();
 	for (final ISingleOperand<? extends ISingleOperand2> operand : operands) {
-	    transformed.add(operand.transform(null));
+	    transformed.add(operand.transform(resolver));
 	}
 	return new ua.com.fielden.platform.eql.s2.elements.Concat(transformed);
     }
@@ -38,15 +38,6 @@ public class Concat extends AbstractFunction<ua.com.fielden.platform.eql.s2.elem
 	final List<EntProp> result = new ArrayList<EntProp>();
 	for (final ISingleOperand operand : operands) {
 	    result.addAll(operand.getLocalProps());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final ISingleOperand operand : operands) {
-	    result.addAll(operand.getAllValues());
 	}
 	return result;
     }

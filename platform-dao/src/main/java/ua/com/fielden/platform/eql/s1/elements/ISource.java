@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.List;
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.s2.elements.ISource2;
 
 
-public interface ISource {
+
+public interface ISource<S2 extends ISource2> {
     /**
      * Represents business alias of the query source
      *
@@ -19,9 +21,5 @@ public interface ISource {
      */
     Class sourceType();
 
-    /**
-     * Collects all values from given query source (assuming it is composed from query model(s))
-     * @return
-     */
-    List<EntValue> getValues();
+    S2 transform(TransformatorToS2 resolver);
 }

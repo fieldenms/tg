@@ -25,11 +25,6 @@ abstract class SingleOperandFunction<S2 extends ISingleOperand2> extends Abstrac
     }
 
     @Override
-    public List<EntValue> getAllValues() {
-	return operand.getAllValues();
-    }
-
-    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;

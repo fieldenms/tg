@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.s2.elements;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 
-public abstract class AbstractSource implements ISource {
+public abstract class AbstractSource implements ISource2 {
 
     protected final boolean persistedType;
 

@@ -12,7 +12,7 @@ public class SecondOf extends SingleOperandFunction<ua.com.fielden.platform.eql.
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.SecondOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.SecondOf(getOperand().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.SecondOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.SecondOf(getOperand().transform(resolver));
     }
 }

@@ -21,12 +21,12 @@ public class CaseWhen extends AbstractFunction<ua.com.fielden.platform.eql.s2.el
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.CaseWhen transform(TransformatorToS2 resolver) {
+    public ua.com.fielden.platform.eql.s2.elements.CaseWhen transform(final TransformatorToS2 resolver) {
 	final List<Pair<ICondition2, ISingleOperand2>> transformedWhenThenPairs = new ArrayList<>();
 	for (final Pair<ICondition<? extends ICondition2>, ISingleOperand<? extends ISingleOperand2>> pair : whenThenPairs) {
-	    transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(pair.getKey().transform(null), pair.getValue().transform(null)));
+	    transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(pair.getKey().transform(resolver), pair.getValue().transform(resolver)));
 	}
-	return new ua.com.fielden.platform.eql.s2.elements.CaseWhen(transformedWhenThenPairs, elseOperand.transform(null));
+	return new ua.com.fielden.platform.eql.s2.elements.CaseWhen(transformedWhenThenPairs, elseOperand.transform(resolver));
     }
 
     @Override
@@ -51,19 +51,6 @@ public class CaseWhen extends AbstractFunction<ua.com.fielden.platform.eql.s2.el
 	}
 	if (elseOperand != null) {
 	    result.addAll(elseOperand.getLocalProps());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final Pair<ICondition<? extends ICondition2>, ISingleOperand<? extends ISingleOperand2>> whenThen : whenThenPairs) {
-	    result.addAll(whenThen.getKey().getAllValues());
-	    result.addAll(whenThen.getValue().getAllValues());
-	}
-	if (elseOperand != null) {
-	    result.addAll(elseOperand.getAllValues());
 	}
 	return result;
     }

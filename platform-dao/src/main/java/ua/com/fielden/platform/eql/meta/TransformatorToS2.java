@@ -4,4 +4,8 @@ public class TransformatorToS2 {
     public void addSource() {
 
     }
+
+    public String generateNextSqlParamName() {
+	return null;
+    }
 }

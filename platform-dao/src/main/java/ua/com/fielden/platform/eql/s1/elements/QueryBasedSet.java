@@ -15,18 +15,13 @@ public class QueryBasedSet implements ISetOperand<ua.com.fielden.platform.eql.s2
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.QueryBasedSet transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.QueryBasedSet(model.transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.QueryBasedSet transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.QueryBasedSet(model.transform(resolver));
     }
 
     @Override
     public List<EntProp> getLocalProps() {
 	return model.getLocalProps();
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	return model.getAllValues();
     }
 
     @Override

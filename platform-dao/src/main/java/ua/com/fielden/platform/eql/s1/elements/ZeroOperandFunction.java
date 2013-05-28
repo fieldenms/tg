@@ -26,11 +26,6 @@ abstract class ZeroOperandFunction<S2 extends IElement2> extends AbstractFunctio
     }
 
     @Override
-    public List<EntValue> getAllValues() {
-	return Collections.emptyList();
-    }
-
-    @Override
     public boolean ignore() {
 	return false;
     }

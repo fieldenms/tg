@@ -24,8 +24,8 @@ public class ComparisonTest extends AbstractCondition<ua.com.fielden.platform.eq
 	this.operator = operator;
     }
 
-    public ua.com.fielden.platform.eql.s2.elements.ComparisonTest transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.ComparisonTest(leftOperand.transform(null), operator, rightOperand.transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.ComparisonTest transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.ComparisonTest(leftOperand.transform(resolver), operator, rightOperand.transform(resolver));
     }
 
     @Override

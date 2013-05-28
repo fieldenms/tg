@@ -12,7 +12,7 @@ public class MonthOf extends SingleOperandFunction<ua.com.fielden.platform.eql.s
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.MonthOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.MonthOf(getOperand().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.MonthOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.MonthOf(getOperand().transform(resolver));
     }
 }

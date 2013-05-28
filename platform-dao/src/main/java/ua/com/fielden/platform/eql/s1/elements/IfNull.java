@@ -12,7 +12,7 @@ public class IfNull extends TwoOperandsFunction<ua.com.fielden.platform.eql.s2.e
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.IfNull transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.IfNull(getOperand1().transform(null), getOperand2().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.IfNull transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.IfNull(getOperand1().transform(resolver), getOperand2().transform(resolver));
     }
 }

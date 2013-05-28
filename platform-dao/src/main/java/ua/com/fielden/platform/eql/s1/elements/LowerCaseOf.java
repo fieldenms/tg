@@ -10,7 +10,7 @@ public class LowerCaseOf extends SingleOperandFunction<ua.com.fielden.platform.e
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.LowerCaseOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.LowerCaseOf(getOperand().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.LowerCaseOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.LowerCaseOf(getOperand().transform(resolver));
     }
 }

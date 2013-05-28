@@ -40,19 +40,4 @@ public abstract class AbstractCondition<S2 extends ICondition2> implements ICond
 	    return result;
 	}
     }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	if (ignore()) {
-	    return Collections.emptyList();
-	} else {
-	    final List<EntValue> result = new ArrayList<EntValue>();
-
-	    for (final IElement item : getCollection()) {
-		result.addAll(item.getAllValues());
-	    }
-
-	    return result;
-	}
-    }
 }

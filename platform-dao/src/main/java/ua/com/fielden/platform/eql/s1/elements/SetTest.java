@@ -19,8 +19,8 @@ public class SetTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.el
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.SetTest transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.SetTest(leftOperand.transform(null), negated, rightOperand.transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.SetTest transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.SetTest(leftOperand.transform(resolver), negated, rightOperand.transform(resolver));
     }
 
     @Override
@@ -35,14 +35,6 @@ public class SetTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.el
 	final List<EntProp> result = new ArrayList<EntProp>();
 	result.addAll(leftOperand.getLocalProps());
 	result.addAll(rightOperand.getLocalProps());
-	return result;
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	result.addAll(leftOperand.getAllValues());
-	result.addAll(rightOperand.getAllValues());
 	return result;
     }
 

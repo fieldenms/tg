@@ -8,10 +8,10 @@ import ua.com.fielden.platform.utils.Pair;
 
 
 public class Sources implements IElement2 {
-    private final ISource main;
+    private final ISource2 main;
     private final List<CompoundSource> compounds;
 
-    public Sources(final ISource main, final List<CompoundSource> compounds) {
+    public Sources(final ISource2 main, final List<CompoundSource> compounds) {
 	super();
 	this.main = main;
 	this.compounds = compounds;
@@ -55,7 +55,7 @@ public class Sources implements IElement2 {
         return sb.toString();
     }
 
-    public ISource getMain() {
+    public ISource2 getMain() {
         return main;
     }
 
@@ -63,8 +63,8 @@ public class Sources implements IElement2 {
         return compounds;
     }
 
-    public List<ISource> getAllSources() {
-	final List<ISource> result = new ArrayList<ISource>();
+    public List<ISource2> getAllSources() {
+	final List<ISource2> result = new ArrayList<ISource2>();
 	result.add(main);
 	for (final CompoundSource compound : compounds) {
 	    result.add(compound.getSource());
@@ -72,11 +72,11 @@ public class Sources implements IElement2 {
 	return result;
     }
 
-    public List<Pair<ISource, Boolean>> getAllSourcesAndTheirJoinType() {
-	final List<Pair<ISource, Boolean>> result = new ArrayList<Pair<ISource, Boolean>>();
-	result.add(new Pair<ISource, Boolean>(main, false));
+    public List<Pair<ISource2, Boolean>> getAllSourcesAndTheirJoinType() {
+	final List<Pair<ISource2, Boolean>> result = new ArrayList<Pair<ISource2, Boolean>>();
+	result.add(new Pair<ISource2, Boolean>(main, false));
 	for (final CompoundSource compound : compounds) {
-	    result.add(new Pair<ISource, Boolean>(compound.getSource(), compound.getJoinType() == JoinType.LJ));
+	    result.add(new Pair<ISource2, Boolean>(compound.getSource(), compound.getJoinType() == JoinType.LJ));
 	}
 	return result;
     }

@@ -14,21 +14,12 @@ public class GroupBys implements IElement<ua.com.fielden.platform.eql.s2.element
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.GroupBys transform(TransformatorToS2 resolver) {
+    public ua.com.fielden.platform.eql.s2.elements.GroupBys transform(final TransformatorToS2 resolver) {
 	final List<ua.com.fielden.platform.eql.s2.elements.GroupBy> transformed = new ArrayList<>();
 	for (final GroupBy groupBy : groups) {
-	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.GroupBy(groupBy.getOperand().transform(null)));
+	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.GroupBy(groupBy.getOperand().transform(resolver)));
 	}
 	return new ua.com.fielden.platform.eql.s2.elements.GroupBys(transformed);
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final GroupBy group : groups) {
-	    result.addAll(group.getOperand().getAllValues());
-	}
-	return result;
     }
 
     @Override

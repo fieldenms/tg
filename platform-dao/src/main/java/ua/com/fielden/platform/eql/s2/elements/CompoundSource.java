@@ -7,11 +7,11 @@ import ua.com.fielden.platform.entity.query.fluent.JoinType;
 
 
 public class CompoundSource implements IElement2 {
-    private final ISource source;
+    private final ISource2 source;
     private final JoinType joinType;
     private final Conditions joinConditions;
 
-    public CompoundSource(final ISource source, final JoinType joinType, final Conditions joinConditions) {
+    public CompoundSource(final ISource2 source, final JoinType joinType, final Conditions joinConditions) {
 	super();
 	this.source = source;
 	this.joinType = joinType;
@@ -23,7 +23,7 @@ public class CompoundSource implements IElement2 {
         return joinType + " " + source + " ON " + joinConditions;
     }
 
-    public ISource getSource() {
+    public ISource2 getSource() {
         return source;
     }
 

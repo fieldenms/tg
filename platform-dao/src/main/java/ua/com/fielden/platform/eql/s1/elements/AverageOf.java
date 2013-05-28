@@ -13,7 +13,7 @@ public class AverageOf extends SingleOperandFunction<ua.com.fielden.platform.eql
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.AverageOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.AverageOf(getOperand().transform(null), distinct) ;
+    public ua.com.fielden.platform.eql.s2.elements.AverageOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.AverageOf(getOperand().transform(resolver), distinct) ;
     }
 }

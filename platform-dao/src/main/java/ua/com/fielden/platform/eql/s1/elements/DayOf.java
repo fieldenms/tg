@@ -11,7 +11,7 @@ public class DayOf extends SingleOperandFunction<ua.com.fielden.platform.eql.s2.
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.DayOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.DayOf(getOperand().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.DayOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.DayOf(getOperand().transform(resolver));
     }
 }

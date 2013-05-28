@@ -19,12 +19,12 @@ public class Expression implements ISingleOperand<ua.com.fielden.platform.eql.s2
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.Expression transform(TransformatorToS2 resolver) {
+    public ua.com.fielden.platform.eql.s2.elements.Expression transform(final TransformatorToS2 resolver) {
 	final List<ua.com.fielden.platform.eql.s2.elements.CompoundSingleOperand> transformed = new ArrayList<>();
 	for (final CompoundSingleOperand item : items) {
-	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.CompoundSingleOperand(item.getOperand().transform(null), item.getOperator()));
+	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.CompoundSingleOperand(item.getOperand().transform(resolver), item.getOperator()));
 	}
-	return new ua.com.fielden.platform.eql.s2.elements.Expression(first.transform(null), transformed);
+	return new ua.com.fielden.platform.eql.s2.elements.Expression(first.transform(resolver), transformed);
     }
 
     @Override
@@ -48,16 +48,6 @@ public class Expression implements ISingleOperand<ua.com.fielden.platform.eql.s2
 	result.addAll(first.getLocalSubQueries());
 	for (final CompoundSingleOperand compSingleOperand : items) {
 	    result.addAll(compSingleOperand.getOperand().getLocalSubQueries());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	result.addAll(first.getAllValues());
-	for (final CompoundSingleOperand compSingleOperand : items) {
-	    result.addAll(compSingleOperand.getOperand().getAllValues());
 	}
 	return result;
     }

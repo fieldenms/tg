@@ -12,7 +12,7 @@ public class RoundTo extends TwoOperandsFunction<ua.com.fielden.platform.eql.s2.
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.RoundTo transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.RoundTo(getOperand1().transform(null), getOperand2().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.RoundTo transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.RoundTo(getOperand1().transform(resolver), getOperand2().transform(resolver));
     }
 }

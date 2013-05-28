@@ -18,8 +18,8 @@ public class NullTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.e
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.NullTest transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.NullTest(operand.transform(null), negated);
+    public ua.com.fielden.platform.eql.s2.elements.NullTest transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.NullTest(operand.transform(resolver), negated);
     }
 
     @Override

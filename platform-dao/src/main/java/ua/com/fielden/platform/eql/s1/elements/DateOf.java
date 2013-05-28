@@ -12,7 +12,7 @@ public class DateOf extends SingleOperandFunction<ua.com.fielden.platform.eql.s2
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.DateOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.DateOf(getOperand().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.DateOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.DateOf(getOperand().transform(resolver));
     }
 }

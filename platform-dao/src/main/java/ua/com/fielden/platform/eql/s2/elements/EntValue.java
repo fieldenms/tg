@@ -8,15 +8,17 @@ import java.util.List;
 public class EntValue implements ISingleOperand2 {
     private final Object value;
     private final boolean ignoreNull;
+    private final String sqlParamName;
 
-    public EntValue(final Object value) {
-	this(value, false);
+    public EntValue(final Object value, final String sqlParamName) {
+	this(value, false, sqlParamName);
     }
 
-    public EntValue(final Object value, final boolean ignoreNull) {
+    public EntValue(final Object value, final boolean ignoreNull, final String sqlParamName) {
 	super();
 	this.value = value;
 	this.ignoreNull = ignoreNull;
+	this.sqlParamName = sqlParamName;
 	if (!ignoreNull && value == null) {
 	    // TODO Uncomment when yieldNull() operator is implemented and all occurences of yield().val(null) are corrected.
 //	    throw new IllegalStateException("Value can't be null"); //

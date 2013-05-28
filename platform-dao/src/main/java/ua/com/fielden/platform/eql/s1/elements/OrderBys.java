@@ -13,10 +13,10 @@ public class OrderBys implements IElement<ua.com.fielden.platform.eql.s2.element
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.OrderBys transform(TransformatorToS2 resolver) {
+    public ua.com.fielden.platform.eql.s2.elements.OrderBys transform(final TransformatorToS2 resolver) {
 	final List<ua.com.fielden.platform.eql.s2.elements.OrderBy> transformed = new ArrayList<>();
 	for (final OrderBy orderBy : models) {
-	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.OrderBy(orderBy.getOperand().transform(null), orderBy.isDesc()));
+	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.OrderBy(orderBy.getOperand().transform(resolver), orderBy.isDesc()));
 	}
 	return new ua.com.fielden.platform.eql.s2.elements.OrderBys(transformed);
     }
@@ -24,17 +24,6 @@ public class OrderBys implements IElement<ua.com.fielden.platform.eql.s2.element
     @Override
     public String toString() {
 	return models.toString();
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final OrderBy model : models) {
-	    if (model.getOperand() != null) {
-		result.addAll(model.getOperand().getAllValues());
-	    }
-	}
-	return result;
     }
 
     @Override

@@ -12,7 +12,7 @@ public class SumOf extends SingleOperandFunction<ua.com.fielden.platform.eql.s2.
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.SumOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.SumOf(getOperand().transform(null), distinct);
+    public ua.com.fielden.platform.eql.s2.elements.SumOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.SumOf(getOperand().transform(resolver), distinct);
     }
 }

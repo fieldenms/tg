@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,8 +25,8 @@ public class EntValue implements ISingleOperand<ua.com.fielden.platform.eql.s2.e
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.EntValue transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.EntValue(value, ignoreNull);
+    public ua.com.fielden.platform.eql.s2.elements.EntValue transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.EntValue(value, ignoreNull, resolver.generateNextSqlParamName());
     }
 
     @Override
@@ -38,11 +37,6 @@ public class EntValue implements ISingleOperand<ua.com.fielden.platform.eql.s2.e
     @Override
     public List<EntQuery> getLocalSubQueries() {
 	return Collections.emptyList();
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	return Arrays.asList(new EntValue[]{this});
     }
 
     @Override

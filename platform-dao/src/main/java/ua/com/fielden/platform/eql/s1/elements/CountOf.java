@@ -13,7 +13,7 @@ public class CountOf extends SingleOperandFunction<ua.com.fielden.platform.eql.s
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.CountOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.CountOf(getOperand().transform(null), distinct);
+    public ua.com.fielden.platform.eql.s2.elements.CountOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.CountOf(getOperand().transform(resolver), distinct);
     }
 }

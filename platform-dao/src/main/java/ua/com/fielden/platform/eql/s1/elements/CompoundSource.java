@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
@@ -45,14 +44,6 @@ public class CompoundSource implements IElement<ua.com.fielden.platform.eql.s2.e
     @Override
     public List<EntProp> getLocalProps() {
 	return joinConditions.getLocalProps();
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	result.addAll(source.getValues());
-	result.addAll(joinConditions.getAllValues());
-	return result;
     }
 
     @Override

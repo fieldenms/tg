@@ -16,10 +16,10 @@ public class OperandsBasedSet implements ISetOperand<ua.com.fielden.platform.eql
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.OperandsBasedSet transform(TransformatorToS2 resolver) {
+    public ua.com.fielden.platform.eql.s2.elements.OperandsBasedSet transform(final TransformatorToS2 resolver) {
 	final List<ISingleOperand2> transformedOperands = new ArrayList<>();
 	for (final ISingleOperand<? extends ISingleOperand2> singleOperand : operands) {
-	    transformedOperands.add(singleOperand.transform(null));
+	    transformedOperands.add(singleOperand.transform(resolver));
 	}
 
 	return new ua.com.fielden.platform.eql.s2.elements.OperandsBasedSet(transformedOperands);
@@ -39,15 +39,6 @@ public class OperandsBasedSet implements ISetOperand<ua.com.fielden.platform.eql
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	for (final ISingleOperand operand : operands) {
 	    result.addAll(operand.getLocalSubQueries());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final ISingleOperand operand : operands) {
-	    result.addAll(operand.getAllValues());
 	}
 	return result;
     }

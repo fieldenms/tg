@@ -17,8 +17,8 @@ public class ExistenceTest extends AbstractCondition<ua.com.fielden.platform.eql
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.ExistenceTest transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.ExistenceTest(negated, subQuery.transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.ExistenceTest transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.ExistenceTest(negated, subQuery.transform(resolver));
     }
 
     @Override

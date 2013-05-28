@@ -3,14 +3,13 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 
-public class QueryBasedSource extends AbstractSource {
+public class QueryBasedSource extends AbstractSource<ua.com.fielden.platform.eql.s2.elements.QueryBasedSource> {
     private final List<EntQuery> models;
     private final Map<String, List<Yield>> yieldsMatrix = new HashMap<String, List<Yield>>();
 
@@ -23,6 +22,15 @@ public class QueryBasedSource extends AbstractSource {
 	this.models = Arrays.asList(models);
 	populateYieldMatrixFromQueryModels(models);
 	validateYieldsMatrix();
+    }
+
+    @Override
+    public ua.com.fielden.platform.eql.s2.elements.QueryBasedSource transform(final TransformatorToS2 resolver) {
+	final List<ua.com.fielden.platform.eql.s2.elements.EntQuery> transformed = new ArrayList<>();
+	for (final EntQuery entQuery : models) {
+	    transformed.add(entQuery.transform(resolver));
+	}
+	return new ua.com.fielden.platform.eql.s2.elements.QueryBasedSource(alias, getDomainMetadataAnalyser(), transformed.toArray(new ua.com.fielden.platform.eql.s2.elements.EntQuery[]{}));
     }
 
     private static boolean checkWhetherResultTypeIsPersisted(final EntQuery... models) {
@@ -68,42 +76,6 @@ public class QueryBasedSource extends AbstractSource {
     @Override
     public Class sourceType() {
 	return null;//firstModel().type();
-    }
-
-    /**
-     * Generates one dot.notated string from list of strings (subproperties).
-     * @param parts
-     * @return
-     */
-    private static String joinWithDot(final List<String> parts) {
-	final StringBuffer sb = new StringBuffer();
-	for (final Iterator<String> iterator = parts.iterator(); iterator.hasNext();) {
-	    sb.append(iterator.next());
-	    if (iterator.hasNext()) {
-		sb.append(".");
-	    }
-	}
-	return sb.toString();
-    }
-
-    private static List<Pair<String, String>> prepareCandidates(final String dotNotatedPropName) {
-	final List<Pair<String, String>> result =  new ArrayList<Pair<String,String>>();
-	final List<String> parts = Arrays.asList(dotNotatedPropName.split("\\."));
-
-	for (int i = parts.size(); i >=1 ; i--) {
-	    result.add(new Pair<String, String>(joinWithDot(parts.subList(0, i)), joinWithDot(parts.subList(i, parts.size()))));
-	}
-
-	return result;
-    }
-
-    @Override
-    public List<EntValue> getValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final EntQuery entQry : models) {
-	    result.addAll(entQry.getAllValues());
-	}
-	return result;
     }
 
     @Override

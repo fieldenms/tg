@@ -13,7 +13,7 @@ public class YearOf extends SingleOperandFunction<ua.com.fielden.platform.eql.s2
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.YearOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.YearOf(getOperand().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.YearOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.YearOf(getOperand().transform(resolver));
     }
 }

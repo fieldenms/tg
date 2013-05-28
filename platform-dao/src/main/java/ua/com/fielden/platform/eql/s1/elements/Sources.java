@@ -5,33 +5,28 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.s2.elements.ISource2;
 import ua.com.fielden.platform.utils.Pair;
 
 
 public class Sources implements IElement<ua.com.fielden.platform.eql.s2.elements.Sources> {
-    private final ISource main;
+    private final ISource<? extends ISource2> main;
     private final List<CompoundSource> compounds;
 
-    public Sources(final ISource main, final List<CompoundSource> compounds) {
+    public Sources(final ISource<? extends ISource2> main, final List<CompoundSource> compounds) {
 	super();
 	this.main = main;
 	this.compounds = compounds;
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.Sources transform(TransformatorToS2 resolver) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	result.addAll(main.getValues());
-	for (final CompoundSource compSource : compounds) {
-	    result.addAll(compSource.getAllValues());
+    public ua.com.fielden.platform.eql.s2.elements.Sources transform(final TransformatorToS2 resolver) {
+	final List<ua.com.fielden.platform.eql.s2.elements.CompoundSource> transformed = new ArrayList<>();
+	for (final CompoundSource compoundSource : compounds) {
+	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.CompoundSource(compoundSource.getSource().transform(resolver), compoundSource.getJoinType(), //
+		    compoundSource.getJoinConditions().transform(resolver)));
 	}
-	return result;
+	return new ua.com.fielden.platform.eql.s2.elements.Sources(main.transform(resolver), transformed);
     }
 
     @Override

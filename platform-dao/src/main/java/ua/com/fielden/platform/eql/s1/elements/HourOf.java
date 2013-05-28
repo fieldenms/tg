@@ -12,7 +12,7 @@ public class HourOf extends SingleOperandFunction<ua.com.fielden.platform.eql.s2
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.HourOf transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.HourOf(getOperand().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.HourOf transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.HourOf(getOperand().transform(resolver));
     }
 }

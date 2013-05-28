@@ -18,11 +18,11 @@ public class Yields implements IElement<ua.com.fielden.platform.eql.s2.elements.
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.Yields transform(TransformatorToS2 resolver) {
+    public ua.com.fielden.platform.eql.s2.elements.Yields transform(final TransformatorToS2 resolver) {
 	final List<ua.com.fielden.platform.eql.s2.elements.Yield> transformed = new ArrayList<>();
 	final ua.com.fielden.platform.eql.s2.elements.Yields result = new ua.com.fielden.platform.eql.s2.elements.Yields();
 	for (final Yield yield : yields.values()) {
-	    result.addYield(new ua.com.fielden.platform.eql.s2.elements.Yield(yield.getOperand().transform(null), yield.getAlias(), yield.isRequiredHint()));
+	    result.addYield(new ua.com.fielden.platform.eql.s2.elements.Yield(yield.getOperand().transform(resolver), yield.getAlias(), yield.isRequiredHint()));
 	}
 	return result;
     }
@@ -75,17 +75,6 @@ public class Yields implements IElement<ua.com.fielden.platform.eql.s2.elements.
 	    }
  	}
 	return bestMatch != null ? yields.get(bestMatch) : null;
-    }
-
-    @Override
-    public List<EntValue> getAllValues() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final Yield yield : yields.values()) {
-//	    if (!yield.isCompositePropertyHeader()) {
-		result.addAll(yield.getOperand().getAllValues());
-//	    }
-	}
-	return result;
     }
 
     @Override

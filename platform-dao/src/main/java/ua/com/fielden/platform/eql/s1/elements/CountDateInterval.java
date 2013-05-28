@@ -15,7 +15,7 @@ public class CountDateInterval extends TwoOperandsFunction<ua.com.fielden.platfo
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.CountDateInterval transform(TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.CountDateInterval(intervalUnit, getOperand1().transform(null), getOperand2().transform(null));
+    public ua.com.fielden.platform.eql.s2.elements.CountDateInterval transform(final TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.CountDateInterval(intervalUnit, getOperand1().transform(resolver), getOperand2().transform(resolver));
     }
 }
