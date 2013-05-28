@@ -19,9 +19,5 @@ public interface ISource2 {
      */
     Class sourceType();
 
-    /**
-     * Collects all values from given query source (assuming it is composed from query model(s))
-     * @return
-     */
     List<EntValue> getValues();
 }
