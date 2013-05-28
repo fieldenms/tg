@@ -3,6 +3,8 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+
 public class OrderBys implements IElement<ua.com.fielden.platform.eql.s2.elements.OrderBys> {
     private final List<OrderBy> models;
 
@@ -11,10 +13,10 @@ public class OrderBys implements IElement<ua.com.fielden.platform.eql.s2.element
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.OrderBys transform() {
+    public ua.com.fielden.platform.eql.s2.elements.OrderBys transform(TransformatorToS2 resolver) {
 	final List<ua.com.fielden.platform.eql.s2.elements.OrderBy> transformed = new ArrayList<>();
 	for (final OrderBy orderBy : models) {
-	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.OrderBy(orderBy.getOperand().transform(), orderBy.isDesc()));
+	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.OrderBy(orderBy.getOperand().transform(null), orderBy.isDesc()));
 	}
 	return new ua.com.fielden.platform.eql.s2.elements.OrderBys(transformed);
     }

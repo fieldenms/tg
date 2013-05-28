@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
@@ -17,8 +18,8 @@ public class NullTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.e
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.NullTest transform() {
-	return new ua.com.fielden.platform.eql.s2.elements.NullTest(operand.transform(), negated);
+    public ua.com.fielden.platform.eql.s2.elements.NullTest transform(TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.NullTest(operand.transform(null), negated);
     }
 
     @Override

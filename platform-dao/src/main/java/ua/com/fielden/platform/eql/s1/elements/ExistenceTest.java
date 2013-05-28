@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+
 
 public class ExistenceTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.elements.ExistenceTest> {
     private final boolean negated;
@@ -15,8 +17,8 @@ public class ExistenceTest extends AbstractCondition<ua.com.fielden.platform.eql
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.ExistenceTest transform() {
-	return new ua.com.fielden.platform.eql.s2.elements.ExistenceTest(negated, subQuery.transform());
+    public ua.com.fielden.platform.eql.s2.elements.ExistenceTest transform(TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.ExistenceTest(negated, subQuery.transform(null));
     }
 
     @Override

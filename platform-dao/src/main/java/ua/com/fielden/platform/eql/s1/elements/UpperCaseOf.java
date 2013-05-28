@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
@@ -9,7 +10,7 @@ public class UpperCaseOf extends SingleOperandFunction<ua.com.fielden.platform.e
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.UpperCaseOf transform() {
-	return new ua.com.fielden.platform.eql.s2.elements.UpperCaseOf(getOperand().transform());
+    public ua.com.fielden.platform.eql.s2.elements.UpperCaseOf transform(TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.UpperCaseOf(getOperand().transform(null));
     }
 }

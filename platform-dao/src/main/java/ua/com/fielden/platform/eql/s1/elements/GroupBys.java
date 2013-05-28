@@ -3,6 +3,8 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+
 
 public class GroupBys implements IElement<ua.com.fielden.platform.eql.s2.elements.GroupBys> {
     private final List<GroupBy> groups;
@@ -12,10 +14,10 @@ public class GroupBys implements IElement<ua.com.fielden.platform.eql.s2.element
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.GroupBys transform() {
+    public ua.com.fielden.platform.eql.s2.elements.GroupBys transform(TransformatorToS2 resolver) {
 	final List<ua.com.fielden.platform.eql.s2.elements.GroupBy> transformed = new ArrayList<>();
 	for (final GroupBy groupBy : groups) {
-	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.GroupBy(groupBy.getOperand().transform()));
+	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.GroupBy(groupBy.getOperand().transform(null)));
 	}
 	return new ua.com.fielden.platform.eql.s2.elements.GroupBys(transformed);
     }

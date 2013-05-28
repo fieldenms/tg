@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
@@ -23,8 +24,8 @@ public class ComparisonTest extends AbstractCondition<ua.com.fielden.platform.eq
 	this.operator = operator;
     }
 
-    public ua.com.fielden.platform.eql.s2.elements.ComparisonTest transform() {
-	return new ua.com.fielden.platform.eql.s2.elements.ComparisonTest(leftOperand.transform(), operator, rightOperand.transform());
+    public ua.com.fielden.platform.eql.s2.elements.ComparisonTest transform(TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.ComparisonTest(leftOperand.transform(null), operator, rightOperand.transform(null));
     }
 
     @Override

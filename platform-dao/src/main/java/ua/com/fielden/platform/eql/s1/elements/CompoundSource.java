@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 
 
 public class CompoundSource implements IElement<ua.com.fielden.platform.eql.s2.elements.CompoundSource> {
@@ -19,9 +20,9 @@ public class CompoundSource implements IElement<ua.com.fielden.platform.eql.s2.e
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.CompoundSource transform() {
+    public ua.com.fielden.platform.eql.s2.elements.CompoundSource transform(final TransformatorToS2 resolver) {
 	// TODO Auto-generated method stub
-	return null;
+	return new ua.com.fielden.platform.eql.s2.elements.CompoundSource(null, joinType, joinConditions.transform(resolver));
     }
 
     @Override

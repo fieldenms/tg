@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s1.processing.EntQueryBlocks;
 import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator;
 import ua.com.fielden.platform.eql.s1.processing.StandAloneConditionBuilder;
@@ -34,7 +35,7 @@ public class EntQuery implements ISingleOperand<ua.com.fielden.platform.eql.s2.e
     transient private final Logger logger = Logger.getLogger(this.getClass());
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.EntQuery transform() {
+    public ua.com.fielden.platform.eql.s2.elements.EntQuery transform(TransformatorToS2 resolver) {
 	// TODO Auto-generated method stub
 	return null;
     }

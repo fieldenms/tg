@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ICondition2;
 
 
@@ -22,9 +23,12 @@ public class Conditions extends AbstractCondition<ua.com.fielden.platform.eql.s2
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.Conditions transform() {
-	// TODO Auto-generated method stub
-	return null;
+    public ua.com.fielden.platform.eql.s2.elements.Conditions transform(final TransformatorToS2 resolver) {
+	final List<ua.com.fielden.platform.eql.s2.elements.CompoundCondition> transformed = new ArrayList<>();
+	for (final CompoundCondition compoundCondition : otherConditions) {
+	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.CompoundCondition(compoundCondition.getLogicalOperator(), compoundCondition.getCondition().transform(resolver)));
+	}
+	return new ua.com.fielden.platform.eql.s2.elements.Conditions(firstCondition.transform(resolver), transformed);
     }
 
     private List<List<ICondition>> formConditionIntoLogicalGroups() {

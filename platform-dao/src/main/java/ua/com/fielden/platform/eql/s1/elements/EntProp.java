@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+
 public class EntProp implements ISingleOperand<ua.com.fielden.platform.eql.s2.elements.EntProp> {
     private String name;
     private boolean external;
@@ -17,7 +19,7 @@ public class EntProp implements ISingleOperand<ua.com.fielden.platform.eql.s2.el
         this(name, false);
     }
 
-    public ua.com.fielden.platform.eql.s2.elements.EntProp transform() {
+    public ua.com.fielden.platform.eql.s2.elements.EntProp transform(TransformatorToS2 resolver) {
 	return null;
     }
 

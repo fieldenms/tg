@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
@@ -11,7 +12,7 @@ public class RoundTo extends TwoOperandsFunction<ua.com.fielden.platform.eql.s2.
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.RoundTo transform() {
-	return new ua.com.fielden.platform.eql.s2.elements.RoundTo(getOperand1().transform(), getOperand2().transform());
+    public ua.com.fielden.platform.eql.s2.elements.RoundTo transform(TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.RoundTo(getOperand1().transform(null), getOperand2().transform(null));
     }
 }

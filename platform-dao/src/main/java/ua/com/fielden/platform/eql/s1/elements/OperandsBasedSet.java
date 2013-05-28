@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
@@ -15,10 +16,10 @@ public class OperandsBasedSet implements ISetOperand<ua.com.fielden.platform.eql
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.OperandsBasedSet transform() {
+    public ua.com.fielden.platform.eql.s2.elements.OperandsBasedSet transform(TransformatorToS2 resolver) {
 	final List<ISingleOperand2> transformedOperands = new ArrayList<>();
 	for (final ISingleOperand<? extends ISingleOperand2> singleOperand : operands) {
-	    transformedOperands.add(singleOperand.transform());
+	    transformedOperands.add(singleOperand.transform(null));
 	}
 
 	return new ua.com.fielden.platform.eql.s2.elements.OperandsBasedSet(transformedOperands);

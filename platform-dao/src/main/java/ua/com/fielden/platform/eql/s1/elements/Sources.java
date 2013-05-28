@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.utils.Pair;
 
 
@@ -18,7 +19,7 @@ public class Sources implements IElement<ua.com.fielden.platform.eql.s2.elements
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.Sources transform() {
+    public ua.com.fielden.platform.eql.s2.elements.Sources transform(TransformatorToS2 resolver) {
 	// TODO Auto-generated method stub
 	return null;
     }

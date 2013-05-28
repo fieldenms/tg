@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
@@ -12,7 +13,7 @@ public class CountOf extends SingleOperandFunction<ua.com.fielden.platform.eql.s
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.CountOf transform() {
-	return new ua.com.fielden.platform.eql.s2.elements.CountOf(getOperand().transform(), distinct);
+    public ua.com.fielden.platform.eql.s2.elements.CountOf transform(TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.CountOf(getOperand().transform(null), distinct);
     }
 }

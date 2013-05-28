@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ICondition2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
@@ -20,12 +21,12 @@ public class CaseWhen extends AbstractFunction<ua.com.fielden.platform.eql.s2.el
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.CaseWhen transform() {
+    public ua.com.fielden.platform.eql.s2.elements.CaseWhen transform(TransformatorToS2 resolver) {
 	final List<Pair<ICondition2, ISingleOperand2>> transformedWhenThenPairs = new ArrayList<>();
 	for (final Pair<ICondition<? extends ICondition2>, ISingleOperand<? extends ISingleOperand2>> pair : whenThenPairs) {
-	    transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(pair.getKey().transform(), pair.getValue().transform()));
+	    transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(pair.getKey().transform(null), pair.getValue().transform(null)));
 	}
-	return new ua.com.fielden.platform.eql.s2.elements.CaseWhen(transformedWhenThenPairs, elseOperand.transform());
+	return new ua.com.fielden.platform.eql.s2.elements.CaseWhen(transformedWhenThenPairs, elseOperand.transform(null));
     }
 
     @Override

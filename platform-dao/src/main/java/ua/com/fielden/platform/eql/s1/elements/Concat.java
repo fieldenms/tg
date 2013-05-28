@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
@@ -15,10 +16,10 @@ public class Concat extends AbstractFunction<ua.com.fielden.platform.eql.s2.elem
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.Concat transform() {
+    public ua.com.fielden.platform.eql.s2.elements.Concat transform(TransformatorToS2 resolver) {
 	final List<ISingleOperand2> transformed = new ArrayList<>();
 	for (final ISingleOperand<? extends ISingleOperand2> operand : operands) {
-	    transformed.add(operand.transform());
+	    transformed.add(operand.transform(null));
 	}
 	return new ua.com.fielden.platform.eql.s2.elements.Concat(transformed);
     }

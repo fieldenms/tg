@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISetOperand2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
@@ -18,8 +19,8 @@ public class SetTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.el
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.SetTest transform() {
-	return new ua.com.fielden.platform.eql.s2.elements.SetTest(leftOperand.transform(), negated, rightOperand.transform());
+    public ua.com.fielden.platform.eql.s2.elements.SetTest transform(TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.SetTest(leftOperand.transform(null), negated, rightOperand.transform(null));
     }
 
     @Override

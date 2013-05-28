@@ -3,6 +3,8 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.Arrays;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+
 
 public class QueryBasedSet implements ISetOperand<ua.com.fielden.platform.eql.s2.elements.QueryBasedSet> {
     private final EntQuery model;
@@ -13,8 +15,8 @@ public class QueryBasedSet implements ISetOperand<ua.com.fielden.platform.eql.s2
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.QueryBasedSet transform() {
-	return new ua.com.fielden.platform.eql.s2.elements.QueryBasedSet(model.transform());
+    public ua.com.fielden.platform.eql.s2.elements.QueryBasedSet transform(TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.QueryBasedSet(model.transform(null));
     }
 
     @Override

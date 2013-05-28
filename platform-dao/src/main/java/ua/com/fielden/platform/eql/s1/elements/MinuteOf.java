@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
@@ -11,7 +12,7 @@ public class MinuteOf extends SingleOperandFunction<ua.com.fielden.platform.eql.
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.MinuteOf transform() {
-	return new ua.com.fielden.platform.eql.s2.elements.MinuteOf(getOperand().transform());
+    public ua.com.fielden.platform.eql.s2.elements.MinuteOf transform(TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.MinuteOf(getOperand().transform(null));
     }
 }

@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+
 
 public class Yields implements IElement<ua.com.fielden.platform.eql.s2.elements.Yields> {
     private final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
@@ -16,11 +18,11 @@ public class Yields implements IElement<ua.com.fielden.platform.eql.s2.elements.
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.Yields transform() {
+    public ua.com.fielden.platform.eql.s2.elements.Yields transform(TransformatorToS2 resolver) {
 	final List<ua.com.fielden.platform.eql.s2.elements.Yield> transformed = new ArrayList<>();
 	final ua.com.fielden.platform.eql.s2.elements.Yields result = new ua.com.fielden.platform.eql.s2.elements.Yields();
 	for (final Yield yield : yields.values()) {
-	    result.addYield(new ua.com.fielden.platform.eql.s2.elements.Yield(yield.getOperand().transform(), yield.getAlias(), yield.isRequiredHint()));
+	    result.addYield(new ua.com.fielden.platform.eql.s2.elements.Yield(yield.getOperand().transform(null), yield.getAlias(), yield.isRequiredHint()));
 	}
 	return result;
     }

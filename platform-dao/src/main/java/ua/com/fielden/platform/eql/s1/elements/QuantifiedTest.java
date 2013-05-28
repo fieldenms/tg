@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 public class QuantifiedTest extends AbstractCondition<ua.com.fielden.platform.eql.s2.elements.QuantifiedTest> {
@@ -20,8 +21,8 @@ public class QuantifiedTest extends AbstractCondition<ua.com.fielden.platform.eq
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.QuantifiedTest transform() {
-	return new ua.com.fielden.platform.eql.s2.elements.QuantifiedTest(leftOperand.transform(), operator, quantifier, rightOperand.transform());
+    public ua.com.fielden.platform.eql.s2.elements.QuantifiedTest transform(TransformatorToS2 resolver) {
+	return new ua.com.fielden.platform.eql.s2.elements.QuantifiedTest(leftOperand.transform(null), operator, quantifier, rightOperand.transform(null));
     }
 
     @Override

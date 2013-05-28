@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+
 
 public class EntValue implements ISingleOperand<ua.com.fielden.platform.eql.s2.elements.EntValue> {
     private final Object value;
@@ -24,7 +26,7 @@ public class EntValue implements ISingleOperand<ua.com.fielden.platform.eql.s2.e
     }
 
     @Override
-    public ua.com.fielden.platform.eql.s2.elements.EntValue transform() {
+    public ua.com.fielden.platform.eql.s2.elements.EntValue transform(TransformatorToS2 resolver) {
 	return new ua.com.fielden.platform.eql.s2.elements.EntValue(value, ignoreNull);
     }
 
