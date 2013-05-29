@@ -12,7 +12,7 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.eql.s1.processing.EntQueryBlocks;
+import ua.com.fielden.platform.eql.s1.elements.QueryCategory;
 import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator;
 
 public class EntQuery implements ISingleOperand2 {

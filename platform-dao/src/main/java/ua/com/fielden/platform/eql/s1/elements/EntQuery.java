@@ -36,8 +36,16 @@ public class EntQuery implements ISingleOperand<ua.com.fielden.platform.eql.s2.e
 
     @Override
     public ua.com.fielden.platform.eql.s2.elements.EntQuery transform(final TransformatorToS2 resolver) {
-	// TODO Auto-generated method stub
-	return null;
+	final TransformatorToS2 localResolver = resolver.produceBasedOn();
+
+	for (final ISource source : sources.getAllSources()) {
+	    localResolver.addSource(source);
+	}
+
+	final ua.com.fielden.platform.eql.s2.elements.EntQueryBlocks entQueryBlocks = new ua.com.fielden.platform.eql.s2.elements.EntQueryBlocks(sources.transform(localResolver), conditions.transform(localResolver), //
+		yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
+
+	return new ua.com.fielden.platform.eql.s2.elements.EntQuery(false, entQueryBlocks, resultType, category, domainMetadataAnalyser, null, null, null, null, paramValues);
     }
 
     private boolean isSubQuery() {

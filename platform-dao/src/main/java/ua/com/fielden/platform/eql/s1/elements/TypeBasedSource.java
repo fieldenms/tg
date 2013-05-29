@@ -18,7 +18,8 @@ public class TypeBasedSource extends AbstractSource<ua.com.fielden.platform.eql.
 
     @Override
     public ua.com.fielden.platform.eql.s2.elements.TypeBasedSource transform(final TransformatorToS2 resolver) {
-	return new ua.com.fielden.platform.eql.s2.elements.TypeBasedSource(entityMetadata, alias, getDomainMetadataAnalyser());
+	return (ua.com.fielden.platform.eql.s2.elements.TypeBasedSource) resolver.getTransformedSource(this);
+	//return new ua.com.fielden.platform.eql.s2.elements.TypeBasedSource(entityMetadata, alias, getDomainMetadataAnalyser());
     }
 
     @Override
@@ -54,5 +55,9 @@ public class TypeBasedSource extends AbstractSource<ua.com.fielden.platform.eql.
 	    return false;
 	}
 	return true;
+    }
+
+    public EntityMetadata<? extends AbstractEntity<?>> getEntityMetadata() {
+        return entityMetadata;
     }
 }

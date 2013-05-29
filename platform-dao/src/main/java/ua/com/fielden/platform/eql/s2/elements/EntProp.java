@@ -6,15 +6,15 @@ import java.util.List;
 
 public class EntProp implements ISingleOperand2 {
     private String name;
-    private boolean external;
+    private boolean aliased;
+    private ISource2 source;
+    private Object resolution;
 
-    public EntProp(final String name, final boolean external) {
+    public EntProp(final String name, final ISource2 source, final boolean aliased, final Object resolution) {
         this.name = name;
-        this.external = external;
-    }
-
-    public EntProp(final String name) {
-        this(name, false);
+        this.source = source;
+        this.aliased = aliased;
+        this.resolution = resolution;
     }
 
     @Override
@@ -76,13 +76,5 @@ public class EntProp implements ISingleOperand2 {
 
     public void setName(final String name) {
         this.name = name;
-    }
-
-    public boolean isExternal() {
-        return external;
-    }
-
-    public void setExternal(final boolean external) {
-        this.external = external;
     }
 }

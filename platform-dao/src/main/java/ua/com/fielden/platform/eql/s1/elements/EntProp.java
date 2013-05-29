@@ -20,7 +20,7 @@ public class EntProp implements ISingleOperand<ua.com.fielden.platform.eql.s2.el
     }
 
     public ua.com.fielden.platform.eql.s2.elements.EntProp transform(final TransformatorToS2 resolver) {
-	return null;
+	return resolver.getTransformedProp(this);
     }
 
     @Override
