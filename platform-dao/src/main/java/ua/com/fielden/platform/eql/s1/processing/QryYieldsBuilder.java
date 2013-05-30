@@ -9,7 +9,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QryYieldsBuilder extends AbstractTokensBuilder {
 
-    protected QryYieldsBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected QryYieldsBuilder(final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(null, queryBuilder, paramValues);
     }
 

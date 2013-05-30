@@ -28,7 +28,7 @@ public class Conditions extends AbstractCondition<ua.com.fielden.platform.eql.s2
 	for (final CompoundCondition compoundCondition : otherConditions) {
 	    transformed.add(new ua.com.fielden.platform.eql.s2.elements.CompoundCondition(compoundCondition.getLogicalOperator(), compoundCondition.getCondition().transform(resolver)));
 	}
-	return new ua.com.fielden.platform.eql.s2.elements.Conditions(firstCondition.transform(resolver), transformed);
+	return firstCondition != null ? new ua.com.fielden.platform.eql.s2.elements.Conditions(firstCondition.transform(resolver), transformed) : new ua.com.fielden.platform.eql.s2.elements.Conditions(null);
     }
 
     private List<List<ICondition>> formConditionIntoLogicalGroups() {

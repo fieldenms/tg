@@ -6,7 +6,7 @@ import ua.com.fielden.platform.eql.s1.elements.MinuteOf;
 
 public class MinuteOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected MinuteOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected MinuteOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 

@@ -7,7 +7,7 @@ import ua.com.fielden.platform.eql.s1.elements.DateOf;
 
 public class DateOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected DateOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected DateOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 

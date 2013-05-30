@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.eql.s1.elements.QueryCategory;
-import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator;
+import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
 
 public class EntQuery implements ISingleOperand2 {
 
@@ -67,7 +67,7 @@ public class EntQuery implements ISingleOperand2 {
 
     public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
 	    final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, //
-            final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
+            final EntQueryGenerator1 generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;

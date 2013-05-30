@@ -13,7 +13,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class ConcatFunctionBuilder extends AbstractTokensBuilder {
 
-    protected ConcatFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected ConcatFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 

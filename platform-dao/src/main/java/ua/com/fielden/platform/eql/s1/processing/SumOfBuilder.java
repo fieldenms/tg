@@ -6,7 +6,7 @@ import ua.com.fielden.platform.eql.s1.elements.SumOf;
 
 public class SumOfBuilder extends OneArgumentFunctionBuilder {
     private final boolean distinct;
-    protected SumOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final boolean distinct) {
+    protected SumOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues, final boolean distinct) {
 	super(parent, queryBuilder, paramValues);
 	this.distinct = distinct;
     }

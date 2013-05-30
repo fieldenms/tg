@@ -17,12 +17,12 @@ import ua.com.fielden.platform.eql.s1.elements.OrderBys;
 import ua.com.fielden.platform.eql.s1.elements.QueryCategory;
 import ua.com.fielden.platform.utils.Pair;
 
-public class EntQueryGenerator {
+public class EntQueryGenerator1 {
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final IFilter filter;
     private final String username;
 
-    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
+    public EntQueryGenerator1(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
 	this.domainMetadataAnalyser = domainMetadataAnalyser;
 	this.filter = filter;
 	this.username = username;

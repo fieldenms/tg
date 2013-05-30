@@ -6,7 +6,7 @@ import ua.com.fielden.platform.eql.s1.elements.MaxOf;
 
 public class MaxOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected MaxOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected MaxOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 

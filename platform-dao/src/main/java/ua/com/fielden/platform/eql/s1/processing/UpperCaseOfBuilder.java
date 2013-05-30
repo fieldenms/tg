@@ -6,7 +6,7 @@ import ua.com.fielden.platform.eql.s1.elements.UpperCaseOf;
 
 public class UpperCaseOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected UpperCaseOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected UpperCaseOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 

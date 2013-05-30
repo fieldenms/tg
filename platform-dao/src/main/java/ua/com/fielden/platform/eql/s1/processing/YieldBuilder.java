@@ -9,7 +9,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class YieldBuilder extends AbstractTokensBuilder {
 
-    protected YieldBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected YieldBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 

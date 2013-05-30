@@ -11,7 +11,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QryGroupsBuilder extends AbstractTokensBuilder {
 
-    protected QryGroupsBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected QryGroupsBuilder(final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(null, queryBuilder, paramValues);
     }
 

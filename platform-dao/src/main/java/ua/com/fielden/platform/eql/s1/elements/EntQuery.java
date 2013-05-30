@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s1.processing.EntQueryBlocks;
-import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator;
+import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
 import ua.com.fielden.platform.eql.s1.processing.StandAloneConditionBuilder;
 
 public class EntQuery implements ISingleOperand<ua.com.fielden.platform.eql.s2.elements.EntQuery> {
@@ -68,7 +68,7 @@ public class EntQuery implements ISingleOperand<ua.com.fielden.platform.eql.s2.e
 	return getSources().getMain() instanceof QueryBasedSource;
     }
 
-    private Conditions enhanceConditions(final Conditions originalConditions, final IFilter filter, final String username, final ISource mainSource, final EntQueryGenerator generator, final Map<String, Object> paramValues) {
+    private Conditions enhanceConditions(final Conditions originalConditions, final IFilter filter, final String username, final ISource mainSource, final EntQueryGenerator1 generator, final Map<String, Object> paramValues) {
 	if (mainSource instanceof TypeBasedSource && filter != null) {
 	final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
 	if (filteringCondition == null) {
@@ -85,7 +85,7 @@ public class EntQuery implements ISingleOperand<ua.com.fielden.platform.eql.s2.e
 
     public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
 	    final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, //
-            final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
+            final EntQueryGenerator1 generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;

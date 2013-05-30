@@ -41,9 +41,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private ITokensBuilder child;
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
     private final Map<String, Object> paramValues;
-    private final EntQueryGenerator queryBuilder;
+    private final EntQueryGenerator1 queryBuilder;
 
-    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	this.parent = parent;
 	this.queryBuilder = queryBuilder;
 	this.paramValues = paramValues;
@@ -394,7 +394,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	return result;
     }
 
-    protected EntQueryGenerator getQueryBuilder() {
+    protected EntQueryGenerator1 getQueryBuilder() {
 	return queryBuilder;
     }
 

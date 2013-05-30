@@ -7,7 +7,7 @@ import ua.com.fielden.platform.eql.s1.elements.DayOf;
 
 public class DayOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected DayOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected DayOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 

@@ -13,7 +13,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {
 
-    protected QrySourcesBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected QrySourcesBuilder(final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(null, queryBuilder, paramValues);
 	setChild(new QrySourceBuilder(this, queryBuilder, paramValues));
     }

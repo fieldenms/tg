@@ -6,7 +6,7 @@ import ua.com.fielden.platform.eql.s1.elements.SecondOf;
 
 public class SecondOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected SecondOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected SecondOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 

@@ -6,7 +6,7 @@ import ua.com.fielden.platform.eql.s1.elements.LowerCaseOf;
 
 public class LowerCaseOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected LowerCaseOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected LowerCaseOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 

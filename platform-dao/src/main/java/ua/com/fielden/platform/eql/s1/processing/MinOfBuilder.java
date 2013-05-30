@@ -6,7 +6,7 @@ import ua.com.fielden.platform.eql.s1.elements.MinOf;
 
 public class MinOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected MinOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected MinOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 

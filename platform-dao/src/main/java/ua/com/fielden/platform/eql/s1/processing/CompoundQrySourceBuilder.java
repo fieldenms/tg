@@ -10,7 +10,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
 
-    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final TokenCategory cat, final Object value) {
+    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues, final TokenCategory cat, final Object value) {
 	super(parent, queryBuilder, paramValues);
 	getTokens().add(new Pair<TokenCategory, Object>(cat, value));
 	setChild(new QrySourceBuilder(this, queryBuilder, paramValues));

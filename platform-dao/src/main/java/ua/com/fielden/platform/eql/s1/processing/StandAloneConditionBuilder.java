@@ -15,7 +15,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class StandAloneConditionBuilder extends AbstractTokensBuilder {
     private final boolean negated;
 
-    public StandAloneConditionBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final ConditionModel exprModel, final boolean negated) {
+    public StandAloneConditionBuilder(final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues, final ConditionModel exprModel, final boolean negated) {
 	super(null, queryBuilder, paramValues);
 	this.negated = negated;
 	setChild(new ConditionBuilder(this, queryBuilder, paramValues));

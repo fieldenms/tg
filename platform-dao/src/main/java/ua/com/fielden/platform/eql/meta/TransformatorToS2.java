@@ -15,7 +15,7 @@ import ua.com.fielden.platform.eql.s2.elements.ISource2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class TransformatorToS2 {
-    private List<Map<ISource<? extends ISource2>, Pair<ISource2, EntityInfo>>> sourceMap;
+    private List<Map<ISource<? extends ISource2>, Pair<ISource2, EntityInfo>>> sourceMap = new ArrayList<>();
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata;
 
     public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata) {

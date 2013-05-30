@@ -1,9 +1,14 @@
 package ua.com.fielden.platform.eql.meta;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase1;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
@@ -31,8 +36,9 @@ import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-public class PropResolutionTest {
+public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     @Test
     public void test() {
@@ -64,15 +70,30 @@ public class PropResolutionTest {
 	final EntityInfo tgModelYearCount = new EntityInfo(TgModelYearCount.class);
 	final EntityInfo tgAverageFuelUsage = new EntityInfo(TgAverageFuelUsage.class);
 
+	tgPersonName.getProps().put("id", new PrimTypePropInfo("id", tgPersonName, Long.class));
 	tgPersonName.getProps().put("key", new PrimTypePropInfo("key", tgPersonName, String.class));
+	tgAuthor.getProps().put("id", new PrimTypePropInfo("id", tgAuthor, Long.class));
 	tgAuthor.getProps().put("key", new PrimTypePropInfo("key", tgAuthor, String.class));
 	tgAuthor.getProps().put("name", new EntityTypePropInfo("name", tgAuthor, tgPersonName));
 	tgAuthor.getProps().put("surname", new PrimTypePropInfo("surname", tgAuthor, String.class));
+	tgAuthorship.getProps().put("id", new PrimTypePropInfo("id", tgAuthorship, Long.class));
 	tgAuthorship.getProps().put("key", new PrimTypePropInfo("key", tgAuthorship, String.class));
 	tgAuthorship.getProps().put("author", new EntityTypePropInfo("author", tgAuthorship, tgAuthor));
 	tgAuthorship.getProps().put("bookTitle", new PrimTypePropInfo("bookTitle", tgAuthorship, String.class));
+	tgAuthorRoyalty.getProps().put("id", new PrimTypePropInfo("id", tgAuthorRoyalty, Long.class));
 	tgAuthorRoyalty.getProps().put("authorship", new EntityTypePropInfo("authorship", tgAuthorRoyalty, tgAuthorship));
 	tgAuthorRoyalty.getProps().put("paymentDate", new PrimTypePropInfo("paymentDate", tgAuthorRoyalty, Date.class));
+
+	final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
+	metadata.put(TgPersonName.class, tgPersonName);
+	metadata.put(TgAuthor.class, tgAuthor);
+	metadata.put(TgAuthorship.class, tgAuthorship);
+	metadata.put(TgAuthorRoyalty.class, tgAuthorRoyalty);
+
+//	final EntityResultQueryModel<TgAuthorship> qry = select(TgAuthorship.class).
+//	where().beginExpr().val(100).mult().model(
+//		select(FUEL_USAGE).yield().sumOf().prop("qty").modelAsPrimitive()
+//		).endExpr().ge().val(1000).model();
 
 	System.out.println(tgAuthorship.resolve("author1"));
 	System.out.println(tgAuthorship.resolve("author1.name"));
@@ -95,5 +116,17 @@ public class PropResolutionTest {
 	System.out.println(tgAuthorRoyalty.resolve("authorship.author.surname"));
 	System.out.println(tgAuthorRoyalty.resolve("authorship.author.name.key"));
 	System.out.println(tgAuthorRoyalty.resolve("paymentDate"));
+
+	System.out.println("-----------------------------------");
+	final EntityResultQueryModel<TgAuthorship> qry = select(TgAuthorship.class).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model();
+	entResultQry2(qry, new TransformatorToS2(metadata));
+	System.out.println("-----------------------------------");
+	final EntityResultQueryModel<TgAuthorRoyalty> qry2 = select(TgAuthorRoyalty.class).as("ar").where().prop("authorship.author.surname").eq().val("Date").or().prop("ar.authorship.author.name.key").eq().val("Chris").model();
+	entResultQry2(qry2, new TransformatorToS2(metadata));
+	System.out.println("-----------------------------------");
+	final EntityResultQueryModel<TgAuthorRoyalty> qry3 = select(TgAuthorRoyalty.class).as("ar").where().exists(
+		select(TgAuthorship.class).where().prop("id").eq().extProp("authorship").and().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model()).model();
+	entResultQry2(qry3, new TransformatorToS2(metadata));
+
     }
 }

@@ -15,6 +15,7 @@ public class EntProp implements ISingleOperand2 {
         this.source = source;
         this.aliased = aliased;
         this.resolution = resolution;
+        System.out.println(" name = " + name + "; source = " + source + "; aliased = " + aliased + "; resolution = " + resolution);
     }
 
     @Override

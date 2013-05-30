@@ -7,7 +7,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 abstract class TwoArgumentsFunctionBuilder extends AbstractTokensBuilder {
 
-    protected TwoArgumentsFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected TwoArgumentsFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);
     }
 
