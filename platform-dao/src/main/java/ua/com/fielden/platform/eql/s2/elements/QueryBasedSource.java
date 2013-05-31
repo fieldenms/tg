@@ -21,8 +21,8 @@ public class QueryBasedSource extends AbstractSource {
     public QueryBasedSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final EntQuery... models) {
 	super(alias, domainMetadataAnalyser, checkWhetherResultTypeIsPersisted(models));
 	this.models = Arrays.asList(models);
-	populateYieldMatrixFromQueryModels(models);
-	validateYieldsMatrix();
+//	populateYieldMatrixFromQueryModels(models);
+//	validateYieldsMatrix();
     }
 
     private static boolean checkWhetherResultTypeIsPersisted(final EntQuery... models) {
@@ -32,20 +32,20 @@ public class QueryBasedSource extends AbstractSource {
 	return models[0].isPersistedType();
     }
 
-    private void populateYieldMatrixFromQueryModels(final EntQuery... models) {
-	for (final EntQuery entQuery : models) {
-	    for (final Yield yield : entQuery.getYields().getYields()) {
-		final List<Yield> foundYields = yieldsMatrix.get(yield.getAlias());
-		if (foundYields != null) {
-		    foundYields.add(yield);
-		} else {
-		    final List<Yield> newList = new ArrayList<Yield>();
-		    newList.add(yield);
-		    yieldsMatrix.put(yield.getAlias(), newList);
-		}
-	    }
-	}
-    }
+//    private void populateYieldMatrixFromQueryModels(final EntQuery... models) {
+//	for (final EntQuery entQuery : models) {
+//	    for (final Yield yield : entQuery.getYields().getYields()) {
+//		final List<Yield> foundYields = yieldsMatrix.get(yield.getAlias());
+//		if (foundYields != null) {
+//		    foundYields.add(yield);
+//		} else {
+//		    final List<Yield> newList = new ArrayList<Yield>();
+//		    newList.add(yield);
+//		    yieldsMatrix.put(yield.getAlias(), newList);
+//		}
+//	    }
+//	}
+//    }
 
     private boolean getYieldNullability(final String yieldAlias) {
 	final boolean result = false;
@@ -67,7 +67,7 @@ public class QueryBasedSource extends AbstractSource {
 
     @Override
     public Class sourceType() {
-	return null;//firstModel().type();
+	return firstModel().type();
     }
 
     /**

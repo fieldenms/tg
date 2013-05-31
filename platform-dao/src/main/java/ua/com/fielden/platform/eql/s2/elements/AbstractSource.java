@@ -1,10 +1,21 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 
 public abstract class AbstractSource implements ISource2 {
 
     protected final boolean persistedType;
+
+    public List<EntProp> props = new ArrayList<>();
+
+
+    @Override
+    public void addProp(final EntProp prop) {
+	props.add(prop);
+    }
 
     /**
      * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).
@@ -60,5 +71,9 @@ public abstract class AbstractSource implements ISource2 {
 	    return false;
 	}
 	return true;
+    }
+
+    public List<EntProp> props() {
+        return props;
     }
 }

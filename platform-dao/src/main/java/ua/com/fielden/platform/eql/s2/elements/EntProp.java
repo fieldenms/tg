@@ -15,7 +15,13 @@ public class EntProp implements ISingleOperand2 {
         this.source = source;
         this.aliased = aliased;
         this.resolution = resolution;
-        System.out.println(" name = " + name + "; source = " + source + "; aliased = " + aliased + "; resolution = " + resolution);
+        source.addProp(this);
+        System.out.println(toString());
+    }
+
+    @Override
+    public String toString() {
+        return " name = " + name + "; source = " + source + "; aliased = " + aliased + "; resolution = " + resolution;
     }
 
     @Override

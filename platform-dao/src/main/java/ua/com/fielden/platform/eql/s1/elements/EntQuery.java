@@ -34,6 +34,10 @@ public class EntQuery implements ISingleOperand<ua.com.fielden.platform.eql.s2.e
 
     transient private final Logger logger = Logger.getLogger(this.getClass());
 
+    public Class type() {
+        return resultType;
+    }
+
     @Override
     public ua.com.fielden.platform.eql.s2.elements.EntQuery transform(final TransformatorToS2 resolver) {
 	final TransformatorToS2 localResolver = resolver.produceBasedOn();

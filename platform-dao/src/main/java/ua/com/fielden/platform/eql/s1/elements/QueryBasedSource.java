@@ -26,11 +26,12 @@ public class QueryBasedSource extends AbstractSource<ua.com.fielden.platform.eql
 
     @Override
     public ua.com.fielden.platform.eql.s2.elements.QueryBasedSource transform(final TransformatorToS2 resolver) {
-	final List<ua.com.fielden.platform.eql.s2.elements.EntQuery> transformed = new ArrayList<>();
-	for (final EntQuery entQuery : models) {
-	    transformed.add(entQuery.transform(resolver));
-	}
-	return new ua.com.fielden.platform.eql.s2.elements.QueryBasedSource(alias, getDomainMetadataAnalyser(), transformed.toArray(new ua.com.fielden.platform.eql.s2.elements.EntQuery[]{}));
+	return (ua.com.fielden.platform.eql.s2.elements.QueryBasedSource) resolver.getTransformedSource(this);
+//	final List<ua.com.fielden.platform.eql.s2.elements.EntQuery> transformed = new ArrayList<>();
+//	for (final EntQuery entQuery : models) {
+//	    transformed.add(entQuery.transform(resolver));
+//	}
+//	return new ua.com.fielden.platform.eql.s2.elements.QueryBasedSource(alias, getDomainMetadataAnalyser(), transformed.toArray(new ua.com.fielden.platform.eql.s2.elements.EntQuery[]{}));
     }
 
     private static boolean checkWhetherResultTypeIsPersisted(final EntQuery... models) {
@@ -75,7 +76,7 @@ public class QueryBasedSource extends AbstractSource<ua.com.fielden.platform.eql
 
     @Override
     public Class sourceType() {
-	return null;//firstModel().type();
+	return firstModel().type();
     }
 
     @Override
@@ -106,5 +107,9 @@ public class QueryBasedSource extends AbstractSource<ua.com.fielden.platform.eql
 	    return false;
 	}
 	return true;
+    }
+
+    public List<EntQuery> getModels() {
+        return models;
     }
 }

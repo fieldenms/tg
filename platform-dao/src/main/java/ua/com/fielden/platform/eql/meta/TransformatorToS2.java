@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.s1.elements.EntProp;
+import ua.com.fielden.platform.eql.s1.elements.EntQuery;
 import ua.com.fielden.platform.eql.s1.elements.ISource;
+import ua.com.fielden.platform.eql.s1.elements.QueryBasedSource;
 import ua.com.fielden.platform.eql.s1.elements.TypeBasedSource;
 import ua.com.fielden.platform.eql.s2.elements.ISource2;
 import ua.com.fielden.platform.utils.Pair;
@@ -24,6 +27,7 @@ public class TransformatorToS2 {
     }
 
     public void addSource(final ISource<? extends ISource2> source) {
+//	System.out.println("              sourceType = " + source.sourceType() + "; " + metadata.get(source.sourceType()));
 	getCurrentQueryMap().put(source, new Pair<ISource2, EntityInfo>(transformSource(source), metadata.get(source.sourceType())));
     }
 
@@ -33,11 +37,28 @@ public class TransformatorToS2 {
 	return result;
     }
 
+    public TransformatorToS2 produceNewOne() {
+	final TransformatorToS2 result = new TransformatorToS2(metadata);
+	return result;
+    }
+
     private ISource2 transformSource(final ISource<? extends ISource2> originalSource) {
-	if (originalSource instanceof TypeBasedSource) {
-	    return new ua.com.fielden.platform.eql.s2.elements.TypeBasedSource(((TypeBasedSource) originalSource).getEntityMetadata(), originalSource.getAlias(), ((TypeBasedSource) originalSource).getDomainMetadataAnalyser());
+	if (originalSource.sourceType() == EntityAggregates.class) {
+	    throw new IllegalStateException("Transformation of EA query based source not yet implemented!");
 	}
-	throw new IllegalStateException("Transformation of query based source not yet implemented!");
+
+	if (originalSource instanceof TypeBasedSource) {
+	    final TypeBasedSource source = (TypeBasedSource) originalSource;
+	    return new ua.com.fielden.platform.eql.s2.elements.TypeBasedSource(source.getEntityMetadata(), originalSource.getAlias(), source.getDomainMetadataAnalyser());
+	} else {
+	    final QueryBasedSource source = (QueryBasedSource) originalSource;
+		final List<ua.com.fielden.platform.eql.s2.elements.EntQuery> transformed = new ArrayList<>();
+		for (final EntQuery entQuery :source.getModels()) {
+		    transformed.add(entQuery.transform(produceNewOne()));
+		}
+
+	    return new ua.com.fielden.platform.eql.s2.elements.QueryBasedSource(originalSource.getAlias(), source.getDomainMetadataAnalyser(), transformed.toArray(new ua.com.fielden.platform.eql.s2.elements.EntQuery[]{}));
+	}
     }
 
     private Map<ISource<? extends ISource2>, Pair<ISource2, EntityInfo>> getCurrentQueryMap() {
@@ -104,7 +125,11 @@ public class TransformatorToS2 {
 
     private PropResolution resolveProp(final Collection<Pair<ISource2, EntityInfo>> sources, final EntProp entProp) {
 	final List<PropResolution> result = new ArrayList<>();
+//	System.out.println("-======== " + entProp);
 	for (final Pair<ISource2, EntityInfo> pair : sources) {
+//	    System.out.println("-============== pair is " + pair);
+//	    System.out.println("-============== pair key source type is " + pair.getKey().sourceType());
+//	    System.out.println("-====================== " + pair.getKey().sourceType().getSimpleName() + " : " + pair.getValue());
 	    final PropResolution resolution = resolvePropAgainstSource(pair, entProp);
 	    if (resolution != null) {
 		result.add(resolution);

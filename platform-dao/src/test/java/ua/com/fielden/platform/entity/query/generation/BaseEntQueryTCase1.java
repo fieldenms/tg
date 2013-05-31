@@ -126,7 +126,7 @@ public class BaseEntQueryTCase1 {
 	}
     }
 
-    protected static Object entResultQry2(final QueryModel qryModel, final TransformatorToS2 transformator) {
+    protected static ua.com.fielden.platform.eql.s2.elements.EntQuery entResultQry2(final QueryModel qryModel, final TransformatorToS2 transformator) {
 	if (qryModel instanceof EntityResultQueryModel) {
 	    return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model()).transform(transformator);
 	}

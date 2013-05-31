@@ -159,7 +159,7 @@ public class DomainMetadata {
 	if (isUnionEntityType(entityType)) {
 	    return new EntityMetadata<ET>(getUnionEntityModels(entityType), entityType, generatePropertyMetadatasForEntity(entityType,  UNION));
 	} else {
-	    System.out.println(" -------------------+++++++++++----------------   " + entityType.getSimpleName());
+	    //System.out.println(" -------------------+++++++++++----------------   " + entityType.getSimpleName());
 
 	    return new EntityMetadata<ET>(entityType, generatePropertyMetadatasForEntity(entityType,  PURE));
 	}
@@ -261,7 +261,7 @@ public class DomainMetadata {
 		} else if (!field.isAnnotationPresent(CritOnly.class)) {
 		    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
 		} else {
-		    System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
+		    //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
 		}
 	    }
 	}

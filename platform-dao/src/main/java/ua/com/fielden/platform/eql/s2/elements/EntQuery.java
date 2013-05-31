@@ -30,6 +30,10 @@ public class EntQuery implements ISingleOperand2 {
 
     transient private final Logger logger = Logger.getLogger(this.getClass());
 
+    public Class type() {
+        return resultType;
+    }
+
     private boolean isSubQuery() {
         return QueryCategory.SUB_QUERY.equals(category);
     }
@@ -71,7 +75,7 @@ public class EntQuery implements ISingleOperand2 {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
-        this.sources = null;//queryBlocks.getSources();
+        this.sources = queryBlocks.getSources();
         this.conditions = null;//filterable ? enhanceConditions(queryBlocks.getConditions(), filter, username, sources.getMain(), generator, paramValues) : queryBlocks.getConditions();
         this.yields = null;//queryBlocks.getYields();
         this.groups = null;//queryBlocks.getGroups();
