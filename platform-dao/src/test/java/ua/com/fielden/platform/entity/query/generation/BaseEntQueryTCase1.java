@@ -27,12 +27,13 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
-import ua.com.fielden.platform.eql.s1.elements.EntProp;
-import ua.com.fielden.platform.eql.s1.elements.EntQuery;
-import ua.com.fielden.platform.eql.s1.elements.EntValue;
-import ua.com.fielden.platform.eql.s1.elements.ISingleOperand;
-import ua.com.fielden.platform.eql.s1.elements.OperandsBasedSet;
+import ua.com.fielden.platform.eql.s1.elements.EntProp1;
+import ua.com.fielden.platform.eql.s1.elements.EntQuery1;
+import ua.com.fielden.platform.eql.s1.elements.EntValue1;
+import ua.com.fielden.platform.eql.s1.elements.ISingleOperand1;
+import ua.com.fielden.platform.eql.s1.elements.OperandsBasedSet1;
 import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
+import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
@@ -108,15 +109,15 @@ public class BaseEntQueryTCase1 {
 
     private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
-    protected static EntQuery entSourceQry(final QueryModel qryModel) {
+    protected static EntQuery1 entSourceQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSourceQuery(qryModel, Collections.EMPTY_MAP, null);
     }
 
-    protected static EntQuery entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
+    protected static EntQuery1 entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
 	return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, null);
     }
 
-    protected static EntQuery entResultQry(final QueryModel qryModel) {
+    protected static EntQuery1 entResultQry(final QueryModel qryModel) {
 	if (qryModel instanceof EntityResultQueryModel) {
 	    return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model());
 	} else if (qryModel instanceof AggregatedResultQueryModel) {
@@ -126,7 +127,7 @@ public class BaseEntQueryTCase1 {
 	}
     }
 
-    protected static ua.com.fielden.platform.eql.s2.elements.EntQuery entResultQry2(final QueryModel qryModel, final TransformatorToS2 transformator) {
+    protected static EntQuery2 entResultQry2(final QueryModel qryModel, final TransformatorToS2 transformator) {
 	if (qryModel instanceof EntityResultQueryModel) {
 	    return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model()).transform(transformator);
 	}
@@ -134,11 +135,11 @@ public class BaseEntQueryTCase1 {
     }
 
 
-    protected static EntQuery entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
+    protected static EntQuery1 entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
 	return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());
     }
 
-    protected static EntQuery entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
+    protected static EntQuery1 entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
 	if (qryModel instanceof EntityResultQueryModel) {
 	    return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).with(paramValues).model());
 	} else if (qryModel instanceof AggregatedResultQueryModel) {
@@ -148,11 +149,11 @@ public class BaseEntQueryTCase1 {
 	}
     }
 
-    protected static EntQuery entSubQry(final QueryModel qryModel) {
+    protected static EntQuery1 entSubQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSubquery(qryModel, Collections.EMPTY_MAP);
     }
 
-    protected static EntQuery entResultQryWithUserFilter(final QueryModel qryModel) {
+    protected static EntQuery1 entResultQryWithUserFilter(final QueryModel qryModel) {
 	if (qryModel instanceof EntityResultQueryModel) {
 	    return qbwf.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model());
 	} else if (qryModel instanceof AggregatedResultQueryModel) {
@@ -162,20 +163,20 @@ public class BaseEntQueryTCase1 {
 	}
     }
 
-    protected static EntProp prop(final String propName) {
-	return new EntProp(propName);
+    protected static EntProp1 prop(final String propName) {
+	return new EntProp1(propName);
     }
 
-    protected static EntValue val(final Object value) {
-	return new EntValue(value);
+    protected static EntValue1 val(final Object value) {
+	return new EntValue1(value);
     }
 
-    protected static EntValue iVal(final Object value) {
-	return new EntValue(value, true);
+    protected static EntValue1 iVal(final Object value) {
+	return new EntValue1(value, true);
     }
 
-    protected static OperandsBasedSet set(final ISingleOperand<? extends ISingleOperand2> ... operands) {
-	return new OperandsBasedSet(Arrays.asList(operands));
+    protected static OperandsBasedSet1 set(final ISingleOperand1<? extends ISingleOperand2> ... operands) {
+	return new OperandsBasedSet1(Arrays.asList(operands));
     }
 
 //    protected static PurePropInfo ppi(final String name, final Class type, final Object hibType, final boolean nullable) {
@@ -218,26 +219,26 @@ public class BaseEntQueryTCase1 {
     }
 
     public static void assertModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
-	final EntQuery shortcutQry = entResultQry(shortcutModel);
-	final EntQuery explicitQry = entResultQry(explicitModel);
+	final EntQuery1 shortcutQry = entResultQry(shortcutModel);
+	final EntQuery1 explicitQry = entResultQry(explicitModel);
 	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
 
     public static void assertSubQueryModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
-	final EntQuery shortcutQry = entSubQry(shortcutModel);
-	final EntQuery explicitQry = entSubQry(explicitModel);
+	final EntQuery1 shortcutQry = entSubQry(shortcutModel);
+	final EntQuery1 explicitQry = entSubQry(explicitModel);
 	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
 
     public static void assertModelsEqualsAccordingUserDataFiltering(final QueryModel shortcutModel, final QueryModel explicitModel) {
-	final EntQuery shortcutQry = entResultQryWithUserFilter(shortcutModel);
-	final EntQuery explicitQry = entResultQry(explicitModel);
+	final EntQuery1 shortcutQry = entResultQryWithUserFilter(shortcutModel);
+	final EntQuery1 explicitQry = entResultQry(explicitModel);
 	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
 
     public static void assertModelsDifferent(final QueryModel shortcutModel, final QueryModel explicitModel) {
-	final EntQuery shortcutQry = entResultQry(shortcutModel);
-	final EntQuery explicitQry = entResultQry(explicitModel);
+	final EntQuery1 shortcutQry = entResultQry(shortcutModel);
+	final EntQuery1 explicitQry = entResultQry(explicitModel);
 	assertFalse(("Query models are equal! exp: " + shortcutQry.toString() + " act: " + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
 

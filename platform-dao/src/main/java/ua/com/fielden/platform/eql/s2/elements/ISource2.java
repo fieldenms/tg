@@ -11,9 +11,9 @@ public interface ISource2 {
      */
     String getAlias();
 
-    void addProp(EntProp prop);
+    void addProp(EntProp2 prop);
 
-    List<EntProp> props();
+    List<EntProp2> props();
 
     /**
      * Indicates query source type (in case of entity type as a source it returns this entity type, in case of query as a source it returns it result type, which can be
@@ -23,5 +23,5 @@ public interface ISource2 {
      */
     Class sourceType();
 
-    List<EntValue> getValues();
+    List<EntValue2> getValues();
 }

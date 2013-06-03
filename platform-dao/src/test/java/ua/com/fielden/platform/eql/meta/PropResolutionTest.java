@@ -11,8 +11,8 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase1;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.s2.elements.EntProp;
-import ua.com.fielden.platform.eql.s2.elements.EntQuery;
+import ua.com.fielden.platform.eql.s2.elements.EntProp2;
+import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
@@ -30,19 +30,19 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 	final EntityInfo tgAuthor = new EntityInfo(TgAuthor.class);
 	final EntityInfo tgAuthorship = new EntityInfo(TgAuthorship.class);
 	final EntityInfo tgAuthorRoyalty = new EntityInfo(TgAuthorRoyalty.class);
-	tgPersonName.getProps().put("id", new PrimTypePropInfo("id", tgPersonName, Long.class));
-	tgPersonName.getProps().put("key", new PrimTypePropInfo("key", tgPersonName, String.class));
-	tgAuthor.getProps().put("id", new PrimTypePropInfo("id", tgAuthor, Long.class));
-	tgAuthor.getProps().put("key", new PrimTypePropInfo("key", tgAuthor, String.class));
-	tgAuthor.getProps().put("name", new EntityTypePropInfo("name", tgAuthor, tgPersonName));
-	tgAuthor.getProps().put("surname", new PrimTypePropInfo("surname", tgAuthor, String.class));
-	tgAuthorship.getProps().put("id", new PrimTypePropInfo("id", tgAuthorship, Long.class));
-	tgAuthorship.getProps().put("key", new PrimTypePropInfo("key", tgAuthorship, String.class));
-	tgAuthorship.getProps().put("author", new EntityTypePropInfo("author", tgAuthorship, tgAuthor));
-	tgAuthorship.getProps().put("bookTitle", new PrimTypePropInfo("bookTitle", tgAuthorship, String.class));
-	tgAuthorRoyalty.getProps().put("id", new PrimTypePropInfo("id", tgAuthorRoyalty, Long.class));
-	tgAuthorRoyalty.getProps().put("authorship", new EntityTypePropInfo("authorship", tgAuthorRoyalty, tgAuthorship));
-	tgAuthorRoyalty.getProps().put("paymentDate", new PrimTypePropInfo("paymentDate", tgAuthorRoyalty, Date.class));
+	tgPersonName.getProps().put("id", new PrimTypePropInfo("id", tgPersonName, Long.class, null));
+	tgPersonName.getProps().put("key", new PrimTypePropInfo("key", tgPersonName, String.class, null));
+	tgAuthor.getProps().put("id", new PrimTypePropInfo("id", tgAuthor, Long.class, null));
+	tgAuthor.getProps().put("key", new PrimTypePropInfo("key", tgAuthor, String.class, null));
+	tgAuthor.getProps().put("name", new EntityTypePropInfo("name", tgAuthor, tgPersonName, null));
+	tgAuthor.getProps().put("surname", new PrimTypePropInfo("surname", tgAuthor, String.class, null));
+	tgAuthorship.getProps().put("id", new PrimTypePropInfo("id", tgAuthorship, Long.class, null));
+	tgAuthorship.getProps().put("key", new PrimTypePropInfo("key", tgAuthorship, String.class, null));
+	tgAuthorship.getProps().put("author", new EntityTypePropInfo("author", tgAuthorship, tgAuthor, null));
+	tgAuthorship.getProps().put("bookTitle", new PrimTypePropInfo("bookTitle", tgAuthorship, String.class, null));
+	tgAuthorRoyalty.getProps().put("id", new PrimTypePropInfo("id", tgAuthorRoyalty, Long.class, null));
+	tgAuthorRoyalty.getProps().put("authorship", new EntityTypePropInfo("authorship", tgAuthorRoyalty, tgAuthorship, null));
+	tgAuthorRoyalty.getProps().put("paymentDate", new PrimTypePropInfo("paymentDate", tgAuthorRoyalty, Date.class, null));
 	metadata.put(TgPersonName.class, tgPersonName);
 	metadata.put(TgAuthor.class, tgAuthor);
 	metadata.put(TgAuthorship.class, tgAuthorship);
@@ -139,10 +139,10 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test6() {
 	final EntityResultQueryModel<TgAuthorship> qry = select(select(TgAuthorRoyalty.class).where().prop("authorship.author.surname").isNotNull().yield().prop("authorship.author").modelAsEntity(TgAuthorship.class)).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model();
-	final EntQuery qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 	System.out.println("---------");
-	for (final EntProp prop : qry2.getSources().getMain().props()) {
-	    System.out.println(prop);
+	for (final EntProp2 prop : qry2.getSources().getMain().props()) {
+	    System.out.println("---: " + prop);
 	}
     }
 
