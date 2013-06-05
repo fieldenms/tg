@@ -5,16 +5,19 @@ import java.util.Collections;
 import java.util.List;
 
 public class EntProp2 implements ISingleOperand2 {
-    private String name;
-    private boolean aliased;
-    private ISource2 source;
-    private Object resolution;
+    private final String name;
+    private final boolean aliased;
+    private final ISource2 source;
+    private final Object resolution;
+    private final Expression2 expression;
 
-    public EntProp2(final String name, final ISource2 source, final boolean aliased, final Object resolution) {
+
+    public EntProp2(final String name, final ISource2 source, final boolean aliased, final Object resolution, final Expression2 expression) {
         this.name = name;
         this.source = source;
         this.aliased = aliased;
         this.resolution = resolution;
+        this.expression = expression;
         source.addProp(this);
         System.out.println(toString());
     }
@@ -79,9 +82,5 @@ public class EntProp2 implements ISingleOperand2 {
             return false;
         }
         return true;
-    }
-
-    public void setName(final String name) {
-        this.name = name;
     }
 }

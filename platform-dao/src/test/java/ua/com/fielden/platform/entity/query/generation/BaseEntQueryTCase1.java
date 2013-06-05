@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
@@ -30,9 +31,11 @@ import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s1.elements.EntProp1;
 import ua.com.fielden.platform.eql.s1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.s1.elements.EntValue1;
+import ua.com.fielden.platform.eql.s1.elements.Expression1;
 import ua.com.fielden.platform.eql.s1.elements.ISingleOperand1;
 import ua.com.fielden.platform.eql.s1.elements.OperandsBasedSet1;
 import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
+import ua.com.fielden.platform.eql.s1.processing.StandAloneExpressionBuilder1;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
@@ -117,6 +120,10 @@ public class BaseEntQueryTCase1 {
 	return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, null);
     }
 
+    protected static Expression1 entQryExpression(final ExpressionModel exprModel) {
+	return (Expression1) new StandAloneExpressionBuilder1(qb, null, exprModel).getResult().getValue();
+    }
+
     protected static EntQuery1 entResultQry(final QueryModel qryModel) {
 	if (qryModel instanceof EntityResultQueryModel) {
 	    return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model());
@@ -133,7 +140,6 @@ public class BaseEntQueryTCase1 {
 	}
 	return null;
     }
-
 
     protected static EntQuery1 entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
 	return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());

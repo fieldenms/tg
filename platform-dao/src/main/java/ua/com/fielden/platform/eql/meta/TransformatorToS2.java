@@ -16,6 +16,7 @@ import ua.com.fielden.platform.eql.s1.elements.QueryBasedSource1;
 import ua.com.fielden.platform.eql.s1.elements.TypeBasedSource1;
 import ua.com.fielden.platform.eql.s2.elements.EntProp2;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
+import ua.com.fielden.platform.eql.s2.elements.Expression2;
 import ua.com.fielden.platform.eql.s2.elements.ISource2;
 import ua.com.fielden.platform.eql.s2.elements.QueryBasedSource2;
 import ua.com.fielden.platform.eql.s2.elements.TypeBasedSource2;
@@ -28,6 +29,20 @@ public class TransformatorToS2 {
     public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata) {
 	this.metadata = metadata;
 	sourceMap.add(new HashMap<ISource1<? extends ISource2>, Pair<ISource2, EntityInfo>>());
+    }
+
+    @Override
+    public String toString() {
+	final StringBuffer sb = new StringBuffer();
+	for (final Map<ISource1<? extends ISource2>, Pair<ISource2, EntityInfo>> item : sourceMap) {
+	    sb.append("-----------------------------\n");
+	    for (final Pair<ISource2, EntityInfo> subitem : item.values()) {
+		sb.append("---");
+		sb.append(subitem.getKey().sourceType().getSimpleName());
+		sb.append("\n");
+	    }
+	}
+	return sb.toString();
     }
 
     public void addSource(final ISource1<? extends ISource2> source) {
@@ -91,7 +106,10 @@ public class TransformatorToS2 {
     }
 
     private EntProp2 generateTransformedProp(final PropResolution resolution) {
-	return new EntProp2(resolution.entProp.getName(), resolution.source, resolution.aliased, resolution.resolution);
+//	System.out.println("         ---+ " + resolution.resolution);
+	final AbstractPropInfo propInfo = (AbstractPropInfo) resolution.resolution;
+	final Expression2 expr = propInfo.getExpression() != null ? propInfo.getExpression().transform(this) : null;
+	return new EntProp2(resolution.entProp.getName(), resolution.source, resolution.aliased, resolution.resolution, expr);
     }
 
     public static class PropResolution {

@@ -20,6 +20,11 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
         this(name, false);
     }
 
+    @Override
+    public String toString() {
+        return name + " " + hashCode();
+    }
+
     public EntProp2 transform(final TransformatorToS2 resolver) {
 	return resolver.getTransformedProp(this);
     }

@@ -9,7 +9,7 @@ public abstract class AbstractPropInfo implements IResolvable {
 
     @Override
     public String toString() {
-        return parent + "." + name;
+        return parent + "." + name + (expression == null ? " no expr " : " has expr ");
     }
 
     public AbstractPropInfo(final String name, final IResolvable parent, final Expression1 expression) {
@@ -27,4 +27,8 @@ public abstract class AbstractPropInfo implements IResolvable {
     }
 
     public abstract Object resolve(String dotNotatedSubPropName);
+
+    public Expression1 getExpression() {
+        return expression;
+    }
 }

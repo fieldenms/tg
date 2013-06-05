@@ -11,12 +11,14 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase1;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.s1.elements.Expression1;
 import ua.com.fielden.platform.eql.s2.elements.EntProp2;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class PropResolutionTest extends BaseEntQueryTCase1 {
@@ -33,6 +35,11 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 	tgPersonName.getProps().put("id", new PrimTypePropInfo("id", tgPersonName, Long.class, null));
 	tgPersonName.getProps().put("key", new PrimTypePropInfo("key", tgPersonName, String.class, null));
 	tgAuthor.getProps().put("id", new PrimTypePropInfo("id", tgAuthor, Long.class, null));
+
+	final Expression1 expr = entQryExpression(expr().model(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("id").model()).model());
+	// TODO EQL
+	//final Expression1 expr = entQryExpression(expr().model(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("author").model()).model());
+	tgAuthor.getProps().put("lastRoyalty", new EntityTypePropInfo("lastRoyalty", tgAuthor, tgAuthorRoyalty, expr));
 	tgAuthor.getProps().put("key", new PrimTypePropInfo("key", tgAuthor, String.class, null));
 	tgAuthor.getProps().put("name", new EntityTypePropInfo("name", tgAuthor, tgPersonName, null));
 	tgAuthor.getProps().put("surname", new PrimTypePropInfo("surname", tgAuthor, String.class, null));
@@ -104,6 +111,19 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 //	System.out.println(tgAuthorRoyalty.resolve("authorship.author.name.key"));
 //	System.out.println(tgAuthorRoyalty.resolve("paymentDate"));
     }
+    @Test
+    public void test0() {
+	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model();
+	entResultQry2(qry, new TransformatorToS2(metadata));
+    }
+
+    @Test
+    @Ignore
+    public void test0a() {
+	final EntityResultQueryModel<TgAuthorship> qry = select(TgAuthorship.class).where().exists(select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model()).model();
+	entResultQry2(qry, new TransformatorToS2(metadata));
+    }
+
 
     @Test
     public void test1() {
@@ -114,6 +134,12 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test2() {
 	final EntityResultQueryModel<TgAuthorRoyalty> qry = select(TgAuthorRoyalty.class).as("ar").where().prop("authorship.author.surname").eq().val("Date").or().prop("ar.authorship.author.name.key").eq().val("Chris").model();
+	entResultQry2(qry, new TransformatorToS2(metadata));
+    }
+
+    @Test
+    public void test2a() {
+	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().exists(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("id").model()).model();
 	entResultQry2(qry, new TransformatorToS2(metadata));
     }
 

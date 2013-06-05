@@ -49,6 +49,9 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 	    localResolver.addSource(source);
 	}
 
+//	System.out.println("------------- TRANSFORMING qry with result type: " + resultType.getSimpleName());
+//	System.out.println(localResolver);
+
 	final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), conditions.transform(localResolver), //
 		yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
 
