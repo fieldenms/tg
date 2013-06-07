@@ -118,6 +118,19 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    public void test0b() {
+	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id").where().prop("lastRoyalty").isNotNull().model();
+	entResultQry2(qry, new TransformatorToS2(metadata));
+    }
+
+    @Test
+    @Ignore
+    public void test0c() {
+	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).as("pn").where().prop("lastRoyalty").isNotNull().model();
+	entResultQry2(qry, new TransformatorToS2(metadata));
+    }
+
+    @Test
     @Ignore
     public void test0a() {
 	final EntityResultQueryModel<TgAuthorship> qry = select(TgAuthorship.class).where().exists(select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model()).model();
