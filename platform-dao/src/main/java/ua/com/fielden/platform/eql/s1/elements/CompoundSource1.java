@@ -5,14 +5,15 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.CompoundSource2;
+import ua.com.fielden.platform.eql.s2.elements.ISource2;
 
 
 public class CompoundSource1 implements IElement1<CompoundSource2> {
-    private final ISource1 source;
+    private final ISource1<ISource2> source;
     private final JoinType joinType;
     private final Conditions1 joinConditions;
 
-    public CompoundSource1(final ISource1 source, final JoinType joinType, final Conditions1 joinConditions) {
+    public CompoundSource1(final ISource1<ISource2> source, final JoinType joinType, final Conditions1 joinConditions) {
 	super();
 	this.source = source;
 	this.joinType = joinType;
@@ -21,8 +22,7 @@ public class CompoundSource1 implements IElement1<CompoundSource2> {
 
     @Override
     public CompoundSource2 transform(final TransformatorToS2 resolver) {
-	// TODO EQL
-	return new CompoundSource2(null, joinType, joinConditions.transform(resolver));
+	return new CompoundSource2(resolver.getTransformedSource(source), joinType, joinConditions.transform(resolver));
     }
 
     @Override
@@ -30,7 +30,7 @@ public class CompoundSource1 implements IElement1<CompoundSource2> {
         return joinType + " " + source + " ON " + joinConditions;
     }
 
-    public ISource1 getSource() {
+    public ISource1<ISource2> getSource() {
         return source;
     }
 

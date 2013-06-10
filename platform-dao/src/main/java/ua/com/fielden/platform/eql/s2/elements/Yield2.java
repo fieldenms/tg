@@ -73,14 +73,6 @@ public class Yield2 {
 	return true;
     }
 
-    public ResultQueryYieldDetails2 getInfo() {
-	return info;
-    }
-
-    public void setInfo(final ResultQueryYieldDetails2 info) {
-	this.info = info;
-    }
-
     protected boolean isRequiredHint() {
         return requiredHint;
     }
