@@ -12,10 +12,15 @@ public class Yield2 {
 	this.operand = operand;
 	this.alias = alias;
 	this.requiredHint = requiredHint;
+	System.out.println(alias + " .... " + javaType());
     }
 
     public Yield2(final ISingleOperand2 operand, final String alias) {
 	this(operand, alias, false);
+    }
+
+    public Class javaType() {
+	return operand.type();
     }
 
     @Override

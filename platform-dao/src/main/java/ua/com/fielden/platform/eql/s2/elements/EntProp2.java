@@ -4,15 +4,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+
 public class EntProp2 implements ISingleOperand2 {
     private final String name;
     private final boolean aliased;
     private final ISource2 source;
-    private final Object resolution;
+    private final AbstractPropInfo resolution;
     private final Expression2 expression;
 
 
-    public EntProp2(final String name, final ISource2 source, final boolean aliased, final Object resolution, final Expression2 expression) {
+    public EntProp2(final String name, final ISource2 source, final boolean aliased, final AbstractPropInfo resolution, final Expression2 expression) {
         this.name = name;
         this.source = source;
         this.aliased = aliased;
@@ -82,5 +84,10 @@ public class EntProp2 implements ISingleOperand2 {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public Class type() {
+	return resolution.javaType();
     }
 }

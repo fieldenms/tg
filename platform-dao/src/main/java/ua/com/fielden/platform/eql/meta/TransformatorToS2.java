@@ -21,6 +21,7 @@ import ua.com.fielden.platform.eql.s2.elements.Expression2;
 import ua.com.fielden.platform.eql.s2.elements.ISource2;
 import ua.com.fielden.platform.eql.s2.elements.QueryBasedSource2;
 import ua.com.fielden.platform.eql.s2.elements.TypeBasedSource2;
+import ua.com.fielden.platform.eql.s2.elements.Yield2;
 
 public class TransformatorToS2 {
     private List<Map<ISource1<? extends ISource2>, SourceInfo>> sourceMap = new ArrayList<>();
@@ -63,8 +64,21 @@ public class TransformatorToS2 {
     }
 
     public void addSource(final ISource1<? extends ISource2> source) {
-//	System.out.println("              sourceType = " + source.sourceType() + "; " + metadata.get(source.sourceType()));
-	getCurrentQueryMap().put(source, new SourceInfo(transformSource(source), metadata.get(source.sourceType()), true));
+	System.out.println("              sourceType = " + source.sourceType() + "; " + metadata.get(source.sourceType()));
+	final ISource2 transformedSource = transformSource(source);
+	if (EntityAggregates.class.equals(transformedSource.sourceType())) {
+	    final EntityInfo entAggEntityInfo = new EntityInfo(EntityAggregates.class);
+	    for (final Yield2 yield : ((QueryBasedSource2) transformedSource).getYields().getYields()) {
+		final AbstractPropInfo aep = yield.javaType().isAssignableFrom(AbstractEntity.class) ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, metadata.get(yield.javaType()), null) :
+		    new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType(), null);
+		//System.out.println("putting -- " + yield.getAlias() + " ... " + aep);
+		entAggEntityInfo.getProps().put(yield.getAlias(), aep);
+	    }
+
+	    getCurrentQueryMap().put(source, new SourceInfo(transformedSource, entAggEntityInfo, true));
+	} else {
+	    getCurrentQueryMap().put(source, new SourceInfo(transformedSource, metadata.get(transformedSource.sourceType()), true));
+	}
     }
 
     public TransformatorToS2 produceBasedOn() {
@@ -96,9 +110,9 @@ public class TransformatorToS2 {
     }
 
     private ISource2 transformSource(final ISource1<? extends ISource2> originalSource) {
-	if (originalSource.sourceType() == EntityAggregates.class) {
-	    throw new IllegalStateException("Transformation of EA query based source not yet implemented!");
-	}
+//	if (originalSource.sourceType() == EntityAggregates.class) {
+//	    throw new IllegalStateException("Transformation of EA query based source not yet implemented!");
+//	}
 
 	if (originalSource instanceof TypeBasedSource1) {
 	    final TypeBasedSource1 source = (TypeBasedSource1) originalSource;
@@ -141,7 +155,7 @@ public class TransformatorToS2 {
 
     private EntProp2 generateTransformedProp(final PropResolution resolution) {
 //	System.out.println("         ---+ " + resolution.resolution);
-	final AbstractPropInfo propInfo = (AbstractPropInfo) resolution.resolution;
+	final AbstractPropInfo propInfo = resolution.resolution;
 	final Expression2 expr = propInfo.getExpression() != null ? propInfo.getExpression().transform(this.produceOneForCalcPropExpression(resolution.source)) : null;
 	return new EntProp2(resolution.entProp.getName(), resolution.source, resolution.aliased, resolution.resolution, expr);
     }
@@ -149,7 +163,7 @@ public class TransformatorToS2 {
     public static class PropResolution {
 	private final boolean aliased;
 
-	public PropResolution(final boolean aliased, final ISource2 source, final Object resolution, final EntProp1 entProp) {
+	public PropResolution(final boolean aliased, final ISource2 source, final AbstractPropInfo resolution, final EntProp1 entProp) {
 	    super();
 	    this.aliased = aliased;
 	    this.source = source;
@@ -158,15 +172,15 @@ public class TransformatorToS2 {
 	}
 
 	private final ISource2 source;
-	private final Object resolution;
+	private final AbstractPropInfo resolution;
 	private final EntProp1 entProp;
     }
 
     private PropResolution resolvePropAgainstSource(final SourceInfo source, final EntProp1 entProp) {
-	final Object asIsResolution = source.entityInfo.resolve(entProp.getName());
+	final AbstractPropInfo asIsResolution = source.entityInfo.resolve(entProp.getName());
 	if (source.source.getAlias() != null && source.aliasingAllowed && entProp.getName().startsWith(source.source.getAlias() + ".")) {
 	    final String aliasLessPropName = entProp.getName().substring(source.source.getAlias().length() + 1);
-	    final Object aliasLessResolution = source.entityInfo.resolve(aliasLessPropName);
+	    final AbstractPropInfo aliasLessResolution = source.entityInfo.resolve(aliasLessPropName);
 	    if (aliasLessResolution != null) {
 		if (asIsResolution == null) {
 		    return new PropResolution(true, source.source, aliasLessResolution, entProp);
@@ -184,8 +198,8 @@ public class TransformatorToS2 {
 //	System.out.println("-======== " + entProp);
 	for (final SourceInfo pair : sources) {
 //	    System.out.println("-============== pair is " + pair);
-//	    System.out.println("-============== pair key source type is " + pair.getKey().sourceType());
-//	    System.out.println("-====================== " + pair.getKey().sourceType().getSimpleName() + " : " + pair.getValue());
+//	    System.out.println("-============== pair key source type is " + pair.source.sourceType());
+//	    System.out.println("-====================== " + pair.source.sourceType().getSimpleName() + " : " + pair.entityInfo);
 	    final PropResolution resolution = resolvePropAgainstSource(pair, entProp);
 	    if (resolution != null) {
 		result.add(resolution);

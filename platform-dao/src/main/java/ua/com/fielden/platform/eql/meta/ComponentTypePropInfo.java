@@ -21,7 +21,12 @@ public class ComponentTypePropInfo extends AbstractPropInfo  {
     }
 
     @Override
-    public Object resolve(final String dotNotatedSubPropName) {
+    public AbstractPropInfo resolve(final String dotNotatedSubPropName) {
 	return dotNotatedSubPropName != null ? getPropEntityInfo().resolve(dotNotatedSubPropName) : this;
+    }
+
+    @Override
+    public Class javaType() {
+	return propEntityInfo.javaType();
     }
 }

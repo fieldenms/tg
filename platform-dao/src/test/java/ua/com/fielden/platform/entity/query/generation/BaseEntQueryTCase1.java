@@ -137,6 +137,8 @@ public class BaseEntQueryTCase1 {
     protected static EntQuery2 entResultQry2(final QueryModel qryModel, final TransformatorToS2 transformator) {
 	if (qryModel instanceof EntityResultQueryModel) {
 	    return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model()).transform(transformator);
+	} else if (qryModel instanceof AggregatedResultQueryModel) {
+	    return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel)qryModel).model()).transform(transformator);
 	}
 	return null;
     }

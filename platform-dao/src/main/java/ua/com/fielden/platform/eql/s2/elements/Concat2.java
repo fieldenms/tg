@@ -77,4 +77,9 @@ public class Concat2 extends AbstractFunction2 {
 	}
 	return true;
     }
+
+    @Override
+    public Class type() {
+	return String.class;
+    }
 }

@@ -15,7 +15,7 @@ public class ComponentInfo implements IResolvable {
 	this.javaType = javaType;
     }
 
-    public Object resolve(final String dotNotatedPropName) {
+    public AbstractPropInfo resolve(final String dotNotatedPropName) {
 	final Pair<String, String> parts = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
 	final AbstractPropInfo foundPart = props.get(parts.getKey());
 	return foundPart == null ? null : foundPart.resolve(parts.getValue());
@@ -32,5 +32,10 @@ public class ComponentInfo implements IResolvable {
     @Override
     public String toString() {
 	return javaType.getSimpleName();
+    }
+
+    @Override
+    public Class javaType() {
+	return javaType;
     }
 }

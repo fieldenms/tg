@@ -77,7 +77,7 @@ public class EntQuery2 implements ISingleOperand2 {
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.sources = queryBlocks.getSources();
         this.conditions = null;//filterable ? enhanceConditions(queryBlocks.getConditions(), filter, username, sources.getMain(), generator, paramValues) : queryBlocks.getConditions();
-        this.yields = null;//queryBlocks.getYields();
+        this.yields = queryBlocks.getYields();
         this.groups = null;//queryBlocks.getGroups();
         this.orderings = null;//queryBlocks.getOrderings();
         this.resultType = resultType;// != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);

@@ -98,4 +98,10 @@ public class CaseWhen2 extends AbstractFunction2 {
 	}
 	return true;
     }
+
+    @Override
+    public Class type() {
+	// TODO EQL
+	return whenThenPairs.get(0).getValue().type();
+    }
 }

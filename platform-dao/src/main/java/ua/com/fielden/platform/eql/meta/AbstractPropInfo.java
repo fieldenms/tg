@@ -26,8 +26,6 @@ public abstract class AbstractPropInfo implements IResolvable {
         return parent;
     }
 
-    public abstract Object resolve(String dotNotatedSubPropName);
-
     public Expression1 getExpression() {
         return expression;
     }

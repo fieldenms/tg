@@ -8,4 +8,8 @@ public class CountOf2 extends SingleOperandFunction2 {
 	super(operand);
 	this.distinct = distinct;
     }
+    @Override
+    public Class type() {
+	return Long.class;
+    }
 }

@@ -20,8 +20,13 @@ public class PrimTypePropInfo extends AbstractPropInfo {
     }
 
     @Override
-    public Object resolve(final String dotNotatedSubPropName) {
+    public AbstractPropInfo resolve(final String dotNotatedSubPropName) {
 	assert(dotNotatedSubPropName == null);
 	return this;
+    }
+
+    @Override
+    public Class javaType() {
+	return getPropType();
     }
 }

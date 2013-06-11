@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase1;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.s1.elements.Expression1;
 import ua.com.fielden.platform.eql.s2.elements.EntProp2;
@@ -186,10 +187,13 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    @Ignore
     public void test7() {
-	final EntityResultQueryModel<AbstractEntity<?>> qry = select(select(TgAuthorship.class).where().prop("bookTitle").isNotNull().yield().prop("author").as("author").modelAsAggregate()).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final AggregatedResultQueryModel qry = select(select(TgAuthorship.class).where().prop("bookTitle").isNotNull().yield().prop("author").as("author").yield().prop("bookTitle").as("title").modelAsAggregate()).where().prop("title").isNotNull().or().begin().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").end().yield().prop("author.name.key").as("name").yield().prop("title").as("titel").modelAsAggregate();
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	System.out.println("---------");
+	for (final EntProp2 prop : qry2.getSources().getMain().props()) {
+	    System.out.println("---: " + prop);
+	}
     }
 
     @Test

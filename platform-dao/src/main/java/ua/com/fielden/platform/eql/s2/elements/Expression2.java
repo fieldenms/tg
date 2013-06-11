@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,5 +87,11 @@ public class Expression2 implements ISingleOperand2 {
 	    return false;
 	}
 	return true;
+    }
+
+    @Override
+    public Class type() {
+	// TODO EQL
+	return BigDecimal.class;
     }
 }

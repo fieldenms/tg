@@ -78,4 +78,10 @@ public class EntValue2 implements ISingleOperand2 {
     public Object getValue() {
         return value;
     }
+
+    @Override
+    public Class type() {
+	// TODO EQL
+	return value != null ? value.getClass() : null;
+    }
 }

@@ -7,4 +7,9 @@ public class YearOf2 extends SingleOperandFunction2 {
     public YearOf2(final ISingleOperand2 operand) {
 	super(operand);
     }
+
+    @Override
+    public Class type() {
+	return Integer.class;
+    }
 }

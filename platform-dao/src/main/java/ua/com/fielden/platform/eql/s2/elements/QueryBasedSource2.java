@@ -21,8 +21,8 @@ public class QueryBasedSource2 extends AbstractSource2 {
     public QueryBasedSource2(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final EntQuery2... models) {
 	super(alias, domainMetadataAnalyser, checkWhetherResultTypeIsPersisted(models));
 	this.models = Arrays.asList(models);
-//	populateYieldMatrixFromQueryModels(models);
-//	validateYieldsMatrix();
+	populateYieldMatrixFromQueryModels(models);
+	validateYieldsMatrix();
     }
 
     private static boolean checkWhetherResultTypeIsPersisted(final EntQuery2... models) {
@@ -32,20 +32,20 @@ public class QueryBasedSource2 extends AbstractSource2 {
 	return models[0].isPersistedType();
     }
 
-//    private void populateYieldMatrixFromQueryModels(final EntQuery... models) {
-//	for (final EntQuery entQuery : models) {
-//	    for (final Yield yield : entQuery.getYields().getYields()) {
-//		final List<Yield> foundYields = yieldsMatrix.get(yield.getAlias());
-//		if (foundYields != null) {
-//		    foundYields.add(yield);
-//		} else {
-//		    final List<Yield> newList = new ArrayList<Yield>();
-//		    newList.add(yield);
-//		    yieldsMatrix.put(yield.getAlias(), newList);
-//		}
-//	    }
-//	}
-//    }
+    private void populateYieldMatrixFromQueryModels(final EntQuery2... models) {
+	for (final EntQuery2 entQuery : models) {
+	    for (final Yield2 yield : entQuery.getYields().getYields()) {
+		final List<Yield2> foundYields = yieldsMatrix.get(yield.getAlias());
+		if (foundYields != null) {
+		    foundYields.add(yield);
+		} else {
+		    final List<Yield2> newList = new ArrayList<Yield2>();
+		    newList.add(yield);
+		    yieldsMatrix.put(yield.getAlias(), newList);
+		}
+	    }
+	}
+    }
 
     private boolean getYieldNullability(final String yieldAlias) {
 	final boolean result = false;
@@ -68,6 +68,10 @@ public class QueryBasedSource2 extends AbstractSource2 {
     @Override
     public Class sourceType() {
 	return firstModel().type();
+    }
+
+    public Yields2 getYields() {
+	return firstModel().getYields();
     }
 
     /**
