@@ -63,6 +63,7 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.pagination.IPageChangedListener;
 import ua.com.fielden.platform.pagination.PageChangedEvent;
 import ua.com.fielden.platform.pagination.PageHolder;
+import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -74,7 +75,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class GisViewPanel <P extends Point> extends JFXPanel {
     private static final long serialVersionUID = 9202827128855362320L;
-    protected static double THRESHOLD = 2.0;
+    private static double DEFAULT_PIXEL_THRESHOLD = 2.0;
     private Timeline locationUpdateTimeline;
     private double xForDragBegin, yForDragBegin;
     private Group path;
@@ -93,6 +94,7 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
     private AbstractEntity<?> previousSelectedEntity;
 
     private IWorldToScreen currentTranformation;
+    private final EntityGridInspector egi;
 
     private Double get(final JSObject p, final String what) {
 	final String s = p.call(what).toString();
@@ -114,7 +116,9 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
      *
      * @return
      */
-    public GisViewPanel(final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
+    public GisViewPanel(final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
+	this.egi = egi;
+	setFocusable(false);
 	Platform.setImplicitExit(false);
 
 	this.points = new ArrayList<>();
@@ -155,9 +159,22 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
 
     protected abstract List<P> createPoints(final IPage<AbstractEntity<?>> entitiesPage);
 
-    protected abstract void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity, final boolean showTooltip);
+    protected abstract void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity);
 
     protected abstract boolean shouldFitToBounds();
+
+    protected void requestFocusForEgi() {
+	if (!egi.hasFocus()) {
+	    SwingUtilitiesEx.invokeLater(new Runnable() {
+		public void run() {
+		    final boolean focused = egi.requestFocusInWindow();
+		    if (!focused) {
+			new Exception("Egi cannot gain focus somehow.").printStackTrace();
+		    }
+		}
+	    });
+	}
+    }
 
     protected void selectEntity() {
 	final AbstractEntity<?> unselectedEntity = previousSelectedEntity;
@@ -166,7 +183,7 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
 	    Platform.runLater(new Runnable() {
 		@Override
 		public void run() {
-		    findAndSelectPoint(selectedEntity, unselectedEntity, !selectedEntity.equals(unselectedEntity));
+		    findAndSelectPoint(selectedEntity, unselectedEntity);
 		    previousSelectedEntity = selectedEntity;
 		}
 	    });
@@ -623,11 +640,15 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
 	return Math.sqrt(sqr(xY.getX() - prevXY.getX()) + sqr(xY.getY() - prevXY.getY()));
     }
 
+    protected double pixelThreashould() {
+	return DEFAULT_PIXEL_THRESHOLD;
+    }
+
     protected Pair<Double, Double> addLine(final WebEngine webEngine, final P start, final P end, final int size, final boolean drawSpeedValues) {
 	final Point2D xY0 = convertWorld2Pixel(webEngine, start.getLatitude(), start.getLongitude());
 	final Point2D xY = convertWorld2Pixel(webEngine, end.getLatitude(), end.getLongitude());
 
-	if (dist(xY0, xY) >= THRESHOLD && (inside(xY0) || inside(xY))) {
+	if (dist(xY0, xY) >= pixelThreashould() && (inside(xY0) || inside(xY))) {
 	    countOfProcessed++;
 
 	    if (drawLines(start, end)) {
