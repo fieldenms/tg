@@ -187,7 +187,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    @Ignore
     public void test7() {
 	final AggregatedResultQueryModel qry = select(select(TgAuthorship.class).where().prop("bookTitle").isNotNull().yield().prop("author").as("author").yield().prop("bookTitle").as("title").modelAsAggregate()).where().prop("title").isNotNull().or().begin().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").end().yield().prop("author.name.key").as("name").yield().prop("title").as("titel").modelAsAggregate();
 	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
