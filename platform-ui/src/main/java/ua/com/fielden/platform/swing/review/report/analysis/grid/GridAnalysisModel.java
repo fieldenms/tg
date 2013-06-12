@@ -15,13 +15,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
 
-import org.joda.time.DateTime;
-
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.SinglePage;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
@@ -33,7 +30,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.report.query.generation.AbstractQueryComposer;
 import ua.com.fielden.platform.report.query.generation.GridAnalysisQueryGenerator;
@@ -56,7 +52,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
     /******* Delta related stuff ********/
     private DeltaRetriever deltaRetriever;
     private ICentreDomainTreeManagerAndEnhancer cdtmaeCopy;
-    private final static String tdPropCopy = "_________transactionDatePropertyCopy";
+    // FIXME private final static String tdPropCopy = "_________transactionDatePropertyCopy";
 
     public GridAnalysisModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser) {
 	super(criteria, null);
@@ -236,30 +232,42 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * @return
      */
     protected Pair<IQueryComposer<T>, IQueryComposer<T>> enhanceByTransactionDateBoundaries(final Date oldNow, final Date now) {
+	// FIXME: this method has been changed to ignore 'tdPropCopy' property!
+	// FIXME: please, change the way of customising delta queries to be more general, not dependent on 'transaction date property'!
+
+	// FIXME: this method has been changed to ignore 'tdPropCopy' property!
+	// FIXME: please, change the way of customising delta queries to be more general, not dependent on 'transaction date property'!
+
+	// FIXME: this method has been changed to ignore 'tdPropCopy' property!
+	// FIXME: please, change the way of customising delta queries to be more general, not dependent on 'transaction date property'!
+
+	// FIXME: this method has been changed to ignore 'tdPropCopy' property!
+	// FIXME: please, change the way of customising delta queries to be more general, not dependent on 'transaction date property'!
+
 	// queries.getKey()!   .getQueryModel(). setParam transDate (left == null ? [---, right] : [left, right])
 	if (queryCustomiser.getQueryGenerator(this) instanceof GridAnalysisQueryGenerator) {
 	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> qGenerator = (GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>) queryCustomiser.getQueryGenerator(this);
 	    final Class<T> root = qGenerator.entityClass();
-	    final String tdProp = AnnotationReflector.getTransactionDateProperty(root);
+	    // FIXME final String tdProp = AnnotationReflector.getTransactionDateProperty(root);
 	    if (oldNow == null) { // RUN is performed (not Delta)
 		final ICentreDomainTreeManagerAndEnhancer cdtme = qGenerator.getCdtme();
 		cdtmaeCopy = EntityUtils.deepCopy(cdtme, ((CentreDomainTreeManagerAndEnhancer) cdtme).getSerialiser());
-		cdtmaeCopy.getEnhancer().addCalculatedProperty(root, "", tdProp, tdPropCopy, "A copy of transaction date property to enhance query with delta boundaries", CalculatedPropertyAttribute.NO_ATTR, "");
-		cdtmaeCopy.getEnhancer().apply();
-		cdtmaeCopy.getFirstTick().check(root, tdPropCopy, true);
+		// FIXME cdtmaeCopy.getEnhancer().addCalculatedProperty(root, "", tdProp, tdPropCopy, "A copy of transaction date property to enhance query with delta boundaries", CalculatedPropertyAttribute.NO_ATTR, "");
+		// FIXME cdtmaeCopy.getEnhancer().apply();
+		// FIXME cdtmaeCopy.getFirstTick().check(root, tdPropCopy, true);
 
 		provideCustomPropertiesForQueries(cdtmaeCopy);
 	    }
-	    final Class<?> tdPropType = PropertyTypeDeterminator.determinePropertyType(root, tdProp);
-	    if (EntityUtils.isDate(tdPropType)) {
-		cdtmaeCopy.getFirstTick().setValue(root, tdPropCopy, oldNow);
-		cdtmaeCopy.getFirstTick().setValue2(root, tdPropCopy, now);
-	    } else if (EntityUtils.isDateTime(tdPropType)) {
-		cdtmaeCopy.getFirstTick().setValue(root, tdPropCopy, oldNow == null ? null : new DateTime(oldNow.getTime()));
-		cdtmaeCopy.getFirstTick().setValue2(root, tdPropCopy, new DateTime(now.getTime()));
-	    } else {
-		throw new IllegalArgumentException("The type [" + tdPropType.getSimpleName() + "] of property [" + tdProp + "] in entity [" + root + "] is not supported.");
-	    }
+//	FIXME    final Class<?> tdPropType = PropertyTypeDeterminator.determinePropertyType(root, tdProp);
+//FIXME	    if (EntityUtils.isDate(tdPropType)) {
+//	FIXME	cdtmaeCopy.getFirstTick().setValue(root, tdPropCopy, oldNow);
+//FIXME		cdtmaeCopy.getFirstTick().setValue2(root, tdPropCopy, now);
+// FIXME    } else if (EntityUtils.isDateTime(tdPropType)) {
+//	FIXME	cdtmaeCopy.getFirstTick().setValue(root, tdPropCopy, oldNow == null ? null : new DateTime(oldNow.getTime()));
+//FIXME		cdtmaeCopy.getFirstTick().setValue2(root, tdPropCopy, new DateTime(now.getTime()));
+//	FIXME    } else {
+//FIXME		throw new IllegalArgumentException("The type [" + tdPropType.getSimpleName() + "] of property [" + tdProp + "] in entity [" + root + "] is not supported.");
+//	FIXME}
 
 	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> newQGenerator = new GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(root, cdtmaeCopy);
 	    final List<IQueryComposer<T>> newQueries = newQGenerator.generateQueryModel().getQueries();
