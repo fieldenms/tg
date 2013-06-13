@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -12,11 +11,6 @@ public class ExistenceTest2 extends AbstractCondition2 {
     public ExistenceTest2(final boolean negated, final EntQuery2 subQuery) {
 	this.negated = negated;
 	this.subQuery = subQuery;
-    }
-
-    @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	return Arrays.asList(new EntQuery2[]{subQuery});
     }
 
     @Override

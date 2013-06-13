@@ -20,24 +20,6 @@ public class GroupBys2 implements IElement2 {
 	return result;
     }
 
-    @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	final List<EntQuery2> result = new ArrayList<EntQuery2>();
-	for (final GroupBy2 group : groups) {
-	    result.addAll(group.getOperand().getLocalSubQueries());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-	final List<EntProp2> result = new ArrayList<EntProp2>();
-	for (final GroupBy2 group : groups) {
-	    result.addAll(group.getOperand().getLocalProps());
-	}
-	return result;
-    }
-
     public List<GroupBy2> getGroups() {
         return groups;
     }

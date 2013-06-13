@@ -14,16 +14,6 @@ abstract class ZeroOperandFunction2 extends AbstractFunction2 {
     }
 
     @Override
-    public List<EntProp2> getLocalProps() {
-	return Collections.emptyList();
-    }
-
-    @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	return Collections.emptyList();
-    }
-
-    @Override
     public List<EntValue2> getAllValues() {
 	return Collections.emptyList();
     }

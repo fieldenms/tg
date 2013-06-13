@@ -36,21 +36,11 @@ public class CompoundSource2 implements IElement2 {
     }
 
     @Override
-    public List<EntProp2> getLocalProps() {
-	return joinConditions.getLocalProps();
-    }
-
-    @Override
     public List<EntValue2> getAllValues() {
 	final List<EntValue2> result = new ArrayList<EntValue2>();
 	result.addAll(source.getValues());
 	result.addAll(joinConditions.getAllValues());
 	return result;
-    }
-
-    @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	return joinConditions.getLocalSubQueries();
     }
 
     @Override

@@ -32,24 +32,6 @@ public class Sources1 implements IElement1<Sources2> {
     }
 
     @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	final List<EntQuery1> result = new ArrayList<EntQuery1>();
-	for (final CompoundSource1 compSource : compounds) {
-	    result.addAll(compSource.getJoinConditions().getLocalSubQueries());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-	final List<EntProp1> result = new ArrayList<EntProp1>();
-	for (final CompoundSource1 compSource : compounds) {
-	    result.addAll(compSource.getJoinConditions().getLocalProps());
-	}
-	return result;
-    }
-
-    @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer();
         sb.append(main);

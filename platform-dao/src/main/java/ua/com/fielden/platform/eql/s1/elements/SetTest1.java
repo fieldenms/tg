@@ -25,21 +25,6 @@ public class SetTest1 extends AbstractCondition1<SetTest2> {
     }
 
     @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	final List<EntQuery1> result = new ArrayList<EntQuery1>();
-	result.addAll(leftOperand.getLocalSubQueries());
-	result.addAll(rightOperand.getLocalSubQueries());
-	return result;    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-	final List<EntProp1> result = new ArrayList<EntProp1>();
-	result.addAll(leftOperand.getLocalProps());
-	result.addAll(rightOperand.getLocalProps());
-	return result;
-    }
-
-    @Override
     public boolean ignore() {
 	return leftOperand.ignore();
     }

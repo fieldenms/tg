@@ -27,24 +27,6 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2>{
     }
 
     @Override
-    public List<EntProp1> getLocalProps() {
-	final List<EntProp1> result = new ArrayList<EntProp1>();
-	for (final ISingleOperand1 operand : operands) {
-	    result.addAll(operand.getLocalProps());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	final List<EntQuery1> result = new ArrayList<EntQuery1>();
-	for (final ISingleOperand1 operand : operands) {
-	    result.addAll(operand.getLocalSubQueries());
-	}
-	return result;
-    }
-
-    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;

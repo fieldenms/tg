@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ua.com.fielden.platform.eql.s2.elements.IElement2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
@@ -14,22 +11,6 @@ abstract class TwoOperandsFunction1<S2 extends IElement2> extends AbstractFuncti
     public TwoOperandsFunction1(final ISingleOperand1<? extends ISingleOperand2> operand1, final ISingleOperand1<? extends ISingleOperand2> operand2) {
 	this.operand1 = operand1;
 	this.operand2 = operand2;
-    }
-
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	final List<EntQuery1> result = new ArrayList<EntQuery1>();
-	result.addAll(operand1.getLocalSubQueries());
-	result.addAll(operand2.getLocalSubQueries());
-	return result;
-    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-	final List<EntProp1> result = new ArrayList<EntProp1>();
-	result.addAll(operand1.getLocalProps());
-	result.addAll(operand2.getLocalProps());
-	return result;
     }
 
     @Override

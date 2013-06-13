@@ -17,21 +17,6 @@ public class SetTest2 extends AbstractCondition2 {
     }
 
     @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	final List<EntQuery2> result = new ArrayList<EntQuery2>();
-	result.addAll(leftOperand.getLocalSubQueries());
-	result.addAll(rightOperand.getLocalSubQueries());
-	return result;    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-	final List<EntProp2> result = new ArrayList<EntProp2>();
-	result.addAll(leftOperand.getLocalProps());
-	result.addAll(rightOperand.getLocalProps());
-	return result;
-    }
-
-    @Override
     public List<EntValue2> getAllValues() {
 	final List<EntValue2> result = new ArrayList<EntValue2>();
 	result.addAll(leftOperand.getAllValues());

@@ -31,28 +31,8 @@ public class Expression1 implements ISingleOperand1<Expression2> {
     }
 
     @Override
-    public List<EntProp1> getLocalProps() {
-	final List<EntProp1> result = new ArrayList<EntProp1>();
-	result.addAll(first.getLocalProps());
-	for (final CompoundSingleOperand1 compSingleOperand : items) {
-	    result.addAll(compSingleOperand.getOperand().getLocalProps());
-	}
-	return result;
-    }
-
-    @Override
     public boolean ignore() {
 	return false;
-    }
-
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	final List<EntQuery1> result = new ArrayList<EntQuery1>();
-	result.addAll(first.getLocalSubQueries());
-	for (final CompoundSingleOperand1 compSingleOperand : items) {
-	    result.addAll(compSingleOperand.getOperand().getLocalSubQueries());
-	}
-	return result;
     }
 
     @Override

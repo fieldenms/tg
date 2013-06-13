@@ -28,28 +28,6 @@ public class OrderBys1 implements IElement1<OrderBys2> {
 	return models.toString();
     }
 
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	final List<EntQuery1> result = new ArrayList<EntQuery1>();
-	for (final OrderBy1 model : models) {
-	    if (model.getOperand() != null) {
-		result.addAll(model.getOperand().getLocalSubQueries());
-	    }
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-	final List<EntProp1> result = new ArrayList<EntProp1>();
-	for (final OrderBy1 model : models) {
-	    if (model.getOperand() != null) {
-		result.addAll(model.getOperand().getLocalProps());
-	    }
-	}
-	return result;
-    }
-
     public List<OrderBy1> getModels() {
 	return models;
     }

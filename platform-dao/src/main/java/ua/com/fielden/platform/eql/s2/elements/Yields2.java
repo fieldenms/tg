@@ -77,28 +77,6 @@ public class Yields2 implements IElement2 {
     }
 
     @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	final List<EntQuery2> result = new ArrayList<EntQuery2>();
-	for (final Yield2 yield : yields.values()) {
-	    if (!yield.isCompositePropertyHeader()) {
-		result.addAll(yield.getOperand().getLocalSubQueries());
-	    }
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-	final List<EntProp2> result = new ArrayList<EntProp2>();
-	for (final Yield2 yield : yields.values()) {
-	    if (!yield.isCompositePropertyHeader()) {
-		result.addAll(yield.getOperand().getLocalProps());
-	    }
-	}
-	return result;
-    }
-
-    @Override
     public String toString() {
 	return yields.toString();
     }

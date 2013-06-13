@@ -24,24 +24,6 @@ public class GroupBys1 implements IElement1<GroupBys2> {
 	return new GroupBys2(transformed);
     }
 
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	final List<EntQuery1> result = new ArrayList<EntQuery1>();
-	for (final GroupBy1 group : groups) {
-	    result.addAll(group.getOperand().getLocalSubQueries());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-	final List<EntProp1> result = new ArrayList<EntProp1>();
-	for (final GroupBy1 group : groups) {
-	    result.addAll(group.getOperand().getLocalProps());
-	}
-	return result;
-    }
-
     public List<GroupBy1> getGroups() {
         return groups;
     }

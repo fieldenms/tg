@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -23,16 +22,6 @@ public class EntValue2 implements ISingleOperand2 {
 	    // TODO Uncomment when yieldNull() operator is implemented and all occurences of yield().val(null) are corrected.
 //	    throw new IllegalStateException("Value can't be null"); //
 	}
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-	return Collections.emptyList();
-    }
-
-    @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	return Collections.emptyList();
     }
 
     @Override

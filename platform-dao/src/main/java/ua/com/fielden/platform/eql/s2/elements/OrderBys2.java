@@ -26,28 +26,6 @@ public class OrderBys2 implements IElement2 {
 	return result;
     }
 
-    @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	final List<EntQuery2> result = new ArrayList<EntQuery2>();
-	for (final OrderBy2 model : models) {
-	    if (model.getOperand() != null) {
-		result.addAll(model.getOperand().getLocalSubQueries());
-	    }
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-	final List<EntProp2> result = new ArrayList<EntProp2>();
-	for (final OrderBy2 model : models) {
-	    if (model.getOperand() != null) {
-		result.addAll(model.getOperand().getLocalProps());
-	    }
-	}
-	return result;
-    }
-
     public List<OrderBy2> getModels() {
 	return models;
     }

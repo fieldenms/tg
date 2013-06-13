@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.Arrays;
-import java.util.List;
-
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.QueryBasedSet2;
 
@@ -18,16 +15,6 @@ public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
     @Override
     public QueryBasedSet2 transform(final TransformatorToS2 resolver) {
 	return new QueryBasedSet2(model.transform(resolver));
-    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-	return model.getLocalProps();
-    }
-
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	return Arrays.asList(new EntQuery1[]{model});
     }
 
     @Override

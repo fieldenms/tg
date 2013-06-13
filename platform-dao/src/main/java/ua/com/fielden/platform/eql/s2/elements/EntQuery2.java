@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -90,40 +88,40 @@ public class EntQuery2 implements ISingleOperand2 {
         this.paramValues = paramValues;
     }
 
-    /**
-     * By immediate props here are meant props used within this query and not within it's (nested) subqueries.
-     *
-     * @return
-     */
-    public List<EntProp2> getImmediateProps() {
-        final List<EntProp2> result = new ArrayList<EntProp2>();
-        result.addAll(sources.getLocalProps());
-        result.addAll(conditions.getLocalProps());
-        result.addAll(groups.getLocalProps());
-        result.addAll(yields.getLocalProps());
-        result.addAll(orderings.getLocalProps());
-        return result;
-    }
-
-    public List<EntQuery2> getImmediateSubqueries() {
-        final List<EntQuery2> result = new ArrayList<EntQuery2>();
-        result.addAll(yields.getLocalSubQueries());
-        result.addAll(groups.getLocalSubQueries());
-        result.addAll(orderings.getLocalSubQueries());
-        result.addAll(conditions.getLocalSubQueries());
-        result.addAll(sources.getLocalSubQueries());
-        return result;
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public List<EntQuery2> getLocalSubQueries() {
-        return Arrays.asList(new EntQuery2[] { this });
-    }
+//    /**
+//     * By immediate props here are meant props used within this query and not within it's (nested) subqueries.
+//     *
+//     * @return
+//     */
+//    public List<EntProp2> getImmediateProps() {
+//        final List<EntProp2> result = new ArrayList<EntProp2>();
+//        result.addAll(sources.getLocalProps());
+//        result.addAll(conditions.getLocalProps());
+//        result.addAll(groups.getLocalProps());
+//        result.addAll(yields.getLocalProps());
+//        result.addAll(orderings.getLocalProps());
+//        return result;
+//    }
+//
+//    public List<EntQuery2> getImmediateSubqueries() {
+//        final List<EntQuery2> result = new ArrayList<EntQuery2>();
+//        result.addAll(yields.getLocalSubQueries());
+//        result.addAll(groups.getLocalSubQueries());
+//        result.addAll(orderings.getLocalSubQueries());
+//        result.addAll(conditions.getLocalSubQueries());
+//        result.addAll(sources.getLocalSubQueries());
+//        return result;
+//    }
+//
+//    @Override
+//    public List<EntProp2> getLocalProps() {
+//        return Collections.emptyList();
+//    }
+//
+//    @Override
+//    public List<EntQuery2> getLocalSubQueries() {
+//        return Arrays.asList(new EntQuery2[] { this });
+//    }
 
     @Override
     public List<EntValue2> getAllValues() {

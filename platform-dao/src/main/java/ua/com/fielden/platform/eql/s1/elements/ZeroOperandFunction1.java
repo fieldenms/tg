@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.Collections;
-import java.util.List;
-
 import ua.com.fielden.platform.eql.s2.elements.IElement2;
 
 
@@ -13,16 +10,6 @@ abstract class ZeroOperandFunction1<S2 extends IElement2> extends AbstractFuncti
 
     public ZeroOperandFunction1(final String functionName) {
 	this.functionName = functionName;
-    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-	return Collections.emptyList();
-    }
-
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	return Collections.emptyList();
     }
 
     @Override

@@ -14,22 +14,6 @@ abstract class TwoOperandsFunction2 extends AbstractFunction2 {
     }
 
     @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	final List<EntQuery2> result = new ArrayList<EntQuery2>();
-	result.addAll(operand1.getLocalSubQueries());
-	result.addAll(operand2.getLocalSubQueries());
-	return result;
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-	final List<EntProp2> result = new ArrayList<EntProp2>();
-	result.addAll(operand1.getLocalProps());
-	result.addAll(operand2.getLocalProps());
-	return result;
-    }
-
-    @Override
     public List<EntValue2> getAllValues() {
 	final List<EntValue2> result = new ArrayList<EntValue2>();
 	result.addAll(operand1.getAllValues());

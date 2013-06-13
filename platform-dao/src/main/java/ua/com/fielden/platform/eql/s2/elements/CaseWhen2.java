@@ -18,32 +18,6 @@ public class CaseWhen2 extends AbstractFunction2 {
     }
 
     @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	final List<EntQuery2> result = new ArrayList<EntQuery2>();
-	for (final Pair<ICondition2, ISingleOperand2> whenThen : whenThenPairs) {
-	    result.addAll(whenThen.getKey().getLocalSubQueries());
-	    result.addAll(whenThen.getValue().getLocalSubQueries());
-	}
-	if (elseOperand != null) {
-	    result.addAll(elseOperand.getLocalSubQueries());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-	final List<EntProp2> result = new ArrayList<EntProp2>();
-	for (final Pair<ICondition2, ISingleOperand2> whenThen : whenThenPairs) {
-	    result.addAll(whenThen.getKey().getLocalProps());
-	    result.addAll(whenThen.getValue().getLocalProps());
-	}
-	if (elseOperand != null) {
-	    result.addAll(elseOperand.getLocalProps());
-	}
-	return result;
-    }
-
-    @Override
     public List<EntValue2> getAllValues() {
 	final List<EntValue2> result = new ArrayList<EntValue2>();
 	for (final Pair<ICondition2, ISingleOperand2> whenThen : whenThenPairs) {

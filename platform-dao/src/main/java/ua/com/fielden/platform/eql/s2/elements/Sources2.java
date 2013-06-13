@@ -28,24 +28,6 @@ public class Sources2 implements IElement2 {
     }
 
     @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	final List<EntQuery2> result = new ArrayList<EntQuery2>();
-	for (final CompoundSource2 compSource : compounds) {
-	    result.addAll(compSource.getJoinConditions().getLocalSubQueries());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-	final List<EntProp2> result = new ArrayList<EntProp2>();
-	for (final CompoundSource2 compSource : compounds) {
-	    result.addAll(compSource.getJoinConditions().getLocalProps());
-	}
-	return result;
-    }
-
-    @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer();
         sb.append(main);

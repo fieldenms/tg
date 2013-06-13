@@ -8,7 +8,7 @@ public class EntityTypePropInfo extends AbstractPropInfo  {
 
     @Override
     public String toString() {
-        return super.toString() + ": " + propEntityInfo;
+        return super.toString() + ": " + propEntityInfo.javaType().getSimpleName();
     }
 
     public EntityTypePropInfo(final String name, final EntityInfo parent, final EntityInfo propEntityInfo, final Expression1 expression) {

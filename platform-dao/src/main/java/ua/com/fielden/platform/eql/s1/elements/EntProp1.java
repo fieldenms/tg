@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.EntProp2;
 
@@ -27,18 +23,6 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
 
     public EntProp2 transform(final TransformatorToS2 resolver) {
 	return resolver.getTransformedProp(this);
-    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-        //return isExpression() ? expression.getLocalProps() : Arrays.asList(new EntProp[]{this});
-        return Arrays.asList(new EntProp1[]{this});
-    }
-
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-        //return isExpression() ? expression.getLocalSubQueries() : Collections.<EntQuery> emptyList();
-        return Collections.<EntQuery1> emptyList();
     }
 
     public String getName() {

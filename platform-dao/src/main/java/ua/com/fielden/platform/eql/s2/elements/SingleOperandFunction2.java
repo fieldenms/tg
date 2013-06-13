@@ -13,16 +13,6 @@ abstract class SingleOperandFunction2 extends AbstractFunction2 {
     }
 
     @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	return operand.getLocalSubQueries();
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-	return operand.getLocalProps();
-    }
-
-    @Override
     public List<EntValue2> getAllValues() {
 	return operand.getAllValues();
     }

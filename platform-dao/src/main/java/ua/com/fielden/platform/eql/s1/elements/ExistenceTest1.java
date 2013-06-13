@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
@@ -20,11 +19,6 @@ public class ExistenceTest1 extends AbstractCondition1<ExistenceTest2> {
     @Override
     public ExistenceTest2 transform(final TransformatorToS2 resolver) {
 	return new ExistenceTest2(negated, subQuery.transform(resolver));
-    }
-
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	return Arrays.asList(new EntQuery1[]{subQuery});
     }
 
     @Override

@@ -13,24 +13,6 @@ public class Concat2 extends AbstractFunction2 {
     }
 
     @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	final List<EntQuery2> result = new ArrayList<EntQuery2>();
-	for (final ISingleOperand2 operand : operands) {
-	    result.addAll(operand.getLocalSubQueries());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-	final List<EntProp2> result = new ArrayList<EntProp2>();
-	for (final ISingleOperand2 operand : operands) {
-	    result.addAll(operand.getLocalProps());
-	}
-	return result;
-    }
-
-    @Override
     public List<EntValue2> getAllValues() {
 	final List<EntValue2> result = new ArrayList<EntValue2>();
 	for (final ISingleOperand2 operand : operands) {

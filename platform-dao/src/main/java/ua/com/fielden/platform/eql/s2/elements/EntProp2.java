@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,18 +26,6 @@ public class EntProp2 implements ISingleOperand2 {
     @Override
     public String toString() {
         return " name = " + name + "; source = " + source + "; aliased = " + aliased + "; resolution = " + resolution;
-    }
-
-    @Override
-    public List<EntProp2> getLocalProps() {
-        //return isExpression() ? expression.getLocalProps() : Arrays.asList(new EntProp[]{this});
-        return Arrays.asList(new EntProp2[]{this});
-    }
-
-    @Override
-    public List<EntQuery2> getLocalSubQueries() {
-        //return isExpression() ? expression.getLocalSubQueries() : Collections.<EntQuery> emptyList();
-        return Collections.<EntQuery2> emptyList();
     }
 
     @Override

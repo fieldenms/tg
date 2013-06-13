@@ -26,24 +26,6 @@ public class Concat1 extends AbstractFunction1<Concat2> {
     }
 
     @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	final List<EntQuery1> result = new ArrayList<EntQuery1>();
-	for (final ISingleOperand1 operand : operands) {
-	    result.addAll(operand.getLocalSubQueries());
-	}
-	return result;
-    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-	final List<EntProp1> result = new ArrayList<EntProp1>();
-	for (final ISingleOperand1 operand : operands) {
-	    result.addAll(operand.getLocalProps());
-	}
-	return result;
-    }
-
-    @Override
     public boolean ignore() {
 	return false;
     }

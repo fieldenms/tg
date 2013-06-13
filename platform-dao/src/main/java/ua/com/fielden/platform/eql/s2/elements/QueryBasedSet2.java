@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -13,18 +12,8 @@ public class QueryBasedSet2 implements ISetOperand2 {
     }
 
     @Override
-    public List<EntProp2> getLocalProps() {
-	return model.getLocalProps();
-    }
-
-    @Override
     public List<EntValue2> getAllValues() {
 	return model.getAllValues();
-    }
-
-    @Override
-    public List<EntQuery2> getLocalSubQueries() {
-	return Arrays.asList(new EntQuery2[]{model});
     }
 
     @Override

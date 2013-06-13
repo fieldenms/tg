@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.List;
-
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.CompoundSource2;
@@ -40,16 +38,6 @@ public class CompoundSource1 implements IElement1<CompoundSource2> {
 
     public Conditions1 getJoinConditions() {
         return joinConditions;
-    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-	return joinConditions.getLocalProps();
-    }
-
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	return joinConditions.getLocalSubQueries();
     }
 
     @Override

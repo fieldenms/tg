@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.List;
-
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
@@ -12,16 +10,6 @@ abstract class SingleOperandFunction1<S2 extends ISingleOperand2> extends Abstra
 
     public SingleOperandFunction1(final ISingleOperand1<? extends ISingleOperand2> operand) {
 	this.operand = operand;
-    }
-
-    @Override
-    public List<EntQuery1> getLocalSubQueries() {
-	return operand.getLocalSubQueries();
-    }
-
-    @Override
-    public List<EntProp1> getLocalProps() {
-	return operand.getLocalProps();
     }
 
     @Override
