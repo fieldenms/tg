@@ -21,11 +21,6 @@ abstract class TwoOperandsFunction2 extends AbstractFunction2 {
 	return result;
     }
 
-    @Override
-    public boolean ignore() {
-	return false;
-    }
-
     public ISingleOperand2 getOperand1() {
         return operand1;
     }

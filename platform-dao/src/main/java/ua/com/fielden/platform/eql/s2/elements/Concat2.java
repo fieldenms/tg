@@ -21,11 +21,6 @@ public class Concat2 extends AbstractFunction2 {
 	return result;
     }
 
-    @Override
-    public boolean ignore() {
-	return false;
-    }
-
     public List<ISingleOperand2> getOperands() {
         return operands;
     }

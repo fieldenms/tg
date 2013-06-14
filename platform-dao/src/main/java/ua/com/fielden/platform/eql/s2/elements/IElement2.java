@@ -4,5 +4,4 @@ import java.util.List;
 
 public interface IElement2 {
     List<EntValue2> getAllValues();
-    boolean ignore();
 }

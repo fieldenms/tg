@@ -45,10 +45,4 @@ public class QueryBasedSet2 implements ISetOperand2 {
 	}
 	return true;
     }
-
-    @Override
-    public boolean ignore() {
-	// TODO Auto-generated method stub
-	return false;
-    }
 }

@@ -47,11 +47,6 @@ abstract class SingleOperandFunction2 extends AbstractFunction2 {
 	return true;
     }
 
-    @Override
-    public boolean ignore() {
-	return false;
-    }
-
     public ISingleOperand2 getOperand() {
         return operand;
     }

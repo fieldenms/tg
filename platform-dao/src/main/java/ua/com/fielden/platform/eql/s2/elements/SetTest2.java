@@ -25,11 +25,6 @@ public class SetTest2 extends AbstractCondition2 {
     }
 
     @Override
-    public boolean ignore() {
-	return leftOperand.ignore();
-    }
-
-    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;

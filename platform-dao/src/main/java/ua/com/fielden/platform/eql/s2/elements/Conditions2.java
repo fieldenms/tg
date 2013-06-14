@@ -3,89 +3,40 @@ package ua.com.fielden.platform.eql.s2.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
-
-
-
 public class Conditions2 extends AbstractCondition2 {
-    private final ICondition2 firstCondition;
-    private final List<CompoundCondition2> otherConditions = new ArrayList<CompoundCondition2>();
+    private final List<List<ICondition2>> allConditions;
 
-    public Conditions2(final ICondition2 firstCondition, final List<CompoundCondition2> otherConditions) {
-	this.firstCondition = firstCondition;
-	this.otherConditions.addAll(otherConditions);
-    }
-
-    public Conditions2(final ICondition2 firstCondition) {
-	this.firstCondition = firstCondition;
-    }
-
-    private List<List<ICondition2>> formConditionIntoLogicalGroups() {
-	final List<List<ICondition2>> result = new ArrayList<List<ICondition2>>();
-	List<ICondition2> currGroup = new ArrayList<ICondition2>();
-	currGroup.add(firstCondition);
-
-	for (final CompoundCondition2 compoundCondition : otherConditions) {
-	    if (compoundCondition.getLogicalOperator() == LogicalOperator.AND) {
-		currGroup.add(compoundCondition.getCondition());
-	    } else {
-		result.add(currGroup);
-		currGroup = new ArrayList<ICondition2>();
-		currGroup.add(compoundCondition.getCondition());
-	    }
-	}
-
-	result.add(currGroup);
-
-	return result;
-    }
-
-    @Override
-    public boolean ignore() {
-	if (firstCondition != null && !firstCondition.ignore()) {
-	    return false;
-	}
-
-	for (final CompoundCondition2 compoundCondition : otherConditions) {
-	    if (!compoundCondition.getCondition().ignore()) {
-		return false;
-	    }
-	}
-
-	return true;
+    public Conditions2(final List<List<ICondition2>> allConditions) {
+	this.allConditions = allConditions;
     }
 
     @Override
     protected List<IElement2> getCollection() {
 	final List<IElement2> result = new ArrayList<IElement2>();
-	if (firstCondition != null && !firstCondition.ignore()) {
-	    result.add(firstCondition);
-	}
 
-	for (final CompoundCondition2 compoundCondition : otherConditions) {
-	    if (!compoundCondition.getCondition().ignore()) {
-		result.add(compoundCondition.getCondition());
+	for (final List<ICondition2> compoundCondition : allConditions) {
+	    for (final ICondition2 iCondition1 : compoundCondition) {
+		result.add(iCondition1);
 	    }
 	}
 	return result;
     }
 
-    @Override
-    public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(firstCondition);
-        for (final CompoundCondition2 compound : otherConditions) {
-            sb.append(" " + compound);
-        }
-        return sb.toString();
-    }
+    //    @Override
+    //    public String toString() {
+    //        final StringBuffer sb = new StringBuffer();
+    //        sb.append(firstCondition);
+    //        for (final CompoundCondition2 compound : otherConditions) {
+    //            sb.append(" " + compound);
+    //        }
+    //        return sb.toString();
+    //    }
 
     @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + ((firstCondition == null) ? 0 : firstCondition.hashCode());
-	result = prime * result + ((otherConditions == null) ? 0 : otherConditions.hashCode());
+	result = prime * result + ((allConditions == null) ? 0 : allConditions.hashCode());
 	return result;
     }
 
@@ -101,20 +52,14 @@ public class Conditions2 extends AbstractCondition2 {
 	    return false;
 	}
 	final Conditions2 other = (Conditions2) obj;
-	if (firstCondition == null) {
-	    if (other.firstCondition != null) {
+	if (allConditions == null) {
+	    if (other.allConditions != null) {
 		return false;
 	    }
-	} else if (!firstCondition.equals(other.firstCondition)) {
-	    return false;
-	}
-	if (otherConditions == null) {
-	    if (other.otherConditions != null) {
-		return false;
-	    }
-	} else if (!otherConditions.equals(other.otherConditions)) {
+	} else if (!allConditions.equals(other.allConditions)) {
 	    return false;
 	}
 	return true;
     }
+
 }

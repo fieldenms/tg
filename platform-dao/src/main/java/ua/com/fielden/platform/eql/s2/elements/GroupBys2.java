@@ -53,10 +53,4 @@ public class GroupBys2 implements IElement2 {
 	}
 	return true;
     }
-
-    @Override
-    public boolean ignore() {
-	// TODO Auto-generated method stub
-	return false;
-    }
 }

@@ -17,11 +17,6 @@ public class Expression2 implements ISingleOperand2 {
     }
 
     @Override
-    public boolean ignore() {
-	return false;
-    }
-
-    @Override
     public List<EntValue2> getAllValues() {
 	final List<EntValue2> result = new ArrayList<EntValue2>();
 	result.addAll(first.getAllValues());

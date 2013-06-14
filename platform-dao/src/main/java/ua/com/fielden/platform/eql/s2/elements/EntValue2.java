@@ -59,11 +59,6 @@ public class EntValue2 implements ISingleOperand2 {
 	return true;
     }
 
-    @Override
-    public boolean ignore() {
-	return ignoreNull && value == null;
-    }
-
     public Object getValue() {
         return value;
     }

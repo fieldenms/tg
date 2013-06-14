@@ -5,13 +5,8 @@ import java.util.List;
 public class GroupedConditions2 extends Conditions2 {
     private final boolean negated;
 
-    public GroupedConditions2(final boolean negated, final ICondition2 firstCondition, final List<CompoundCondition2> otherConditions) {
-	super(firstCondition, otherConditions);
-	this.negated = negated;
-    }
-
-    public GroupedConditions2(final boolean negated, final ICondition2 firstCondition) {
-	super(firstCondition);
+    public GroupedConditions2(final boolean negated, final List<List<ICondition2>> allConditions) {
+	super(allConditions);
 	this.negated = negated;
     }
 

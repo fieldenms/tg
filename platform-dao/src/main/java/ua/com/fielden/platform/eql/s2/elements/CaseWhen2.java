@@ -31,11 +31,6 @@ public class CaseWhen2 extends AbstractFunction2 {
     }
 
     @Override
-    public boolean ignore() {
-	return false;
-    }
-
-    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
