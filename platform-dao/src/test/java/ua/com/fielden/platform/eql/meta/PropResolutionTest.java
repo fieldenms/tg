@@ -24,7 +24,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 public class PropResolutionTest extends BaseEntQueryTCase1 {
 
-
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
 
     @Before
@@ -112,6 +111,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 //	System.out.println(tgAuthorRoyalty.resolve("authorship.author.name.key"));
 //	System.out.println(tgAuthorRoyalty.resolve("paymentDate"));
     }
+
     @Test
     public void test0() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model();
@@ -137,7 +137,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 	final EntityResultQueryModel<TgAuthorship> qry = select(TgAuthorship.class).where().exists(select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model()).model();
 	entResultQry2(qry, new TransformatorToS2(metadata));
     }
-
 
     @Test
     public void test1() {

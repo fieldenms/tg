@@ -69,26 +69,6 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 	return new Conditions2(transformed);
     }
 
-    //    private List<List<ICondition1>> formConditionIntoLogicalGroups() {
-    //	final List<List<ICondition1>> result = new ArrayList<List<ICondition1>>();
-    //	List<ICondition1> currGroup = new ArrayList<ICondition1>();
-    //	currGroup.add(firstCondition);
-    //
-    //	for (final CompoundCondition1 compoundCondition : otherConditions) {
-    //	    if (compoundCondition.getLogicalOperator() == LogicalOperator.AND) {
-    //		currGroup.add(compoundCondition.getCondition());
-    //	    } else {
-    //		result.add(currGroup);
-    //		currGroup = new ArrayList<ICondition1>();
-    //		currGroup.add(compoundCondition.getCondition());
-    //	    }
-    //	}
-    //
-    //	result.add(currGroup);
-    //
-    //	return result;
-    //    }
-
     @Override
     public boolean ignore() {
 	return allConditions.size() == 0;
@@ -123,7 +103,6 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	//result = prime * result + ((firstCondition == null) ? 0 : firstCondition.hashCode());
 	result = prime * result + ((allConditions == null) ? 0 : allConditions.hashCode());
 	return result;
     }
@@ -140,13 +119,6 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 	    return false;
 	}
 	final Conditions1 other = (Conditions1) obj;
-	//	if (firstCondition == null) {
-	//	    if (other.firstCondition != null) {
-	//		return false;
-	//	    }
-	//	} else if (!firstCondition.equals(other.firstCondition)) {
-	//	    return false;
-	//	}
 	if (allConditions == null) {
 	    if (other.allConditions != null) {
 		return false;

@@ -140,7 +140,7 @@ public class BaseEntQueryTCase1 {
 	} else if (qryModel instanceof AggregatedResultQueryModel) {
 	    return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel)qryModel).model()).transform(transformator);
 	}
-	return null;
+	throw new IllegalStateException("Not implemented yet");
     }
 
     protected static EntQuery1 entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {

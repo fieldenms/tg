@@ -83,7 +83,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 	    return originalConditions;
 	}
 	logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
-	final List<CompoundCondition1> others = new ArrayList();
+	final List<CompoundCondition1> others = new ArrayList<>();
 	others.add(new CompoundCondition1(LogicalOperator.AND, originalConditions));
 	return originalConditions.ignore() ? new Conditions1(new StandAloneConditionBuilder1(generator, paramValues, filteringCondition, false).getModel()) : new Conditions1(new StandAloneConditionBuilder1(generator, paramValues, filteringCondition, false).getModel(), others);
 	} else {

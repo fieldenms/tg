@@ -2,15 +2,17 @@ package ua.com.fielden.platform.eql.s1.elements;
 
 import java.util.List;
 
+import ua.com.fielden.platform.eql.s2.elements.ICondition2;
+
 public class GroupedConditions1 extends Conditions1 {
     private final boolean negated;
 
-    public GroupedConditions1(final boolean negated, final ICondition1 firstCondition, final List<CompoundCondition1> otherConditions) {
+    public GroupedConditions1(final boolean negated, final ICondition1<? extends ICondition2> firstCondition, final List<CompoundCondition1> otherConditions) {
 	super(firstCondition, otherConditions);
 	this.negated = negated;
     }
 
-    public GroupedConditions1(final boolean negated, final ICondition1 firstCondition) {
+    public GroupedConditions1(final boolean negated, final ICondition1<? extends ICondition2> firstCondition) {
 	super(firstCondition);
 	this.negated = negated;
     }
