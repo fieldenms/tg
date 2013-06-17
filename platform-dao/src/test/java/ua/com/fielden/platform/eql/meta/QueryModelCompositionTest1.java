@@ -66,17 +66,14 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
     protected final IWhere0<TgWorkOrder> where_wo = select(WORK_ORDER).as("wo").where();
 
 
-    @Ignore
     @Test
-    public void test15() {
+    public void test_user_data_filtering() {
 	assertModelsEqualsAccordingUserDataFiltering(//
 		select(VEHICLE). //
 		where().prop("model.make.key").eq().val("MERC").model(),
 
 		select(VEHICLE). //
-		//join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		//join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
-		where().begin().prop("key").notLike().val("A%").end().and().prop("model.make.key").eq().val("MERC").model());
+		where().begin().prop("key").notLike().val("A%").end().and().begin().prop("model.make.key").eq().val("MERC").end().model());
     }
 
     /////////////////////////////////////////// Conditions ////////////////////////////////////////////////////
@@ -302,8 +299,8 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(TgWorkOrder.class).as("wo").on().prop("v").eq().prop("wo.vehicle").leftJoin(TgWorkOrder.class).as("wo2").on().prop("v").eq().prop("wo2.vehicle"). //
 	where().dayOf().prop("initDate").gt().val(15).and().prop("price").lt().prop("purchasePrice").model();
 
-	final Conditions1 condition1 = new Conditions1(new ComparisonTest1(prop("v"), _eq, prop("wo.vehicle")), new ArrayList<CompoundCondition1>());
-	final Conditions1 condition2 = new Conditions1(new ComparisonTest1(prop("v"), _eq, prop("wo2.vehicle")), new ArrayList<CompoundCondition1>());
+	final Conditions1 condition1 = conditions(new ComparisonTest1(prop("v"), _eq, prop("wo.vehicle")));
+	final Conditions1 condition2 = conditions(new ComparisonTest1(prop("v"), _eq, prop("wo2.vehicle")));
 
 	final List<CompoundSource1> others = new ArrayList<CompoundSource1>();
 	others.add(new CompoundSource1(new TypeBasedSource1(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition1));
@@ -315,7 +312,7 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
 
 	final List<CompoundCondition1> others2 = new ArrayList<CompoundCondition1>();
 	others2.add(new CompoundCondition1(_and, new ComparisonTest1(prop("price"), _lt, prop("purchasePrice"))));
-	final Conditions1 exp2 = new Conditions1(new ComparisonTest1(new DayOf1(prop("initDate")), _gt, val(15)), others2);
+	final Conditions1 exp2 = conditions(new ComparisonTest1(new DayOf1(prop("initDate")), _gt, val(15)), others2.toArray(new CompoundCondition1[]{}));
 	assertEquals(exp2, act.getConditions());
     }
 
@@ -458,7 +455,7 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
     public void test_query_sources1() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(WORK_ORDER).as("wo").on().prop("v").eq().prop("vehicle").model();
 
-	final Conditions1 condition = new Conditions1(new ComparisonTest1(prop("v"), ComparisonOperator.EQ, prop("vehicle")), new ArrayList<CompoundCondition1>());
+	final Conditions1 condition = conditions(new ComparisonTest1(prop("v"), ComparisonOperator.EQ, prop("vehicle")));
 
 	final List<CompoundSource1> others = new ArrayList<>();
 	others.add(new CompoundSource1(new TypeBasedSource1(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition));
@@ -471,7 +468,7 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
     public void test_query_sources1a() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(WORK_ORDER).as("wo").on().prop("v").eq().prop("wo.vehicle").where().val(1).isNotNull().model();
 
-	final Conditions1 condition = new Conditions1(new ComparisonTest1(prop("v"), ComparisonOperator.EQ, prop("wo.vehicle")), new ArrayList<CompoundCondition1>());
+	final Conditions1 condition = conditions(new ComparisonTest1(prop("v"), ComparisonOperator.EQ, prop("wo.vehicle")));
 
 	final List<CompoundSource1> others = new ArrayList<CompoundSource1>();
 	others.add(new CompoundSource1(new TypeBasedSource1(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition));
@@ -484,7 +481,7 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
     public void test_query_sources_with_explicit_join_and_without_aliases() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(WORK_ORDER).on().prop("v").eq().prop("vehicle").model();
 
-	final Conditions1 condition = new Conditions1(new ComparisonTest1(prop("v"), ComparisonOperator.EQ, prop("vehicle")), new ArrayList<CompoundCondition1>());
+	final Conditions1 condition = conditions(new ComparisonTest1(prop("v"), ComparisonOperator.EQ, prop("vehicle")));
 
 	final List<CompoundSource1> others = new ArrayList<CompoundSource1>();
 	others.add(new CompoundSource1(new TypeBasedSource1(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), null, DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition));
@@ -497,8 +494,8 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
     public void test_query_sources2() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(WORK_ORDER).as("wo").on().prop("v").eq().prop("wo.vehicle").leftJoin(WORK_ORDER).as("wo2").on().prop("v").eq().prop("wo2.vehicle").model();
 
-	final Conditions1 condition1 = new Conditions1(new ComparisonTest1(prop("v"), ComparisonOperator.EQ, prop("wo.vehicle")), new ArrayList<CompoundCondition1>());
-	final Conditions1 condition2 = new Conditions1(new ComparisonTest1(prop("v"), ComparisonOperator.EQ, prop("wo2.vehicle")), new ArrayList<CompoundCondition1>());
+	final Conditions1 condition1 = conditions(new ComparisonTest1(prop("v"), ComparisonOperator.EQ, prop("wo.vehicle")));
+	final Conditions1 condition2 = conditions(new ComparisonTest1(prop("v"), ComparisonOperator.EQ, prop("wo2.vehicle")));
 
 	final List<CompoundSource1> others = new ArrayList<CompoundSource1>();
 	others.add(new CompoundSource1(new TypeBasedSource1(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition1));

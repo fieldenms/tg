@@ -5,9 +5,11 @@ import java.util.List;
 
 public class Conditions2 extends AbstractCondition2 {
     private final List<List<ICondition2>> allConditions;
+    private final boolean negated;
 
-    public Conditions2(final List<List<ICondition2>> allConditions) {
+    public Conditions2(final boolean negated, final List<List<ICondition2>> allConditions) {
 	this.allConditions = allConditions;
+	this.negated = negated;
     }
 
     @Override
@@ -22,21 +24,12 @@ public class Conditions2 extends AbstractCondition2 {
 	return result;
     }
 
-    //    @Override
-    //    public String toString() {
-    //        final StringBuffer sb = new StringBuffer();
-    //        sb.append(firstCondition);
-    //        for (final CompoundCondition2 compound : otherConditions) {
-    //            sb.append(" " + compound);
-    //        }
-    //        return sb.toString();
-    //    }
-
     @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
 	result = prime * result + ((allConditions == null) ? 0 : allConditions.hashCode());
+	result = prime * result + (negated ? 1231 : 1237);
 	return result;
     }
 
@@ -59,7 +52,9 @@ public class Conditions2 extends AbstractCondition2 {
 	} else if (!allConditions.equals(other.allConditions)) {
 	    return false;
 	}
+	if (negated != other.negated) {
+	    return false;
+	}
 	return true;
     }
-
 }

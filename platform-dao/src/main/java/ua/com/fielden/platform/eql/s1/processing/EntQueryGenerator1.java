@@ -112,7 +112,8 @@ public class EntQueryGenerator1 {
 	//logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
 	final List<CompoundCondition1> others = new ArrayList<>();
 	others.add(new CompoundCondition1(LogicalOperator.AND, originalConditions));
-	return originalConditions.ignore() ? new Conditions1(new StandAloneConditionBuilder1(generator, paramValues, filteringCondition, false).getModel()) : new Conditions1(new StandAloneConditionBuilder1(generator, paramValues, filteringCondition, false).getModel(), others);
+	final Conditions1 filteringConditions = new StandAloneConditionBuilder1(generator, paramValues, filteringCondition, false).getModel();
+	return originalConditions.ignore() ? filteringConditions : new Conditions1(false, filteringConditions, others);
 	} else {
 	    return originalConditions;
 	}

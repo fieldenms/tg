@@ -43,7 +43,7 @@ public class ConditionsBuilder1 extends AbstractTokensBuilder1 {
 		final CompoundCondition1 subsequentCompoundCondition = (CompoundCondition1) iterator.next().getValue();
 		otherConditions.add(subsequentCompoundCondition);
 	    }
-	    return new Conditions1(firstCondition, otherConditions);
+	    return new Conditions1(false, firstCondition, otherConditions);
 	}
     }
 

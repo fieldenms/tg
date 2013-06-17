@@ -12,7 +12,6 @@ import ua.com.fielden.platform.eql.s1.elements.CompoundSingleOperand1;
 import ua.com.fielden.platform.eql.s1.elements.Conditions1;
 import ua.com.fielden.platform.eql.s1.elements.Expression1;
 import ua.com.fielden.platform.eql.s1.elements.GroupBys1;
-import ua.com.fielden.platform.eql.s1.elements.GroupedConditions1;
 import ua.com.fielden.platform.eql.s1.elements.ICondition1;
 import ua.com.fielden.platform.eql.s1.elements.ISingleOperand1;
 import ua.com.fielden.platform.eql.s1.elements.Sources1;
@@ -36,8 +35,8 @@ public class BaseEntQueryCompositionTCase1 extends BaseEntQueryTCase1 {
     protected final static ArithmeticalOperator _add = ArithmeticalOperator.ADD;
     protected final static ArithmeticalOperator _sub = ArithmeticalOperator.SUB;
 
-    protected static GroupedConditions1 group(final boolean negation, final ICondition1<? extends ICondition2> firstCondition, final CompoundCondition1... otherConditions) {
-	return new GroupedConditions1(negation, firstCondition, Arrays.asList(otherConditions));
+    protected static Conditions1 group(final boolean negation, final ICondition1<? extends ICondition2> firstCondition, final CompoundCondition1... otherConditions) {
+	return new Conditions1(negation, firstCondition, Arrays.asList(otherConditions));
     }
 
     protected static CompoundCondition1 compound(final LogicalOperator operator, final ICondition1<? extends ICondition2> condition) {
@@ -69,7 +68,7 @@ public class BaseEntQueryCompositionTCase1 extends BaseEntQueryTCase1 {
     }
 
     protected static Conditions1 conditions(final ICondition1<? extends ICondition2> firstCondition, final CompoundCondition1... otherConditions) {
-	return new Conditions1(firstCondition, Arrays.asList(otherConditions));
+	return new Conditions1(false, firstCondition, Arrays.asList(otherConditions));
     }
 
     protected static Expression1 expression(final ISingleOperand1<? extends ISingleOperand2> first, final CompoundSingleOperand1 ... others) {

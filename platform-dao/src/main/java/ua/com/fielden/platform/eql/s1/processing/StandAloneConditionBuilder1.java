@@ -8,8 +8,9 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.eql.s1.elements.CompoundCondition1;
-import ua.com.fielden.platform.eql.s1.elements.GroupedConditions1;
+import ua.com.fielden.platform.eql.s1.elements.Conditions1;
 import ua.com.fielden.platform.eql.s1.elements.ICondition1;
+import ua.com.fielden.platform.eql.s2.elements.ICondition2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class StandAloneConditionBuilder1 extends AbstractTokensBuilder1 {
@@ -35,19 +36,19 @@ public class StandAloneConditionBuilder1 extends AbstractTokensBuilder1 {
 	return getChild() == null;
     }
 
-    public GroupedConditions1 getModel() {
+    public Conditions1 getModel() {
 	if (getChild() != null) {
 	    throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
 
 	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-	final ICondition1 firstCondition = (ICondition1) iterator.next().getValue();
+	final ICondition1<? extends ICondition2> firstCondition = (ICondition1<? extends ICondition2>) iterator.next().getValue();
 	final List<CompoundCondition1> otherConditions = new ArrayList<CompoundCondition1>();
 	for (; iterator.hasNext();) {
 	    final CompoundCondition1 subsequentCompoundCondition = (CompoundCondition1) iterator.next().getValue();
 	    otherConditions.add(subsequentCompoundCondition);
 	}
-	return new GroupedConditions1(negated, firstCondition, otherConditions);
+	return new Conditions1(negated, firstCondition, otherConditions);
     }
 
     @Override

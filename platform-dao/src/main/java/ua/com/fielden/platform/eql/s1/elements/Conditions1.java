@@ -11,17 +11,20 @@ import ua.com.fielden.platform.eql.s2.elements.Conditions2;
 import ua.com.fielden.platform.eql.s2.elements.ICondition2;
 
 public class Conditions1 extends AbstractCondition1<Conditions2> {
+    private final boolean negated;
     private final List<List<ICondition1<? extends ICondition2>>> allConditions = new ArrayList<>();
 
-    public Conditions1(final ICondition1<? extends ICondition2> firstCondition, final List<CompoundCondition1> otherConditions) {
+    public Conditions1(final boolean negated, final ICondition1<? extends ICondition2> firstCondition, final List<CompoundCondition1> otherConditions) {
 	this.allConditions.addAll(formConditionIntoLogicalGroups(firstCondition, otherConditions));
+	this.negated = negated;
     }
 
-    public Conditions1(final ICondition1<? extends ICondition2> firstCondition) {
-	this(firstCondition, Collections.<CompoundCondition1>emptyList());
+    public Conditions1(final boolean negated, final ICondition1<? extends ICondition2> firstCondition) {
+	this(negated, firstCondition, Collections.<CompoundCondition1> emptyList());
     }
 
     public Conditions1() {
+	negated = false;
     }
 
     private List<List<ICondition1<? extends ICondition2>>> formConditionIntoLogicalGroups(final ICondition1<? extends ICondition2> firstCondition, final List<CompoundCondition1> otherConditions) {
@@ -67,7 +70,7 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 	    }
 	    transformed.add(transformedGroup);
 	}
-	return new Conditions2(transformed);
+	return new Conditions2(negated, transformed);
     }
 
     @Override
@@ -89,9 +92,10 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 	return result;
     }
 
-        @Override
+    @Override
     public String toString() {
 	final StringBuffer sb = new StringBuffer();
+
 	for (final Iterator<List<ICondition1<? extends ICondition2>>> iterator = allConditions.iterator(); iterator.hasNext();) {
 	    final List<ICondition1<? extends ICondition2>> list = iterator.next();
 
@@ -103,40 +107,41 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 	    sb.append(iterator.hasNext() ? " OR " : "");
 
 	}
-	return sb.toString();
+	return (negated ? "NOT (" : "(") + sb.toString() + ")";
     }
 
-	@Override
-	public int hashCode() {
-	    final int prime = 31;
-	    int result = 1;
-	    result = prime * result + ((allConditions == null) ? 0 : allConditions.hashCode());
-	    return result;
-	}
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((allConditions == null) ? 0 : allConditions.hashCode());
+	result = prime * result + (negated ? 1231 : 1237);
+	return result;
+    }
 
-	@Override
-	public boolean equals(final Object obj) {
-	    if (this == obj) {
-		return true;
-	    }
-	    if (obj == null) {
-		System.out.println(" conditions not equal 1");
-		return false;
-	    }
-	    if (!(obj instanceof Conditions1)) {
-		System.out.println(" conditions not equal 2 due to : " + obj.getClass() + " is different from " + this.getClass());
-		return false;
-	    }
-	    final Conditions1 other = (Conditions1) obj;
-	    if (allConditions == null) {
-		if (other.allConditions != null) {
-		    System.out.println(" conditions not equal 3");
-		    return false;
-		}
-	    } else if (!allConditions.equals(other.allConditions)) {
-		System.out.println(" conditions not equal 4");
-		return false;
-	    }
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj) {
 	    return true;
 	}
+	if (obj == null) {
+	    return false;
+	}
+	if (!(obj instanceof Conditions1)) {
+	    return false;
+	}
+	final Conditions1 other = (Conditions1) obj;
+	if (allConditions == null) {
+	    if (other.allConditions != null) {
+		return false;
+	    }
+	} else if (!allConditions.equals(other.allConditions)) {
+	    return false;
+	}
+	if (negated != other.negated) {
+	    return false;
+	}
+	return true;
+    }
+
 }
