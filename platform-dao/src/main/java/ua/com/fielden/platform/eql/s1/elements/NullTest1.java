@@ -10,10 +10,10 @@ import ua.com.fielden.platform.eql.s2.elements.NullTest2;
 
 
 public class NullTest1 extends AbstractCondition1<NullTest2> {
-    private final ISingleOperand1<ISingleOperand2> operand;
+    private final ISingleOperand1<? extends ISingleOperand2> operand;
     private final boolean negated;
 
-    public NullTest1(final ISingleOperand1<ISingleOperand2> operand, final boolean negated) {
+    public NullTest1(final ISingleOperand1<? extends ISingleOperand2> operand, final boolean negated) {
 	this.operand = operand;
 	this.negated = negated;
     }

@@ -10,8 +10,8 @@ import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
 public class ComparisonTest1 extends AbstractCondition1<ComparisonTest2> {
-    private final ISingleOperand1<ISingleOperand2> leftOperand;
-    private final ISingleOperand1<ISingleOperand2> rightOperand;
+    private final ISingleOperand1<? extends ISingleOperand2> leftOperand;
+    private final ISingleOperand1<? extends ISingleOperand2> rightOperand;
     private final ComparisonOperator operator;
 
     @Override
@@ -19,7 +19,7 @@ public class ComparisonTest1 extends AbstractCondition1<ComparisonTest2> {
         return leftOperand + " " + operator + " " + rightOperand;
     }
 
-    public ComparisonTest1(final ISingleOperand1<ISingleOperand2> leftOperand, final ComparisonOperator operator, final ISingleOperand1<ISingleOperand2> rightOperand) {
+    public ComparisonTest1(final ISingleOperand1<? extends ISingleOperand2> leftOperand, final ComparisonOperator operator, final ISingleOperand1<? extends ISingleOperand2> rightOperand) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;
 	this.operator = operator;

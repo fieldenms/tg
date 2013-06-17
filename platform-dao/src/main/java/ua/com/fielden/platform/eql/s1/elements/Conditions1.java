@@ -27,7 +27,7 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 	final List<List<ICondition1<? extends ICondition2>>> result = new ArrayList<>();
 	List<ICondition1<? extends ICondition2>> currGroup = new ArrayList<ICondition1<? extends ICondition2>>();
 
-	if (!firstCondition.ignore()) {
+	if (firstCondition != null && !firstCondition.ignore()) {
 	    currGroup.add(firstCondition);
 	}
 
