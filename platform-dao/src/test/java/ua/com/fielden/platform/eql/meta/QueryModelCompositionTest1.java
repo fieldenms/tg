@@ -66,6 +66,19 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
     protected final IWhere0<TgWorkOrder> where_wo = select(WORK_ORDER).as("wo").where();
 
 
+    @Ignore
+    @Test
+    public void test15() {
+	assertModelsEqualsAccordingUserDataFiltering(//
+		select(VEHICLE). //
+		where().prop("model.make.key").eq().val("MERC").model(),
+
+		select(VEHICLE). //
+		//join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
+		//join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		where().begin().prop("key").notLike().val("A%").end().and().prop("model.make.key").eq().val("MERC").model());
+    }
+
     /////////////////////////////////////////// Conditions ////////////////////////////////////////////////////
     @Test
     public void test_like() {

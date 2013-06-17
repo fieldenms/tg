@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -9,16 +7,12 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.FetchModel;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s1.processing.EntQueryBlocks1;
-import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
-import ua.com.fielden.platform.eql.s1.processing.StandAloneConditionBuilder1;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.s2.elements.EntQueryBlocks2;
+import ua.com.fielden.platform.eql.s2.elements.ISource2;
 
 public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
@@ -35,20 +29,44 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     transient private final Logger logger = Logger.getLogger(this.getClass());
 
+    private boolean isSubQuery() {
+        return QueryCategory.SUB_QUERY.equals(category);
+    }
+
+
     public Class type() {
         return resultType;
+    }
+
+    @Override
+    public String toString() {
+        return sql();
+    }
+
+    public String sql() {
+        final StringBuffer sb = new StringBuffer();
+        sb.append(isSubQuery() ? "(" : "");
+        sb.append("SELECT ");
+        sb.append(yields);
+        sb.append("\nFROM ");
+        sb.append(sources);
+        if (!conditions.ignore()) {
+            sb.append("\nWHERE ");
+            sb.append(conditions);
+        }
+        sb.append(groups);
+        sb.append(isSubQuery() ? ")" : "");
+        sb.append(orderings);
+        return sb.toString();
     }
 
     @Override
     public EntQuery2 transform(final TransformatorToS2 resolver) {
 	final TransformatorToS2 localResolver = resolver.produceBasedOn();
 
-	for (final ISource1 source : sources.getAllSources()) {
+	for (final ISource1<? extends ISource2> source : sources.getAllSources()) {
 	    localResolver.addSource(source);
 	}
-
-//	System.out.println("------------- TRANSFORMING qry with result type: " + resultType.getSimpleName());
-//	System.out.println(localResolver);
 
 	final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), conditions.transform(localResolver), //
 		yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
@@ -56,49 +74,13 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 	return new EntQuery2(false, entQueryBlocks, resultType, category, domainMetadataAnalyser, null, null, null, null, paramValues);
     }
 
-    private boolean isSubQuery() {
-        return QueryCategory.SUB_QUERY.equals(category);
-    }
-
-    private boolean isSourceQuery() {
-        return QueryCategory.SOURCE_QUERY.equals(category);
-    }
-
-    private boolean isResultQuery() {
-        return QueryCategory.RESULT_QUERY.equals(category);
-    }
-
-    private boolean mainSourceIsTypeBased() {
-	return getSources().getMain() instanceof TypeBasedSource1;
-    }
-
-    private boolean mainSourceIsQueryBased() {
-	return getSources().getMain() instanceof QueryBasedSource1;
-    }
-
-    private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, final String username, final ISource1 mainSource, final EntQueryGenerator1 generator, final Map<String, Object> paramValues) {
-	if (mainSource instanceof TypeBasedSource1 && filter != null) {
-	final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
-	if (filteringCondition == null) {
-	    return originalConditions;
-	}
-	logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
-	final List<CompoundCondition1> others = new ArrayList<>();
-	others.add(new CompoundCondition1(LogicalOperator.AND, originalConditions));
-	return originalConditions.ignore() ? new Conditions1(new StandAloneConditionBuilder1(generator, paramValues, filteringCondition, false).getModel()) : new Conditions1(new StandAloneConditionBuilder1(generator, paramValues, filteringCondition, false).getModel(), others);
-	} else {
-	    return originalConditions;
-	}
-    }
-
-    public EntQuery1(final boolean filterable, final EntQueryBlocks1 queryBlocks, final Class resultType, final QueryCategory category, //
-	    final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, //
-            final EntQueryGenerator1 generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
+    public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class resultType, final QueryCategory category, //
+	    final DomainMetadataAnalyser domainMetadataAnalyser, final FetchModel fetchModel, final Map<String, Object> paramValues) {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.sources = queryBlocks.getSources();
-        this.conditions = filterable ? enhanceConditions(queryBlocks.getConditions(), filter, username, sources.getMain(), generator, paramValues) : queryBlocks.getConditions();
+        this.conditions = queryBlocks.getConditions();
         this.yields = queryBlocks.getYields();
         this.groups = queryBlocks.getGroups();
         this.orderings = queryBlocks.getOrderings();
@@ -111,41 +93,6 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
         this.paramValues = paramValues;
     }
-
-//    /**
-//     * By immediate props here are meant props used within this query and not within it's (nested) subqueries.
-//     *
-//     * @return
-//     */
-//    public List<EntProp1> getImmediateProps() {
-//        final List<EntProp1> result = new ArrayList<EntProp1>();
-//        result.addAll(sources.getLocalProps());
-//        result.addAll(conditions.getLocalProps());
-//        result.addAll(groups.getLocalProps());
-//        result.addAll(yields.getLocalProps());
-//        result.addAll(orderings.getLocalProps());
-//        return result;
-//    }
-//
-//    public List<EntQuery1> getImmediateSubqueries() {
-//        final List<EntQuery1> result = new ArrayList<EntQuery1>();
-//        result.addAll(yields.getLocalSubQueries());
-//        result.addAll(groups.getLocalSubQueries());
-//        result.addAll(orderings.getLocalSubQueries());
-//        result.addAll(conditions.getLocalSubQueries());
-//        result.addAll(sources.getLocalSubQueries());
-//        return result;
-//    }
-//
-//    @Override
-//    public List<EntProp1> getLocalProps() {
-//        return Collections.emptyList();
-//    }
-//
-//    @Override
-//    public List<EntQuery1> getLocalSubQueries() {
-//        return Arrays.asList(new EntQuery1[] { this });
-//    }
 
     public Sources1 getSources() {
         return sources;
@@ -187,7 +134,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
+	if (this == obj) {
             return true;
         }
         if (obj == null) {

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.s1.elements;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
@@ -88,44 +89,54 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 	return result;
     }
 
-    //    @Override
-    // TODO EQL
-    //    public String toString() {
-    //        final StringBuffer sb = new StringBuffer();
-    //        sb.append(firstCondition);
-    //        for (final CompoundCondition1 compound : otherConditions) {
-    //            sb.append(" " + compound);
-    //        }
-    //        return sb.toString();
-    //    }
+        @Override
+    public String toString() {
+	final StringBuffer sb = new StringBuffer();
+	for (final Iterator<List<ICondition1<? extends ICondition2>>> iterator = allConditions.iterator(); iterator.hasNext();) {
+	    final List<ICondition1<? extends ICondition2>> list = iterator.next();
 
-    @Override
-    public int hashCode() {
-	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((allConditions == null) ? 0 : allConditions.hashCode());
-	return result;
+	    for (final Iterator<ICondition1<? extends ICondition2>> iterator2 = list.iterator(); iterator2.hasNext();) {
+		final ICondition1<? extends ICondition2> cond = iterator2.next();
+		sb.append(cond);
+		sb.append(iterator2.hasNext() ? " AND " : "");
+	    }
+	    sb.append(iterator.hasNext() ? " OR " : "");
+
+	}
+	return sb.toString();
     }
 
-    @Override
-    public boolean equals(final Object obj) {
-	if (this == obj) {
-	    return true;
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = 1;
+	    result = prime * result + ((allConditions == null) ? 0 : allConditions.hashCode());
+	    return result;
 	}
-	if (obj == null) {
-	    return false;
-	}
-	if (!(obj instanceof Conditions1)) {
-	    return false;
-	}
-	final Conditions1 other = (Conditions1) obj;
-	if (allConditions == null) {
-	    if (other.allConditions != null) {
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj) {
+		return true;
+	    }
+	    if (obj == null) {
+		System.out.println(" conditions not equal 1");
 		return false;
 	    }
-	} else if (!allConditions.equals(other.allConditions)) {
-	    return false;
+	    if (!(obj instanceof Conditions1)) {
+		System.out.println(" conditions not equal 2 due to : " + obj.getClass() + " is different from " + this.getClass());
+		return false;
+	    }
+	    final Conditions1 other = (Conditions1) obj;
+	    if (allConditions == null) {
+		if (other.allConditions != null) {
+		    System.out.println(" conditions not equal 3");
+		    return false;
+		}
+	    } else if (!allConditions.equals(other.allConditions)) {
+		System.out.println(" conditions not equal 4");
+		return false;
+	    }
+	    return true;
 	}
-	return true;
-    }
 }

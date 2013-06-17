@@ -18,6 +18,11 @@ public class GroupedConditions1 extends Conditions1 {
     }
 
     @Override
+    public String toString() {
+        return (negated ? "NOT (" :"(") + super.toString() +")";
+    }
+
+    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = super.hashCode();

@@ -22,6 +22,12 @@ public class LikeTest1 extends AbstractCondition1<LikeTest2> {
     }
 
     @Override
+    public String toString() {
+	return leftOperand + (negated ? " NOT LIKE " : " LIKE ") + rightOperand;
+    }
+
+
+    @Override
     public LikeTest2 transform(final TransformatorToS2 resolver) {
 	return new LikeTest2(leftOperand.transform(resolver), rightOperand.transform(resolver), negated, caseInsensitive);
     }
@@ -48,32 +54,42 @@ public class LikeTest1 extends AbstractCondition1<LikeTest2> {
 	    return true;
 	}
 	if (obj == null) {
+	    System.out.println(" like 1");
 	    return false;
 	}
 	if (!(obj instanceof LikeTest1)) {
+	    System.out.println(" like 2");
 	    return false;
 	}
 	final LikeTest1 other = (LikeTest1) obj;
 	if (caseInsensitive != other.caseInsensitive) {
+	    System.out.println(" like 3");
 	    return false;
 	}
 	if (leftOperand == null) {
 	    if (other.leftOperand != null) {
+		    System.out.println(" like 4");
 		return false;
 	    }
 	} else if (!leftOperand.equals(other.leftOperand)) {
+	    System.out.println(" like 5");
 	    return false;
 	}
 	if (negated != other.negated) {
+	    System.out.println(" like 6");
 	    return false;
 	}
 	if (rightOperand == null) {
 	    if (other.rightOperand != null) {
+		    System.out.println(" like 7");
 		return false;
 	    }
 	} else if (!rightOperand.equals(other.rightOperand)) {
+	    System.out.println(" like 8");
 	    return false;
 	}
+
+	System.out.println(" like EQUALS");
 	return true;
     }
 

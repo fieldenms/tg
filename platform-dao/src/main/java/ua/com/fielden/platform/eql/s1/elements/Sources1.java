@@ -3,12 +3,10 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.s2.elements.ISource2;
 import ua.com.fielden.platform.eql.s2.elements.Sources2;
-import ua.com.fielden.platform.utils.Pair;
 
 
 public class Sources1 implements IElement1<Sources2> {
@@ -41,7 +39,7 @@ public class Sources1 implements IElement1<Sources2> {
         return sb.toString();
     }
 
-    public ISource1 getMain() {
+    public ISource1<? extends ISource2> getMain() {
         return main;
     }
 
@@ -49,8 +47,8 @@ public class Sources1 implements IElement1<Sources2> {
         return compounds;
     }
 
-    public List<ISource1> getAllSources() {
-	final List<ISource1> result = new ArrayList<ISource1>();
+    public List<ISource1<? extends ISource2>> getAllSources() {
+	final List<ISource1<? extends ISource2>> result = new ArrayList<>();
 	result.add(main);
 	for (final CompoundSource1 compound : compounds) {
 	    result.add(compound.getSource());
@@ -58,14 +56,14 @@ public class Sources1 implements IElement1<Sources2> {
 	return result;
     }
 
-    public List<Pair<ISource1, Boolean>> getAllSourcesAndTheirJoinType() {
-	final List<Pair<ISource1, Boolean>> result = new ArrayList<Pair<ISource1, Boolean>>();
-	result.add(new Pair<ISource1, Boolean>(main, false));
-	for (final CompoundSource1 compound : compounds) {
-	    result.add(new Pair<ISource1, Boolean>(compound.getSource(), compound.getJoinType() == JoinType.LJ));
-	}
-	return result;
-    }
+//    public List<Pair<ISource1, Boolean>> getAllSourcesAndTheirJoinType() {
+//	final List<Pair<ISource1, Boolean>> result = new ArrayList<Pair<ISource1, Boolean>>();
+//	result.add(new Pair<ISource1, Boolean>(main, false));
+//	for (final CompoundSource1 compound : compounds) {
+//	    result.add(new Pair<ISource1, Boolean>(compound.getSource(), compound.getJoinType() == JoinType.LJ));
+//	}
+//	return result;
+//    }
 
     @Override
     public int hashCode() {

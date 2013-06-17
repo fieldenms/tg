@@ -238,6 +238,7 @@ public class BaseEntQueryTCase1 {
     }
 
     public static void assertModelsEqualsAccordingUserDataFiltering(final QueryModel shortcutModel, final QueryModel explicitModel) {
+	shortcutModel.setFilterable(true);
 	final EntQuery1 shortcutQry = entResultQryWithUserFilter(shortcutModel);
 	final EntQuery1 explicitQry = entResultQry(explicitModel);
 	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));

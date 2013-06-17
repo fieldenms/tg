@@ -9,7 +9,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase1;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.s1.elements.Expression1;
@@ -115,64 +114,69 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test0() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+
+	//final EntQuery2 exp = new EntQuery2(false, null, TgAuthor.class, null, null, null, null, null, null, null);
+
+
+
     }
 
     @Test
     public void test0b() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id").where().prop("lastRoyalty").isNotNull().model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     @Test
     @Ignore
     public void test0c() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).as("pn").where().prop("lastRoyalty").isNotNull().model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     @Test
     @Ignore
     public void test0a() {
 	final EntityResultQueryModel<TgAuthorship> qry = select(TgAuthorship.class).where().exists(select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model()).model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     @Test
     public void test1() {
 	final EntityResultQueryModel<TgAuthorship> qry = select(TgAuthorship.class).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     @Test
     public void test2() {
 	final EntityResultQueryModel<TgAuthorRoyalty> qry = select(TgAuthorRoyalty.class).as("ar").where().prop("authorship.author.surname").eq().val("Date").or().prop("ar.authorship.author.name.key").eq().val("Chris").model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     @Test
     public void test2a() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().exists(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("id").model()).model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     @Test
     public void test3() {
 	final EntityResultQueryModel<TgAuthorRoyalty> qry = select(TgAuthorRoyalty.class).as("ar").where().exists(
 		select(TgAuthorship.class).where().prop("id").eq().extProp("authorship").and().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model()).model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     @Test
     public void test4() {
 	final EntityResultQueryModel<TgAuthorship> qry = select(select(TgAuthorship.class).where().prop("bookTitle").isNotNull().model()).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     @Test
     public void test5() {
 	final EntityResultQueryModel<TgAuthorRoyalty> qry = select(select(TgAuthorRoyalty.class).where().prop("authorship.author.surname").isNotNull().model()).as("ar").where().prop("authorship.author.surname").eq().val("Date").or().prop("ar.authorship.author.name.key").eq().val("Chris").model();
-	entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     @Test

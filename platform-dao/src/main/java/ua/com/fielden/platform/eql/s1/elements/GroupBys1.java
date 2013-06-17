@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
@@ -26,6 +27,22 @@ public class GroupBys1 implements IElement1<GroupBys2> {
 
     public List<GroupBy1> getGroups() {
         return groups;
+    }
+
+    @Override
+    public String toString() {
+	final StringBuffer sb = new StringBuffer();
+	if (groups.size() > 0) {
+	    sb.append("\nGROUP BY ");
+	}
+	for (final Iterator<GroupBy1> iterator = groups.iterator(); iterator.hasNext();) {
+	    sb.append(iterator.next());
+	    if (iterator.hasNext()) {
+		sb.append(", ");
+	    }
+	}
+
+	return sb.toString();
     }
 
     @Override
