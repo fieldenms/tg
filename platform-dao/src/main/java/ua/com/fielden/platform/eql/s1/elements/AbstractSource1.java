@@ -5,8 +5,6 @@ import ua.com.fielden.platform.eql.s2.elements.ISource2;
 
 public abstract class AbstractSource1<S2 extends ISource2> implements ISource1<S2> {
 
-    protected final boolean persistedType;
-
     /**
      * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).
      */
@@ -17,9 +15,8 @@ public abstract class AbstractSource1<S2 extends ISource2> implements ISource1<S
      */
     private final DomainMetadataAnalyser domainMetadataAnalyser;
 
-    public AbstractSource1(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean persistedType) {
+    public AbstractSource1(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.alias = alias;
-        this.persistedType = persistedType;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
     }
 

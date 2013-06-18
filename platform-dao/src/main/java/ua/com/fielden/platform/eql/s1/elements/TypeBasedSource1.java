@@ -10,7 +10,7 @@ public class TypeBasedSource1 extends AbstractSource1<TypeBasedSource2> {
     private EntityMetadata<? extends AbstractEntity<?>> entityMetadata;
 
     public TypeBasedSource1(final EntityMetadata<? extends AbstractEntity<?>> entityMetadata, final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
-	super(alias, domainMetadataAnalyser, entityMetadata.isPersisted());
+	super(alias, domainMetadataAnalyser);
 	this.entityMetadata = entityMetadata;
 	if (entityMetadata == null) {
 	    throw new IllegalStateException("Missing entity persistence metadata for entity type: " + sourceType());

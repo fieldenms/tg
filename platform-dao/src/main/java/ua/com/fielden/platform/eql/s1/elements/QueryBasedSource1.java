@@ -19,7 +19,11 @@ public class QueryBasedSource1 extends AbstractSource1<QueryBasedSource2> {
     }
 
     public QueryBasedSource1(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final EntQuery1... models) {
-	super(alias, domainMetadataAnalyser, checkWhetherResultTypeIsPersisted(models));
+	super(alias, domainMetadataAnalyser);
+	if (models == null || models.length == 0) {
+	    throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
+	}
+
 	this.models = Arrays.asList(models);
 	populateYieldMatrixFromQueryModels(models);
 	validateYieldsMatrix();
@@ -33,13 +37,6 @@ public class QueryBasedSource1 extends AbstractSource1<QueryBasedSource2> {
 //	    transformed.add(entQuery.transform(resolver));
 //	}
 //	return new ua.com.fielden.platform.eql.s2.elements.QueryBasedSource(alias, getDomainMetadataAnalyser(), transformed.toArray(new ua.com.fielden.platform.eql.s2.elements.EntQuery[]{}));
-    }
-
-    private static boolean checkWhetherResultTypeIsPersisted(final EntQuery1... models) {
-	if (models == null || models.length == 0) {
-	    throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
-	}
-	return models[0].isPersistedType();
     }
 
     private void populateYieldMatrixFromQueryModels(final EntQuery1... models) {

@@ -7,8 +7,6 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 
 public abstract class AbstractSource2 implements ISource2 {
 
-    protected final boolean persistedType;
-
     public List<EntProp2> props = new ArrayList<>();
 
     @Override
@@ -32,9 +30,8 @@ public abstract class AbstractSource2 implements ISource2 {
      */
     private final DomainMetadataAnalyser domainMetadataAnalyser;
 
-    public AbstractSource2(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean persistedType) {
+    public AbstractSource2(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.alias = alias;
-        this.persistedType = persistedType;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
     }
 

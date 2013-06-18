@@ -55,7 +55,6 @@ public class EntQueryGenerator1 {
 	    final OrderingModel orderModel, //
 	    final fetch fetchModel, //
 	    final Map<String, Object> paramValues) {
-	System.out.println("--------------------   filterable  = " + filterable);
 	final QrySourcesBuilder1 from = new QrySourcesBuilder1(this, paramValues);
 	final ConditionsBuilder1 where = new ConditionsBuilder1(null, this, paramValues);
 	final QryYieldsBuilder1 select = new QryYieldsBuilder1(this, paramValues);
@@ -133,7 +132,6 @@ public class EntQueryGenerator1 {
 		parseTokensIntoComponents(qryModel.isFilterable(), filter, username, qryModel, orderModel, fetchModel, paramValues), //
 		resultType != null ? resultType : qryModel.getResultType(), //
 		category, //
-		domainMetadataAnalyser, //
 		fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //
 		paramValues);
     }

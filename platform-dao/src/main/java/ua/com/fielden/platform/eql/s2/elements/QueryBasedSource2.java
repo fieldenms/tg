@@ -19,17 +19,14 @@ public class QueryBasedSource2 extends AbstractSource2 {
     }
 
     public QueryBasedSource2(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final EntQuery2... models) {
-	super(alias, domainMetadataAnalyser, checkWhetherResultTypeIsPersisted(models));
-	this.models = Arrays.asList(models);
-	populateYieldMatrixFromQueryModels(models);
-	validateYieldsMatrix();
-    }
-
-    private static boolean checkWhetherResultTypeIsPersisted(final EntQuery2... models) {
+	super(alias, domainMetadataAnalyser);
 	if (models == null || models.length == 0) {
 	    throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
 	}
-	return models[0].isPersistedType();
+
+	this.models = Arrays.asList(models);
+	populateYieldMatrixFromQueryModels(models);
+	validateYieldsMatrix();
     }
 
     private void populateYieldMatrixFromQueryModels(final EntQuery2... models) {
