@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.meta;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -112,15 +111,15 @@ public class BaseEntQueryTCase1 {
     private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery1 entSourceQry(final QueryModel qryModel) {
-	return qb.generateEntQueryAsSourceQuery(qryModel, Collections.EMPTY_MAP, null);
+	return qb.generateEntQueryAsSourceQuery(qryModel, null);
     }
 
-    protected static EntQuery1 entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-	return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, null);
-    }
+//    protected static EntQuery1 entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
+//	return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, null);
+//    }
 
     protected static Expression1 entQryExpression(final ExpressionModel exprModel) {
-	return (Expression1) new StandAloneExpressionBuilder1(qb, null, exprModel).getResult().getValue();
+	return (Expression1) new StandAloneExpressionBuilder1(qb, exprModel).getResult().getValue();
     }
 
     protected static EntQuery1 entResultQry(final QueryModel qryModel) {
@@ -157,7 +156,7 @@ public class BaseEntQueryTCase1 {
     }
 
     protected static EntQuery1 entSubQry(final QueryModel qryModel) {
-	return qb.generateEntQueryAsSubquery(qryModel, Collections.EMPTY_MAP);
+	return qb.generateEntQueryAsSubquery(qryModel);
     }
 
     protected static EntQuery1 entResultQryWithUserFilter(final QueryModel qryModel) {

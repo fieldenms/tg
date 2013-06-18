@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.s1.processing;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.Functions;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
@@ -26,7 +25,6 @@ import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_T
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IVAL;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
@@ -40,85 +38,83 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
     private final ITokensBuilder1 parent;
     private ITokensBuilder1 child;
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
-    private final Map<String, Object> paramValues;
     private final EntQueryGenerator1 queryBuilder;
 
-    protected AbstractTokensBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
+    protected AbstractTokensBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder) {
 	this.parent = parent;
 	this.queryBuilder = queryBuilder;
-	this.paramValues = paramValues;
     }
 
     private void add(final Functions function) {
 	switch (function) {
 	case SUM:
-	    setChild(new SumOfBuilder1(this, queryBuilder, getParamValues(), false));
+	    setChild(new SumOfBuilder1(this, queryBuilder, false));
 	    break;
 	case COUNT:
-	    setChild(new CountOfBuilder1(this, queryBuilder, getParamValues(), false));
+	    setChild(new CountOfBuilder1(this, queryBuilder, false));
 	    break;
 	case AVERAGE:
-	    setChild(new AverageOfBuilder1(this, queryBuilder, getParamValues(), false));
+	    setChild(new AverageOfBuilder1(this, queryBuilder, false));
 	    break;
 	case MIN:
-	    setChild(new MinOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new MinOfBuilder1(this, queryBuilder));
 	    break;
 	case MAX:
-	    setChild(new MaxOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new MaxOfBuilder1(this, queryBuilder));
 	    break;
 	case SECOND:
-	    setChild(new SecondOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new SecondOfBuilder1(this, queryBuilder));
 	    break;
 	case MINUTE:
-	    setChild(new MinuteOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new MinuteOfBuilder1(this, queryBuilder));
 	    break;
 	case HOUR:
-	    setChild(new HourOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new HourOfBuilder1(this, queryBuilder));
 	    break;
 	case DAY:
-	    setChild(new DayOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new DayOfBuilder1(this, queryBuilder));
 	    break;
 	case MONTH:
-	    setChild(new MonthOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new MonthOfBuilder1(this, queryBuilder));
 	    break;
 	case YEAR:
-	    setChild(new YearOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new YearOfBuilder1(this, queryBuilder));
 	    break;
 	case DATE:
-	    setChild(new DateOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new DateOfBuilder1(this, queryBuilder));
 	    break;
 	case ABS:
-	    setChild(new AbsOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new AbsOfBuilder1(this, queryBuilder));
 	    break;
 	case SUM_DISTINCT:
-	    setChild(new SumOfBuilder1(this, queryBuilder, getParamValues(), true));
+	    setChild(new SumOfBuilder1(this, queryBuilder, true));
 	    break;
 	case COUNT_DISTINCT:
-	    setChild(new CountOfBuilder1(this, queryBuilder, getParamValues(), true));
+	    setChild(new CountOfBuilder1(this, queryBuilder, true));
 	    break;
 	case AVERAGE_DISTINCT:
-	    setChild(new AverageOfBuilder1(this, queryBuilder, getParamValues(), true));
+	    setChild(new AverageOfBuilder1(this, queryBuilder, true));
 	    break;
 	case UPPERCASE:
-	    setChild(new UpperCaseOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new UpperCaseOfBuilder1(this, queryBuilder));
 	    break;
 	case LOWERCASE:
-	    setChild(new LowerCaseOfBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new LowerCaseOfBuilder1(this, queryBuilder));
 	    break;
 	case IF_NULL:
-	    setChild(new IfNullBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new IfNullBuilder1(this, queryBuilder));
 	    break;
 	case COUNT_DATE_INTERVAL:
-	    setChild(new CountDateIntervalBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new CountDateIntervalBuilder1(this, queryBuilder));
 	    break;
 	case CASE_WHEN:
-	    setChild(new CaseFunctionBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new CaseFunctionBuilder1(this, queryBuilder));
 	    break;
 	case ROUND:
-	    setChild(new RoundToBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new RoundToBuilder1(this, queryBuilder));
 	    break;
 	case CONCAT:
-	    setChild(new ConcatFunctionBuilder1(this, queryBuilder, getParamValues()));
+	    setChild(new ConcatFunctionBuilder1(this, queryBuilder));
 	    break;
 	default:
 	    throw new RuntimeException("Unrecognised function token: " + function);
@@ -131,23 +127,23 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 	} else {
 	    switch (cat) {
 	    case BEGIN_EXPR: //eats token
-		setChild(new ExpressionBuilder1(this, queryBuilder, getParamValues()));
+		setChild(new ExpressionBuilder1(this, queryBuilder));
 		break;
 	    case FUNCTION: //eats token
 	    case COLLECTIONAL_FUNCTION: //eats token
 		add((Functions) value);
 		break;
 	    case BEGIN_COND: //eats token
-		setChild(new GroupedConditionsBuilder1(this, queryBuilder, getParamValues(), (Boolean) value));
+		setChild(new GroupedConditionsBuilder1(this, queryBuilder, (Boolean) value));
 		break;
 	    case COND_TOKENS: //
-		tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder1(queryBuilder, getParamValues(), (ConditionModel) value, false).getModel()));
+		tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder1(queryBuilder, (ConditionModel) value, false).getModel()));
 		break;
 	    case NEGATED_COND_TOKENS: //
-		tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder1(queryBuilder, getParamValues(), (ConditionModel) value, true).getModel()));
+		tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder1(queryBuilder, (ConditionModel) value, true).getModel()));
 		break;
 	    case LOGICAL_OPERATOR:
-		setChild(new CompoundConditionBuilder1(this, queryBuilder, getParamValues(), cat, value));
+		setChild(new CompoundConditionBuilder1(this, queryBuilder, cat, value));
 		break;
 	    default:
 		tokens.add(new Pair<TokenCategory, Object>(cat, value));
@@ -240,9 +236,11 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 	case EXT_PROP:
 	    return new EntProp1((String) value, true);
 	case PARAM:
-	    return new EntValue1(getParamValue((String) value));
+	    throw new UnsupportedOperationException("Operations with params not yet supported");
+	    //return new EntValue1(getParamValue((String) value));
 	case IPARAM:
-	    return new EntValue1(getParamValue((String) value), true);
+	    throw new UnsupportedOperationException("Operations with params not yet supported");
+	    //return new EntValue1(getParamValue((String) value), true);
 	case VAL:
 	    return new EntValue1(preprocessValue(value));
 	case IVAL:
@@ -253,38 +251,38 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 	case FUNCTION_MODEL:
 	    return (ISingleOperand1) value;
 	case EXPR_TOKENS:
-	    return (ISingleOperand1) new StandAloneExpressionBuilder1(queryBuilder, getParamValues(), (ExpressionModel) value).getResult().getValue();
+	    return (ISingleOperand1) new StandAloneExpressionBuilder1(queryBuilder, (ExpressionModel) value).getResult().getValue();
 	case EQUERY_TOKENS:
 	case ALL_OPERATOR:
 	case ANY_OPERATOR:
-	    return queryBuilder.generateEntQueryAsSubquery((QueryModel) value, getParamValues());
+	    return queryBuilder.generateEntQueryAsSubquery((QueryModel) value);
 	default:
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
 	}
     }
 
-    protected List<ISingleOperand1<? extends ISingleOperand2>> getModelForArrayParam(final TokenCategory cat, final Object value) {
-	final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
-	final Object paramValue = getParamValue((String) value);
-
-	if (!(paramValue instanceof List)) {
-	    result.add(getModelForSingleOperand(cat, value));
-	} else {
-	    for (final Object singleValue : (List<Object>) paramValue) {
-		result.add(getModelForSingleOperand((cat == IPARAM ? IVAL : VAL), singleValue));
-	    }
-	}
-	return result;
-    }
-
-    protected Object getParamValue(final String paramName) {
-	if (getParamValues().containsKey(paramName)) {
-	    return preprocessValue(getParamValues().get(paramName));
-	} else {
-	    return null; //TODO think through
-	    //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
-	}
-    }
+//    protected List<ISingleOperand1<? extends ISingleOperand2>> getModelForArrayParam(final TokenCategory cat, final Object value) {
+//	final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
+//	final Object paramValue = getParamValue((String) value);
+//
+//	if (!(paramValue instanceof List)) {
+//	    result.add(getModelForSingleOperand(cat, value));
+//	} else {
+//	    for (final Object singleValue : (List<Object>) paramValue) {
+//		result.add(getModelForSingleOperand((cat == IPARAM ? IVAL : VAL), singleValue));
+//	    }
+//	}
+//	return result;
+//    }
+//
+//    protected Object getParamValue(final String paramName) {
+//	if (getParamValues().containsKey(paramName)) {
+//	    return preprocessValue(getParamValues().get(paramName));
+//	} else {
+//	    return null; //TODO think through
+//	    //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
+//	}
+//    }
 
     private Object preprocessValue(final Object value) {
 	if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
@@ -340,7 +338,8 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 
 	for (final Object singleValue : (List<Object>) value) {
 	    if (singleCat == PARAM || singleCat == IPARAM) {
-		result.addAll(getModelForArrayParam(singleCat, singleValue));
+		throw new UnsupportedOperationException("Operations with params not yet supported");
+		//result.addAll(getModelForArrayParam(singleCat, singleValue));
 	    } else {
 		result.add(getModelForSingleOperand(singleCat, singleValue));
 	    }
@@ -385,7 +384,8 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 
 	for (final Object singleValue : (List<Object>) value) {
 	    if (singleCat == PARAM || singleCat == IPARAM) {
-		result.addAll(getModelForArrayParam(singleCat, singleValue));
+		throw new UnsupportedOperationException("Operations with params not yet supported");
+		//result.addAll(getModelForArrayParam(singleCat, singleValue));
 	    } else {
 		result.add(getModelForSingleOperand(singleCat, singleValue));
 	    }
@@ -396,9 +396,5 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 
     protected EntQueryGenerator1 getQueryBuilder() {
 	return queryBuilder;
-    }
-
-    public Map<String, Object> getParamValues() {
-	return paramValues;
     }
 }

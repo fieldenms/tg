@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
@@ -18,7 +16,6 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     private final GroupBys1 groups;
     private final OrderBys1 orderings;
 
-    private final Map<String, Object> paramValues;
     private final Class resultType;
     private final QueryCategory category;
     private final FetchModel fetchModel;
@@ -60,11 +57,11 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 	final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), conditions.transform(localResolver), //
 		yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
 
-	return new EntQuery2(entQueryBlocks, resultType, category, fetchModel, paramValues);
+	return new EntQuery2(entQueryBlocks, resultType, category, fetchModel, null /*TODO EQL*/);
     }
 
     public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class resultType, final QueryCategory category, //
-	    final FetchModel fetchModel, final Map<String, Object> paramValues) {
+	    final FetchModel fetchModel) {
         super();
         this.category = category;
         this.fetchModel = fetchModel;
@@ -77,7 +74,6 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
         if (this.resultType == null && category != QueryCategory.SUB_QUERY) { // only primitive result queries have result type not assigned
             throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
         }
-        this.paramValues = paramValues;
     }
 
     public Sources1 getSources() {
@@ -114,7 +110,6 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 	result = prime * result + ((fetchModel == null) ? 0 : fetchModel.hashCode());
 	result = prime * result + ((groups == null) ? 0 : groups.hashCode());
 	result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
-	result = prime * result + ((paramValues == null) ? 0 : paramValues.hashCode());
 	result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
 	result = prime * result + ((sources == null) ? 0 : sources.hashCode());
 	result = prime * result + ((yields == null) ? 0 : yields.hashCode());
@@ -162,13 +157,6 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 		return false;
 	    }
 	} else if (!orderings.equals(other.orderings)) {
-	    return false;
-	}
-	if (paramValues == null) {
-	    if (other.paramValues != null) {
-		return false;
-	    }
-	} else if (!paramValues.equals(other.paramValues)) {
 	    return false;
 	}
 	if (resultType == null) {

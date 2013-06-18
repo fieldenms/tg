@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.ISingleOperand1;
@@ -11,8 +9,8 @@ import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.YIELD;
 
 public class OrderByBuilder1 extends AbstractTokensBuilder1 {
     private boolean descOrder;
-    protected OrderByBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
-	super(parent, queryBuilder, paramValues);
+    protected OrderByBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder) {
+	super(parent, queryBuilder);
     }
 
     @Override

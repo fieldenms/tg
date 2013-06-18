@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.s1.processing;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.CompoundSource1;
@@ -13,9 +12,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder1 extends AbstractTokensBuilder1 {
 
-    protected QrySourcesBuilder1(final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
-	super(null, queryBuilder, paramValues);
-	setChild(new QrySourceBuilder1(this, queryBuilder, paramValues));
+    protected QrySourcesBuilder1(final EntQueryGenerator1 queryBuilder) {
+	super(null, queryBuilder);
+	setChild(new QrySourceBuilder1(this, queryBuilder));
     }
 
     @Override
@@ -23,7 +22,7 @@ public class QrySourcesBuilder1 extends AbstractTokensBuilder1 {
 	switch (cat) {
 	case JOIN_TYPE: //eats token
 	    finaliseChild();
-	    setChild(new CompoundQrySourceBuilder1(this, getQueryBuilder(), getParamValues(), cat, value));
+	    setChild(new CompoundQrySourceBuilder1(this, getQueryBuilder(), cat, value));
 	    break;
 	default:
 	    super.add(cat, value);

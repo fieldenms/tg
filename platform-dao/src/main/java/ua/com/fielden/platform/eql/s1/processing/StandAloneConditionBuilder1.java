@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.s1.processing;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -16,10 +15,10 @@ import ua.com.fielden.platform.utils.Pair;
 public class StandAloneConditionBuilder1 extends AbstractTokensBuilder1 {
     private final boolean negated;
 
-    public StandAloneConditionBuilder1(final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues, final ConditionModel exprModel, final boolean negated) {
-	super(null, queryBuilder, paramValues);
+    public StandAloneConditionBuilder1(final EntQueryGenerator1 queryBuilder, final ConditionModel exprModel, final boolean negated) {
+	super(null, queryBuilder);
 	this.negated = negated;
-	setChild(new ConditionBuilder1(this, queryBuilder, paramValues));
+	setChild(new ConditionBuilder1(this, queryBuilder));
 
 	for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
 	    add(tokenPair.getKey(), tokenPair.getValue());

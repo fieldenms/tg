@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.CompoundSource1;
@@ -10,10 +8,10 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundQrySourceBuilder1 extends AbstractTokensBuilder1 {
 
-    protected CompoundQrySourceBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues, final TokenCategory cat, final Object value) {
-	super(parent, queryBuilder, paramValues);
+    protected CompoundQrySourceBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder, final TokenCategory cat, final Object value) {
+	super(parent, queryBuilder);
 	getTokens().add(new Pair<TokenCategory, Object>(cat, value));
-	setChild(new QrySourceBuilder1(this, queryBuilder, paramValues));
+	setChild(new QrySourceBuilder1(this, queryBuilder));
     }
 
     @Override
@@ -21,8 +19,8 @@ public class CompoundQrySourceBuilder1 extends AbstractTokensBuilder1 {
 	switch (cat) {
 	case ON: //eats token
 	    finaliseChild();
-	    final ConditionsBuilder1 onCondition = new ConditionsBuilder1(this, getQueryBuilder(), getParamValues());
-	    onCondition.setChild(new ConditionBuilder1(onCondition, getQueryBuilder(), getParamValues()));
+	    final ConditionsBuilder1 onCondition = new ConditionsBuilder1(this, getQueryBuilder());
+	    onCondition.setChild(new ConditionBuilder1(onCondition, getQueryBuilder()));
 	    setChild(onCondition);
 	    break;
 	default:

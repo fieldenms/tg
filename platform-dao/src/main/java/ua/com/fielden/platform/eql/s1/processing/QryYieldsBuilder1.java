@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.Yield1;
 import ua.com.fielden.platform.eql.s1.elements.Yields1;
@@ -9,8 +7,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QryYieldsBuilder1 extends AbstractTokensBuilder1 {
 
-    protected QryYieldsBuilder1(final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
-	super(null, queryBuilder, paramValues);
+    protected QryYieldsBuilder1(final EntQueryGenerator1 queryBuilder) {
+	super(null, queryBuilder);
     }
 
     @Override

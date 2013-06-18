@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.s1.processing;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.GroupBy1;
@@ -11,8 +10,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QryGroupsBuilder1 extends AbstractTokensBuilder1 {
 
-    protected QryGroupsBuilder1(final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
-	super(null, queryBuilder, paramValues);
+    protected QryGroupsBuilder1(final EntQueryGenerator1 queryBuilder) {
+	super(null, queryBuilder);
     }
 
     @Override

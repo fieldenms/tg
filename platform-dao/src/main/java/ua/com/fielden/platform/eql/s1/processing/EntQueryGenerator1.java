@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.s1.processing;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -39,26 +38,25 @@ public class EntQueryGenerator1 {
     }
 
     public EntQuery1 generateEntQueryAsResultQuery(final QueryExecutionModel<?, ?> qem) {
-	return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), null, qem.getFetchModel(), qem.getParamValues(), QueryCategory.RESULT_QUERY, filter, username);
+	return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), null, qem.getFetchModel(), QueryCategory.RESULT_QUERY, filter, username);
     }
 
-    public EntQuery1 generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues, final Class resultType) {
-	return generateEntQuery(qryModel, null, resultType, null, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
+    public EntQuery1 generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Class resultType) {
+	return generateEntQuery(qryModel, null, resultType, null, QueryCategory.SOURCE_QUERY, filter, username);
     }
 
-    public EntQuery1 generateEntQueryAsSubquery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
-	return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.SUB_QUERY, filter, username);
+    public EntQuery1 generateEntQueryAsSubquery(final QueryModel<?> qryModel) {
+	return generateEntQuery(qryModel, null, null, null, QueryCategory.SUB_QUERY, filter, username);
     }
 
     public EntQueryBlocks1 parseTokensIntoComponents(final boolean filterable, final IFilter filter, //
 	    final String username, final QueryModel<?> qryModel, //
 	    final OrderingModel orderModel, //
-	    final fetch fetchModel, //
-	    final Map<String, Object> paramValues) {
-	final QrySourcesBuilder1 from = new QrySourcesBuilder1(this, paramValues);
-	final ConditionsBuilder1 where = new ConditionsBuilder1(null, this, paramValues);
-	final QryYieldsBuilder1 select = new QryYieldsBuilder1(this, paramValues);
-	final QryGroupsBuilder1 groupBy = new QryGroupsBuilder1(this, paramValues);
+	    final fetch fetchModel) {
+	final QrySourcesBuilder1 from = new QrySourcesBuilder1(this);
+	final ConditionsBuilder1 where = new ConditionsBuilder1(null, this);
+	final QryYieldsBuilder1 select = new QryYieldsBuilder1(this);
+	final QryGroupsBuilder1 groupBy = new QryGroupsBuilder1(this);
 
 	ITokensBuilder1 active = null;
 
@@ -71,18 +69,18 @@ public class EntQueryGenerator1 {
 		switch ((QueryTokens) pair.getValue()) {
 		case WHERE:
 		    active = where;
-		    where.setChild(new ConditionBuilder1(where, this, paramValues));
+		    where.setChild(new ConditionBuilder1(where, this));
 		    break;
 		case FROM:
 		    active = from;
 		    break;
 		case YIELD:
 		    active = select;
-		    select.setChild(new YieldBuilder1(select, this, paramValues));
+		    select.setChild(new YieldBuilder1(select, this));
 		    break;
 		case GROUP_BY:
 		    active = groupBy;
-		    groupBy.setChild(new GroupBuilder1(groupBy, this, paramValues));
+		    groupBy.setChild(new GroupBuilder1(groupBy, this));
 		    break;
 		default:
 		    break;
@@ -92,17 +90,17 @@ public class EntQueryGenerator1 {
 
 	final Sources1 sources = from.getModel();
 	final Conditions1 conditions = where.getModel();
-	final Conditions1 enhancedConditions = filterable ? enhanceConditions(conditions, filter, username, sources.getMain(), this, paramValues) : conditions;
+	final Conditions1 enhancedConditions = filterable ? enhanceConditions(conditions, filter, username, sources.getMain(), this) : conditions;
 
 	return new EntQueryBlocks1(sources, //
 		enhancedConditions, //
 	select.getModel(), //
 	groupBy.getModel(), //
-	produceOrderBys(orderModel, paramValues));
+	produceOrderBys(orderModel));
     }
 
     private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
-	    final String username, final ISource1<? extends ISource2> mainSource, final EntQueryGenerator1 generator, final Map<String, Object> paramValues) {
+	    final String username, final ISource1<? extends ISource2> mainSource, final EntQueryGenerator1 generator) {
 	if (mainSource instanceof TypeBasedSource1 && filter != null) {
 	final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
 	if (filteringCondition == null) {
@@ -111,7 +109,7 @@ public class EntQueryGenerator1 {
 	//logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
 	final List<CompoundCondition1> others = new ArrayList<>();
 	others.add(new CompoundCondition1(LogicalOperator.AND, originalConditions));
-	final Conditions1 filteringConditions = new StandAloneConditionBuilder1(generator, paramValues, filteringCondition, false).getModel();
+	final Conditions1 filteringConditions = new StandAloneConditionBuilder1(generator, filteringCondition, false).getModel();
 	return originalConditions.ignore() ? filteringConditions : new Conditions1(false, filteringConditions, others);
 	} else {
 	    return originalConditions;
@@ -123,21 +121,19 @@ public class EntQueryGenerator1 {
 	    final OrderingModel orderModel, //
 	    final Class resultType, //
 	    final fetch fetchModel, //
-	    final Map<String, Object> paramValues, //
 	    final QueryCategory category, //
 	    final IFilter filter, //
 	    final String username) {
 
 	return new EntQuery1( //
-		parseTokensIntoComponents(qryModel.isFilterable(), filter, username, qryModel, orderModel, fetchModel, paramValues), //
+		parseTokensIntoComponents(qryModel.isFilterable(), filter, username, qryModel, orderModel, fetchModel), //
 		resultType != null ? resultType : qryModel.getResultType(), //
 		category, //
-		fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //
-		paramValues);
+		fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser));
     }
 
-    private OrderBys1 produceOrderBys(final OrderingModel orderModel, final Map<String, Object> paramValues) {
-	final QryOrderingsBuilder1 orderBy = new QryOrderingsBuilder1(null, this, paramValues);
+    private OrderBys1 produceOrderBys(final OrderingModel orderModel) {
+	final QryOrderingsBuilder1 orderBy = new QryOrderingsBuilder1(null, this);
 
 	if (orderModel != null) {
 	    for (final Iterator<Pair<TokenCategory, Object>> iterator = orderModel.getTokens().iterator(); iterator.hasNext();) {
@@ -145,11 +141,11 @@ public class EntQueryGenerator1 {
 		if (TokenCategory.SORT_ORDER.equals(pair.getKey())) {
 		    orderBy.add(pair.getKey(), pair.getValue());
 		    if (iterator.hasNext()) {
-			orderBy.setChild(new OrderByBuilder1(orderBy, this, paramValues));
+			orderBy.setChild(new OrderByBuilder1(orderBy, this));
 		    }
 		} else {
 		    if (orderBy.getChild() == null) {
-			orderBy.setChild(new OrderByBuilder1(orderBy, this, paramValues));
+			orderBy.setChild(new OrderByBuilder1(orderBy, this));
 		    }
 		    orderBy.add(pair.getKey(), pair.getValue());
 		}

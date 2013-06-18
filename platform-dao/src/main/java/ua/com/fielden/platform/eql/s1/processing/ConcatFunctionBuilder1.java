@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.s1.processing;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.Concat1;
@@ -13,8 +12,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class ConcatFunctionBuilder1 extends AbstractTokensBuilder1 {
 
-    protected ConcatFunctionBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
-	super(parent, queryBuilder, paramValues);
+    protected ConcatFunctionBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder) {
+	super(parent, queryBuilder);
     }
 
     @Override

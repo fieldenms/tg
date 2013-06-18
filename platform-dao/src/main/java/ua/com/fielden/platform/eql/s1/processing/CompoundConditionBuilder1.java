@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.CompoundCondition1;
@@ -10,10 +8,10 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundConditionBuilder1 extends AbstractTokensBuilder1 {
 
-    protected CompoundConditionBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues, final TokenCategory cat, final Object value) {
-	super(parent, queryBuilder, paramValues);
+    protected CompoundConditionBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder, final TokenCategory cat, final Object value) {
+	super(parent, queryBuilder);
 	getTokens().add(new Pair<TokenCategory, Object>(cat, value));
-	setChild(new ConditionBuilder1(this, queryBuilder, paramValues));
+	setChild(new ConditionBuilder1(this, queryBuilder));
     }
 
     @Override

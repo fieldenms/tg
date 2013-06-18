@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.s1.processing;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -15,8 +14,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourceBuilder1 extends AbstractTokensBuilder1 {
 
-    protected QrySourceBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
-	super(parent, queryBuilder, paramValues);
+    protected QrySourceBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder) {
+	super(parent, queryBuilder);
     }
 
     private boolean isEntityTypeAsSourceTest() {
@@ -63,7 +62,7 @@ public class QrySourceBuilder1 extends AbstractTokensBuilder1 {
 	final Class resultType = readyResultType != null ? readyResultType : null;
 	final List<EntQuery1> queries = new ArrayList<EntQuery1>();
 	for (final QueryModel qryModel : models) {
-	    queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, getParamValues(), resultType));
+	    queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, resultType));
 	}
 
 	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new QueryBasedSource1(alias, getQueryBuilder().getDomainMetadataAnalyser(), queries.toArray(new EntQuery1[]{})));

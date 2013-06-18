@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.s1.processing;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.CaseWhen1;
@@ -15,16 +14,16 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class CaseFunctionBuilder1 extends AbstractTokensBuilder1 {
 
-    protected CaseFunctionBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder, final Map<String, Object> paramValues) {
-	super(parent, queryBuilder, paramValues);
-	setChild(new ConditionBuilder1(this, queryBuilder, paramValues));
+    protected CaseFunctionBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder) {
+	super(parent, queryBuilder);
+	setChild(new ConditionBuilder1(this, queryBuilder));
     }
 
     @Override
     public void add(final TokenCategory cat, final Object value) {
 	switch (cat) {
 	case COND_START: //eats token
-	    setChild(new ConditionBuilder1(this, getQueryBuilder(), getParamValues()));
+	    setChild(new ConditionBuilder1(this, getQueryBuilder()));
 	    break;
 	default:
 	    super.add(cat, value);
