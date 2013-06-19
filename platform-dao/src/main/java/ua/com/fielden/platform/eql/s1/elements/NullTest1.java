@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.eql.s2.elements.NullTest2;
@@ -19,13 +16,13 @@ public class NullTest1 extends AbstractCondition1<NullTest2> {
     }
 
     @Override
-    public NullTest2 transform(final TransformatorToS2 resolver) {
-	return new NullTest2(operand.transform(resolver), negated);
+    public String toString() {
+        return operand + " IS " + (negated ? "NOT NULL" : "NULL");
     }
 
     @Override
-    public boolean ignore() {
-	return operand.ignore();
+    public NullTest2 transform(final TransformatorToS2 resolver) {
+	return new NullTest2(operand.transform(resolver), negated);
     }
 
     @Override
@@ -60,10 +57,5 @@ public class NullTest1 extends AbstractCondition1<NullTest2> {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    protected List<IElement1> getCollection() {
-	return new ArrayList<IElement1>(){{add(operand);}};
     }
 }

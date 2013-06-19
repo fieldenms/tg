@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.List;
 
 
 
@@ -13,8 +12,8 @@ abstract class SingleOperandFunction2 extends AbstractFunction2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	return operand.getAllValues();
+    public boolean ignore() {
+	return false;
     }
 
     @Override

@@ -22,7 +22,7 @@ public class EntParam1 implements ISingleOperand1<EntValue2> {
     }
 
     public EntValue2 transform(final TransformatorToS2 resolver) {
-	return null;//resolver.getTransformedProp(this);
+	return resolver.getTransformedParamToValue(this);
     }
 
     public String getName() {
@@ -31,11 +31,6 @@ public class EntParam1 implements ISingleOperand1<EntValue2> {
 
     public boolean isIgnoreNull() {
         return ignoreNull;
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
     }
 
     @Override

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -13,12 +12,8 @@ public class Concat2 extends AbstractFunction2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	final List<EntValue2> result = new ArrayList<EntValue2>();
-	for (final ISingleOperand2 operand : operands) {
-	    result.addAll(operand.getAllValues());
-	}
-	return result;
+    public boolean ignore() {
+	return false;
     }
 
     public List<ISingleOperand2> getOperands() {

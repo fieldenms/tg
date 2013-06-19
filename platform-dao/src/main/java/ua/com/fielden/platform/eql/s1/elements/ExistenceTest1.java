@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ExistenceTest2;
 
@@ -19,11 +16,6 @@ public class ExistenceTest1 extends AbstractCondition1<ExistenceTest2> {
     @Override
     public ExistenceTest2 transform(final TransformatorToS2 resolver) {
 	return new ExistenceTest2(negated, subQuery.transform(resolver));
-    }
-
-    @Override
-    public boolean ignore() {
-	return false;
     }
 
     @Override
@@ -58,10 +50,5 @@ public class ExistenceTest1 extends AbstractCondition1<ExistenceTest2> {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    protected List<IElement1> getCollection() {
-	return new ArrayList<IElement1>(){{add(subQuery);}};
     }
 }

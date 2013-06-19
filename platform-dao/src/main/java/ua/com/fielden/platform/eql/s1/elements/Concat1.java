@@ -25,11 +25,6 @@ public class Concat1 extends AbstractFunction1<Concat2> {
 	return new Concat2(transformed);
     }
 
-    @Override
-    public boolean ignore() {
-	return false;
-    }
-
     public List<ISingleOperand1<? extends ISingleOperand2>> getOperands() {
         return operands;
     }

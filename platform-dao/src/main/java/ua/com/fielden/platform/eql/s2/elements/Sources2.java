@@ -3,9 +3,6 @@ package ua.com.fielden.platform.eql.s2.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
-import ua.com.fielden.platform.utils.Pair;
-
 
 public class Sources2 implements IElement2 {
     private final ISource2 main;
@@ -18,13 +15,8 @@ public class Sources2 implements IElement2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	final List<EntValue2> result = new ArrayList<EntValue2>();
-	result.addAll(main.getValues());
-	for (final CompoundSource2 compSource : compounds) {
-	    result.addAll(compSource.getAllValues());
-	}
-	return result;
+    public boolean ignore() {
+	return false;
     }
 
     @Override
@@ -50,15 +42,6 @@ public class Sources2 implements IElement2 {
 	result.add(main);
 	for (final CompoundSource2 compound : compounds) {
 	    result.add(compound.getSource());
-	}
-	return result;
-    }
-
-    public List<Pair<ISource2, Boolean>> getAllSourcesAndTheirJoinType() {
-	final List<Pair<ISource2, Boolean>> result = new ArrayList<Pair<ISource2, Boolean>>();
-	result.add(new Pair<ISource2, Boolean>(main, false));
-	for (final CompoundSource2 compound : compounds) {
-	    result.add(new Pair<ISource2, Boolean>(compound.getSource(), compound.getJoinType() == JoinType.LJ));
 	}
 	return result;
     }

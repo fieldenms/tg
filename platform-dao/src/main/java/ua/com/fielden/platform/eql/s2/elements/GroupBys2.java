@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -12,12 +11,8 @@ public class GroupBys2 implements IElement2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	final List<EntValue2> result = new ArrayList<EntValue2>();
-	for (final GroupBy2 group : groups) {
-	    result.addAll(group.getOperand().getAllValues());
-	}
-	return result;
+    public boolean ignore() {
+	return false;
     }
 
     public List<GroupBy2> getGroups() {

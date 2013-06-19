@@ -16,6 +16,11 @@ public class ComparisonTest2 extends AbstractCondition2 {
         return leftOperand + " " + operator + " " + rightOperand;
     }
 
+    @Override
+    public boolean ignore() {
+	return leftOperand.ignore() || rightOperand.ignore();
+    }
+
     public ComparisonTest2(final ISingleOperand2 leftOperand, final ComparisonOperator operator, final ISingleOperand2 rightOperand) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;

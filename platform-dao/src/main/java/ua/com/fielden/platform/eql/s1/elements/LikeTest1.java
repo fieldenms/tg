@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.eql.s2.elements.LikeTest2;
@@ -26,15 +23,9 @@ public class LikeTest1 extends AbstractCondition1<LikeTest2> {
 	return leftOperand + (negated ? " NOT LIKE " : " LIKE ") + rightOperand;
     }
 
-
     @Override
     public LikeTest2 transform(final TransformatorToS2 resolver) {
 	return new LikeTest2(leftOperand.transform(resolver), rightOperand.transform(resolver), negated, caseInsensitive);
-    }
-
-    @Override
-    public boolean ignore() {
-	return leftOperand.ignore() || rightOperand.ignore();
     }
 
     @Override
@@ -91,10 +82,5 @@ public class LikeTest1 extends AbstractCondition1<LikeTest2> {
 
 	System.out.println(" like EQUALS");
 	return true;
-    }
-
-    @Override
-    protected List<IElement1> getCollection() {
-	return new ArrayList<IElement1>(){{add(leftOperand); add(rightOperand);}};
     }
 }

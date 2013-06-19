@@ -36,10 +36,8 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
         sb.append(yields);
         sb.append("\nFROM ");
         sb.append(sources);
-        if (!conditions.ignore()) {
-            sb.append("\nWHERE ");
-            sb.append(conditions);
-        }
+        sb.append("\nWHERE ");
+        sb.append(conditions);
         sb.append(groups);
         sb.append(isSubQuery() ? ")" : "");
         sb.append(orderings);
@@ -94,11 +92,6 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     public OrderBys1 getOrderings() {
         return orderings;
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
     }
 
     @Override

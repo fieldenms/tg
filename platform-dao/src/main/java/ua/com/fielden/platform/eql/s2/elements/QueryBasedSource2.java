@@ -98,14 +98,14 @@ public class QueryBasedSource2 extends AbstractSource2 {
 	return result;
     }
 
-    @Override
-    public List<EntValue2> getValues() {
-	final List<EntValue2> result = new ArrayList<EntValue2>();
-	for (final EntQuery2 entQry : models) {
-	    result.addAll(entQry.getAllValues());
-	}
-	return result;
-    }
+//    @Override
+//    public List<EntValue2> getValues() {
+//	final List<EntValue2> result = new ArrayList<EntValue2>();
+//	for (final EntQuery2 entQry : models) {
+//	    result.addAll(entQry.getAllValues());
+//	}
+//	return result;
+//    }
 
     @Override
     public int hashCode() {

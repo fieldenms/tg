@@ -81,10 +81,4 @@ public class CompoundSource1 implements IElement1<CompoundSource2> {
 	}
 	return true;
     }
-
-    @Override
-    public boolean ignore() {
-	// TODO Auto-generated method stub
-	return false;
-    }
 }

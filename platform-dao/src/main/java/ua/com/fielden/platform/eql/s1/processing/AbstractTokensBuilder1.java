@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.s1.elements.CountAll1;
+import ua.com.fielden.platform.eql.s1.elements.EntParam1;
 import ua.com.fielden.platform.eql.s1.elements.EntProp1;
 import ua.com.fielden.platform.eql.s1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.s1.elements.EntValue1;
@@ -25,6 +26,7 @@ import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_T
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IVAL;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
@@ -236,10 +238,10 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 	case EXT_PROP:
 	    return new EntProp1((String) value, true);
 	case PARAM:
-	    throw new UnsupportedOperationException("Operations with params not yet supported");
+	    return new EntParam1((String) value);
 	    //return new EntValue1(getParamValue((String) value));
 	case IPARAM:
-	    throw new UnsupportedOperationException("Operations with params not yet supported");
+	    return new EntParam1((String) value, true);
 	    //return new EntValue1(getParamValue((String) value), true);
 	case VAL:
 	    return new EntValue1(preprocessValue(value));
@@ -337,12 +339,12 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 	final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
 
 	for (final Object singleValue : (List<Object>) value) {
-	    if (singleCat == PARAM || singleCat == IPARAM) {
-		throw new UnsupportedOperationException("Operations with params not yet supported");
-		//result.addAll(getModelForArrayParam(singleCat, singleValue));
-	    } else {
+//	    if (singleCat == PARAM || singleCat == IPARAM) {
+//		//throw new UnsupportedOperationException("Operations with params not yet supported");
+//		result.addAll(getModelForArrayParam(singleCat, singleValue));
+//	    } else {
 		result.add(getModelForSingleOperand(singleCat, singleValue));
-	    }
+//	    }
 	}
 
 	return new OperandsBasedSet1(result);

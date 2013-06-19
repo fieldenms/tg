@@ -1,21 +1,15 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import ua.com.fielden.platform.eql.s2.elements.IElement2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 
-abstract class TwoOperandsFunction1<S2 extends IElement2> extends AbstractFunction1<S2> {
+abstract class TwoOperandsFunction1<S2 extends ISingleOperand2> extends AbstractFunction1<S2> {
     private final ISingleOperand1<? extends ISingleOperand2> operand1;
     private final ISingleOperand1<? extends ISingleOperand2> operand2;
 
     public TwoOperandsFunction1(final ISingleOperand1<? extends ISingleOperand2> operand1, final ISingleOperand1<? extends ISingleOperand2> operand2) {
 	this.operand1 = operand1;
 	this.operand2 = operand2;
-    }
-
-    @Override
-    public boolean ignore() {
-	return false;
     }
 
     public ISingleOperand1<? extends ISingleOperand2> getOperand1() {

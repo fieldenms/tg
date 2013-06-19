@@ -18,16 +18,8 @@ public class CaseWhen2 extends AbstractFunction2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	final List<EntValue2> result = new ArrayList<EntValue2>();
-	for (final Pair<ICondition2, ISingleOperand2> whenThen : whenThenPairs) {
-	    result.addAll(whenThen.getKey().getAllValues());
-	    result.addAll(whenThen.getValue().getAllValues());
-	}
-	if (elseOperand != null) {
-	    result.addAll(elseOperand.getAllValues());
-	}
-	return result;
+    public boolean ignore() {
+	return false;
     }
 
     @Override

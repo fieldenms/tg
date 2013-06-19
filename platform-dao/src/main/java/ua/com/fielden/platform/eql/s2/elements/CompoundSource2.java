@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 
 
@@ -36,11 +33,8 @@ public class CompoundSource2 implements IElement2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	final List<EntValue2> result = new ArrayList<EntValue2>();
-	result.addAll(source.getValues());
-	result.addAll(joinConditions.getAllValues());
-	return result;
+    public boolean ignore() {
+	return false;
     }
 
     @Override

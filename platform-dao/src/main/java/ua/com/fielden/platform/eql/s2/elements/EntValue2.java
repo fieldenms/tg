@@ -1,23 +1,19 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.Arrays;
-import java.util.List;
 
 
 public class EntValue2 implements ISingleOperand2 {
     private final Object value;
     private final boolean ignoreNull;
-    private final String sqlParamName;
 
-    public EntValue2(final Object value, final String sqlParamName) {
-	this(value, false, sqlParamName);
+    public EntValue2(final Object value) {
+	this(value, false);
     }
 
-    public EntValue2(final Object value, final boolean ignoreNull, final String sqlParamName) {
+    public EntValue2(final Object value, final boolean ignoreNull) {
 	super();
 	this.value = value;
 	this.ignoreNull = ignoreNull;
-	this.sqlParamName = sqlParamName;
 	if (!ignoreNull && value == null) {
 	    // TODO Uncomment when yieldNull() operator is implemented and all occurences of yield().val(null) are corrected.
 //	    throw new IllegalStateException("Value can't be null"); //
@@ -25,8 +21,8 @@ public class EntValue2 implements ISingleOperand2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	return Arrays.asList(new EntValue2[]{this});
+    public boolean ignore() {
+	return ignoreNull && value == null;
     }
 
     @Override

@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.eql.s1.elements.EntParam1;
 import ua.com.fielden.platform.eql.s1.elements.EntProp1;
 import ua.com.fielden.platform.eql.s1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.s1.elements.EntValue1;
@@ -177,8 +178,16 @@ public class BaseEntQueryTCase1 {
 	return new EntValue1(value);
     }
 
+    protected static EntParam1 param(final String value) {
+	return new EntParam1(value);
+    }
+
     protected static EntValue1 iVal(final Object value) {
 	return new EntValue1(value, true);
+    }
+
+    protected static EntParam1 iParam(final String value) {
+	return new EntParam1(value, true);
     }
 
     protected static OperandsBasedSet1 set(final ISingleOperand1<? extends ISingleOperand2> ... operands) {

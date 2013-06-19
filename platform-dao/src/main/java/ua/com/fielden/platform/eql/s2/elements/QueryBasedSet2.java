@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.List;
 
 
 public class QueryBasedSet2 implements ISetOperand2 {
@@ -12,8 +11,8 @@ public class QueryBasedSet2 implements ISetOperand2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	return model.getAllValues();
+    public boolean ignore() {
+	return false;
     }
 
     @Override

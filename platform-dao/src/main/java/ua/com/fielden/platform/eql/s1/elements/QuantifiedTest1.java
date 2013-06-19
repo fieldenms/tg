@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.Quantifier;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
@@ -25,11 +22,6 @@ public class QuantifiedTest1 extends AbstractCondition1<QuantifiedTest2> {
     @Override
     public QuantifiedTest2 transform(final TransformatorToS2 resolver) {
 	return new QuantifiedTest2(leftOperand.transform(resolver), operator, quantifier, rightOperand.transform(resolver));
-    }
-
-    @Override
-    public boolean ignore() {
-	return leftOperand.ignore();
     }
 
     @Override
@@ -76,10 +68,5 @@ public class QuantifiedTest1 extends AbstractCondition1<QuantifiedTest2> {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    protected List<IElement1> getCollection() {
-	return new ArrayList<IElement1>(){{add(leftOperand); add(rightOperand);}};
     }
 }

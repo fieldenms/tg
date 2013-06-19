@@ -27,28 +27,32 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 	negated = false;
     }
 
+    public boolean isEmpty() {
+	return allConditions.size() == 0;
+    }
+
     private List<List<ICondition1<? extends ICondition2>>> formConditionIntoLogicalGroups(final ICondition1<? extends ICondition2> firstCondition, final List<CompoundCondition1> otherConditions) {
 	final List<List<ICondition1<? extends ICondition2>>> result = new ArrayList<>();
 	List<ICondition1<? extends ICondition2>> currGroup = new ArrayList<ICondition1<? extends ICondition2>>();
 
-	if (firstCondition != null && !firstCondition.ignore()) {
+	if (firstCondition != null/* && !firstCondition.ignore()*/) {
 	    currGroup.add(firstCondition);
 	}
 
 	for (final CompoundCondition1 compoundCondition : otherConditions) {
 	    if (compoundCondition.getLogicalOperator() == LogicalOperator.AND) {
-		if (!compoundCondition.getCondition().ignore()) {
+		//if (!compoundCondition.getCondition().ignore()) {
 		    currGroup.add(compoundCondition.getCondition());
-		}
+		//}
 	    } else {
 		if (currGroup.size() > 0) {
 		    result.add(currGroup);
 		}
 
 		currGroup = new ArrayList<ICondition1<? extends ICondition2>>();
-		if (!compoundCondition.getCondition().ignore()) {
+		//if (!compoundCondition.getCondition().ignore()) {
 		    currGroup.add(compoundCondition.getCondition());
-		}
+		//}
 	    }
 	}
 
@@ -61,35 +65,20 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 
     @Override
     public Conditions2 transform(final TransformatorToS2 resolver) {
-
 	final List<List<ICondition2>> transformed = new ArrayList<>();
 	for (final List<ICondition1<? extends ICondition2>> conditionGroup : allConditions) {
 	    final List<ICondition2> transformedGroup = new ArrayList<>();
 	    for (final ICondition1<? extends ICondition2> condition : conditionGroup) {
-		transformedGroup.add(condition.transform(resolver));
-	    }
-	    transformed.add(transformedGroup);
-	}
-	return new Conditions2(negated, transformed);
-    }
-
-    @Override
-    public boolean ignore() {
-	return allConditions.size() == 0;
-    }
-
-    @Override
-    protected List<IElement1> getCollection() {
-	final List<IElement1> result = new ArrayList<IElement1>();
-
-	for (final List<ICondition1<? extends ICondition2>> compoundCondition : allConditions) {
-	    for (final ICondition1<? extends ICondition2> iCondition1 : compoundCondition) {
-		if (!iCondition1.ignore()) {
-		    result.add(iCondition1);
+		final ICondition2 transformedCondition = condition.transform(resolver);
+		if (!transformedCondition.ignore()) {
+		    transformedGroup.add(transformedCondition);
 		}
 	    }
+	    if (transformedGroup.size() > 0) {
+		transformed.add(transformedGroup);
+	    }
 	}
-	return result;
+	return new Conditions2(negated, transformed);
     }
 
     @Override

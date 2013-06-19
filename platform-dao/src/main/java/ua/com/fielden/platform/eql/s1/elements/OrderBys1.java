@@ -61,10 +61,4 @@ public class OrderBys1 implements IElement1<OrderBys2> {
 	}
 	return true;
     }
-
-    @Override
-    public boolean ignore() {
-	// TODO Auto-generated method stub
-	return false;
-    }
 }

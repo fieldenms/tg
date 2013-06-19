@@ -42,11 +42,6 @@ abstract class SingleOperandFunction1<S2 extends ISingleOperand2> extends Abstra
 	return true;
     }
 
-    @Override
-    public boolean ignore() {
-	return false;
-    }
-
     public ISingleOperand1<? extends ISingleOperand2> getOperand() {
         return operand;
     }

@@ -113,10 +113,4 @@ public class Yields1 implements IElement1<Yields2> {
 	}
 	return true;
     }
-
-    @Override
-    public boolean ignore() {
-	// TODO Auto-generated method stub
-	return false;
-    }
 }

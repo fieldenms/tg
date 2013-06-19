@@ -74,10 +74,4 @@ public class GroupBys1 implements IElement1<GroupBys2> {
 	}
 	return true;
     }
-
-    @Override
-    public boolean ignore() {
-	// TODO Auto-generated method stub
-	return false;
-    }
 }

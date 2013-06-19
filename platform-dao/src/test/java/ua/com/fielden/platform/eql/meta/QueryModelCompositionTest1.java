@@ -140,14 +140,13 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
     }
 
     @Test
-    @Ignore // TODO EQL
     public void test_simple_query_model_03() {
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("eqclass", "CL1");
 
 	assertModelsEquals(//
 		conditions(new NullTest1(prop("model"), true), //
-			compound(_and, new NullTest1(val("CL1"), false))), //
+			compound(_and, new NullTest1(param("eqclass"), false))), //
 		conditions(where_veh.prop("model").isNotNull().and().param("eqclass").isNull(), paramValues));
     }
 
@@ -246,22 +245,20 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
     }
 
     @Test
-    @Ignore // TODO EQL
     public void test_ignore_of_null_value_in_condition3() {
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("param", "MERC%");
 	assertModelsEquals(//
-		conditions(new LikeTest1(prop("model.desc"), val("MERC%"), false, false)), //
+		conditions(new LikeTest1(prop("model.desc"), param("param"), false, false)), //
 		conditions(where_veh.prop("model.desc").like().param("param"), paramValues));
     }
 
     @Test
-    @Ignore // TODO EQL
     public void test_ignore_of_null_value_in_condition4() {
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("param", null);
 	assertModelsEquals(//
-		conditions(new LikeTest1(prop("model.desc"), iVal(null), false, false)), //
+		conditions(new LikeTest1(prop("model.desc"), iParam("param"), false, false)), //
 		conditions(where_veh.prop("model.desc").like().iParam("param"), paramValues));
     }
 
@@ -273,7 +270,6 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
     }
 
     @Test
-    @Ignore // TODO EQL
     public void test_expressions1() {
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("costMultiplier", 1);
@@ -284,8 +280,8 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
 			expression(
 				expression(
 					expression(
-						expression(prop("wo.actCost.amount"), compound( _mult, val(1))), //
-						compound(_add, prop("wo.estCost.amount")), compound(_div, val(2))), //
+						expression(prop("wo.actCost.amount"), compound( _mult, param("costMultiplier"))), //
+						compound(_add, prop("wo.estCost.amount")), compound(_div, param("costDivider"))), //
 					compound(_add, prop("wo.yearlyCost.amount"))), //
 				compound(_div, val(12))),
 		_gt, val(1000))), //
@@ -372,7 +368,6 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
 
     //////////////////////////////////////////////////////// Yielding ///////////////////////////////////////////////////////////////////
     @Test
-    @Ignore // TODO EQL
     public void test1() {
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("param", 20);
@@ -380,7 +375,7 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
 	final Yields1 exp = new Yields1();
 	exp.addYield(new Yield1(prop("station"), "st"));
 	final List<CompoundSingleOperand1> compSingleOperands = new ArrayList<>();
-	compSingleOperands.add(new CompoundSingleOperand1(val(20), ArithmeticalOperator.ADD));
+	compSingleOperands.add(new CompoundSingleOperand1(param("param"), ArithmeticalOperator.ADD));
 	final Expression1 expression = expression(prop("model"), compSingleOperands.toArray(new CompoundSingleOperand1[]{}));
 	exp.addYield(new Yield1(expression, "m"));
 	assertEquals("models are different", exp, entResultQry(qry, paramValues).getYields());

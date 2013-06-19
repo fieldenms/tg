@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.FetchModel;
@@ -40,14 +38,8 @@ public class EntQuery2 implements ISingleOperand2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-        final List<EntValue2> result = new ArrayList<EntValue2>();
-        result.addAll(sources.getAllValues());
-        result.addAll(conditions.getAllValues());
-        result.addAll(groups.getAllValues());
-        result.addAll(orderings.getAllValues());
-        result.addAll(yields.getAllValues());
-        return result;
+    public boolean ignore() {
+        return false;
     }
 
     public Sources2 getSources() {

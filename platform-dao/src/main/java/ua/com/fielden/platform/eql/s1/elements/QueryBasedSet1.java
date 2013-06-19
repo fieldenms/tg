@@ -46,11 +46,4 @@ public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
 	}
 	return true;
     }
-
-    @Override
-    public boolean ignore() {
-	// TODO Auto-generated method stub
-	return false;
-    }
-
 }

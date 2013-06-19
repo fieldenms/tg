@@ -17,11 +17,8 @@ public class SetTest2 extends AbstractCondition2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	final List<EntValue2> result = new ArrayList<EntValue2>();
-	result.addAll(leftOperand.getAllValues());
-	result.addAll(rightOperand.getAllValues());
-	return result;
+    public boolean ignore() {
+	return leftOperand.ignore();
     }
 
     @Override

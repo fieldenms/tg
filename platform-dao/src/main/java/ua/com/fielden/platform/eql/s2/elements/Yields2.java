@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -66,14 +64,8 @@ public class Yields2 implements IElement2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	final List<EntValue2> result = new ArrayList<EntValue2>();
-	for (final Yield2 yield : yields.values()) {
-	    if (!yield.isCompositePropertyHeader()) {
-		result.addAll(yield.getOperand().getAllValues());
-	    }
-	}
-	return result;
+    public boolean ignore() {
+	return false;
     }
 
     @Override

@@ -23,5 +23,5 @@ public interface ISource2 {
      */
     Class sourceType();
 
-    List<EntValue2> getValues();
+    //List<EntValue2> getValues();
 }

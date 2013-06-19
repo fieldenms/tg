@@ -24,7 +24,7 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
 
     @Override
     public EntValue2 transform(final TransformatorToS2 resolver) {
-	return new EntValue2(value, ignoreNull, resolver.generateNextSqlParamName());
+	return new EntValue2(value, ignoreNull);
     }
 
     @Override
@@ -55,11 +55,6 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    public boolean ignore() {
-	return ignoreNull && value == null;
     }
 
     public Object getValue() {

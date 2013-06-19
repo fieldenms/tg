@@ -56,15 +56,6 @@ public class Sources1 implements IElement1<Sources2> {
 	return result;
     }
 
-//    public List<Pair<ISource1, Boolean>> getAllSourcesAndTheirJoinType() {
-//	final List<Pair<ISource1, Boolean>> result = new ArrayList<Pair<ISource1, Boolean>>();
-//	result.add(new Pair<ISource1, Boolean>(main, false));
-//	for (final CompoundSource1 compound : compounds) {
-//	    result.add(new Pair<ISource1, Boolean>(compound.getSource(), compound.getJoinType() == JoinType.LJ));
-//	}
-//	return result;
-//    }
-
     @Override
     public int hashCode() {
 	final int prime = 31;
@@ -101,11 +92,5 @@ public class Sources1 implements IElement1<Sources2> {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    public boolean ignore() {
-	// TODO Auto-generated method stub
-	return false;
     }
 }

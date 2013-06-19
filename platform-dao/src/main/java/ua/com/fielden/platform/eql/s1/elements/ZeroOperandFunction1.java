@@ -13,11 +13,6 @@ abstract class ZeroOperandFunction1<S2 extends IElement2> extends AbstractFuncti
     }
 
     @Override
-    public boolean ignore() {
-	return false;
-    }
-
-    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;

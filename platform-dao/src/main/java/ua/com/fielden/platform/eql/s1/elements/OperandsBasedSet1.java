@@ -55,10 +55,4 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2>{
 	}
 	return true;
     }
-
-    @Override
-    public boolean ignore() {
-	// TODO Auto-generated method stub
-	return false;
-    }
 }

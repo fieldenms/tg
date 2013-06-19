@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.Collections;
-import java.util.List;
-
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -23,10 +20,10 @@ public class TypeBasedSource2 extends AbstractSource2 {
 	return entityMetadata.getType();
     }
 
-    @Override
-    public List<EntValue2> getValues() {
-	return Collections.emptyList();
-    }
+//    @Override
+//    public List<EntValue2> getValues() {
+//	return Collections.emptyList();
+//    }
 
     @Override
     public int hashCode() {

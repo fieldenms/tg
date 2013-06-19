@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class OrderBys2 implements IElement2 {
@@ -16,14 +15,8 @@ public class OrderBys2 implements IElement2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	final List<EntValue2> result = new ArrayList<EntValue2>();
-	for (final OrderBy2 model : models) {
-	    if (model.getOperand() != null) {
-		result.addAll(model.getOperand().getAllValues());
-	    }
-	}
-	return result;
+    public boolean ignore() {
+	return false;
     }
 
     public List<OrderBy2> getModels() {

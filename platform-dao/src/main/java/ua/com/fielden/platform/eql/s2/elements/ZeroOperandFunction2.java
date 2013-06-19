@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.Collections;
-import java.util.List;
 
 
 
@@ -14,8 +12,8 @@ abstract class ZeroOperandFunction2 extends AbstractFunction2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-	return Collections.emptyList();
+    public boolean ignore() {
+	return false;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -114,7 +115,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test0() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
 
 	//final EntQuery2 exp = new EntQuery2(false, null, TgAuthor.class, null, null, null, null, null, null, null);
 
@@ -125,64 +126,64 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test0b() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id").where().prop("lastRoyalty").isNotNull().model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
     }
 
     @Test
     @Ignore
     public void test0c() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).as("pn").where().prop("lastRoyalty").isNotNull().model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
     }
 
     @Test
     @Ignore
     public void test0a() {
 	final EntityResultQueryModel<TgAuthorship> qry = select(TgAuthorship.class).where().exists(select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model()).model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
     }
 
     @Test
     public void test1() {
 	final EntityResultQueryModel<TgAuthorship> qry = select(TgAuthorship.class).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
     }
 
     @Test
     public void test2() {
 	final EntityResultQueryModel<TgAuthorRoyalty> qry = select(TgAuthorRoyalty.class).as("ar").where().prop("authorship.author.surname").eq().val("Date").or().prop("ar.authorship.author.name.key").eq().val("Chris").model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
     }
 
     @Test
     public void test2a() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().exists(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("id").model()).model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
     }
 
     @Test
     public void test3() {
 	final EntityResultQueryModel<TgAuthorRoyalty> qry = select(TgAuthorRoyalty.class).as("ar").where().exists(
 		select(TgAuthorship.class).where().prop("id").eq().extProp("authorship").and().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model()).model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
     }
 
     @Test
     public void test4() {
 	final EntityResultQueryModel<TgAuthorship> qry = select(select(TgAuthorship.class).where().prop("bookTitle").isNotNull().model()).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
     }
 
     @Test
     public void test5() {
 	final EntityResultQueryModel<TgAuthorRoyalty> qry = select(select(TgAuthorRoyalty.class).where().prop("authorship.author.surname").isNotNull().model()).as("ar").where().prop("authorship.author.surname").eq().val("Date").or().prop("ar.authorship.author.name.key").eq().val("Chris").model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
     }
 
     @Test
     public void test6() {
 	final EntityResultQueryModel<TgAuthorship> qry = select(select(TgAuthorRoyalty.class).where().prop("authorship.author.surname").isNotNull().yield().prop("authorship.author").modelAsEntity(TgAuthorship.class)).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
 	System.out.println("---------");
 	for (final EntProp2 prop : qry2.getSources().getMain().props()) {
 	    System.out.println("---: " + prop);
@@ -192,7 +193,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test7() {
 	final AggregatedResultQueryModel qry = select(select(TgAuthorship.class).where().prop("bookTitle").isNotNull().yield().prop("author").as("author").yield().prop("bookTitle").as("title").modelAsAggregate()).where().prop("title").isNotNull().or().begin().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").end().yield().prop("author.name.key").as("name").yield().prop("title").as("titel").modelAsAggregate();
-	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
 	System.out.println("---------");
 	for (final EntProp2 prop : qry2.getSources().getMain().props()) {
 	    System.out.println("---: " + prop);

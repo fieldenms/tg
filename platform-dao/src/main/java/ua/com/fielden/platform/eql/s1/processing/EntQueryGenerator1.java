@@ -102,15 +102,15 @@ public class EntQueryGenerator1 {
     private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
 	    final String username, final ISource1<? extends ISource2> mainSource, final EntQueryGenerator1 generator) {
 	if (mainSource instanceof TypeBasedSource1 && filter != null) {
-	final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
-	if (filteringCondition == null) {
-	    return originalConditions;
-	}
-	//logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
-	final List<CompoundCondition1> others = new ArrayList<>();
-	others.add(new CompoundCondition1(LogicalOperator.AND, originalConditions));
-	final Conditions1 filteringConditions = new StandAloneConditionBuilder1(generator, filteringCondition, false).getModel();
-	return originalConditions.ignore() ? filteringConditions : new Conditions1(false, filteringConditions, others);
+	    final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
+	    if (filteringCondition == null) {
+		return originalConditions;
+	    }
+	    //logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
+	    final List<CompoundCondition1> others = new ArrayList<>();
+	    others.add(new CompoundCondition1(LogicalOperator.AND, originalConditions));
+	    final Conditions1 filteringConditions = new StandAloneConditionBuilder1(generator, filteringCondition, false).getModel();
+	    return originalConditions.isEmpty() ? filteringConditions : new Conditions1(false, filteringConditions, others);
 	} else {
 	    return originalConditions;
 	}

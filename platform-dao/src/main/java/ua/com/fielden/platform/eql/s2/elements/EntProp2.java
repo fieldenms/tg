@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.Collections;
-import java.util.List;
-
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 
 public class EntProp2 implements ISingleOperand2 {
@@ -29,9 +26,8 @@ public class EntProp2 implements ISingleOperand2 {
     }
 
     @Override
-    public List<EntValue2> getAllValues() {
-        //return isExpression() ? expression.getAllValues() : Collections.<EntValue> emptyList();
-        return Collections.<EntValue2> emptyList();
+    public boolean ignore() {
+        return false;
     }
 
     public String getName() {
