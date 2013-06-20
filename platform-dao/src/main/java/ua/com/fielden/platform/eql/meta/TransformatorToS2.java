@@ -211,7 +211,7 @@ public class TransformatorToS2 {
     }
 
     public EntValue2 getTransformedValue(final EntValue1 originalValue) {
-	return new EntValue2(preprocessValue(originalValue), originalValue.isIgnoreNull());
+	return new EntValue2(preprocessValue(originalValue.getValue()), originalValue.isIgnoreNull());
     }
 
     private EntProp2 generateTransformedProp(final PropResolution resolution) {

@@ -22,6 +22,7 @@ public class EntValue2 implements ISingleOperand2 {
 
     @Override
     public boolean ignore() {
+	System.out.println(" ignore = " + (ignoreNull && value == null) + " --- " + value + " - " + ignoreNull);
 	return ignoreNull && value == null;
     }
 

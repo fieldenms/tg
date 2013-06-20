@@ -70,65 +70,65 @@ public class EntQuery2 implements ISingleOperand2 {
     @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
-            System.out.println("1");
+            System.out.println("EntQuery 1");
             return true;
         }
         if (obj == null) {
-            System.out.println("2");
+            System.out.println("EntQuery 2");
             return false;
         }
         if (!(obj instanceof EntQuery2)) {
-            System.out.println("3");
+            System.out.println("EntQuery 3");
             return false;
         }
         final EntQuery2 other = (EntQuery2) obj;
         if (conditions == null) {
             if (other.conditions != null) {
-                System.out.println("4");
+                System.out.println("EntQuery 4");
                 return false;
             }
         } else if (!conditions.equals(other.conditions)) {
-            System.out.println("5");
+            System.out.println("EntQuery 5");
             return false;
         }
         if (groups == null) {
             if (other.groups != null) {
-                System.out.println("6");
+                System.out.println("EntQuery 6");
                 return false;
             }
         } else if (!groups.equals(other.groups)) {
-            System.out.println("7 " + other.groups);
+            System.out.println("EntQuery 7 " + other.groups);
             return false;
         }
         if (category != other.category) {
-            System.out.println("8");
+            System.out.println("EntQuery 8");
             return false;
         }
         if (resultType == null) {
             if (other.resultType != null) {
-                System.out.println("9");
+                System.out.println("EntQuery 9");
                 return false;
             }
         } else if (!resultType.equals(other.resultType)) {
-            System.out.println("10");
+            System.out.println("EntQuery 10");
             return false;
         }
         if (sources == null) {
             if (other.sources != null) {
-                System.out.println("11");
+                System.out.println("EntQuery 11");
                 return false;
             }
         } else if (!sources.equals(other.sources)) {
-            System.out.println("12");
+            System.out.println("EntQuery 12");
             return false;
         }
         if (yields == null) {
             if (other.yields != null) {
-                System.out.println("13");
+                System.out.println("EntQuery 13");
                 return false;
             }
         } else if (!yields.equals(other.yields)) {
-            System.out.println("14");
+            System.out.println("EntQuery 14");
             return false;
         }
         return true;
