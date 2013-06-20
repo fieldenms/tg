@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.eql.meta;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
@@ -13,12 +15,24 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.s1.elements.Expression1;
+import ua.com.fielden.platform.eql.s2.elements.CompoundSource2;
+import ua.com.fielden.platform.eql.s2.elements.Conditions2;
 import ua.com.fielden.platform.eql.s2.elements.EntProp2;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
+import ua.com.fielden.platform.eql.s2.elements.EntQueryBlocks2;
+import ua.com.fielden.platform.eql.s2.elements.GroupBy2;
+import ua.com.fielden.platform.eql.s2.elements.GroupBys2;
+import ua.com.fielden.platform.eql.s2.elements.ICondition2;
+import ua.com.fielden.platform.eql.s2.elements.NullTest2;
+import ua.com.fielden.platform.eql.s2.elements.OrderBys2;
+import ua.com.fielden.platform.eql.s2.elements.Sources2;
+import ua.com.fielden.platform.eql.s2.elements.TypeBasedSource2;
+import ua.com.fielden.platform.eql.s2.elements.Yields2;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
+import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -116,11 +130,25 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     public void test0() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model();
 	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+    }
 
-	//final EntQuery2 exp = new EntQuery2(false, null, TgAuthor.class, null, null, null, null, null, null, null);
+    @Test
+    public void test_q1() {
+	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().model();
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
 
+	final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
+	final Sources2 sources = new Sources2(source, Collections.<CompoundSource2>emptyList());
+	final List<List<ICondition2>> allConditions = new ArrayList<>();
+	final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+	final EntityInfo tgAuthor = new EntityInfo(TgAuthor.class);
+	firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, false, metadata.get(TgAuthor.class).resolve("surname"), null), true));
+	allConditions.add(firstAndConditionsGroup);
+	final Conditions2 conditions = new Conditions2(false, allConditions);
 
-
+	final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2>emptyList()), new OrderBys2(null));
+	final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, QueryCategory.RESULT_QUERY, null);
+	assertEquals(qry2, exp);
     }
 
     @Test

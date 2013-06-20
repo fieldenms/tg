@@ -17,7 +17,7 @@ public class EntProp2 implements ISingleOperand2 {
         this.resolution = resolution;
         this.expression = expression;
         source.addProp(this);
-        System.out.println(toString());
+        //System.out.println(toString());
     }
 
     @Override
@@ -35,37 +35,76 @@ public class EntProp2 implements ISingleOperand2 {
     }
 
     @Override
+    public Class type() {
+	return resolution.javaType();
+    }
+
+    @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        return result;
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + (aliased ? 1231 : 1237);
+	result = prime * result + ((expression == null) ? 0 : expression.hashCode());
+	result = prime * result + ((name == null) ? 0 : name.hashCode());
+	result = prime * result + ((resolution == null) ? 0 : resolution.hashCode());
+	result = prime * result + ((source == null) ? 0 : source.hashCode());
+	return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof EntProp2)) {
-            return false;
-        }
-        final EntProp2 other = (EntProp2) obj;
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public Class type() {
-	return resolution.javaType();
+	if (this == obj) {
+	    return true;
+	}
+	if (obj == null) {
+	    System.out.println("entProp 1");
+	    return false;
+	}
+	if (!(obj instanceof EntProp2)) {
+	    System.out.println("entProp 2");
+	    return false;
+	}
+	final EntProp2 other = (EntProp2) obj;
+	if (aliased != other.aliased) {
+	    System.out.println("entProp 3");
+	    return false;
+	}
+	if (expression == null) {
+	    if (other.expression != null) {
+		System.out.println("entProp 4");
+		return false;
+	    }
+	} else if (!expression.equals(other.expression)) {
+	    System.out.println("entProp 5");
+	    return false;
+	}
+	if (name == null) {
+	    if (other.name != null) {
+		System.out.println("entProp 6");
+		return false;
+	    }
+	} else if (!name.equals(other.name)) {
+	    System.out.println("entProp 7");
+	    return false;
+	}
+	if (resolution == null) {
+	    if (other.resolution != null) {
+		System.out.println("entProp 8");
+		return false;
+	    }
+	} else if (!resolution.equals(other.resolution)) {
+	    System.out.println("entProp 9: " + resolution + " vs " + other.resolution);
+	    return false;
+	}
+	if (source == null) {
+	    if (other.source != null) {
+		System.out.println("entProp 10");
+		return false;
+	    }
+	} else if (!source.equals(other.source)) {
+	    System.out.println("entProp 11");
+	    return false;
+	}
+	return true;
     }
 }

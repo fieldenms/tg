@@ -9,8 +9,6 @@ public interface ISource2 {
      *
      * @return
      */
-    String getAlias();
-
     void addProp(EntProp2 prop);
 
     List<EntProp2> props();

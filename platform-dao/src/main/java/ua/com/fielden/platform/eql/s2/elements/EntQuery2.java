@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 
@@ -14,14 +12,13 @@ public class EntQuery2 implements ISingleOperand2 {
     private final OrderBys2 orderings;
     private final Class resultType;
     private final QueryCategory category;
-    private final Map<String, Object> paramValues;
 
     public Class type() {
         return resultType;
     }
 
     public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class resultType, final QueryCategory category, //
-	    final FetchModel fetchModel, final Map<String, Object> paramValues) {
+	    final FetchModel fetchModel) {
         super();
         this.category = category;
         this.sources = queryBlocks.getSources();
@@ -30,11 +27,6 @@ public class EntQuery2 implements ISingleOperand2 {
         this.groups = queryBlocks.getGroups();
         this.orderings = queryBlocks.getOrderings();
         this.resultType = resultType;
-        if (this.resultType == null && category != QueryCategory.SUB_QUERY) { // only primitive result queries have result type not assigned
-            throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
-        }
-
-        this.paramValues = paramValues;
     }
 
     @Override
@@ -78,51 +70,65 @@ public class EntQuery2 implements ISingleOperand2 {
     @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
+            System.out.println("1");
             return true;
         }
         if (obj == null) {
+            System.out.println("2");
             return false;
         }
         if (!(obj instanceof EntQuery2)) {
+            System.out.println("3");
             return false;
         }
         final EntQuery2 other = (EntQuery2) obj;
         if (conditions == null) {
             if (other.conditions != null) {
+                System.out.println("4");
                 return false;
             }
         } else if (!conditions.equals(other.conditions)) {
+            System.out.println("5");
             return false;
         }
         if (groups == null) {
             if (other.groups != null) {
+                System.out.println("6");
                 return false;
             }
         } else if (!groups.equals(other.groups)) {
+            System.out.println("7 " + other.groups);
             return false;
         }
         if (category != other.category) {
+            System.out.println("8");
             return false;
         }
         if (resultType == null) {
             if (other.resultType != null) {
+                System.out.println("9");
                 return false;
             }
         } else if (!resultType.equals(other.resultType)) {
+            System.out.println("10");
             return false;
         }
         if (sources == null) {
             if (other.sources != null) {
+                System.out.println("11");
                 return false;
             }
         } else if (!sources.equals(other.sources)) {
+            System.out.println("12");
             return false;
         }
         if (yields == null) {
             if (other.yields != null) {
+                System.out.println("13");
                 return false;
             }
         } else if (!yields.equals(other.yields)) {
+            System.out.println("14");
             return false;
         }
         return true;

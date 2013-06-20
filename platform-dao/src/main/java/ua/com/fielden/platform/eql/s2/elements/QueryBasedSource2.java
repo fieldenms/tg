@@ -3,12 +3,10 @@ package ua.com.fielden.platform.eql.s2.elements;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.utils.Pair;
 
 public class QueryBasedSource2 extends AbstractSource2 {
     private final List<EntQuery2> models;
@@ -19,7 +17,6 @@ public class QueryBasedSource2 extends AbstractSource2 {
     }
 
     public QueryBasedSource2(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final EntQuery2... models) {
-	super(alias, domainMetadataAnalyser);
 	if (models == null || models.length == 0) {
 	    throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
 	}
@@ -71,46 +68,10 @@ public class QueryBasedSource2 extends AbstractSource2 {
 	return firstModel().getYields();
     }
 
-    /**
-     * Generates one dot.notated string from list of strings (subproperties).
-     * @param parts
-     * @return
-     */
-    private static String joinWithDot(final List<String> parts) {
-	final StringBuffer sb = new StringBuffer();
-	for (final Iterator<String> iterator = parts.iterator(); iterator.hasNext();) {
-	    sb.append(iterator.next());
-	    if (iterator.hasNext()) {
-		sb.append(".");
-	    }
-	}
-	return sb.toString();
-    }
-
-    private static List<Pair<String, String>> prepareCandidates(final String dotNotatedPropName) {
-	final List<Pair<String, String>> result =  new ArrayList<Pair<String,String>>();
-	final List<String> parts = Arrays.asList(dotNotatedPropName.split("\\."));
-
-	for (int i = parts.size(); i >=1 ; i--) {
-	    result.add(new Pair<String, String>(joinWithDot(parts.subList(0, i)), joinWithDot(parts.subList(i, parts.size()))));
-	}
-
-	return result;
-    }
-
-//    @Override
-//    public List<EntValue2> getValues() {
-//	final List<EntValue2> result = new ArrayList<EntValue2>();
-//	for (final EntQuery2 entQry : models) {
-//	    result.addAll(entQry.getAllValues());
-//	}
-//	return result;
-//    }
-
     @Override
     public int hashCode() {
 	final int prime = 31;
-	int result = super.hashCode();
+	int result = 1;
 	result = prime * result + ((models == null) ? 0 : models.hashCode());
 	return result;
     }
@@ -120,7 +81,7 @@ public class QueryBasedSource2 extends AbstractSource2 {
 	if (this == obj) {
 	    return true;
 	}
-	if (!super.equals(obj)) {
+	if (obj == null) {
 	    return false;
 	}
 	if (!(obj instanceof QueryBasedSource2)) {

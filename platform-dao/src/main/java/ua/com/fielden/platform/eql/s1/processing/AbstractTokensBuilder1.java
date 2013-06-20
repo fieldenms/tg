@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.Functions;
@@ -26,7 +25,6 @@ import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_T
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IVAL;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
@@ -239,14 +237,12 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 	    return new EntProp1((String) value, true);
 	case PARAM:
 	    return new EntParam1((String) value);
-	    //return new EntValue1(getParamValue((String) value));
 	case IPARAM:
 	    return new EntParam1((String) value, true);
-	    //return new EntValue1(getParamValue((String) value), true);
 	case VAL:
-	    return new EntValue1(preprocessValue(value));
+	    return new EntValue1(value);
 	case IVAL:
-	    return new EntValue1(preprocessValue(value), true);
+	    return new EntValue1(value, true);
 	case ZERO_ARG_FUNCTION:
 	    return getZeroArgFunctionModel((Functions) value);
 	case EXPR:
@@ -261,54 +257,6 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 	default:
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
 	}
-    }
-
-//    protected List<ISingleOperand1<? extends ISingleOperand2>> getModelForArrayParam(final TokenCategory cat, final Object value) {
-//	final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
-//	final Object paramValue = getParamValue((String) value);
-//
-//	if (!(paramValue instanceof List)) {
-//	    result.add(getModelForSingleOperand(cat, value));
-//	} else {
-//	    for (final Object singleValue : (List<Object>) paramValue) {
-//		result.add(getModelForSingleOperand((cat == IPARAM ? IVAL : VAL), singleValue));
-//	    }
-//	}
-//	return result;
-//    }
-//
-//    protected Object getParamValue(final String paramName) {
-//	if (getParamValues().containsKey(paramName)) {
-//	    return preprocessValue(getParamValues().get(paramName));
-//	} else {
-//	    return null; //TODO think through
-//	    //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
-//	}
-//    }
-
-    private Object preprocessValue(final Object value) {
-	if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
-	    final List<Object> values = new ArrayList<Object>();
-	    for (final Object object : (Iterable) value) {
-		final Object furtherPreprocessed = preprocessValue(object);
-		if (furtherPreprocessed instanceof List) {
-		    values.addAll((List) furtherPreprocessed);
-		} else {
-		    values.add(furtherPreprocessed);
-		}
-	    }
-	    return values;
-	} else {
-	    return convertValue(value);
-	}
-    }
-
-    /** Ensures that values of boolean types are converted properly. */
-    private Object convertValue(final Object value) {
-	if (value instanceof Boolean) {
-	    return getQueryBuilder().getDomainMetadataAnalyser().getDomainMetadata().getBooleanValue((Boolean) value);
-	}
-	return value;
     }
 
     protected ISetOperand1<? extends ISetOperand2> getModelForSetOperand(final TokenCategory cat, final Object value) {
@@ -339,12 +287,12 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
 	final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
 
 	for (final Object singleValue : (List<Object>) value) {
-//	    if (singleCat == PARAM || singleCat == IPARAM) {
-//		//throw new UnsupportedOperationException("Operations with params not yet supported");
-//		result.addAll(getModelForArrayParam(singleCat, singleValue));
-//	    } else {
+	    if (singleCat == PARAM || singleCat == IPARAM) {
+		throw new UnsupportedOperationException("Operations with params not yet supported");
+		//result.addAll(getModelForArrayParam(singleCat, singleValue));
+	    } else {
 		result.add(getModelForSingleOperand(singleCat, singleValue));
-//	    }
+	    }
 	}
 
 	return new OperandsBasedSet1(result);

@@ -55,7 +55,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 	final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), conditions.transform(localResolver), //
 		yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
 
-	return new EntQuery2(entQueryBlocks, resultType, category, fetchModel, null /*TODO EQL*/);
+	return new EntQuery2(entQueryBlocks, resultType, category, fetchModel);
     }
 
     public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class resultType, final QueryCategory category, //

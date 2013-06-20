@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.s1.elements.EntParam1;
 import ua.com.fielden.platform.eql.s1.elements.EntProp1;
 import ua.com.fielden.platform.eql.s1.elements.EntQuery1;
+import ua.com.fielden.platform.eql.s1.elements.EntValue1;
 import ua.com.fielden.platform.eql.s1.elements.ISource1;
 import ua.com.fielden.platform.eql.s1.elements.QueryBasedSource1;
 import ua.com.fielden.platform.eql.s1.elements.TypeBasedSource1;
@@ -32,34 +33,55 @@ public class TransformatorToS2 {
     private final Map<String, Object> paramValues = new HashMap<>();
     private final DomainMetadata domainData;
 
+    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final DomainMetadata domainData) {
+	this.metadata = metadata;
+	sourceMap.add(new HashMap<ISource1<? extends ISource2>, SourceInfo>());
+	this.paramValues.putAll(paramValues);
+	this.domainData = domainData;
+    }
+
     static class SourceInfo {
 	private final ISource2 source;
 	private final EntityInfo entityInfo;
 	private final boolean aliasingAllowed;
+	private final String alias;
 
-	public SourceInfo(final ISource2 source, final EntityInfo entityInfo, final boolean aliasingAllowed) {
+	public SourceInfo(final ISource2 source, final EntityInfo entityInfo, final boolean aliasingAllowed, final String alias) {
 	    this.source = source;
 	    this.entityInfo = entityInfo;
 	    this.aliasingAllowed = aliasingAllowed;
+	    this.alias = alias;
 	}
 
 	SourceInfo produceNewWithoutAliasing() {
-	    return new SourceInfo(source, entityInfo, false);
+	    return new SourceInfo(source, entityInfo, false, alias);
 	}
     }
 
-  // TODO EQL duplicate
-  protected Object getParamValue(final String paramName) {
+//    protected List<ISingleOperand1<? extends ISingleOperand2>> getModelForArrayParam(final TokenCategory cat, final Object value) {
+//	final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
+//	final Object paramValue = getParamValue((String) value);
+//
+//	if (!(paramValue instanceof List)) {
+//	    result.add(getModelForSingleOperand(cat, value));
+//	} else {
+//	    for (final Object singleValue : (List<Object>) paramValue) {
+//		result.add(getModelForSingleOperand((cat == IPARAM ? IVAL : VAL), singleValue));
+//	    }
+//	}
+//	return result;
+//    }
+
+    protected Object getParamValue(final String paramName) {
 	if (paramValues.containsKey(paramName)) {
 	    return preprocessValue(paramValues.get(paramName));
 	} else {
 	    return null; //TODO think through
 	    //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
 	}
-  }
+    }
 
-  // TODO EQL duplicate
-  private Object preprocessValue(final Object value) {
+    private Object preprocessValue(final Object value) {
 	if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
 	    final List<Object> values = new ArrayList<Object>();
 	    for (final Object object : (Iterable) value) {
@@ -70,27 +92,18 @@ public class TransformatorToS2 {
 		    values.add(furtherPreprocessed);
 		}
 	    }
-	    System.out.println("                              return values: " + values);
 	    return values;
 	} else {
 	    return convertValue(value);
 	}
-  }
+    }
 
-  /** Ensures that values of boolean types are converted properly. */
-  // TODO EQL duplicate
-  private Object convertValue(final Object value) {
+    /** Ensures that values of boolean types are converted properly. */
+    private Object convertValue(final Object value) {
 	if (value instanceof Boolean) {
 	    return domainData.getBooleanValue((Boolean) value);
 	}
 	return value;
-  }
-
-    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final DomainMetadata domainData) {
-	this.metadata = metadata;
-	sourceMap.add(new HashMap<ISource1<? extends ISource2>, SourceInfo>());
-	this.paramValues.putAll(paramValues);
-	this.domainData = domainData;
     }
 
     @Override
@@ -118,9 +131,9 @@ public class TransformatorToS2 {
 		entAggEntityInfo.getProps().put(yield.getAlias(), aep);
 	    }
 
-	    getCurrentQueryMap().put(source, new SourceInfo(transformedSource, entAggEntityInfo, true));
+	    getCurrentQueryMap().put(source, new SourceInfo(transformedSource, entAggEntityInfo, true, source.getAlias()));
 	} else {
-	    getCurrentQueryMap().put(source, new SourceInfo(transformedSource, metadata.get(transformedSource.sourceType()), true));
+	    getCurrentQueryMap().put(source, new SourceInfo(transformedSource, metadata.get(transformedSource.sourceType()), true, source.getAlias()));
 	}
     }
 
@@ -156,7 +169,7 @@ public class TransformatorToS2 {
     private ISource2 transformSource(final ISource1<? extends ISource2> originalSource) {
 	if (originalSource instanceof TypeBasedSource1) {
 	    final TypeBasedSource1 source = (TypeBasedSource1) originalSource;
-	    return new TypeBasedSource2(source.getEntityMetadata(), originalSource.getAlias(), source.getDomainMetadataAnalyser());
+	    return new TypeBasedSource2(source.sourceType()/*, originalSource.getAlias(), source.getDomainMetadataAnalyser()*/);
 	} else {
 	    final QueryBasedSource1 source = (QueryBasedSource1) originalSource;
 	    final List<EntQuery2> transformed = new ArrayList<>();
@@ -197,6 +210,10 @@ public class TransformatorToS2 {
 	return new EntValue2(getParamValue(originalParam.getName()), originalParam.isIgnoreNull());
     }
 
+    public EntValue2 getTransformedValue(final EntValue1 originalValue) {
+	return new EntValue2(preprocessValue(originalValue), originalValue.isIgnoreNull());
+    }
+
     private EntProp2 generateTransformedProp(final PropResolution resolution) {
 	final AbstractPropInfo propInfo = resolution.resolution;
 	final Expression2 expr = propInfo.getExpression() != null ? propInfo.getExpression().transform(this.produceOneForCalcPropExpression(resolution.source)) : null;
@@ -221,8 +238,8 @@ public class TransformatorToS2 {
 
     private PropResolution resolvePropAgainstSource(final SourceInfo source, final EntProp1 entProp) {
 	final AbstractPropInfo asIsResolution = source.entityInfo.resolve(entProp.getName());
-	if (source.source.getAlias() != null && source.aliasingAllowed && entProp.getName().startsWith(source.source.getAlias() + ".")) {
-	    final String aliasLessPropName = entProp.getName().substring(source.source.getAlias().length() + 1);
+	if (source.alias != null && source.aliasingAllowed && entProp.getName().startsWith(source.alias + ".")) {
+	    final String aliasLessPropName = entProp.getName().substring(source.alias.length() + 1);
 	    final AbstractPropInfo aliasLessResolution = source.entityInfo.resolve(aliasLessPropName);
 	    if (aliasLessResolution != null) {
 		if (asIsResolution == null) {
