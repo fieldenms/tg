@@ -1,15 +1,21 @@
 package ua.com.fielden.platform.reflection;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -186,6 +192,53 @@ public class TitlesDescsGetter {
 	    }
 	}
 	return -1;
+    }
+
+
+    public static String processReqErrorMsg(final String propName, final Class<?> entityType) {
+	String errorMsg = "";
+	if (AbstractEntity.KEY.equals(propName)) {
+	    if (AnnotationReflector.isAnnotationPresent(KeyTitle.class, entityType)) {
+		errorMsg = AnnotationReflector.getAnnotation(KeyTitle.class, entityType).reqErrorMsg();
+	    } else {
+		errorMsg = "";
+	    }
+	} else if (AbstractEntity.DESC.equals(propName)) {
+	    if (AnnotationReflector.isAnnotationPresent(DescRequired.class, entityType)) {
+		errorMsg = AnnotationReflector.getAnnotation(DescRequired.class, entityType).value();
+	    } else {
+		errorMsg = "";
+	    }
+	} else {
+	    errorMsg = AnnotationReflector.getPropertyAnnotation(Required.class, entityType, propName).value();
+	}
+	// template processing
+	if (!StringUtils.isEmpty(errorMsg)) {
+
+	    final String propTitle = TitlesDescsGetter.getTitleAndDesc(propName, entityType).getKey();
+	    errorMsg = errorMsg.replace("{{prop-title}}", StringUtils.isEmpty(propTitle) ? propName : propTitle);
+	    errorMsg = errorMsg.replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey());
+	}
+	return errorMsg;
+    }
+
+    public static String processEntityExistsErrorMsg(final String propName, final Object errouneousValue, final Class<?> entityType) {
+	String errorMsg = "";
+
+	try {
+	    final Method setter = Reflector.obtainPropertySetter(entityType, propName);
+	    if (setter.isAnnotationPresent(EntityExists.class)) {
+		errorMsg = setter.getAnnotation(EntityExists.class).errorMsg();
+		final String propTitle = TitlesDescsGetter.getTitleAndDesc(propName, entityType).getKey();
+		errorMsg = errorMsg.replace("{{prop-title}}", StringUtils.isEmpty(propTitle) ? propName : propTitle);
+		errorMsg = errorMsg.replace("{{prop-value}}", errouneousValue + "");
+		errorMsg = errorMsg.replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey());
+	    }
+	} catch (final NoSuchMethodException e) {
+	    e.printStackTrace();
+	}
+
+	return errorMsg;
     }
 
 }

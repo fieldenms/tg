@@ -46,6 +46,8 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.bind.development.Binder.IPropertyConnector;
 import ua.com.fielden.platform.swing.components.bind.development.Binder.IRebindable;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
@@ -252,6 +254,7 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
      *
      * @return the ValueModel that provides the unbuffered value
      */
+    @Override
     public IBindingEntity getSubjectBean() {
 	return subjectBean;
     }
@@ -296,6 +299,7 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
 	firePropertyChange(PROPERTYNAME_SUBJECT_BEAN, oldSubjectBean, newSubjectBean);
     }
 
+    @Override
     public final PropertyChangeSupportEx getChangeSupport() {
 	return changeSupport;
     }
@@ -308,6 +312,7 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
      * @param propertyName
      * @param listener
      */
+    @Override
     public final synchronized void addPropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
 	if (listener == null) {
 	    throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
@@ -321,6 +326,7 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
     /**
      * Removes property change listener.
      */
+    @Override
     public final synchronized void removePropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
 	getChangeSupport().removePropertyChangeListener(propertyName, listener);
     }
@@ -528,7 +534,9 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
 			    subjectBean.set(propertyName, null);
 			    setterPerformed = true;
 			} else if (isEmpty(values, bufferedValue, stringBinding)) { // otherwise, if there is some text, but autocompleter failed to find a corresponding entity then this should be reported as non-existing entity case
-			    final Result result = new Result(subjectBean, new Exception("Could not find a matching value/values for " + bufferedValue));
+			    final String errorMsg = TitlesDescsGetter.processEntityExistsErrorMsg(propertyName, bufferedValue, subjectBean.getProperty(propertyName).getEntity().getType());
+
+			    final Result result = new Result(subjectBean, new Exception(!StringUtils.isEmpty(errorMsg) ? errorMsg : "Could not find a matching value/values for " + bufferedValue));
 			    // ------ pre-setter logic validation
 			    logger.info("Could not find a matching value/values for " + bufferedValue);
 			    if (!stringBinding) {
@@ -704,6 +712,7 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
 	 * @param evt
 	 *            the property change event to be handled
 	 */
+	@Override
 	public void propertyChange(final PropertyChangeEvent evt) {
 	    if (Boolean.TRUE.equals(evt.getNewValue())) {
 		commit();
@@ -713,18 +722,22 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
 	}
     }
 
+    @Override
     public String getPropertyName() {
 	return propertyName;
     }
 
+    @Override
     public synchronized boolean addOnCommitAction(final IOnCommitAction onCommitAction) {
 	return onCommitActions.add(onCommitAction);
     }
 
+    @Override
     public synchronized boolean removeOnCommitAction(final IOnCommitAction onCommitAction) {
 	return onCommitActions.remove(onCommitAction);
     }
 
+    @Override
     public List<IOnCommitAction> getOnCommitActions() {
 	return Collections.unmodifiableList(onCommitActions);
     }

@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.entity.meta;
 
 import java.beans.PropertyChangeListener;
+
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.*;
+
 import java.beans.PropertyChangeSupport;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -20,12 +23,16 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Mutator;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyTitle;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.NotNullValidator;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
@@ -77,29 +84,26 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     /// Holds an original value of the property.
     ///////////////////////////////////////////////////////
     /**
-     * Original value is always the value retrieved from a data storage.
-     * This means that new entities, which have not been persisted yet, have original values of their properties equal to <code>null</code>
+     * Original value is always the value retrieved from a data storage. This means that new entities, which have not been persisted yet, have original values of their properties
+     * equal to <code>null</code>
      * <p>
-     * In case of properties with default values such definition might be unintuitive at first.
-     * However, the whole notion of default property values specified as an assignment during property field definition does not fit naturally into
-     * the proposed modelling paradigm.
-     * Any property value should be validated before being assigned.
-     * This requires setter invocation, and should be a deliberate act enforced as part of the application logic.
-     * Enforcing validation for default values is not technically difficult, but would introduce a maintenance hurdle for application developers,
-     * where during an evolution of the system the validation logic might change, but default values not updated accordingly.
-     * This would lead to entity instantiation failure.
+     * In case of properties with default values such definition might be unintuitive at first. However, the whole notion of default property values specified as an assignment
+     * during property field definition does not fit naturally into the proposed modelling paradigm. Any property value should be validated before being assigned. This requires
+     * setter invocation, and should be a deliberate act enforced as part of the application logic. Enforcing validation for default values is not technically difficult, but would
+     * introduce a maintenance hurdle for application developers, where during an evolution of the system the validation logic might change, but default values not updated
+     * accordingly. This would lead to entity instantiation failure.
      *
-     * A much preferred approach is to provide a custom entity constructor or instantiation factories in case default property values support is required,
-     * where property values should be set via setters.
-     * The use of factories would provide additional flexibility, where default values could be governed by business logic and a place of entity instantiation.
+     * A much preferred approach is to provide a custom entity constructor or instantiation factories in case default property values support is required, where property values
+     * should be set via setters. The use of factories would provide additional flexibility, where default values could be governed by business logic and a place of entity
+     * instantiation.
      */
     private Object originalValue;
     private Object prevValue;
     private Object lastInvalidValue;
     private int valueChangeCount = 0;
     /**
-     * Indicates whether this property has an assigned value.
-     * This flag is requited due to the fact that the value of null could be assigned making it impossible to identify the fact of value assignment.
+     * Indicates whether this property has an assigned value. This flag is requited due to the fact that the value of null could be assigned making it impossible to identify the
+     * fact of value assignment.
      */
     private boolean assigned = false;
     ///////////////////////////////////////////////////////
@@ -137,9 +141,9 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @param validators
      */
     public MetaProperty(final AbstractEntity<?> entity, final Field field, final Class<?> type, //
-    final boolean isKey, final boolean isCollectional, final Class<?> propertyAnnotationType, final boolean calculated, final boolean upperCase,//
-    final Set<Annotation> validationAnnotations,//
-    final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators, final IAfterChangeEventHandler aceHandler, final String[] dependentPropertyNames) {
+	    final boolean isKey, final boolean isCollectional, final Class<?> propertyAnnotationType, final boolean calculated, final boolean upperCase,//
+	    final Set<Annotation> validationAnnotations,//
+	    final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators, final IAfterChangeEventHandler aceHandler, final String[] dependentPropertyNames) {
 	this.entity = entity;
 	this.name = field.getName();
 	this.type = type;
@@ -151,7 +155,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 	this.propertyAnnotationType = propertyAnnotationType;
 	this.calculated = calculated;
 	this.upperCase = upperCase;
-	this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : new String[]{};
+	this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : new String[] {};
     }
 
     /**
@@ -177,8 +181,12 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 	    if (requiredHandler == null || requiredHandler.size() > 1) {
 		throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
 	    }
-	    final Result result = new Result(getEntity(), new IllegalArgumentException("Required property " + (StringUtils.isEmpty(getTitle()) ? name : getTitle())
-		    + " is not specified for entity " + TitlesDescsGetter.getEntityTitleAndDesc(getEntity().getType()).getKey()));
+
+	    final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
+
+	    final Result result = new Result(getEntity(), new IllegalArgumentException(StringUtils.isEmpty(reqErrorMsg) ? "Required property "
+		    + (StringUtils.isEmpty(getTitle()) ? name : getTitle()) + " is not specified for entity "
+		    + getEntityTitleAndDesc(getEntity().getType()).getKey() : reqErrorMsg));
 	    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), result);
 	    return result;
 	} else {
@@ -439,9 +447,13 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 		if (!getValidators().containsKey(ValidationAnnotation.REQUIRED)) {
 		    throw new IllegalArgumentException("There are no REQUIRED validation annotation pair for required property!");
 		}
-		setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(getEntity(), new IllegalArgumentException("Required property "
+
+		final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
+
+		setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(getEntity(),
+			new IllegalArgumentException(StringUtils.isEmpty(reqErrorMsg) ? "Required property "
 			+ (StringUtils.isEmpty(getTitle()) ? name : getTitle()) + " is not specified for entity "
-			+ TitlesDescsGetter.getEntityTitleAndDesc(getEntity().getType()).getKey())));
+			+ getEntityTitleAndDesc(getEntity().getType()).getKey() : reqErrorMsg)));
 		return false;
 	    }
 	}
@@ -781,11 +793,10 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     }
 
     /**
-     * Convenient method that returns either property value (if property validation passed successfully) or
-     * {@link #getLastInvalidValue()} (if property validation idn't pass).
+     * Convenient method that returns either property value (if property validation passed successfully) or {@link #getLastInvalidValue()} (if property validation idn't pass).
      * <p>
-     * A special care is taken for properties with default values assigned at the field level.
-     * This method returns <code>original value</code> for properties that are valid and not assigned.
+     * A special care is taken for properties with default values assigned at the field level. This method returns <code>original value</code> for properties that are valid and not
+     * assigned.
      *
      * @return
      */
@@ -1047,6 +1058,6 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @return
      */
     public IAfterChangeEventHandler getAceHandler() {
-        return aceHandler;
+	return aceHandler;
     }
 }
