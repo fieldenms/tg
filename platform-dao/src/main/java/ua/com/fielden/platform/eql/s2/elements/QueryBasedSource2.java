@@ -41,15 +41,15 @@ public class QueryBasedSource2 extends AbstractSource2 {
 	}
     }
 
-    private boolean getYieldNullability(final String yieldAlias) {
-	final boolean result = false;
-	for (final Yield2 yield : yieldsMatrix.get(yieldAlias)) {
-	    if (false/*yield.getInfo().isNullable()*/) {
-		return true;
-	    }
-	}
-	return result;
-    }
+//    private boolean getYieldNullability(final String yieldAlias) {
+//	final boolean result = false;
+//	for (final Yield2 yield : yieldsMatrix.get(yieldAlias)) {
+//	    if (false/*yield.getInfo().isNullable()*/) {
+//		return true;
+//	    }
+//	}
+//	return result;
+//    }
 
     private void validateYieldsMatrix() {
 	for (final Map.Entry<String, List<Yield2>> entry : yieldsMatrix.entrySet()) {

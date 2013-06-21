@@ -12,14 +12,18 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.s1.elements.Expression1;
+import ua.com.fielden.platform.eql.s2.elements.ComparisonTest2;
 import ua.com.fielden.platform.eql.s2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.s2.elements.Conditions2;
 import ua.com.fielden.platform.eql.s2.elements.EntProp2;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.s2.elements.EntQueryBlocks2;
+import ua.com.fielden.platform.eql.s2.elements.EntValue2;
 import ua.com.fielden.platform.eql.s2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.s2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.s2.elements.ICondition2;
@@ -141,7 +145,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 	final Sources2 sources = new Sources2(source, Collections.<CompoundSource2>emptyList());
 	final List<List<ICondition2>> allConditions = new ArrayList<>();
 	final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-	firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, false, metadata.get(TgAuthor.class).resolve("surname"), null), true));
+	firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, metadata.get(TgAuthor.class).resolve("surname"), null), true));
 	allConditions.add(firstAndConditionsGroup);
 	final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -159,7 +163,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 	final Sources2 sources = new Sources2(source, Collections.<CompoundSource2>emptyList());
 	final List<List<ICondition2>> allConditions = new ArrayList<>();
 	final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-	firstAndConditionsGroup.add(new NullTest2(new EntProp2("a.surname", source, true, metadata.get(TgAuthor.class).resolve("surname"), null), true));
+	firstAndConditionsGroup.add(new NullTest2(new EntProp2("a.surname", source, metadata.get(TgAuthor.class).resolve("surname"), null), true));
 	allConditions.add(firstAndConditionsGroup);
 	final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -167,7 +171,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 	final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, QueryCategory.RESULT_QUERY, null);
 	assertEquals(qry2, exp);
     }
-
 
     @Test
     public void test_q3() {
@@ -178,7 +181,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 	final Sources2 sources = new Sources2(source, Collections.<CompoundSource2>emptyList());
 	final List<List<ICondition2>> allConditions = new ArrayList<>();
 	final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-	firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, false, metadata.get(TgAuthor.class).resolve("surname"), null), true));
+	firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, metadata.get(TgAuthor.class).resolve("surname"), null), true));
 	allConditions.add(firstAndConditionsGroup);
 	final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -188,13 +191,115 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    public void test0b() {
-	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id").where().prop("lastRoyalty").isNotNull().model();
+    public void test_q4() {
+	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param").model();
 	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+
+	final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
+	final Sources2 sources = new Sources2(source, Collections.<CompoundSource2>emptyList());
+	final List<List<ICondition2>> allConditions = new ArrayList<>();
+	final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+	firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, metadata.get(TgAuthor.class).resolve("surname"), null), true));
+	allConditions.add(firstAndConditionsGroup);
+	final Conditions2 conditions = new Conditions2(false, allConditions);
+
+	final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2>emptyList()), new OrderBys2(null));
+	final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, QueryCategory.RESULT_QUERY, null);
+	assertEquals(qry2, exp);
+    }
+
+    @Test
+    public void test_q5() {
+	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").eq().param("param").model();
+	final Map<String, Object> params = new HashMap<>();
+	params.put("param", 1);
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, params, DOMAIN_METADATA));
+
+	final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
+	final Sources2 sources = new Sources2(source, Collections.<CompoundSource2>emptyList());
+	final List<List<ICondition2>> allConditions = new ArrayList<>();
+	final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+	firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("surname", source, metadata.get(TgAuthor.class).resolve("surname"), null), ComparisonOperator.EQ,
+		new EntValue2(1)));
+	allConditions.add(firstAndConditionsGroup);
+	final Conditions2 conditions = new Conditions2(false, allConditions);
+
+	final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2>emptyList()), new OrderBys2(null));
+	final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, QueryCategory.RESULT_QUERY, null);
+	assertEquals(exp, qry2);
+    }
+
+    @Test
+    public void test0b() {
+	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
+		where().prop("surname").eq().val(1).model();
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+
+	final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
+	final TypeBasedSource2 source2 = new TypeBasedSource2(TgPersonName.class);
+
+	final List<List<ICondition2>> allConditions = new ArrayList<>();
+	final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+	firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("name", source, metadata.get(TgAuthor.class).resolve("name"), null), ComparisonOperator.EQ,
+		new EntProp2("pn.id", source2, metadata.get(TgPersonName.class).resolve("id"), null)));
+	allConditions.add(firstAndConditionsGroup);
+	final Conditions2 joinConditions = new Conditions2(false, allConditions);
+
+
+	final CompoundSource2 compound = new CompoundSource2(source2, JoinType.LJ, joinConditions);
+	final List<CompoundSource2> compounds = new ArrayList<>();
+	compounds.add(compound);
+	final Sources2 sources = new Sources2(source, compounds);
+	final List<List<ICondition2>> allConditions2 = new ArrayList<>();
+	final List<ICondition2> firstAndConditionsGroup2 = new ArrayList<>();
+	firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("surname", source, metadata.get(TgAuthor.class).resolve("surname"), null), ComparisonOperator.EQ,
+		new EntValue2(1)));
+	allConditions2.add(firstAndConditionsGroup2);
+	final Conditions2 conditions = new Conditions2(false, allConditions2);
+
+	final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2>emptyList()), new OrderBys2(null));
+	final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, QueryCategory.RESULT_QUERY, null);
+	assertEquals(exp, qry2);
+
     }
 
     @Test
     @Ignore
+    public void test0b1() {
+	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
+		where().prop("lastRoyalty").eq().val(1).model();
+	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+
+	final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
+	final TypeBasedSource2 source2 = new TypeBasedSource2(TgPersonName.class);
+
+	final List<List<ICondition2>> allConditions = new ArrayList<>();
+	final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+	firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("name", source, metadata.get(TgAuthor.class).resolve("name"), null), ComparisonOperator.EQ,
+		new EntProp2("pn.id", source2, metadata.get(TgPersonName.class).resolve("id"), null)));
+	allConditions.add(firstAndConditionsGroup);
+	final Conditions2 joinConditions = new Conditions2(false, allConditions);
+
+
+	final CompoundSource2 compound = new CompoundSource2(source2, JoinType.LJ, joinConditions);
+	final List<CompoundSource2> compounds = new ArrayList<>();
+	compounds.add(compound);
+	final Sources2 sources = new Sources2(source, compounds);
+	final List<List<ICondition2>> allConditions2 = new ArrayList<>();
+	final List<ICondition2> firstAndConditionsGroup2 = new ArrayList<>();
+	firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("lastRoyalty", source, metadata.get(TgAuthor.class).resolve("lastRoyalty"), null), ComparisonOperator.EQ,
+		new EntValue2(1)));
+	allConditions2.add(firstAndConditionsGroup2);
+	final Conditions2 conditions = new Conditions2(false, allConditions2);
+
+	final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2>emptyList()), new OrderBys2(null));
+	final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, QueryCategory.RESULT_QUERY, null);
+	assertEquals(exp, qry2);
+
+    }
+
+    @Test
+    //@Ignore
     public void test0c() {
 	final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).as("pn").where().prop("lastRoyalty").isNotNull().model();
 	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
@@ -248,7 +353,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     public void test6() {
 	final EntityResultQueryModel<TgAuthorship> qry = select(select(TgAuthorRoyalty.class).where().prop("authorship.author.surname").isNotNull().yield().prop("authorship.author").modelAsEntity(TgAuthorship.class)).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model();
 	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
-	System.out.println("---------");
 	for (final EntProp2 prop : qry2.getSources().getMain().props()) {
 	    System.out.println("---: " + prop);
 	}
@@ -258,7 +362,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     public void test7() {
 	final AggregatedResultQueryModel qry = select(select(TgAuthorship.class).where().prop("bookTitle").isNotNull().yield().prop("author").as("author").yield().prop("bookTitle").as("title").modelAsAggregate()).where().prop("title").isNotNull().or().begin().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").end().yield().prop("author.name.key").as("name").yield().prop("title").as("titel").modelAsAggregate();
 	final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
-	System.out.println("---------");
 	for (final EntProp2 prop : qry2.getSources().getMain().props()) {
 	    System.out.println("---: " + prop);
 	}

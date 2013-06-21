@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 
 
@@ -67,10 +64,5 @@ public class ComparisonTest2 extends AbstractCondition2 {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    protected List<IElement2> getCollection() {
-	return new ArrayList<IElement2>(){{add(leftOperand); add(rightOperand);}};
     }
 }

@@ -58,6 +58,8 @@ public class TransformatorToS2 {
 	}
     }
 
+
+    // TODO EQL
 //    protected List<ISingleOperand1<? extends ISingleOperand2>> getModelForArrayParam(final TokenCategory cat, final Object value) {
 //	final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
 //	final Object paramValue = getParamValue((String) value);
@@ -121,7 +123,6 @@ public class TransformatorToS2 {
     }
 
     public void addSource(final ISource1<? extends ISource2> source) {
-	System.out.println("              sourceType = " + source.sourceType() + "; " + metadata.get(source.sourceType()));
 	final ISource2 transformedSource = transformSource(source);
 	if (EntityAggregates.class.equals(transformedSource.sourceType())) {
 	    final EntityInfo entAggEntityInfo = new EntityInfo(EntityAggregates.class);
@@ -217,7 +218,7 @@ public class TransformatorToS2 {
     private EntProp2 generateTransformedProp(final PropResolution resolution) {
 	final AbstractPropInfo propInfo = resolution.resolution;
 	final Expression2 expr = propInfo.getExpression() != null ? propInfo.getExpression().transform(this.produceOneForCalcPropExpression(resolution.source)) : null;
-	return new EntProp2(resolution.entProp.getName(), resolution.source, resolution.aliased, resolution.resolution, expr);
+	return new EntProp2(resolution.entProp.getName(), resolution.source, resolution.resolution, expr);
     }
 
     public static class PropResolution {

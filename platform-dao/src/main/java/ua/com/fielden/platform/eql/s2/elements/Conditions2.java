@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Conditions2 extends AbstractCondition2 {
@@ -10,18 +9,6 @@ public class Conditions2 extends AbstractCondition2 {
     public Conditions2(final boolean negated, final List<List<ICondition2>> allConditions) {
 	this.allConditions = allConditions;
 	this.negated = negated;
-    }
-
-    @Override
-    protected List<IElement2> getCollection() {
-	final List<IElement2> result = new ArrayList<IElement2>();
-
-	for (final List<ICondition2> compoundCondition : allConditions) {
-	    for (final ICondition2 iCondition1 : compoundCondition) {
-		result.add(iCondition1);
-	    }
-	}
-	return result;
     }
 
     @Override

@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.ArrayList;
-import java.util.List;
-
-
 
 public class NullTest2 extends AbstractCondition2 {
     private final ISingleOperand2 operand;
@@ -16,7 +12,7 @@ public class NullTest2 extends AbstractCondition2 {
 
     @Override
     public String toString() {
-        return (negated ? " NOT " : " ") + operand;
+	return (negated ? " NOT " : " ") + operand;
     }
 
     @Override
@@ -61,10 +57,5 @@ public class NullTest2 extends AbstractCondition2 {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    protected List<IElement2> getCollection() {
-	return new ArrayList<IElement2>(){{add(operand);}};
     }
 }

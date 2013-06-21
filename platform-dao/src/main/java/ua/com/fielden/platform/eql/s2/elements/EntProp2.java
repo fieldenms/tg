@@ -4,25 +4,21 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 
 public class EntProp2 implements ISingleOperand2 {
     private final String name;
-    private final boolean aliased;
     private final ISource2 source;
     private final AbstractPropInfo resolution;
     private final Expression2 expression;
 
-
-    public EntProp2(final String name, final ISource2 source, final boolean aliased, final AbstractPropInfo resolution, final Expression2 expression) {
+    public EntProp2(final String name, final ISource2 source, final AbstractPropInfo resolution, final Expression2 expression) {
         this.name = name;
         this.source = source;
-        this.aliased = aliased;
         this.resolution = resolution;
         this.expression = expression;
         source.addProp(this);
-        //System.out.println(toString());
     }
 
     @Override
     public String toString() {
-        return " name = " + name + "; source = " + source + "; aliased = " + aliased + "; resolution = " + resolution;
+        return " name = " + name + "; source = " + source + "; resolution = " + resolution;
     }
 
     @Override
@@ -43,7 +39,6 @@ public class EntProp2 implements ISingleOperand2 {
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + (aliased ? 1231 : 1237);
 	result = prime * result + ((expression == null) ? 0 : expression.hashCode());
 	result = prime * result + ((name == null) ? 0 : name.hashCode());
 	result = prime * result + ((resolution == null) ? 0 : resolution.hashCode());
@@ -65,11 +60,7 @@ public class EntProp2 implements ISingleOperand2 {
 	    return false;
 	}
 	final EntProp2 other = (EntProp2) obj;
-	if (aliased != other.aliased) {
-	    System.out.println("entProp 3");
-	    return false;
-	}
-	if (expression == null) {
+       	if (expression == null) {
 	    if (other.expression != null) {
 		System.out.println("entProp 4");
 		return false;

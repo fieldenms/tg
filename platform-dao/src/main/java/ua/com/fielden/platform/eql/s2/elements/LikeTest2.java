@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class LikeTest2 extends AbstractCondition2 {
@@ -66,10 +64,5 @@ public class LikeTest2 extends AbstractCondition2 {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    protected List<IElement2> getCollection() {
-	return new ArrayList<IElement2>(){{add(leftOperand); add(rightOperand);}};
     }
 }

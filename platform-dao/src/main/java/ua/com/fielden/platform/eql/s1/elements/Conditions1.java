@@ -35,24 +35,20 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 	final List<List<ICondition1<? extends ICondition2>>> result = new ArrayList<>();
 	List<ICondition1<? extends ICondition2>> currGroup = new ArrayList<ICondition1<? extends ICondition2>>();
 
-	if (firstCondition != null/* && !firstCondition.ignore()*/) {
+	if (firstCondition != null) {
 	    currGroup.add(firstCondition);
 	}
 
 	for (final CompoundCondition1 compoundCondition : otherConditions) {
 	    if (compoundCondition.getLogicalOperator() == LogicalOperator.AND) {
-		//if (!compoundCondition.getCondition().ignore()) {
-		    currGroup.add(compoundCondition.getCondition());
-		//}
+		currGroup.add(compoundCondition.getCondition());
 	    } else {
 		if (currGroup.size() > 0) {
 		    result.add(currGroup);
 		}
 
 		currGroup = new ArrayList<ICondition1<? extends ICondition2>>();
-		//if (!compoundCondition.getCondition().ignore()) {
-		    currGroup.add(compoundCondition.getCondition());
-		//}
+		currGroup.add(compoundCondition.getCondition());
 	    }
 	}
 
@@ -132,5 +128,4 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
 	}
 	return true;
     }
-
 }

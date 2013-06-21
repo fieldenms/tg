@@ -4,11 +4,6 @@ import java.util.List;
 
 
 public interface ISource2 {
-    /**
-     * Represents business alias of the query source
-     *
-     * @return
-     */
     void addProp(EntProp2 prop);
 
     List<EntProp2> props();
@@ -20,6 +15,4 @@ public interface ISource2 {
      * @return
      */
     Class sourceType();
-
-    //List<EntValue2> getValues();
 }
