@@ -210,7 +210,8 @@ public class TitlesDescsGetter {
 		errorMsg = "";
 	    }
 	} else {
-	    errorMsg = AnnotationReflector.getPropertyAnnotation(Required.class, entityType, propName).value();
+	    final Required anRequired = AnnotationReflector.getPropertyAnnotation(Required.class, entityType, propName);
+	    errorMsg = anRequired != null ? anRequired.value() : "";
 	}
 	// template processing
 	if (!StringUtils.isEmpty(errorMsg)) {
