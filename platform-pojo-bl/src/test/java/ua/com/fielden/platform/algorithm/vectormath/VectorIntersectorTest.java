@@ -27,13 +27,13 @@ public class VectorIntersectorTest {
     @Test
     public void test_tangent_intersection_in_primary_end() {
 	assertEquals("Should be equal.", new Pair<>(true, new Pair<>(v(3), v(-3))),
-		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(2), v(-1), v(4), v(-5)));
+		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(1), v(-3), v(4), v(-3)));
     }
 
     @Test
     public void test_tangent_not_intersection_in_primary_end() {
 	assertEquals("Should be equal.", new Pair<>(false, null),
-		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(1), v(-3), v(4), v(-3)));
+		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(2), v(-1), v(4), v(-5)));
     }
 
     @Test
@@ -46,13 +46,13 @@ public class VectorIntersectorTest {
     @Test
     public void test_tangent_intersection_in_primary_start() {
 	assertEquals("Should be equal.", new Pair<>(true, new Pair<>(v(1), v(-2))),
-		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(1), v(-2), v(0), v(-2)));
+		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(1), v(-2), v(0), v(-1)));
     }
 
     @Test
     public void test_tangent_not_intersection_in_primary_start() {
 	assertEquals("Should be equal.", new Pair<>(false, null),
-		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(1), v(-2), v(0), v(-1)));
+		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(1), v(-2), v(0), v(-2)));
     }
 
     @Test
@@ -65,13 +65,13 @@ public class VectorIntersectorTest {
     @Test
     public void test_intersection_in_the_middle() {
 	assertEquals("Should be equal.", new Pair<>(true, new Pair<>(v(2), BigDecimal.valueOf(-2.5).setScale(15, RoundingMode.HALF_UP))),
-		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(3), v(-1), v(1), v(-4)));
+		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(1), v(-3), v(3), v(-2)));
     }
 
     @Test
     public void test_not_intersection_in_the_middle() {
 	assertEquals("Should be equal.", new Pair<>(false, null),
-		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(1), v(-3), v(3), v(-1)));
+		VectorIntersector.intersect(v(1), v(-2), v(3), v(-3), v(3), v(-1), v(1), v(-4)));
     }
 
     @Test

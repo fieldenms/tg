@@ -27,7 +27,7 @@ public class VectorIntersector {
 	final Vector s = qEnd.sub(q);
 
 	final BigDecimal crossRandSProduct = r.crossProduct(s);
-	if (crossRandSProduct.compareTo(BigDecimal.ZERO) >= 0) { // parallel or bad intersection angle > 180
+	if (crossRandSProduct.compareTo(BigDecimal.ZERO) <= 0) { // parallel or bad intersection angle > 180
 	    return new Pair<>(false, null);
 	}
 	final Vector qSubP = q.sub(p);

@@ -63,4 +63,16 @@ public class VectorTest {
 	assertEquals("Should be equal.", v(-1), v(1, 1).crossProduct(v(1, 0)));
     }
 
+    @Test
+    public void test_cross_product2() {
+	assertEquals("Should be equal.", v(0), v(0, 1).crossProduct(v(0, 1)));
+	assertEquals("Should be equal.", v(1), v(0, 1).crossProduct(v(-1, 1)));
+	assertEquals("Should be equal.", v(1), v(0, 1).crossProduct(v(-1, 0)));
+	assertEquals("Should be equal.", v(1), v(0, 1).crossProduct(v(-1, -1)));
+	assertEquals("Should be equal.", v(0), v(0, 1).crossProduct(v(0, -1)));
+	assertEquals("Should be equal.", v(-1), v(0, 1).crossProduct(v(1, -1)));
+	assertEquals("Should be equal.", v(-1), v(0, 1).crossProduct(v(1, 0)));
+	assertEquals("Should be equal.", v(-1), v(0, 1).crossProduct(v(1, 1)));
+    }
+
 }
