@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
@@ -9,8 +8,8 @@ import ua.com.fielden.platform.eql.s2.elements.TypeBasedSource2;
 public class TypeBasedSource1 extends AbstractSource1<TypeBasedSource2> {
     private EntityMetadata<? extends AbstractEntity<?>> entityMetadata;
 
-    public TypeBasedSource1(final EntityMetadata<? extends AbstractEntity<?>> entityMetadata, final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
-	super(alias, domainMetadataAnalyser);
+    public TypeBasedSource1(final EntityMetadata<? extends AbstractEntity<?>> entityMetadata, final String alias) {
+	super(alias);
 	this.entityMetadata = entityMetadata;
 	if (entityMetadata == null) {
 	    throw new IllegalStateException("Missing entity persistence metadata for entity type: " + sourceType());

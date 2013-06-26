@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.eql.s2.elements.ISource2;
 
 public abstract class AbstractSource1<S2 extends ISource2> implements ISource1<S2> {
@@ -10,24 +9,13 @@ public abstract class AbstractSource1<S2 extends ISource2> implements ISource1<S
      */
     protected final String alias;
 
-    /**
-     * Reference to mappings generator instance - used for acquiring properties persistence infos.
-     */
-    private final DomainMetadataAnalyser domainMetadataAnalyser;
-
-    public AbstractSource1(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
+    public AbstractSource1(final String alias) {
         this.alias = alias;
-        this.domainMetadataAnalyser = domainMetadataAnalyser;
     }
 
     @Override
     public String getAlias() {
         return alias;
-    }
-
-
-    public DomainMetadataAnalyser getDomainMetadataAnalyser() {
-        return domainMetadataAnalyser;
     }
 
     @Override

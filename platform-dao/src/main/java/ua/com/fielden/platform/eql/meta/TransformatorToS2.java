@@ -178,7 +178,7 @@ public class TransformatorToS2 {
 		transformed.add(entQuery.transform(produceNewOne()));
 	    }
 
-	    return new QueryBasedSource2(originalSource.getAlias(), source.getDomainMetadataAnalyser(), transformed.toArray(new EntQuery2[] {}));
+	    return new QueryBasedSource2(originalSource.getAlias(), transformed.toArray(new EntQuery2[] {}));
 	}
     }
 

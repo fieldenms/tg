@@ -50,28 +50,41 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 	final EntityInfo tgAuthor = new EntityInfo(TgAuthor.class);
 	final EntityInfo tgAuthorship = new EntityInfo(TgAuthorship.class);
 	final EntityInfo tgAuthorRoyalty = new EntityInfo(TgAuthorRoyalty.class);
-	tgPersonName.getProps().put("id", new PrimTypePropInfo("id", tgPersonName, Long.class, null));
-	tgPersonName.getProps().put("key", new PrimTypePropInfo("key", tgPersonName, String.class, null));
-	tgAuthor.getProps().put("id", new PrimTypePropInfo("id", tgAuthor, Long.class, null));
+
+	new PrimTypePropInfo("id", tgPersonName, Long.class, null);
+	new PrimTypePropInfo("key", tgPersonName, String.class, null);
+	new PrimTypePropInfo("id", tgAuthor, Long.class, null);
 
 	final Expression1 expr = entQryExpression(expr().model(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("id").model()).model());
-	// TODO EQL
-	//final Expression1 expr = entQryExpression(expr().model(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("author").model()).model());
-	tgAuthor.getProps().put("lastRoyalty", new EntityTypePropInfo("lastRoyalty", tgAuthor, tgAuthorRoyalty, expr));
-	tgAuthor.getProps().put("key", new PrimTypePropInfo("key", tgAuthor, String.class, null));
-	tgAuthor.getProps().put("name", new EntityTypePropInfo("name", tgAuthor, tgPersonName, null));
-	tgAuthor.getProps().put("surname", new PrimTypePropInfo("surname", tgAuthor, String.class, null));
-	tgAuthorship.getProps().put("id", new PrimTypePropInfo("id", tgAuthorship, Long.class, null));
-	tgAuthorship.getProps().put("key", new PrimTypePropInfo("key", tgAuthorship, String.class, null));
-	tgAuthorship.getProps().put("author", new EntityTypePropInfo("author", tgAuthorship, tgAuthor, null));
-	tgAuthorship.getProps().put("bookTitle", new PrimTypePropInfo("bookTitle", tgAuthorship, String.class, null));
-	tgAuthorRoyalty.getProps().put("id", new PrimTypePropInfo("id", tgAuthorRoyalty, Long.class, null));
-	tgAuthorRoyalty.getProps().put("authorship", new EntityTypePropInfo("authorship", tgAuthorRoyalty, tgAuthorship, null));
-	tgAuthorRoyalty.getProps().put("paymentDate", new PrimTypePropInfo("paymentDate", tgAuthorRoyalty, Date.class, null));
+	// TODO EQL final Expression1 expr = entQryExpression(expr().model(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("author").model()).model());
+	new EntityTypePropInfo("lastRoyalty", tgAuthor, tgAuthorRoyalty, expr);
+	new PrimTypePropInfo("key", tgAuthor, String.class, null);
+	new EntityTypePropInfo("name", tgAuthor, tgPersonName, null);
+	new PrimTypePropInfo("surname", tgAuthor, String.class, null);
+
+	new PrimTypePropInfo("id", tgAuthorship, Long.class, null);
+	new PrimTypePropInfo("key", tgAuthorship, String.class, null);
+	new EntityTypePropInfo("author", tgAuthorship, tgAuthor, null);
+	new PrimTypePropInfo("bookTitle", tgAuthorship, String.class, null);
+
+	new PrimTypePropInfo("id", tgAuthorRoyalty, Long.class, null);
+	new EntityTypePropInfo("authorship", tgAuthorRoyalty, tgAuthorship, null);
+	new PrimTypePropInfo("paymentDate", tgAuthorRoyalty, Date.class, null);
+
 	metadata.put(TgPersonName.class, tgPersonName);
 	metadata.put(TgAuthor.class, tgAuthor);
 	metadata.put(TgAuthorship.class, tgAuthorship);
 	metadata.put(TgAuthorRoyalty.class, tgAuthorRoyalty);
+
+//	final Set<Class<? extends AbstractEntity<?>>> entities = new HashSet<>();
+//	entities.add(TgPersonName.class);
+//	entities.add(TgAuthor.class);
+//	entities.add(TgAuthorship.class);
+//	entities.add(TgAuthorRoyalty.class);
+//
+//
+//	metadata.putAll(MetadataGenerator.generate(entities));
+
 	System.out.println("--------------------------------------------------- START ---------------------------------------------------");
     }
 

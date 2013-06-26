@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-
 public class QueryBasedSource2 extends AbstractSource2 {
     private final List<EntQuery2> models;
     private final Map<String, List<Yield2>> yieldsMatrix = new HashMap<String, List<Yield2>>();
@@ -16,7 +14,7 @@ public class QueryBasedSource2 extends AbstractSource2 {
 	return models.get(0);
     }
 
-    public QueryBasedSource2(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final EntQuery2... models) {
+    public QueryBasedSource2(final String alias, final EntQuery2... models) {
 	if (models == null || models.length == 0) {
 	    throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
 	}

@@ -48,7 +48,7 @@ public class QrySourceBuilder1 extends AbstractTokensBuilder1 {
 	final Class<AbstractEntity<?>> resultType = (Class) firstValue();
 	final EntityMetadata entityMetadata = getQueryBuilder().getDomainMetadataAnalyser().getEntityMetadata(resultType);
 	if (entityMetadata.isPersisted()) {
-	    return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource1(entityMetadata, (String) secondValue(), getQueryBuilder().getDomainMetadataAnalyser()));
+	    return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource1(entityMetadata, (String) secondValue()));
 	} else {
 	    final List<QueryModel> readyModels = new ArrayList<QueryModel>();
 	    readyModels.addAll(entityMetadata.getModels());
@@ -65,7 +65,7 @@ public class QrySourceBuilder1 extends AbstractTokensBuilder1 {
 	    queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, resultType));
 	}
 
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new QueryBasedSource1(alias, getQueryBuilder().getDomainMetadataAnalyser(), queries.toArray(new EntQuery1[]{})));
+	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new QueryBasedSource1(alias, queries.toArray(new EntQuery1[]{})));
     }
 
     @Override
