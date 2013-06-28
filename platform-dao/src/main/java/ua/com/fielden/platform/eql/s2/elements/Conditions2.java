@@ -12,6 +12,11 @@ public class Conditions2 extends AbstractCondition2 {
     }
 
     @Override
+    public String toString() {
+        return (negated ? " NOT " : "") + allConditions;
+    }
+
+    @Override
     public boolean ignore() {
 	return allConditions.size() == 0;
     }

@@ -28,29 +28,24 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator1 {
     private final DomainMetadataAnalyser domainMetadataAnalyser;
-    private final IFilter filter;
-    private final String username;
 
-    public EntQueryGenerator1(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
+    public EntQueryGenerator1(final DomainMetadataAnalyser domainMetadataAnalyser) {
 	this.domainMetadataAnalyser = domainMetadataAnalyser;
-	this.filter = filter;
-	this.username = username;
     }
 
     public EntQuery1 generateEntQueryAsResultQuery(final QueryExecutionModel<?, ?> qem) {
-	return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), null, qem.getFetchModel(), QueryCategory.RESULT_QUERY, filter, username);
+	return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), null, qem.getFetchModel(), QueryCategory.RESULT_QUERY);
     }
 
     public EntQuery1 generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Class resultType) {
-	return generateEntQuery(qryModel, null, resultType, null, QueryCategory.SOURCE_QUERY, filter, username);
+	return generateEntQuery(qryModel, null, resultType, null, QueryCategory.SOURCE_QUERY);
     }
 
     public EntQuery1 generateEntQueryAsSubquery(final QueryModel<?> qryModel) {
-	return generateEntQuery(qryModel, null, null, null, QueryCategory.SUB_QUERY, filter, username);
+	return generateEntQuery(qryModel, null, null, null, QueryCategory.SUB_QUERY);
     }
 
-    public EntQueryBlocks1 parseTokensIntoComponents(final boolean filterable, final IFilter filter, //
-	    final String username, final QueryModel<?> qryModel, //
+    public EntQueryBlocks1 parseTokensIntoComponents(final QueryModel<?> qryModel, //
 	    final OrderingModel orderModel, //
 	    final fetch fetchModel) {
 	final QrySourcesBuilder1 from = new QrySourcesBuilder1(this);
@@ -89,11 +84,11 @@ public class EntQueryGenerator1 {
 	}
 
 	final Sources1 sources = from.getModel();
-	final Conditions1 conditions = where.getModel();
-	final Conditions1 enhancedConditions = filterable ? enhanceConditions(conditions, filter, username, sources.getMain(), this) : conditions;
+//	final Conditions1 conditions = where.getModel();
+//	final Conditions1 enhancedConditions = filterable ? enhanceConditions(conditions, filter, username, sources.getMain(), this) : conditions;
 
 	return new EntQueryBlocks1(sources, //
-		enhancedConditions, //
+		where.getModel(), //enhancedConditions, //
 	select.getModel(), //
 	groupBy.getModel(), //
 	produceOrderBys(orderModel));
@@ -121,15 +116,13 @@ public class EntQueryGenerator1 {
 	    final OrderingModel orderModel, //
 	    final Class resultType, //
 	    final fetch fetchModel, //
-	    final QueryCategory category, //
-	    final IFilter filter, //
-	    final String username) {
+	    final QueryCategory category) {
 
 	return new EntQuery1( //
-		parseTokensIntoComponents(qryModel.isFilterable(), filter, username, qryModel, orderModel, fetchModel), //
+		parseTokensIntoComponents(qryModel, orderModel, fetchModel), //
 		resultType != null ? resultType : qryModel.getResultType(), //
 		category, //
-		fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser));
+		fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), qryModel.isFilterable());
     }
 
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {

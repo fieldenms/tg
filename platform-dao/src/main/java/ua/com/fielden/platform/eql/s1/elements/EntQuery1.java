@@ -1,9 +1,17 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ua.com.fielden.platform.entity.query.FetchModel;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s1.processing.EntQueryBlocks1;
+import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
+import ua.com.fielden.platform.eql.s1.processing.StandAloneConditionBuilder1;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.s2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.s2.elements.ISource2;
@@ -19,6 +27,8 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     private final Class resultType;
     private final QueryCategory category;
     private final FetchModel fetchModel;
+
+    private final boolean filterable;
 
     private boolean isSubQuery() {
         return QueryCategory.SUB_QUERY.equals(category);
@@ -44,6 +54,23 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
         return sb.toString();
     }
 
+    private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
+	    final String username, final ISource1<? extends ISource2> mainSource, final EntQueryGenerator1 generator) {
+	if (mainSource instanceof TypeBasedSource1 && filter != null) {
+	    final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
+	    if (filteringCondition == null) {
+		return originalConditions;
+	    }
+	    //logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
+	    final List<CompoundCondition1> others = new ArrayList<>();
+	    others.add(new CompoundCondition1(LogicalOperator.AND, originalConditions));
+	    final Conditions1 filteringConditions = new StandAloneConditionBuilder1(generator, filteringCondition, false).getModel();
+	    return originalConditions.isEmpty() ? filteringConditions : new Conditions1(false, filteringConditions, others);
+	} else {
+	    return originalConditions;
+	}
+    }
+
     @Override
     public EntQuery2 transform(final TransformatorToS2 resolver) {
 	final TransformatorToS2 localResolver = resolver.produceBasedOn();
@@ -52,15 +79,17 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 	    localResolver.addSource(source);
 	}
 
-	final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), conditions.transform(localResolver), //
+	final Conditions1 enhancedConditions = enhanceConditions(conditions, resolver.getFilter(), resolver.getUsername(), sources.getMain(), resolver.getEntQueryGenerator1());
+	final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), enhancedConditions.transform(localResolver), //
 		yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
 
 	return new EntQuery2(entQueryBlocks, resultType, category, fetchModel);
     }
 
     public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class resultType, final QueryCategory category, //
-	    final FetchModel fetchModel) {
+	    final FetchModel fetchModel, final boolean filterable) {
         super();
+        this.filterable = filterable;
         this.category = category;
         this.fetchModel = fetchModel;
         this.sources = queryBlocks.getSources();

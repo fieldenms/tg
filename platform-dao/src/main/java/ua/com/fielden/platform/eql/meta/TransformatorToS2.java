@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.eql.s1.elements.EntParam1;
 import ua.com.fielden.platform.eql.s1.elements.EntProp1;
 import ua.com.fielden.platform.eql.s1.elements.EntQuery1;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.eql.s1.elements.EntValue1;
 import ua.com.fielden.platform.eql.s1.elements.ISource1;
 import ua.com.fielden.platform.eql.s1.elements.QueryBasedSource1;
 import ua.com.fielden.platform.eql.s1.elements.TypeBasedSource1;
+import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
 import ua.com.fielden.platform.eql.s2.elements.EntProp2;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.s2.elements.EntValue2;
@@ -32,12 +34,19 @@ public class TransformatorToS2 {
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata;
     private final Map<String, Object> paramValues = new HashMap<>();
     private final DomainMetadata domainData;
+    private final IFilter filter;
+    private final String username;
+    private final EntQueryGenerator1 entQueryGenerator1;
 
-    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final DomainMetadata domainData) {
+
+    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final DomainMetadata domainData, final IFilter filter, final String username, final EntQueryGenerator1 entQueryGenerator1) {
 	this.metadata = metadata;
 	sourceMap.add(new HashMap<ISource1<? extends ISource2>, SourceInfo>());
 	this.paramValues.putAll(paramValues);
 	this.domainData = domainData;
+	this.filter = filter;
+	this.username = username;
+	this.entQueryGenerator1 = entQueryGenerator1;
     }
 
     static class SourceInfo {
@@ -139,19 +148,19 @@ public class TransformatorToS2 {
     }
 
     public TransformatorToS2 produceBasedOn() {
-	final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData);
+	final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData, filter, username, entQueryGenerator1);
 	result.sourceMap.addAll(sourceMap);
 
 	return result;
     }
 
     public TransformatorToS2 produceNewOne() {
-	final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData);
+	final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData, filter, username, entQueryGenerator1);
 	return result;
     }
 
     public TransformatorToS2 produceOneForCalcPropExpression(final ISource2 source) {
-	final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData);
+	final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData, filter, username, entQueryGenerator1);
 	for (final Map<ISource1<? extends ISource2>, SourceInfo> item : sourceMap) {
 	    for (final Entry<ISource1<? extends ISource2>, SourceInfo> mapItem : item.entrySet()) {
 		if (mapItem.getValue().source.equals(source)) {
@@ -268,5 +277,17 @@ public class TransformatorToS2 {
 	}
 
 	return result.size() == 1 ? result.get(0) : null;
+    }
+
+    public IFilter getFilter() {
+        return filter;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public EntQueryGenerator1 getEntQueryGenerator1() {
+        return entQueryGenerator1;
     }
 }

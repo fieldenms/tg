@@ -107,9 +107,9 @@ public class BaseEntQueryTCase1 {
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    private static final EntQueryGenerator1 qb = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, null, null);
+    protected static final EntQueryGenerator1 qb = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER);
 
-    private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
+    //private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery1 entSourceQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSourceQuery(qryModel, null);
@@ -160,15 +160,15 @@ public class BaseEntQueryTCase1 {
 	return qb.generateEntQueryAsSubquery(qryModel);
     }
 
-    protected static EntQuery1 entResultQryWithUserFilter(final QueryModel qryModel) {
-	if (qryModel instanceof EntityResultQueryModel) {
-	    return qbwf.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model());
-	} else if (qryModel instanceof AggregatedResultQueryModel) {
-	    return qbwf.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel)qryModel).model());
-	} else {
-	    throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
-	}
-    }
+//    protected static EntQuery1 entResultQryWithUserFilter(final QueryModel qryModel) {
+//	if (qryModel instanceof EntityResultQueryModel) {
+//	    return qbwf.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model());
+//	} else if (qryModel instanceof AggregatedResultQueryModel) {
+//	    return qbwf.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel)qryModel).model());
+//	} else {
+//	    throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
+//	}
+//    }
 
     protected static EntProp1 prop(final String propName) {
 	return new EntProp1(propName);
@@ -245,12 +245,12 @@ public class BaseEntQueryTCase1 {
 	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
 
-    public static void assertModelsEqualsAccordingUserDataFiltering(final QueryModel shortcutModel, final QueryModel explicitModel) {
-	shortcutModel.setFilterable(true);
-	final EntQuery1 shortcutQry = entResultQryWithUserFilter(shortcutModel);
-	final EntQuery1 explicitQry = entResultQry(explicitModel);
-	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
-    }
+//    public static void assertModelsEqualsAccordingUserDataFiltering(final QueryModel shortcutModel, final QueryModel explicitModel) {
+//	shortcutModel.setFilterable(true);
+//	final EntQuery1 shortcutQry = entResultQryWithUserFilter(shortcutModel);
+//	final EntQuery1 explicitQry = entResultQry(explicitModel);
+//	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
+//    }
 
     public static void assertModelsDifferent(final QueryModel shortcutModel, final QueryModel explicitModel) {
 	final EntQuery1 shortcutQry = entResultQry(shortcutModel);
