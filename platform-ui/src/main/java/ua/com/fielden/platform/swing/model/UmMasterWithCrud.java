@@ -142,8 +142,9 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
 			return getPrevEntity();
 		    } else if (getManagedEntity().isPersisted()) {
 			return (T) getManagedEntity().restoreToOriginal();
+		    } else {
+			return getEntityProducer().newEntity();
 		    }
-		    return (T) getManagedEntity().restoreToOriginal();
 		} finally {
 		    setPrevEntity(null);
 		}
