@@ -154,6 +154,10 @@ final class Tokens {
     }
 
     public Tokens val(final Object value) {
+	// TODO need YieldNull to allow this exception
+//	if (value == null) {
+//	    throw new RuntimeException("Shouldn't pass Null to val(...) method. Use iVal(...) if condition autoignore feature is required.");
+//	}
 	return add(TokenCategory.VAL, valuePreprocessor.apply(value));
     }
 

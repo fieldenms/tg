@@ -255,7 +255,7 @@ public class DomainMetadata {
 		} else if (field.isAnnotationPresent(Calculated.class)) {
 		    safeMapAdd(result, getCalculatedPropInfo(entityType, field));
 		} else if (field.isAnnotationPresent(MapTo.class)) {
-		    safeMapAdd(result, getCommonPropHibInfo(entityType, field));
+		    safeMapAdd(result, getPersistedPropHibInfo(entityType, field));
 		} else if (Finder.isOne2One_association(entityType, field.getName())) {
 		    safeMapAdd(result, getOneToOnePropInfo(entityType, field));
 		} else if (!field.isAnnotationPresent(CritOnly.class)) {
@@ -358,15 +358,15 @@ public class DomainMetadata {
 	return result;
     }
 
-    private PropertyMetadata getCommonPropHibInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
+    private PropertyMetadata getPersistedPropHibInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
 	final String propName = field.getName();
-	final Class javaType = determinePropertyType(entityType, propName); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+	/**/final Class javaType = determinePropertyType(entityType, propName); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	final boolean isEntity = isPersistedEntityType(javaType);
 	final boolean isUnionEntity = isUnionEntityType(javaType);
 	final MapTo mapTo = getMapTo(entityType, propName);
 	final boolean isCompositeKeyMember = getCompositeKeyMember(entityType, propName) != null;
 	final boolean isRequired = field.isAnnotationPresent(Required.class);
-	final PersistedType persistedType = getPersistedType(entityType, propName);
+	/**/final PersistedType persistedType = getPersistedType(entityType, propName);
 	final boolean nullable = !(isRequired || isCompositeKeyMember);
 
 	final Object hibernateType = getHibernateType(javaType, persistedType, isEntity);
@@ -415,8 +415,8 @@ public class DomainMetadata {
     private PropertyMetadata getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
 	final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(calculatedPropfield.getAnnotation(Calculated.class).category());
 
-	final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-	final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+	/**/final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+	/**/final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
 	final Object hibernateType = getHibernateType(javaType, persistedType, false);
 
 	final ExpressionModel expressionModel = dmeg.extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
@@ -425,8 +425,8 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata getOneToOnePropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-	final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-	final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+	/**/final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+	/**/final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
 	final Object hibernateType = getHibernateType(javaType, persistedType, true);
 
 	final ExpressionModel expressionModel = expr().prop("id").model();
@@ -434,11 +434,19 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata getSyntheticPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-	final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-	final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+	/**/final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+	/**/final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
 	final Object hibernateType = getHibernateType(javaType, persistedType, false);
 	final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? COMPONENT_HEADER : SYNTHETIC;
 	return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).hibType(hibernateType).type(propCat).build();
+    }
+
+    private void determineCommonInfo(final Class<? extends AbstractEntity<?>> holdingEntityType, final Field propertyField) {
+	final String propName = propertyField.getName();
+	final Class javaType = determinePropertyType(holdingEntityType, propName); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+	final PersistedType persistedType = getPersistedType(holdingEntityType, propName);
+	final Object hibernateType = getHibernateType(javaType, persistedType, true);
+
     }
 
     private PropertyMetadata getCollectionalPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
