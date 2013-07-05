@@ -101,7 +101,7 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 	}
 	for (final Pair<String, Object> conditionPair : otherPropValues) {
 	    compondCondition = compondCondition.and().prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), conditionPair.getKey())//
-	    .getConditionBuildingName()).eq().val(conditionPair.getValue());
+	    .getConditionBuildingName()).eq().iVal(conditionPair.getValue());
 	}
 	final Builder<T, EntityResultQueryModel<T>> builderModel = from(compondCondition.model())//
 	.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)));
