@@ -346,6 +346,8 @@ public class WebClientStartupUtility {
 
 	pd = new Period(st, new DateTime());
 	System.out.println("\t\t" + "menuFactory.build(itemsFromCloud);...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+
+	menu.selectFirtItem();
     }
 
     /**

@@ -160,7 +160,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 	tabPane.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(infoTab, INFO_TAB);
 
 	// Assign the default info panel or create one if none was provided
-	defaultInfoPanel = defaultInforPanel != null ? defaultInforPanel : new SimpleInfoPanel(DEFAULT_INFO);
+	defaultInfoPanel = defaultInforPanel != null ? defaultInforPanel : new SimpleInfoPanel(getDefaultInfo());
 	firstTabClosable = false; // the use of this property is reserved for a case where no info panel is required
 	tabPane.addTab("Info", defaultInfoPanel);
 	tabPane.setTabClosableAt(0, false);
@@ -203,6 +203,14 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 
 	// select the first menu item
 	setSelectionRow(0);
+    }
+
+    /**
+     * Should be overridden for the purpose of providing alternative default info.
+     * @return
+     */
+    protected String getDefaultInfo() {
+	return DEFAULT_INFO;
     }
 
     protected JideTabbedPane getTabPane() {
@@ -579,6 +587,10 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 	setSelectionRow(0);
 	activateMenuItemAction.setPostAction(followedByAction);
 	activateMenuItemAction.actionPerformed(null);
+    }
+
+    public void selectFirtItem() {
+	setSelectionRow(0);
     }
 
     /**
