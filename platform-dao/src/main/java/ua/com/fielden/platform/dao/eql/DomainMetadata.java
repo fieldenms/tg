@@ -316,13 +316,13 @@ public class DomainMetadata {
      * @throws Exception
      * @throws
      */
-    private Object getHibernateType(final Class javaType, final PersistedType persistedType, final boolean entity) {
-	final String hibernateTypeName = persistedType != null ? persistedType.value() : null;
-	final Class hibernateUserTypeImplementor = persistedType != null ? persistedType.userType() : Void.class;
-
-	if (entity) {
+    private Object getHibernateType(final Class javaType, final PersistedType persistedType) {
+	if (isPersistedEntityType(javaType)) {
 	    return TypeFactory.basic("long");
 	}
+
+	final String hibernateTypeName = persistedType != null ? persistedType.value() : null;
+	final Class hibernateUserTypeImplementor = persistedType != null ? persistedType.userType() : Void.class;
 
 	if (isNotEmpty(hibernateTypeName)) {
 	    return TypeFactory.basic(hibernateTypeName);
@@ -369,7 +369,7 @@ public class DomainMetadata {
 	/**/final PersistedType persistedType = getPersistedType(entityType, propName);
 	final boolean nullable = !(isRequired || isCompositeKeyMember);
 
-	final Object hibernateType = getHibernateType(javaType, persistedType, isEntity);
+	final Object hibernateType = getHibernateType(javaType, persistedType);
 
 	PropertyCategory propertyCategory;
 	if (isEntity) {
@@ -417,7 +417,7 @@ public class DomainMetadata {
 
 	/**/final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	/**/final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
-	final Object hibernateType = getHibernateType(javaType, persistedType, false);
+	final Object hibernateType = getHibernateType(javaType, persistedType);
 
 	final ExpressionModel expressionModel = dmeg.extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
 	final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? COMPONENT_HEADER : EXPRESSION;
@@ -427,7 +427,7 @@ public class DomainMetadata {
     private PropertyMetadata getOneToOnePropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
 	/**/final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	/**/final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
-	final Object hibernateType = getHibernateType(javaType, persistedType, true);
+	final Object hibernateType = getHibernateType(javaType, persistedType);
 
 	final ExpressionModel expressionModel = expr().prop("id").model();
 	return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(PropertyCategory.EXPRESSION).build();
@@ -436,7 +436,7 @@ public class DomainMetadata {
     private PropertyMetadata getSyntheticPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
 	/**/final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	/**/final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
-	final Object hibernateType = getHibernateType(javaType, persistedType, false);
+	final Object hibernateType = getHibernateType(javaType, persistedType);
 	final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? COMPONENT_HEADER : SYNTHETIC;
 	return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).hibType(hibernateType).type(propCat).build();
     }
@@ -445,9 +445,11 @@ public class DomainMetadata {
 	final String propName = propertyField.getName();
 	final Class javaType = determinePropertyType(holdingEntityType, propName); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	final PersistedType persistedType = getPersistedType(holdingEntityType, propName);
-	final Object hibernateType = getHibernateType(javaType, persistedType, true);
+	final Object hibernateType = getHibernateType(javaType, persistedType);
 
     }
+
+
 
     private PropertyMetadata getCollectionalPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
 	return new PropertyMetadata.Builder(field.getName(), determinePropertyType(entityType, field.getName()), true).type(COLLECTIONAL).build();
