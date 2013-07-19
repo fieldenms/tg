@@ -498,8 +498,23 @@ public class Finder {
 		klass = klass.getSuperclass();
 	    }
 	}
+
+	return removeDuplicates(properties);
+    }
+
+    private static List<Field> removeDuplicates(final List<Field> wholeHierarchyProperties) {
+	final List<Field> properties = new ArrayList<Field>();
+	final Set<String> fieldNames = new HashSet<>();
+	for (final Field field : wholeHierarchyProperties) {
+	    if (!fieldNames.contains(field.getName())) {
+		fieldNames.add(field.getName());
+		properties.add(field);
+	    }
+	}
+
 	return properties;
     }
+
 
     /**
      * Returns a list of fields (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
