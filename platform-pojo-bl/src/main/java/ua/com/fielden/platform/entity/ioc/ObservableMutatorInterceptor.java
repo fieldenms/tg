@@ -92,7 +92,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
 		final Pair<Object, Object> newAndOldValues = determineNewAndOldValues(entity, propertyName, invocation.getArguments()[0], method);
 		final Object newValue = newAndOldValues.getKey();
 		final Object oldValue = newAndOldValues.getValue();
-		logger.debug("Property \"" + fullPropertyName + "\" new value is \"" + newValue + "\", old value is \"" + oldValue + "\".");
+		// logger.debug("Property \"" + fullPropertyName + "\" new value is \"" + newValue + "\", old value is \"" + oldValue + "\".");
 
 		// perform validation and possibly setting ONLY in this three cases :
 		logger.debug("Checking if validation is needed for \"" + fullPropertyName + "\"...");
