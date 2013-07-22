@@ -25,9 +25,14 @@ public class MetadataGenerator {
 	return result;
     }
 
+
+
+
+
+
+
+
     private static void addProps(final EntityInfo entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo> allEntitiesInfo) {
-
-
 
 	for (final Field field : getRealProperties(entityInfo.javaType())) {
 	    final Class javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;

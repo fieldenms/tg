@@ -12,7 +12,7 @@ public class ComponentTypePropInfo extends AbstractPropInfo  {
     }
 
     public ComponentTypePropInfo(final String name, final EntityInfo parent, final EntityInfo propEntityInfo, final Expression1 expression) {
-	super(name, parent, expression);
+	super(name, parent, expression, false);
 	this.propEntityInfo = propEntityInfo;
     }
 

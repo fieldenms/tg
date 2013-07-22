@@ -11,7 +11,7 @@ public class PrimTypePropInfo extends AbstractPropInfo {
     }
 
     public PrimTypePropInfo(final String name, final EntityInfo parent, final Class propType, final Expression1 expression) {
-	super(name, parent, expression);
+	super(name, parent, expression, true);
 	this.propType = propType;
     }
 
