@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review.development;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,8 +12,8 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -38,25 +39,51 @@ public class EntityQueryCriteriaUtils {
      * @param enhancer
      * @return
      */
-    public static Pair<Set<String>, Set<String>> separateFetchAndTotalProperties(final Class<?> root, final ITickManager tickManager, final IDomainTreeEnhancer enhancer) {
+    public static Pair<Set<String>, Set<String>> separateFetchAndTotalProperties(final Class<?> root, final IAddToResultTickManager tickManager, final IDomainTreeEnhancer enhancer) {
         final Set<String> fetchProperties = new HashSet<String>();
         final Set<String> totalProperties = new HashSet<String>();
-        final List<String> checkedProperties = tickManager.checkedProperties(root);
-        for (final String property : checkedProperties)
-            try {
-        	final ICalculatedProperty calcProperty = enhancer.getCalculatedProperty(root, property);
+        final Pair<List<Pair<String, Integer>>, Map<String, List<String>>> totalFetchProps = getMappedFetchAndTotals(root, tickManager, enhancer);
+	for (final Pair<String, Integer> fetchProp : totalFetchProps.getKey()) {
+	    fetchProperties.add(fetchProp.getKey());
+	}
+	for (final List<String> totalProps : totalFetchProps.getValue().values()) {
+	    totalProperties.addAll(totalProps);
+	}
+        return new Pair<Set<String>, Set<String>>(fetchProperties, totalProperties);
+    }
+
+    /**
+     * Returns the pair of fetch properties and totals map. The totals map - it is a map between fetch properties and list of total names.
+     *
+     * @param rootType
+     * @param cdtme
+     * @return
+     */
+    public static Pair<List<Pair<String, Integer>>, Map<String, List<String>>> getMappedFetchAndTotals(final Class<?> root, final IAddToResultTickManager tickManager, final IDomainTreeEnhancer enhancer){
+	final List<Pair<String, Integer>> columns = new ArrayList<Pair<String, Integer>>();
+	final Map<String, List<String>> totals = new HashMap<String, List<String>>();
+	final List<String> checkedProperties = tickManager.checkedProperties(root);
+	for(final String property : checkedProperties){
+	    try {
+		final ICalculatedProperty calcProperty = enhancer.getCalculatedProperty(root, property);
 		if(calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION && calcProperty.getOriginationProperty() != null){
 		    final String originProperty = Reflector.fromRelative2AbsotulePath(calcProperty.getContextPath(), calcProperty.getOriginationProperty());
 		    if(checkedProperties.contains(originProperty)){
-			totalProperties.add(property);
+			List<String> totalList = totals.get(originProperty);
+			    if(totalList == null){
+				totalList = new ArrayList<String>();
+				totals.put(originProperty, totalList);
+			    }
+			    totalList.add(property);
 		    }
-		} else {
-        	    fetchProperties.add(property);
-        	}
-            } catch (final IncorrectCalcPropertyException ex) {
-        	fetchProperties.add(property);
-            }
-        return new Pair<Set<String>, Set<String>>(fetchProperties, totalProperties);
+		}else{
+		    columns.add(new Pair<String, Integer>(property, Integer.valueOf(tickManager.getWidth(root, property))));
+		}
+	    } catch(final IncorrectCalcPropertyException ex){
+		columns.add(new Pair<String, Integer>(property, Integer.valueOf(tickManager.getWidth(root, property))));
+	    }
+	}
+	return new Pair<List<Pair<String, Integer>>, Map<String,List<String>>>(columns, totals);
     }
 
     /**

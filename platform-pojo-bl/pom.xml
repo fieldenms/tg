@@ -30,6 +30,28 @@
 			<version>1.2</version>
 		</dependency>
 		<!-- end of Kryo specific libs -->
+		
+		<!-- Jackson dependencies -->
+		
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>2.2.2</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.2.2</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.2.2</version>
+		</dependency>
+		
+		<!-- End of jackson dependencies -->
 
 		<!-- Hibernate 3.2.6.ga conflicts with A 3.3.1, thus Guice packaged version
 			of ASM is used. -->
