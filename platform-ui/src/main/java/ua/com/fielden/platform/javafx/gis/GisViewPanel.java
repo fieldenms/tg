@@ -2,6 +2,7 @@ package ua.com.fielden.platform.javafx.gis;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -57,6 +58,7 @@ import netscape.javascript.JSObject;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.gis.Point;
 import ua.com.fielden.platform.pagination.IPage;
@@ -64,6 +66,7 @@ import ua.com.fielden.platform.pagination.IPageChangedListener;
 import ua.com.fielden.platform.pagination.PageChangedEvent;
 import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -73,9 +76,10 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public abstract class GisViewPanel <P extends Point> extends JFXPanel {
+public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point> extends JFXPanel implements IPoint<P> {
     private static final long serialVersionUID = 9202827128855362320L;
     private static double DEFAULT_PIXEL_THRESHOLD = 2.0;
+
     private Timeline locationUpdateTimeline;
     private double xForDragBegin, yForDragBegin;
     private Group path;
@@ -95,6 +99,7 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
 
     private IWorldToScreen currentTranformation;
     private final EntityGridInspector egi;
+    private final GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> parentView;
 
     private Double get(final JSObject p, final String what) {
 	final String s = p.call(what).toString();
@@ -109,19 +114,22 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
 	return points;
     }
 
-    protected abstract AbstractEntity<?> selectedEntity();
+    protected AbstractEntity<?> selectedEntity()  {
+	return parentView.getEnhancedSelectedAbstractEntity();
+    }
 
     /**
      * Creates a swing container with javaFx dashboard.
      *
      * @return
      */
-    public GisViewPanel(final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
+    public GisViewPanel(final GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> parentView, final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
+	this.parentView = parentView;
 	this.egi = egi;
 	setFocusable(false);
 	Platform.setImplicitExit(false);
 
-	this.points = new ArrayList<>();
+	this.points = new ArrayList<P>();
 	this.trackSegments = new HashMap<>();
 
 	Platform.runLater(new Runnable() {
@@ -561,7 +569,8 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
 	System.err.println("REMOVING OLD AND ADDING NEW...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
     }
 
-    protected Color getColor(final P start) {
+    @Override
+    public Color getColor(final P start) {
 	final int speed = start.getSpeed();
 	final double maxSpeed = 80.0;
 	// return Color.hsb(0, speed / maxSpeed, 1.0);
@@ -569,7 +578,8 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
 	return Color.hsb(240.0 + ((360.0 - 240.0) * speed / maxSpeed), 1.0, 1.0); // 0 (dark blue, hue=? 120) to 80 (red, hue=0) km/hour
     }
 
-    protected String getTooltip(final P point) {
+    @Override
+    public String getTooltip(final P point) {
 	return point.toString();
     }
 
@@ -745,5 +755,19 @@ public abstract class GisViewPanel <P extends Point> extends JFXPanel {
     public void centerBy(final double longitude, final double latitude) {
 	webEngine.executeScript("document.setCenter(" + latitude + "," + longitude + ")");
 	removeOldAndAddNew(webEngine, zoom(webEngine));
+    }
+
+    protected abstract AbstractEntity<?> entityToSelect(final P point);
+
+    @Override
+    public final void clickedAction(final P point) {
+	parentView.deselectAll();
+
+	final AbstractEntity<?> entityToSelect = entityToSelect(point);
+
+	parentView.selectEntities(Arrays.<AbstractEntity<?>> asList(entityToSelect));
+	parentView.bringToView(entityToSelect);
+
+	requestFocusForEgi();
     }
 }
