@@ -13,7 +13,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAn
  *
  * @author Developers
  */
-public abstract class GpsGridAnalysisModel<T extends AbstractEntity> extends GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer> {
+public abstract class GpsGridAnalysisModel<T extends AbstractEntity<?>> extends GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer> {
     private boolean fitToBounds = false;
     private final Class<T> entityType;
 

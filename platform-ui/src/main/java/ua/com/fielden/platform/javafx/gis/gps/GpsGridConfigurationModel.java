@@ -14,17 +14,11 @@ import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAn
  *
  * @author Developers
  */
-public abstract class GpsGridConfigurationModel<T extends AbstractEntity> extends GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
+public abstract class GpsGridConfigurationModel<T extends AbstractEntity<?>> extends GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
     public GpsGridConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> queryCustomiser) {
 	super(criteria, queryCustomiser);
     }
 
     @Override
     public abstract GpsGridAnalysisModel<T> createGridAnalysisModel();
-
-    // TODO
-//    @Override
-//    public AbstractMessageGridAnalysisModel<T> createGridAnalysisModel() {
-//        return new AbstractMessageGridAnalysisModel<T>(getCriteria(), getQueryCustomiser());
-//    }
 }

@@ -25,7 +25,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisVie
  * @author TG Team
  *
  */
-public class MachineGpsGridAnalysisView<T extends AbstractEntity> extends GpsGridAnalysisView<T, MachineGpsGisViewPanel<T>> {
+public class MachineGpsGridAnalysisView<T extends AbstractEntity<?>> extends GpsGridAnalysisView<T, MachineGpsGisViewPanel<T>> {
     private static final long serialVersionUID = 553731585658593055L;
 
     private AbstractEntity<?> viewFocusedEntity;

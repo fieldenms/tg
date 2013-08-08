@@ -14,7 +14,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
  * @author TG Team
  *
  */
-public abstract class GpsGridConfigurationView<T extends AbstractEntity> extends GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> {
+public abstract class GpsGridConfigurationView<T extends AbstractEntity<?>> extends GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> {
     private static final long serialVersionUID = 1507085016131840748L;
 
     public GpsGridConfigurationView(final GpsGridConfigurationModel<T> model, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, final BlockingIndefiniteProgressLayer progressLayer, final IToolbarCustomiser<GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer>> toolbarCustomiser) {

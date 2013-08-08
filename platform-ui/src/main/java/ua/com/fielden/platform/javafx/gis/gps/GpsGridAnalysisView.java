@@ -25,7 +25,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
  * @author TG Team
  *
  */
-public abstract class GpsGridAnalysisView<T extends AbstractEntity, GVPTYPE extends GpsGisViewPanel<T>> extends GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> {
+public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE extends GpsGisViewPanel<T>> extends GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> {
     private static final long serialVersionUID = 553731585658593055L;
 
     private final JSplitPane tableAndGisViewSplitter;
