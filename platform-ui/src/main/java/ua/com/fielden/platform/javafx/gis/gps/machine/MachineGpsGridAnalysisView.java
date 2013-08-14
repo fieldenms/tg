@@ -3,6 +3,7 @@ package ua.com.fielden.platform.javafx.gis.gps.machine;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.List;
 
 import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
@@ -29,6 +30,7 @@ public class MachineGpsGridAnalysisView<T extends AbstractEntity<?>> extends Gps
     private static final long serialVersionUID = 553731585658593055L;
 
     private AbstractEntity<?> viewFocusedEntity;
+    private List<T> oldSelected;
 
     public MachineGpsGridAnalysisView(final GpsGridAnalysisModel<T> model, final GpsGridConfigurationView<T> owner) {
 	super(model, owner);
@@ -55,7 +57,11 @@ public class MachineGpsGridAnalysisView<T extends AbstractEntity<?>> extends Gps
     }
 
     @Override
-    protected void beforePromotingDataAction() {
+    protected List<T> beforePromotingDataAction() {
+	if (getGisViewPanel() != null) {
+	    getGisViewPanel().setCalloutChangeShouldBeForced(false);
+	}
+
         final JViewport viewport = getEgiPanel().getEgiScrollPane().getViewport();
         final Rectangle viewRect = viewport.getViewRect();
         final Point position = new Point((int) viewRect.getX(), (int) (viewRect.getY() + viewRect.getHeight() - 1));
@@ -65,12 +71,16 @@ public class MachineGpsGridAnalysisView<T extends AbstractEntity<?>> extends Gps
 	viewFocusedEntity = tableModel.getEntityAt(topRow);
 	System.out.println("BRINGTOVIEW: viewFocusedEntity == " + viewFocusedEntity);
 
-	super.beforePromotingDataAction();
+	oldSelected = super.beforePromotingDataAction();
+	return oldSelected;
     }
 
     @Override
-    protected void afterPromotingDataAction() {
-        super.afterPromotingDataAction();
+    protected void afterPromotingDataAction(final List<T> oldSelected) {
+	if (getGisViewPanel() != null) {
+	    selectEntities((List<AbstractEntity<?>>) oldSelected);
+	    getGisViewPanel().setCalloutChangeShouldBeForced(true);
+	}
 
 	if (viewFocusedEntity != null) {
 	    bringToView(viewFocusedEntity);

@@ -82,13 +82,9 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
 		    @Override
 		    public void run() {
-			beforePromotingDataAction();
-
-			final List<T> oldSelected = getEnhancedSelectedEntities();
+			final List<T> oldSelected = beforePromotingDataAction();
 		        egiPanel.setData((IPage<T>) e.getNewPage());
-			selectEntities((List<AbstractEntity<?>>)oldSelected);
-
-			afterPromotingDataAction();
+			afterPromotingDataAction(oldSelected);
 		    }
 		});
 
@@ -119,12 +115,14 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     /**
      * A method to provide custom action just before promoting new data to EGI.
      */
-    protected void beforePromotingDataAction() {
+    protected List<T> beforePromotingDataAction() {
+	return getEnhancedSelectedEntities();
     }
     /**
      * A method to provide custom action just after new data has been promoted to EGI.
      */
-    protected void afterPromotingDataAction() {
+    protected void afterPromotingDataAction(final List<T> oldSelected) {
+	selectEntities((List<AbstractEntity<?>>) oldSelected);
     }
 
     @SuppressWarnings("unchecked")

@@ -33,4 +33,25 @@ public interface IPoint<P extends Point> {
      * @param point
      */
     void clickedAction(final P point);
+
+    /**
+     * Turns off existent callout.
+     *
+     * @param point
+     */
+    void turnOffCallout();
+
+    /**
+     * Closes existent callout.
+     *
+     * @param point
+     */
+    void closeCallout();
+
+    /**
+     * Opens callout for specific point.
+     *
+     * @param point
+     */
+    void openCallout(final P point);
 }

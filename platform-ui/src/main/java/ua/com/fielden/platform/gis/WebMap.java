@@ -292,7 +292,7 @@ public class WebMap extends Application {
 	stage.setTitle("Web Map");
 	final Scene scene = new Scene(root, 1100, 600, Color.web("#666970"));
 	stage.setScene(scene);
-	scene.getStylesheets().add("/webmap/WebMap.css");
+	//scene.getStylesheets().add("/webmap/WebMap.css");
 	// show stage
 	stage.show(); // setVisible(true);
     }

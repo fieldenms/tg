@@ -20,7 +20,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisVie
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 /**
- * {@link GridAnalysisView} for Vehicle main details with EGI and GIS views.
+ * {@link GridAnalysisView} with EGI and GPS GIS views.
  *
  * @author TG Team
  *
@@ -34,11 +34,11 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
     public GpsGridAnalysisView(final GpsGridAnalysisModel<T> model, final GpsGridConfigurationView<T> owner) {
 	super(model, owner);
 
-	gisViewPanel = createGisViewPanel(getEgiPanel().getEgi(), getEgiPanel().getEgi().getSelectionModel(), getModel().getPageHolder()); // new MessageGisViewPanel<T>(this, getEgiPanel().getEgi(), getEgiPanel().getEgi().getSelectionModel(), getModel().getPageHolder());
+	gisViewPanel = createGisViewPanel(getEgiPanel().getEgi(), getEgiPanel().getEgi().getSelectionModel(), getModel().getPageHolder());
 	tableAndGisViewSplitter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, getEgiPanel(), gisViewPanel);
 	tableAndGisViewSplitter.setOneTouchExpandable(true);
-	tableAndGisViewSplitter.setDividerLocation(0.5);
-	// tableAndGisViewSplitter.setResizeWeight(0.5);
+	tableAndGisViewSplitter.setDividerLocation(0.5); // FIXME this does not work properly!  // tableAndGisViewSplitter.setResizeWeight(0.5);
+
 	layoutView();
     }
 
@@ -46,7 +46,22 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
 	return gisViewPanel;
     }
 
-    protected abstract GVPTYPE createGisViewPanel(/*final AbstractMessageGridAnalysisView<T> parentView, */ final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder);
+    /**
+     * Creates gis view panel.
+     *
+     * @param egi
+     * @param listSelectionModel
+     * @param pageHolder
+     * @return
+     */
+    protected abstract GVPTYPE createGisViewPanel(final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder);
+
+    /**
+     * Provides a colouring scheme for egi table based on specific nature of Gps Gis centre.
+     *
+     * @return
+     */
+    protected abstract IColouringScheme<AbstractEntity> createRowColoringScheme();
 
     @Override
     public GpsGridAnalysisModel<T> getModel() {
@@ -58,23 +73,6 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
         return new EgiPanel(getModel().getCriteria().getEntityClass(), getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer(), createRowColoringScheme());
     }
 
-//    private IColouringScheme<AbstractEntity> createRowColoringScheme() {
-//	return new IColouringScheme<AbstractEntity>() {
-//	    @Override
-//	    public Color getColor(final AbstractEntity entity) {
-//		for (final MessagePoint p : gisViewPanel.points()) {
-//		    if (p.getMessage().getId().equals(entity.getId())) {
-//			final javafx.scene.paint.Color messageColor = gisViewPanel.getColor(p);
-//			return CategoryChartFactory.getAwtColor(messageColor.equals(javafx.scene.paint.Color.BLUE) ? javafx.scene.paint.Color.GREEN : messageColor);
-//			// TODO return CategoryChartFactory.getAwtColor(messageColor);
-//		    }
-//		}
-//		return Color.WHITE;
-//	    }
-//	};
-//    }
-
-    protected abstract IColouringScheme<AbstractEntity> createRowColoringScheme();
 
     @Override
     protected int getPageSize() {

@@ -70,8 +70,13 @@ public class MessagePointArrow extends Polygon implements IMessagePointNode {
     }
 
     @Override
-    public void select(final boolean showTooltip) {
-	mixin.select(showTooltip);
+    public void select() {
+	mixin.select();
+    }
+
+    @Override
+    public boolean selected() {
+	return mixin.selected();
     }
 
     @Override
@@ -95,17 +100,27 @@ public class MessagePointArrow extends Polygon implements IMessagePointNode {
     }
 
     @Override
-    public void updateAndAdd(final Point2D xY, final Group parent, final int zoom) {
-	mixin.updateAndAdd(xY, parent, zoom);
+    public void makeVisibleAndUpdate(final Point2D xY, final Group parent, final int zoom) {
+	mixin.makeVisibleAndUpdate(xY, parent, zoom);
     }
 
     @Override
-    public boolean hasCallout() {
-        return mixin.hasCallout();
+    public void createAndAddCallout(final Group parent) {
+	mixin.createAndAddCallout(parent);
     }
 
     @Override
-    public void addExistingCalloutToScene(final Group parent) {
-	mixin.addExistingCalloutToScene(parent);
+    public void closeCallout() {
+	mixin.closeCallout();
+    }
+
+    @Override
+    public void makeInvisible() {
+	mixin.makeInvisible();
+    }
+
+    @Override
+    public void add(final Group parent) {
+	mixin.add(parent);
     }
 }

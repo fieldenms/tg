@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.javafx.gis.gps.message;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.ListSelectionModel;
 
@@ -12,6 +14,7 @@ import ua.com.fielden.platform.javafx.gis.gps.MessagePoint;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
+import ua.com.fielden.platform.utils.Pair;
 
 public class MessageGpsGisViewPanel<T extends AbstractEntity<?>> extends GpsGisViewPanel<T> {
     private static final long serialVersionUID = -7032805070573512539L;
@@ -21,15 +24,15 @@ public class MessageGpsGisViewPanel<T extends AbstractEntity<?>> extends GpsGisV
     }
 
     @Override
-    protected List<MessagePoint> createPoints(final IPage<AbstractEntity<?>> entitiesPage) {
-	clearEntityPoints();
+    protected Pair<List<MessagePoint>, Map<Long, List<MessagePoint>>> createPoints(final IPage<AbstractEntity<?>> entitiesPage) {
 	final List<MessagePoint> newPoints = new ArrayList<>();
+	final Map<Long, List<MessagePoint>> newEntityPoints = new HashMap<Long, List<MessagePoint>>();
 	for (final AbstractEntity<?> message : entitiesPage.data()) {
 	    final MessagePoint mp = MessagePoint.createMessagePointFromMessage(message);
 	    newPoints.add(mp);
-	    extendEntityPointsBy(message, mp);
+	    extendEntityPointsBy(newEntityPoints, message, mp);
 	}
-	return newPoints;
+	return new Pair<>(newPoints, newEntityPoints);
     }
 
     private double distance(final MessagePoint start, final MessagePoint end) {

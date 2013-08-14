@@ -51,7 +51,8 @@ public interface IMessagePointNode {
      */
     void clickedAction();
 
-    void select(final boolean showTooltip);
+    void select();
+    boolean selected();
     void unselect();
 
     /**
@@ -61,11 +62,13 @@ public interface IMessagePointNode {
 
     void setZoom(final int zoom);
 
-    void updateAndAdd(final Point2D xY, final Group parent, final int zoom);
+    void add(final Group parent);
 
-    /** Returns <code>true</code> if callout exist at this stage for this message point node. */
-    boolean hasCallout();
+    void makeVisibleAndUpdate(final Point2D xY, final Group parent, final int zoom);
 
-    /** Adds existent callout to scene. */
-    void addExistingCalloutToScene(final Group parent);
+    void makeInvisible();
+
+    void createAndAddCallout(final Group parent);
+
+    void closeCallout();
 }

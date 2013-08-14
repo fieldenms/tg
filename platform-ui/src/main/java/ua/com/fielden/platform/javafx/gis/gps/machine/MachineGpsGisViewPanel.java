@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.javafx.gis.gps.machine;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.ListSelectionModel;
 
@@ -12,6 +14,7 @@ import ua.com.fielden.platform.javafx.gis.gps.MessagePointNodeMixin;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
+import ua.com.fielden.platform.utils.Pair;
 
 public class MachineGpsGisViewPanel<T extends AbstractEntity<?>> extends GpsGisViewPanel<T> {
     private static final long serialVersionUID = -7032805070573512539L;
@@ -22,9 +25,9 @@ public class MachineGpsGisViewPanel<T extends AbstractEntity<?>> extends GpsGisV
     }
 
     @Override
-    protected List<MessagePoint> createPoints(final IPage<AbstractEntity<?>> entitiesPage) {
-	clearEntityPoints();
+    protected Pair<List<MessagePoint>, Map<Long, List<MessagePoint>>> createPoints(final IPage<AbstractEntity<?>> entitiesPage) {
 	final List<MessagePoint> newPoints = new ArrayList<>();
+	final Map<Long, List<MessagePoint>> newEntityPoints = new HashMap<Long, List<MessagePoint>>();
 	for (final AbstractEntity<?> machine : entitiesPage.data()) {
 	    if (machine.get("lastMessage") != null) {
 		final List<AbstractEntity> lastMessages = (List<AbstractEntity>) machine.get("lastMessages");
@@ -32,15 +35,15 @@ public class MachineGpsGisViewPanel<T extends AbstractEntity<?>> extends GpsGisV
 		    if (i >= 0) {
 			final MessagePoint mp = MessagePoint.createMessagePointFromMachine(machine, lastMessages.get(i));
 			newPoints.add(mp);
-			extendEntityPointsBy(machine, mp);
+			extendEntityPointsBy(newEntityPoints, machine, mp);
 		    }
 		}
 		final MessagePoint mp = MessagePoint.createMessagePointFromMachine(machine);
 		newPoints.add(mp);
-		extendEntityPointsBy(machine, mp);
+		extendEntityPointsBy(newEntityPoints, machine, mp);
 	    }
 	}
-	return newPoints;
+	return new Pair<>(newPoints, newEntityPoints);
     }
 
     @Override

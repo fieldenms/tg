@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.javafx.gis.gps;
 
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import javafx.scene.Node;
 import javafx.scene.web.WebEngine;
 
 import javax.swing.ListSelectionModel;
@@ -19,6 +18,7 @@ import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * An abstract base class for all GPS-message related {@link GisViewPanel}s.
@@ -31,20 +31,33 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
     private static final long serialVersionUID = -7032805070573512539L;
 
     private final GpsGridAnalysisView<T, ?> parentView;
-    protected final Map<Long, List<MessagePoint>> entityPoints;
     private final Map<MessagePoint, IMessagePointNode> components = new HashMap<>();
-    private int zoom;
-    private final List<IMessagePointNode> nodesWithCallouts = new ArrayList<>();
+    private Long entityWithCallout;
+    private boolean calloutHasBeenTurnedOff = false;
     private boolean inside;
+    private boolean dist;
+    private MessagePoint selectedPoint;
 
     public GpsGisViewPanel(final GpsGridAnalysisView<T, ?> parentView, final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
 	super(parentView, egi, listSelectionModel, pageHolder);
 	this.parentView = parentView;
-	this.entityPoints = new HashMap<>();
+    }
+
+    protected abstract double initialHalfSizeFactor();
+
+    @Override
+    protected void freeResources() {
+	components.clear();
+
+        super.freeResources();
     }
 
     @Override
-    protected final void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity) {
+    protected final void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity, final boolean forceCalloutChange) {
+	if (forceCalloutChange) {
+	    closeCallout();
+	}
+
 	if (unselectedEntity != null) {
 	    final MessagePoint unselectedEntityPoint = getCorrespondingPoint(unselectedEntity);
 	    if (unselectedEntityPoint != null) {
@@ -55,43 +68,24 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 	if (selectedEntity != null) {
 	    final MessagePoint selectedEntityPoint = getCorrespondingPoint(selectedEntity);
 	    if (selectedEntityPoint != null) {
-		// TODO at this stage centering is returned... but possibly we should fit a new callout to bounds?
+		// at this stage centering is returned... but possibly we should fit a new callout to bounds?
 		centerBy(selectedEntityPoint.getLongitude(), selectedEntityPoint.getLatitude());
-		final IMessagePointNode selectedComponent = ensureThatComponentExists(selectedEntityPoint);
-		selectedComponent.select(showCallout(selectedComponent));
+
+		ensureThatComponentExists(selectedEntityPoint).select();
+		openCallout(selectedEntityPoint);
+
+		removeOldAndAddNew(getWebEngine(), zoom(getWebEngine()));
 	    }
 	}
     }
 
-    protected void extendEntityPointsBy(final AbstractEntity entity, final MessagePoint messagePoint) {
-	final List<MessagePoint> list = entityPoints.get(entity.getId());
-	if (list == null) {
-	    entityPoints.put(entity.getId(), new ArrayList<MessagePoint>());
-	}
-	entityPoints.get(entity.getId()).add(messagePoint);
-    }
-
-    protected void clearEntityPoints() {
-	entityPoints.clear();
-    }
-
-    public MessagePoint getCorrespondingPoint(final AbstractEntity entity) {
-	if (entity == null) {
-	    return null;
-	} else if (entity.getId() == null) {
-	    throw new IllegalArgumentException("An id for entity [" + entity + "] should exist.");
-	}
-	final List<MessagePoint> list = entityPoints.get(entity.getId());
-	return list == null ? null : list.get(list.size() - 1); // get the last point in the list
-    }
-
     protected IMessagePointNode ensureThatComponentExists(final MessagePoint point) {
 	if (components.get(point) == null) {
-	    prevXY = null;
-
 	    inside = true; // turn off adaptive adding
+	    dist = true; // turn off adaptive adding
 	    addPoint(getWebEngine(), point); // this is necessary when a node is not even created (as the scene is lazy now)
 	    inside = false;
+	    dist = false;
 	}
 	if (components.get(point) == null) {
 	    throw new IllegalStateException("components.get(point) is null! It is illegal situation!");
@@ -104,18 +98,9 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 	return inside ? true : super.inside(xY);
     }
 
-    protected boolean showCallout(final IMessagePointNode mpn) {
-	return true;
-	//	    if (this.nodesWithCallouts.isEmpty()) {
-	//		return true;
-	//	    } else {
-	//		for (final IMessagePointNode nodeWithCallout : this.nodesWithCallouts) {
-	//		    if (nodeWithCallout == mpn) {
-	//			return true;
-	//		    }
-	//		}
-	//		return false;
-	//	    }
+    @Override
+    protected boolean isPixelBusy(final Pair<Integer, Integer> pixel) {
+	return dist ? false : super.isPixelBusy(pixel);
     }
 
     @Override
@@ -156,18 +141,81 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 
     @Override
     protected void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
-	this.zoom = zoom;
-	this.nodesWithCallouts.clear();
-	// components.clear();
+	System.err.println("\tentityWithCallout == " + entityWithCallout + " calloutHasBeenTurnedOff == " + calloutHasBeenTurnedOff);
+	// this.nodesWithCallouts.clear();
+	selectedPoint = null;
 	super.removeOldAndAddNew(webEngine, zoom);
 
+	if (selectedPoint != null) {
+	    dist = true; // turn off adaptive adding
+	    addPoint(webEngine, selectedPoint);
+	    dist = false;
+	}
+	selectedPoint = null;
+
 	// add callouts to upper "layer" of nodes
-	for (final IMessagePointNode nodeWithCallouts : nodesWithCallouts) {
-	    nodeWithCallouts.addExistingCalloutToScene(path());
+	if (entityWithCallout != null) {
+	    updateCallout(webEngine);
 	}
     }
 
-    protected abstract double initialHalfSizeFactor();
+    protected void updateCallout(final WebEngine webEngine) {
+	final MessagePoint pointOfEntityWithCallout = getCorrespondingPoint(entityWithCallout);
+	if (pointOfEntityWithCallout != null) {
+	    ensureThatComponentExists(pointOfEntityWithCallout).closeCallout();
+
+	    dist = true; // turn off adaptive adding
+	    final Point2D xY = addPoint(webEngine, pointOfEntityWithCallout);
+	    dist = false;
+
+	    if (!calloutHasBeenTurnedOff && inside(xY)) {
+		ensureThatComponentExists(pointOfEntityWithCallout).createAndAddCallout(path());
+	    }
+	}
+    }
+
+    @Override
+    public void closeCallout() {
+	if (entityWithCallout != null) {
+	    final MessagePoint pointOfEntityWithCallout = getCorrespondingPoint(entityWithCallout);
+	    if (pointOfEntityWithCallout != null) {
+		ensureThatComponentExists(pointOfEntityWithCallout).closeCallout();
+		entityWithCallout = null;
+		calloutHasBeenTurnedOff = false;
+	    }
+	}
+    }
+
+    @Override
+    public void openCallout(final MessagePoint point) {
+	final Long newEntityWithCallout = entityToSelect(point).getId();
+	if (entityWithCallout != null) {
+	    if (entityWithCallout.equals(newEntityWithCallout)) {
+		updateCallout(getWebEngine());
+		return;
+	    } else {
+		throw new IllegalStateException("Old callout for entity [" + entityWithCallout + "] should be removed at this stage when new callout has been arrived (" + newEntityWithCallout + ").");
+	    }
+	} else {
+	    final MessagePoint pointOfNewEntityWithCallout = getCorrespondingPoint(newEntityWithCallout);
+	    if (pointOfNewEntityWithCallout != null) {
+		ensureThatComponentExists(pointOfNewEntityWithCallout).createAndAddCallout(path());
+		entityWithCallout = newEntityWithCallout;
+		// calloutHasBeenTurnedOff = false;
+	    }
+	}
+    }
+
+    @Override
+    public void turnOffCallout() {
+	if (entityWithCallout != null) {
+	    final MessagePoint pointOfEntityWithCallout = getCorrespondingPoint(entityWithCallout);
+	    if (pointOfEntityWithCallout != null) {
+		ensureThatComponentExists(pointOfEntityWithCallout).closeCallout();
+		calloutHasBeenTurnedOff = true;
+	    }
+	}
+    }
 
     protected IMessagePointNode createMessagePointNode(final MessagePoint messagePoint) {
 	if (messagePoint.getSpeed() <= 0) {
@@ -181,25 +229,31 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
     protected Point2D addPoint(final WebEngine webEngine, final MessagePoint messagePoint) {
 	final Point2D xY = super.addPoint(webEngine, messagePoint);
 
-	if (inside(xY) && dist(prevXY, xY) >= pixelThreashould()) {
+	final IMessagePointNode cachedMessagePointNode = components.get(messagePoint);
+	if (cachedMessagePointNode != null && cachedMessagePointNode.selected()) {
+	    selectedPoint = messagePoint;
+	}
+
+	final Pair<Integer, Integer> pixel = getPixel(xY.getX(), xY.getY());
+
+	if (inside(xY) && !isPixelBusy(pixel)) {
 	    countOfProcessed++;
-	    final IMessagePointNode cachedMessagePointNode = components.get(messagePoint);
 	    if (cachedMessagePointNode != null) {
-		cachedMessagePointNode.updateAndAdd(xY, path(), zoom);
-
-		if (cachedMessagePointNode.hasCallout()) {
-		    this.nodesWithCallouts.add(cachedMessagePointNode);
-		}
+		oldCountOfProcessed++;
+		cachedMessagePointNode.makeVisibleAndUpdate(xY, path(), getZoom());
+		putPixelNode(pixel, (Node) cachedMessagePointNode);
 	    } else {
+		newCountOfProcessed++;
 		final IMessagePointNode newMessagePointNode = createMessagePointNode(messagePoint);
-		newMessagePointNode.updateAndAdd(xY, path(), zoom);
+		newMessagePointNode.add(path());
+		newMessagePointNode.makeVisibleAndUpdate(xY, path(), getZoom());
 		components.put(messagePoint, newMessagePointNode);
-
-		if (newMessagePointNode.hasCallout()) {
-		    this.nodesWithCallouts.add(newMessagePointNode);
-		}
+		putPixelNode(pixel, (Node) newMessagePointNode);
 	    }
-	    prevXY = xY;
+	} else {
+	    if (cachedMessagePointNode != null) {
+		cachedMessagePointNode.makeInvisible();
+	    }
 	}
 	return xY;
     }

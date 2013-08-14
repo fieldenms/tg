@@ -162,47 +162,26 @@ public class MessagePointNodeMixin implements IMessagePointNode {
     }
 
     @Override
-    public void select(final boolean showTooltip) {
+    public void select() {
 	if (!selected) {
 	    selected = true;
 
 	    // bring to front
-	    final Group parent = (Group) referenceNode().getParent();
-	    parent.getChildren().remove(referenceNode());
+	    path.getChildren().remove(referenceNode);
 
 	    updateSizesAndCentre(getSize());
 	    updateColor();
 
-	    parent.getChildren().add(referenceNode());
-
+	    path.getChildren().add(referenceNode);
 
 	    updateTooltip();
-	    if (showTooltip) {
-		// add callout:
-		createAndAddCallout(parent);
-
-//		final Window window = scene.getWindow();
-//
-//		tooltip.show(window, window.getX() + scene.getX() + referenceNode().getLayoutX(), window.getY() + scene.getY() + referenceNode().getLayoutY());
-//		final Timer t = new Timer();
-//		t.schedule(new TimerTask() {
-//		    @Override
-//		    public void run() {
-//			Platform.runLater(new Runnable() {
-//			    public void run() {
-//				tooltip.hide();
-//			    }
-//			});
-//		    }
-//		}, 3000);
-
-	    }
 	} else {
-	    createAndAddCallout(path);
+	    // TODO
 	}
     }
 
-    protected void createAndAddCallout(final Group path) {
+    @Override
+    public void createAndAddCallout(final Group path) {
 	final Group infoNode = new Group();
 	final Text textNode = new Text(contract.getTooltip(messagePoint).trim());
 	textNode.setFill(Color.BLACK);
@@ -211,11 +190,9 @@ public class MessagePointNodeMixin implements IMessagePointNode {
 	textNode.textOriginProperty().set(VPos.TOP);
 	infoNode.getChildren().add(textNode);
 
-	closeCallout();
 	currentCallout = new Callout(referenceNode(), infoNode, scene, path, createCalloutCloseAction());
 	path.getChildren().add(currentCallout);
     }
-
 
     @Override
     public void unselect() {
@@ -224,16 +201,11 @@ public class MessagePointNodeMixin implements IMessagePointNode {
 
 	    updateSizesAndCentre(getSize());
 	    updateColor();
-
-	    closeCallout();
-
-//	    if (tooltip != null) {
-//		tooltip.hide();
-//	    }
 	}
     }
 
-    protected void closeCallout() {
+    @Override
+    public void closeCallout() {
 	if (currentCallout != null) {
 	    currentCallout.close();
 	    currentCallout = null;
@@ -244,7 +216,7 @@ public class MessagePointNodeMixin implements IMessagePointNode {
 	return new Runnable() {
 	    @Override
 	    public void run() {
-		closeCallout();
+		contract.turnOffCallout();
 	    }
 	};
     }
@@ -275,25 +247,28 @@ public class MessagePointNodeMixin implements IMessagePointNode {
     }
 
     @Override
-    public void updateAndAdd(final Point2D xY, final Group parent, final int zoom) {
+    public void makeVisibleAndUpdate(final Point2D xY, final Group parent, final int zoom) {
 	setZoom(zoom);
 	update();
 
 	referenceNode.setLayoutX(xY.getX());
 	referenceNode.setLayoutY(xY.getY());
+
+	referenceNode.setVisible(true);
+    }
+
+    @Override
+    public void add(final Group parent) {
 	parent.getChildren().add(referenceNode);
     }
 
     @Override
-    public boolean hasCallout() {
-        return currentCallout != null;
+    public void makeInvisible() {
+	referenceNode.setVisible(false);
     }
 
     @Override
-    public void addExistingCalloutToScene(final Group parent) {
-	if (!hasCallout()) {
-	    throw new IllegalArgumentException("Cannot add non-existent callout.");
-	}
-	createAndAddCallout(parent);
+    public boolean selected() {
+	return selected;
     }
 }

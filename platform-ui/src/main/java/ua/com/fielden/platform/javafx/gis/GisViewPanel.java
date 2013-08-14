@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.javafx.gis;
 
+import java.awt.event.MouseAdapter;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +13,6 @@ import java.util.TimerTask;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -37,6 +36,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
@@ -78,43 +78,52 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point> extends JFXPanel implements IPoint<P> {
     private static final long serialVersionUID = 9202827128855362320L;
-    private static double DEFAULT_PIXEL_THRESHOLD = 2.0;
 
-    private Timeline locationUpdateTimeline;
-    private double xForDragBegin, yForDragBegin;
-    private Group path;
-    private BorderPane root;
-    private BorderPane webViewPanel;
-    private Slider startSlider, endSlider;
-    private WebView webView;
-    private WebEngine webEngine;
-    private final List<P> points;
-    private final Map<P, TrackSegment> trackSegments;
-    private ToggleButton road, satellite, hybrid, terrain;
-    private int currentZoomDelta = 0;
     private static long ZOOM_DELAY = 300;
-    private Timer timer = new Timer();
-    private GisView activeView;
-    private AbstractEntity<?> previousSelectedEntity;
+    private static double DEFAULT_PIXEL_THRESHOLD = 2.0;
+    private static double DRAGGING_PIXEL_THRESHOULD = 0.0; // 30.0
 
-    private IWorldToScreen currentTranformation;
-    private final EntityGridInspector egi;
-    private final GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> parentView;
-
-    private Double get(final JSObject p, final String what) {
-	final String s = p.call(what).toString();
-	return new Double(s);
+    static { // use system proxy settings when standalone application
+        // System.setProperty("java.net.useSystemProxies", "true");
     }
 
-    public Group path() {
+    private Timeline locationUpdateTimeline;
+    private Timer timer = new Timer();
+    private GisView activeView;
+
+    private final EntityGridInspector egi;
+    private final GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> parentView;
+    private WebView webView;
+    private WebEngine webEngine;
+    private ToggleButton road, satellite, hybrid, terrain;
+    private Slider startSlider, endSlider;
+    private BorderPane root;
+    private StackPane webViewPanel;
+    private BorderPane canvas;
+
+    private final List<P> points;
+    private final Map<Long, List<P>> entityPoints;
+    private final Map<P, TrackSegment> trackSegments;
+    private Group path;
+    private final Map<Integer, Map<Integer, Node>> pixelNodes = new HashMap<>();
+
+    private double xForDragBegin, yForDragBegin;
+    private IWorldToScreen currentTranformation;
+    private AbstractEntity<?> previousSelectedEntity;
+    protected int countOfProcessed, oldCountOfProcessed, newCountOfProcessed;
+    private int currentZoomDelta = 0;
+    private int zoom;
+    protected boolean calloutChangeShouldBeForced = true;
+
+    public void setCalloutChangeShouldBeForced(final boolean calloutChangeShouldBeForced) {
+	this.calloutChangeShouldBeForced = calloutChangeShouldBeForced;
+    }
+
+    protected Group path() {
 	return path;
     }
 
-    public List<P> points() {
-	return points;
-    }
-
-    protected AbstractEntity<?> selectedEntity()  {
+    protected final AbstractEntity<?> selectedEntity()  {
 	return parentView.getEnhancedSelectedAbstractEntity();
     }
 
@@ -130,6 +139,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	Platform.setImplicitExit(false);
 
 	this.points = new ArrayList<P>();
+	this.entityPoints = new HashMap<>();
 	this.trackSegments = new HashMap<>();
 
 	Platform.runLater(new Runnable() {
@@ -141,11 +151,21 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	    }
 	});
 
+	this.egi.addMouseListener(new MouseAdapter() {
+	    @Override
+	    public void mouseClicked(final java.awt.event.MouseEvent e) {
+	        final int index = egi.rowAtPoint(e.getPoint());
+	        if (index != -1) {
+	            selectEntity(true); // when the user has been clicked -- callout change should be forced
+	        }
+	    }
+	});
+
 	listSelectionModel.addListSelectionListener(new ListSelectionListener() {
 	    @Override
 	    public void valueChanged(final ListSelectionEvent e) {
 		if (!e.getValueIsAdjusting()) {
-		    selectEntity();
+		    selectEntity(calloutChangeShouldBeForced);
 		}
 		return;
 	    }
@@ -158,18 +178,26 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 
 		    @Override
 		    public void run() {
-			providePoints(createPoints((IPage<AbstractEntity<?>>) e.getNewPage()), shouldFitToBounds());
+			Platform.runLater(new Runnable() {
+			    @Override
+			    public void run() {
+				providePoints(createPoints((IPage<AbstractEntity<?>>) e.getNewPage()), shouldFitToBounds());
+				removeOldAndAddNew(webEngine, zoom(webEngine));
+			    }
+			});
 		    }
 		});
 	    }
 	});
     }
 
-    protected abstract List<P> createPoints(final IPage<AbstractEntity<?>> entitiesPage);
+    protected abstract Pair<List<P>, Map<Long, List<P>>> createPoints(final IPage<AbstractEntity<?>> entitiesPage);
 
-    protected abstract void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity);
+    protected abstract void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity, final boolean forceCalloutChange);
 
     protected abstract boolean shouldFitToBounds();
+
+    protected abstract AbstractEntity<?> entityToSelect(final P point);
 
     protected void requestFocusForEgi() {
 	if (!egi.hasFocus()) {
@@ -184,66 +212,21 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	}
     }
 
-    protected void selectEntity() {
+    protected void selectEntity(final boolean forceCalloutChange) {
 	final AbstractEntity<?> unselectedEntity = previousSelectedEntity;
 	final AbstractEntity<?> selectedEntity = selectedEntity();
-	if (selectedEntity != null) {
-	    Platform.runLater(new Runnable() {
-		@Override
-		public void run() {
-		    findAndSelectPoint(selectedEntity, unselectedEntity);
-		    previousSelectedEntity = selectedEntity;
-		}
-	    });
-	}
+	Platform.runLater(new Runnable() {
+	    @Override
+	    public void run() {
+		findAndSelectPoint(selectedEntity, unselectedEntity, forceCalloutChange);
+		previousSelectedEntity = selectedEntity;
+	    }
+	});
     }
-
-    // load the image
-    // private static Image image = new Image("src/main/resources/marker.png", true); // /marker.png
-
-//    private final static String packageName = "gis";
-//    private final List<Point> pe = DataRetriever.getData("src/main/resources/gis/gis-data-sample.csv"); //       createUrl("gis-data-sample.csv")         "/home/jhou/workspace/trident-genesis/platform-ui/src/main/resources/gis/gis-data-sample.csv"
-//
-//    {
-//	Collections.sort(pe);
-//    }
 
     private static Group createSimplePath() {
 	final Group g = new Group();
-	final Path path = new Path();
-
-//	      ['Bondi Beach', -33.890542, 151.274856, 4],
-//	      ['Coogee Beach', -33.923036, 151.259052, 5],
-
-//	final MoveTo moveTo = new MoveTo();
-//	moveTo.setX(0.0f);
-//	moveTo.setY(0.0f);
-//
-//	final HLineTo hLineTo = new HLineTo();
-//	hLineTo.setX(70.0f);
-
-//	final QuadCurveTo quadCurveTo = new QuadCurveTo();
-//	quadCurveTo.setX(120.0f);
-//	quadCurveTo.setY(60.0f);
-//	quadCurveTo.setControlX(100.0f);
-//	quadCurveTo.setControlY(0.0f);
-//
-//	final LineTo lineTo = new LineTo();
-//	lineTo.setX(175.0f);
-//	lineTo.setY(55.0f);
-//
-//	final ArcTo arcTo = new ArcTo();
-//	arcTo.setX(50.0f);
-//	arcTo.setY(50.0f);
-//	arcTo.setRadiusX(50.0f);
-//	arcTo.setRadiusY(50.0f);
-
-//	path.getElements().add(moveTo);
-//	path.getElements().add(hLineTo);
-//	path.getElements().add(quadCurveTo);
-//	path.getElements().add(lineTo);
-//	path.getElements().add(arcTo);
-	g.getChildren().add(path);
+	g.setCache(true); // this should improve a repainting when interacting with 'path' group (translating or other transformations)
 	return g;
     }
 
@@ -274,12 +257,6 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	// create web engine and view
 	webView = new WebView();
 	webEngine = webView.getEngine();
-
-//	webEngine.setOnStatusChanged(new EventHandler<WebEvent<String>>() {
-//	    public void handle(final WebEvent<String> event) {
-//		System.err.println("JAVASCRIPT EVENT: " + event);
-//	    };
-//	});
 
 	loadMap();
         // create map type buttons
@@ -404,7 +381,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
         // create root
         root = new BorderPane();
         root.getStyleClass().add("map");
-        webViewPanel = new BorderPane();
+        webViewPanel = new StackPane();
 
         ///////////////////// Dragging and scrolling logic ////////////
 	webView.setDisable(true); // need to disable web view as it steals mouse events
@@ -424,18 +401,27 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	    public void handle(final MouseEvent event) {
 		final double deltaXForPan = -(event.getSceneX() - xForDragBegin);
 		final double deltaYForPan = -(event.getSceneY() - yForDragBegin);
+		if ((Math.abs(deltaXForPan) + Math.abs(deltaYForPan)) / 2.0 > DRAGGING_PIXEL_THRESHOULD) {
+		    panBy(deltaXForPan, deltaYForPan);
+		    path.setTranslateX(path.getTranslateX() - deltaXForPan);
+		    path.setTranslateY(path.getTranslateY() - deltaYForPan);
 
-		panBy(deltaXForPan, deltaYForPan);
-
-		xForDragBegin = event.getSceneX();
-		yForDragBegin = event.getSceneY();
-		event.consume();
+		    xForDragBegin = event.getSceneX();
+		    yForDragBegin = event.getSceneY();
+		    event.consume();
+		}
 	    }
 	});
 
 	webViewPanel.setOnMouseReleased(new EventHandler<MouseEvent>() {
 	    @Override
 	    public void handle(final MouseEvent event) {
+		final double deltaXForPan = -(event.getSceneX() - xForDragBegin);
+		final double deltaYForPan = -(event.getSceneY() - yForDragBegin);
+		panBy(deltaXForPan, deltaYForPan);
+		path.setTranslateX(path.getTranslateX() - deltaXForPan);
+		path.setTranslateY(path.getTranslateY() - deltaYForPan);
+
 		xForDragBegin = event.getSceneX();
 		yForDragBegin = event.getSceneY();
 
@@ -489,14 +475,18 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 
         ////////////////////////////////
 
-        webViewPanel.setCenter(webView);
-        root.setCenter(webViewPanel);
+        // webViewPanel.setCenter(webView);
+	webViewPanel.getChildren().add(webView);
+	canvas = new BorderPane();
+	webViewPanel.getChildren().add(canvas);
+
+	root.setCenter(webViewPanel);
         root.setTop(toolBar);
 
         path = createSimplePath();
-        webViewPanel.getChildren().add(path);
+        canvas.getChildren().add(path);
+
         final Scene scene = new Scene(root,1100,600, Color.web("#666970"));
-        scene.getStylesheets().add("/webmap/WebMap.css");
 
 	return scene;
     }
@@ -521,51 +511,63 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
         return spacer;
     }
 
-    static { // use system proxy settings when standalone application
-        // System.setProperty("java.net.useSystemProxies", "true");
-    }
-
-    public static void main(final String[] args){
-        Application.launch(args);
-    }
-
     protected boolean drawSpeedValues(final int zoom) {
 	return zoom > 15;
     }
 
-    protected Point2D prevXY;
-    protected int countOfProcessed;
+    /**
+     * A current zoom at some stage. Should be strictly used for addPoint or addLine purposes.
+     *
+     * @return
+     */
+    protected int getZoom() {
+	return zoom;
+    }
 
     protected void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
-	final DateTime start = new DateTime();
+	this.zoom = zoom;
+
+	final DateTime start0 = new DateTime();
+	DateTime start = new DateTime();
 	System.err.println("REMOVING OLD AND ADDING NEW...");
 
 	updateTransformation();
 
+	Period pd = new Period(start, new DateTime());
+	System.out.println("UPDATED transformation: done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	start = new DateTime();
+
 	if (path != null) {
-	    webViewPanel.getChildren().remove(path);
+	    path.setTranslateX(0.0);
+	    path.setTranslateY(0.0);
 	}
-
-	this.path = new Group();
+	pixelNodes.clear();
 
 	countOfProcessed = 0;
-	for (int i = 1 + (int)(startSlider.getValue() * points.size()); i < (int)(endSlider.getValue() * points.size()); i++) {
-	    addLine(webEngine, points.get(i-1), points.get(i), points.size(), drawSpeedValues(zoom));
-	}
-	System.out.println("PROCESSED segments: " + countOfProcessed);
-
-	prevXY = null;
-	countOfProcessed = 0;
+	newCountOfProcessed = 0;
+	oldCountOfProcessed = 0;
 	if (points.size() > 0) {
 	    addPoint(webEngine, points.get(0));
 	}
 	for (int i = 1 + (int)(startSlider.getValue() * points.size()); i < (int)(endSlider.getValue() * points.size()); i++) {
 	    addPoint(webEngine, points.get(i));
 	}
-	System.out.println("PROCESSED nodes: " + countOfProcessed);
+	pd = new Period(start, new DateTime());
+	System.out.println("PROCESSED nodes: " + countOfProcessed + " (new = " + newCountOfProcessed + "; old = " + oldCountOfProcessed + ") done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	start = new DateTime();
 
-	webViewPanel.getChildren().add(this.path);
-	final Period pd = new Period(start, new DateTime());
+	countOfProcessed = 0;
+	newCountOfProcessed = 0;
+	oldCountOfProcessed = 0;
+	for (int i = 1 + (int)(startSlider.getValue() * points.size()); i < (int)(endSlider.getValue() * points.size()); i++) {
+	    addLine(webEngine, points.get(i-1), points.get(i), points.size(), drawSpeedValues(zoom));
+	}
+
+	pd = new Period(start, new DateTime());
+	System.out.println("PROCESSED segments: " + countOfProcessed + " (new = " + newCountOfProcessed + "; old = " + oldCountOfProcessed + ") done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	start = new DateTime();
+
+	pd = new Period(start0, new DateTime());
 	System.err.println("REMOVING OLD AND ADDING NEW...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
     }
 
@@ -639,15 +641,41 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	}
     }
 
-    private double sqr(final double x) {
-	return x * x;
+//    private double sqr(final double x) {
+//	return x * x;
+//    }
+//
+//    protected double dist(final Point2D prevXY, final Point2D xY) {
+//	if (prevXY == null) {
+//	    return 1000;
+//	}
+//	return Math.sqrt(sqr(xY.getX() - prevXY.getX()) + sqr(xY.getY() - prevXY.getY()));
+//    }
+
+    /**
+     * Extracts a pixel (int x; int y) from the (double x; double y) values.
+     *
+     */
+    protected Pair<Integer, Integer> getPixel(final double x, final double y) {
+	return new Pair<>(new Double(Math.floor(x)).intValue(), new Double(Math.floor(y)).intValue()); // upper left corner of the pixel is used
     }
 
-    protected double dist(final Point2D prevXY, final Point2D xY) {
-	if (prevXY == null) {
-	    return 1000;
+    protected boolean isPixelBusy(final Pair<Integer, Integer> pixel) {
+	return getPixelNode(pixel) != null;
+    }
+
+    private Node getPixelNode(final Pair<Integer, Integer> pixel) {
+	final Map<Integer, Node> nodesInY = pixelNodes.get(pixel.getKey());
+	return nodesInY == null ? null : nodesInY.get(pixel.getValue());
+    }
+
+    protected Node putPixelNode(final Pair<Integer, Integer> pixel, final Node node) {
+	final Map<Integer, Node> nodesInY = pixelNodes.get(pixel.getKey());
+	if (nodesInY == null) {
+	    pixelNodes.put(pixel.getKey(), new HashMap<Integer, Node>());
 	}
-	return Math.sqrt(sqr(xY.getX() - prevXY.getX()) + sqr(xY.getY() - prevXY.getY()));
+	pixelNodes.get(pixel.getKey()).put(pixel.getValue(), node);
+	return node;
     }
 
     protected double pixelThreashould() {
@@ -658,20 +686,26 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	final Point2D xY0 = convertWorld2Pixel(webEngine, start.getLatitude(), start.getLongitude());
 	final Point2D xY = convertWorld2Pixel(webEngine, end.getLatitude(), end.getLongitude());
 
-	if (dist(xY0, xY) >= pixelThreashould() && (inside(xY0) || inside(xY))) {
+	final TrackSegment cachedTrackSegment = trackSegments.get(end);
+	final Pair<Integer, Integer> pixel = getPixel((xY0.getX() + xY.getX()) / 2.0, (xY0.getY() + xY.getY()) / 2.0);
+	if (drawLines(start, end) && (inside(xY0) || inside(xY)) && !isPixelBusy(pixel)) {
 	    countOfProcessed++;
 
-	    if (drawLines(start, end)) {
-		final TrackSegment cachedTrackSegment = trackSegments.get(end);
-		if (cachedTrackSegment != null) {
-		    cachedTrackSegment.update(xY0, xY);
-		    this.path.getChildren().add(cachedTrackSegment);
-		} else {
-		    final TrackSegment newTrackSegment = new TrackSegment(start, end);
-		    newTrackSegment.update(xY0, xY);
-		    trackSegments.put(end, newTrackSegment);
-		    this.path.getChildren().add(newTrackSegment);
-		}
+	    if (cachedTrackSegment != null) {
+		oldCountOfProcessed++;
+		cachedTrackSegment.update(xY0, xY);
+		cachedTrackSegment.setVisible(true);
+		// cachedTrackSegment.toBack();
+		putPixelNode(pixel, cachedTrackSegment);
+	    } else {
+		newCountOfProcessed++;
+		final TrackSegment newTrackSegment = new TrackSegment(start, end);
+		newTrackSegment.update(xY0, xY);
+		newTrackSegment.setVisible(true);
+		trackSegments.put(end, newTrackSegment);
+		this.path.getChildren().add(0, newTrackSegment);
+		// newTrackSegment.toBack();
+		putPixelNode(pixel, newTrackSegment);
 	    }
 
 	    //	if (end.getSpeed() < 5) {
@@ -691,16 +725,17 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 		// text.setStrokeWidth(2);
 		this.path.getChildren().add(text);
 	    }
-
-	    // addPoint(webEngine, end, size);
-
+	} else {
+	    if (cachedTrackSegment != null) {
+		cachedTrackSegment.setVisible(false);
+	    }
 	}
 	return new Pair<Double, Double>(xY.getX(), xY.getY());
     }
 
     protected boolean inside(final Point2D xY) {
-	return xY.getX() >= 0 && xY.getX() <= webView.getWidth() &&
-		xY.getY() >= 0 && xY.getY() <= webView.getHeight();
+	return xY.getX() >= -webView.getWidth() && xY.getX() <= 2 * webView.getWidth() &&
+		xY.getY() >= -webView.getHeight() && xY.getY() <= 2 * webView.getHeight();
     }
 
     protected boolean drawLines(final P start, final P end) {
@@ -722,26 +757,68 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	}
     }
 
-    public void providePoints(final List<P> points, final boolean fitToBounds) {
-	Platform.runLater(new Runnable() {
-	    @Override
-	    public void run() {
-		// This should order points in its natural ordering (see compareTo() method in concrete Point implementation)
-		System.err.println("SORT " + new Date());
-		Collections.sort(points);
-		System.err.println("SORTED " + new Date());
+    /**
+     * Provides completely new points to this view panel.
+     *
+     * Includes:
+     * 1. Sorting new points in natural ordering to ensure a correct order of they on a track etc.
+     * 2. Remove old resources (VERY IMPORTANT)
+     * 3. Fit to bounds if necessary.
+     * 4. Add new nodes, callouts and other stuff that correspond to new points.
+     * 5. Select an entity if it was selected before.
+     *
+     * @param points
+     * @param fitToBounds
+     */
+    protected void providePoints(final Pair<List<P>, Map<Long, List<P>>> pointsAndEntityPoints, final boolean fitToBounds) {
+	freeResources();
 
-		GisViewPanel.this.points.clear();
-		GisViewPanel.this.points.addAll(points);
+	final List<P> points = pointsAndEntityPoints.getKey();
 
-		if (fitToBounds) {
-		    fitToBounds();
-		}
-		// actually add a markers
-		removeOldAndAddNew(webEngine, zoom(webEngine));
-		selectEntity();
-	    }
-	});
+	// This should order points in its natural ordering (see compareTo() method in concrete Point implementation)
+	Collections.sort(points);
+
+	this.points.addAll(points);
+	this.entityPoints.putAll(pointsAndEntityPoints.getValue());
+
+	if (fitToBounds) {
+	    fitToBounds();
+	}
+    }
+
+    /**
+     * Clears all caches for nodes as well as the models (called 'points').
+     */
+    protected void freeResources() {
+	pixelNodes.clear();
+	trackSegments.clear();
+
+	entityPoints.clear();
+	points.clear();
+
+	if (path != null) {
+	    path.getChildren().clear();
+	}
+    }
+
+    protected static <P> void extendEntityPointsBy(final Map<Long, List<P>> entityPoints, final AbstractEntity entity, final P point) {
+	final List<P> list = entityPoints.get(entity.getId());
+	if (list == null) {
+	    entityPoints.put(entity.getId(), new ArrayList<P>());
+	}
+	entityPoints.get(entity.getId()).add(point);
+    }
+
+    protected P getCorrespondingPoint(final Long entityId) {
+	if (entityId == null) {
+	    throw new IllegalArgumentException("An id for entity should exist.");
+	}
+	final List<P> list = entityPoints.get(entityId);
+	return list == null ? null : list.get(list.size() - 1); // get the last point in the list
+    }
+
+    public P getCorrespondingPoint(final AbstractEntity entity) {
+	return entity == null ? null : getCorrespondingPoint(entity.getId());
     }
 
     public WebEngine getWebEngine() {
@@ -749,15 +826,13 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
     }
 
     protected void panBy(final double deltaXForPan, final double deltaYForPan) {
+	System.err.println("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
 	webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
     }
 
     public void centerBy(final double longitude, final double latitude) {
 	webEngine.executeScript("document.setCenter(" + latitude + "," + longitude + ")");
-	removeOldAndAddNew(webEngine, zoom(webEngine));
     }
-
-    protected abstract AbstractEntity<?> entityToSelect(final P point);
 
     @Override
     public final void clickedAction(final P point) {
@@ -769,5 +844,10 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	parentView.bringToView(entityToSelect);
 
 	requestFocusForEgi();
+    }
+
+    private static Double get(final JSObject p, final String what) {
+	final String s = p.call(what).toString();
+	return new Double(s);
     }
 }
