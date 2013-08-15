@@ -18,7 +18,6 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class MachineGpsGisViewPanel<T extends AbstractEntity<?>> extends GpsGisViewPanel<T> {
     private static final long serialVersionUID = -7032805070573512539L;
-    private final static int TAIL_SIZE_LIMIT = 5;
 
     public MachineGpsGisViewPanel(final MachineGpsGridAnalysisView<T> parentView, final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
 	super(parentView, egi, listSelectionModel, pageHolder);
@@ -31,12 +30,10 @@ public class MachineGpsGisViewPanel<T extends AbstractEntity<?>> extends GpsGisV
 	for (final AbstractEntity<?> machine : entitiesPage.data()) {
 	    if (machine.get("lastMessage") != null) {
 		final List<AbstractEntity> lastMessages = (List<AbstractEntity>) machine.get("lastMessages");
-		for (int i = lastMessages.size() - 2 - TAIL_SIZE_LIMIT; i <= lastMessages.size() - 2; i++) { // without last message
-		    if (i >= 0) {
-			final MessagePoint mp = MessagePoint.createMessagePointFromMachine(machine, lastMessages.get(i));
-			newPoints.add(mp);
-			extendEntityPointsBy(newEntityPoints, machine, mp);
-		    }
+		for (int i = 0; i < lastMessages.size() - 1; i++) { // without last message
+		    final MessagePoint mp = MessagePoint.createMessagePointFromMachine(machine, lastMessages.get(i));
+		    newPoints.add(mp);
+		    extendEntityPointsBy(newEntityPoints, machine, mp);
 		}
 		final MessagePoint mp = MessagePoint.createMessagePointFromMachine(machine);
 		newPoints.add(mp);
