@@ -13,8 +13,7 @@ import ua.com.fielden.platform.gis.Point;
  *
  */
 public class MessagePoint extends Point {
-    // FIXME in all concrete implementations MACHINE_PROP_ALIAS should be defined! Use reflection at this stage
-    public static /*final */String MACHINE_PROP_ALIAS = null;
+    public static /*final*/ String MACHINE_PROP_ALIAS = null; // in all concrete implementations MACHINE_PROP_ALIAS should be defined! Use reflection for this
     private final AbstractEntity<?> message;
     private final AbstractEntity<?> machine;
 
@@ -68,7 +67,6 @@ public class MessagePoint extends Point {
     }
 
     protected static void validateMessageWithoutMachine(final AbstractEntity<?> message) {
-	validateProperty(message, "created");
 	validateProperty(message, "gpsTime");
 	validateProperty(message, "vectorSpeed");
 	validateProperty(message, "vectorAngle");
@@ -77,7 +75,7 @@ public class MessagePoint extends Point {
     }
 
     private MessagePoint(final AbstractEntity<?> message, final AbstractEntity<?> machine) {
-	super((Date) message.get("created"), (Date) message.get("gpsTime"), (Integer) message.get("vectorSpeed"), ((BigDecimal) message.get("y")).doubleValue(), ((BigDecimal) message.get("x")).doubleValue());
+	super((Date) message.get("gpsTime"), (Integer) message.get("vectorSpeed"), ((BigDecimal) message.get("y")).doubleValue(), ((BigDecimal) message.get("x")).doubleValue());
 
 	this.vectorAngle = (Integer) message.get("vectorAngle");
 

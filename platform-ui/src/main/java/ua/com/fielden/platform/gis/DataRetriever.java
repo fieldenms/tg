@@ -39,7 +39,7 @@ public class DataRetriever {
 		    final Date d2 = df.parse(st.nextToken());
 		    final int speed = Integer.valueOf(st.nextToken());
 		    final double latitude = Double.valueOf(st.nextToken()), longitude = Double.valueOf(st.nextToken());;
-		    final Point pe = new Point(d1, d2, speed, latitude, longitude);
+		    final Point pe = new Point(d2, speed, latitude, longitude);
 		    list.add(pe);
 		}
 	    }

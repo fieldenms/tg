@@ -3,20 +3,15 @@ package ua.com.fielden.platform.gis;
 import java.util.Date;
 
 public class Point implements Comparable<Point> {
-    private final Date timestamp, gpstime;
+    private final Date gpstime;
     private final int speed;
     private final double latitude, longitude;
 
-    public Point(final Date timestamp, final Date gpstime, final int speed, final double latitude, final double longitude) {
-	this.timestamp = timestamp;
+    public Point(final Date gpstime, final int speed, final double latitude, final double longitude) {
 	this.gpstime = gpstime;
 	this.speed = speed;
 	this.latitude = latitude;
 	this.longitude = longitude;
-    }
-
-    public Date getTimestamp() {
-        return timestamp;
     }
 
     public Date getGpstime() {
@@ -42,6 +37,6 @@ public class Point implements Comparable<Point> {
 
     @Override
     public String toString() {
-	return "Point [timestamp=" + timestamp + ", gpstime=" + gpstime + ", speed=" + speed + ", latitude=" + latitude + ", longitude=" + longitude + "]";
+	return "Point [gpstime=" + gpstime + ", speed=" + speed + ", latitude=" + latitude + ", longitude=" + longitude + "]";
     }
 }
