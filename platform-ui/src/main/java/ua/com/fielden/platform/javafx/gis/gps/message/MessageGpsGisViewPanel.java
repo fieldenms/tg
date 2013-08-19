@@ -35,14 +35,14 @@ public class MessageGpsGisViewPanel<T extends AbstractEntity<?>> extends GpsGisV
 	return new Pair<>(newPoints, newEntityPoints);
     }
 
-    private double distance(final MessagePoint start, final MessagePoint end) {
+    protected double distance(final MessagePoint start, final MessagePoint end) {
 	return MapUtils.calcDistance(start.getLongitude(), start.getLatitude(), end.getLongitude(), end.getLatitude());
     }
 
     @Override
     protected boolean drawLines(final MessagePoint start, final MessagePoint end) {
-	return start.getMachine().equals(end.getMachine()) && // draw line if it is same machine
-		distance(start, end) < 200; // draw line if a distance between points is < 200 meters
+	return start.getMachine().equals(end.getMachine()); // draw line if it is same machine
+		// && distance(start, end) < 200; // draw line if a distance between points is < 200 meters
     }
 
     @Override
