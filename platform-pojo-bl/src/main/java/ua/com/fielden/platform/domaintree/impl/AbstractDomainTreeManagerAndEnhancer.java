@@ -405,15 +405,15 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
-	public boolean addPropertyCheckingListener(final IPropertyCheckingListener listener) {
+	public void addPropertyCheckingListener(final IPropertyCheckingListener listener) {
 	    // inject an enhanced type into method implementation
-	    return base.addPropertyCheckingListener(listener);
+	    base.addPropertyCheckingListener(listener);
 	}
 
 	@Override
-	public boolean removePropertyCheckingListener(final IPropertyCheckingListener listener) {
+	public void removePropertyCheckingListener(final IPropertyCheckingListener listener) {
 	    // inject an enhanced type into method implementation
-	    return base.removePropertyCheckingListener(listener);
+	    base.removePropertyCheckingListener(listener);
 	}
 
 	@Override

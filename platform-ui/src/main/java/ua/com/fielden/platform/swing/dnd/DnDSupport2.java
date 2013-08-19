@@ -9,9 +9,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -19,7 +20,7 @@ import javax.swing.TransferHandler;
 
 /**
  * Class, enabling drag-n-drop support for {@link JComponent}s
- * 
+ *
  * @author Yura
  */
 public class DnDSupport2 {
@@ -29,7 +30,7 @@ public class DnDSupport2 {
     private DnDSupport2() {
     }
 
-    private static final Map<JComponent, MouseListener> INSTALLED_ADAPTERS = new HashMap<JComponent, MouseListener>();
+    private static final Map<JComponent, WeakReference<MouseListener>> INSTALLED_ADAPTERS = new WeakHashMap<>();
 
     public static final DataFlavor TG_DATA_FLAVOR;
 
@@ -61,7 +62,7 @@ public class DnDSupport2 {
      * - when call to {@link DragToSupport#canDropTo(Point, Object, JComponent)} returned true and user released mouse button over specified component, call to
      * {@link DragToSupport#dropTo(Point, Object, JComponent)} method occurs with same parameters as in {@link DragToSupport#canDropTo(Point, Object, JComponent)} method. If during
      * invocation of this method occurred that it is not possible to drop object then you should return false and indicate unsuccessful object dropping.
-     * 
+     *
      * <br>
      * <br>
      * Generally the lifecycle of drag is like that : while dragging over components calls to {@link DragFromSupport#getObject4DragAt(Point, JComponent)} on drag source component
@@ -75,7 +76,7 @@ public class DnDSupport2 {
      * Note : left mouse button press initiates drag behavior. To change this, call
      * {@link #installDnDSupport(JComponent, ua.com.fielden.platform.dnd.DnDSupport2.DragStartRecognizer, ua.com.fielden.platform.dnd.DnDSupport2.DragFromSupport, ua.com.fielden.platform.dnd.DnDSupport2.DragToSupport)}
      * method with custom {@link DragStartRecognizer}.
-     * 
+     *
      * @param component
      * @param dragFromSupport
      * @param dragToSupport
@@ -107,9 +108,9 @@ public class DnDSupport2 {
     /**
      * Does the same as {@link #installDnDSupport(JComponent, ua.com.fielden.platform.dnd.DnDSupport2.DragFromSupport, ua.com.fielden.platform.dnd.DnDSupport2.DragToSupport)} but
      * drag begins when {@link DragStartRecognizer#isDragStartEvent(MouseEvent)} return true on mouse event.
-     * 
+     *
      * @see #installDnDSupport(JComponent, ua.com.fielden.platform.dnd.DnDSupport2.DragFromSupport, ua.com.fielden.platform.dnd.DnDSupport2.DragToSupport)
-     * 
+     *
      * @param component
      * @param dragStartRecognizer
      * @param dragFromSupport
@@ -128,7 +129,7 @@ public class DnDSupport2 {
      * <br>
      * Default drag support can be spotted by presence of public method setDragEnabled(boolean). If component doesn't support drag everything is ok, we don't do anything. But if it
      * does we try to call setDragEnabled(false) on it using Reflection API.
-     * 
+     *
      * @param component
      */
     private static boolean setDragEnableForComponent(final JComponent component, final boolean dragEnable) {
@@ -146,18 +147,19 @@ public class DnDSupport2 {
 
     /**
      * Removes drag-n-drop support provided by this class, if it was installed and returns the result of such removal.
-     * 
+     *
      * @param component
      */
     public static boolean deinstallDnDSupport(final JComponent component) {
 	if (component.getTransferHandler() instanceof DnDTransferHandler) {
 	    // removing mouse listener enabling drag-from functionality if it was added to the component
-	    if (INSTALLED_ADAPTERS.containsKey(component)) {
-		component.removeMouseListener(INSTALLED_ADAPTERS.get(component));
+	    if (INSTALLED_ADAPTERS.containsKey(component) && INSTALLED_ADAPTERS.get(component).get() != null) {
+		component.removeMouseListener(INSTALLED_ADAPTERS.get(component).get());
 		INSTALLED_ADAPTERS.remove(component);
 	    }
 	    component.setTransferHandler(null);
 	    setDragEnableForComponent(component, false);
+	    removeNullReferences();
 	    return true;
 	} else {
 	    return false;
@@ -165,6 +167,7 @@ public class DnDSupport2 {
     }
 
     private static boolean installAdapterIfNeeded(final JComponent component, final DragStartRecognizer dragStartRecognizer) {
+	removeNullReferences();
 	if ((!setDragEnableForComponent(component, true)) && (dragStartRecognizer != null)) {
 	    if (!INSTALLED_ADAPTERS.containsKey(component)) {
 		final MouseAdapter adapter = new MouseAdapter() {
@@ -177,7 +180,7 @@ public class DnDSupport2 {
 		    }
 		};
 		component.addMouseListener(adapter);
-		INSTALLED_ADAPTERS.put(component, adapter);
+		INSTALLED_ADAPTERS.put(component, new WeakReference<MouseListener>(adapter));
 		return true;
 	    } else {
 		return false;
@@ -187,10 +190,22 @@ public class DnDSupport2 {
     }
 
     /**
+     * Removes the map entries those have been erased with garbage collector.
+     *
+     */
+    private static void removeNullReferences() {
+	for (final Map.Entry<JComponent, WeakReference<MouseListener>> entry : INSTALLED_ADAPTERS.entrySet()) {
+	    if (entry.getValue().get() == null) {
+		INSTALLED_ADAPTERS.remove(entry.getKey());
+	    }
+	}
+    }
+
+    /**
      * Interface providing custom drag-from support.
-     * 
+     *
      * @see DnDSupport2#installDnDSupport(JComponent, ua.com.fielden.platform.dnd.DnDSupport2.DragFromSupport, ua.com.fielden.platform.dnd.DnDSupport2.DragToSupport)
-     * 
+     *
      * @author Yura
      */
     public static interface DragFromSupport {
@@ -201,9 +216,9 @@ public class DnDSupport2 {
 
     /**
      * Interface providing custom drag-to support.
-     * 
+     *
      * @see DnDSupport2#installDnDSupport(JComponent, ua.com.fielden.platform.dnd.DnDSupport2.DragFromSupport, ua.com.fielden.platform.dnd.DnDSupport2.DragToSupport)
-     * 
+     *
      * @author Yura
      */
     public static interface DragToSupport {
@@ -215,7 +230,7 @@ public class DnDSupport2 {
     /**
      * Interface for defining, what kind of mouse event should initiate drag. Implementors of this interface may return true, for instance if left mouse button was pressed along
      * with ctrl key etc.
-     * 
+     *
      * @author Yura
      */
     public static interface DragStartRecognizer {
@@ -225,7 +240,7 @@ public class DnDSupport2 {
     /**
      * Class that wraps standard {@link TransferHandler} functionality and redirects all calls to {@link DragFromSupport} and {@link DragToSupport} interfaces installed on
      * particular component.
-     * 
+     *
      * @author Yura
      */
     private static class DnDTransferHandler extends TransferHandler {
@@ -423,7 +438,7 @@ public class DnDSupport2 {
 	/**
 	 * Checks whether it is drop operation(not clipboard one), whether support component and component to which this import is sent are the same and whether data flavor of
 	 * incoming import is supported.
-	 * 
+	 *
 	 * @param support
 	 * @return
 	 */
@@ -447,7 +462,7 @@ public class DnDSupport2 {
 
     /**
      * Helper class that incapsulates dragged object and drag source component. Actually instances of this class(not just {@link Object}) is dragged between components.
-     * 
+     *
      * @author Yura
      */
     public static class TransferredObject {
@@ -485,7 +500,7 @@ public class DnDSupport2 {
 
     /**
      * Throws {@link IllegalArgumentException} if value is null.
-     * 
+     *
      * @param <E>
      * @param value
      * @param valueName

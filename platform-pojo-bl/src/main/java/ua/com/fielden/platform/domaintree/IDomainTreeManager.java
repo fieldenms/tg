@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree;
 
+import java.util.EventListener;
 import java.util.List;
 
 /**
@@ -117,7 +118,7 @@ public interface IDomainTreeManager {
          * @author TG Team
          *
          */
-        public interface IPropertyCheckingListener {
+        public interface IPropertyCheckingListener extends EventListener{
 	    /**
 	     * @param hasBeenChecked -- <code>true</code> to indicate that property was successfully checked, <code>false</code> to indicate that it was successfully unchecked.
 	     * @param index -- the <code>index</code> of the property being checked / unchecked inside "checking properties" list.
@@ -131,7 +132,7 @@ public interface IDomainTreeManager {
          * @param listener
          * @return
          */
-        boolean addPropertyCheckingListener(final IPropertyCheckingListener listener);
+        void addPropertyCheckingListener(final IPropertyCheckingListener listener);
 
         /**
          * Removes a {@link IPropertyCheckingListener} listener.
@@ -139,7 +140,7 @@ public interface IDomainTreeManager {
          * @param listener
          * @return
          */
-        boolean removePropertyCheckingListener(final IPropertyCheckingListener listener);
+        void removePropertyCheckingListener(final IPropertyCheckingListener listener);
 
         /**
          * Swaps two properties (<code>property1</code> and <code>property2</code>) in an ordered list of checked properties for concrete <code>root</code> type.

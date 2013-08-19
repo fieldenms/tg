@@ -146,13 +146,13 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	final ICentreDomainTreeManagerAndEnhancer cdtm = entityCentreConfigurationView.getModel().getEntityCentreManager();
 	if (cdtm == null) {
 	    try {
-		/* TODO */ entityCentreConfigurationView.getModel().initEntityCentreManager();
+		/* TODO */entityCentreConfigurationView.getModel().initEntityCentreManager();
 	    } catch (final IllegalArgumentException e) {
 		logger.error(e.getMessage(), e);
 	    }
 	}
 	return entityCentreConfigurationView.getModel().getEntityCentreManager();
-	}
+    }
 
     /**
      * Returns the {@link CentreConfigurationView} instance wrapped by this {@link DynamicReportWrapper}.

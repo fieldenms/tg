@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -8,7 +9,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.event.EventListenerList;
+
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager.IPropertyCheckingListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
@@ -232,6 +236,37 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     }
 
     /**
+     * The weak wrapper for {@link IPropertyCheckingListener} instance.
+     *
+     * @author TG Team
+     *
+     */
+    public static class WeakPropertyCheckingListener implements IPropertyCheckingListener {
+
+	private final WeakReference<IPropertyCheckingListener> ref;
+	private final ITickManager tickManager;
+
+	/**
+	 * Creates weak wrapper for {@link IPropertyCheckingListener} instance and tick manager. (Please note that tickManager doesn't registers specified listener. It must be done manually!).
+	 *
+	 * @param listener
+	 * @param tickManager
+	 */
+	public WeakPropertyCheckingListener(final IPropertyCheckingListener listener, final ITickManager tickManager) {
+	    this.ref = new WeakReference<IDomainTreeManager.ITickManager.IPropertyCheckingListener>(listener);
+	    this.tickManager = tickManager;
+	}
+
+	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index) {
+	    if (ref.get() != null) {
+		ref.get().propertyStateChanged(root, property, hasBeenChecked, oldState, index);
+	    } else {
+		tickManager.removePropertyCheckingListener(this);
+	    }
+	}
+    }
+
+    /**
      * A tick manager with all sufficient logic. <br><br>
      *
      * Includes implementation of "checking" logic, that contain: <br>
@@ -247,7 +282,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	private final transient AbstractDomainTreeRepresentation dtr;
 	private final transient ITickRepresentation tr;
 
-	private final transient List<IPropertyCheckingListener> propertyCheckingListeners;
+	private final transient EventListenerList propertyCheckingListeners;
 
 	/**
 	 * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr" fields.
@@ -263,7 +298,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    this.checkedProperties = createRootsMap();
 	    this.checkedProperties.putAll(checkedProperties);
 
-	    this.propertyCheckingListeners = new ArrayList<IPropertyCheckingListener>();
+	    this.propertyCheckingListeners = new EventListenerList();
 
 	    this.dtr = null;
 	    this.tr = null;
@@ -356,7 +391,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    checkedPropertiesMutable(root).remove(property);
 
 	    // fire UNCHECKED event after successful "unchecked" action
-	    for (final IPropertyCheckingListener listener : propertyCheckingListeners) {
+	    for (final IPropertyCheckingListener listener : propertyCheckingListeners.getListeners(IPropertyCheckingListener.class)) {
 		listener.propertyStateChanged(root, property, false, null, index);
 	    }
 	}
@@ -365,19 +400,19 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    checkedPropertiesMutable(root).add(index, property);
 
 	    // fire CHECKED event after successful "checked" action
-	    for (final IPropertyCheckingListener listener : propertyCheckingListeners) {
+	    for (final IPropertyCheckingListener listener : propertyCheckingListeners.getListeners(IPropertyCheckingListener.class)) {
 		listener.propertyStateChanged(root, property, true, null, index);
 	    }
 	}
 
 	@Override
-	public boolean addPropertyCheckingListener(final IPropertyCheckingListener listener) {
-	    return propertyCheckingListeners.add(listener);
+	public void addPropertyCheckingListener(final IPropertyCheckingListener listener) {
+	    propertyCheckingListeners.add(IPropertyCheckingListener.class, listener);
 	}
 
 	@Override
-	public boolean removePropertyCheckingListener(final IPropertyCheckingListener listener) {
-	    return propertyCheckingListeners.remove(listener);
+	public void removePropertyCheckingListener(final IPropertyCheckingListener listener) {
+	    propertyCheckingListeners.remove(IPropertyCheckingListener.class, listener);
 	}
 
 	@Override
