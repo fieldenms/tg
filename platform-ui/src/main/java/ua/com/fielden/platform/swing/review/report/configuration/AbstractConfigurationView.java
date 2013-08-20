@@ -189,6 +189,8 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     public void close() {
 	setSize(new Dimension(0, 0));
 	getModel().setMode(NOT_SPECIFIED);
+	previousView = null;
+	previousWizard = null;
 	wasResized = false;
 	wasChildLoaded = false;
 	newConfigurationView = false;
