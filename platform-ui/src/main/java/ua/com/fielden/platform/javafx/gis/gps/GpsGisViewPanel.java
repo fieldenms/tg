@@ -110,8 +110,7 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 
     @Override
     protected void afterMapLoaded() {
-	getWebEngine().executeScript("document.goToLocation(\"Lviv\")");
-	// getWebEngine().executeScript("document.setMapTypeSatellite()");
+	executeScript("document.goToLocation(\"Lviv\")");
 	activateView(GisView.ROAD);
     }
 
@@ -141,8 +140,7 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 
     @Override
     protected void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
-	System.err.println("\tentityWithCallout == " + entityWithCallout + " calloutHasBeenTurnedOff == " + calloutHasBeenTurnedOff);
-	// this.nodesWithCallouts.clear();
+	// System.err.println("\tentityWithCallout == " + entityWithCallout + " calloutHasBeenTurnedOff == " + calloutHasBeenTurnedOff);
 	selectedPoint = null;
 	super.removeOldAndAddNew(webEngine, zoom);
 

@@ -5,6 +5,8 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.concurrent.Worker.State;
+
 import javax.swing.JComponent;
 import javax.swing.JSplitPane;
 import javax.swing.ListSelectionModel;
@@ -16,8 +18,11 @@ import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.swing.egi.EgiPanel;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.coloring.IColouringScheme;
+import ua.com.fielden.platform.swing.review.development.DefaultLoadingNode;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 
 /**
  * {@link GridAnalysisView} with EGI and GPS GIS views.
@@ -31,15 +36,41 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
     private final JSplitPane tableAndGisViewSplitter;
     private final GVPTYPE gisViewPanel;
 
+    //Asynchronous loading related fields.
+    private final DefaultLoadingNode gpsViewPanelLoadingNode;
+
     public GpsGridAnalysisView(final GpsGridAnalysisModel<T> model, final GpsGridConfigurationView<T> owner) {
 	super(model, owner);
 
+	this.gpsViewPanelLoadingNode = new DefaultLoadingNode();
+	addLoadingChild(gpsViewPanelLoadingNode);
+
 	gisViewPanel = createGisViewPanel(getEgiPanel().getEgi(), getEgiPanel().getEgi().getSelectionModel(), getModel().getPageHolder());
+	gisViewPanel.addGisPanelLoadListener(createLoadListener());
 	tableAndGisViewSplitter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, getEgiPanel(), gisViewPanel);
 	tableAndGisViewSplitter.setOneTouchExpandable(true);
-	tableAndGisViewSplitter.setDividerLocation(0.5); // FIXME this does not work properly!  // tableAndGisViewSplitter.setResizeWeight(0.5);
+
+	addLoadListener(new ILoadListener() {
+	    @Override
+	    public void viewWasLoaded(final LoadEvent event) {
+		tableAndGisViewSplitter.setDividerLocation(0.5); // tableAndGisViewSplitter.setResizeWeight(0.5);
+	    }
+	});
 
 	layoutView();
+    }
+
+    private IGisPanelLoadedListener createLoadListener() {
+	return new IGisPanelLoadedListener() {
+
+	    @Override
+	    public void gisPanelLoaded(final GisPanelLoadEvent e) {
+		if (State.SUCCEEDED == e.getState() || State.FAILED == e.getState()) {
+		    gisViewPanel.removeGisPanelLoadListener(this);
+		    gpsViewPanelLoadingNode.tryLoading();
+		}
+	    }
+	};
     }
 
     protected GVPTYPE getGisViewPanel() {
@@ -62,6 +93,12 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
      * @return
      */
     protected abstract IColouringScheme<AbstractEntity> createRowColoringScheme();
+
+    @Override
+    public void close() {
+	gpsViewPanelLoadingNode.reset();
+	super.close();
+    }
 
     @Override
     public GpsGridAnalysisModel<T> getModel() {

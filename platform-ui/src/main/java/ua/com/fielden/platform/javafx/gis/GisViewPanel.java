@@ -61,10 +61,13 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.gis.Point;
+import ua.com.fielden.platform.javafx.gis.gps.GisPanelLoadEvent;
+import ua.com.fielden.platform.javafx.gis.gps.IGisPanelLoadedListener;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.pagination.IPageChangedListener;
 import ua.com.fielden.platform.pagination.PageChangedEvent;
 import ua.com.fielden.platform.pagination.PageHolder;
+import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
@@ -258,7 +261,23 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	webView = new WebView();
 	webEngine = webView.getEngine();
 
-	loadMap();
+	webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
+	    public void changed(final ObservableValue ov, final State oldState, final State newState) {
+		if (newState == State.SUCCEEDED) {
+		    afterMapLoaded();
+		    fireGisLoadEvent(new GisPanelLoadEvent(GisViewPanel.this, State.SUCCEEDED));
+		} else if (newState == State.FAILED) {
+		    webEngine.reload();
+		    fireGisLoadEvent(new GisPanelLoadEvent(GisViewPanel.this, State.FAILED));
+
+		    // invokeErrorDialog(new Exception("Web view page loading has been failed."));
+		} else {
+		    // other states like SCHEDULLED or READY or RUNNING are not interesting
+		}
+	    }
+	});
+
+	// loadMap();
         // create map type buttons
         final ToggleGroup mapTypeGroup = new ToggleGroup();
         road = new ToggleButton("Road");
@@ -276,16 +295,19 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
                     final ObservableValue<? extends Toggle> observableValue,
                     final Toggle toggle, final Toggle toggle1) {
                 if (road.isSelected()) {
-                    webEngine.executeScript("document.setMapTypeRoad()");
+                    executeScript("document.setMapTypeRoad()");
                 } else if (satellite.isSelected()) {
-                    webEngine.executeScript("document.setMapTypeSatellite()");
+                    executeScript("document.setMapTypeSatellite()");
                 } else if (hybrid.isSelected()) {
-                    webEngine.executeScript("document.setMapTypeHybrid()");
+                    executeScript("document.setMapTypeHybrid()");
                 } else if (terrain.isSelected()) {
-                    webEngine.executeScript("document.setMapTypeTerrain()");
+                    executeScript("document.setMapTypeTerrain()");
                 }
             }
         });
+
+        loadMap();
+
         // add map source toggles
         final ToggleGroup mapSourceGroup = new ToggleGroup();
         final ToggleButton google = new ToggleButton("Google");
@@ -323,7 +345,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
                     new KeyFrame(new Duration(400),
                             new EventHandler<ActionEvent>() {
                         public void handle(final ActionEvent actionEvent) {
-                            webEngine.executeScript("document.goToLocation(\""+ searchBox.getText() + "\")");
+                            executeScript("document.goToLocation(\""+ searchBox.getText() + "\")");
                         }
                     })
                 );
@@ -333,7 +355,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
         final Button zoomIn = new Button("Zoom In");
         zoomIn.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(final ActionEvent actionEvent) {
-		webEngine.executeScript("document.zoomIn(); document.map.getZoom()");
+		executeScript("document.zoomIn(); document.map.getZoom()");
 		removeOldAndAddNew(webEngine, zoom(webEngine));
             }
         });
@@ -347,7 +369,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
         final Button zoomOut = new Button("Zoom Out");
         zoomOut.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(final ActionEvent actionEvent) {
-        	webEngine.executeScript("document.zoomOut()");
+        	executeScript("document.zoomOut()");
 		removeOldAndAddNew(webEngine, zoom(webEngine));
             }
         });
@@ -456,7 +478,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 				    final double centrePixelY = webView.getHeight() / 2.0;
 
 				    panBy(-(centrePixelX - cursorPixelX), -(centrePixelY - cursorPixelY));
-				    webEngine.executeScript("document.setZoom(" + targetZoom + ")");
+				    executeScript("document.setZoom(" + targetZoom + ")");
 				    panBy(centrePixelX - cursorPixelX, centrePixelY - cursorPixelY);
 				    final Period p = new Period(st, new DateTime());
 				    System.out.println("Zooming by " + currentZoomDelta + " steps in " + p.getSeconds() + " sec " + p.getMillis() + " millis");
@@ -492,17 +514,16 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
     }
 
     protected void afterMapLoaded() {
+	executeScript("document.checkLoadedScripts()");
     }
 
-    protected void loadMap() {
-	webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
-	    public void changed(final ObservableValue ov, final State oldState, final State newState) {
-		if (newState == State.SUCCEEDED) {
-		    afterMapLoaded();
-		}
-	    }
-	});
-	webEngine.load(GisViewPanel.class.getResource("googlemap.html").toString());
+    private void loadMap() {
+	try {
+	    webEngine.load(GisViewPanel.class.getResource("googlemap.html").toString());
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    invokeErrorDialog(e);
+	}
     }
 
     private Node createSpacer() {
@@ -529,13 +550,14 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 
 	final DateTime start0 = new DateTime();
 	DateTime start = new DateTime();
+	Period pd;
 	System.err.println("REMOVING OLD AND ADDING NEW...");
 
 	updateTransformation();
 
-	Period pd = new Period(start, new DateTime());
-	System.out.println("UPDATED transformation: done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-	start = new DateTime();
+//	Period pd = new Period(start, new DateTime());
+//	System.out.println("UPDATED transformation: done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+//	start = new DateTime();
 
 	if (path != null) {
 	    path.setTranslateX(0.0);
@@ -585,14 +607,14 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	return point.toString();
     }
 
-    private static Point2D googleConvertWorld2Pixel(final WebEngine webEngine, final double latitude, final double longitude) {
-	final JSObject point = (JSObject) webEngine.executeScript("document.convertPoint(" + latitude + ", " + longitude + ")");
-	return new Point2D.Double((Double) point.getMember("x"), (Double) point.getMember("y"));
-    }
+//    private static Point2D googleConvertWorld2Pixel(final WebEngine webEngine, final double latitude, final double longitude) {
+//	final JSObject point = (JSObject) webEngine.executeScript("document.convertPoint(" + latitude + ", " + longitude + ")");
+//	return new Point2D.Double((Double) point.getMember("x"), (Double) point.getMember("y"));
+//    }
 
     protected void updateTransformation() {
-	final JSObject northEast = (JSObject) webEngine.executeScript("document.getNorthEast()");
-	final JSObject southWest = (JSObject) webEngine.executeScript("document.getSouthWest()");
+	final JSObject northEast = (JSObject) executeScript("document.getNorthEast()");
+	final JSObject southWest = (JSObject) executeScript("document.getSouthWest()");
 
 //	currentTranformation = new WorldToScreenAffineTransformation(webView.getWidth(), webView.getHeight(),
 //		get(southWest, "lng"), get(southWest, "lat"), get(northEast, "lng"), get(northEast, "lat"));
@@ -743,18 +765,44 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
     }
 
     protected int zoom(final WebEngine webEngine) {
-	return (Integer) webEngine.executeScript("document.map.getZoom()");
+	return (Integer) executeScript("document.map.getZoom()");
     }
 
     protected void fitToBounds() {
 	if (points != null && !points.isEmpty()) {
 	    // fit all coordinates to the bounds calculated by existing points
-	    webEngine.executeScript("document.viewBounds = new google.maps.LatLngBounds()");
+	    executeScript("document.viewBounds = new google.maps.LatLngBounds()");
 	    for (final P point : points) {
-		webEngine.executeScript("document.viewBounds.extend(new google.maps.LatLng(" + point.getLatitude() + "," + point.getLongitude() + "))");
+		executeScript("document.viewBounds.extend(new google.maps.LatLng(" + point.getLatitude() + "," + point.getLongitude() + "))");
 	    }
-	    webEngine.executeScript("document.map.fitBounds(document.viewBounds)");
+	    executeScript("document.map.fitBounds(document.viewBounds)");
 	}
+    }
+
+    /**
+     * Executes javaScript script. If execution fails -- it reports that in dialog window (there is a need to reload all centre).
+     *
+     * @param jsString
+     * @return
+     */
+    protected Object executeScript(final String jsString) {
+	try {
+	    return webEngine.executeScript(jsString);
+	} catch (final Exception e) {
+	    e.printStackTrace();
+
+	    invokeErrorDialog(e);
+	    return null;
+	    // FIXME executeScript(jsString);
+	}
+    }
+
+    private void invokeErrorDialog(final Exception e) {
+	SwingUtilitiesEx.invokeLater(new Runnable() {
+	    public void run() {
+		new DialogWithDetails(null, "Перевантажте центр (перервано звязок з інтернетом)", e).setVisible(true);
+	    }
+	});
     }
 
     /**
@@ -826,12 +874,12 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
     }
 
     protected void panBy(final double deltaXForPan, final double deltaYForPan) {
-	System.err.println("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
-	webEngine.executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
+	// System.err.println("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
+	executeScript("document.panBy(" + deltaXForPan + ", " + deltaYForPan + ")");
     }
 
     public void centerBy(final double longitude, final double latitude) {
-	webEngine.executeScript("document.setCenter(" + latitude + "," + longitude + ")");
+	executeScript("document.setCenter(" + latitude + "," + longitude + ")");
     }
 
     @Override
@@ -844,6 +892,24 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	parentView.bringToView(entityToSelect);
 
 	requestFocusForEgi();
+    }
+
+    public void addGisPanelLoadListener(final IGisPanelLoadedListener listener) {
+	listenerList.add(IGisPanelLoadedListener.class, listener);
+    }
+
+    public void removeGisPanelLoadListener(final IGisPanelLoadedListener listener) {
+	listenerList.remove(IGisPanelLoadedListener.class, listener);
+    }
+
+    private void fireGisLoadEvent(final GisPanelLoadEvent e) {
+	SwingUtilitiesEx.invokeLater(new Runnable() {
+	    public void run() {
+		for(final IGisPanelLoadedListener listener : listenerList.getListeners(IGisPanelLoadedListener.class)) {
+		    listener.gisPanelLoaded(e);
+		}
+	    }
+	});
     }
 
     private static Double get(final JSObject p, final String what) {

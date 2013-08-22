@@ -15,6 +15,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -44,6 +46,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReviewModel<T, CDTME, IAbstractAnalysisDomainTreeManager> {
+    private final Logger logger = Logger.getLogger(getClass());
     private final long TRANSACTION_ENTITY_DELTA_DELAY = 6000;
     /** holds the last executed query */
     private Pair<IQueryComposer<T>, IQueryComposer<T>> analysisQueries;
@@ -94,25 +97,31 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 			throw new IllegalArgumentException("Cannot retrieve 'delta' if main query has not been run.");
 		    }
 
-		    final Date old = new Date(oldNow.getTime());
-		    oldNow = new Date();
-		    final Result result = getDelta(old, oldNow);
-		    if (result.isSuccessful()) {
-			final IPage<T> deltaPage = page(result);
-			if (!deltaPage.data().isEmpty()) {
-			    getPageHolder().newPage(produceEnhancedPage(deltaPage)); // update loaded page
+		    try {
+			final Date old = new Date(oldNow.getTime());
+			oldNow = new Date();
+			final Result result = getDelta(old, oldNow);
+			if (result.isSuccessful()) {
+			    final IPage<T> deltaPage = page(result);
+			    if (!deltaPage.data().isEmpty()) {
+				getPageHolder().newPage(produceEnhancedPage(deltaPage)); // update loaded page
+			    }
+			} else {
+			    logger.error("DELTA RETRIEVAL HAS BEEN FAILED DUE TO [" + result.getMessage() + "].");
+			    result.printStackTrace();
 			}
-		    } else {
-			System.err.println("DELTA RETRIEVAL HAS BEEN FAILED DUE TO [" + result.getMessage() + "].");
+		    } catch (final Exception e) {
+			logger.error("DELTA RETRIEVAL HAS BEEN FAILED DUE TO [" + e.getMessage() + "].");
+			e.printStackTrace();
 		    }
 
 		    timer = null;
 
 		    if (getAnalysisView().isShowing()) {
-			System.err.println("INIT DELTA RETRIEVAL ==> isShowing == " + getAnalysisView().isShowing());
+			logger.info("INIT DELTA RETRIEVAL ==> isShowing == " + getAnalysisView().isShowing());
 			scheduleDeltaRetrieval();
 		    } else {
-			System.err.println("DELTA RETRIEVAL STOPPED ==> isShowing == " + getAnalysisView().isShowing());
+			logger.info("DELTA RETRIEVAL STOPPED ==> isShowing == " + getAnalysisView().isShowing());
 		    }
 		}
 	    };
@@ -302,6 +311,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	if (AnnotationReflector.isTransactionEntity(getCriteria().getEntityClass())) {
 	    if (deltaRetriever != null) {
 		deltaRetriever.stop();
+		deltaRetriever = null;
 	    }
 	    now = new Date();
 	    final Pair<IQueryComposer<T>, IQueryComposer<T>> queries = enhanceByTransactionDateBoundaries(null, now);
