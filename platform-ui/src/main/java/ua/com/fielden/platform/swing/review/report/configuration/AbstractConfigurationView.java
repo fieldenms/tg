@@ -38,6 +38,7 @@ import javax.swing.JOptionPane;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
+import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.development.SelectableAndLoadBasePanel;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
@@ -98,6 +99,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	newConfigurationView = false;
 	addComponentListener(createComponentWasResized());
 	model.addPropertyChangeListener(createModeChangeListener());
+	addLoadListener(createAfterLoadListener());
     }
 
     /**
@@ -176,6 +178,15 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     }
 
     /**
+     * Shows the message on the blocking progress layer when this configuration view is loading
+     *
+     * @param msg
+     */
+    public void showLoadingMessage(final String msg) {
+	getProgressLayer().setText(msg);
+    }
+
+    /**
      * Returns the value that indicates whether this view was loaded or not.
      *
      * @return
@@ -198,6 +209,16 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     }
 
     /**
+     * Locks or unlocks this configuration view when it is loading.
+     *
+     * @param lock
+     */
+    protected void blockLoadingView(final boolean lock) {
+	getProgressLayer().setLocked(lock);
+    }
+
+
+    /**
      * Override this to provide custom report view.
      *
      * @param configurableView
@@ -216,6 +237,21 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     abstract protected WT createWizardView();
 
     /**
+     * Returns the load listener that unlocks the view after it was loaded.
+     *
+     * @return
+     */
+    private ILoadListener createAfterLoadListener() {
+        return new ILoadListener() {
+
+	    @Override
+	    public void viewWasLoaded(final LoadEvent event) {
+		blockLoadingView(false);
+	    }
+	};
+    }
+
+    /**
      * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined. Also if child component was also loaded then it fires the
      * load event.
      *
@@ -231,7 +267,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		    if (!wasResized) {
 			// yes, so this one is first, lets handle it and set flag
 			// to indicate that we won't handle any more
-			// "component resized" event
+			// "component resized" event and removing this component listener.
 			wasResized = true;
 
 			//The component was resized so lets see whether child was loaded if that is true then fire
@@ -252,19 +288,22 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      * @return
      */
     private Action createOpenAction() {
-	return new BlockingLayerCommand<List<Result>>("Open", getProgressLayer()) {
+	return new Command<List<Result>>("Open") {
 
 	    private static final long serialVersionUID = 6165292815580260412L;
 
 	    @Override
 	    protected boolean preAction() {
-		setMessage("Opening...");
+		blockLoadingView(true);
+		showLoadingMessage("Loading...");
 		final boolean superResult = super.preAction();
 		if (!superResult) {
+		    blockLoadingView(false);
 		    return false;
 		}
 		for (final Result result : fireConfigurationEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, PRE_OPEN))) {
 		    if (!result.isSuccessful()) {
+			blockLoadingView(false);
 			return false;
 		    }
 		}
@@ -279,7 +318,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	    @Override
 	    protected void postAction(final List<Result> value) {
 		super.postAction(value);
-		setMessage("");
+		showLoadingMessage("Opening...");
 		for (final Result valueRes : value) {
 		    if (!valueRes.isSuccessful()) {
 			newConfigurationView = true;
@@ -294,6 +333,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	    @Override
 	    protected void handlePreAndPostActionException(final Throwable ex) {
 		super.handlePreAndPostActionException(ex);
+		blockLoadingView(false);
 		fireConfigurationEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, OPEN_FAILED));
 	    }
 	};
@@ -311,13 +351,20 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	    public void propertyChange(final PropertyChangeEvent evt) {
 		if ("mode".equals(evt.getPropertyName())) {
 		    final ReportMode mode = (ReportMode) evt.getNewValue();
+		    final ReportMode oldMode = (ReportMode) evt.getOldValue();
 		    switch (mode) {
 		    case WIZARD:
 			previousWizard = createWizardView();
+			if(ReportMode.NOT_SPECIFIED != oldMode) {
+			    addUnlockLoadListener(previousWizard);
+			}
 			setView(previousWizard);
 			break;
 		    case REPORT:
 			previousView = createConfigurableView();
+			if(ReportMode.NOT_SPECIFIED != oldMode) {
+			    addUnlockLoadListener(previousView);
+			}
 			setView(previousView);
 			break;
 		    case NOT_SPECIFIED:
@@ -326,6 +373,20 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		    }
 		}
 
+	    }
+
+	    private void addUnlockLoadListener(final SelectableAndLoadBasePanel loadPanel) {
+		if(loadPanel != null) {
+		    loadPanel.addLoadListener(new ILoadListener() {
+
+		        @Override
+		        public void viewWasLoaded(final LoadEvent event) {
+		            blockLoadingView(false);
+		        }
+		    });
+		} else {
+		    blockLoadingView(false);
+		}
 	    }
 
 	};
@@ -502,7 +563,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      * @param <VT>
      * @param <WT>
      */
-    private static abstract class ChangeModeAction extends BlockingLayerCommand<Result> {
+    private static abstract class ChangeModeAction extends Command<Result> {
 
 	private static final long serialVersionUID = 1090639998966452323L;
 
@@ -521,7 +582,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	public ChangeModeAction(final AbstractConfigurationView<?, ?> configurationView,//
 		final List<ReportMode> reportModes,//
 		final List<AbstractConfigurationViewEventAction> configEvents) {
-	    super("", configurationView.getProgressLayer());
+	    super("");
 	    this.configurationView = configurationView;
 	    this.reportMode = reportModes.get(0);
 	    this.restorationMode = reportModes.get(1);
@@ -542,8 +603,10 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	@Override
 	protected boolean preAction() {
+	    configurationView.blockLoadingView(true);
 	    for(final Result result : configurationView.fireConfigurationEvent(new AbstractConfigurationViewEvent(configurationView, preEvent))){
 		if(!result.isSuccessful()){
+		    configurationView.blockLoadingView(false);
 		    return false;
 		}
 	    }
@@ -558,13 +621,15 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	    default:
 		break;
 	    }
-	    setMessage(message);
+	    configurationView.showLoadingMessage(message);
 	    if (!super.preAction()) {
+		configurationView.blockLoadingView(false);
 		return false;
 	    }
 	    final Result result = getConfigurationView().getModel().canSetMode(reportMode);
 	    if (!result.isSuccessful()) {
 		JOptionPane.showMessageDialog(getConfigurationView(), result.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
+		configurationView.blockLoadingView(false);
 		return false;
 	    }
 	    return true;
@@ -590,9 +655,17 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	@Override
 	protected final void handlePreAndPostActionException(final Throwable ex) {
-	    new BlockingLayerCommand<Void>("", getConfigurationView().getProgressLayer()) {
+	    new Command<Void>("") {
 
 		private static final long serialVersionUID = 6591522199014576781L;
+
+		@Override
+		protected boolean preAction() {
+		    if(!super.preAction()) {
+			return false;
+		    }
+		    return true;
+		};
 
 		@Override
 		protected Void action(final ActionEvent e) throws Exception {

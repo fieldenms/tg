@@ -135,6 +135,13 @@ public interface IDomainTreeManager {
         void addPropertyCheckingListener(final IPropertyCheckingListener listener);
 
         /**
+         * Adds a weak reference on the specified {@link IPropertyCheckingListener} listener.
+         *
+         * @param listener
+         */
+        void addWeakPropertyCheckingListener(final IPropertyCheckingListener listener);
+
+        /**
          * Removes a {@link IPropertyCheckingListener} listener.
          *
          * @param listener

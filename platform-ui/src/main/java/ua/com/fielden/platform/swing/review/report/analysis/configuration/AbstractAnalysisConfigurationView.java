@@ -76,6 +76,11 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 	addSelectionEventListener(createSelectionListener());
     }
 
+    @Override
+    public void showLoadingMessage(final String msg) {
+	getOwner().getOwner().getProgressLayer().setText(msg);
+    }
+
     /**
      * Returns the save action.
      *
@@ -235,6 +240,16 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 		detailsFrame.setVisible(true);
 	    }
 	}.actionPerformed(null);
+    }
+
+    @Override
+    protected void blockLoadingView(final boolean lock) {
+	//Must first see whether owner was loaded or not.
+	//If The owner is not loaded then entity centre is still loading and blocking pane is locked or unlocked,
+	//Otherwise it can be locked because only analysis is loading or it configure, build, cancel was pressed.
+	if(getOwner().isLoaded()) {
+	    getOwner().getOwner().getProgressLayer().setLocked(lock);
+	}
     }
 
     @Override

@@ -150,14 +150,14 @@ public class EntityLocatorWizard<T extends AbstractEntity<?>, R extends Abstract
 
 	    @Override
 	    public void startEdit() {
-		getBuildAction().setEnabled(false, false);
-		getCancelAction().setEnabled(false, false);
+		getBuildAction().setEnabled(false);
+		getCancelAction().setEnabled(false);
 	    }
 
 	    @Override
 	    public void finishEdit() {
-		getBuildAction().setEnabled(true, false);
-		getCancelAction().setEnabled(true, false);
+		getBuildAction().setEnabled(true);
+		getCancelAction().setEnabled(true);
 	    }
 	};
     }

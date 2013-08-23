@@ -241,7 +241,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      * @author TG Team
      *
      */
-    public static class WeakPropertyCheckingListener implements IPropertyCheckingListener {
+    private static class WeakPropertyCheckingListener implements IPropertyCheckingListener {
 
 	private final WeakReference<IPropertyCheckingListener> ref;
 	private final ITickManager tickManager;
@@ -263,6 +263,15 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    } else {
 		tickManager.removePropertyCheckingListener(this);
 	    }
+	}
+
+	/**
+	 * Returns the weak reference of {@link IPropertyCheckingListener} on which this instance is referenced to.
+	 *
+	 * @return
+	 */
+	public IPropertyCheckingListener getRef() {
+	    return ref.get();
 	}
     }
 
@@ -407,12 +416,39 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
 	@Override
 	public void addPropertyCheckingListener(final IPropertyCheckingListener listener) {
+	    removeEmptyWeakPropertyCheckingListener();
 	    propertyCheckingListeners.add(IPropertyCheckingListener.class, listener);
 	}
 
 	@Override
+	public void addWeakPropertyCheckingListener(final IPropertyCheckingListener listener) {
+	    removeEmptyWeakPropertyCheckingListener();
+	    propertyCheckingListeners.add(IPropertyCheckingListener.class, new WeakPropertyCheckingListener(listener, this));
+	}
+
+	@Override
 	public void removePropertyCheckingListener(final IPropertyCheckingListener listener) {
-	    propertyCheckingListeners.remove(IPropertyCheckingListener.class, listener);
+	    for(final Object obj : propertyCheckingListeners.getListenerList()) {
+		if (obj instanceof WeakPropertyCheckingListener) {
+		    final IPropertyCheckingListener weakRef = ((WeakPropertyCheckingListener) obj).getRef();
+		    if (weakRef == listener || weakRef == null) {
+			propertyCheckingListeners.remove(IPropertyCheckingListener.class, (IPropertyCheckingListener) obj);
+		    }
+		} else if (listener == obj){
+		    propertyCheckingListeners.remove(IPropertyCheckingListener.class, (IPropertyCheckingListener) obj);
+		}
+	    }
+	}
+
+	/**
+	 * Removes the {@link WeakPropertyCheckingListener} which has empty weak reference to the {@link IPropertyCheckingListener} instance.
+	 */
+	private void removeEmptyWeakPropertyCheckingListener() {
+	    for (final Object obj : propertyCheckingListeners.getListenerList()) {
+		if (obj instanceof WeakPropertyCheckingListener && ((WeakPropertyCheckingListener) obj).getRef() == null) {
+		    propertyCheckingListeners.remove(IPropertyCheckingListener.class, (IPropertyCheckingListener) obj);
+		}
+	    }
 	}
 
 	@Override

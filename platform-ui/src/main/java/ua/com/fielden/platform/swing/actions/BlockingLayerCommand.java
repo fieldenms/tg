@@ -2,7 +2,6 @@ package ua.com.fielden.platform.swing.actions;
 
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
-import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
@@ -74,7 +73,7 @@ public abstract class BlockingLayerCommand<T> extends Command<T> {
      */
     protected void setEnabled(final boolean enable, final boolean locked, final boolean force) {
 	super.setEnabled(enable);
-	if (provider.getBlockingLayer() != null && (force || !provider.getBlockingLayer().isIncrementalLocking() )) {
+	if (provider.getBlockingLayer() != null && (force /*|| !provider.getBlockingLayer().isIncrementalLocking()*/ )) {
 	    provider.getBlockingLayer().setLocked(locked);
 	}
     }

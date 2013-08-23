@@ -32,12 +32,10 @@ import javax.swing.JToggleButton;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager.IPropertyCheckingListener;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.WeakPropertyCheckingListener;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
@@ -126,9 +124,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 	addPlaceholders();
 
 	this.rowRemoverListener = createPropertyRemoveListener();
-	final ITickManager tickManager = this.eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-	final WeakPropertyCheckingListener weakRef = new WeakPropertyCheckingListener(rowRemoverListener, tickManager);
-	tickManager.addPropertyCheckingListener(weakRef);
+	this.eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick().addWeakPropertyCheckingListener(rowRemoverListener);
     }
 
     private IPropertyCheckingListener createPropertyRemoveListener() {
