@@ -63,7 +63,7 @@ public class DomainMetadataExpressionsGenerator {
 	    return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
 	} else {
 	    try {
-		final Field exprField = entityType.getDeclaredField(calculatedPropfield.getName() + "_");
+		final Field exprField = Finder.getFieldByName(entityType, calculatedPropfield.getName() + "_");
 		exprField.setAccessible(true);
 		return (ExpressionModel) exprField.get(null);
 	    } catch (final Exception e) {
