@@ -164,6 +164,7 @@
 		</dependency>
 	</dependencies>
 	<build>
+		<sourceEncoding>UTF-8</sourceEncoding>
 		<pluginManagement>
 			<plugins>
 				<plugin>
