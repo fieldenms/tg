@@ -33,7 +33,7 @@ import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 @TransactionEntity("packetReceived")
 public class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
-    public static final String MACHINE_PROP_ALIAS = "machineRouteDriver.machine";
+    // TODO public static final String MACHINE_PROP_ALIAS = "machineRouteDriver.machine";
 
     @IsProperty
     @MapTo

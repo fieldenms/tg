@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.gis.gps.actors;
+package ua.com.fielden.platform.gis.gps;
 
 /**
  * Raw GPS message data from GPS modules.

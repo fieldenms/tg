@@ -4,6 +4,10 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
+import ua.com.fielden.platform.gis.gps.AvlData;
+import ua.com.fielden.platform.gis.gps.AvlGpsElement;
+import ua.com.fielden.platform.gis.gps.AvlIoCodes;
+import ua.com.fielden.platform.gis.gps.AvlIoElement;
 
 /**
  * A convenient routine for populating data from {@link AvlData} to GPS message.
