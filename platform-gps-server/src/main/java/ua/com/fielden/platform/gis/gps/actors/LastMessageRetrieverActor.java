@@ -70,10 +70,13 @@ public class LastMessageRetrieverActor<T extends AbstractAvlMessage> extends Unt
 	    }
 	    originalRequester = getSender();
 	    final MachinesTiming mt = (MachinesTiming) data;
-	    machinesCount = mt.getMachinesTiming().size();
+	    machinesCount = 0;
 
 	    for (final Entry<Long, Date> idAndDate : mt.getMachinesTiming().entrySet()) {
-		machineActors.get(idAndDate.getKey()).tell(new LastMessagesRequest(idAndDate.getValue()), getSelf());
+		if (machineActors.get(idAndDate.getKey()) != null) { // there are machines without GPS modules! No machine actor exists in this case
+		    machinesCount++;
+		    machineActors.get(idAndDate.getKey()).tell(new LastMessagesRequest(idAndDate.getValue()), getSelf());
+		}
 	    }
 	} else if (data instanceof LastMessagesResponse) {
 	    receivedMachinesCount++;
