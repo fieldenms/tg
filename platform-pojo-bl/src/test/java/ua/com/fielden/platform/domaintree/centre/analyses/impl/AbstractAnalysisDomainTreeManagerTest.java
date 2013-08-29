@@ -361,6 +361,10 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     public void test_that_PropertyCheckingListeners_work() {
     }
 
+    @Override
+    public void test_that_WeakPropertyCheckingListeners_work() {
+    }
+
     private static int i, j;
 
     @Test
@@ -400,6 +404,41 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     }
 
     @Test
+    public void test_that_WeakPropertyUsageListeners_work() {
+	i = 0; j = 0;
+	IPropertyUsageListener listener = new IPropertyUsageListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
+		if (hasBeenUsed == null) {
+		    throw new IllegalArgumentException("'hasBeenUsed' cannot be null.");
+		}
+		if (hasBeenUsed) {
+		    i++;
+		} else {
+		    j++;
+		}
+	    }
+	};
+	dtm().getFirstTick().addWeakPropertyUsageListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	final String property = "booleanProp";
+	dtm().getFirstTick().check(MasterEntity.class, property, true);
+	dtm().getFirstTick().use(MasterEntity.class, property, true);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	listener = null;
+	System.gc();
+
+	dtm().getFirstTick().use(MasterEntity.class, property, false);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+    }
+
+    @Test
     public void test_that_PropertyOrderingListeners_work() {
 	// it is necessary to make properties "used" to be able to toggle ordering
 	dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", true);
@@ -434,5 +473,35 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
 	assertEquals("Incorrect value 'i'.", 4, i);
+    }
+
+    @Test
+    public void test_that_WeakPropertyOrderingListeners_work() {
+	// it is necessary to make properties "used" to be able to toggle ordering
+	dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", true);
+
+	i = 0;
+	IPropertyOrderingListener listener = new IPropertyOrderingListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final List<Pair<String, Ordering>> newOrderedProperties, final List<Pair<String, Ordering>> oldState) {
+		i++;
+	    }
+	};
+	dtm().getSecondTick().addWeakPropertyOrderingListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+
+	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+
+	assertEquals("Incorrect value 'i'.", 1, i);
+
+	listener = null;
+	System.gc();
+
+	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+
+	assertEquals("Incorrect value 'i'.", 1, i);
     }
 }

@@ -123,6 +123,9 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
      */
     private boolean split = false;
 
+    //weak listeners for analysis
+    private final IPropertyUsageListener distrUsageListener;
+
     //Asynchronous loading related fields.
     private final DefaultLoadingNode chartAnalysisLoadingNode;
 
@@ -151,6 +154,10 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 	//Add the chart updater.
 	model.getChartAnalysisDataProvider().addAnalysisModelChangedListener(createModelUpdaterListener());
+
+	distrUsageListener = createDistributionTickListener(distributionList);
+	final IAnalysisAddToDistributionTickManager firstTick = model.adtme().getFirstTick();
+	firstTick.addWeakPropertyUsageListener(distrUsageListener);
     }
 
     @Override
@@ -297,19 +304,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	if (usedProperties.size() == 1) {
 	    distributionList.setSelectedValue(usedProperties.get(0), true);
 	}
-	/**
-	 * Adds the listener that listens the property usage changes and synchronises them with ui model.
-	 */
-	firstTick.addPropertyUsageListener(new IPropertyUsageListener() {
 
-	    @Override
-	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
-		final boolean isSelected = property.equals(distributionList.getSelectedValue());
-		if(isSelected != hasBeenUsed){
-		    distributionList.setSelectedValue(property, hasBeenUsed);
-		}
-	    }
-	});
 	distributionList.addListSelectionListener(new ListSelectionListener() {
 
 	    @Override
@@ -329,6 +324,19 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    }
 	});
 	return distributionList;
+    }
+
+    private IPropertyUsageListener createDistributionTickListener(final JList<String> distributionList) {
+        return new IPropertyUsageListener() {
+
+            @Override
+            public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
+        	final boolean isSelected = property.equals(distributionList.getSelectedValue());
+        	if(isSelected != hasBeenUsed){
+        	    distributionList.setSelectedValue(property, hasBeenUsed);
+        	}
+            }
+        };
     }
 
     /**

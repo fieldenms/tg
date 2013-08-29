@@ -335,7 +335,14 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param listener
          * @return
          */
-        boolean addPropertyValueListener(final IPropertyValueListener listener);
+        void addPropertyValueListener(final IPropertyValueListener listener);
+
+        /**
+         * Adds a weak {@link IPropertyValueListener} listener for main "Value"
+         *
+         * @param listener
+         */
+        void addWeakPropertyValueListener(final IPropertyValueListener listener);
 
         /**
          * Removes a {@link IPropertyValueListener} listener for main "value".
@@ -343,7 +350,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param listener
          * @return
          */
-        boolean removePropertyValueListener(final IPropertyValueListener listener);
+        void removePropertyValueListener(final IPropertyValueListener listener);
 
         /**
          * Adds a {@link IPropertyValueListener} listener for secondary "Value".
@@ -351,7 +358,14 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param listener
          * @return
          */
-        boolean addPropertyValue2Listener(final IPropertyValueListener listener);
+        void addPropertyValue2Listener(final IPropertyValueListener listener);
+
+        /**
+         * Adds a weak {@link IPropertyValueListener} listener for secondary "Value"
+         *
+         * @param listener
+         */
+        void addWeakPropertyValue2Listener(final IPropertyValueListener listener);
 
         /**
          * Removes a {@link IPropertyValueListener} listener for secondary "value".
@@ -359,7 +373,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param listener
          * @return
          */
-        boolean removePropertyValue2Listener(final IPropertyValueListener listener);
+        void removePropertyValue2Listener(final IPropertyValueListener listener);
 
 	/**
 	 * Returns value that indicates whether <i>secondary</i> value of a criteria property is empty or not. <br><br>

@@ -67,7 +67,7 @@ public class DomainTreeListSortingModel<T extends AbstractEntity<?>> implements 
 		fireSortingModelChanged(new SorterChangedEvent<String>(DomainTreeListSortingModel.this, newOrderedProperties, oldState));
 	    }
 	};
-	orderingManager.addPropertyOrderingListener(defaultPropertyOrderingListener);
+	orderingManager.addWeakPropertyOrderingListener(defaultPropertyOrderingListener);
     }
 
     @Override
@@ -104,7 +104,7 @@ public class DomainTreeListSortingModel<T extends AbstractEntity<?>> implements 
     public void toggleSorterSingle(final String item) {
 	orderingManager.removePropertyOrderingListener(defaultPropertyOrderingListener);
 	resetAllSortOrderExcept(item);
-	orderingManager.addPropertyOrderingListener(defaultPropertyOrderingListener);
+	orderingManager.addWeakPropertyOrderingListener(defaultPropertyOrderingListener);
 	toggleSorter(item);
     }
 

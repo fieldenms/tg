@@ -650,23 +650,23 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
-	public boolean addPropertyValueListener(final IPropertyValueListener listener) {
-	    return base().addPropertyValueListener(listener);
+	public void addPropertyValueListener(final IPropertyValueListener listener) {
+	    base().addPropertyValueListener(listener);
 	}
 
 	@Override
-	public boolean removePropertyValueListener(final IPropertyValueListener listener) {
-	    return base().removePropertyValueListener(listener);
+	public void removePropertyValueListener(final IPropertyValueListener listener) {
+	    base().removePropertyValueListener(listener);
 	}
 
 	@Override
-	public boolean addPropertyValue2Listener(final IPropertyValueListener listener) {
-	    return base().addPropertyValue2Listener(listener);
+	public void addPropertyValue2Listener(final IPropertyValueListener listener) {
+	    base().addPropertyValue2Listener(listener);
 	}
 
 	@Override
-	public boolean removePropertyValue2Listener(final IPropertyValueListener listener) {
-	    return base().removePropertyValue2Listener(listener);
+	public void removePropertyValue2Listener(final IPropertyValueListener listener) {
+	    base().removePropertyValue2Listener(listener);
 	}
 
 
@@ -777,6 +777,17 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    // inject an enhanced type into method implementation
 	    base().removeCheckedProperty(enhancer().getManagedType(root), property);
 	}
+
+	@Override
+	public void addWeakPropertyValueListener(final IPropertyValueListener listener) {
+	    base().addWeakPropertyValueListener(listener);
+
+	}
+
+	@Override
+	public void addWeakPropertyValue2Listener(final IPropertyValueListener listener) {
+	    base().addWeakPropertyValue2Listener(listener);
+	}
     }
 
     /**
@@ -809,13 +820,13 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
-	public boolean addPropertyOrderingListener(final IPropertyOrderingListener listener) {
+	public void addPropertyOrderingListener(final IPropertyOrderingListener listener) {
 	    // TODO Auto-generated method stub
 	    throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
 	}
 
 	@Override
-	public boolean removePropertyOrderingListener(final IPropertyOrderingListener listener) {
+	public void removePropertyOrderingListener(final IPropertyOrderingListener listener) {
 	    // TODO Auto-generated method stub
 	    throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
 	}
@@ -831,6 +842,11 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    // inject an enhanced type into method implementation
 	    base().setWidth(enhancer().getManagedType(root), property, width);
 	    return this;
+	}
+
+	@Override
+	public void addWeakPropertyOrderingListener(final IPropertyOrderingListener listener) {
+	    throw new UnsupportedOperationException("Weak IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
 	}
     }
 

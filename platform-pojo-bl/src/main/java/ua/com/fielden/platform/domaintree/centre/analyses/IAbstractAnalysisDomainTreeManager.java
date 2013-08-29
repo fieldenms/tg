@@ -117,7 +117,14 @@ public interface IAbstractAnalysisDomainTreeManager extends IDomainTreeManager {
          * @param listener
          * @return
          */
-        boolean addPropertyUsageListener(final IPropertyUsageListener listener);
+        void addPropertyUsageListener(final IPropertyUsageListener listener);
+
+        /**
+         * Ads a weak {@link IPropertyUsageListener} listener.
+         *
+         * @param listener
+         */
+        void addWeakPropertyUsageListener(final IPropertyUsageListener listener);
 
         /**
          * Removes a {@link IPropertyUsageListener} listener.
@@ -125,7 +132,7 @@ public interface IAbstractAnalysisDomainTreeManager extends IDomainTreeManager {
          * @param listener
          * @return
          */
-        boolean removePropertyUsageListener(final IPropertyUsageListener listener);
+        void removePropertyUsageListener(final IPropertyUsageListener listener);
     }
 
     /**

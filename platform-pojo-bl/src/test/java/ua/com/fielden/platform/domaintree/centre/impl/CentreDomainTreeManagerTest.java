@@ -693,6 +693,10 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     public void test_that_PropertyCheckingListeners_work() {
     }
 
+    @Override
+    public void test_that_WeakPropertyCheckingListeners_work() {
+    }
+
     private static int i, j;
 
     @Test
@@ -733,6 +737,50 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	dtm().getFirstTick().setValue2(MasterEntity.class, prop, false);
 	assertEquals("Incorrect value 'i'.", 2, i);
 	assertEquals("Incorrect value 'j'.", 2, j);
+    }
+
+    @Test
+    public void test_that_WeakPropertyValue1And2Listeners_work() {
+	i = 0; j = 0;
+	IPropertyValueListener listener1 = new IPropertyValueListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState) {
+		i++;
+	    }
+	};
+	dtm().getFirstTick().addWeakPropertyValueListener(listener1);
+	IPropertyValueListener listener2 = new IPropertyValueListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState) {
+		j++;
+	    }
+	};
+	dtm().getFirstTick().addWeakPropertyValue2Listener(listener2);
+
+	final String prop = "booleanProp";
+	dtm().getFirstTick().check(MasterEntity.class, prop, true);
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getFirstTick().setValue(MasterEntity.class, prop, true);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getFirstTick().setValue2(MasterEntity.class, prop, true);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+
+	listener1 = null;
+	listener2 = null;
+	System.gc();
+
+	dtm().getFirstTick().setValue(MasterEntity.class, prop, false);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+
+	dtm().getFirstTick().setValue2(MasterEntity.class, prop, false);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
     }
 
     ////////////////////////////////////////////////////////////////////////////////

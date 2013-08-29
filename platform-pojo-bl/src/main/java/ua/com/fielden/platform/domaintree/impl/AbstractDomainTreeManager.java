@@ -428,14 +428,14 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
 	@Override
 	public void removePropertyCheckingListener(final IPropertyCheckingListener listener) {
-	    for(final Object obj : propertyCheckingListeners.getListenerList()) {
-		if (obj instanceof WeakPropertyCheckingListener) {
+	    for(final IPropertyCheckingListener obj : propertyCheckingListeners.getListeners(IPropertyCheckingListener.class)) {
+		if (listener == obj) {
+		    propertyCheckingListeners.remove(IPropertyCheckingListener.class, listener);
+		} else if (obj instanceof WeakPropertyCheckingListener) {
 		    final IPropertyCheckingListener weakRef = ((WeakPropertyCheckingListener) obj).getRef();
 		    if (weakRef == listener || weakRef == null) {
-			propertyCheckingListeners.remove(IPropertyCheckingListener.class, (IPropertyCheckingListener) obj);
+			propertyCheckingListeners.remove(IPropertyCheckingListener.class, obj);
 		    }
-		} else if (listener == obj){
-		    propertyCheckingListeners.remove(IPropertyCheckingListener.class, (IPropertyCheckingListener) obj);
 		}
 	    }
 	}
@@ -444,9 +444,9 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	 * Removes the {@link WeakPropertyCheckingListener} which has empty weak reference to the {@link IPropertyCheckingListener} instance.
 	 */
 	private void removeEmptyWeakPropertyCheckingListener() {
-	    for (final Object obj : propertyCheckingListeners.getListenerList()) {
+	    for (final IPropertyCheckingListener obj : propertyCheckingListeners.getListeners(IPropertyCheckingListener.class)) {
 		if (obj instanceof WeakPropertyCheckingListener && ((WeakPropertyCheckingListener) obj).getRef() == null) {
-		    propertyCheckingListeners.remove(IPropertyCheckingListener.class, (IPropertyCheckingListener) obj);
+		    propertyCheckingListeners.remove(IPropertyCheckingListener.class, obj);
 		}
 	    }
 	}

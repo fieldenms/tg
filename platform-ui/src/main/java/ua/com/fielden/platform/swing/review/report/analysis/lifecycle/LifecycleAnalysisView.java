@@ -43,8 +43,6 @@ import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.categorychart.ActionChartPanel;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
-import ua.com.fielden.platform.swing.categorychart.ChartTypeChangedEvent;
-import ua.com.fielden.platform.swing.categorychart.ICurrentChartTypeChangedListener;
 import ua.com.fielden.platform.swing.categorychart.MultipleChartPanel;
 import ua.com.fielden.platform.swing.categorychart.SwitchChartsModel;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
@@ -119,6 +117,9 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
      */
     private final JSplitPane splitPane;
 
+    //weak listeners for analysis
+    private final IPropertyUsageListener distrUsageListener;
+
     //Asynchronous loading related fields
     protected final DefaultLoadingNode chartLoadingNode;
 
@@ -165,18 +166,11 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	    }
 	});
 
+	distrUsageListener = createDistributionTickListener(distributionPropertiesList);
+	final ILifecycleAddToDistributionTickManager firstTick = model.adtme().getFirstTick();
+	firstTick.addWeakPropertyUsageListener(distrUsageListener);
+
 	layoutComponents();
-    }
-
-    private ICurrentChartTypeChangedListener createChartTypeChangedListener(final SwitchChartsModel<LifecycleModel<T>, CategoryChartTypes> switchChartModel) {
-	return new ICurrentChartTypeChangedListener() {
-
-	    @Override
-	    public void chartTypeChanged(final ChartTypeChangedEvent event) {
-		switchChartModel.removeCurrentChartTypeChangedListener(this);
-		chartLoadingNode.tryLoading();
-	    }
-	};
     }
 
     @Override
@@ -562,17 +556,6 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	    distributionList.setSelectedValue(usedProperties.get(0), true);
 	}
 
-	//Adds the listener that listens the property usage changes and synchronises them with ui model.
-	firstTick.addPropertyUsageListener(new IPropertyUsageListener() {
-
-	    @Override
-	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
-		final boolean isSelected = property.equals(distributionList.getSelectedValue());
-		if(isSelected != hasBeenUsed){
-		    distributionList.setSelectedValue(property, hasBeenUsed);
-		}
-	    }
-	});
 	distributionList.addListSelectionListener(new ListSelectionListener() {
 
 	    @Override
@@ -593,6 +576,19 @@ public class LifecycleAnalysisView<T extends AbstractEntity<?>> extends Abstract
 	    }
 	});
 	return distributionList;
+    }
+
+    private IPropertyUsageListener createDistributionTickListener(final JList<String> distributionList) {
+        return new IPropertyUsageListener() {
+
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
+		final boolean isSelected = property.equals(distributionList.getSelectedValue());
+		if(isSelected != hasBeenUsed){
+		    distributionList.setSelectedValue(property, hasBeenUsed);
+		}
+	    }
+	};
     }
 
     /**

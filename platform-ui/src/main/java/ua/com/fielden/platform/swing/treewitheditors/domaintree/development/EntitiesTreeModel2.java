@@ -60,6 +60,13 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
     //private final Logger logger = Logger.getLogger(getClass());
     private final String firstTickCaption, secondTickCaption;
 
+    //Weak listeners those should be added domain tree manager.
+    private final IPropertyListener propertyListener;
+    private final IPropertyDisablementListener firstTickDisableListener;
+    private final IPropertyDisablementListener secondTickDisableListener;
+    private final IPropertyCheckingListener firstTickCheckingListener;
+    private final IPropertyCheckingListener secondTickCheckingListener;
+
     /**
      * Creates a new tree model for the 'entities tree' relying on {@link IDomainTreeManagerAndEnhancer}.
      *
@@ -103,13 +110,18 @@ public class EntitiesTreeModel2<DTM extends IDomainTreeManager> extends Multiple
 	}
 
 	// add the listener into manager's representation to correctly reflect 'structural' changes (property added / removed) in this EntitiesTreeModel
-	this.manager.getRepresentation().addPropertyListener(new PropertyListener());
+	propertyListener = new PropertyListener();
+	this.manager.getRepresentation().addWeakPropertyListener(propertyListener);
 	// add two listeners into manager's representation's first and second ticks to correctly reflect 'disablement' changes (property disabled / enabled) in this EntitiesTreeModel
-	this.manager.getRepresentation().getFirstTick().addPropertyDisablementListener(new PropertyDisablementListener(0));
-	this.manager.getRepresentation().getSecondTick().addPropertyDisablementListener(new PropertyDisablementListener(1));
+	firstTickDisableListener = new PropertyDisablementListener(0);
+	this.manager.getRepresentation().getFirstTick().addWeakPropertyDisablementListener(firstTickDisableListener);
+	secondTickDisableListener = new PropertyDisablementListener(1);
+	this.manager.getRepresentation().getSecondTick().addWeakPropertyDisablementListener(secondTickDisableListener);
 	// add two listeners into manager's first and second tick to correctly reflect 'checking' changes (property checked / unchecked) in this EntitiesTreeModel
-	this.manager.getFirstTick().addPropertyCheckingListener(new PropertyCheckingListener(0));
-	this.manager.getSecondTick().addPropertyCheckingListener(new PropertyCheckingListener(1));
+	firstTickCheckingListener = new PropertyCheckingListener(0);
+	this.manager.getFirstTick().addWeakPropertyCheckingListener(firstTickCheckingListener);
+	secondTickCheckingListener = new PropertyCheckingListener(1);
+	this.manager.getSecondTick().addWeakPropertyCheckingListener(secondTickCheckingListener);
 
 	// add the listener into EntitiesTreeModel to correctly reflect changes (node checked / unchecked) in its manager
 	this.addTreeCheckingListener(listeners[0], 0);

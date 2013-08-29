@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree;
 
+import java.util.EventListener;
 import java.util.List;
 import java.util.Set;
 
@@ -81,7 +82,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      * @author TG Team
      *
      */
-    public interface IPropertyListener extends IPropertyStateListener<Boolean> {
+    public interface IPropertyListener extends IPropertyStateListener<Boolean>{
 	/**
 	 * @param wasAddedOrRemoved -- <code>true</code> to indicate that property was successfully added, <code>false</code> to indicate that it was successfully removed.
 	 */
@@ -97,7 +98,14 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      * @param listener
      * @return
      */
-    boolean addPropertyListener(final IPropertyListener listener);
+    void addPropertyListener(final IPropertyListener listener);
+
+    /**
+     * Adds the weak {@link IPropertyListener} listener.
+     *
+     * @param listener
+     */
+    void addWeakPropertyListener(final IPropertyListener listener);
 
     /**
      * Removes a {@link IPropertyListener} listener.
@@ -105,7 +113,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      * @param listener
      * @return
      */
-    boolean removePropertyListener(final IPropertyListener listener);
+    void removePropertyListener(final IPropertyListener listener);
 
     /**
      * The structure of properties in case of circular references can be "not loaded" to some level of properties.
@@ -206,7 +214,14 @@ public interface IDomainTreeRepresentation extends IRootTyped {
          * @param listener
          * @return
          */
-        boolean addPropertyDisablementListener(final IPropertyDisablementListener listener);
+        void addPropertyDisablementListener(final IPropertyDisablementListener listener);
+
+        /**
+         * Adds the weak {@link IPropertyDisablementListener} instance.
+         *
+         * @param listener
+         */
+        void addWeakPropertyDisablementListener(final IPropertyDisablementListener listener);
 
         /**
          * Removes a {@link IPropertyDisablementListener} listener.
@@ -214,7 +229,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
          * @param listener
          * @return
          */
-        boolean removePropertyDisablementListener(final IPropertyDisablementListener listener);
+        void removePropertyDisablementListener(final IPropertyDisablementListener listener);
 
         /**
          * Defines a contract which ticks for which properties should be <b>immutably</b> checked (and automatically disabled!) in domain tree representation. <br><br>
@@ -253,7 +268,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      *
      * @param <T>
      */
-    public interface IPropertyStateListener<T> {
+    public interface IPropertyStateListener<T> extends EventListener{
 	/**
 	 * Invokes after successful "change" of property state (e.g. added / removed / checked / disabled / etc.).
 	 *

@@ -35,6 +35,11 @@ public class DomainTreeListCheckingModel<T extends AbstractEntity<?>> implements
     private final Class<T> root;
 
     /**
+     * Weak usage listener.
+     */
+    private final IPropertyUsageListener listener;
+
+    /**
      * Initiates this {@link DomainTreeListCheckingModel} and wraps the specified {@link IUsageManager} instance.
      *
      * @param usageManager
@@ -42,13 +47,14 @@ public class DomainTreeListCheckingModel<T extends AbstractEntity<?>> implements
     public DomainTreeListCheckingModel(final Class<T> root, final IUsageManager usageManager){
 	this.root = root;
 	this.usageManager = usageManager;
-	this.usageManager.addPropertyUsageListener(new IPropertyUsageListener() {
+	this.listener = new IPropertyUsageListener() {
 
 	    @Override
 	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
 		fireCheckingModelChanged(new ListCheckingEvent<String>(this, property, oldState, hasBeenUsed));
 	    }
-	});
+	};
+	this.usageManager.addWeakPropertyUsageListener(listener);
     }
 
     @Override

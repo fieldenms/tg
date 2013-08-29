@@ -392,4 +392,37 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	assertEquals("Incorrect value 'i'.", 3, i);
 	assertEquals("Incorrect value 'j'.", 0, j);
     }
+
+    @Test
+    public void test_that_WeakPropertyCheckingListeners_work() {
+	i = 0; j = 0;
+	IPropertyCheckingListener listener = new IPropertyCheckingListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index) {
+		if (hasBeenChecked == null) {
+		    throw new IllegalArgumentException("'hasBeenChecked' cannot be null.");
+		}
+		if (hasBeenChecked) {
+		    i++;
+		} else {
+		    j++;
+		}
+	    }
+	};
+	dtm().getFirstTick().addWeakPropertyCheckingListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getFirstTick().check(MasterEntity.class, "bigDecimalProp", true);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	listener = null;
+	System.gc();
+
+	dtm().getFirstTick().check(MasterEntity.class, "integerProp", true);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+    }
 }

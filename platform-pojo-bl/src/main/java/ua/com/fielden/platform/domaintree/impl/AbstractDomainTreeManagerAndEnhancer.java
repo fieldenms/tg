@@ -471,13 +471,13 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
-	public boolean addPropertyListener(final IPropertyListener listener) {
-	    return base.addPropertyListener(listener);
+	public void addPropertyListener(final IPropertyListener listener) {
+	    base.addPropertyListener(listener);
 	}
 
 	@Override
-	public boolean removePropertyListener(final IPropertyListener listener) {
-	    return base.removePropertyListener(listener);
+	public void removePropertyListener(final IPropertyListener listener) {
+	    base.removePropertyListener(listener);
 	}
 
 	/**
@@ -543,15 +543,15 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    }
 
 	    @Override
-	    public boolean addPropertyDisablementListener(final IPropertyDisablementListener listener) {
+	    public void addPropertyDisablementListener(final IPropertyDisablementListener listener) {
 		// inject an enhanced type into method implementation
-	        return base.addPropertyDisablementListener(listener);
+	        base.addPropertyDisablementListener(listener);
 	    }
 
 	    @Override
-	    public boolean removePropertyDisablementListener(final IPropertyDisablementListener listener) {
+	    public void removePropertyDisablementListener(final IPropertyDisablementListener listener) {
 		// inject an enhanced type into method implementation
-	        return base.removePropertyDisablementListener(listener);
+	        base.removePropertyDisablementListener(listener);
 	    }
 
 	    @Override
@@ -568,6 +568,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    protected boolean isCheckedImmutablyLightweight(final Class<?> root, final String property) {
 		// inject an enhanced type into method implementation
 		return base.isCheckedImmutablyLightweight(enhancerWithPropertiesPopulation.getManagedType(root), property);
+	    }
+
+	    @Override
+	    public void addWeakPropertyDisablementListener(final IPropertyDisablementListener listener) {
+		base.addWeakPropertyDisablementListener(listener);
 	    }
 	}
 
@@ -620,6 +625,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
 	protected IDomainTreeEnhancer enhancer() {
 	    return enhancerWithPropertiesPopulation;
+	}
+
+	@Override
+	public void addWeakPropertyListener(final IPropertyListener listener) {
+	    base.addWeakPropertyListener(listener);
 	}
     }
 

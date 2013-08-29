@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
@@ -12,12 +13,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.event.EventListenerList;
+
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation.IPropertyDisablementListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -55,7 +59,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
     private final transient EnhancementRootsMap<ListenedArrayList> includedProperties;
 
-    private final transient List<IPropertyListener> propertyListeners, disabledPropertyListeners;
+    private final transient EventListenerList propertyListeners, disabledPropertyListeners;
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
@@ -69,8 +73,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	this.firstTick = firstTick;
 	this.secondTick = secondTick;
 
-	propertyListeners = new ArrayList<IPropertyListener>();
-	disabledPropertyListeners = new ArrayList<IPropertyListener>();
+	propertyListeners = new EventListenerList();
+	disabledPropertyListeners = new EventListenerList();
 
 	// initialise the references on this instance in its children
 	try {
@@ -359,6 +363,47 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     /**
+     * Weak implementation of the {@link IPropertyListener} interface.
+     *
+     * @author TG Team
+     *
+     */
+    private static class WeakPropertyListener implements IPropertyListener{
+
+	private final WeakReference<IPropertyListener> ref;
+	private final IDomainTreeRepresentation dtr;
+
+	public WeakPropertyListener(final IDomainTreeRepresentation dtr, final IPropertyListener listener) {
+	    this.dtr = dtr;
+	    this.ref = new WeakReference<IPropertyListener>(listener);
+	}
+
+	@Override
+	public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
+	    if (ref.get() != null) {
+		ref.get().propertyStateChanged(root, property, wasAddedOrRemoved, oldState);
+	    } else {
+		dtr.removePropertyListener(this);
+	    }
+	}
+
+	@Override
+	public boolean isInternal() {
+	    if (ref.get() != null) {
+		return ref.get().isInternal();
+	    } else {
+		dtr.removePropertyListener(this);
+		return false;
+	    }
+	}
+
+	public IPropertyListener getRef() {
+	    return ref.get();
+	}
+
+    }
+
+    /**
      * An {@link ArrayList} specific implementation which listens to structure modifications (add / remove elements) and fires appropriate events.
      *
      * @author TG Team
@@ -381,14 +426,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
 	private void fireProperty(final Class<?> root, final String property, final boolean added) {
 	    if (parentDtr != null) {
-		for (final IPropertyListener listener : parentDtr.propertyListeners) {
+		for (final IPropertyListener listener : parentDtr.propertyListeners.getListeners(IPropertyListener.class)) {
 		    if (!listener.isInternal()) {
 			// logger().info("Started external listener [" + listener + "] for property [" + property + "].");
 			listener.propertyStateChanged(root, property, added, null);
 			// logger().info("Ended external listener [" + listener + "] for property [" + property + "].");
 		    }
 		}
-		for (final IPropertyListener listener : parentDtr.propertyListeners) {
+		for (final IPropertyListener listener : parentDtr.propertyListeners.getListeners(IPropertyListener.class)) {
 		    if (listener.isInternal()) {
 			// logger().info("Started internal listener [" + listener + "] for property [" + property + "].");
 			listener.propertyStateChanged(root, property, added, null);
@@ -548,22 +593,51 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     private void enableListening(final boolean enable) {
 	if (enable) {
-	    propertyListeners.addAll(disabledPropertyListeners);
-	    disabledPropertyListeners.clear();
+	    movePropertyListners(disabledPropertyListeners, propertyListeners);
 	} else {
-	    disabledPropertyListeners.addAll(propertyListeners);
-	    propertyListeners.clear();
+	    movePropertyListners(propertyListeners, disabledPropertyListeners);
+	}
+    }
+
+    private void movePropertyListners(final EventListenerList from, final EventListenerList to) {
+	for(final IPropertyListener listener : from.getListeners(IPropertyListener.class)) {
+	    to.add(IPropertyListener.class, listener);
+	    from.remove(IPropertyListener.class,listener);
 	}
     }
 
     @Override
-    public boolean addPropertyListener(final IPropertyListener listener) {
-	return propertyListeners.add(listener);
+    public void addPropertyListener(final IPropertyListener listener) {
+	removeEmptyWeakPropertyListeners();
+	propertyListeners.add(IPropertyListener.class, listener);
     }
 
     @Override
-    public boolean removePropertyListener(final IPropertyListener listener) {
-	return propertyListeners.remove(listener);
+    public void addWeakPropertyListener(final IPropertyListener listener) {
+	removeEmptyWeakPropertyListeners();
+	propertyListeners.add(IPropertyListener.class, new WeakPropertyListener(this, listener));
+    }
+
+    @Override
+    public void removePropertyListener(final IPropertyListener listener) {
+	for (final IPropertyListener obj : propertyListeners.getListeners(IPropertyListener.class)) {
+	    if (listener == obj) {
+		propertyListeners.remove(IPropertyListener.class, listener);
+	    } else if (obj instanceof WeakPropertyListener) {
+		final IPropertyListener weakRef = ((WeakPropertyListener) obj).getRef();
+		if (weakRef == listener || weakRef == null) {
+		    propertyListeners.remove(IPropertyListener.class, obj);
+		}
+	    }
+	}
+    }
+
+    private void removeEmptyWeakPropertyListeners() {
+	for(final IPropertyListener obj : propertyListeners.getListeners(IPropertyListener.class)) {
+	    if(obj instanceof WeakPropertyListener && ((WeakPropertyListener) obj).getRef() == null) {
+		propertyListeners.remove(IPropertyListener.class, obj);
+	    }
+	}
     }
 
     @Override
@@ -644,6 +718,31 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
     }
 
+    private static class WeakPropertyDisablementListener implements IPropertyDisablementListener {
+
+	private final AbstractTickRepresentation tr;
+	private final WeakReference<IPropertyDisablementListener> ref;
+
+	public WeakPropertyDisablementListener(final AbstractTickRepresentation tr, final IPropertyDisablementListener listener) {
+	    this.tr = tr;
+	    this.ref = new WeakReference<IPropertyDisablementListener>(listener);
+	}
+
+	@Override
+	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
+	    if (ref.get() != null) {
+		ref.get().propertyStateChanged(root, property, hasBeenDisabled, oldState);
+	    } else {
+		tr.removePropertyDisablementListener(this);
+	    }
+	}
+
+	public IPropertyDisablementListener getRef() {
+	    return ref.get();
+	}
+
+    }
+
     /**
      * An abstract tick representation. <br><br>
      *
@@ -659,7 +758,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	private final EnhancementSet disabledManuallyProperties;
 	private final transient AbstractDomainTreeRepresentation dtr;
 
-	private final transient List<IPropertyDisablementListener> propertyDisablementListeners;
+	private final transient EventListenerList propertyDisablementListeners;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor and then into manager constructor, which should initialise "dtr" and "tickManager" fields.
@@ -667,7 +766,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	protected AbstractTickRepresentation() {
 	    this.disabledManuallyProperties = createSet();
 
-	    this.propertyDisablementListeners = new ArrayList<IPropertyDisablementListener>();
+	    this.propertyDisablementListeners = new EventListenerList();
 
 	    this.dtr = null; // IMPORTANT : to use this tick it should be passed into representation constructor, which should initialise "dtr" field.
 	}
@@ -700,13 +799,38 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	@Override
-	public boolean addPropertyDisablementListener(final IPropertyDisablementListener listener) {
-	    return propertyDisablementListeners.add(listener);
+	public void addPropertyDisablementListener(final IPropertyDisablementListener listener) {
+	    removeEmptyPropertyDisablementListeners();
+	    propertyDisablementListeners.add(IPropertyDisablementListener.class, listener);
 	}
 
 	@Override
-	public boolean removePropertyDisablementListener(final IPropertyDisablementListener listener) {
-	    return propertyDisablementListeners.remove(listener);
+	public void addWeakPropertyDisablementListener(final IPropertyDisablementListener listener) {
+	    removeEmptyPropertyDisablementListeners();
+	    propertyDisablementListeners.add(IPropertyDisablementListener.class, new WeakPropertyDisablementListener(this, listener));
+
+	}
+
+	@Override
+	public void removePropertyDisablementListener(final IPropertyDisablementListener listener) {
+	    for(final IPropertyDisablementListener obj : propertyDisablementListeners.getListeners(IPropertyDisablementListener.class)) {
+		if (listener == obj) {
+		    propertyDisablementListeners.remove(IPropertyDisablementListener.class, listener);
+		} else if (obj instanceof WeakPropertyDisablementListener) {
+		    final IPropertyDisablementListener weakRef = ((WeakPropertyDisablementListener) obj).getRef();
+		    if (weakRef == listener || weakRef == null) {
+			propertyDisablementListeners.remove(IPropertyDisablementListener.class, obj);
+		    }
+		}
+	    }
+	}
+
+	private void removeEmptyPropertyDisablementListeners() {
+	    for(final IPropertyDisablementListener obj : propertyDisablementListeners.getListeners(IPropertyDisablementListener.class)) {
+		if (obj instanceof WeakPropertyDisablementListener && ((WeakPropertyDisablementListener) obj).getRef() == null) {
+		    propertyDisablementListeners.remove(IPropertyDisablementListener.class, obj);
+		}
+	    }
 	}
 
 	/**
@@ -717,7 +841,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	 */
 	private void fireDisablingEvent(final Class<?> root, final String property) {
 	    // fire DISABLED event after successful "disabled" action
-	    for (final IPropertyDisablementListener listener : propertyDisablementListeners) {
+	    for (final IPropertyDisablementListener listener : propertyDisablementListeners.getListeners(IPropertyDisablementListener.class)) {
 		listener.propertyStateChanged(root, property, true, null);
 	    }
 	}

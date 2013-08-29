@@ -77,6 +77,9 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
      */
     private final NDecPanel<T> multipleDecView;
 
+    //weak listeners for analysis
+    private final IPropertyUsageListener distrUsageListener;
+
     public MultipleDecView(final MultipleDecModel<T> model, final MultipleDecConfigurationView<T> owner) {
 	super(model, owner);
 	this.toolBar = createToolBar();
@@ -93,6 +96,11 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
 		new AnalysisListDragToSupport<T>(distributionList, getModel().getCriteria().getEntityClass(), getModel().adtme().getFirstTick()), true);
 
 	this.addSelectionEventListener(createMultipleDecSelectionListener());
+
+	distrUsageListener = createDistributionTickListener(distributionList);
+	final IAnalysisAddToDistributionTickManager firstTick = model.adtme().getFirstTick();
+	firstTick.addWeakPropertyUsageListener(distrUsageListener);
+
 	layoutComponents();
     }
 
@@ -179,16 +187,6 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
 	/**
 	 * Adds the listener that listens the property usage changes and synchronises them with ui model.
 	 */
-	firstTick.addPropertyUsageListener(new IPropertyUsageListener() {
-
-	    @Override
-	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
-		final boolean isSelected = property.equals(distributionList.getSelectedValue());
-		if(isSelected != hasBeenUsed){
-		    distributionList.setSelectedValue(property, hasBeenUsed);
-		}
-	    }
-	});
 	distributionList.addListSelectionListener(new ListSelectionListener() {
 
 	    @Override
@@ -208,6 +206,19 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
 	    }
 	});
 	return distributionList;
+    }
+
+    private IPropertyUsageListener createDistributionTickListener(final JList<String> distributionList) {
+        return new IPropertyUsageListener() {
+
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
+		final boolean isSelected = property.equals(distributionList.getSelectedValue());
+		if(isSelected != hasBeenUsed){
+		    distributionList.setSelectedValue(property, hasBeenUsed);
+		}
+	    }
+	};
     }
 
     /**

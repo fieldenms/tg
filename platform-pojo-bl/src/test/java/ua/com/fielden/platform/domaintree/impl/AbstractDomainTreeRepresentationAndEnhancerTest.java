@@ -395,6 +395,45 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     @Test
+    public void test_that_WeakPropertyListeners_work() {
+	i = 0; j = 0;
+	IPropertyListener listener = new IPropertyListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
+		if (wasAddedOrRemoved == null) {
+		    throw new IllegalArgumentException("'wasAddedOrRemoved' cannot be null.");
+		}
+		if (wasAddedOrRemoved) {
+		    i++;
+		} else {
+		    j++;
+		}
+	    }
+
+	    @Override
+	    public boolean isInternal() {
+	        return false;
+	    }
+	};
+	dtm().getRepresentation().addWeakPropertyListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getRepresentation().excludeImmutably(MasterEntity.class, "integerProp");
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+
+	listener = null;
+	System.gc();
+
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+    }
+
+    @Test
     public void test_that_PropertyDisablementListeners_work() {
 	i = 0; j = 0;
 	final IPropertyDisablementListener listener = new IPropertyDisablementListener() {
@@ -426,6 +465,40 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
 
 	dtm().getRepresentation().warmUp(MasterEntity.class, "entityProp.entityProp.slaveEntityProp");
 	assertEquals("Incorrect value 'i'.", 2, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+    }
+
+    @Test
+    public void test_that_WeakPropertyDisablementListeners_work() {
+	i = 0; j = 0;
+	IPropertyDisablementListener listener = new IPropertyDisablementListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
+		if (hasBeenDisabled == null) {
+		    throw new IllegalArgumentException("'hasBeenDisabled' cannot be null.");
+		}
+		if (hasBeenDisabled) {
+		    i++;
+		} else {
+		    j++;
+		}
+	    }
+	};
+	dtm().getRepresentation().getFirstTick().addWeakPropertyDisablementListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "integerProp");
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	listener = null;
+	System.gc();
+
+	dtm().getFirstTick().check(MasterEntity.class, "bigDecimalProp", true);
+	dtm().getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "bigDecimalProp");
+	assertEquals("Incorrect value 'i'.", 1, i);
 	assertEquals("Incorrect value 'j'.", 0, j);
     }
 }

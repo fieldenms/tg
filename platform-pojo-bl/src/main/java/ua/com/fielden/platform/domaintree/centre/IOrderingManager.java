@@ -56,7 +56,14 @@ public interface IOrderingManager {
      * @param listener
      * @return
      */
-    boolean addPropertyOrderingListener(final IPropertyOrderingListener listener);
+    void addPropertyOrderingListener(final IPropertyOrderingListener listener);
+
+    /**
+     * Adds a weak {@link IPropertyOrderingListener} listener.
+     *
+     * @param listener
+     */
+    void addWeakPropertyOrderingListener(final IPropertyOrderingListener listener);
 
     /**
      * Removes a {@link IPropertyOrderingListener} listener.
@@ -64,5 +71,5 @@ public interface IOrderingManager {
      * @param listener
      * @return
      */
-    boolean removePropertyOrderingListener(final IPropertyOrderingListener listener);
+    void removePropertyOrderingListener(final IPropertyOrderingListener listener);
 }

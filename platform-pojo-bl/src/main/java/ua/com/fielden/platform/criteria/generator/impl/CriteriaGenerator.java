@@ -10,6 +10,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -20,6 +22,7 @@ import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
@@ -73,11 +76,14 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final ICompanionObjectFinder controllerProvider;
 
+    private final Map<ICentreDomainTreeManager, Class<?>> generatedClasses;
+
 
     @Inject
     public CriteriaGenerator(final EntityFactory entityFactory, final ICompanionObjectFinder controllerProvider){
 	this.entityFactory = entityFactory;
 	this.controllerProvider = controllerProvider;
+	this.generatedClasses = new WeakHashMap<>();
     }
 
     @Override
@@ -92,16 +98,25 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> EntityQueryCriteria<CDTME, T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final CDTME cdtme, final Class<? extends EntityQueryCriteria> entityClass) {
-	final List<NewProperty> newProperties = new ArrayList<NewProperty>();
-	for(final String propertyName : cdtme.getFirstTick().checkedProperties(root)){
-	    if (!AbstractDomainTree.isPlaceholder(propertyName)) {
-		newProperties.addAll(generateCriteriaProperties(root, cdtme.getEnhancer(), propertyName));
-	    }
-	}
-	final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
 	try {
-	    final Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) cl.startModification(entityClass.getName()).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
+	    final Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> queryCriteriaClass;
+
+	    if (generatedClasses.containsKey(cdtme)) {
+		queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) generatedClasses.get(cdtme);
+	    } else {
+		final List<NewProperty> newProperties = new ArrayList<NewProperty>();
+		for (final String propertyName : cdtme.getFirstTick().checkedProperties(root)) {
+		    if (!AbstractDomainTree.isPlaceholder(propertyName)) {
+			newProperties.addAll(generateCriteriaProperties(root, cdtme.getEnhancer(), propertyName));
+		    }
+		}
+		final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+
+		queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) cl.startModification(entityClass.getName()).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
+		generatedClasses.put(cdtme, queryCriteriaClass);
+	    }
+
 	    final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = entityFactory.newByKey(queryCriteriaClass, "not required");
 
 	    //Set dao for generated entity query criteria.

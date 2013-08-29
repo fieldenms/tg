@@ -162,7 +162,15 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     }
 
     @Override
+    public void test_that_WeakPropertyUsageListeners_work() {
+    }
+
+    @Override
     public void test_that_PropertyOrderingListeners_work() {
+    }
+
+    @Override
+    public void test_that_WeakPropertyOrderingListeners_work() {
     }
 
     ///////////////////////// Date Period checking /////////////////////////
