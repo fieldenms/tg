@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.Invisible;
@@ -18,7 +17,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -31,7 +29,7 @@ import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 @MapEntityTo
 //TODO do not forget to provide companion object in its descendants -- @CompanionObject(IMachine.class)
 @TransactionEntity("lastMessage.packetReceived") // this is marker only -- the actual "delta" query uses special MachineMonitor resource
-public class AbstractAvlMachine <T extends AbstractAvlMessage> extends AbstractEntity<String> {
+public abstract class AbstractAvlMachine <T extends AbstractAvlMessage> extends AbstractEntity<String> {
     private static final long serialVersionUID = -50301420153223995L;
 
     @IsProperty
@@ -58,11 +56,12 @@ public class AbstractAvlMachine <T extends AbstractAvlMessage> extends AbstractE
     @Invisible
     private String objectCode;
 
-    @IsProperty
-    @Readonly
-    @Calculated
-    @Title(value = "Останнє GPS повідомлення", desc = "Містить інформацію про останнє GPS повідомлення, отримане від GPS модуля.")
-    private T lastMessage;
+    // IMPORTANT: a similar lastMessage property should be added to AbstractAvlMessage descendant (+getter and setter)
+//    @IsProperty
+//    @Readonly
+//    @Calculated
+//    @Title(value = "Останнє GPS повідомлення", desc = "Містить інформацію про останнє GPS повідомлення, отримане від GPS модуля.")
+//    private T lastMessage;
     private static ExpressionModel lastMessage_ = expr().val(null).model();
 	    // expr().model(select(Message.class).where().prop(Message.MACHINE_PROP_ALIAS).eq().extProp("id").and().//
 	    // notExists(select(Message.class).where().prop(Message.MACHINE_PROP_ALIAS).eq().extProp(Message.MACHINE_PROP_ALIAS).and().prop("gpsTime").gt().extProp("gpsTime").model()).model()).model();
@@ -83,14 +82,9 @@ public class AbstractAvlMachine <T extends AbstractAvlMessage> extends AbstractE
     }
 
     @Observable
-    public AbstractAvlMachine<T> setLastMessage(final T lastMessage) {
-	this.lastMessage = lastMessage;
-	return this;
-    }
+    public abstract AbstractAvlMachine<T> setLastMessage(final T lastMessage);
 
-    public T getLastMessage() {
-	return lastMessage;
-    }
+    public abstract T getLastMessage();
 
     @Override
     @NotNull
