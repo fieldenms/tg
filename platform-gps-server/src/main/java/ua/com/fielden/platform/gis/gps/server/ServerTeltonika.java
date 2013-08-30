@@ -32,9 +32,11 @@ public class ServerTeltonika implements Runnable {
 				new NioServerSocketChannelFactory(
 						Executors.newCachedThreadPool(),
 						Executors.newCachedThreadPool()));
+		bootstrap.setOption("child.keepAlive", false);
 
 		// Set up the pipeline factory.
 		bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+			@Override
 			public ChannelPipeline getPipeline() throws Exception {
 			    System.out.println("new pipe is requested");
 				return Channels.pipeline(
