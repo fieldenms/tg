@@ -59,8 +59,8 @@ public class ServerTeltonika implements Runnable {
 
     public void shutdown() {
 	log.info("Shutdown initiated...");
-	serverChannel.close();
-	allChannels.close();
+	serverChannel.close().awaitUninterruptibly();
+	allChannels.close().awaitUninterruptibly();
 	log.info("Channels closed.");
 	bootstrap.releaseExternalResources();
 	log.info("External resources released.");
