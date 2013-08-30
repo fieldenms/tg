@@ -31,7 +31,7 @@ public abstract class ApplicationConfigurationUtil<T extends AbstractAvlMessage,
     private final static Logger logger = Logger.getLogger(ApplicationConfigurationUtil.class);
 
     /** An utility class to start GPS server services (like Netty GPS server and Machine actors). */
-    public final void startGpsServices(final Properties props, final Injector injector) {
+    public final ServerTeltonika startGpsServices(final Properties props, final Injector injector) {
 	// get all vehicles with their latest GPS message
 	// the resultant map is used by both the GPS message handler for updating and CurrentMachinesState resource for read
 	// thus a concurrent map is used to synchronize read/write operations
@@ -44,7 +44,9 @@ public abstract class ApplicationConfigurationUtil<T extends AbstractAvlMessage,
 
 	//////// start netty-based GPS server
 	InternalLoggerFactory.setDefaultFactory(new Log4JLoggerFactory());
-	new Thread(new ServerTeltonika(props.getProperty("gps.host"), Integer.valueOf(props.getProperty("gps.port")), new DefaultGpsHandlerFactory<T, M, N>(machineCache, actors))).start();
+	final ServerTeltonika gpsServer = new ServerTeltonika(props.getProperty("gps.host"), Integer.valueOf(props.getProperty("gps.port")), new DefaultGpsHandlerFactory<T, M, N>(machineCache, actors));
+	new Thread(gpsServer).start();
+	return gpsServer;
     }
 
     /** Creates specific {@link AbstractActors} implementation. */
