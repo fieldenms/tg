@@ -37,7 +37,7 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
 //    @Override
 //    public void handleUpstream(final ChannelHandlerContext ctx, final ChannelEvent e) throws Exception {
 //	if (e instanceof ChannelStateEvent) {
-//	    // logger.info(e.toString());
+//	    // logger.debug(e.toString());
 //	}
 //	super.handleUpstream(ctx, e);
 //	// System.out.print("event:" + e.toString() + "\n");
@@ -71,7 +71,7 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
 	handleLogoff(ctx, 0);
 
 	super.channelClosed(ctx, e);
-	log.info("Client channel closed.");
+	log.debug("Client channel closed.");
     }
 
     @Override
@@ -94,7 +94,7 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
 	try {
 	    final Option<M> machine = machineLookup.get(imei);
 	    if (machine.hasValue()) {
-		log.info("Authorised IMEI [" + imei + "].");
+		log.debug("Authorised IMEI [" + imei + "].");
 		msg.writeByte(LOGIN_ALLOW);
 		setImei(imei);
 		setMachine(machine.value());

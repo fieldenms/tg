@@ -93,7 +93,9 @@ public class LastMessageRetrieverActor<T extends AbstractAvlMessage> extends Unt
 
 	    if (machinesCount > receivedMachinesCount) {
 		// this is illegal situation!
-		unhandled("The number of processed machines exceeds the number of requested machines.");
+		final String m = "The number of processed machines exceeds the number of requested machines.";
+		logger.error(m);
+		unhandled(m);
 	    } else if (machinesCount.equals(receivedMachinesCount)) {
 		logger.debug("Non-empty last messages response for all machines has been obtained for [" + getSelf() + "] actor.");
 
@@ -107,7 +109,7 @@ public class LastMessageRetrieverActor<T extends AbstractAvlMessage> extends Unt
 		unhandled(data);
 	    }
 	} else {
-	    logger.error("Unrecognizable message (" + data + ") отримано.");
+	    logger.error("Unrecognizable message (" + data + ") has been obtained.");
 	    unhandled(data);
 	}
     }

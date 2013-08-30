@@ -17,6 +17,7 @@ import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
 import ua.com.fielden.platform.gis.gps.AvlData;
 import ua.com.fielden.platform.persistence.HibernateUtil;
+import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 
 /**
@@ -43,8 +44,11 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
     private T lastProcessedMessage;
     private final HibernateUtil hibUtil;
     private final AvlToMessageConverter<T> avlToMessageConverter = new AvlToMessageConverter<>();
+    private ActorRef machinesCounterRef;
 
-    public AbstractAvlMachineActor(final EntityFactory factory, final M machine, final T lastMessage, final HibernateUtil hibUtil) {
+    public AbstractAvlMachineActor(final EntityFactory factory, final M machine, final T lastMessage, final HibernateUtil hibUtil, final ActorRef machinesCounterRef) {
+	this.machinesCounterRef = machinesCounterRef;
+
 	messagesComparator = new MessagesComparator<T>();
 	blackout = new Blackout<T>(messagesComparator);
 	this.machine = machine;
@@ -57,6 +61,14 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
 
 	this.hibUtil = hibUtil;
 	// do not forget to invoke processTempMessages()!
+    }
+
+    @Override
+    public void preStart() {
+        super.preStart();
+
+        machinesCounterRef.tell(new MachineActorStarted(), getSelf());
+        machinesCounterRef = null;
     }
 
     protected abstract void processTempMessages(final M machine) throws Exception;

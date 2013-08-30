@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.gis.gps.actors;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.jboss.netty.logging.InternalLoggerFactory;
+import org.jboss.netty.logging.Log4JLoggerFactory;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -16,6 +17,8 @@ import scala.concurrent.duration.Duration;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
 import ua.com.fielden.platform.gis.gps.AvlData;
+import ua.com.fielden.platform.gis.gps.factory.DefaultGpsHandlerFactory;
+import ua.com.fielden.platform.gis.gps.server.ServerTeltonika;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -39,6 +42,11 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
     private final ActorSystem system;
     // an actors that represent machine processors, that contain last messages
     private final Map<Long, ActorRef> machineActors;
+    private final ActorRef machinesCounter;
+
+    private final Map<String, M> cache;
+    private final String gpsHost;
+    private final Integer gpsPort;
 
     /**
      * Creates an actor system responsible for processing messages and getting efficiently a state from it (e.g. last machine message).
@@ -48,12 +56,18 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
      * TODO IMPORTANT: creating of a new machine is not supported yet in server runtime.
      *
      */
-    public AbstractActors(final Injector injector, final Collection<M> machines) {
+    public AbstractActors(final Injector injector, final Map<String, M> cache, final String gpsHost, final Integer gpsPort) {
+	this.gpsHost = gpsHost;
+	this.gpsPort = gpsPort;
+
 	this.system = ActorSystem.create("machine-actors");
 
+	this.cache = new HashMap<String, M>(cache);
+	machinesCounter = MachinesCounterActor.create(system, this.cache.size(), this);
+
 	this.machineActors = new HashMap<>();
-	for (final M machine : machines) {
-	    this.machineActors.put(machine.getId(), create(injector, system, machine));
+	for (final M machine : this.cache.values()) {
+	    this.machineActors.put(machine.getId(), create(injector, system, machine, machinesCounter));
 	}
     }
 
@@ -65,15 +79,15 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
      * @param machine
      * @return
      */
-    protected final ActorRef create(final Injector injector, final ActorSystem system, final M machine) {
-	final ActorRef myActor = system.actorOf(new Props(new UntypedActorFactory() {
+    protected final ActorRef create(final Injector injector, final ActorSystem system, final M machine, final ActorRef machinesCounterRef) {
+	final ActorRef machineActorRef = system.actorOf(new Props(new UntypedActorFactory() {
 	    private static final long serialVersionUID = -6677642334839003771L;
 
 	    public UntypedActor create() {
-		return createMachineActor(injector, machine);
+		return createMachineActor(injector, machine, machinesCounterRef);
 	    }
 	}), createName(machine));
-	return myActor;
+	return machineActorRef;
     }
 
     /**
@@ -83,7 +97,7 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
      * @param machine
      * @return
      */
-    protected abstract N createMachineActor(final Injector injector, final M machine);
+    protected abstract N createMachineActor(final Injector injector, final M machine, final ActorRef machinesCounterRef);
 
     /**
      * Creates a machine actor name using a transliterated version of machine's key.
@@ -133,5 +147,26 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
 	    logger.error(e);
 	    throw new IllegalStateException(e);
 	}
+    }
+
+    public Map<String, M> getCache() {
+	return cache;
+    }
+
+    /**
+     * Starts Gps netty server.
+     */
+    protected void startNettyGpsServer() {
+	//////// start netty-based GPS server
+	InternalLoggerFactory.setDefaultFactory(new Log4JLoggerFactory());
+	final ServerTeltonika serverTeltonika = new ServerTeltonika(gpsHost, gpsPort, new DefaultGpsHandlerFactory<T, M, N>(this));
+	new Thread(serverTeltonika).start();
+
+	Runtime.getRuntime().addShutdownHook(new Thread(){
+	    @Override
+	    public void run() {
+		serverTeltonika.shutdown();
+	    }
+	});
     }
 }
