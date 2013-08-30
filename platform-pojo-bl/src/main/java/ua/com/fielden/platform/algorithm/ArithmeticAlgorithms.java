@@ -4,9 +4,9 @@ import java.util.Arrays;
 
 /**
  * This is a class providing a number of trivial arithmetic algorithms as static methods.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ArithmeticAlgorithms {
     private ArithmeticAlgorithms() {
@@ -14,7 +14,7 @@ public class ArithmeticAlgorithms {
 
     /**
      * Returns an index of the minimum element in the passed in array.
-     * 
+     *
      * @param values
      * @return
      */
@@ -43,7 +43,7 @@ public class ArithmeticAlgorithms {
 
     /**
      * Returns true if all values in the passed in array are equal.
-     * 
+     *
      * @param values
      * @return
      */
@@ -69,7 +69,7 @@ public class ArithmeticAlgorithms {
 
     /**
      * Calculates Least Common Multiplier for a given number of integers.
-     * 
+     *
      * @param values
      * @return
      */
@@ -83,7 +83,7 @@ public class ArithmeticAlgorithms {
 
 	// the algorithm body
 	final Integer[] current = Arrays.copyOf(values, values.length);
-	while (!areValuesEqual(current)) {
+	while (!areValuesEqual((Object[])current)) {
 	    final Integer minIndex = minIndex(current);
 	    current[minIndex] += values[minIndex];
 	}
