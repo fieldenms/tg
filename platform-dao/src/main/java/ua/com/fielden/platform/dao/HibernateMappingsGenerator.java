@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.dao.DomainMetadata.specialProps;
+
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
@@ -9,7 +11,6 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
-import static ua.com.fielden.platform.dao.DomainMetadata.specialProps;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
@@ -41,7 +42,7 @@ public class HibernateMappingsGenerator {
 	sb.append("</hibernate-mapping>");
 
 	final String result = sb.toString();
-	System.out.println(result);
+	// System.out.println(result);
 	return result;
     }
 
