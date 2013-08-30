@@ -9,6 +9,7 @@ import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.channel.group.ChannelGroup;
 
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
@@ -22,6 +23,8 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
     private static final byte LOGIN_DENY = 0x0;
     private static final byte LOGIN_ALLOW = 0x1;
 
+    private final ChannelGroup allChannels;
+
     private String imei;
     private M machine;
     private final Logger log = Logger.getLogger(ServerTeltonikaHandler.class);
@@ -29,7 +32,8 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
     private final IMachineLookup<T, M> machineLookup;
     private final IMessageHandler<T, M> messageHandler;
 
-    public ServerTeltonikaHandler(final IMachineLookup<T, M> machineLookup, final IMessageHandler<T, M> messageHandler) {
+    public ServerTeltonikaHandler(final ChannelGroup allChannels, final IMachineLookup<T, M> machineLookup, final IMessageHandler<T, M> messageHandler) {
+	this.allChannels = allChannels;
 	this.machineLookup = machineLookup;
 	this.messageHandler = messageHandler;
     }
@@ -44,12 +48,6 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
 //    }
 
     @Override
-    public void channelConnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
-	super.channelConnected(ctx, e);
-	log.debug("Client channel connected.");
-    }
-
-    @Override
     public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
 	final Object msg = e.getMessage();
 	if (msg instanceof String) {
@@ -62,8 +60,17 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
     }
 
     @Override
+    public void channelConnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
+	super.channelConnected(ctx, e);
+	allChannels.add(ctx.getChannel());
+	log.debug("Client channel connected.");
+    }
+
+    @Override
     public void channelDisconnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
-	log.debug("Client channel disconnected.");
+	log.debug("Originating channel has disconnected.");
+	allChannels.remove(ctx.getChannel());
+	super.channelDisconnected(ctx, e);
     }
 
     @Override

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.jboss.netty.channel.group.ChannelGroup;
+import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.logging.InternalLoggerFactory;
 import org.jboss.netty.logging.Log4JLoggerFactory;
 import org.joda.time.DateTime;
@@ -83,6 +85,7 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
 	final ActorRef machineActorRef = system.actorOf(new Props(new UntypedActorFactory() {
 	    private static final long serialVersionUID = -6677642334839003771L;
 
+	    @Override
 	    public UntypedActor create() {
 		return createMachineActor(injector, machine, machinesCounterRef);
 	    }
@@ -159,7 +162,8 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
     protected void startNettyGpsServer() {
 	//////// start netty-based GPS server
 	InternalLoggerFactory.setDefaultFactory(new Log4JLoggerFactory());
-	final ServerTeltonika serverTeltonika = new ServerTeltonika(gpsHost, gpsPort, new DefaultGpsHandlerFactory<T, M, N>(this));
+	final ChannelGroup allChannels = new DefaultChannelGroup("gps-server");
+	final ServerTeltonika serverTeltonika = new ServerTeltonika(gpsHost, gpsPort, allChannels, new DefaultGpsHandlerFactory<T, M, N>(allChannels, this));
 	new Thread(serverTeltonika).start();
 
 	Runtime.getRuntime().addShutdownHook(new Thread(){

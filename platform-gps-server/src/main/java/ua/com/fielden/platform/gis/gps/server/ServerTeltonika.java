@@ -21,13 +21,15 @@ public class ServerTeltonika implements Runnable {
     private final String host;
     private final int port;
     private final IGpsHandlerFactory handlerFactory;
-    public static final ChannelGroup allChannels = new DefaultChannelGroup("gps-server");
+    public final ChannelGroup allChannels;
     private ServerBootstrap bootstrap;
+    private Channel serverChannel;
 
-    public ServerTeltonika(final String host, final int port, final IGpsHandlerFactory handlerFactory) {
+    public ServerTeltonika(final String host, final int port, final ChannelGroup allChannels, final IGpsHandlerFactory handlerFactory) {
 	this.host = host;
 	this.port = port;
 	this.handlerFactory = handlerFactory;
+	this.allChannels = allChannels;
     }
 
     @Override
@@ -50,13 +52,14 @@ public class ServerTeltonika implements Runnable {
 	});
 
 	// Bind and start to accept incoming connections.
-	final Channel channel = bootstrap.bind(new InetSocketAddress(host, port));
-	allChannels.add(channel);
+	serverChannel = bootstrap.bind(new InetSocketAddress(host, port));
+	allChannels.add(serverChannel);
 	log.info("\tNetty GPS server started on " + host + ":" + port);
     }
 
     public void shutdown() {
 	log.info("Shutdown initiated...");
+	serverChannel.close();
 	allChannels.close();
 	log.info("Channels closed.");
 	bootstrap.releaseExternalResources();
