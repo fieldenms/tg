@@ -144,7 +144,7 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
 	try {
 	    final Map<Long, List<T>> result = (Map<Long, List<T>>) Await.result(future, timeout.duration());
 	    final Period p = new Period(st, new DateTime());
-	    logger.error("Last messages for " + machinesTiming.size() + " machines retrieved in " + (p.getHours() == 0 ? "" : p.getHours() + " h ") + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms");
+	    logger.info("Last messages for " + machinesTiming.size() + " machines retrieved in " + (p.getHours() == 0 ? "" : p.getHours() + " h ") + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms");
 	    return result;
 	} catch (final Exception e) {
 	    logger.error(e);

@@ -25,7 +25,7 @@ public class LastMessageRetrieverActor<T extends AbstractAvlMessage> extends Unt
 
     private final Map<Long, ActorRef> machineActors;
     private Integer machinesCount;
-    private int receivedMachinesCount = 0;
+    private Integer receivedMachinesCount;
     private final Map<Long, List<T>> lastMessages = new HashMap<>(600);
     private ActorRef originalRequester;
 
@@ -71,6 +71,7 @@ public class LastMessageRetrieverActor<T extends AbstractAvlMessage> extends Unt
 	    originalRequester = getSender();
 	    final MachinesTiming mt = (MachinesTiming) data;
 	    machinesCount = 0;
+	    receivedMachinesCount = 0;
 
 	    for (final Entry<Long, Date> idAndDate : mt.getMachinesTiming().entrySet()) {
 		if (machineActors.get(idAndDate.getKey()) != null) { // there are machines without GPS modules! No machine actor exists in this case
@@ -88,15 +89,18 @@ public class LastMessageRetrieverActor<T extends AbstractAvlMessage> extends Unt
 		logger.debug("Empty last messages response has been obtained for [" + getSelf() + "] actor. receivedMachinesCount == " + receivedMachinesCount + " (from " + machinesCount + ").");
 		// no messages for this machine
 	    } else {
-		unhandled("Unsupported LastMessagesResponse type descendant.");
+		// this is illegal situation!
+		final String m = "Unsupported LastMessagesResponse type descendant.";
+		logger.error(m);
+		unhandled(m);
 	    }
 
-	    if (machinesCount > receivedMachinesCount) {
+	    if (receivedMachinesCount > machinesCount) {
 		// this is illegal situation!
 		final String m = "The number of processed machines exceeds the number of requested machines.";
 		logger.error(m);
 		unhandled(m);
-	    } else if (machinesCount.equals(receivedMachinesCount)) {
+	    } else if (receivedMachinesCount.equals(machinesCount)) {
 		logger.debug("Non-empty last messages response for all machines has been obtained for [" + getSelf() + "] actor.");
 
 		// all machines have sent a response with a last message.
