@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
@@ -125,7 +126,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	for (final EntityCentreConfig ecc : centresFromTheCloud) {
 	    final Class<?> miType = getMiType(ecc.getMenuItem().getKey());
 	    if (!map.containsKey(miType)) {
-		map.put(miType, new LinkedHashMap<String, List<String>>());
+		map.put(miType, new TreeMap<String, List<String>>());
 	    }
 	    map.get(miType).put(ecc.getTitle(), new ArrayList<String>());
 	}
