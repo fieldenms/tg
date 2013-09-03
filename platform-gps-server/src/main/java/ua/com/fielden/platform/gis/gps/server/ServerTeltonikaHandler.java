@@ -54,7 +54,7 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
 		log.debug(format("Attempting to close previous connection for IMEI[%s]", getImei()));
 		try {
 		    allChannels.remove(prevChannel);
-		    prevChannel.close();
+		    prevChannel.close().awaitUninterruptibly();
 
 		} catch (final Exception ex) {
 		    log.warn(format("Life sucks and previous connection for IMEI %s could not be closed.", getImei()));
