@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.gis.gps.server;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
@@ -10,7 +11,6 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
 import ua.com.fielden.platform.gis.gps.factory.IGpsHandlerFactory;
@@ -24,12 +24,14 @@ public class ServerTeltonika implements Runnable {
     public final ChannelGroup allChannels;
     private ServerBootstrap bootstrap;
     private Channel serverChannel;
+    private final ConcurrentHashMap<String, Channel> existingConnections;
 
-    public ServerTeltonika(final String host, final int port, final ChannelGroup allChannels, final IGpsHandlerFactory handlerFactory) {
+    public ServerTeltonika(final String host, final int port, final ConcurrentHashMap<String, Channel> existingConnections, final ChannelGroup allChannels, final IGpsHandlerFactory handlerFactory) {
 	this.host = host;
 	this.port = port;
 	this.handlerFactory = handlerFactory;
 	this.allChannels = allChannels;
+	this.existingConnections = existingConnections;
     }
 
     @Override
@@ -59,10 +61,13 @@ public class ServerTeltonika implements Runnable {
 
     public void shutdown() {
 	log.info("Shutdown initiated...");
+	existingConnections.clear();
 	serverChannel.close().awaitUninterruptibly();
 	allChannels.close().awaitUninterruptibly();
 	log.info("Channels closed.");
-	bootstrap.releaseExternalResources();
+	if (bootstrap != null) {
+	    bootstrap.releaseExternalResources();
+	}
 	log.info("External resources released.");
     }
 }

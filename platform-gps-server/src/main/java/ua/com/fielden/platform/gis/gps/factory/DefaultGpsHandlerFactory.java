@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.gis.gps.factory;
 
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
 
@@ -14,8 +17,10 @@ public class DefaultGpsHandlerFactory<T extends AbstractAvlMessage, M extends Ab
     private final IMachineLookup<T, M> machineLookup;
     private final AbstractActors<T, M, N> actors;
     private final ChannelGroup allChannels;
+    private final ConcurrentHashMap<String, Channel> existingConnections;
 
-    public DefaultGpsHandlerFactory(final ChannelGroup allChannels, final AbstractActors<T, M, N> actors) {
+    public DefaultGpsHandlerFactory(final ConcurrentHashMap<String, Channel> existingConnections, final ChannelGroup allChannels, final AbstractActors<T, M, N> actors) {
+	this.existingConnections = existingConnections;
 	this.allChannels = allChannels;
 	this.actors = actors;
 	machineLookup = new MachineLookupDao<T, M>(actors.getCache());
@@ -23,6 +28,6 @@ public class DefaultGpsHandlerFactory<T extends AbstractAvlMessage, M extends Ab
 
     @Override
     public ChannelUpstreamHandler create() {
-	return new ServerTeltonikaHandler<T, M>(allChannels, machineLookup, new GpsMessageHandler<T, M, N>(actors));
+	return new ServerTeltonikaHandler<T, M>(existingConnections, allChannels, machineLookup, new GpsMessageHandler<T, M, N>(actors));
     }
 }

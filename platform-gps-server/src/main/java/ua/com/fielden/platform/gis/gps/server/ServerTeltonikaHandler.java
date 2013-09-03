@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.gis.gps.server;
 
+import static java.lang.String.format;
+
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -24,6 +28,7 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
     private static final byte LOGIN_ALLOW = 0x1;
 
     private final ChannelGroup allChannels;
+    private final ConcurrentHashMap<String, Channel> existingConnections;
 
     private String imei;
     private M machine;
@@ -32,26 +37,32 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
     private final IMachineLookup<T, M> machineLookup;
     private final IMessageHandler<T, M> messageHandler;
 
-    public ServerTeltonikaHandler(final ChannelGroup allChannels, final IMachineLookup<T, M> machineLookup, final IMessageHandler<T, M> messageHandler) {
+    public ServerTeltonikaHandler(final ConcurrentHashMap<String, Channel> existingConnections, final ChannelGroup allChannels, final IMachineLookup<T, M> machineLookup, final IMessageHandler<T, M> messageHandler) {
+	this.existingConnections = existingConnections;
 	this.allChannels = allChannels;
 	this.machineLookup = machineLookup;
 	this.messageHandler = messageHandler;
     }
 
-//    @Override
-//    public void handleUpstream(final ChannelHandlerContext ctx, final ChannelEvent e) throws Exception {
-//	if (e instanceof ChannelStateEvent) {
-//	    // logger.debug(e.toString());
-//	}
-//	super.handleUpstream(ctx, e);
-//	// System.out.print("event:" + e.toString() + "\n");
-//    }
-
     @Override
     public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
 	final Object msg = e.getMessage();
 	if (msg instanceof String) {
-	    handleLogin(ctx, (String) msg); // process the initial handshake that result is successful or unsuccessful IMEI recognition
+	    setImei((String) msg);
+	    final Channel prevChannel = existingConnections.get(getImei());
+	    if (prevChannel != null && prevChannel != ctx.getChannel()) { // need to close previous channel
+		log.debug(format("Attempting to close previous connection for IMEI[%s]", getImei()));
+		try {
+		    allChannels.remove(prevChannel);
+		    prevChannel.close();
+
+		} catch (final Exception ex) {
+		    log.warn(format("Life sucks and previous connection for IMEI %s could not be closed.", getImei()));
+		}
+	    }
+	    existingConnections.put(getImei(), ctx.getChannel());
+	    // IMEI
+	    handleLogin(ctx, getImei()); // process the initial handshake that result is successful or unsuccessful IMEI recognition
 	} else if (msg instanceof AvlData[]) { // AVL data array
 	    handleData(ctx, getMachine(), (AvlData[]) msg);
 	} else {

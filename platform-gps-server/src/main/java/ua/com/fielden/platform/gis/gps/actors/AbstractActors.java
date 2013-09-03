@@ -4,8 +4,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.logging.InternalLoggerFactory;
@@ -163,7 +165,8 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
 	//////// start netty-based GPS server
 	InternalLoggerFactory.setDefaultFactory(new Log4JLoggerFactory());
 	final ChannelGroup allChannels = new DefaultChannelGroup("gps-server");
-	final ServerTeltonika serverTeltonika = new ServerTeltonika(gpsHost, gpsPort, allChannels, new DefaultGpsHandlerFactory<T, M, N>(allChannels, this));
+	final ConcurrentHashMap<String, Channel> existingConnections = new ConcurrentHashMap<>();
+	final ServerTeltonika serverTeltonika = new ServerTeltonika(gpsHost, gpsPort, existingConnections, allChannels, new DefaultGpsHandlerFactory<T, M, N>(existingConnections, allChannels, this));
 	new Thread(serverTeltonika).start();
 
 	Runtime.getRuntime().addShutdownHook(new Thread(){
