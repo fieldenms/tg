@@ -119,7 +119,7 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
 	    } else {
 		log.warn("Unrecognised IMEI [" + imei + "].");
 		msg.writeByte(LOGIN_DENY);
-		channel.close();
+		//channel.close(); // FIXME relies on multiplexer to close the channel
 	    }
 	} finally {
 	    channel.write(msg);
