@@ -37,6 +37,8 @@ abstract class PivotTreeTableModel extends DynamicTreeTableModel {
 
     abstract TreePath getPathForColumn(int column);
 
+    abstract Class<?>[] getColumnTypes(int column);
+
     public void addPivotDataLoadedListener(final PivotDataLoadedListener listener) {
 	listeners.add(PivotDataLoadedListener.class, listener);
     }

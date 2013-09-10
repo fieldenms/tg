@@ -100,28 +100,28 @@ public class RenderingDecorator {
 	    component.setFont(table.getFont());
 
 	    if (hasFocus) {
-		Border border = null;
-		if (isSelected) {
-		    border = UIManager.getBorder("Table.focusSelectedCellHighlightBorder");
-		}
-		if (border == null) {
-		    border = UIManager.getBorder("Table.focusCellHighlightBorder");
-		}
-		component.setBorder(border);
+		    Border border = null;
+		    if (isSelected) {
+			border = UIManager.getBorder("Table.focusSelectedCellHighlightBorder");
+		    }
+		    if (border == null) {
+			border = UIManager.getBorder("Table.focusCellHighlightBorder");
+		    }
+		    component.setBorder(border);
 
-		if (!isSelected && table.isCellEditable(row, column)) {
-		    Color col = UIManager.getColor("Table.focusCellForeground");
-		    if (col != null) {
-			component.setForeground(col);
+		    if (!isSelected && table.isCellEditable(row, column)) {
+			Color col = UIManager.getColor("Table.focusCellForeground");
+			if (col != null) {
+			    component.setForeground(col);
+			}
+			col = UIManager.getColor("Table.focusCellBackground");
+			if (col != null) {
+			    component.setBackground(col);
+			}
 		    }
-		    col = UIManager.getColor("Table.focusCellBackground");
-		    if (col != null) {
-			component.setBackground(col);
-		    }
+		} else {
+		    component.setBorder(getNoFocusBorder());
 		}
-	    } else {
-		component.setBorder(getNoFocusBorder());
-	    }
 	}
     }
 

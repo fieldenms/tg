@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,6 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRe
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 
 /**
@@ -46,23 +44,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
      */
     protected PivotDomainTreeManager(final ISerialiser serialiser, final PivotDomainTreeRepresentation dtr, final Boolean visible, final PivotAddToDistributionTickManager firstTick, final PivotAddToAggregationTickManager secondTick) {
 	super(serialiser, dtr, visible, firstTick, secondTick);
-
-	// Initialise the pdtm field for first tick.
-	try {
-	   setPdtmForTickManager(firstTick);
-	   setPdtmForTickManager(secondTick);
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    throw new IllegalStateException(e);
-	}
-    }
-
-    private void setPdtmForTickManager(final TickManager tickManager) throws IllegalArgumentException, IllegalAccessException{
-	final Field pdtmField = Finder.findFieldByName(tickManager.getClass(), "pdtm");
-	final boolean isAccessibleForFirstTick = pdtmField.isAccessible();
-	pdtmField.setAccessible(true);
-	pdtmField.set(tickManager, this);
-	pdtmField.setAccessible(isAccessibleForFirstTick);
     }
 
     @Override
@@ -86,8 +67,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
 	private final transient IUsageManager columnUsageManager;
 
-	private final transient IPivotDomainTreeManager pdtm;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.
@@ -96,7 +75,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	    propertiesWidths = createPropertiesMap();
 	    rootsListsOfUsedProperties = createRootsMap();
 	    columnUsageManager = new ColumnUsageManager();
-	    pdtm = null;
 	}
 
 	@Override
@@ -205,13 +183,9 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
 		final List<String> listOfUsedProperties = getAndInitSecondUsedProperties(managedType, property);
 		if (check && !listOfUsedProperties.contains(property)) {
-		    if (pdtm.getSecondTick().usedProperties(root).size() <= 1) {
-			listOfUsedProperties.clear();
-			listOfUsedProperties.add(property);
-			PivotAddToDistributionTickManager.this.use(root, property, false);
-		    } else {
-			throw new IllegalStateException("Please select only one aggregation property!");
-		    }
+		    listOfUsedProperties.clear();
+		    listOfUsedProperties.add(property);
+		    PivotAddToDistributionTickManager.this.use(root, property, false);
 		} else if (!check) {
 		    listOfUsedProperties.remove(property);
 		}
@@ -274,15 +248,12 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
     public static class PivotAddToAggregationTickManager extends AbstractAnalysisAddToAggregationTickManager implements IPivotAddToAggregationTickManager {
 	private final EnhancementPropertiesMap<Integer> propertiesWidths;
 
-	private final transient IPivotDomainTreeManager pdtm;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.
 	 */
 	public PivotAddToAggregationTickManager() {
 	    propertiesWidths = createPropertiesMap();
-	    pdtm = null;
 	}
 
 	@Override
@@ -310,9 +281,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
 	    final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
 	    if (check && !listOfUsedProperties.contains(property)) {
-		if (!pdtm.getFirstTick().getSecondUsageManager().usedProperties(root).isEmpty()) {
-		    listOfUsedProperties.clear();
-		}
 		listOfUsedProperties.add(property);
 	    } else if (!check && listOfUsedProperties.contains(property)) {
 		// before successful removal of the Usage -- the Ordering should be removed

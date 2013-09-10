@@ -103,9 +103,12 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	    @Override
 	    public void valueChanged(final ListCheckingEvent<String> e) {
-		if(pivotModel.isMultipleCube()){
-		    return;
-		}
+
+		//TODO Remove the surrounded with comment ///TODO
+//		if(pivotModel.isMultipleCube()){	  ///TODO
+//		    return;				  ///TODO
+//		}					  ///TODO
+		/////////////////////////////////////////////TODO
 		if (pivotModel.aggregatedProperties().contains(e.getItem()) && e.getNewCheck()) {
 		    final List<String> properties = secondTick.checkedProperties(root);
 		    final int to = properties.indexOf(e.getItem());
@@ -305,13 +308,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	@Override
 	public Class<?> getColumnClass(final int column) {
-	    if (column == 0) {
-		return String.class;
-	    } else if(isMultipleCube()){
-		return cubeModel.getValueColumnClass(0);
-	    } else {
-		return cubeModel.getValueColumnClass(column-1);
-	    }
+	    return Object[].class;
 	}
 
 	@Override
@@ -367,6 +364,21 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		return secondTick.getWidth(root, cubeModel.getColumnIdentifier(column-1).toString());
 	    }
 	    return 0;
+	}
+
+	@Override
+	public Class<?>[] getColumnTypes(final int column) {
+	    if (column == 0) {
+		return new Class<?>[] {String.class};
+	    } else if(isMultipleCube()){
+		final Class<?>[] types = new Class<?>[cubeModel.getValueColumnCount()];
+		for(int columnIndex = 0; columnIndex < cubeModel.getValueColumnCount(); columnIndex++) {
+		    types[columnIndex] = cubeModel.getValueColumnClass(columnIndex);
+		}
+		return types;
+	    } else {
+		return new Class<?>[] {cubeModel.getValueColumnClass(column-1)};
+	    }
 	}
 
 	@Override
@@ -480,9 +492,13 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		    } else {
 			treeNode = (DefaultMutableTreeNode)cubeModel.getColumnRoot().getChildAt(column -1);
 		    }
-		    return cubeModel.getValueAt(getUserObject(), treeNode, 0);
+		    final Object[] values = new Object[cubeModel.getValueColumnCount()];
+		    for(int valueIndex = 0; valueIndex < values.length; valueIndex++) {
+			values[valueIndex] = cubeModel.getValueAt(getUserObject(), treeNode, valueIndex);
+		    }
+		    return values;
 		} else {
-		    return cubeModel.getValueAt(getUserObject(), cubeModel.getColumnRoot(), column-1);
+		    return new Object[] {cubeModel.getValueAt(getUserObject(), cubeModel.getColumnRoot(), column-1)};
 		}
 	    }
 
@@ -511,8 +527,19 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		    }
 		    return getWrappedUserObject() == null ? PivotTreeTableNode.NULL_USER_OBJECT : getWrappedUserObject().toString();
 		}
-		final Object value = getValueAt(column);
-		return value != null ? value.toString() : null;
+		final Object[] value = (Object[]) getValueAt(column);
+		final StringBuilder tooltipBuilder = new StringBuilder();
+		tooltipBuilder.append("<html>");
+		for (int colInd = 0; colInd < value.length; colInd++) {
+		    tooltipBuilder.append(cubeModel.getValueColumnName(colInd));
+		    tooltipBuilder.append(" = ");
+		    tooltipBuilder.append(value[colInd]);
+		    if (colInd < value.length - 1) {
+			tooltipBuilder.append("<br>");
+		    }
+		}
+		tooltipBuilder.append("</html>");
+		return tooltipBuilder.toString();
 	    }
 	}
 
@@ -540,8 +567,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		    return defaultCompare(o1, o2);
 		}
 		for (final Pair<Integer, Ordering> sortingParam : sortOrders) {
-		    final Comparable<?> value1 = (Comparable) o1.getValueAt(sortingParam.getKey().intValue() + 1);
-		    final Comparable<?> value2 = (Comparable) o2.getValueAt(sortingParam.getKey().intValue() + 1);
+		    final Comparable<?> value1 = (Comparable) ((Object[])o1.getValueAt(sortingParam.getKey().intValue() + 1))[0];
+		    final Comparable<?> value2 = (Comparable) ((Object[])o2.getValueAt(sortingParam.getKey().intValue() + 1))[0];
 		    final int sortMultiplier = sortingParam.getValue() == Ordering.ASCENDING ? 1 : (sortingParam.getValue() == Ordering.DESCENDING ? -1 : 0);
 		    int result = 0;
 		    if (value1 == null) {

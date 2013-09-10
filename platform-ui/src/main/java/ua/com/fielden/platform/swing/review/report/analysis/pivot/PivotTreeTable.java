@@ -76,8 +76,8 @@ public class PivotTreeTable extends FilterableTreeTable {
 	    @Override
 	    public void columnAdded(final TableColumnModelEvent e) {
 		final TableColumn column = getColumnModel().getColumn(e.getToIndex());
-		final Class<?> columnClass = pivotModel.getColumnClass(e.getToIndex());
-		column.setCellRenderer(createCellRenderer(columnClass));
+		final Class<?>[] columnTypes = pivotModel.getColumnTypes(e.getToIndex());
+		column.setCellRenderer(createCellRenderer(columnTypes));
 	    }
 
 	    @Override
@@ -195,15 +195,14 @@ public class PivotTreeTable extends FilterableTreeTable {
 	};
     }
 
-
     /**
      *
      *
-     * @param columnClass
+     * @param columnTypes
      * @return
      */
-    private TableCellRenderer createCellRenderer(final Class<?> columnClass) {
-	return new PivotTableCellRenderer(columnClass);
+    private TableCellRenderer createCellRenderer(final Class<?>[] columnTypes) {
+	return new PivotTableCellRenderer(1, new Color(214, 217, 223), columnTypes);
     }
 
 

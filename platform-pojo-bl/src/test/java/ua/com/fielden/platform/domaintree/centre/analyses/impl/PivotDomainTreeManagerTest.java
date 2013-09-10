@@ -204,7 +204,7 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", true);
 	assertEquals("The list of used properties for second tick is incorrect.", Arrays.asList("moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
 	dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", true);
-	assertEquals("The list of used properties for second tick is incorrect.", Arrays.asList("intAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
+	assertEquals("The list of used properties for second tick is incorrect.", Arrays.asList("intAggExprProp", "moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
 	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
 	dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", false);
 	assertEquals("The ordering list of used properties for the second tick is incorrect", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
@@ -224,14 +224,9 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         assertEquals("List of used properties for the first tick and second usage manager is incorrect.", Arrays.asList(), dtm().getFirstTick().getSecondUsageManager().usedProperties(MasterEntity.class));
         dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", true);
         dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", true);
-	try {
-	    dtm().getFirstTick().getSecondUsageManager().use(MasterEntity.class, "dateExprProp", true);
-	    fail("Can not use property of the second usage manager");
-	} catch (final IllegalStateException e) {
-	    assertEquals("List of used properties for the first tick and second usage manager is incorrect.", Arrays.asList(), dtm().getFirstTick().getSecondUsageManager().usedProperties(MasterEntity.class));
-	}
-	dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", false);
 	dtm().getFirstTick().getSecondUsageManager().use(MasterEntity.class, "dateExprProp", true);
+	assertEquals("List of used properties for the second tick is incorrect.", Arrays.asList("intAggExprProp", "moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
+	dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", false);
 	assertEquals("List of used properties for the first tick and second usage manager is incorrect.", Arrays.asList("dateExprProp"), dtm().getFirstTick().getSecondUsageManager().usedProperties(MasterEntity.class));
 	dtm().getFirstTick().getSecondUsageManager().use(MasterEntity.class, "dateExprProp", false);
 	dtm().getFirstTick().getSecondUsageManager().use(MasterEntity.class, "dateExprProp", false);
