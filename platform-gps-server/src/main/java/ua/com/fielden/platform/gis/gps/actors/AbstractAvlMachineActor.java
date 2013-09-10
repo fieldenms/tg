@@ -131,6 +131,12 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
     public void onReceive(final Object data) throws Exception {
 	if (data instanceof AvlData[]) {
 	    processSinglePacket(createPacket((AvlData[]) data), false);
+	} else if (data instanceof Packet) {
+	    final Packet<T> packet = (Packet<T>) data;
+	    for (final T message : packet.getMessages()) {
+		completeMessage(message);
+	    }
+	    processSinglePacket(packet, false);
 	} else if (data instanceof LastMessagesRequest) {
 	    final LastMessagesRequest glm = (LastMessagesRequest) data;
 	    // System.out.println("Запит про останнє повідомлення для машини " + machine + " після " + glm.getAfterDate() + ". Received: " + new Date() + " для актора " + getSelf());
