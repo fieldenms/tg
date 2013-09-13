@@ -108,6 +108,12 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	return (PivotAnalysisModel<T>) super.getModel();
     }
 
+    @Override
+    protected void enableRelatedActions(final boolean enable, final boolean navigate) {
+	super.enableRelatedActions(enable, navigate);
+	getCentre().getExportAction().setEnabled(enable);
+    }
+
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
      *
@@ -129,7 +135,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		//Managing the paginator's enablements.
 		getCentre().getPaginator().setEnableActions(false, false);
 		//Managing load and export enablements.
-		getCentre().getExportAction().setEnabled(false);
+		getCentre().getExportAction().setEnabled(true);
 		getCentre().getRunAction().setEnabled(true);
 	    }
 	};
@@ -425,132 +431,4 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	((AbstractTableModel) treeTable.getModel()).fireTableStructureChanged();
 	treeTable.getSelectionModel().setSelectionInterval(0, treeTable.getRowForPath(selectedPath));
     }
-
-    //TODO needed for exporting data in to excel file.
-    //    public Result exportDataIntoFile(final File file, final List<? extends IBindingEntity> analysisData) {
-    //	final GroupItem rootItem = dataProvider.createBasicTreeFrom(analysisData);
-    //	final PivotTreeTableNode rootNode = rootItem.createTree("Grand totals", treeTableModel);
-    //	rootNode.sort(treeTableModel.getTreeTableSorter());
-    //	try {
-    //	    final byte[] content = getContent(rootNode);
-    //	    FileOutputStream fo;
-    //	    fo = new FileOutputStream(file);
-    //	    fo.write(content);
-    //	    fo.flush();
-    //	    fo.close();
-    //	} catch (final Exception e) {
-    //	    return new Result(e);
-    //	}
-    //	return Result.successful(file);
-    //    }
-    //
-    //    private byte[] getContent(final PivotTreeTableNode rootNode) throws IOException {
-    //	final HSSFWorkbook wb = new HSSFWorkbook();
-    //	final HSSFSheet sheet = wb.createSheet("Exported Data");
-    //	// Create a header row.
-    //	final HSSFRow headerRow = sheet.createRow(0);
-    //	// Create a new font and alter it
-    //	final HSSFFont font = wb.createFont();
-    //	font.setFontHeightInPoints((short) 12);
-    //	font.setFontName("Courier New");
-    //	font.setBoldweight((short) 1000);
-    //	// Fonts are set into a style so create a new one to use
-    //	final HSSFCellStyle headerCellStyle = wb.createCellStyle();
-    //	headerCellStyle.setFont(font);
-    //	headerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
-    //	final HSSFCellStyle headerInnerCellStyle = wb.createCellStyle();
-    //	headerInnerCellStyle.setFont(font);
-    //	headerInnerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
-    //	headerInnerCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
-    //	final String propertyTitles[] = initPropertyTitles();
-    //	// Create cells and put column names there
-    //	for (int index = 0; index < propertyTitles.length; index++) {
-    //	    final HSSFCell cell = headerRow.createCell(index);
-    //	    cell.setCellValue(propertyTitles[index]);
-    //	    cell.setCellStyle(index < propertyTitles.length - 1 ? headerInnerCellStyle : headerCellStyle);
-    //	}
-    //
-    //	// let's make cell style to handle borders
-    //	final HSSFCellStyle dataCellStyle = wb.createCellStyle();
-    //	dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
-    //
-    //	//exporting created tree.
-    //	traceTree(new TreePath(rootNode), sheet, dataCellStyle, getSelectedDistributionProperties().size(), 1);
-    //
-    //	final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
-    //
-    //	wb.write(oStream);
-    //
-    //	oStream.flush();
-    //	oStream.close();
-    //
-    //	return oStream.toByteArray();
-    //    }
-    //
-    //    private int traceTree(final TreePath path, final HSSFSheet sheet, final HSSFCellStyle dataCellStyle, final int columnShift, final int rowNum) {
-    //	//TODO after modifying pivot tree table, change this implementation.
-    //
-    //	//Exporting current node.
-    //	final PivotTreeTableNode node = (PivotTreeTableNode) path.getLastPathComponent();
-    //	final Object[] cellValues = new Object[node.getColumnCount() + columnShift];
-    //	for (int columnIndex = 0; columnIndex < cellValues.length; columnIndex++) {
-    //	    cellValues[columnIndex] = columnIndex <= columnShift ? (columnIndex == (path.getPathCount() - 1) ? node.getValueAt(0) : null) //
-    //		    : node.getValueAt(columnIndex - columnShift);
-    //	}
-    //	final HSSFRow row = sheet.createRow(rowNum);
-    //
-    //	for (int index = 0; index < cellValues.length; index++) {
-    //	    final HSSFCell cell = row.createCell(index); // create new cell
-    //	    if (index < cellValues.length - 1) { // the last column should not have right border
-    //		cell.setCellStyle(dataCellStyle);
-    //	    }
-    //	    final Object value = cellValues[index]; // get the value
-    //	    // need to try to do the best job with types
-    //	    if (value instanceof Date) {
-    //		cell.setCellValue(DateTimeDateFormat.getDateTimeInstance().format(value));
-    //	    } else if (value instanceof DateTime) {
-    //		cell.setCellValue(DateTimeDateFormat.getDateTimeInstance().format(value));
-    //	    } else if (value instanceof Number) {
-    //		cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
-    //		cell.setCellValue(((Number) value).doubleValue());
-    //	    } else if (value instanceof Boolean) {
-    //		cell.setCellType(HSSFCell.CELL_TYPE_BOOLEAN);
-    //		cell.setCellValue((Boolean) value);
-    //	    } else if (value == null) { // if null then leave call blank
-    //		cell.setCellType(HSSFCell.CELL_TYPE_BLANK);
-    //	    } else { // otherwise treat value as String
-    //		cell.setCellType(HSSFCell.CELL_TYPE_STRING);
-    //		cell.setCellValue(value.toString());
-    //	    }
-    //	}
-    //
-    //	//Exporting nodes children.
-    //	int rowCount = rowNum;
-    //	final Enumeration<? extends MutableTreeTableNode> childrenEnum = node.children();
-    //	while (childrenEnum.hasMoreElements()) {
-    //	    final MutableTreeTableNode nextChild = childrenEnum.nextElement();
-    //	    final TreePath newPath = path.pathByAddingChild(nextChild);
-    //	    rowCount = traceTree(newPath, sheet, dataCellStyle, columnShift, rowCount + 1);
-    //	}
-    //
-    //	//Returns row index;
-    //	return rowCount;
-    //    }
-    //
-    //    private String[] initPropertyTitles() {
-    //	final List<IDistributedProperty> distributionProperties = getSelectedDistributionProperties();
-    //	final List<IAggregatedProperty> aggregationProperties = getSelectedAggregationProperties();
-    //	final String propertyTitles[] = new String[1 + distributionProperties.size() + aggregationProperties.size()];
-    //	propertyTitles[0] = "Grand totals";
-    //	for (int index = 0; index < distributionProperties.size(); index++) {
-    //	    final IDistributedProperty diProperty = distributionProperties.get(index);
-    //	    propertyTitles[index + 1] = diProperty.toString();
-    //	}
-    //	for (int index = 0; index < aggregationProperties.size(); index++) {
-    //	    final IAggregatedProperty agProperty = aggregationProperties.get(index);
-    //	    propertyTitles[index + 1 + distributionProperties.size()] = agProperty.toString();
-    //	}
-    //	return propertyTitles;
-    //    }
-
 }

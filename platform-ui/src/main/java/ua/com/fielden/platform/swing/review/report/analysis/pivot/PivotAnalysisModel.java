@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 
 import java.awt.event.ActionEvent;
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +19,16 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.helpers.DateTimeDateFormat;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
+import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -29,6 +41,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ndimcube.EntitiesMultipleDimensionCubeData;
 import ua.com.fielden.platform.ndimcube.EntitiesMultipleDimensionCubeModel;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
@@ -103,12 +116,6 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	    @Override
 	    public void valueChanged(final ListCheckingEvent<String> e) {
-
-		//TODO Remove the surrounded with comment ///TODO
-//		if(pivotModel.isMultipleCube()){	  ///TODO
-//		    return;				  ///TODO
-//		}					  ///TODO
-		/////////////////////////////////////////////TODO
 		if (pivotModel.aggregatedProperties().contains(e.getItem()) && e.getNewCheck()) {
 		    final List<String> properties = secondTick.checkedProperties(root);
 		    final int to = properties.indexOf(e.getItem());
@@ -267,7 +274,180 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     @Override
     protected Result exportData(final String fileName) throws IOException {
-	return new Result(new UnsupportedOperationException("Data exporting in the pivot analysis is not yet implemented!"));
+	try {
+	    final byte[] content = getContent((PivotTreeTableNode) pivotModel.getRoot());
+	    FileOutputStream fo;
+	    fo = new FileOutputStream(fileName);
+	    fo.write(content);
+	    fo.flush();
+	    fo.close();
+	} catch (final Exception e) {
+	    return new Result(e);
+	}
+	return Result.successful(fileName);
+    }
+
+
+    private byte[] getContent(final PivotTreeTableNode rootNode) throws IOException {
+	if(pivotModel.cubeModel.getRowDistributionProperties().isEmpty()
+		&& pivotModel.cubeModel.getColumnDistributionProperties().isEmpty()
+		&& pivotModel.cubeModel.getAggregationProperties().isEmpty()) {
+	    throw new IllegalArgumentException("To export data into external file run query first!");
+	}
+	final HSSFWorkbook wb = new HSSFWorkbook();
+	final HSSFSheet sheet = wb.createSheet("Exported Data");
+	// Create a new font and alter it
+	final HSSFFont font = wb.createFont();
+	font.setFontHeightInPoints((short) 12);
+	font.setFontName("Courier New");
+	font.setBoldweight((short) 1000);
+	// Fonts are set into a style so create a new one to use
+	final HSSFCellStyle headerCellStyle = wb.createCellStyle();
+	headerCellStyle.setFont(font);
+	headerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
+	final HSSFCellStyle headerInnerCellStyle = wb.createCellStyle();
+	headerInnerCellStyle.setFont(font);
+	headerInnerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
+	headerInnerCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
+	final String[] propertyTitles = initPropertyTitles();
+	final String[] valueColumnTitles = initColumnValueTitles();
+	final int distrColumnCount = pivotModel.rowCategoryProperties().size();
+	final int rowsToMerge = (pivotModel.isMultipleCube() && valueColumnTitles.length > 1) ? 1 : 0;
+
+	//Creating distribution header.
+	mergeCellWithStyle(sheet, 0, 0, rowsToMerge + 1, distrColumnCount + 1, headerInnerCellStyle, TitlesDescsGetter.removeHtml(pivotModel.getColumnName(0)));
+
+	//Creating aggregation column header
+	final HSSFRow subHeader = sheet.getRow(1);
+	for(int headerIndex = 0; headerIndex < propertyTitles.length; headerIndex++) {
+	    final int valueIndex = distrColumnCount + 1 + headerIndex * (subHeader != null ? valueColumnTitles.length : 1);
+	    mergeCellWithStyle(sheet, 0, valueIndex, 1, pivotModel.isMultipleCube() ? valueColumnTitles.length : 1, //
+		    headerIndex < propertyTitles.length - 1 ? headerInnerCellStyle : headerCellStyle, propertyTitles[headerIndex]);
+	    if(pivotModel.isMultipleCube() && valueColumnTitles.length > 1) {
+		for(int subHeaderIndex = 0; subHeaderIndex < valueColumnTitles.length; subHeaderIndex++) {
+		    final HSSFCell subHeaderCell = subHeader.createCell(valueIndex + subHeaderIndex);
+		    subHeaderCell.setCellValue(valueColumnTitles[subHeaderIndex]);
+		    subHeaderCell.setCellStyle(((headerIndex < propertyTitles.length - 1) || (subHeaderIndex < valueColumnTitles.length - 1))
+			    ? headerInnerCellStyle : headerCellStyle);
+		}
+	    }
+
+	}
+
+	// let's make cell style to handle borders
+	final HSSFCellStyle dataCellStyle = wb.createCellStyle();
+	dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
+	//exporting created tree.
+	traceTree(new TreePath(rootNode), sheet, dataCellStyle, pivotModel.isMultipleCube() ? valueColumnTitles.length : 1, pivotModel.rowCategoryProperties().size(), rowsToMerge + 1);
+
+	final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
+
+	wb.write(oStream);
+
+	oStream.flush();
+	oStream.close();
+
+	return oStream.toByteArray();
+    }
+
+    /**
+     * Merges the specified number of rows and columns starting from row and col. Set specified cell style and vlue.
+     *
+     * @param sheet
+     * @param row
+     * @param col
+     * @param rows
+     * @param columns
+     * @param style
+     * @param value
+     */
+    private void mergeCellWithStyle(final HSSFSheet sheet, final int row, final int col, final int rows, final int columns, final HSSFCellStyle style, final String value) {
+	for(int rowInd = 0; rowInd < rows; rowInd++) {
+	    HSSFRow workRow = sheet.getRow(row + rowInd);
+	    if(workRow == null) {
+		workRow = sheet.createRow(row + rowInd);
+	    }
+	    for(int colInd = 0; colInd < columns; colInd++) {
+		HSSFCell workCell = workRow.getCell(col + colInd);
+		if(workCell == null) {
+		    workCell = workRow.createCell(col + colInd);
+		}
+		workCell.setCellStyle(style);
+	    }
+	}
+	sheet.getRow(row).getCell(col).setCellValue(value);
+	sheet.addMergedRegion(new CellRangeAddress(row, row + rows - 1, col, col + columns - 1));
+    }
+
+    private String[] initColumnValueTitles() {
+	final String valuePropertyTitles[] = new String[pivotModel.cubeModel.getValueColumnCount()];
+	for (int index = 0; index < valuePropertyTitles.length; index++) {
+	    valuePropertyTitles[index] = TitlesDescsGetter.removeHtml(pivotModel.cubeModel.getValueColumnName(index));
+	}
+	return valuePropertyTitles;
+    }
+
+    private String[] initPropertyTitles() {
+	final String propertyTitles[] = new String[pivotModel.getColumnCount() - 1];
+	for (int index = 0; index < propertyTitles.length; index++) {
+	    propertyTitles[index] = TitlesDescsGetter.removeHtml(pivotModel.getColumnName(index + 1));
+	}
+	return propertyTitles;
+    }
+
+    private int traceTree(final TreePath path, final HSSFSheet sheet, final HSSFCellStyle dataCellStyle, final int valueColumns, final int columnShift, final int rowNum) {
+	//Exporting current node.
+	final PivotTreeTableNode node = (PivotTreeTableNode) path.getLastPathComponent();
+	final Object[] cellValues = new Object[(node.getColumnCount() - 1) * valueColumns  + columnShift + 1];
+	for (int columnIndex = 0; columnIndex < node.getColumnCount() + columnShift; columnIndex++) {
+	    if(columnIndex <= columnShift) {
+		cellValues[columnIndex] = columnIndex == (path.getPathCount() - 1) ? node.getValueAt(0) : null;
+	    } else {
+		final Object[] values = (Object[])node.getValueAt(columnIndex - columnShift);
+		for(int valInd = 0; valInd < valueColumns; valInd++) {
+		    cellValues[(columnIndex - columnShift - 1) * valueColumns + columnShift + 1 + valInd] = values[valInd];
+		}
+	    }
+	}
+	final HSSFRow row = sheet.createRow(rowNum);
+
+
+	for (int index = 0; index < cellValues.length; index++) {
+	    final HSSFCell cell = row.createCell(index); // create new cell
+	    if (index < cellValues.length - 1) { // the last column should not have right border
+		cell.setCellStyle(dataCellStyle);
+	    }
+	    final Object value = cellValues[index]; // get the value
+	    // need to try to do the best job with types
+	    if (value instanceof Date) {
+		cell.setCellValue(DateTimeDateFormat.getDateTimeInstance().format(value));
+	    } else if (value instanceof DateTime) {
+		cell.setCellValue(DateTimeDateFormat.getDateTimeInstance().format(value));
+	    } else if (value instanceof Number) {
+		cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+		cell.setCellValue(((Number) value).doubleValue());
+	    } else if (value instanceof Boolean) {
+		cell.setCellType(HSSFCell.CELL_TYPE_BOOLEAN);
+		cell.setCellValue((Boolean) value);
+	    } else if (value == null) { // if null then leave call blank
+		cell.setCellType(HSSFCell.CELL_TYPE_BLANK);
+	    } else { // otherwise treat value as String
+		cell.setCellType(HSSFCell.CELL_TYPE_STRING);
+		cell.setCellValue(value.toString());
+	    }
+	}
+
+	//Exporting nodes children.
+	int rowCount = rowNum;
+	final Enumeration<? extends MutableTreeTableNode> childrenEnum = node.children();
+	while (childrenEnum.hasMoreElements()) {
+	    final MutableTreeTableNode nextChild = childrenEnum.nextElement();
+	    final TreePath newPath = path.pathByAddingChild(nextChild);
+	    rowCount = traceTree(newPath, sheet, dataCellStyle, valueColumns, columnShift, rowCount + 1);
+	}
+
+	//Returns row index;
+	return rowCount;
     }
 
     @Override
@@ -346,7 +526,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    final Class<T> root = getCriteria().getEntityClass();
 	    final IPivotAddToDistributionTickManager firstTick = adtme().getFirstTick();
 	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
-	    if(column == 0){
+	    if(column == 0 && cubeModel.getRowDistributionProperties().size() > 0){
 		firstTick.setWidth(root, cubeModel.getRowDistributionProperties().get(0), width);
 	    } else if(column > 0 && !isMultipleCube()) {
 		secondTick.setWidth(root, cubeModel.getColumnIdentifier(column-1).toString(), width);
@@ -358,7 +538,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    final Class<T> root = getCriteria().getEntityClass();
 	    final IPivotAddToDistributionTickManager firstTick = adtme().getFirstTick();
 	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
-	    if(column == 0){
+	    if(column == 0 && cubeModel.getRowDistributionProperties().size() > 0){
 		return firstTick.getWidth(root, cubeModel.getRowDistributionProperties().get(0));
 	    } else if(column > 0 && !isMultipleCube()) {
 		return secondTick.getWidth(root, cubeModel.getColumnIdentifier(column-1).toString());

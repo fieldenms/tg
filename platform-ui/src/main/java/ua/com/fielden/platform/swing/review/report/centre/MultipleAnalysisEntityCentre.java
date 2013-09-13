@@ -155,13 +155,13 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
 	    @Override
 	    protected boolean preAction() {
-		final boolean result = super.preAction();
-		if (!result) {
-		    return false;
-		}
 		final ICloseGuard closeGuard = canClose();
 		if (closeGuard != null) {
 		    JOptionPane.showMessageDialog(MultipleAnalysisEntityCentre.this, closeGuard.whyCannotClose(), "Warning", JOptionPane.WARNING_MESSAGE);
+		    return false;
+		}
+		final boolean result = super.preAction();
+		if (!result) {
 		    return false;
 		}
 		return true;

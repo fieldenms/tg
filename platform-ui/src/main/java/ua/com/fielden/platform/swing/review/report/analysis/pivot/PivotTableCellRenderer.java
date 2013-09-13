@@ -37,7 +37,6 @@ public class PivotTableCellRenderer implements TableCellRenderer {
 	    viewPanel.add(views[typeIndex]);
 	}
 	viewPanel.setBackground(gridColor);
-	//viewPanel.setOpaque(false);
     }
 
     private Converter createConverter(final Class<?> type) {

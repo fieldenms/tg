@@ -92,11 +92,11 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
 
 	    @Override
 	    protected boolean preAction() {
-		if(!super.preAction()){
-		    return false;
-		}
 		if(!getOwner().getModel().isFreeze()){
 		    JOptionPane.showMessageDialog(AnalysisWizardView.this, "This analysis wizard can not be canceled!", "Warning", JOptionPane.WARNING_MESSAGE);
+		    return false;
+		}
+		if(!super.preAction()){
 		    return false;
 		}
 		return true;

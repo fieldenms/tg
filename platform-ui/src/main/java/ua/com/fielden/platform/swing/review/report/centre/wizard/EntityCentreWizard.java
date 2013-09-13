@@ -102,11 +102,11 @@ public class EntityCentreWizard<T extends AbstractEntity<?>, C extends AbstractE
 
 	    @Override
 	    protected boolean preAction() {
-		if(!super.preAction()){
-		    return false;
-		}
 		if(!getOwner().getModel().isFreezed()){
 		    JOptionPane.showMessageDialog(EntityCentreWizard.this, "This entity centre wizard can not be canceled!", "Warning", JOptionPane.WARNING_MESSAGE);
+		    return false;
+		}
+		if(!super.preAction()){
 		    return false;
 		}
 		return true;

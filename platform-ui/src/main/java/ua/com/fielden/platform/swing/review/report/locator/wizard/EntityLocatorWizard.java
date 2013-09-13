@@ -101,11 +101,11 @@ public class EntityLocatorWizard<T extends AbstractEntity<?>, R extends Abstract
 
 	    @Override
 	    protected boolean preAction() {
-		if(!super.preAction()){
-		    return false;
-		}
 		if(!getOwner().getModel().isInFreezedPhase()){
 		    JOptionPane.showMessageDialog(EntityLocatorWizard.this, "This locator's wizard can not be canceled!", "Warning", JOptionPane.WARNING_MESSAGE);
+		    return false;
+		}
+		if(!super.preAction()){
 		    return false;
 		}
 		return true;
