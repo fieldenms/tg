@@ -21,48 +21,47 @@ import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
 public class Blackout<T extends AbstractAvlMessage> {
     private T start;
     private T finish;
-    private final List<T> messages = new ArrayList<>();
-    private final List<Packet<T>> packets = new ArrayList<>();
-    private final MessagesComparator<T> messagesComparator;
+    private final SortedSet<T> messages;
+    private final Set<Long> gpsTimes = new HashSet<>();
 
     public Blackout(final MessagesComparator<T> messagesComparator) {
-	this.messagesComparator = messagesComparator;
+	this.messages = new TreeSet<>(messagesComparator);
     }
 
     public void add(final Packet<T> packet) {
-	packets.add(packet);
-	messages.addAll(packet.getMessages());
-	if (start == null || (start != null && packet.getStart().getGpsTime().getTime() < start.getGpsTime().getTime())) {
-	    start = packet.getStart();
-	}
+	for (final T message : packet.getMessages()) {
+	    if (!gpsTimes.contains(message.getGpsTime().getTime())) {
+		messages.add(message);
+		gpsTimes.add(message.getGpsTime().getTime());
 
-	if (finish == null || (finish != null && packet.getFinish().getGpsTime().getTime() > finish.getGpsTime().getTime())) {
-	    finish = packet.getFinish();
+		if (start == null || (start != null && message.getGpsTime().getTime() < start.getGpsTime().getTime())) {
+		    start = message;
+		}
+
+		if (finish == null || (finish != null && message.getGpsTime().getTime() > finish.getGpsTime().getTime())) {
+		    finish = message;
+		}
+	    }
 	}
     }
 
     public Collection<T> reset() {
 	if (messages.size() > 0) {
-	    final Set<Long> gpsTimes = new HashSet<>();
-	    final SortedSet<T> result = new TreeSet<T>(messagesComparator);
+	    final List<T> result = new ArrayList<>();
 	    for (final T message : messages) {
-		if (!gpsTimes.contains(message.getGpsTime().getTime())) {
-		    result.add(message);
-		    gpsTimes.add(message.getGpsTime().getTime());
-		}
-
+		result.add(message);
 	    }
 	    start = null;
 	    finish = null;
 	    messages.clear();
-	    packets.clear();
+	    gpsTimes.clear();
 	    return result;
 	} else {
 	    return Collections.emptySet();
 	}
     }
 
-    public List<T> getMessages() {
+    public SortedSet<T> getMessages() {
 	return messages;
     }
 
