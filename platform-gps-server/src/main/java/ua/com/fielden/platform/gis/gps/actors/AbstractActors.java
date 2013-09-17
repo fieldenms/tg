@@ -114,7 +114,7 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
 	return "machine_" + Transliterator.transliterate(machine.getKey()).replaceAll(" ", "_").toLowerCase();
     }
 
-    protected ActorRef getMachineActor(final Long machineId) {
+    public ActorRef getMachineActor(final Long machineId) {
 	return machineActors.get(machineId);
     }
 
@@ -175,5 +175,9 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
 		serverTeltonika.shutdown();
 	    }
 	});
+    }
+
+    protected ActorSystem getSystem() {
+	return system;
     }
 }
