@@ -162,12 +162,12 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
 		}
 
 		if (lastMessages.isEmpty()) {
-		    getSender().tell(new NoLastMessage(), getSender());
+		    getSender().tell(new NoLastMessage(), getSelf());
 		} else {
-		    getSender().tell(new LastMessages(machine.getId(), lastMessages), getSender());
+		    getSender().tell(new LastMessages<T>(machine.getId(), lastMessages), getSelf());
 		}
 	    } else {
-		getSender().tell(new NoLastMessage(), getSender());
+		getSender().tell(new NoLastMessage(), getSelf());
 	    }
 	} else {
 	    unhandled(data);
