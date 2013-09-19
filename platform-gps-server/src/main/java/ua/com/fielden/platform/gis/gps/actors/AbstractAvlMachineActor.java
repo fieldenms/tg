@@ -95,7 +95,7 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
 
 		if (lastProcessedMessage != null && lastProcessedMessage.getGpsTime().getTime() >= first.getStart().getGpsTime().getTime()) {
 		    persistError(first);
-		} else if (blackout.getFinish() != null && blackout.getFinish().getGpsTime().getTime() > first.getStart().getGpsTime().getTime()) {
+		} else if (blackout.getFinish() != null && blackout.getFinish().getGpsTime().getTime() >= first.getStart().getGpsTime().getTime()) {
 		    blackout.add(first);
 		} else {
 		    final int maximumIndexOfPacketBreakingChronologyOfFirstPacket = findMaximumIndexOfPacketBreakingChronologyOfGivenPacket(first);
