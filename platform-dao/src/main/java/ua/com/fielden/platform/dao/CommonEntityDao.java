@@ -186,7 +186,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 		// let's also make sure that duplicate entities are not allowed
 		final Integer count = count(createQueryByKey(entity.getKey()), Collections.<String, Object> emptyMap());
 		if (count > 0) {
-		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " already exists."));
+		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " already exists: " + entity));
 		}
 
 		// check and assign properties annotated with @TransactionDate
