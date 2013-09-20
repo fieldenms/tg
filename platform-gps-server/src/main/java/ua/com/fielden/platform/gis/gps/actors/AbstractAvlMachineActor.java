@@ -33,8 +33,6 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
     private static int windowSize2 = 10;
     private static int windowSize3 = 30;
     private final Logger logger = Logger.getLogger(AbstractAvlMachineActor.class);
-    private static BigDecimal TWO = new BigDecimal(2);
-    private static BigDecimal TWO_MINUS = new BigDecimal(-2);
 
     private final M machine;
     private final LinkedList<Packet<T>> incomingPackets = new LinkedList<>();
@@ -77,7 +75,7 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
 
     protected abstract void persistError(final Packet<T> packet) throws Exception;
 
-    protected abstract void persist(final Collection<T> messages, final T first, final T last, final T latestPersistedMessage) throws Exception;
+    protected abstract void persist(final Collection<T> messages, final T latestPersistedMessage) throws Exception;
 
     protected final void processSinglePacket(final Packet<T> packet, final boolean onStart) throws Exception {
 	if (!packet.isEmpty()) {
@@ -112,10 +110,10 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
 				final T blackoutLastMessage = blackout.getFinish();
 				final T blackoutStart = blackout.getStart();
 				final Collection<T> messages = blackout.reset();
-				persist(messages, blackoutStart, blackoutLastMessage, lastProcessedMessage);
+				persist(messages, lastProcessedMessage);
 				lastProcessedMessage = blackoutLastMessage;
 			    }
-			    persist(first.getMessages(), first.getStart(), first.getFinish(), lastProcessedMessage);
+			    persist(first.getMessages(), lastProcessedMessage);
 			    lastProcessedMessage = first.getFinish();
 			} else {
 			    blackout.add(first);
@@ -265,10 +263,7 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
 	final Packet<T> packet = new Packet<T>(packetReceived, messagesComparator);
 	for (int i = data.length - 1; i >= 0; i--) {
 	    final T msg = completeMessage(avlToMessageConverter.populateData(createMessage(), data[i], packetReceived)); // AvlToMessageConverter.convert(data[i], machine, machineRouteDriverHistoryMaintainer, packetReceived);
-
-	    if (isValid(msg)) {
-		packet.add(msg);
-	    }
+	    packet.add(msg);
 	}
 	return packet;
     }
@@ -295,26 +290,6 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
      * @return
      */
     protected abstract T completeMessageCopy(T populateData, final T messageToCopyFrom);
-
-    private boolean isZero(final BigDecimal value) {
-	return BigDecimal.ZERO.compareTo(value) == 0;
-    }
-
-    private boolean isNearZero(final BigDecimal value) {
-	return TWO_MINUS.compareTo(value) < 0 && TWO.compareTo(value) > 0;
-    }
-
-    private boolean isValid(final T msg) {
-	if (isZero(msg.getX()) || isZero(msg.getY()) || (isNearZero(msg.getX()) && isNearZero(msg.getY()))) {
-	    return false;
-	} else if ((msg.getGpsTime().getTime() - (new Date()).getTime()) > 600000)/*10 minutes*/{
-	    return false;
-	} else if (msg.getVectorSpeed().equals(255)) {
-	    return false;
-	}
-
-	return true;
-    }
 
     protected M getMachine() {
 	return machine;

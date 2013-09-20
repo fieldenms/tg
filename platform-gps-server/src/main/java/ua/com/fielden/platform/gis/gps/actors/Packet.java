@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.gis.gps.actors;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,6 +14,9 @@ import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
  *
  */
 public class Packet<T extends AbstractAvlMessage> {
+    private static BigDecimal TWO = new BigDecimal(2);
+    private static BigDecimal TWO_MINUS = new BigDecimal(-2);
+
     private final Long created;
     private T start;
     private T finish;
@@ -31,7 +35,7 @@ public class Packet<T extends AbstractAvlMessage> {
     }
 
     public void add(final T message) {
-	if (!gpsTimes.contains(message.getGpsTime().getTime())) {
+	if (!gpsTimes.contains(message.getGpsTime().getTime()) && isValid(message)) {
 	    gpsTimes.add(message.getGpsTime().getTime());
 	    messages.add(message);
 	    if (start == null || (start != null && message.getGpsTime().getTime() < start.getGpsTime().getTime())) {
@@ -44,6 +48,25 @@ public class Packet<T extends AbstractAvlMessage> {
 	}
     }
 
+    private boolean isValid(final T msg) {
+	if (isZero(msg.getX()) || isZero(msg.getY()) || (isNearZero(msg.getX()) && isNearZero(msg.getY()))) {
+	    return false;
+	} else if ((msg.getGpsTime().getTime() - (new Date()).getTime()) > 600000)/*10 minutes*/{
+	    return false;
+	} else if (msg.getVectorSpeed().equals(255)) {
+	    return false;
+	}
+
+	return true;
+    }
+
+    private boolean isZero(final BigDecimal value) {
+	return BigDecimal.ZERO.compareTo(value) == 0;
+    }
+
+    private boolean isNearZero(final BigDecimal value) {
+	return TWO_MINUS.compareTo(value) < 0 && TWO.compareTo(value) > 0;
+    }
     public boolean isEmpty() {
 	return messages.size() == 0;
     }
