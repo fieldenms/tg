@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.reflection;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -7,9 +12,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -29,10 +37,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 /**
  * This is a helper class to provide :
@@ -45,6 +49,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
  *
  */
 public class Finder {
+    private final static Map<Class<?>, List<Field>> entityKeyMembers = new HashMap<>();
+
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
@@ -272,10 +278,49 @@ public class Finder {
      * The implementation of this method is based on {@link #getFieldsAnnotatedWith(Class, Class)}, which traverses the whole class hierarchy. Thus, it supports correct
      * determination of properties declared at different hierarchical levels constituting a part of the composite key.
      *
+     * IMPORTANT: all key members for types are cached during application lifecycle. It greatly
+     * reduces computational complexity as there is no need to retrieve key members for immutable
+     * {@link AbstractEntity}'s descendants.
+     *
      * @param klass
      * @return
      */
-    public static List<Field> getKeyMembers(final Class<?> type) {
+    public final static List<Field> getKeyMembers(final Class<?> type) {
+	// NOTE: please note that perhaps for generated types the key members are often similar as in
+	// original types. But this is not the case when someone changed a key member property
+	// by adding another property inside it etc. (this is fully allowed in TG). Thus such an optimisation
+	// of this cache needs to be investigated more carefully.
+	//
+	// final Class<?> referenceTypeFromWhichKeyMembersCanBeDetermined = DynamicEntityClassLoader.getOriginalType(type); ?
+
+	final List<Field> cachedKeyMembers = entityKeyMembers.get(type); // TODO consider soft references here..
+	return cachedKeyMembers == null ? new ArrayList<>(loadAndCacheKeyMembers(type)) : new ArrayList<>(cachedKeyMembers); // new list should be returned, not the same reference
+	// old implementation -- return loadKeyMembers(type);
+    }
+
+    /**
+     * Loads key members for <code>type</code> and caches them in global cache.
+     *
+     * @param type
+     * @return
+     */
+    private final static List<Field> loadAndCacheKeyMembers(final Class<?> type) {
+	final List<Field> loadedKeyMembers = Collections.unmodifiableList(loadKeyMembers(type)); // should be immutable
+	entityKeyMembers.put(type, loadedKeyMembers);
+	return loadedKeyMembers;
+    }
+
+    /**
+     * Determines properties within the provided class to be used for a key. There are two cases: either entity uses a composite key or a single property <code>key</code> represent
+     * a key.
+     * <p>
+     * The implementation of this method is based on {@link #getFieldsAnnotatedWith(Class, Class)}, which traverses the whole class hierarchy. Thus, it supports correct
+     * determination of properties declared at different hierarchical levels constituting a part of the composite key.
+     *
+     * @param klass
+     * @return
+     */
+    private final static List<Field> loadKeyMembers(final Class<?> type) {
 	final SortedMap<Integer, Field> properties = new TreeMap<Integer, Field>(); // the use of SortedMap ensures the correct order of properties to be used the composite key
 	final List<Field> compositeKeyFields = findRealProperties(type, CompositeKeyMember.class);
 
