@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.gis.gps;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -21,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 @KeyType(String.class)
 @EntityTitle(value = "Машина", desc = "Автомобіль, або спецтехніка.")
@@ -49,12 +48,6 @@ public abstract class AbstractAvlMachine <T extends AbstractAvlMessage> extends 
     @Title(value = "Enabled", desc = "Enabled")
     @Invisible
     private boolean enabled;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Object code", desc = "Object code")
-    @Invisible
-    private String objectCode;
 
     // IMPORTANT: a similar lastMessage property should be added to AbstractAvlMessage descendant (+getter and setter)
 //    @IsProperty
@@ -95,16 +88,6 @@ public abstract class AbstractAvlMachine <T extends AbstractAvlMessage> extends 
     }
 
     @Observable
-    public AbstractAvlMachine<T>  setObjectCode(final String objectCode) {
-	this.objectCode = objectCode;
-	return this;
-    }
-
-    public String getObjectCode() {
-	return objectCode;
-    }
-
-    @Observable
     public AbstractAvlMachine<T>  setEnabled(final boolean enabled) {
 	this.enabled = enabled;
 	return this;
@@ -123,7 +106,6 @@ public abstract class AbstractAvlMachine <T extends AbstractAvlMessage> extends 
     public Date getDeletedTime() {
 	return deletedTime;
     }
-
 
     @Observable
     public AbstractAvlMachine<T>  setDeleted(final boolean deleted) {
