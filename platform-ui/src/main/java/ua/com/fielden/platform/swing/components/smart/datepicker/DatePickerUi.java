@@ -59,10 +59,10 @@ public class DatePickerUi extends SmartComponentUi<JFormattedTextField, DatePick
      * @return an instance of a JFormattedTextField
      */
     protected static JFormattedTextField createEditor(final Locale locale, final boolean useTimePortion, final Long defaultTimePortionMillis) {
-	final DateFormat fullFormat = convertFormat(locale, ConverterFactory.getFullFormatStringForLocale(locale)),
-			 dateAndPartialTimeFormat = convertFormat(locale, "dd/MM/yyyy hh:mm"),
-			 dateAndPartialTimeWithoutMinutesFormat = convertFormat(locale, "dd/MM/yyyy hh"),
-			 dateFormat = convertFormat(locale, "dd/MM/yyyy");
+	final DateFormat fullFormat = convertFormat(locale, ConverterFactory.createFullDateFormat(locale)),
+			 dateAndPartialTimeFormat = convertFormat(locale, ConverterFactory.createShortDateAndHoursAndMinutesFormat(locale)),
+			 dateAndPartialTimeWithoutMinutesFormat = convertFormat(locale, ConverterFactory.createShortDateAndHoursFormat(locale)),
+			 dateFormat = convertFormat(locale, ConverterFactory.createShortDateFormat(locale));
 	final AbstractFormatterFactory fullFactory = ComponentFactory.createDateFormatterFactory(fullFormat, fullFormat),
 				       dateAndPartialTimeFactory = ComponentFactory.createDateFormatterFactory(dateAndPartialTimeFormat, dateAndPartialTimeFormat),
 				       dateAndPartialTimeWithoutMinutesFactory = ComponentFactory.createDateFormatterFactory(dateAndPartialTimeWithoutMinutesFormat, dateAndPartialTimeWithoutMinutesFormat),
