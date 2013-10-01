@@ -17,6 +17,7 @@ import org.jdesktop.swingx.util.Contract;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.SpecialFormattedField;
 import ua.com.fielden.platform.swing.components.smart.development.SmartComponentUi;
+import ua.com.fielden.platform.utils.ConverterFactory;
 
 /**
  * Implements Ui logic for date picker layer.
@@ -58,7 +59,7 @@ public class DatePickerUi extends SmartComponentUi<JFormattedTextField, DatePick
      * @return an instance of a JFormattedTextField
      */
     protected static JFormattedTextField createEditor(final Locale locale, final boolean useTimePortion, final Long defaultTimePortionMillis) {
-	final DateFormat fullFormat = convertFormat(locale, "dd/MM/yyyy hh:mma"),
+	final DateFormat fullFormat = convertFormat(locale, ConverterFactory.getFullFormatStringForLocale(locale)),
 			 dateAndPartialTimeFormat = convertFormat(locale, "dd/MM/yyyy hh:mm"),
 			 dateAndPartialTimeWithoutMinutesFormat = convertFormat(locale, "dd/MM/yyyy hh"),
 			 dateFormat = convertFormat(locale, "dd/MM/yyyy");
