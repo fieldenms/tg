@@ -59,7 +59,7 @@ public class MachinesCounterActor extends UntypedActor {
 	    } else if (startedMachinesCount == machinesCount) {
 		logger.info("\tMachine actors started.");
 
-		this.actors.startNettyGpsServer();
+		this.actors.actorsStartedPostAction();
 
 		// Stops this actor and all its supervised children
 		getContext().stop(getSelf());

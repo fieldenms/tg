@@ -159,14 +159,28 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
     }
 
     /**
-     * Starts Gps netty server.
+     * Performs some custom action after the actors has been started.
+     */
+    protected void actorsStartedPostAction() {
+	startNettyGpsServer();
+    }
+
+    /**
+     * Starts Netty Gps server.
      */
     protected void startNettyGpsServer() {
 	//////// start netty-based GPS server
 	InternalLoggerFactory.setDefaultFactory(new Log4JLoggerFactory());
 	final ChannelGroup allChannels = new DefaultChannelGroup("gps-server");
 	final ConcurrentHashMap<String, Channel> existingConnections = new ConcurrentHashMap<>();
-	final ServerTeltonika serverTeltonika = new ServerTeltonika(gpsHost, gpsPort, existingConnections, allChannels, new DefaultGpsHandlerFactory<T, M, N>(existingConnections, allChannels, this));
+	final ServerTeltonika serverTeltonika = new ServerTeltonika(gpsHost, gpsPort, existingConnections, allChannels, new DefaultGpsHandlerFactory<T, M, N>(existingConnections, allChannels, this)) {
+	    @Override
+	    public void run() {
+	        super.run();
+
+	        nettyServerStartedPostAction();
+	    }
+	};
 	new Thread(serverTeltonika).start();
 
 	Runtime.getRuntime().addShutdownHook(new Thread(){
@@ -177,7 +191,14 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
 	});
     }
 
+    protected void nettyServerStartedPostAction() {
+    }
+
     protected ActorSystem getSystem() {
 	return system;
+    }
+
+    protected Logger getLogger() {
+	return logger;
     }
 }
