@@ -12,12 +12,14 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -145,30 +147,28 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 			+ ") does not match the number of properties in the entity composite key (" + list.size() + ").");
 	    }
 
-	    ICompoundCondition0<T> cc = (list.get(0).getType() == String.class) ? //
-	    qry.where().lowerCase().prop(list.get(0).getName())//
-	    .eq().lowerCase().val(realKeyValues[0])
-		    : //
-		    qry.where().prop(list.get(0).getName())//
-		    .eq().val(realKeyValues[0]);
+	    ICompoundCondition0<T> cc = qry.where().condition(buildConditionForKeyMember(list.get(0).getName(), list.get(0).getType(), realKeyValues[0]));
 
 	    for (int index = 1; index < list.size(); index++) {
-		cc = (list.get(index).getType() == String.class) ? //
-		cc.and().lowerCase().prop(list.get(index).getName()).eq().lowerCase().val(realKeyValues[index])
-			: // all conditions are linked with AND by default with lower case
-			cc.and().prop(list.get(index).getName()).eq().val(realKeyValues[index]); // all conditions are linked with AND by default
+		cc = cc.and().condition(buildConditionForKeyMember(list.get(index).getName(), list.get(index).getType(), realKeyValues[index]));
 	    }
+
 	    return cc.model();
 	} else if (keyValues.length != 1) {
 	    throw new IllegalArgumentException("Only one key value is expected instead of " + keyValues.length + " when looking for an entity by a non-composite key.");
 	} else {
-	    return (keyValues[0] instanceof String) ? //
-	    qry.where().lowerCase().prop(AbstractEntity.KEY)//
-	    .eq().lowerCase().val(keyValues[0]).model()
-		    : //
-		    qry.where().prop(AbstractEntity.KEY)//
-		    .eq().val(keyValues[0]).model();
+	    return qry.where().condition(buildConditionForKeyMember(AbstractEntity.KEY, getKeyType(), keyValues[0])).model();
 	}
+    }
+
+    private ConditionModel buildConditionForKeyMember(final String propName, final Class propType, final Object propValue) {
+	if (propValue == null) {
+	    return cond().prop(propName).isNull().model();
+	} else if (String.class.equals(propType)) {
+	    return cond().lowerCase().prop(propName).eq().lowerCase().val(propValue).model();
+   	} else {
+	    return cond().prop(propName).eq().val(propValue).model();
+   	}
     }
 
     @Override
