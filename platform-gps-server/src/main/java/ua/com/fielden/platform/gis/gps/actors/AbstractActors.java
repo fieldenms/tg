@@ -70,9 +70,20 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
 	machinesCounter = MachinesCounterActor.create(system, this.cache.size(), this);
 
 	this.machineActors = new HashMap<>();
+    }
+
+    /**
+     * Starts all machine actors based on a state of initialised actor system.
+     *
+     * @param injector
+     * @return
+     */
+    public AbstractActors<T, M, N> startMachines(final Injector injector) {
+	logger.info("\tMachine actors starting...");
 	for (final M machine : this.cache.values()) {
 	    this.machineActors.put(machine.getId(), create(injector, system, machine, machinesCounter));
 	}
+	return this;
     }
 
     /**

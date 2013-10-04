@@ -23,8 +23,6 @@ public class MachinesCounterActor extends UntypedActor {
 	this.machinesCount = machinesCount;
 	this.startedMachinesCount = 0;
 	this.actors = actors;
-
-	logger.info("\tMachine actors starting...");
     }
 
     /**

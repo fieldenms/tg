@@ -34,6 +34,7 @@ public abstract class ApplicationConfigurationUtil<T extends AbstractAvlMessage,
 
 	// create and start all actors responsible for message handling
 	final AbstractActors<T, M, N> actors = createActors(fetchMachinesToTrack(injector));
+	actors.startMachines(injector);
 
 	final DefaultMachineMonitoringProvider<T, M, N> mmProvider = (DefaultMachineMonitoringProvider<T, M, N>) injector.getInstance(IMachineMonitoringProvider.class);
 	mmProvider.setActors(actors);
