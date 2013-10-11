@@ -127,48 +127,53 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
 
     @Override
     public void onReceive(final Object data) throws Exception {
-	if (data instanceof AvlData[]) {
-	    processSinglePacket(createPacket((AvlData[]) data), false);
-	} else if (data instanceof Packet) {
-	    final Packet<T> packet = (Packet<T>) data;
-	    for (final T message : packet.getMessages()) {
-		completeMessage(message);
-	    }
-	    processSinglePacket(packet, false);
-	} else if (data instanceof LastMessagesRequest) {
-	    final LastMessagesRequest glm = (LastMessagesRequest) data;
-	    // System.out.println("Запит про останнє повідомлення для машини " + machine + " після " + glm.getAfterDate() + ". Received: " + new Date() + " для актора " + getSelf());
+	try {
+		if (data instanceof AvlData[]) {
+		    processSinglePacket(createPacket((AvlData[]) data), false);
+		} else if (data instanceof Packet) {
+		    final Packet<T> packet = (Packet<T>) data;
+		    for (final T message : packet.getMessages()) {
+			completeMessage(message);
+		    }
+		    processSinglePacket(packet, false);
+		} else if (data instanceof LastMessagesRequest) {
+		    final LastMessagesRequest glm = (LastMessagesRequest) data;
+		    // System.out.println("Запит про останнє повідомлення для машини " + machine + " після " + glm.getAfterDate() + ". Received: " + new Date() + " для актора " + getSelf());
 
-	    if (latestGpsMessage != null) {
-		final List<T> lastMessages = new ArrayList<>();
+		    if (latestGpsMessage != null) {
+			final List<T> lastMessages = new ArrayList<>();
 
-		if (glm.isOnlyOne()) { // only single last message is needed
-		    if (glm.getAfterDate() == null || latestGpsMessage.getGpsTime().getTime() > glm.getAfterDate().getTime()) {
-			lastMessages.add(completeMessageCopy(produceIncompleteLastMessage(machine, latestGpsMessage), latestGpsMessage));
+			if (glm.isOnlyOne()) { // only single last message is needed
+			    if (glm.getAfterDate() == null || latestGpsMessage.getGpsTime().getTime() > glm.getAfterDate().getTime()) {
+				lastMessages.add(completeMessageCopy(produceIncompleteLastMessage(machine, latestGpsMessage), latestGpsMessage));
+			    }
+			} else {
+			    if (glm.getAfterDate() == null || latestGpsMessage.getGpsTime().getTime() > glm.getAfterDate().getTime()) {
+				lastMessages.add(completeMessageCopy(produceIncompleteLastMessage(machine, latestGpsMessage), latestGpsMessage));
+			    }
+			    // TODO does not supported, maybe will be deprecated at all
+			    //		    MessageWithMarkers current = messageQueue.last();
+			    //		    while (lastMessages.size() <= MachineMonitor.MAX_LAST_MESSAGES_COUNT && current != null && current.message().getGpsTime().getTime() > glm.getAfterDate().getTime()) {
+			    //			lastMessages.add(produceLastMessage(machine, current.message()));
+			    //			current = messageQueue.lower(current);
+			    //		    }
+			    //		    Collections.reverse(lastMessages);
+			}
+
+			if (lastMessages.isEmpty()) {
+			    getSender().tell(new NoLastMessage(), getSelf());
+			} else {
+			    getSender().tell(new LastMessages<T>(machine.getId(), lastMessages), getSelf());
+			}
+		    } else {
+			getSender().tell(new NoLastMessage(), getSelf());
 		    }
 		} else {
-		    if (glm.getAfterDate() == null || latestGpsMessage.getGpsTime().getTime() > glm.getAfterDate().getTime()) {
-			lastMessages.add(completeMessageCopy(produceIncompleteLastMessage(machine, latestGpsMessage), latestGpsMessage));
-		    }
-		    // TODO does not supported, maybe will be deprecated at all
-		    //		    MessageWithMarkers current = messageQueue.last();
-		    //		    while (lastMessages.size() <= MachineMonitor.MAX_LAST_MESSAGES_COUNT && current != null && current.message().getGpsTime().getTime() > glm.getAfterDate().getTime()) {
-		    //			lastMessages.add(produceLastMessage(machine, current.message()));
-		    //			current = messageQueue.lower(current);
-		    //		    }
-		    //		    Collections.reverse(lastMessages);
+		    unhandled(data);
 		}
-
-		if (lastMessages.isEmpty()) {
-		    getSender().tell(new NoLastMessage(), getSelf());
-		} else {
-		    getSender().tell(new LastMessages<T>(machine.getId(), lastMessages), getSelf());
-		}
-	    } else {
-		getSender().tell(new NoLastMessage(), getSelf());
-	    }
-	} else {
-	    unhandled(data);
+	} catch (final Exception e) {
+	    logger.error(e.getMessage(), e);
+	    throw e;
 	}
     }
 
