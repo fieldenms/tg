@@ -353,9 +353,19 @@ user@workstation:~/workspace-tg-apps/coolapp$ java -jar \
     \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/01-application-modules/images/03-client-installation-uri.png}
   \end{image}
   
-  Once installation is completed, run the client application by either navigating to the specified installation directory and running \texttt{run.bat} (\texttt{run.sh} for Linux) or by choosing an appropriate program from the \emph{Start} menu under Windows.
+  Once installation is completed, there is one final touch that is required to apply before starting the client.
+  The generated application is supplied with a simple H2 database that contains bare minimum to start the work.
+  This database excludes any application menu configuration, although the generated application has some default menu items.
+  Thus, it is required to update the database, which happens automatically when the client application starts and its \texttt{application.properties} file has property \texttt{workflow=development}.
+  By default this property is set to \texttt{deployment}, which is appropriate for application deployments.
+  Having property \texttt{workflow} unchanged would simply result in the empty main menu once the client start.
+  
+  Starting the client application can be done by either navigating to the specified installation directory and running \texttt{run.bat} (\texttt{run.sh} for Linux) or by choosing an appropriate program from the \emph{Start} menu under Windows.
   The login screen of the generated application is depicted in Fig.~\ref{img:ch00:02:client_login}.
   The default user name and password is \emph{SU} (both capital).
+  User \emph{SU} is a base-user -- the concept explained later in the book.
+  For now it is sufficient to know that base-users have extra capabilities, maim menu configuration is among them.
+  Ordinary user, such as user \emph{DEMO} that exists in the demo H2 database, are not allowed to run the client in the \texttt{development} mode.
 
   \begin{image}{Application login}{\label{img:ch00:02:client_login}}    
     \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/01-application-modules/images/04-client-login.png}
