@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import com.google.inject.asm.ClassAdapter;
-import com.google.inject.asm.ClassVisitor;
+import org.kohsuke.asm3.ClassAdapter;
+import org.kohsuke.asm3.ClassVisitor;
 
 
 /**

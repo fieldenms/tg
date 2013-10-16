@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.reflection.asm.impl.remapper;
 
-import com.google.inject.asm.AnnotationVisitor;
-import com.google.inject.asm.Label;
-import com.google.inject.asm.MethodVisitor;
+import org.kohsuke.asm3.AnnotationVisitor;
+import org.kohsuke.asm3.Label;
+import org.kohsuke.asm3.MethodVisitor;
 
 
 /**
@@ -24,6 +24,7 @@ public class RemappingMethodAdapter extends LocalVariablesSorter {
         this.remapper = renamer;
     }
 
+    @Override
     public void visitFieldInsn(
         final int opcode,
         final String owner,
@@ -36,6 +37,7 @@ public class RemappingMethodAdapter extends LocalVariablesSorter {
                 remapper.mapDesc(desc));
     }
 
+    @Override
     public void visitMethodInsn(
         final int opcode,
         final String owner,
@@ -48,18 +50,22 @@ public class RemappingMethodAdapter extends LocalVariablesSorter {
                 remapper.mapMethodDesc(desc));
     }
 
+    @Override
     public void visitTypeInsn(final int opcode, final String type) {
         super.visitTypeInsn(opcode, remapper.mapType(type));
     }
 
+    @Override
     public void visitLdcInsn(final Object cst) {
         super.visitLdcInsn(remapper.mapValue(cst));
     }
 
+    @Override
     public void visitMultiANewArrayInsn(final String desc, final int dims) {
         super.visitMultiANewArrayInsn(remapper.mapDesc(desc), dims);
     }
 
+    @Override
     public void visitTryCatchBlock(
         final Label start,
         final Label end,
@@ -70,6 +76,7 @@ public class RemappingMethodAdapter extends LocalVariablesSorter {
                 type == null ? null : remapper.mapType(type));
     }
 
+    @Override
     public void visitLocalVariable(
         final String name,
         final String desc,
@@ -86,16 +93,19 @@ public class RemappingMethodAdapter extends LocalVariablesSorter {
                 index);
     }
 
+    @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
         final AnnotationVisitor av = mv.visitAnnotation(remapper.mapDesc(desc), visible);
         return av == null ? av : new RemappingAnnotationAdapter(av, remapper);
     }
 
+    @Override
     public AnnotationVisitor visitAnnotationDefault() {
         final AnnotationVisitor av = mv.visitAnnotationDefault();
         return av == null ? av : new RemappingAnnotationAdapter(av, remapper);
     }
 
+    @Override
     public AnnotationVisitor visitParameterAnnotation(
         final int parameter,
         final String desc,
@@ -107,6 +117,7 @@ public class RemappingMethodAdapter extends LocalVariablesSorter {
         return av == null ? av : new RemappingAnnotationAdapter(av, remapper);
     }
 
+    @Override
     public void visitFrame(
         final int type,
         final int nLocal,

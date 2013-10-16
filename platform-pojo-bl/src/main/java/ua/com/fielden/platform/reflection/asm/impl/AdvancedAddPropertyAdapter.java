@@ -14,14 +14,14 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.Pair;
 
-import com.google.inject.asm.AnnotationVisitor;
-import com.google.inject.asm.ClassAdapter;
-import com.google.inject.asm.ClassVisitor;
-import com.google.inject.asm.FieldVisitor;
-import com.google.inject.asm.MethodAdapter;
-import com.google.inject.asm.MethodVisitor;
-import com.google.inject.asm.Opcodes;
-import com.google.inject.asm.Type;
+import org.kohsuke.asm3.AnnotationVisitor;
+import org.kohsuke.asm3.ClassAdapter;
+import org.kohsuke.asm3.ClassVisitor;
+import org.kohsuke.asm3.FieldVisitor;
+import org.kohsuke.asm3.MethodAdapter;
+import org.kohsuke.asm3.MethodVisitor;
+import org.kohsuke.asm3.Opcodes;
+import org.kohsuke.asm3.Type;
 
 
 /**

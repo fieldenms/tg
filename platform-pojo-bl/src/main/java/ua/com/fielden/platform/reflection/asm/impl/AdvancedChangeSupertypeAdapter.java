@@ -1,11 +1,9 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import org.apache.tools.ant.types.CommandlineJava.SysProperties;
-
-import com.google.inject.asm.ClassAdapter;
-import com.google.inject.asm.ClassVisitor;
-import com.google.inject.asm.MethodVisitor;
-import com.google.inject.asm.Opcodes;
+import org.kohsuke.asm3.ClassAdapter;
+import org.kohsuke.asm3.ClassVisitor;
+import org.kohsuke.asm3.MethodVisitor;
+import org.kohsuke.asm3.Opcodes;
 
 
 /**

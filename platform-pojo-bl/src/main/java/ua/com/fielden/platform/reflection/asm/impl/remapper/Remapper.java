@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.reflection.asm.impl.remapper;
 
-import com.google.inject.asm.Type;
-import com.google.inject.asm.signature.SignatureReader;
-import com.google.inject.asm.signature.SignatureVisitor;
-import com.google.inject.asm.signature.SignatureWriter;
+import org.kohsuke.asm3.Type;
+import org.kohsuke.asm3.signature.SignatureReader;
+import org.kohsuke.asm3.signature.SignatureVisitor;
+import org.kohsuke.asm3.signature.SignatureWriter;
 
 /**
  * A class responsible for remapping types and names.

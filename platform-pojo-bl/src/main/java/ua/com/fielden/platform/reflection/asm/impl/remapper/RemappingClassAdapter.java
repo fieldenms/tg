@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.reflection.asm.impl.remapper;
 
 
-import com.google.inject.asm.AnnotationVisitor;
-import com.google.inject.asm.ClassAdapter;
-import com.google.inject.asm.ClassVisitor;
-import com.google.inject.asm.FieldVisitor;
-import com.google.inject.asm.MethodVisitor;
+import org.kohsuke.asm3.AnnotationVisitor;
+import org.kohsuke.asm3.ClassAdapter;
+import org.kohsuke.asm3.ClassVisitor;
+import org.kohsuke.asm3.FieldVisitor;
+import org.kohsuke.asm3.MethodVisitor;
 
 /**
  * A <code>ClassAdapter</code> for type remapping.
@@ -23,6 +23,7 @@ public class RemappingClassAdapter extends ClassAdapter {
         this.remapper = remapper;
     }
 
+    @Override
     public void visit(
         final int version,
         final int access,
@@ -41,12 +42,14 @@ public class RemappingClassAdapter extends ClassAdapter {
                         : remapper.mapTypes(interfaces));
     }
 
+    @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
         AnnotationVisitor av;
         av = super.visitAnnotation(remapper.mapDesc(desc), visible);
         return av == null ? null : createRemappingAnnotationAdapter(av);
     }
 
+    @Override
     public FieldVisitor visitField(
         final int access,
         final String name,
@@ -62,6 +65,7 @@ public class RemappingClassAdapter extends ClassAdapter {
         return fv == null ? null : createRemappingFieldAdapter(fv);
     }
 
+    @Override
     public MethodVisitor visitMethod(
         final int access,
         final String name,
@@ -78,6 +82,7 @@ public class RemappingClassAdapter extends ClassAdapter {
         return mv == null ? null : createRemappingMethodAdapter(access, newDesc, mv);
     }
 
+    @Override
     public void visitInnerClass(
         final String name,
         final String outerName,
@@ -90,6 +95,7 @@ public class RemappingClassAdapter extends ClassAdapter {
                 access);
     }
 
+    @Override
     public void visitOuterClass(final String owner, final String name, final String desc) {
         super.visitOuterClass(remapper.mapType(owner),
                 name == null ? null : remapper.mapMethodName(owner, name, desc),

@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.reflection.asm.impl.remapper;
 
-import com.google.inject.asm.Label;
-import com.google.inject.asm.MethodAdapter;
-import com.google.inject.asm.MethodVisitor;
-import com.google.inject.asm.Opcodes;
-import com.google.inject.asm.Type;
+import org.kohsuke.asm3.Label;
+import org.kohsuke.asm3.MethodAdapter;
+import org.kohsuke.asm3.MethodVisitor;
+import org.kohsuke.asm3.Opcodes;
+import org.kohsuke.asm3.Type;
 
 /**
  * A {@link MethodAdapter} that renumbers local variables in their order of
@@ -70,6 +70,7 @@ public class LocalVariablesSorter extends MethodAdapter {
         firstLocal = nextLocal;
     }
 
+    @Override
     public void visitVarInsn(final int opcode, final int var) {
         Type type;
         switch (opcode) {
@@ -103,14 +104,17 @@ public class LocalVariablesSorter extends MethodAdapter {
         mv.visitVarInsn(opcode, remap(var, type));
     }
 
+    @Override
     public void visitIincInsn(final int var, final int increment) {
         mv.visitIincInsn(remap(var, Type.INT_TYPE), increment);
     }
 
+    @Override
     public void visitMaxs(final int maxStack, final int maxLocals) {
         mv.visitMaxs(maxStack, nextLocal);
     }
 
+    @Override
     public void visitLocalVariable(
         final String name,
         final String desc,
@@ -123,6 +127,7 @@ public class LocalVariablesSorter extends MethodAdapter {
         mv.visitLocalVariable(name, desc, signature, start, end, newIndex);
     }
 
+    @Override
     public void visitFrame(
         final int type,
         final int nLocal,

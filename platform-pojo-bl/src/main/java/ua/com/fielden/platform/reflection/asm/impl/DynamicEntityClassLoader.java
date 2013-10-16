@@ -13,8 +13,8 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.utils.Pair;
 
-import com.google.inject.asm.ClassReader;
-import com.google.inject.asm.ClassWriter;
+import org.kohsuke.asm3.ClassReader;
+import org.kohsuke.asm3.ClassWriter;
 
 /**
  * A class loader for dynamically constructed or modified entity types.

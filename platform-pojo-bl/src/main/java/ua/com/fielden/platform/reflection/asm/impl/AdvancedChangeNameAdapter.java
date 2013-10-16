@@ -3,7 +3,7 @@ package ua.com.fielden.platform.reflection.asm.impl;
 import ua.com.fielden.platform.reflection.asm.impl.remapper.RemappingClassAdapter;
 import ua.com.fielden.platform.reflection.asm.impl.remapper.SimpleRemapper;
 
-import com.google.inject.asm.ClassVisitor;
+import org.kohsuke.asm3.ClassVisitor;
 
 
 /**

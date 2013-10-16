@@ -10,15 +10,15 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 
-import com.google.inject.asm.AnnotationVisitor;
-import com.google.inject.asm.Attribute;
-import com.google.inject.asm.ClassAdapter;
-import com.google.inject.asm.ClassVisitor;
-import com.google.inject.asm.FieldVisitor;
-import com.google.inject.asm.MethodAdapter;
-import com.google.inject.asm.MethodVisitor;
-import com.google.inject.asm.Opcodes;
-import com.google.inject.asm.Type;
+import org.kohsuke.asm3.AnnotationVisitor;
+import org.kohsuke.asm3.Attribute;
+import org.kohsuke.asm3.ClassAdapter;
+import org.kohsuke.asm3.ClassVisitor;
+import org.kohsuke.asm3.FieldVisitor;
+import org.kohsuke.asm3.MethodAdapter;
+import org.kohsuke.asm3.MethodVisitor;
+import org.kohsuke.asm3.Opcodes;
+import org.kohsuke.asm3.Type;
 
 /**
  * A class adapter designed for modification of existing fields based on the new specification.
