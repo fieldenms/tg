@@ -65,6 +65,7 @@ public class RestPropertyFactoryModule extends EntityModule {
 
     @Override
     public void setInjector(final Injector injector) {
+	super.setInjector(injector);
 	entityFactory.setInjector(injector);
 	defaultControllerProvider.setInjector(injector);
 	final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);

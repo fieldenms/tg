@@ -154,6 +154,7 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 	    public IAfterChangeEventHandler create(final AbstractEntity<?> entity, final Field propertyField) throws Exception {
 		if ("vehicle".equals(propertyField.getName())){
 		    return new IAfterChangeEventHandler() {
+			@Override
 			public void handle(final MetaProperty property, final Object entityPropertyValue) {
 			    System.out.println("\tdefine...");
 			    try {
@@ -196,6 +197,7 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 
     @Override
     public void setInjector(final Injector injector) {
+	super.setInjector(injector);
 	entityFactory.setInjector(injector);
     }
 

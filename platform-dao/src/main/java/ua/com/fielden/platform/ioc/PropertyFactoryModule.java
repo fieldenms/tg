@@ -64,6 +64,7 @@ public class PropertyFactoryModule extends TransactionalModule {
 
     @Override
     public void setInjector(final Injector injector) {
+	super.setInjector(injector);
 	daoFactory.setInjector(injector);
 	entityFactory.setInjector(injector);
 	defaultControllerProvider.setInjector(injector);

@@ -5,7 +5,6 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.ioc.AuthorisationModule;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.security.AuthorisationException;
@@ -24,7 +23,6 @@ public class AuthorisationProcessTest {
     private final Injector injector = new ApplicationInjectorFactory()
     .add(new CommonTestEntityModuleWithPropertyFactory())
     .add(new AuthBindingModule())
-    .add(new AuthorisationModule())
     .getInjector();
 
 
