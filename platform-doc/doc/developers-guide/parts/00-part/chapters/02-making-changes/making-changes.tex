@@ -323,16 +323,12 @@ public void future_birthday_date_should_produce_validation_error() {
 
 \begin{code}{Unborn personnel should not be persisted.}{\label{lst:Person-birthday-validation-test-4}}{codebgcolor}
     \begin{lstlisting}
-@Test
-public void future_birthday_date_should_not_be_saved() {	
+@Test(expected = Result.class)
+public void future_birthday_date_should_be_null() {
   final Person person = ao(Person.class).
-			findByKey("USER2").
-			setBirthday(new DateTime().plusYears(1).toDate());	
-
-  ao(Person.class).save(person);
-
-  assertNull("Should have not been saved.", 
-             ao(Person.class).findByKey("USER2").getBirthday());
+                        findByKey("USER2").
+                        setBirthday(new DateTime().plusYears(1).toDate());
+  save(person);
 }
     \end{lstlisting}
   \end{code}

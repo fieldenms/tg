@@ -3,9 +3,9 @@
   \begin{notebox}{Who should read it.}{\label{mb:skip}}
     This chapter is required only for those readers who are unfamiliar with Apache Maven, which is used for managing Trident Genesis based projects, and can be safely skipped otherwise.
   \end{notebox}
-  
-  Apache Maven is a software project management and comprehension tool. 
-  It is based on the concept of a \emph{project object model} or simply POM to understand the structure of the project. 
+
+  Apache Maven is a software project management and comprehension tool.
+  It is based on the concept of a \emph{project object model} or simply POM to understand the structure of the project.
   Maven can manage project dependencies and build projects from a central piece of information declared in its POM file.
   POM files are maintained by developers and changed as project demands.
 
@@ -15,7 +15,7 @@
   All Java libraries are packaged into jar files, which are effectively zip archives containing all library related resources such as compiled class files, image files and more.
   Thus, \emph{project dependency} is always a jar file.
 
-  There are two main question about dependencies: 
+  There are two main question about dependencies:
   \begin{itemize}
     \item Where the dependency is located?
     \item What dependency version should be use?
@@ -36,12 +36,12 @@
   \section{Repositories and Artifacts}
   All dependencies that are managed by Maven are identified by three parameters: group ID, artifact ID and version.
   Artifact ID and version information are encoded into the jar file names.
-  For example, if the file name of some dependency is \texttt{platform-pojo-bl-\tikzinline{1.1}.jar} then the highlighted portion \texttt{\tikzinline{1.1}} indicates the version, and the preceding part \texttt{platform-pojo-bl} is the artifact ID.
+  For example, if the file name of some dependency is \texttt{platform-pojo-bl-\tikzinline{1.1}.jar} then the highlighted portion \texttt{\tikzinline{1.1}} indicates the version\footnote{Version \texttt{1.1} is used here as an example only. The actual version of the platform used should correspond to the latest version at the time of reading this manual.,} and the preceding part \texttt{platform-pojo-bl} is the artifact ID.
   The group ID corresponds to a directory structure of the repository where dependencies are stored.
 
   Maven repositories represent physical locations where dependencies are stored.
   Roughly speaking, there are two types of repositories -- local and remote.
-  
+
 
   \subsection*{Local Repository}
   The local repository is represented by a specially designated directory \texttt{$\sim$/.m2} on every development workstation where symbol \tikzinline{$\sim$} indicates a user home directory.
@@ -58,50 +58,50 @@
   \end{enumerate}
   There could be some additional files associated with the dependency (indicated as ellipsis on the figure) that can be safely ignored at the moment.
 
-  \begin{image}{A fragment of the local repository structure}{\label{img:ch00:01:local_repository_structure}}    
+  \begin{image}{A fragment of the local repository structure}{\label{img:ch00:01:local_repository_structure}}
     \begin{tikzpicture}	[remember picture, scale=0.9,
 			  edge from parent fork right,grow=right,rounded corners=1pt,
 			  every node/.style={scale=0.6,fill=white!10,rounded corners, level distance = 40mm},
-			  edge from parent/.style={black,thick,draw},			  
+			  edge from parent/.style={black,thick,draw},
 			  level 1/.style={level distance=20mm,nodes={fill=white!10}, minimum width=20mm, minimum height=5mm},
 			  level 2/.style={level distance=20mm,nodes={fill=white!10}, minimum width=20mm, minimum height=5mm},
 			  level 3/.style={level distance=25mm,sibling distance=10mm, nodes={fill=white!10}, minimum width=30mm, minimum height=5mm},
 			  level 4/.style={level distance=25mm,sibling distance=10mm, nodes={fill=white!10}, minimum width=20mm, minimum height=5mm},
 			  level 5/.style={level distance=40mm,sibling distance=10mm, nodes={fill=white!10}, minimum width=50mm, minimum height=5mm}
-			  ]      
+			  ]
       \node{$\sim$/.m2}
 	child {node[fill=codebgcolor!30] (settings11) {.settings}}
 	child {node[fill=highlight] {repository}
-	  child {node {group ID $N_1$}}	  
-	  child {node {\ldots}}	  
+	  child {node {group ID $N_1$}}
+	  child {node {\ldots}}
 	  child {node[fill=highlight] {fielden}
-	    child {node {artifact ID $N_2$}}	    
-	    child {node {\ldots}}	    
+	    child {node {artifact ID $N_2$}}
+	    child {node {\ldots}}
 	    child {node[fill=highlight] {platfrom-pojo-bl}
 	      child {node {version $N_3$}}
-	      child {node {\ldots}}	      
+	      child {node {\ldots}}
 	      child {node[fill=highlight] {1.1}
 		child {node {\ldots}}
 		child {node[fill=highlight] {platform-pojo-bl-1.1.pom}}
-		child {node[fill=highlight] {platform-pojo-bl-1.1-javadoc.jar}}		
+		child {node[fill=highlight] {platform-pojo-bl-1.1-javadoc.jar}}
 		child {node[fill=highlight] {platform-pojo-bl-1.1.jar}}
 	      }
 	      child {node {version 1}}
 	    }
-	    child {node {artifact ID 1}}	    
-	  }	 
-	  child {node {group ID 1}}	  
-	};    
+	    child {node {artifact ID 1}}
+	  }
+	  child {node {group ID 1}}
+	};
     \end{tikzpicture}
-    
+
     \tikznote{tree_a1}{settings11}{6cm}{-0.2cm}{4cm}{Settings File}{Contains Maven specific settings, which are discussed in details later in this section.}
   \end{image}
-  
+
 
   It is quite naturally to ask now how do all of those dependencies get into the local repository and whether it should all be managed by hand?
   The answer to the latter question is \emph{no}, there is no need to handle local repositories manually as Maven fully automates this process.
   As to the former question, \emph{all dependencies are downloaded into the local repository from remote repositories}\footnote{
-    Dependencies can be added into the local repository manually by using special Maven commands. 
+    Dependencies can be added into the local repository manually by using special Maven commands.
     This capability is useful in cases where a developer needs to experiment with some libraries locally without affecting any shared projects.
   }.
   Dependencies are downloaded into the local repository only if projects, which need to be managed on a local machine, specify those dependencies.
@@ -114,7 +114,7 @@
   In case where the dependency is not found, an error is reported about unresolved dependency.
 
   \subsection*{Remote Repository}
-  
+
   The \emph{remote repository} represents a dedicated server that is located either on LAN or Internet.
   The default Maven action is to utilise a number of publicly available remote Maven repositories, which contain a plethora of open source Java libraries.
   However, some libraries may not be available in these repositories or only older versions are available.
@@ -123,8 +123,8 @@
   The most prominent advantage of this approach if the ability to manage all dependencies be that open source, inhouse or commercial libraries in a uniform way.
   Figure \ref{img:ch00:01:maven_repository_structure} shows a schematic representation of the Maven local and remote repositories.
 
-  \begin{image}{The role of the inhouse repository}{\label{img:ch00:01:maven_repository_structure}}    
-    \begin{tikzpicture}	[remember picture, >=latex', every text node part/.style={text centered}]      
+  \begin{image}{The role of the inhouse repository}{\label{img:ch00:01:maven_repository_structure}}
+    \begin{tikzpicture}	[remember picture, >=latex', every text node part/.style={text centered}]
 	\node [label=left:Developer, scale=0.7] (d1) at (-5,0) {\imagepartzerochapterzero{laptop.pdf}};
 	\node [label=left:Developer, scale=0.7] (d2) at (-5,-1) {\imagepartzerochapterzero{laptop.pdf}};
 	\node [] at (-5,-2.0) {\Large \ldots};
@@ -138,7 +138,7 @@
 	\coordinate (1) at (-0.9,-0.5);
 	\coordinate (2) at (-0.9,-1.0);
 	\coordinate (3) at (-0.9,-1.5);
-% 
+%
 	\fill [black, thick,<->] (d1.east) edge (1.west);
 	\fill [black, thick,<->] (d2.east) edge (2.west);
 	\fill [black, thick,<->] (d3.east) edge (3.west);
@@ -151,41 +151,41 @@
   Any publicly available dependency is first downloaded to the inhouse repository and then downloaded to the local machine where the request to find that dependency was initiated.
   Subsequent requests for this dependency from other local machines would result in downloading the files from an inhouse repository directly\footnote{
   This approaches has an added value by reducing the Internet traffic otherwise required to download dependencies off the public repositories onto all local machines.
-  }.  
+  }.
   Thus, the inhouse repository serves as a single interaction point for resolving all dependencies for any project.
-  
-  \section{Download and Configure} 
+
+  \section{Download and Configure}
   Maven can be downloaded from the official \href{http://maven.apache.org/download.html}{Apache Maven web site}\footnote{\url{http://maven.apache.org/download.html}}.
   The recommended at this time version for TG-based applications is 2.2.1.
   Once downloaded please follow the \href{http://maven.apache.org/download.html#Installation}{installation instructions}, which are also available on the official site\footnote{\url{http://maven.apache.org/download.html\#Installation}}.
-  
+
   \begin{notebox}{JDK Version.}{\label{mb:java}}
-    It is important to note that Oracle JDK 6.x should be used for developing applications with TG, and it should be installed before downloading and installing Maven. 
+    It is important to note that Oracle JDK 7.x should be used for developing applications with TG, and it should be installed before downloading and installing Maven.
   \end{notebox}
-  
+
   All Trident Genesis artifacts and their dependencies reside in the dedicated Maven Repository at the Fielden's R\&D facility (let's call it TG Maven Repository).
   In order to follow the Maven way, this repository needs to be integrated into the development infrastructure of the team using TG.
   This can be done either by registering TG Maven Repository with an on-site Maven remote repository (the preferred approach), or by specifying it as a mirror in the Maven configuration file \texttt{.settings}.
   The latter approach can be explained and easily followed by the reader without much prior knowledge, which is why it is presented below.
-  
+
   Listing~\ref{lst:settings} represents a content of the Maven configuration file \texttt{.settings} used by the TG Team.
   It can be simply copied and pasted into a local copy of \texttt{$\sim$/.m2/.settings}.
   The presented files has three main sections:
   \begin{enumerate}
-    \item Mirrors -- used to enforce s single Maven repository by having it mirror all repository requests. 
+    \item Mirrors -- used to enforce s single Maven repository by having it mirror all repository requests.
 	  The repository must contain all of the desired artifacts, or be able to proxy the requests to other repositories.
-    \item Profiles -- Maven supports the notion of configuration profiles. 
+    \item Profiles -- Maven supports the notion of configuration profiles.
 	  If necessary there can be several profiles that can be associated with different settings and activated either globally or per project.
     \item Servers -- server settings are used to control credentials for accessing declared repositories for read as well as write, which is used for deploying release or snapshot artifacts.
   \end{enumerate}
   The only entires that need to be changed are the \emph{username} and \emph{password} in server related section.
   The values for \emph{username} and \emph{password}  should be requested separately from the R\&D team.
   The listing provides all the necessary annotations explaining configuration settings.
-  
+
   \lstset{language=XML,
 	  escapechar=\%,
 	  morekeywords={settings, encoding, mirrorOf, mirrors, mirror, id, profiles, profile, repositories, repository, url, releases, snapshots, version,
-			pluginRepositories, pluginRepository, activeProfiles, activeProfile, servers, server, username, password, 
+			pluginRepositories, pluginRepository, activeProfiles, activeProfile, servers, server, username, password,
 			directoryPermissions, filePermissions, proxies, proxy, active, protocol, host, port, nonProxyHosts},
 	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
   \begin{code}{Maven Settings}{\label{lst:settings}}{codebgcolor}
@@ -256,7 +256,7 @@
     \tikznote{lst_settings_servers_annotation}{lst_settings_servers}{5.0cm}{-0.2cm}{6cm}{Servers}{
       This sections is responsible for listing three server components registered as separate servers for Maven to access all types of artifacts (releases and snapshots).
 
-      Also, this is the area where \emph{username} and \emph{password} should be specified. 
+      Also, this is the area where \emph{username} and \emph{password} should be specified.
       Credentials for all three servers most likely would be the same.
     }
   \end{code}
@@ -285,23 +285,23 @@
 
   \section{POM Essentials}
 
-  As mentioned earlier, project object model is an XML representation of the Maven project held in a file named \texttt{pom.xml}. 
+  As mentioned earlier, project object model is an XML representation of the Maven project held in a file named \texttt{pom.xml}.
   It defines all necessary information about project's structure, dependencies and build configurations.
   Structurally, Maven supports single-module and multi-module projects.
   For example, Trident Genesis itself is a multi-module project\footnote{Platform modules are covered in details later in the book.}.
 
-  Although, small applications could be managed as single-module projects, it should be used only if these applications are truly monolithic (which is rather an exception than a rule).  
+  Although, small applications could be managed as single-module projects, it should be used only if these applications are truly monolithic (which is rather an exception than a rule).
   Regardless of the domain complexity, every TG-based application is a multi-module project.
   This provides a way to cleanly separate application concerns by segregating them into separate project modules with weak interdependency.
-  
+
   \begin{notebox}{The Interface-Segregation Principle.}{\label{mb:segregation}}
     The interface-segregation principle is one of the five SOLID principles of Object-Oriented Design.
-    It is a software development principle used for clean development and is intended to help developers avoid making their software impossible to change. 
-    If followed, the ISP will help a system stay decoupled and thus easier to refactor, change, and redeploy. 
+    It is a software development principle used for clean development and is intended to help developers avoid making their software impossible to change.
+    If followed, the ISP will help a system stay decoupled and thus easier to refactor, change, and redeploy.
     The ISP says that once an interface has become too 'fat' it needs to be split into smaller and more specific interfaces so that any clients of the interface will only know about the methods that pertain to them. In a nutshell, no client should be forced to depend on methods it does not use.
 
     More on this topic can be found in~\cite{Martin2002}, or at \url{http://en.wikipedia.org/wiki/Interface_segregation_principle}.
-  \end{notebox}   
+  \end{notebox}
 
   \hyperref[lst:pom]{Listing \ref{lst:pom}} illustrates a fragment of a parent POM file for a multi-module project.
   This fragment represents a part of the actual Trident Genesis Platform project POM.
@@ -309,13 +309,13 @@
   These artifacts should not necessarily be parts of the same project.
   In fact, \emph{groupId} serves as an umbrella for all projects that, for example, develop by the same team or company.
   In this case, the value of \emph{groupId} is \emph{fielden}, which is the name of the company developing the Trident Genesis Platform.
-  
+
   The \emph{artifactId} value determines the name of the generated by the project artifact.
   In case of a multi-module project there will always be multiple artifacts that correspond to each project module.
   It is important that all projects and their modules have unique \emph{artifactId} within the same \emph{groupId}.
-  The \emph{groupId} value may contain dots similar to Java package naming convention.  
+  The \emph{groupId} value may contain dots similar to Java package naming convention.
   This could be useful, for example, to identify different departments within the same company, which reduces the risk of names clashing.
-  
+
   The \emph{packaging} option tells Maven whether the artifact packaging type.
   Value \emph{pom} indicates that this POM serves only for grouping of project modules, and the module specific POM files have \emph{packaging} option specified as \emph{jar}.
   The \emph{jar} value advises Maven to produce an artifact packaged into a jar file.
@@ -326,7 +326,7 @@
   For example, snapshots and releases are associated with different locations in remote repositories (refer configuration section above), snapshots cannot be released and projects that have a release version, but have snapshot dependencies also cannot be released.
   Maven is very strict when it comes to proper dependency management.
   So don't fight it -- embrace it.
-  
+
   \lstset{language=XML,
 	  escapechar=\%,
 	  morekeywords={project, modelVersion, groupId, artifactId, packaging, packaging, version, encoding, name, description, modules, module},
@@ -367,14 +367,14 @@
 	    </dependency>
 	    ...
 	  </dependencies>
-    </project> 
+    </project>
     \end{lstlisting}
-    \tikzhighlight{lst_pom_n1}{lst_pom_n2}  
+    \tikzhighlight{lst_pom_n1}{lst_pom_n2}
     \tikznote{lst_pom_a1}{lst_pom_n2_1}{6cm}{0.5cm}{5cm}{Project Group}{This tag indicates project's group, which usually refers to the company or development group responsible for implementing the project.}
     \tikzhighlight{lst_pom_n3}{lst_pom_n4}
-    \tikznote{lst_pom_a2}{lst_pom_n4_1}{4cm}{-0.5cm}{5cm}{Project Artifact}{There can be several notes for the same highlighted area.}  
+    \tikznote{lst_pom_a2}{lst_pom_n4_1}{4cm}{-0.5cm}{5cm}{Project Artifact}{There can be several notes for the same highlighted area.}
     \tikznote{lst_pom_a3}{lst_pom_modules}{4cm}{-0.5cm}{5cm}{Project Modules}{Lists all modules that form the multi-module project.}
-    \tikznote{lst_pom_a4}{lst_pom_dependency}{6cm}{0.2cm}{5cm}{Project Dependencies}{Lists Maven artifacts that project depends on in format \texttt{groupId:artifactId:version}.}    
+    \tikznote{lst_pom_a4}{lst_pom_dependency}{6cm}{0.2cm}{5cm}{Project Dependencies}{Lists Maven artifacts that project depends on in format \texttt{groupId:artifactId:version}.}
   \end{code}
 
   More insightful material on Maven can be found in an excellent book ``Apache Maven 2 Effective Implementation''~\cite{PoCh2009}.

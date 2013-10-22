@@ -113,6 +113,19 @@ contains): :
       \end{lstlisting}
     \end{code}
 
+    \item Define value for property 'platformVersion': : -- a TG archetype specific variable, which should be provided to specify the version of the platfrom that his project sould depend on; type the required version and hit \texttt{enter} to confirm\footnote{Version \texttt{1.2-SNAPSHOT} is used here only as an example.}.    
+    \begin{code}{Trident Genesis version}{\label{lst::archetype-platformVerson}}{terminalbgcolor}
+      \begin{lstlisting}
+	Define value for property 'groupId': : fielden		
+	Define value for property 'artifactId': : coolapp
+	Define value for property 'version': 1.0-SNAPSHOT:
+	Define value for property 'package': fielden:	
+	Define value for property 'companyName': : Fielden Management Services
+        Define value for property 'platformVersion': : 1.2-SNAPSHOT
+      \end{lstlisting}
+    \end{code}
+    
+    
     \item Define value for property 'prjectName': : -- a TG archetype specific variable, which should be provided with a full name of the project; the example below uses value \emph{Coo App}; hit \texttt{enter} to confirm.
     
     \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
@@ -122,6 +135,7 @@ contains): :
 	Define value for property 'version': 1.0-SNAPSHOT:
 	Define value for property 'package': fielden:
 	Define value for property 'companyName': : Fielden Management Services
+	Define value for property 'platformVersion': : 1.2-SNAPSHOT
 	Define value for property 'prjectName': : Cool App
       \end{lstlisting}
     \end{code}
@@ -135,6 +149,7 @@ contains): :
 	Define value for property 'version': 1.0-SNAPSHOT:
 	Define value for property 'package': fielden:	
 	Define value for property 'companyName': : Fielden Management Services
+	Define value for property 'platformVersion': : 1.2-SNAPSHOT
 	Define value for property 'prjectName': : Cool App
 	Define value for property 'prjectWebSite': : http://www.fielden.com.au/coolapp
       \end{lstlisting}
@@ -149,25 +164,10 @@ contains): :
 	Define value for property 'version': 1.0-SNAPSHOT:
 	Define value for property 'package': fielden:	
 	Define value for property 'companyName': : Fielden Management Services
+	Define value for property 'platformVersion': : 1.2-SNAPSHOT
 	Define value for property 'prjectName': : Cool App
 	Define value for property 'prjectWebSite': : http://www.fielden.com.au/coolapp
 	Define value for property 'supportEmail': : coolapp@support.fielden.com.au
-      \end{lstlisting}
-    \end{code}
-
-    \item Define value for property 'platformVersion': : -- a TG archetype specific variable, which should be provided to specify the version of the platfrom that his project sould depend on; type the required version and hit \texttt{enter} to confirm.
-    
-    \begin{code}{Trident Genesis version}{\label{lst::archetype-platformVerson}}{terminalbgcolor}
-      \begin{lstlisting}
-	Define value for property 'groupId': : fielden		
-	Define value for property 'artifactId': : coolapp
-	Define value for property 'version': 1.0-SNAPSHOT:
-	Define value for property 'package': fielden:	
-	Define value for property 'companyName': : Fielden Management Services
-	Define value for property 'prjectName': : Cool App
-	Define value for property 'prjectWebSite': : http://www.fielden.com.au/coolapp
-	Define value for property 'supportEmail': : coolapp@support.fielden.com.au
-	Define value for property 'platformVersion': : 1.2
       \end{lstlisting}
     \end{code}
 
@@ -176,7 +176,6 @@ contains): :
   Once the above variables have been entered Maven lists all of their values and prompts the developer to confirm their values before generating the project. 
   The default confirmation value is \texttt{Y} -- pressing \texttt{enter} leads to confirmation of the values' correctness. 
   Typing \texttt{N} and pressing \texttt{enter} leads to new prompts for all the variables.
-
   
   \begin{code}{Properties configuration confirmation}{\label{lst:properties_confirmation}}{terminalbgcolor}
       \begin{lstlisting}
@@ -186,11 +185,11 @@ contains): :
 	version: 1.0-SNAPSHOT
 	package: fielden
 	companyName: Fielden Management Services
+	platformVersion: 1.2-SNAPSHOT
 	projectName: Cool App
 	projectWebSite: http://www.fielden.com.au/coolapp
 	supportEmail: coolapp@support.fielden.com.au
-	platformVersion: 1.2
-	Y:
+	Y: :
       \end{lstlisting}
   \end{code}
 
@@ -208,10 +207,10 @@ contains): :
 	-Dversion=1.0-SNAPSHOT \
 	-Dpackage=fielden \
 	-DcompanyName="Fielden Management Servces" \
+	-DplatformVersion=1.2-SNAPSHOT
 	-DprojectName="Cool App" \
 	-DprojectWebSite=http://www.fielden.com.au/coolapp \
-	-DsupportEmail=coolapp@support.fielden.com.au \
-        -DplatformVersion=1.2
+	-DsupportEmail=coolapp@support.fielden.com.au \        
       \end{lstlisting}
   \end{code}
 
@@ -353,20 +352,12 @@ user@workstation:~/workspace-tg-apps/coolapp$ java -jar \
     \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/01-application-modules/images/03-client-installation-uri.png}
   \end{image}
   
-  Once installation is completed, there is one final touch that is required to apply before starting the client.
-  The generated application is supplied with a simple H2 database that contains bare minimum to start the work.
-  This database excludes any application menu configuration, although the generated application has some default menu items.
-  Thus, it is required to update the database, which happens automatically when the client application starts and its \texttt{application.properties} file has property \texttt{workflow=development}.
-  By default this property is set to \texttt{deployment}, which is appropriate for application deployments.
-  Having property \texttt{workflow} unchanged would simply result in the empty main menu once the client start.
-  
-  Starting the client application can be done by either navigating to the specified installation directory and running \texttt{run.bat} (\texttt{run.sh} for Linux) or by choosing an appropriate program from the \emph{Start} menu under Windows.
+  Once installation is completed, starting the client application can be done by either navigating to the specified installation directory and running \texttt{run.bat} (\texttt{run.sh} for Linux) or by choosing an appropriate program from the \emph{Start} menu under Windows.
   The login screen of the generated application is depicted in Fig.~\ref{img:ch00:02:client_login}.
   The default user name and password is \emph{SU} (both capital).
   User \emph{SU} is a base-user -- the concept explained later in the book.
   For now it is sufficient to know that base-users have extra capabilities, maim menu configuration is among them.
-  Ordinary user, such as user \emph{DEMO} that exists in the demo H2 database, are not allowed to run the client in the \texttt{development} mode.
-
+  
   \begin{image}{Application login}{\label{img:ch00:02:client_login}}    
     \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/01-application-modules/images/04-client-login.png}
   \end{image}
@@ -531,13 +522,12 @@ user@workstation:~/workspace-tg-apps/coolapp$
   In order to specify this file select tabsheet \emph{Arguments} and set the value of \emph{Program arguments} to \emph{application.properties} as depicted in Fig.~\ref{img:ch00:02:server-module-run-config-args-tab}.
   Once that is done press the \emph{Run} button in the bottom right corner of the dialog to start the server.
   As the result, the \emph{Console} tabsheet of the Java perspective in Eclipse IDE should contain an output, which indicates a successful server launch.
-  
-  The next step is to run the client application.
 
+  The next step is to run the client application.
+  
   \begin{image}{Cool App Server Run Configuration (Arguments)}{\label{img:ch00:02:server-module-run-config-args-tab}}    
     \includegraphics[width=0.75\textwidth]{parts/00-part/chapters/01-application-modules/images/14-server-module-run-config-arguments-tab.png}
   \end{image}
-  
 
   \subsubsection*{Client}
   
@@ -567,7 +557,7 @@ user@workstation:~/workspace-tg-apps/coolapp$
   \begin{image}{Cool App Client Run Configuration (Arguments)}{\label{img:ch00:02:client-module-run-config-arguments-tab}}    
     \includegraphics[width=0.75\textwidth]{parts/00-part/chapters/01-application-modules/images/16-client-module-run-config-arguments-tab.png}
   \end{image}
-
+  
   Hopefully by now the reader could see how quickly it was to start a TG-based project with a complete automation of the processes to build and deploy the application as well as to configure the development environment.
   
   It's about time to make some project changes and see easy it is.
