@@ -102,7 +102,7 @@ public class TrafficLights extends Group {
 	private final TrafficLightModel model;
 	private final Color lightingColor;
 	private final Runnable action;
-	private final Tooltip tooltip;
+	private Tooltip tooltip;
 	private boolean isBlinking = false;
 
 	public void startBlinking() {
@@ -125,10 +125,12 @@ public class TrafficLights extends Group {
 	    return tooltip;
 	}
 
+	protected void setTooltip(final Tooltip tooltip) {
+	    this.tooltip = tooltip;
+	}
+
 	public TrafficLight(final TrafficLightModel model, final double radius, final Color lightingColor, final Runnable action) {
 	    super(0, 0, radius);
-
-	    tooltip = new Tooltip();
 
 	    this.model = model;
 
@@ -183,6 +185,10 @@ public class TrafficLights extends Group {
 	}
 
 	protected void updateTooltip() {
+	    if (tooltip == null) { // lazy initialisation to improve performance
+		tooltip = new Tooltip();
+	    }
+
 	    if (model.getCount() > 0) {
 		tooltip.setText(model.getCount() + " items");
 		Tooltip.install(this, tooltip);
