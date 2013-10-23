@@ -6,14 +6,17 @@ import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -24,22 +27,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
 import javax.swing.SortOrder;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import javax.swing.event.TableColumnModelEvent;
 import javax.swing.event.TableColumnModelListener;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -60,6 +72,11 @@ import ua.com.fielden.platform.swing.verticallabel.MouseDefaultHeaderHandler;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.ResourceLoader;
+
+import com.jidesoft.grid.FilterableTableModel;
+import com.jidesoft.grid.QuickTableFilterField;
+import com.jidesoft.popup.JidePopup;
 
 public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 
@@ -87,10 +104,12 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	super();
 	final Pair<List<Pair<String, Integer>>, Map<String, List<String>>> gridDataModel = createGridDataModel(rootType, cdtme);
 	final Class<?> managedType = cdtme.getEnhancer().getManagedType(rootType);
-	this.egi = createEgi(egiColouringScheme == null ? createGridModel(managedType, gridDataModel.getKey()) : createGridModelWithColouringScheme(managedType, gridDataModel.getKey(), egiColouringScheme));
+	final PropertyTableModel<?> _tableModel = egiColouringScheme == null ? createGridModel(managedType, gridDataModel.getKey()) : createGridModelWithColouringScheme(managedType, gridDataModel.getKey(), egiColouringScheme);
+	final QuickTableFilterField _filterField = createFilterField(_tableModel);
 
+	this.egi = createEgi(_filterField.getDisplayTableModel());
+	_filterField.setTable(egi);
 	configureEgiWithOrdering(egi, rootType, cdtme);
-
 	if (!gridDataModel.getValue().isEmpty()) {
 	    setLayout(new MigLayout("fill, insets 0", "[]", "[grow]0[shrink 0]0[]"));
 
@@ -106,8 +125,109 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	    setLayout(new MigLayout("fill, insets 0"));
 	    add(egiScrollPane = new JScrollPane(egi), "grow");
 	}
+
+	final JidePopup _popup = createSearchPopup(_filterField);
+
+	final KeyStroke showSearch = KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK); // CTRL+F
+	final String SHOW_SEARCH = "SHOW_SEARCH_PANEL";
+	final Action showSearchAction = createShowSearchAction(_popup);
+	getActionMap().put(SHOW_SEARCH, showSearchAction);
+	getInputMap(WHEN_IN_FOCUSED_WINDOW).put(showSearch, SHOW_SEARCH);
     }
 
+    /**
+     * Returns the filter component to filter table.
+     *
+     * @param _tableModel
+     * @return
+     */
+    private QuickTableFilterField createFilterField(final PropertyTableModel<?> _tableModel) {
+	final QuickTableFilterField _filterField = new QuickTableFilterField(_tableModel);
+	_filterField.setHintText("Type here to filter...");
+	_filterField.getTextField().setEnabled(true);
+	_filterField.getTextField().setEditable(true);
+	_filterField.setBackground(Color.WHITE);
+	return _filterField;
+    }
+
+    /**
+     * Returns the pop up component with search field.
+     * @param _filterField
+     * @return
+     */
+    private JidePopup createSearchPopup(final QuickTableFilterField _filterField) {
+	final ActionPanelBuilder _panelBuilder = new ActionPanelBuilder();
+	final JidePopup _popup = com.jidesoft.popup.JidePopupFactory.getSharedInstance().createPopup();
+	final Action hideSearchAction = createHideSearchAction(_popup);
+	final KeyStroke hideSearch = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0); // ESC
+	final String HIDE_SEARCH = "HIDE_SEARCH_PANEL";
+
+	_panelBuilder.addButton(hideSearchAction);
+	_panelBuilder.addComponent(_filterField);
+
+	final JToolBar _toolBar = _panelBuilder.buildActionPanel();
+	_toolBar.setFloatable(false);
+	_toolBar.setBorder(BorderFactory.createEmptyBorder());
+
+	_popup.setLayout(new MigLayout("fill, insets 0",  "[fill, grow]", "[fill, grow]"));
+	_popup.setResizable(false);
+	_popup.setMovable(false);
+	_popup.add(_toolBar);
+	_popup.add(_filterField);
+	_popup.setTransient(false);
+	_popup.getActionMap().put(HIDE_SEARCH, hideSearchAction);
+	_popup.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(hideSearch, HIDE_SEARCH);
+	_popup.setDefaultFocusComponent(_filterField.getTextField());
+	_popup.addPopupMenuListener(new PopupMenuListener() {
+
+	    @Override
+	    public void popupMenuWillBecomeVisible(final PopupMenuEvent e) {
+		// TODO Auto-generated method stub
+
+	    }
+
+	    @Override
+	    public void popupMenuWillBecomeInvisible(final PopupMenuEvent e) {
+		_filterField.setSearchingText("");
+	    }
+
+	    @Override
+	    public void popupMenuCanceled(final PopupMenuEvent e) {
+		// TODO Auto-generated method stub
+
+	    }
+	});
+	return _popup;
+    }
+
+    private Action createHideSearchAction(final JidePopup _popup) {
+	return new AbstractAction() {
+
+	    private static final long serialVersionUID = 8327840776664813556L;
+	    {
+		final Icon icon = ResourceLoader.getIcon("images/cross.png");
+		putValue(Action.LARGE_ICON_KEY, icon);
+		putValue(Action.SHORT_DESCRIPTION, "Close this search panel");
+	    }
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		_popup.hidePopup();
+	    }
+	};
+    }
+
+    private Action createShowSearchAction(final JidePopup _popup) {
+	return new AbstractAction() {
+
+	    private static final long serialVersionUID = 8327840776664813556L;
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		_popup.showPopup(SwingConstants.SOUTH_WEST, EgiPanel.this);
+	    }
+	};
+    }
 
     /**
      * Returns the {@link EntityGridInspector} associated with this panel.
@@ -473,7 +593,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * @return
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private EntityGridInspector<T> createEgi(final PropertyTableModel<?> model) {
+    private EntityGridInspector<T> createEgi(final FilterableTableModel model) {
 	final EntityGridInspector<T> egi = new EntityGridInspector(model, false);
 	egi.setRowHeight(ROW_HEIGHT);
 	egi.setSelectionMode(MULTIPLE_INTERVAL_SELECTION);

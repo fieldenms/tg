@@ -94,9 +94,25 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
      * @param tableModel
      */
     public EntityGridInspector(final PropertyTableModel<T> tableModel, final boolean sortable) {
-	super(new FilterableTableModel(tableModel));
+	this(new FilterableTableModel(tableModel), sortable);
+    }
 
-	this.actualTableModel = tableModel;
+    /**
+     * Creates the table with filterable model and extracts the associated property table model. If the actual model of the given {@link FilterableTableModel}
+     * is not the instance of {@link PropertyTableModel} then the {@link IllegalArgumentException} will be thrown.
+     *
+     * @param filterableTableModel
+     * @param sortable
+     */
+    @SuppressWarnings("unchecked")
+    public EntityGridInspector(final FilterableTableModel filterableTableModel, final boolean sortable) {
+	super(filterableTableModel);
+
+	if(!(filterableTableModel.getActualModel() instanceof PropertyTableModel)) {
+	    throw new IllegalArgumentException("The underlying table model for the filterable table model must be property table model");
+	}
+
+	this.actualTableModel = (PropertyTableModel<T>)filterableTableModel.getActualModel();
 
 	addCellEditorListener(new JideCellEditorAdapter() {
 	    @Override
@@ -117,15 +133,31 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
     }
 
     /**
+     * This method rebuilds table by new {@link FilterableTableModel}. If the actual model of the given {@link FilterableTableModel}
+     * is not the instance of {@link PropertyTableModel} then the {@link IllegalArgumentException} will be thrown.
+     *
+     * @param tableModel
+     */
+    @SuppressWarnings("unchecked")
+    public void setPropertyTableModel(final FilterableTableModel tableModel) {
+	this.setModel(tableModel);
+
+	if (!(tableModel.getActualModel() instanceof PropertyTableModel)) {
+	    throw new IllegalArgumentException("The underlying table model for the filterable table model must be property table model");
+	}
+
+	this.actualTableModel = (PropertyTableModel<T>)tableModel.getActualModel();
+	afterModelSet(this.actualTableModel);
+    }
+
+    /**
      * This method rebuilds table by new PropertyTableModel. Note that "listSelectionListener", "cellMouseListener" and "cellMouseMotionListener" have to be already added before
      * using this method (in constructor call).
      *
      * @param tableModel
      */
     public void setPropertyTableModel(final PropertyTableModel<T> tableModel) {
-	this.setModel(new FilterableTableModel(tableModel));
-	this.actualTableModel = tableModel;
-	afterModelSet(this.actualTableModel);
+	setPropertyTableModel(new FilterableTableModel(tableModel));
     }
 
     /**
