@@ -69,17 +69,17 @@ public abstract class AbstractEntity<K extends Comparable>
 \subsection{Compile Time Meta-Data}
   
   \subsubsection*{Business Key Definitions.}
-  Each entity has a notion of a \emph{business key} that consists of one or several entity properties\footnote{The concept of \emph{property} is will be defined further in text. Therefore, at this stage it should be thought of as a field with some additional information about it.}, which together uniquely identify an instance of a given entity type.
+  Each entity has a notion of a \emph{business key} that consists of one or several entity properties\footnote{The concept of \emph{property} is defined further in text. At this stage it should be thought of as a field with some additional information associated with it.}, which together uniquely identify an instance of a given entity type.
   For example, instances of type \emph{Person}, which was introduced in previous chapter, are uniquely identified by their \emph{person code}.
   Entity type \emph{Person} has its key defined to be of type \texttt{java.lang.String}, which indicates that it consists of one property of the specified type -- property \emph{key} in this case.
-  \emph{AbstractEntity} provides full support for two kinds of business keys:
+  \emph{AbstractEntity} provides a comprehensive support for two kinds of business keys:
   \begin{description}
     \item[\textbf{Simple Key}] -- is represented by a single property \emph{key} of type String, Integer or any entity type.
     \item[\textbf{Composite Key}] -- can include two or more properties as \emph{key members} with no restrictions on their type. Class \emph{DynamicEntityKey} models the composite key.
    \end{description}
 
   In order to provide more substance to this discussion, let's extend our demo application, which was generated in part~\ref{part-I}, with new entity types.
-  For this, is proposed to use the Rail industry domain as an application business domain that needs to be modelled.
+  For this, it is proposed to use the Rail industry domain as an application business domain that needs to be modelled.
   
   The first domain entity to be added is \emph{Wagon}.
   It is uniquely identified by its number that may contain alphanumeric characters, and therefore its key can be naturally modelled as a simple key of type \emph{String}.
