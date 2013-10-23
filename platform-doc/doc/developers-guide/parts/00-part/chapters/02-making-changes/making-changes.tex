@@ -304,10 +304,9 @@ public void birthday_indicating_a_young_person_should_be_saved() {
   Strictly speaking this test is not necessary and is provided only for the purpose of example, as it tests an already established at the platform level fact -- correct property values can be persisted when requested.
 
   The third test (Listing~\ref{lst:Person-birthday-validation-test-3}) ensures rule \emph{2.b} that no future birth dates are acceptable.
-  The last test (Listing~\ref{lst:Person-birthday-validation-test-4}) ensures that invalid birthday value is not saved
-  \footnote{Similar to test in Listing~\ref{lst:Person-birthday-validation-test-2}, it is provided more as an example -- the platform does not permit saving of invalid values, and there is no particular reason to test this invariant behaviour at the application level}.
+  The last test (Listing~\ref{lst:Person-birthday-validation-test-4}) ensures that a person, which has an invalid property birthday, cannot not be saved\footnote{Similar to test in Listing~\ref{lst:Person-birthday-validation-test-2}, it is provided more as an example -- the platform does not permit saving of invalid values, and there is no particular reason to test this invariant behaviour at the application level}.
 
-\begin{code}{Unborn personnel should lead to a validation error.}{\label{lst:Person-birthday-validation-test-3}}{codebgcolor}
+\begin{code}{Future birthday's should lead to a validation error.}{\label{lst:Person-birthday-validation-test-3}}{codebgcolor}
     \begin{lstlisting}
 @Test
 public void future_birthday_date_should_produce_validation_error() {	
@@ -321,10 +320,10 @@ public void future_birthday_date_should_produce_validation_error() {
     \end{lstlisting}
   \end{code}
 
-\begin{code}{Unborn personnel should not be persisted.}{\label{lst:Person-birthday-validation-test-4}}{codebgcolor}
+\begin{code}{Persons with invalid property birthday should not be saved.}{\label{lst:Person-birthday-validation-test-4}}{codebgcolor}
     \begin{lstlisting}
 @Test(expected = Result.class)
-public void future_birthday_date_should_be_null() {
+public void should_not_save_person_with_future_birthday() {
   final Person person = ao(Person.class).
                         findByKey("USER2").
                         setBirthday(new DateTime().plusYears(1).toDate());
@@ -335,11 +334,11 @@ public void future_birthday_date_should_be_null() {
 
   Running these tests by pressing \texttt{Ctrl+F11} combination while in the editor window of the test case, should result in failure of three out of four of the provided tests\footnote{The generated test \texttt{should\_be\_able\_to\_find\_person\_USER2} should also succeed.}.
   Test \texttt{birthday\_indicating\_a\_young\_person\_should\_be\_saved} succeeds because any value without validation is persisted when requested.
-  For the same reason, test \texttt{future\_birthday\_date\_should\_not\_be\_saved} fails.
+  For the same reason, test \texttt{should\_not\_save\_person\_with\_future\_birthday} fails -- the person gets saved, but exception \texttt{Result} is expected.
 
-  The provided unit tests establish a set of constraints that guide the coding effort -- once all the tests pass the validation rule implementation can be declared completed.
+  The provided unit tests establish a set of constraints that guide the coding effort -- once all the tests pass, the validation rule implementation can be considered completed.
   Listing~\ref{lst:Person-birthday-validation} provides a complete validation logic that satisfies all business requirements.
-  Before moving further in the text please try to implement the validation rules personally without using code from the listing to make the tests pass.
+  Before moving further in the text please try to implement the validation rules personally without using the code from the listing to make the tests pass.
 
 
  \begin{code}{Birthday validation logic}{\label{lst:Person-birthday-validation}}{codebgcolor}
