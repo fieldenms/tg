@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.dao;
 
-import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 
@@ -17,6 +17,6 @@ public interface IUserAndRoleAssociationDao extends IEntityDao<UserAndRoleAssoci
      *
      * @param associations
      */
-    void removeAssociation(List<UserAndRoleAssociation> associations);
+    void removeAssociation(Set<UserAndRoleAssociation> associations);
 
 }

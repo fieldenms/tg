@@ -2,8 +2,10 @@ package ua.com.fielden.web.security.userroleaccosication;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 import org.restlet.Restlet;
@@ -59,7 +61,7 @@ public class UserAndRoleAssociationManagementTestCase extends WebBasedTestCase {
 	final UserRole role = userControllerRao.findAllUserRoles().get(2);
 	assertEquals("Unexpected third role.", "role3", role.getKey());
 
-	userControllerRao.updateUser(user, new ArrayList<UserRole>(){{add(role);}});
+	userControllerRao.updateUsers(new HashMap<User, Set<UserRole>>() {{put(user, new HashSet<UserRole>(){{add(role);}});}});
 	assertEquals("Incorrect number of roles.", 1, userControllerRao.findAllUsers().get(0).getRoles().size());
     }
 
@@ -70,7 +72,7 @@ public class UserAndRoleAssociationManagementTestCase extends WebBasedTestCase {
 	final UserRole role = userControllerRao.findAllUserRoles().get(2);
 	assertEquals("Unexpected third role.", "role3", role.getKey());
 
-	userControllerRao.updateUser(user, new ArrayList<UserRole>(user.roles()){{add(role);}});
+	userControllerRao.updateUsers(new HashMap<User, Set<UserRole>>() {{put(user, new HashSet<UserRole>(user.roles()){{add(role);}});}});
 	assertEquals("Incorrect number of roles.", 3, userControllerRao.findAllUsers().get(0).getRoles().size());
     }
 
@@ -81,7 +83,7 @@ public class UserAndRoleAssociationManagementTestCase extends WebBasedTestCase {
 	final UserRole role = userControllerRao.findAllUserRoles().get(2);
 	assertEquals("Unexpected third role.", "role3", role.getKey());
 
-	userControllerRao.updateUser(user, new ArrayList<UserRole>());
+	userControllerRao.updateUsers(new HashMap<User, Set<UserRole>>() {{put(user, new HashSet<UserRole>());}});
 	assertEquals("Incorrect number of roles.", 0, userControllerRao.findAllUsers().get(0).getRoles().size());
     }
 

@@ -470,7 +470,7 @@ public final class RestClientUtil implements IUserProvider {
      * @param map
      * @return
      */
-    public Representation represent(final Map<String, List<Long>> map) {
+    public Representation represent(final Map<?, List<Long>> map) {
 	final byte[] bytes = serialiser.serialise(map);
 	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }

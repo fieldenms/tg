@@ -1,6 +1,12 @@
 package ua.com.fielden.platform.dao;
 
-import java.util.ArrayList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,12 +23,6 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Test case for the {@link IUserRoleDao}, {@link IUserAndRoleAssociationDao}, and {@link SecurityRoleAssociationDao} classes
@@ -85,7 +85,7 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
 	User user = userDao.findUserByKeyWithRoles("user1");
 	user.setPassword("new password");
 	UserAndRoleAssociation userAssociation = new_composite(UserAndRoleAssociation.class, user, new UserRole("role1", ""));
-	final List<UserAndRoleAssociation> associations = new ArrayList<UserAndRoleAssociation>();
+	final Set<UserAndRoleAssociation> associations = new HashSet<UserAndRoleAssociation>();
 	for (final UserAndRoleAssociation roleAssociation : user.getRoles()) {
 	    if (roleAssociation.equals(userAssociation)) {
 		associations.add(roleAssociation);

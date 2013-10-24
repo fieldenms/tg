@@ -94,11 +94,12 @@ public class SecurityTokenResource extends ServerResource {
     /**
      * Handles POST request resulting making associations between security tokens and user roles.
      */
+    @SuppressWarnings("unchecked")
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
 	try {
-	    final Map<String, List<Long>> map = restUtil.restoreMap(envelope);
+	    final Map<String, List<Long>> map = (Map<String, List<Long>>)restUtil.restoreMap(envelope);
 	    final Map<Class<? extends ISecurityToken>, List<UserRole>> associations = convert(map);
 	    controller.saveSecurityToken(associations);
 	    // if there  was no exception then report a success back to client

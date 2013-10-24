@@ -265,7 +265,7 @@ public class RestServerUtil {
      * @return
      * @throws Exception
      */
-    public Map<String, List<Long>> restoreMap(final Representation representation) throws Exception {
+    public Map<?, List<Long>> restoreMap(final Representation representation) throws Exception {
 	return serialiser.deserialise(representation.getStream(), Map.class);
     }
 

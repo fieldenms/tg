@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.swing.usertable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -11,9 +13,9 @@ import ua.com.fielden.platform.security.user.UserRole;
 
 /**
  * Table model that represents associations between users and user roles.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class UserTableModel extends AbstractTableModel {
 
@@ -34,7 +36,7 @@ public class UserTableModel extends AbstractTableModel {
 
     /**
      * Creates new instance of UserTableModel and adds the specified user and user roles to the model
-     * 
+     *
      * @param users
      * @param userRoles
      */
@@ -88,7 +90,7 @@ public class UserTableModel extends AbstractTableModel {
 
     /**
      * Returns the tool tip text for column headers.
-     * 
+     *
      * @param columnIndex
      * @return
      */
@@ -98,7 +100,7 @@ public class UserTableModel extends AbstractTableModel {
 
     /**
      * Returns the tool tip for the table cells.
-     * 
+     *
      * @param rowIndex
      * @param columnIndex
      * @return
@@ -109,7 +111,7 @@ public class UserTableModel extends AbstractTableModel {
 
     /**
      * Adds the user to the model.
-     * 
+     *
      * @param newUser
      */
     public void addUser(final User newUser) {
@@ -125,7 +127,7 @@ public class UserTableModel extends AbstractTableModel {
 
     /**
      * Adds the user role to the model
-     * 
+     *
      * @param newUserRole
      */
     public void addUserRole(final UserRole newUserRole) {
@@ -140,7 +142,7 @@ public class UserTableModel extends AbstractTableModel {
 
     /**
      * Clears the previous data from model and loads the specified list of users and list of user roles in to the table model
-     * 
+     *
      * @param users
      * @param userRoles
      */
@@ -161,7 +163,7 @@ public class UserTableModel extends AbstractTableModel {
 
     /**
      * Returns the users of the table model
-     * 
+     *
      * @return
      */
     public List<User> getUsers() {
@@ -170,7 +172,7 @@ public class UserTableModel extends AbstractTableModel {
 
     /**
      * Returns the user roles of the table model
-     * 
+     *
      * @return
      */
     public List<UserRole> getUserRoles() {
@@ -179,7 +181,7 @@ public class UserTableModel extends AbstractTableModel {
 
     /**
      * Returns true if the specified column is the column that holds the users otherwise it returns the false
-     * 
+     *
      * @param column
      * @return
      */
@@ -192,13 +194,13 @@ public class UserTableModel extends AbstractTableModel {
 
     /**
      * Returns the list of {@link UserRole}s those are checked or unchecked for given {@link User}
-     * 
+     *
      * @param user
      * @param checked
      * @return
      */
-    public List<UserRole> getUserRolesFor(final User user, final boolean checked) {
-	final List<UserRole> checkedUserRoles = new ArrayList<UserRole>();
+    public Set<UserRole> getUserRolesFor(final User user, final boolean checked) {
+	final Set<UserRole> checkedUserRoles = new HashSet<UserRole>();
 	final int userIndex = users.indexOf(user);
 	if (userIndex < 0) {
 	    return null;

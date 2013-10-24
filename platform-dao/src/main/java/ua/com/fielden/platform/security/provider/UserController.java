@@ -1,7 +1,14 @@
 package ua.com.fielden.platform.security.provider;
 
-import java.util.ArrayList;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
@@ -18,11 +25,6 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Implementation of the user controller, which should be used managing system user information.
@@ -56,16 +58,22 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
     }
 
     @Override
+    public void updateUsers(final Map<User, Set<UserRole>> userRoleMap) {
+	for(final Map.Entry<User, Set<UserRole>> userRoleEntry : userRoleMap.entrySet()) {
+	    updateUser(userRoleEntry.getKey(), userRoleEntry.getValue());
+	}
+    }
+
     @SessionRequired
-    public void updateUser(final User user, final List<UserRole> checkedRoles) {
+    private void updateUser(final User user, final Set<UserRole> checkedRoles) {
 	// remove list at the first stage of the algorithm contains the associations of the given user.
 	// At the last stage of the algorithm that list contains only associations those must be removed from the data base
-	final List<UserAndRoleAssociation> removeList = new ArrayList<UserAndRoleAssociation>(user.getRoles());
+	final Set<UserAndRoleAssociation> removeList = new HashSet<UserAndRoleAssociation>(user.getRoles());
 	// contains the list of associations those must be saved
-	final List<UserAndRoleAssociation> saveList = new ArrayList<UserAndRoleAssociation>();
+	final Set<UserAndRoleAssociation> saveList = new HashSet<UserAndRoleAssociation>();
 
-	for (int userRoleIndex = 0; userRoleIndex < checkedRoles.size(); userRoleIndex++) {
-	    final UserAndRoleAssociation roleAssociation = user.getEntityFactory().newByKey(UserAndRoleAssociation.class, user, checkedRoles.get(userRoleIndex));
+	for (final UserRole role : checkedRoles) {
+	    final UserAndRoleAssociation roleAssociation = user.getEntityFactory().newByKey(UserAndRoleAssociation.class, user, role);
 	    if (!removeList.contains(roleAssociation)) {
 		saveList.add(roleAssociation);
 	    } else {
@@ -79,7 +87,7 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
 	saveAssociation(saveList);
     }
 
-    private void saveAssociation(final List<UserAndRoleAssociation> associations) {
+    private void saveAssociation(final Set<UserAndRoleAssociation> associations) {
 	for (final UserAndRoleAssociation association : associations) {
 	    userAssociationDao.save(association);
 	}

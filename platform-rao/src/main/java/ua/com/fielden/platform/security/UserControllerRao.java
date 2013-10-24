@@ -6,11 +6,16 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Method;
+import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -24,7 +29,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
@@ -59,13 +63,30 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUserCon
     }
 
     @Override
-    public void updateUser(final User user, final List<UserRole> roles) {
-	final String ids = CollectionUtil.toString(roles, "id", ",");
-	final Request request = restUtil.newRequest(Method.POST, restUtil.getBaseUri(getDefaultWebResourceType()) + "/useroles?userId=" + user.getId() + "&roles=" + ids);
+    public void updateUsers(final Map<User, Set<UserRole>> userRoleMap) {
+	// prepare an envelope
+	final Map<Long, List<Long>> envelopeContent = convert(userRoleMap);
+	final Representation envelope = restUtil.represent(envelopeContent);
+	// prepare a request
+	final Request request = restUtil.newRequest(Method.POST, restUtil.getBaseUri(getDefaultWebResourceType()) + "/useroles");
+	request.setEntity(envelope);
+	// process request
 	final Pair<Response, Result> result = restUtil.process(request);
 	if (!result.getValue().isSuccessful()) {
 	    throw result.getValue();
 	}
+    }
+
+    private Map<Long, List<Long>> convert(final Map<User, Set<UserRole>> userRoleMap) {
+	final Map<Long, List<Long>> result = new HashMap<>();
+	for (final User user : userRoleMap.keySet()) {
+	    final List<Long> roleIds = new ArrayList<Long>();
+	    for (final UserRole role : userRoleMap.get(user)) {
+		roleIds.add(role.getId());
+	    }
+	    result.put(user.getId(), roleIds);
+	}
+	return result;
     }
 
     @Override

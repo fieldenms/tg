@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.web.resources;
 
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
@@ -32,9 +36,6 @@ public class UserRoleAssociationResource extends ServerResource {
     private final IUserRoleDao userRoleDao;
     private final RestServerUtil restUtil;
 
-    private final Long userIdToHaveRolesUpdated;
-    private final Long[] roleIds;
-
     /**
      * Principle constructor.
      */
@@ -45,23 +46,6 @@ public class UserRoleAssociationResource extends ServerResource {
 	this.controller = controller;
 	this.userRoleDao = userRoleDao;
 	this.restUtil = restUtil;
-
-	userIdToHaveRolesUpdated = Long.parseLong(request.getResourceRef().getQueryAsForm().getFirstValue("userId"));
-	roleIds = parseRoles(request.getResourceRef().getQueryAsForm().getFirstValue("roles"));
-    }
-
-    /** Converts string representation of roles' ids to integer. */
-    private Long[] parseRoles(final String firstValue) {
-	if (StringUtils.isEmpty(firstValue)) {
-	    return new Long[0];
-	}
-
-	final String[] roles = firstValue.split(",");
-	final List<Long> ids = new ArrayList<Long>(roles.length);
-	for (final String strId : roles) {
-	    ids.add(Long.parseLong(strId));
-	}
-	return ids.toArray(new Long[]{});
     }
 
     ///////////////////////////////////////////////////////////////////
@@ -74,11 +58,10 @@ public class UserRoleAssociationResource extends ServerResource {
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
 	try {
-	    // retrieve roles by ids and user with roles by key
-	    final List<UserRole> roles = userRoleDao.findByIds(roleIds);
-	    final User user = controller.findUserByIdWithRoles(userIdToHaveRolesUpdated);
+	    final Map<Long, List<Long>> map = (Map<Long, List<Long>>)restUtil.restoreMap(envelope);
+	    final Map<User, Set<UserRole>> userRoleMap = convert(map);
 	    // update user with new roles
-	    controller.updateUser(user, roles);
+	    controller.updateUsers(userRoleMap);
 	    // if there  was no exception then report a success back to client
 	    //getResponse().setEntity(restUtil.resultRepresentation(new Result("Roles updated successfully.")));
 	    return restUtil.resultRepresentation(new Result("Roles updated successfully."));
@@ -88,6 +71,59 @@ public class UserRoleAssociationResource extends ServerResource {
 	    //getResponse().setEntity(restUtil.errorRepresentation(msg));
 	    return restUtil.errorRepresentation(msg);
 	}
+    }
+
+    private Map<User, Set<UserRole>> convert(final Map<Long, List<Long>> map) {
+	final Map<Long, User> users = getUsersFor(map.keySet());
+	final Map<Long, UserRole> userRoles = getUserRolesFor(map.values());
+	final Map<User, Set<UserRole>> userRoleMap = new HashMap<>();
+	for(final Map.Entry<Long, List<Long>> mapEntry : map.entrySet()) {
+	    final Set<UserRole> newRoles = getRolesFor(mapEntry.getValue(), userRoles);
+	    final User user = getUserFor(mapEntry.getKey(), users);
+	    userRoleMap.put(user, newRoles);
+	}
+	return userRoleMap;
+    }
+
+    private User getUserFor(final Long key, final Map<Long, User> users) {
+	final User user = users.get(key);
+	if (user == null) {
+	    throw new IllegalStateException("The user with id: " + key + " doesn't exists!");
+	}
+	return user;
+    }
+
+    private Set<UserRole> getRolesFor(final List<Long> value, final Map<Long, UserRole> userRoles) {
+	final Set<UserRole> roles = new HashSet<>();
+	for (final Long key : value) {
+	    final UserRole role = userRoles.get(key);
+	    if (role == null) {
+		throw new IllegalStateException("The user role with id: " + key + " doesn't exists!");
+	    }
+	    roles.add(role);
+	}
+	return roles;
+    }
+
+    private Map<Long, UserRole> getUserRolesFor(final Collection<List<Long>> values) {
+	final Set<Long> ids = new HashSet<>();
+	for (final List<Long> restoredIds : values) {
+	    ids.addAll(restoredIds);
+	}
+	final List<UserRole> roles = userRoleDao.findByIds(ids.toArray(new Long[] {}));
+	final Map<Long, UserRole> roleMap = new HashMap<>();
+	for (final UserRole role : roles) {
+	    roleMap.put(role.getId(), role);
+	}
+	return roleMap;
+    }
+
+    private Map<Long, User> getUsersFor(final Set<Long> keySet) {
+	final Map<Long, User> userMap = new HashMap<>();
+	for (final Long id : keySet) {
+	    userMap.put(id, controller.findUserByIdWithRoles(id));
+	}
+	return userMap;
     }
 
 }

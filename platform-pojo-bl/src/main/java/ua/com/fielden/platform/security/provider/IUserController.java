@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.security.provider;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
@@ -34,7 +36,7 @@ public interface IUserController extends IUserDao {
      * @param user
      * @param userRoles
      */
-    void updateUser(User user, List<UserRole> userRoles);
+    void updateUsers(Map<User, Set<UserRole>> userRolesMap);
 
     /**
      * Finds user by name.

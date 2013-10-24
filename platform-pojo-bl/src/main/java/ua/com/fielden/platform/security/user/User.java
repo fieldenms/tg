@@ -1,11 +1,7 @@
 package ua.com.fielden.platform.security.user;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Invisible;
@@ -140,12 +136,12 @@ public class User extends AbstractEntity<String> {
      *
      * @return
      */
-    public List<UserRole> roles() {
-	final SortedSet<UserRole> result = new TreeSet<UserRole>();
+    public Set<UserRole> roles() {
+	final Set<UserRole> result = new HashSet<UserRole>();
 	for (final UserAndRoleAssociation assoc : roles) {
 	    result.add(assoc.getUserRole());
 	}
-	return new ArrayList<UserRole>(result);
+	return result;
     }
 
     @Observable

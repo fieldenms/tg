@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.security.dao;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
@@ -27,18 +31,17 @@ public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssoci
 
     @Override
     @SessionRequired
-    public void removeAssociation(final List<UserAndRoleAssociation> associations) {
+    public void removeAssociation(final Set<UserAndRoleAssociation> associations) {
 	if (associations.size() == 0) {
 	    return;
 	}
 	String query = "delete from " + UserAndRoleAssociation.class.getName() + " where ";
-	for (int associationIndex = 0; associationIndex < associations.size(); associationIndex++) {
-	    if (associationIndex > 0) {
-		query += " or ";
-	    }
-	    query += "(user.id=" + associations.get(associationIndex).getUser().getId() + " and userRole.id=" + //
-		    associations.get(associationIndex).getUserRole().getId() + ")";
+	final List<String> querySubstr = new ArrayList<>();
+	for (final UserAndRoleAssociation assoc : associations) {
+	    querySubstr.add("(user.id=" + assoc.getUser().getId() + " and userRole.id=" + //
+		    assoc.getUserRole().getId() + ")");
 	}
+	query += StringUtils.join(querySubstr, " or ");
 	getSession().createQuery(query).executeUpdate();
     }
 }

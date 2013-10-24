@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.swing.usertable;
 
 import java.awt.event.ActionEvent;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.swing.Action;
 
@@ -51,10 +54,14 @@ public class UserReviewModel {
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		final List<? extends User> users = userController.findAllUsersWithRoles();
-		for (final User user : users) {
-		    userController.updateUser(user, userTableModel.getUserRolesFor(user, true));
+		final Map<User, Set<UserRole>> userRolesMap = new HashMap<>();
+		for (final User user : userTableModel.getUsers()) {
+		    final Set<UserRole> newRoles = userTableModel.getUserRolesFor(user, true);
+		    if(!user.roles().equals(newRoles)) {
+			userRolesMap.put(user, newRoles);
+		    }
 		}
+		userController.updateUsers(userRolesMap);
 		return null;
 	    }
 

@@ -3,6 +3,7 @@ package ua.com.fielden.web.security;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -44,7 +45,7 @@ public class UserControllerForTestPurposes implements IUserController {
     }
 
     @Override
-    public void updateUser(final User users, final List<UserRole> newUserRoles) {
+    public void updateUsers(final Map<User, Set<UserRole>> userRoleMap) {
     }
 
 
