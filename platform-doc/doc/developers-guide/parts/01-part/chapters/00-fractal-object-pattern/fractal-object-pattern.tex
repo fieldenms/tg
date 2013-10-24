@@ -36,12 +36,11 @@
   
   However, neither Naked Objects nor other known to us domain-driven frameworks offer an approach that would address the problem of software system design and construction from the perspective of conceptual modelling of information systems.
   From a conceptual modelling perspective each system should provide three functions~\cite{oli2007}: 
-  \begin{enumerate}
-    \item \emph{Memory}: to maintain a representation of the state of a domain.
-    \item \emph{Informative}: to provide information about the state of a domain.
-    \item \emph{Active}: to perform actions that change the state of a domain. 
-  \end{enumerate}
- 
+  \begin{description}
+    \item[\textbf{Memory.}] Maintains a representation of the state of a domain.
+    \item[\textbf{Informative.}] Provides information about the state of a domain.
+    \item[\textbf{Active.}] Perform actions that change the state of a domain. 
+  \end{description} 
   In order to design and construct a holistic software system, its architecture should incorporate these three essential functions.
 
   This section discusses an approach implemented in the Trident Genesis platform called Fractal Objects. 
@@ -77,8 +76,8 @@
   Through the use of specialised internal DSLs, type system and metadata for defining a domain model, the platform is provided with a capability to interpret the model at runtime for fulfilling all three essential functions of an information system. 
   The following discussion delves more into the details of this integration.
 
- \begin{figure}[!htp]
-    \centering    
+  \begin{figure}[!htp]
+     \centering
     \begin{tikzpicture}[scale=0.8,  every node/.style={transform shape}, node distance=1cm, auto, opacity=0.8]
       \tikzset{
 	  application/.style={rectangle,rounded corners,draw=black, top color=blue!50!white, bottom color=white,very thick, inner sep=1em, minimum size=3em, text centered, text=blue!50!black},
@@ -107,14 +106,9 @@
   Thus, instead of developing an external DSL for domain model definition, a pure object-oriented approach of using a set of specifically designed classes together with meta-data capabilities of Java was developed that provides all the essential facilities for defining domain models.
   Rich type systems of modern object-oriented languages together with meta-data support provide very comprehensive means to capture domain information in a statically typed manner that is superior to relational data structures.  
   The business domain entities are modelled by reusing the type system provided in the platform, which supports well-defined patterns for modelling real-life interoperability between domain entities.  
-  The meta-data provides a declarative way to associate various business rules (e.g. validation rules) with domain entities, define application security, control transaction demarcation, visual representation of domain entities and more.
-  It also assists in the fine-tuning of the business domain models with the support of configuration-based behaviour that is achieved by means of dependency injection.  
-  Based on runtime type information and meta-data, the platform can automatically construct a large portion of the application internals that provides support for the complete application life-cycle.
-  For instance, the provided meta-data and types are sufficient for automatic construction of the application user interface that can leverage the validation rules and dependencies between domain entities.  
-  Fig.~\ref{img:ch02:02:entity-object-model} schematically depicts a domain entity model.
-  
 
-\begin{figure}[!htp]    
+  \begin{wrapfigure}{r}{0.4\textwidth}
+    \vspace{-20pt}
     \centering   
     \begin{tikzpicture}[>=latex']
       \tikzset{
@@ -133,7 +127,12 @@
       \fill [blue!50!black,->,out=-100,in=150] (ct.south) edge (o.west);      
     \end{tikzpicture} 
     \caption{Entity Object Model}\label{img:ch02:02:entity-object-model}
-  \end{figure}
+  \end{wrapfigure}  
+  The meta-data provides a declarative way to associate various business rules (e.g. validation rules) with domain entities, define application security, control transaction demarcation, visual representation of domain entities and more.
+  It also assists in the fine-tuning of the business domain models with the support of configuration-based behaviour that is achieved by means of dependency injection.  
+  Based on runtime type information and meta-data, the platform can automatically construct a large portion of the application internals that provides support for the complete application life-cycle.
+  For instance, the provided meta-data and types are sufficient for automatic construction of the application user interface that can leverage the validation rules and dependencies between domain entities.  
+  Fig.~\ref{img:ch02:02:entity-object-model} schematically depicts a domain entity model.
 
   \subsubsection{Entity and Companion Objects}
   
@@ -167,26 +166,13 @@
   \subsubsection{Kinds of Fractal Objects}
 
   In order to implement the three essential functions of an information system, Fractal Objects provide three metaphors (kinds of fractal objects):
-  \begin{itemize}
-    \item Persistent Entities (or Memory Entities) -- a fractal object that models a domain entity that should maintain a persistent state.
-    \item Synthesised Entities (or Information Entities) -- a fractal object that is based on (synthesised) several persistent entities or subset of their properties.
-    \item Functional Entities (or Active Entities) -- a fractal object used to model a use case that involves one or more persistent entities.
-  \end{itemize}
+  \begin{description}
+    \item[\textbf{Persistent Entities.}] A fractal object that models a domain entity that should maintain a persistent state.
+    \item[\textbf{Synthesised Entities.}] A fractal object that is based on (synthesised) several persistent entities or subset of their properties.
+    \item[\textbf{Functional Entities.}] A fractal object used to model a use case that involves one or more persistent entities.
+  \end{description}
 
-  Most business applications require the majority of domain entities to be stored for future reference or analyses.
-  Such domain entities are modelled with so-called \emph{persistent} entity types.
-  However, not all domain entities need to be persisted.
-  One of the unique domain modelling concepts of Fractal Objects is that of \emph{synthesised} and \emph{functional} entities, which allow modelling of short-lived domain entities in exactly the same way as persistent entities.
-  These kinds of entities can mix in any other kind, which is especially powerful when there is a need to combine loosely coupled domain entities as a single business concept or a usecase.
-  This provides a uniform way for implementing business processes that may involve all three kinds of entities.
-  Please note that synthesised and functional entities may have a persistent nature.
-  For example, a functional entity modelling some specific use case may persist information what domain entities have been modified during its execution, who and when performed it etc.
-
-  In principle these kinds of fractal objects are almost identical except some meta-data information, and can be composed without any restriction to form complex structures and behaviour.
-  Fig.~\ref{img:ch02:03:fractal-objects-composition} schematically depicts a functional entity that is composed of one synthesised entity and two persistent entities.
-  When a save operation is applied to such fractal object, it actions, which may lead to modification of a persistent state for persistent entities it incorporates.
-
-  \begin{figure}[!htp]    
+  \begin{wrapfigure}{r}{0.43\textwidth}
     \centering    
     \begin{tikzpicture}[>=latex']
       \tikzset{
@@ -222,7 +208,20 @@
     \end{tikzpicture} 
     
      \caption{Composition of fractal objects}\label{img:ch02:03:fractal-objects-composition}
-  \end{figure}
+  \end{wrapfigure}
+  
+  Most business applications require the majority of domain entities to be stored for future reference or analyses.
+  Such domain entities are modelled with so-called \emph{persistent} entity types.
+  However, not all domain entities need to be persisted.
+  One of the unique domain modelling concepts of Fractal Objects is that of \emph{synthesised} and \emph{functional} entities, which allow modelling of short-lived domain entities in exactly the same way as persistent entities.
+  These kinds of entities can mix in any other kind, which is especially powerful when there is a need to combine loosely coupled domain entities as a single business concept or a usecase.
+  This provides a uniform way for implementing business processes that may involve all three kinds of entities.
+  Please note that synthesised and functional entities may have a persistent nature.
+  For example, a functional entity modelling some specific use case may persist information what domain entities have been modified during its execution, who and when performed it etc.
+
+  In principle these kinds of fractal objects are almost identical except some meta-data information, and can be composed without any restriction to form complex structures and behaviour.
+  Fig.~\ref{img:ch02:03:fractal-objects-composition} schematically depicts a functional entity that is composed of one synthesised entity and two persistent entities.
+  When a save operation is applied to such fractal object, it actions, which may lead to modification of a persistent state for persistent entities it incorporates.
 
   \subsection{The Manipulation Language}
 
@@ -259,12 +258,13 @@
   And while ORM frameworks try to hide relational nature of databases, their querying mechanisms still very closely resemble relational operators from SQL.
   
   The holistic approach to the information system modelling is essential for making sustainable applications that could fulfil the needs of different groups of users.
-  One of the evident proofs of this is the emerging concept of \emph{Embedded Business Intelligence} that brings analytical capabilities back to the core system~\cite{XuLiShiHeWang:2007}.
+  One of the evident proofs of this is the emerging concept of \emph{Embedded Business Intelligence} that brings analytical capabilities back to the core system~\cite{XLSHW2007}.
   This concept offers instant decision making and immersive user experience, and its implementation requires a holistic information system design with proper domain modelling and information retrieval function~\cite{oli2007}.
   A fully capable data querying mechanism is an inherent building block of such systems.
   In our view this should be achieved by close integration between the domain model and the querying mechanism that would allow tapping into the knowledge it captures.
 
 \paragraph{Object graph traversal.}
+
   Object composition serves as a way for modelling relationships between domain entities in OOP~\cite{Martin2002}, and is re-enforced in Fractal Objects.
   Thus, if it is necessary to access an object property in the context of some other object the notion of \emph{dot-notated property path} is used, where the dot symbol (aka \emph{navigation operator}~\cite{DeMichiel:2012:JPA}) separates properties from each other.
   Dot-notated paths represent paths in object graphs stored in computer memory and provide an essential mechanism for accessing data represented as objects.
@@ -272,32 +272,30 @@
   Current ORM frameworks translate dot-notated paths into a series of INNER JOIN operators, which are applicable only to non-collectional composition\footnote{Composition representing only many-to-one and one-to-one associations, many-to-zero and one-to-zero are also not supported.}.
   The developed as part of Trident Genesis model for relation traversal supports automatic selection of the most appropriate strategy~-- INNER JOIN, OUTER JOIN, EXISTS and their combination.
   This is achieved by close integration with the underlying domain model and its meta-data in conjunction with high level query language (Entity Query Language~\cite{Hodych:2012}) that is implemented as an internal DSL based on progressive interfaces~\cite{Fowler:2010:DSL}.
-  
-  Another important advancement supported by the developed query mechanism is the transparent use of collectional properties (i.e. one-to-many relationship).
-  This provides a proper object-oriented approach to data querying unlike existing ORM solutions that enforce an explicit use of set operators to achieve the same result.
-  The following example illustrates some of the described features.  
-  This query retrieves all Mercedes vehicles that consumed more UNLEADED fuel than PREMIUM over their lifetime.
 
   \lstset{morekeywords={val,select,where,prop,eq,and,begin,end,starts_with,any_of_values,values,or,yield_and_group,as,yield,begin_expr,sum_of,div,end_expr,model,in,sumOf,with,gt,modelAs, modelAsAggregate, groupByAndYield, within, prevMonth},
   numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt,
   basicstyle=\scriptsize\color{basiccolor}, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
 
-  \begin{code}{Entity query example (aggregation)}{\label{lst:eql1}}{codebgcolor}
+  \begin{code}{Entity query example (aggregation)}{\label{ch01:00:lst:eql-aggregation}}{codebgcolor}
     \begin{lstlisting}
 select(Vehicle.class).
 where().
   prop("vehModel.make").eq().val("MERCEDES").
   and().
   sumOf().prop("fuelUsages.qty").with().
-          prop("fuelUsages.fuelType").eq().
-          val("UNLEADED").
+          prop("fuelUsages.fuelType").eq().val("UNLEADED").
   gt().
   sumOf().prop("fuelUsages.qty").with().
-          prop("fuelUsages.fuelType").eq().
-          val("PREMIUM").
+          prop("fuelUsages.fuelType").eq().val("PREMIUM").
 model();
     \end{lstlisting}
    \end{code}
+  
+  Another important advancement supported by the developed query mechanism is the transparent use of collectional properties (i.e. one-to-many relationship).
+  This provides a proper object-oriented approach to data querying unlike existing ORM solutions that enforce an explicit use of set operators to achieve the same result.
+  Listing~\ref{ch01:00:lst:eql-aggregation} illustrates some of the described features.  
+  This query retrieves all Mercedes vehicles that consumed more UNLEADED fuel than PREMIUM over their lifetime.
 
 \paragraph{Relational concepts in object-oriented querying.}
 
@@ -305,10 +303,10 @@ model();
   Such support is well established in SQL, but is completely lacking in current ORM solutions.
   The challenge to develop this mechanism is in bringing a pure relational concept of working with sets of tuples into the object-oriented domain model.
   However, realising that any object can be decomposed into its properties, the notion of data tuple naturally translates into the tuple of properties from existing domain entities that preserve the knowledge of its type and meta-data (i.e. projections).
-  The following example illustrates the use of this functionality.
+  Listing~\ref{ch01:00:lst:eql-subqueries} illustrates the use of this functionality.
   This query retrieves previous month maintenance cost, modelled by a separate non-persistent class \texttt{PrevMonthMaintCost}, for all Mercedes vehicles that exceeded the amount of $500.00$.
   
-  \begin{code}{Entity query example (subqueries)}{\label{lst:eql2}}{codebgcolor}
+  \begin{code}{Entity query example (subqueries)}{\label{ch01:00:lst:eql-subqueries}}{codebgcolor}
     \begin{lstlisting}[numbersep=10pt]
 select(
     select(WorkOrder.class).
@@ -325,28 +323,21 @@ model(PrevMonthMaintCost.class);
     \end{lstlisting}
    \end{code}  
 
+\vspace{-20pt}   
 \paragraph{Synthesising Entities.}
   The easiest way to create synthesised entities it to base them on a query model.
   This provides a very effective approach that enables full integration of such synthesised entities into the ad-hoc querying mechanism provided by the platform.
   Also, it shows that Fractal Objects stay very consistent when it comes to the domain modelling using the provided definition and manipulation languages.
 
-  In order to better explain how it works let's consider an example of a synthesised entity \emph{VehicleMonthlyCost} from a fleet business domain.
-  The following snippet demonstrates the definition of this entity object, where method \texttt{model()} is moved to a separate snippet farther in text.
-  The \emph{VehicleMonthlyCost} has a composite nature (its business key consists of two properties).
-  It is synthesised using a query model, which identified by a conversational field name \texttt{model\_}.
-  Method \texttt{model()} provides the actual query definition, and needs to be inspected to better understand the what other domain entities make it up.
-
-  \begin{code}{Synthesising entity}{\label{lst:eql3}}{codebgcolor}
+  \begin{code}{Synthesised Entity Declaration.}{\label{ch01:00:lst:synthesised-entity}}{codebgcolor}
     \begin{lstlisting}[numbersep=10pt]
 @EntityTitle(value = "Vehicle monthly cost")
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Vehicle/Month")
 @CompanionObject(IVehicleMonthlyCost.class)
-public class VehicleMonthlyCost 
-    extends AbstractEntity<CompositeEntityKey> {
+public class VehicleMonthlyCost extends AbstractEntity<CompositeEntityKey> {
     
-    private static final EntityResultQueryModel
-    <VehicleMonthlyCost> model_ = model();
+    private static final EntityResultQueryModel<VehicleMonthlyCost> model_ = model();
 
     @IsProperty
     @Title("Vehicle")
@@ -362,18 +353,19 @@ public class VehicleMonthlyCost
     @Title("Cost")
     private Money cost;
 
-    private static EntityResultQueryModel
-    <VehicleMonthlyCost> model() {
-	...
-    }  
+    private static EntityResultQueryModel<VehicleMonthlyCost> model() { ... }  
     ...
 }
     \end{lstlisting}   
   \end{code}  
   
-  \medskip
-  \medskip
-  The following snippet shows the implementation for method \texttt{model()}.
+  In order to better explain how it works let's consider an example of a synthesised entity \emph{VehicleMonthlyCost} from a fleet business domain.
+  Listing~\ref{ch01:00:lst:synthesised-entity} demonstrates the definition of this entity object, where method \texttt{model()} is moved to a separate snippet farther in text.
+  The \emph{VehicleMonthlyCost} has a composite nature (its business key consists of two properties).
+  It is synthesised using a query model, which identified by a conversational field name \texttt{model\_}.
+  Method \texttt{model()} provides the actual query definition, and needs to be inspected to better understand the what other domain entities make it up.
+  
+  Listing~\ref{ch01:00:lst:synthesised-entity-model} shows the implementation for method \texttt{model()}.
   It declares three query models (\emph{maintenanceCost}, \emph{fuelCost}, \emph{insuranceCost}) that are used as subqueries for the final query on line 31.
   Model \emph{maintenanceCost} defines a query that collects vehicle monthly maintenance cost, where maintenance is represented by a persistent domain entity \emph{WorkOrder}.
   Model \emph{fuelCost} defines a query that collects vehicle monthly fuel usage cost, where fuel usage is represented by a persistent domain entity \emph{FuelUsage}.
@@ -382,51 +374,58 @@ public class VehicleMonthlyCost
   The resulting query model combines these three models to synthesise \emph{VehicleMonthlyCost}.
   When such query is executed, it instantiates objects of class \emph{VehicleMonthlyCost}, where all properties are assigned corresponding values calculated by the model.
 
-  \begin{code}{Synthesising entity}{\label{lst:eql4}}{codebgcolor}
+  \begin{code}{The Model for Synthesised Entity.}{\label{ch01:00:lst:synthesised-entity-model}}{codebgcolor}
     \begin{lstlisting}[numbersep=10pt]
 ...   
-private static EntityResultQueryModel
-   <VehicleMonthlyCost> model() {
-   final EntityResultQueryModel<VehicleMonthlyCost> 
-        maintenanceCost = select(WorkOrder.class).
-	groupBy().prop("vehicle").
-	groupBy().monthOf().prop("actualStart").
-	yield().prop("vehicle").
-	yield().monthOf().prop("actualStart").as("month").
-	yield().sumOf().prop("totalAct").as("cost").
+private static EntityResultQueryModel<VehicleMonthlyCost> model() {
+   final EntityResultQueryModel<VehicleMonthlyCost> maintenanceCost = 
+        select(WorkOrder.class).
+	  groupBy().prop("vehicle").
+	  groupBy().monthOf().prop("actualStart").
+	  yield().prop("vehicle").
+	  yield().monthOf().prop("actualStart").as("month").
+	  yield().sumOf().prop("totalAct").as("cost").
 	modelAsEntity(VehicleMonthlyCost.class);
 
-  final EntityResultQueryModel<VehicleMonthlyCost> 
-        fuelCost = select(FuelUsage.class).
-	groupBy().prop("vehicle").
-	groupBy().monthOf().prop("purchaseDate").
-	yield().prop("vehicle").
-	yield().monthOf().prop("purchaseDate").as("month").
-	yield().sumOf().prop("purchasePrice").as("cost").
+  final EntityResultQueryModel<VehicleMonthlyCost>fuelCost = 
+        select(FuelUsage.class).
+	  groupBy().prop("vehicle").
+	  groupBy().monthOf().prop("purchaseDate").
+	  yield().prop("vehicle").
+	  yield().monthOf().prop("purchaseDate").as("month").
+	  yield().sumOf().prop("purchasePrice").as("cost").
 	modelAsEntity(VehicleMonthlyCost.class);
 
-   final EntityResultQueryModel<VehicleMonthlyCost> 
-        insuranceCost = select(Insurance.class).
-	groupBy().prop("vehicle").
-	groupBy().monthOf().prop("transDate").
-	yield().prop("vehicle").
-	yield().monthOf().prop("transDate").as("month").
-	yield().sumOf().prop("amount").as("cost").
+   final EntityResultQueryModel<VehicleMonthlyCost> insuranceCost = 
+        select(Insurance.class).
+	  groupBy().prop("vehicle").
+	  groupBy().monthOf().prop("transDate").
+	  yield().prop("vehicle").
+	  yield().monthOf().prop("transDate").as("month").
+	  yield().sumOf().prop("amount").as("cost").
 	modelAsEntity(VehicleMonthlyCost.class);
 
    return select(maintenanceCost, fuelCost, insuranceCost).
-	groupBy().prop("vehicle").
-	groupBy().prop("month").
-	yield().prop("vehicle").
-	yield().prop("month").
-	yield().sumOf().prop("cost").as("cost").
-	modelAsEntity(VehicleMonthlyCost.class);
+	    groupBy().prop("vehicle").
+	    groupBy().prop("month").
+	    yield().prop("vehicle").
+	    yield().prop("month").
+	    yield().sumOf().prop("cost").as("cost").
+	  modelAsEntity(VehicleMonthlyCost.class);
 }  
     \end{lstlisting}   
   \end{code}  
 
   Most notable, such synthesised entity can be further used for queries where selection criteria can be applied to its properties \emph{month}, \emph{cost}, \emph{vehicle} and all its properties as defined for persisted entity \emph{Vehicle}.
 
+  \section{Fractal Objects are Essential to TG}
   
-  The Trident Genesis platform should be understood as a computational platform that recognises and translates the domain model described by using the described pair of definition and manipulation languages.
-  The Fractal Objects design pattern provides a way to structure the domain model that is defined using these languages and its understanding is essential to development of applications based on the platform.
+  The Trident Genesis platform should be understood as a computational platform that recognises and translates the domain model, which is described by using the outlined pair of \emph{definition} and \emph{manipulation} languages.
+  The Fractal Objects design pattern provides a way to structure a domain model that is defined using these languages.
+  Therefore, its understanding is essential for developing applications based on the platform.
+  
+  The use of the Fractal Objects design pattern leads to rich and robust functionality by means of combination of the three kinds of entities -- Persistent, Synthesised and Functional.
+  This is different from a more common understanding of OOP (although, not originally intended) where the main mechanism to attain rich functionality is not through combination, but through the inheritance and multitude of methods on objects.
+  The developed design pattern ensures more consistent and uniform way to systems design.
+  
+  
