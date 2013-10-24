@@ -1,0 +1,705 @@
+\chapter{Business Entities and Processes}\label{ch01:01}
+
+\myepigraph{In our profession, precision and perfection are not a dispensable luxury, but a simple necessity.}{Niklaus Wirth}
+
+  At the heart of the platform's domain orientation is the concept of an \emph{entity type} -- a way to describe what a business domain entity is.
+  In Object-Oriented languages such as Java types are most frequently\footnote{Primitives in Java are represented as instances of int, double, float etc., which are not classes, but are types.} represented as classes.
+  For example, class \texttt{java.lang.String} is a type representing a sequence of characters.
+  
+  Each type has its definition, which can be thought of as meta-data.
+  For example, type \texttt{java.lang.String} has its definition, which allows specification of the actual sequence of characters with their encoding information (e.g. UTF-8).
+  Instances of some type represent the actual data (i.e. not meta-data) that has the structure defined by their type.
+  
+  In affect, types define what and how data can be described.
+  The richer meta-data is the more precise data definition is possible to obtain, which provides a way to capture business domain specialisation more accurately.
+  From the mathematical perspective, types can be thought of as sets\footnote{Types are also mathematical concepts studies by Type Theory, which is less wide spread than Set Theory.}.
+  It can be said that any type is a set containing all possible instances of a specific data structure.
+
+  Type instances can be considered immutable and there are various functions that can map instances of some types (or tuple of instances of some, possible different, types) into instances of the same or different types (tuple of types).
+  Consider the function for concatenating two strings, which we often simply write as \texttt{``Hello '' + ``World''}\footnote{This is so called \emph{operator notation} of otherwise normal function call.}, obtaining a new instance of the string type ``Hello World'', while the original input strings remain unchanged.
+  Its formal definition is $+:String\times String \rightarrow String$, where any pair of strings gets mapped (or transformed) into a single string by means of putting together two sequences of characters representing the two input strings.
+  A more common way to write function calls in programming languages is \texttt{function\_name (list\_of\_arguments)}.
+  This way, a call to the string concatenation function could be written as \texttt{+(``Hello '', ``World'')}, where \texttt{+} is a function name.
+
+  From a business domain perspective, functions represent business actions that transform instances of business domain entity types into instances of the same or different types.
+  Therefore, the process of \emph{domain driven design} consists of two distinct, but at the same time intertwined steps of describing business entities with meta-data and identifying business processes that transform business entities by applying one or more business actions, which are implemented as functions.
+  
+  The platform's role is to streamline this process by reducing low-level technical aspects allowing developers to concentrate on business tasks at hand by providing and reusing rich meta-data capabilities to automate otherwise routine and tedious programming tasks.
+
+\section{Entity Types and Meta-Data}
+
+  Every business domain \emph{entity type} in TG is implemented as a Java class that extends \emph{AbstractEntity} -- a specially designed class that serves as a common ancestor for all entity types.
+  Listing~\ref{lst:AbstractEntity} provides a fragment of \emph{AbstractEntity} class definition.
+  It has one generic parameter \texttt{K extends Comparable}, which captures the type of entity key (see below), and fulfils the \emph{Comparable} contract that makes all entities of the same type comparable and sortable.
+  
+ \lstset{language=Java,
+	  escapechar=\%,
+	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+  \begin{code}{AbstractEntity definition.}{\label{lst:AbstractEntity}}{codebgcolor}
+    \begin{lstlisting}
+
+public abstract class AbstractEntity<K extends Comparable> 
+                implements Comparable<AbstractEntity<K>> {
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+
+  Any descendent from \emph{AbstractEntity} type provides compile (design) time and runtime (execution time) meta-data required for modelling business domain entities:
+  \begin{description}
+   \item[\textbf{Compile time meta-data}] -- data that forms part of entity type description, which is present in the entity type definition at the class source level.
+      \begin{itemize}
+	\item Business Key definitions.
+	\item Property definitions.
+	\item Pre- and post- conditions for property value change.
+      \end{itemize}
+
+   \item[\textbf{Runtime meta-data}] -- data that gets associated with an instance of an entity type during program execution.
+      \begin{itemize}
+	\item Entity identity and meta-state (version, editable, persisted, dirty etc.).
+	\item Property validation results.
+	\item Property state (editable, visible etc.).	
+	\item Property value change information.	
+      \end{itemize}
+   \end{description}
+
+  Let's discuss entity meta-data in greater detail.
+
+\subsection{Compile Time Meta-Data}
+  
+  \subsubsection*{Business Key Definitions.}
+  Each entity has a notion of a \emph{business key} that consists of one or several entity properties\footnote{The concept of \emph{property} is will be defined further in text. Therefore, at this stage it should be thought of as a field with some additional information about it.}, which together uniquely identify an instance of a given entity type.
+  For example, instances of type \emph{Person}, which was introduced in previous chapter, are uniquely identified by their \emph{person code}.
+  Entity type \emph{Person} has its key defined to be of type \texttt{java.lang.String}, which indicates that it consists of one property of the specified type -- property \emph{key} in this case.
+  \emph{AbstractEntity} provides full support for two kinds of business keys:
+  \begin{description}
+    \item[\textbf{Simple Key}] -- is represented by a single property \emph{key} of type String, Integer or any entity type.
+    \item[\textbf{Composite Key}] -- can include two or more properties as \emph{key members} with no restrictions on their type. Class \emph{DynamicEntityKey} models the composite key.
+   \end{description}
+
+  In order to provide more substance to this discussion, let's extend our demo application, which was generated in part~\ref{part-I}, with new entity types.
+  For this, is proposed to use the Rail industry domain as an application business domain that needs to be modelled.
+  
+  The first domain entity to be added is \emph{Wagon}.
+  It is uniquely identified by its number that may contain alphanumeric characters, and therefore its key can be naturally modelled as a simple key of type \emph{String}.
+  Listing \ref{lst:WagonSimpleKey} contains a code that provides a basic definition for type \emph{Wagon}.
+  Two things are important here.
+  First, class \emph{Wagon} extends class \emph{AbstractEntity}, which is parameterised with type \emph{String} that is used as a key type.
+  Second, annotation \emph{KeyType} is used to annotate class \emph{Wagon} and has one argument \emph{String.class} that matches the key type.
+  This is required to overcome Java's reification limitation, which does not preserve generic parameterisation information at runtime\footnote{This might change in future versions of Java, which would naturally remove the need to use annotation \emph{KeyType}.}.
+
+  \begin{code}{Simple key of type String for entity Wagon.}{\label{lst:WagonSimpleKey}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+public class Wagon extends AbstractEntity<String> {
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+  In order to demonstrates entity with a composite key, let's consider that our application already has entity types \emph{WagonClass} and \emph{BogieClass} that have their keys defined exactly as for entity type \emph{Wagon}.
+  These entities are responsible for modelling wagon and bogie classification.
+  Wagons have bogies as part of their physical structure, but not all bogies are compatible with any wagon.
+  The system should implement a business rule that would govern what bogies can be placed onto a wagon. 
+  One possible way to implement such a rule is to provide an entity that would model the relationship between wagon and bogie classification information, which requires the use of a composite key.
+  
+  Listing~\ref{lst:WagonBogieClassificationCompatibilityCompositeKey} contains a code that provides a basic definition for such compatibility entity type.
+  The principle difference to previously discussed entity types, is the use of a composite key implemented by type \emph{DynamicEntityKey}, which is specified as entity's key type.
+  This composite key consists of two members -- properties designated with annotation \emph{CompositeKeyMember}, which takes one argument responsible for identifying member's sequential order in the key.
+  Annotation \emph{IsProperty} placed above each key member designates that each member a property (see section below).
+
+
+  \begin{code}{Composite key of an entity modelling wagon/bogie classification compatibility.}{\label{lst:WagonBogieClassificationCompatibilityCompositeKey}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(DynamicEntityKey.class)
+public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKey> {
+
+    @IsProperty
+    @CompositeKeyMember(1)
+    private WagonClass wagonClass;
+
+    @IsProperty
+    @CompositeKeyMember(2)
+    private BogieClass bogieClass;
+
+    ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+  Business entity key is used in \emph{AbstractEntity} for implementing methods \emph{hashCode()}, \emph{equals(Object)}, \emph{toString()} and \emph{compareTo(AbstractEntity)}, which removes the need  need to code these methods as part of specific domain entity types~\cite{Bloch2008}.
+  If required, method \emph{toString()} can be overridden by descendent entity types in order to provide more appropriate entity specific standard output.
+
+  \begin{notebox}{Composite key template.}{\label{nb:EclipseTemplatesForCompositeKey}}
+    Typing \texttt{tgp} in the body of the class and pressing \texttt{Ctrl + Space} key combination will present a dialog with an option \texttt{tgpcompositekey} for generating a property that is a member of the composite key.
+  \end{notebox}
+
+  \subsubsection*{Property definitions.}
+  
+  For a field, which is declared as part of an \emph{AbstractEntity} descendent type, to become a property, it needs to be annotated with annotation \emph{IsProperty}, and its \emph{setter} must be annotated with annotation \emph{Observable}.
+  Early runtime exception is thrown if the system identifies inconsistencies in property declarations upon entity instantiation.
+  Properties can be provided with \emph{title} and \emph{description}, which is used in various situations such as UI or logging.
+  
+  As an example of a defined entity property, let's consider entity type \emph{Wagon} that is provided with property \emph{wagonClass: WagonClass} as illustrated in listing~\ref{lst:WagonWagonClassProperty}.
+  Here an ordinary private field \emph{wagonClass: WagonClass} is provided with annotation \emph{IsProperty} and an optional, but recommended, annotation \emph{Title}.
+  Property's setter (often referred as \emph{mutator}) \emph{setWagonClass} has its name specified in accordance with JavaBeans specification, and is provided with a mandatory annotation \emph{Observable}.
+  According to the JavaBeans specification, the return type for setters should be \emph{void}.
+  The platform supports an extended setter specification by allowing the return type to match the type of the declaring class.
+  In this case, setter \emph{setWagonClass} has return type \emph{Wagon}.
+  Such specification enhancement provides a convenient way to chain many setter calls when initialising an entity instance.
+  
+  Although, getter must also be provided, there is no special requirements in addition to those stated in the JavaBeans specification.
+  Specifically, getter's name must begin with word \texttt{get} followed by a corresponding field name starting with a capitalised first character, and the return type must match that of the property.
+
+  \begin{code}{Property \emph{wagonClass} in Wagon.}{\label{lst:WagonWagonClassProperty}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+public class Wagon extends AbstractEntity<String> {
+
+   @IsProperty
+   @Title(value = "WA Class", desc = "Wagon classification.")
+   private WagonClass wagonClass;
+
+   @Observable
+   public Wagon setWagonClass(final WagonClass wagonClass) {
+      this.wagonClass = wagonClass;
+      return this;
+   }
+  
+   public WagonClass getWagonClass() {
+      return wagonClass;
+   }
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+
+  \begin{notebox}{Property template.}{\label{nb:EclipseTemplatesForProperty}}
+    Typing \texttt{tgp} in the body of the class and pressing \texttt{Ctrl + Space} key combination will present a dialog with an option \texttt{tgprop} for generating a property template.
+  \end{notebox}
+
+  \subsubsection*{Pre- and post- conditions for property value change.}
+  
+  In order to control correctness of property values at runtime and take necessary actions as the result of property value change, the platform supports the notion of property pre- and post- conditions.
+  The platform provides a predefined list of pre- and post- conditions (fully discussed in \ref{part-III}) in a form of specialised annotations that cover common cases of frequently used conditions.
+  
+  The original intention for pre-conditions (either predefined or custom) was to perform property value validation before it is assigned to the property.
+  From this perspective pre-conditions can be though of as value validators.
+  The original intention for post-conditions was to modify the runtime meta-data of entities (their properties) after a new value was successfully validated and assigned to a property.
+  Such modification can be manifested in making certain properties in the same entity instance required or readonly.
+  From this perspective post-conditions can be thought of as definers that define or change the runtime meta-data of an entity instance.
+  
+  Listing~\ref{lst:PreConditionWagonWagonClassProperty} illustrates the use of two special pre-conditions -- \emph{EntityExists}, which ensures that only persisted instances of \emph{WagonClass} can be assigned to \emph{Wagon}'s property \emph{wagonClass}, and \emph{Required}, which indicates that property \emph{wagonClass} must have a value.
+  Predefined condition handlers have their order of execution, where \emph{Required} has an execution precedence above \emph{EntityExists}, and thus \emph{EntityExists} handler does not need to deal with \texttt{null} property values.
+
+  \begin{code}{Pre-condition for property \emph{wagonClass} in Wagon.}{\label{lst:PreConditionWagonWagonClassProperty}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+public class Wagon extends AbstractEntity<String> {  
+   ....................................
+   @IsProperty
+   @Required
+   @Title(value = "WA Class", desc = "Wagon classification.")
+   private WagonClass wagonClass;
+
+   @Observable
+   @EntityExists(WagonClass.class)
+   public Wagon setWagonClass(final WagonClass wagonClass) {
+      this.wagonClass = wagonClass;
+      return this;
+   }
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+  Predefined pre-condition handlers are great when they as intended, but they cannot be customised to behave differently.
+  The most generic way to implement pre-and post- conditions is to provide \emph{Before Change} and \emph{After Change} event handlers associated with a property as part of its declaration.
+  Custom pre- and post- conditions have lower execution precedence than predefined ones.  
+  Thus, it is always safe to rely, for example, on the fact that pre-condition \emph{Required} is executed before any custom handlers.
+
+  In order to illustrate the use of custom pre-conditions, let's enhance entity type \emph{WagonClass} with a new property \emph{tonnage: Integer}, which should describe wagon's tonnage.
+  A business rule states that tonnage is required and there are only three possible values -- 50, 75 and 100.
+  This rule can be conveniently implemented as a combination of predefined and custom pre- conditions.
+  
+  Listing~\ref{lst:PreConditionWagonClassTonnageProperty} illustrates declaration of property \emph{tonnage}, which has predefined pre-condition \emph{Required} and a custom \emph{Before Change} event handler \emph{TonnageValidator}.
+  The actual implementation of the \emph{TonnageValidator} handler is provided and analysed as part of runtime property validation discussion.
+  
+  \begin{code}{Pre-conditions for property \emph{tonnage} in WagonClass.}{\label{lst:PreConditionWagonClassTonnageProperty}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+public class WagonClass extends AbstractEntity<String> {  
+   ....................................
+   @IsProperty
+   @Required   
+   @BeforeChange(@Handler(TonnageValidator.class))   
+   private Integer tonnage;
+
+   @Observable   
+   public WagonClass setTonnage(final Integer tonnage) {
+      this.tonnage = tonnage;
+      return this;
+   }
+
+   @Observable   
+   public Integer getTonnage() {      
+      return tonnage;
+   }
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
+ 
+  Annotation \emph{BeforeChange} can accepts one or many handlers, and each handler is declared with annotation \emph{Handler} that takes at least one argument \emph{value} equal to the type implementing the handling logic.
+  \emph{Handler} supports other arguments, which provide a way to initialise handler properties upon its instantiation.
+  In order to demonstrate this capability, consider the following enhancement to our domain model.
+  
+  In the Rail domain, wagon classification indicates the number of slots on a wagon designated to mounting bogies.
+  In order to capture this information, entity type \emph{WagonClass} needs to be provided with a new property \emph{numOfSlots: Integer}.
+  The value for this property should be in the range from 2 to 10, which can be enforced by a custom pre-condition handler.
+  Such pre-condition handler could be made configurable by supporting specification of the minimum and maximum values for the range.
+  Listing~\ref{lst:PreConditionWagonClassNumOfSlotsProperty} illustrates declaration of property \emph{numOfSlots}, which is specified as \emph{Required} and has one custom pre-condition \emph{NumOfSlotsValidator} with properties \emph{minNumOfSlots: Integer} and \emph{maxNumOfSlots: Integer} initialised with values 2 and 10 respectively.
+  The actual code for \emph{NumOfSlotsValidator} is discussed as part of the section on runtime meta-data.
+
+  \begin{code}{Pre-conditions for property \emph{numOfSlots} in WagonClass.}{\label{lst:PreConditionWagonClassNumOfSlotsProperty}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+public class WagonClass extends AbstractEntity<String> {  
+   ....................................
+    @IsProperty
+    @Required
+    @BeforeChange (@Handler(
+		      value = NumOfSlotsValidator.class, 
+		      integer = {
+			@IntParam(name = "minNumOfSlots", value = 2), 
+			@IntParam(name = "maxNumOfSlots", value = 10)}))
+    @Title(value = "BO Slots", desc = "Number of bogie slots")
+    private Integer numOfSlots;
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+
+
+  \paragraph*{Dependent Properties.}
+
+  One of the common situations when modelling business domains, is the existence of entities where some of their properties depend on each other.
+  The most trivial example of such situation is an entity with two date properties that represent a single date period.
+  In this case when there is an attempt to set the \emph{start} property value lager than the current value of the \emph{finish} property, such value should fail validation ensuring that date period is not inverted.
+  However, if the \emph{finish} property is subsequently changed by setting its value into the future comparing the invalid \emph{start} value, then this invalid value needs to be revalidated and assigned to the \emph{start} property if valid.
+  
+  The platform provides an elegant way to handle validation error recovery situations for properties that dependent on each other. 
+  The dependent properties need to be declared with annotation \emph{Dependent} that takes a list of dependent property names as its argument. 
+  The word \emph{dependent} here means that properties depend on some other property. 
+  
+  In order to provide a more elaborate usecase for dependent properties, consider domain entity \emph{WorkOrder}, which captures the work associated with fixing a wagon.
+  There are three values that need to be captured by every work order -- \emph{actualStart: Date}, \emph{actualFinish: Date} and \emph{odometerReading: Integer}.
+  Properties \emph{actualStart} and \emph{actualFinish} represent a date period during which work order took place, and they should have the validation logic as in the above scenario.
+  In addition, the value for property \emph{odometerReading}, which is considered to be taken at the moment in time captured by property \emph{actualStart}, should be validated against a history of odometer readings for a corresponding wagon.
+
+  Thus, property \emph{actualStart} has two dependent properties that should be validated when it is changed.
+  Specifically, properties \emph{actualFinish} and \emph{odometerReading} should be validated (or revalidated and attempted values assigned if revalidation succeeds) when the value of property \emph{actualStart} is change.
+  For clear differentiation, let's call property \emph{actualStart} a master property, and properties declared as part of its \emph{Dependent} annotation -- dependent properties.
+  Listing~\ref{lst:DependentProperties} illustrates dependency definition for the described scenario\footnote{Pre-conditions are deliberately not included into the listing in order to highlight dependency related declarations.}.
+
+  \begin{code}{Declaration of dependent properties.}{\label{lst:DependentProperties}}{codebgcolor}
+    \begin{lstlisting}
+@IsProperty
+@Dependent({"actualFinish", "odometerReading"})
+private Date actualStart;
+
+@IsProperty
+@Dependent("actualStart")
+private Date actualFinish;
+
+@IsProperty
+@Dependent("actualStart")
+private Integer odometerReading;
+    \end{lstlisting}
+  \end{code}
+
+  The dependent properties get \texttt{validated} or \texttt{revalidated} only if the current property is changed successfully.
+  This means, for example, that if \emph{actualStart} is being set, but its value is not recognised as valid, and thus not assigned, then there is no need to act on dependent properties as there was no changes to the state of an entity instance itself.
+  
+  The property dependency mechanism distinguishes between \texttt{validation} and \texttt{revalidation}.  
+  \texttt{Validation} means that if a dependent property is valid at the time when a corresponding master property was changed, then it needs to be validated again.
+  If validation fails, the value of that dependent property does not change as it was legitimately assigned before -- only the validation meta-data changes to indicate the validation error.
+  \texttt{Revalidation} means that a dependent property was invalid when a corresponding master property was changed, and needs to be revalidated.
+  In case of successful revalidation, the attempted value should be assigned to that dependent property.
+  If revalidation resulted in error, the cause of that error could be different to the original validation error due to the change in the entity state.
+  
+  The dependency mechanism gracefully handles circular dependencies -- both direct and transitive.
+  Listing~\ref{lst:DependentProperties} contains a direct circular dependency where property \emph{actualStart} depends on property \emph{odometerReading} that in turn depends on \emph{actualStart}.
+
+  Another good example of dependency usage is in the earlier introduced \emph{WagonBogieClassCompatibility} type.
+  The basic validation rule for this entity should ensure that only bogie classes with a higher or equal tonnage than a corresponding wagon class tonnage should be used.
+  In order to demonstrate the need for dependency between properties \emph{wagonClass} and \emph{bogieClass}, consider the following scenario.
+  A new compatibility is in the process of creation.
+  User enters wagon class with tonnage of 100 ton and then tries to enter a bogie class with tonnage of 50 ton.
+  The system reports an error, stating that such bogie class cannot be compatible with a given wagon class due to its unfit tonnage.
+  User realises that the actual error is due to mistakenly entered 100 ton wagon class, and that there should be a 50 ton wagon class instead.
+  S/he changes the wagon class to a relevant 50 ton value, and naturally expects the attempted value of 50 ton bogie class to become valid and assigned to the property.
+  This requires revalidation of that attempted bogie class value, which is exactly what the dependency mechanism is designed to handle.
+  
+  Listing~\ref{lst:WagonBogieClassificationCompatibilityDependency} provides an updated declaration for entity type \emph{WagonBogieClassCompatibility}.
+  The definition for property \emph{wagonClass} now includes a \emph{Before Change Event} (BCE)\footnote{Discussed in details in the next subsection.} handler declaration, specifying the class implementing it, and the dependency information, specifying dependent property \emph{bogieClass}.
+  The same definition change has been applied to property \emph{bogieClass}, but with different values~-- it has its own BCE handler, and the dependency is on property \emph{wagonClass}.
+  The specified BCE handlers validate tonnages for both classes, whereas the dependency declarations ensure revalidation of properties whenever any of them change.
+  
+  \begin{code}{Declaration of dependency for bogie and wagon classes.}{\label{lst:WagonBogieClassificationCompatibilityDependency}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(DynamicEntityKey.class)
+public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKey> {
+
+    @IsProperty
+    @CompositeKeyMember(1)
+    @BeforeChange(@Handler(WbccWagonTonnageValidator.class))
+    @Dependent("bogieClass")
+    private WagonClass wagonClass;
+
+    @IsProperty
+    @CompositeKeyMember(2)
+    @BeforeChange(@Handler(WbccBogieTonnageValidator.class))
+    @Dependent("wagonClass")
+    private BogieClass bogieClass;
+
+    ....................................
+}
+    \end{lstlisting}
+  \end{code}
+  
+  In order to better understand the dependency mechanism and the difference between \emph{validation} and \emph{revalidation}, let's elaborate more on the \emph{WagonBogieClassCompatibility} example.
+  
+  \paragraph*{Revalidation.}
+  Consider that there is a brand new entity instance, which did not have any attempts made to set values for properties \emph{wagonClass} and \emph{bogieClass}.
+  First, we try to set 50 ton bogie class as a value for property \emph{bogieClass}.
+  This value passes the validation as there is nothing to validate against -- property \emph{wagonClass} has no value yet.
+  Then we attempt to set property \emph{wagonClass} as a 100 ton wagon class, which would fail validation due to a greater tonnage value than that of an already assigned bogie class.
+  In this case, property \emph{wagonClass} becomes \emph{invalid} and its value remains \emph{null}.
+  At the same time, due to the fact that property \emph{wagonClass} was not assigned any value, its dependent property \emph{bogieClass} does not get revalidated and remains in its previous state -- valid.
+ 
+  While the entity instance is in the described state, an attempt is made to change property \emph{bogieClass} to a new value of 100 ton bogie class.
+  This new value gets accepted due to the fact that property \emph{wagonClass} still has no value, which means that there is nothing to violate.
+  However, the dependency mechanism reacts to this successful change, and tries to revalidate a previously attempted for property \emph{wagonClass} value.
+  This attempted value passes revalidation (both bogie and wagon classes have equal tonnages), which results in the assignment of a 100 ton wagon class value to property \emph{wagonClass}, and the recovery of its validation state.
+  All this happens automatically, without the need to make an explicit attempt to reset \emph{wagonClass} value.
+  In case of the end-user, this would mean manually changing the value.
+
+  \paragraph*{Validation.}
+  A different situation would be observed if only property \emph{bogieClass} would have a BCE handler preventing the acceptance of bogie classes that conflict with a \emph{wagonClass} value.
+  This means that any wagon class value can be set as the value for property \emph{wagonClass} without any validation.
+  
+  Let's consider that a 50 ton bogie class has been specified for a brand new compatibility entity instance.
+  Then an attempt to set a 100 ton wagon class is made.
+  This attempt would be successful since there is no validation of property \emph{wagonClass}.
+  However, the dependency mechanism would recognise a successful property assignment and would trigger validation of the dependent property \emph{bogieClass}.
+  As the result, property \emph{bogieClass} would be marked as invalid, but its value, which was assigned previously, would not change.
+  
+  \begin{notebox}{Mutual and one-way dependencies.}{\label{nb:MutialDependencyOrNot}}
+    All provided dependency example show properties that are mutually dependent on each other.
+    However, this is not required.
+    Consider the last example where we discussed the difference between validation and revalidation.
+    In case of validation discussion, we considered the model where property \emph{wagonClass} did not have any validation -- only property \emph{bogieClass} did.
+    This means that no bogie class should be accepted if it conflicts with a \emph{wagonClass} property value, but any wagon class, including values that could make property \emph{bogieClass} invalid, is acceptable.
+    Such model, basically, makes property \emph{wagonClass} dominate over property \emph{bogieClass}, and there is a need to state that property \emph{bogieClass} is dependent on property \emph{wagonClass}.
+    At the same time, there is no need to state that property \emph{wagonClass} is dependent on property \emph{bogieClass}.    
+    This means that these properties have \emph{one-way} dependency.\\
+
+    A code snippet below illustrates property definitions for this one-way dependency case.
+    The \emph{wagonClass} property definition specifies that property \emph{bogieClass} is dependent on it, and thus needs to be validated/revalidated when \emph{wagonClass} value changes.
+    The \emph{bogieClass} definition does not specify any properties that depend on it, but has a BCE handler to ensure that no bogie class conflicting a wagon class value is accepted.
+
+    \begin{lstlisting}
+    @IsProperty
+    @Dependent("bogieClass")
+    private WagonClass wagonClass;
+
+    @IsProperty
+    @BeforeChange(@Handler(WbccBogieTonnageValidator.class))
+    private BogieClass bogieClass;
+    \end{lstlisting}
+  
+  \end{notebox}
+
+\subsection{Runtime Meta-Data}
+
+  The runtime meta-data is created from the compile time meta-data and associated with each instance of every entity type.
+  It has a localised nature, which means that changing meta-data in one instance of some entity type does not make any impact on any other instance of the same or different type.
+  Entity runtime meta-data is a collection of runtime meta-data associated with each entity property and entity instance specific states such as version.
+  
+  All entities should always be instantiated using an instance of \emph{EntityFactory} -- a special factory class designed to associated entity instances with runtime meta-date at the creation time.  
+  No entities should be created using \texttt{new} keyword applied to their type constructor.
+  An appropriate instance of \emph{EntityFactory} is provided to the application at runtime as part of the \emph{Injection of Control} (IoC) mechanism, and represents a thread-safe singleton object ready to be used anywhere in the system\footnote{The mechanism for \emph{EntityFactory} configuration and instantiation is discussed in a separate section on IoC later in the text.}.
+  
+  \subsubsection*{Entity identity and meta-state (version, editable, persisted, dirty etc.).}
+
+  The notion of \emph{entity identifier} is used to allocate some unique, but irrelevant from the business perspective, number for each persisted instance of any entity type.
+  It should be though of as a reference (or pointer) to an entity instance, but in the database instead of RAM.
+  At the database level, entity identifier are used to making primary and foreign keys.
+  Once its value is assigned it never changes.
+  The current platform policy for identity generation enforces uniqueness throughout all entity types.
+  At the \emph{AbstractEntity} level, identifier is represented by property \emph{id}, and can be accessed by using getter \emph{getId()}.
+  When a new entity instance is created, its identifier is initialised with value \texttt{null}, and should never be set manually from an application code.
+  Although, entity identity is persisted, it is still considered to be a part of entity meta-data rather than data as it has more of a servicing connotation.
+
+  Here is a list of entity specific meta-data methods:
+
+  \begin{description}
+    \item[\textbf{isPersisted()}] -- returns \texttt{true} if an entity instance was persisted, which is derived from the fact of having identifier assigned to a non-null value; otherwise, returns \texttt{false}
+    \item[\textbf{isDirty()}] -- indicates whether an entity instance is different from its persisted counterpart; all new entity instances (the ones that have not been persisted) are considered dirty; any change to entity instance property values makes that instance dirty; if one of properties in a previously persisted entity instance is change and then changed again back to its original property, that entity remains non-dirty.
+    \item[\textbf{getVersion()}] -- return the number of how many times an entity instance was modified and persisted; version is updated upon save and only if an entity instance is dirty; simply changing one of entity's property does not change its version.
+    \item[\textbf{isEditable()}] -- by default return a successful instance of type \emph{Result}\footnote{\emph{Result} is a special class used as a generic way to provide information about correctness or incorrectness of something such as type instance, action etc. It consists of two main fields -- \emph{exception: Exception} and \emph{instance: Object}. Its method \emph{isSuccessful()} returns \emph{true} if property \emph{exception} is \emph{null}.}; can be overridden to provide application specific logic when an entity instance should be editable; if an entity instance is not editable then changing any of its properties does not have any effect.
+    \item[\textbf{restoreToOriginal()}] -- restores all entity properties to their original values and resets property validation information.
+    \item[\textbf{isValid()}] -- returns an instance of type \emph{Result} indicating success or the first validation error; the default behaviour is to check all properties for validity; if some custom validation logic needs to be provided at the entity level in addition to checking properties then method \emph{validate()} should be overridden\footnote{A call to super.validate() is highly recommended as it performs checking of property validity.}; when invoked, method \emph{isValid()} employs a locking mechanism to ensure that entity validation takes place only after all running at the time individual property validations complete, and that no property change can take place until entity validation completes.
+  \end{description}
+  
+
+  \subsubsection*{Property validation results.}
+
+  A runtime meta-data that is associated with an individual entity property is represented by class \emph{MetaProperty}, which is designed to capture runtime meta-data for a single property.
+  Each entity property is provided with a corresponding instance of \emph{MetaProperty} at the instantiation time.
+  Meta-properties can be obtained from an entity instance by invoking method \emph{getProperty(propertyName)}, where \emph{propertyName} is the name of any entity property, or method \emph{getProperties()} returning a map of meta-properties where keys are the name of properties and corresponding values are instances of type \emph{MetaProperty}.
+
+  Amongst property meta-data such as title, description, type, meta-property maintains information about property pre- and post- conditions and results of property validation (i.e. results of executing pre-conditions).
+  Custom, or what might be referred as domain specific, pre- and post- conditions are represented by \emph{Before Change Event} (BCE) and \emph{After Change Event} (ACE) handlers respectively.
+  Every instance of meta-property contains actual instances of classes handling pre- and post- conditions, which includes BCE and ACE handlers.
+  A special mechanism kicks in upon an attempt to set a new value for some property, which reuses pre-condition handler instances to process the new value before assigning it to the property and post-condition instances after the value has been assigned.
+
+  \paragraph*{BCE Handlers.}
+  As was mentioned before, the primary objection of BCE handlers is to validate the value being set for the property.
+  Any class that implements contract \emph{IBeforeChangeEventHandler$<$T$>$} can be used as a BCE handler for a property of type \emph{T}.
+  This contract requires implementation of a single method \emph{handle(final MetaProperty property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations)}, which returns an instance of \emph{Result} indicating success or failure, and takes four arguments:
+
+  \begin{description}
+    \item[\textbf{property: MetaProperty}] -- is an instance of the meta-property associated with a property that a handler instance is associated with; it can be used for various purposes, including access to the actual entity instance holding the property and other properties that might need to be used as part of the handler logic.
+    \item[\textbf{newValue: T}] -- this is a new property value of type \emph{T}, which is being set; it is no yet assigned to the underpinning property field.
+    \item[\textbf{oldValue: T}] -- the current value of the property, which is going to be replaced with a new value of it passes all validation.
+    \item[\textbf{mutatorAnnotations: Set$<$Annotation$>$}] -- a set of annotations associated with property mutator (i.e. setter), which is passed for convenience in case the handler logic needs to obtain some addition information from them.
+   \end{description}
+  
+  There is nothing in the BCE handler type declaration that would associate it with a particular entity type -- only the property type.
+  However, the actual implementation of method \emph{handle} may rely on the fact the an entity associated with a property being processed is of a certain type.
+  Therefore, one should be mindful of the intended semantics for BCE handlers when declaring them as part of property definitions.
+
+  Let's discuss implementation of the \emph{TonnageValidator} handler associated with property \emph{WagonClass.tonnage} (listing~\ref{lst:PreConditionWagonClassTonnageProperty}), which is provided in listing~\ref{lst:TonnageValidator}.
+  It implements contract \emph{IBeforeChangeEventHandler} parameterised by the type of the property it is associated with.
+  Specifically, type \emph{Integer} that is the type of property \emph{tonnage}.
+  
+  The \emph{handle} method checks whether a new value is one of the three acceptable values 50, 70 or 100.
+  If the value is different than unsuccessful \emph{Result} is created, which accepts an appropriate exception as its second argument explaining the reason for rejecting the new value.
+  Otherwise, a successful \emph{Result} is return.
+
+  \begin{code}{Custom pre-condition TonnageValidator.}{\label{lst:TonnageValidator}}{codebgcolor}
+    \begin{lstlisting}
+public class TonnageValidator 
+    implements IBeforeChangeEventHandler<Integer> {
+
+    @Override
+    public Result handle(
+	final MetaProperty property, 
+	final Integer newValue, 
+	final Integer oldValue, 
+	final Set<Annotation> mutatorAnnotations) {
+	
+	if (newValue != 50 && newValue != 75 && newValue != 100) {
+	    return new Result(
+		      newValue, 
+		      new IllegalArgumentException("Valid tonnage values are " +
+	    		                           "50, 75 and 100.")
+	    );
+	}
+	return Result.successful(newValue);
+    }
+}
+    \end{lstlisting}
+  \end{code}
+
+  As can be observed, the provided implementation is not entity type dependent and thus can be associated with any property of type \emph{Integer} in any entity type is appropriate\footnote{Obviously, the actual handler implementation has its specific meaning regardless of whether it is entity type specific or not, and may not be applicable to any arbitrary \emph{Integer} property.}.
+  Another important remark about the presented implementation is that argument \emph{newValue} is not changed for \emph{null} before being used in the \emph{if} statement.
+  In this case it is safe due to the fact that property \emph{WagonClass.tonnage} has another pre-condition -- \emph{Required}, with a higher precedence.
+  This means that \emph{null} value would never get past this pre-condition, and as the result of this, pre-condition \emph{TonnageValidator} would never get invoked.
+
+  \begin{notebox}{Defensive or not.}{\label{nb:DefensiveOrNot}}
+    There was an interesting discussion during one of the training sessions with respect to defensive programming, which sparked as the result of an intuition that argument \emph{newValue} in method \emph{TonnageValidator.handle} should be checked for \emph{null} before being used for validation as it would seem to be a good defensive programming practice.    
+    Although, it might be a good idea in general, our past experience and analysis suggests that the meaning of \emph{defensive} should always be treated within a specific semantic context.\\
+    
+    If the intention for \emph{TonnageValidator} is to be used only in cases where the property is \emph{required} then having a \emph{null} check with no \emph{newValue} validation against the three possible values and a successful \emph{Result} returned, could lead to unintentional BCE handler usages by being associated with properties that are not declared as \emph{required}, and would inflict a false certainty that only the three permitted tonnage values are acceptable.
+    In fact, value \emph{null} would also be acceptable.
+    In this case, it would be better if the handler fails with NPE rather than accept the \emph{null} value.\\
+    
+    Alternatively, there could be a check that fails validation if \emph{newValue} is \emph{null}, which has only one benefit over no check at all -- it could provide a more meaningful error message stating that property value is required.
+    The downside of this approach is that it is not clear from an entity type declaration that a property value is required unless the code of \emph{TonnageValidator} is inspected.
+  \end{notebox}
+
+
+  Another pre-condition, which is declared for property \emph{WagonClacc.numOfSlots: Integer}, is interesting from initialisation point of view.
+  This BCE handler is declared in listing~\ref{lst:PreConditionWagonClassNumOfSlotsProperty}, and specifies two integer values for handler fields \emph{minNumOfSlots} and \emph{maxNumOfSlots}.
+  Listing~\ref{lst:NumOfSlotsValidator} provides a complete implementation for this BCE handler.
+  Fields \emph{minNumOfSlots} and \emph{maxNumOfSlots} do not require to have getters and setters.
+
+  \begin{code}{Custom pre-condition NumOfSlotsValidator.}{\label{lst:NumOfSlotsValidator}}{codebgcolor}
+    \begin{lstlisting}
+public class NumOfSlotsValidator implements IBeforeChangeEventHandler<Integer> {
+    private int minNumOfSlots;
+    private int maxNumOfSlots;
+
+    @Override
+    public Result handle(
+	final MetaProperty property, 
+	final Integer newValue, 
+	final Integer oldValue, 	
+	final Set<Annotation> mutatorAnnotations) {
+
+	if (newValue < minNumOfSlots || newValue > maxNumOfSlots) {
+	    return new Result(
+		newValue, 
+		new IllegalArgumentException("Number of slots should be between " + 
+				  minNumOfSlots + " and " + maxNumOfSlots + "."));
+	}
+	return Result.successful(newValue);
+    }
+}
+    \end{lstlisting}
+  \end{code}
+
+  The most powerful approach for implementing BCE and ACE handlers is by declaring them as interfaces where the actual implementation is bound as part of IoC module configuration.
+  This approach is discussed separately in section~\ref{ch01:01:IoC}, which is dedicated to the topic of application configuration by means of \emph{injection of control}.
+
+  \begin{notebox}{Error or Warning?}{\label{nb:ErrorOrWarning}}    
+    Sometimes a property value can be recognised as valid, but it is approaching (in some sense) a condition where it would become invalid.
+    For example, wagons with 10 bogies could be considered uncommon, and so if 10 is specified as the value for property \emph{WagonClass.numOfSlots} then it should be recognised as valid, but some mechanism is desired to indicate that it could potentially be entered by mistake.
+
+    In such cases, an instance of type \emph{Warning} should be returned instead of successful \emph{Result}.
+    Type \emph{Warning} is a \emph{Result}, which has a special treatment at the platform level (UI specifically), and can have custom handling as part of some business logic if required.
+  \end{notebox}
+
+  \emph{MetaProperty} provides the following methods for accessing validation results:
+  \begin{description}
+    \item[\textbf{getFirstFailure()}] -- returns an instance of \emph{Result} that indicates the first failure that ocurred during the last attempt to chage  property value, or \emph{null} if there was no error.
+    \item[\textbf{getFirstWarning()}] --  returns an instance of \emph{Warning} associated with the last attempt to chage  property value, or \emph{null} if there was no warning.
+  \end{description}
+
+
+  \paragraph*{ACE Handlers.}
+
+  Post-condition handlers are executed only after a new property value is assigned, which means it passed all pre-conditions.
+  The only predefined in the platform post-condition is \emph{Dependent} that, as has been discussed earlier, is dedicated to handle revalidation of dependent properties.
+  
+  In order to provide custom post-condition business logic, the platform provides support for \emph{After Change Event} (ACE) handlers.
+  Unlike BCE, where multiple handlers can be associated with a single property, there can only be one ACE handler associated with any particular property\footnote{This API decision was based on the platform usecases that suggested the benefit of having multiple BCE handlers, which can be independent from each other and applicable in different combinations to different properties in diverse entity types, while ACE handlers are pretty much relevant for a specific property in a specific entity type only, and thus, are best to be represented by one logical unit such as handler class.}.
+  Although, ACE handlers might change values for entity properties, it is highly discouraged.
+  Instead, they should be used primarily for modifying property meta-data.
+  
+  For example, earlier introduced entity type \emph{WagonBogieClassCompatibility} has property \emph{active}, which indicates whether a given compatibility is in effect (value \emph{true}) or is an inactive instance kept for historical reasons (value \emph{false}).
+  It would sensible if application users could not change properties for inactive compatibility instances except property \emph{active} itself.
+  If property \emph{active} is changed from \emph{false} to \emph{true} then all properties should become editable again.
+  
+  Listing~\ref{lst:WagonBogieClassificationCompatibilityAce} illustrates declaration for ACE handler \emph{MakeOtherPropertiesReadonlyWhenInactive} as part of the definition for property \emph{active}.
+
+  \begin{code}{ACE handler declaration for property active.}{\label{lst:WagonBogieClassificationCompatibilityAce}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(DynamicEntityKey.class)
+public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKey> {
+    ....................................
+    @IsProperty
+    @AfterChange(MakeOtherPropertiesReadonlyWhenInactive.class)
+    private boolean active;
+    ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+  Listing~\ref{lst:WagonBogieClassificationCompatibilityAce} illustrates declaration for ACE handler \emph{MakeOtherPropertiesReadonlyWhenInactive} as part of the definition for property \emph{active}.
+
+  \begin{code}{ACE handler implementation for property active.}{\label{lst:MakeOtherPropertiesReadonlyWhenInactive}}{codebgcolor}
+    \begin{lstlisting}
+public class MakeOtherPropertiesReadonlyWhenInactive 
+	implements IAfterChangeEventHandler<Boolean> {											
+
+    @Override
+    public void handle(final MetaProperty property, final Boolean active) {
+	final WagonBogieClassCompatibility entity = 
+		    (WagonBogieClassCompatibility) property.getEntity();
+	for (final MetaProperty mp : entity.getProperties().values()) {
+	    if (!mp.getName().equals(property.getName())) {
+		mp.setEditable(active);
+	    }
+	}
+    }
+}
+    \end{lstlisting}
+  \end{code}
+
+  Similarly to BCE handler, any class implementing contract \emph{IAfterChangeEventHandler$<$T$>$} can be used as an ACE handler for a property of type $<$T$>$.
+  Method \emph{handle(final MetaProperty property, final T value)} for ACE is much simple having only two arguments:
+  \begin{description}
+    \item[\textbf{property: MetaProperty}] -- is an instance of the meta-property associated with a property that a handler instance is intended for; it can be used for various purposes, including access to the actual entity instance holding the property and other properties that might need to be used as part of the handler logic.
+    \item[\textbf{value: T}] -- this is a newly assigned to property value of type \emph{T}.
+  \end{description}
+  The actual handler implementation, which is provided in listing~\ref{lst:MakeOtherPropertiesReadonlyWhenInactive}, obtains an entity instance (lines~6-7) and then iterates over all its meta-properties (line~8) to set their editability to the property value \emph{active}~(line~10).
+  A meta-property for property \emph{active} itself is not changed, which is achieved by using name comparison~(line~9).
+
+  ACE handlers initialisation mechanism is exactly the same as for BCE handerls can be used.
+  Also, as for BCE handlers there is no declarative association of ACE handlers with a particular entity type -- only semantic association.
+  However, ACE handlers have a natural tendency to be applicable to a single entity type.
+
+  \subsubsection*{Property state (editable, visible etc.).}
+  The most obvious part of any property's state is its value.
+  It can always be obtained from an entity instance by either by using property getter \texttt{entity.getPropertyName()} or method \emph{get} such as \texttt{entity.get(``propertyName'')}.
+  Property value can also be obtained from a corresponding meta-property instance by using its method \emph{getValue()} -- \texttt{metaProperty.getValue()}.
+  It makes sense to use this way only of there is already an instance of meta-property.
+  In any case, all these possible ways to obtain a property value result in a direct getter invocation, and mainly exist as a convenience when either entity type is unknown at design time or there is only an instance of a meta-property.
+  
+  Setting property values is, as expected, achieved by using corresponding setters.
+  The use of enhanced setter definition, which return an instance of an entity itself is convenient when there is a need to set more than one property.
+  Listing~\ref{lst:ChainedSetters} illustrates setter chaining as part of \emph{WagonBogieClassCompatibility} instantiation and initialisation.
+
+  \begin{code}{Chained setter calls.}{\label{lst:ChainedSetters}}{codebgcolor}
+    \begin{lstlisting}
+    final WagonBogieClassCompatibility entity = entityFactory.
+		  newEntity(WagonBogieClassCompatibility.class).
+		  setWagonClass(wagonClass).
+		  setBogieClass(bogieClass);
+    \end{lstlisting}
+  \end{code}
+
+
+  Additionally, \emph{MetaProperty} provides runtime access to property meta-data.
+  The following method of \emph{MetaProperty} are of most interest:
+  \begin{description}
+    \item[\textbf{isEditable()}] -- indicates whether property is editable; this information is only idicative and should be explicitly reused if to make any impact -- the actual property value can be changed by using its setter regardless\footnote{A remainder, if an entity instance returns an unsuccessful result from its method \emph{isEditable} then the entity sate cannot be changed.}; for example, this meta-data is used by UI logic to make property editors operate in readonly mode; the default property meta-state can be specified as part of its definition by declaring annotation \emph{Readonly}.
+    \item[\textbf{isRequired()}] -- indicates whether property is required for an entity instance to be valid, which means that property must have a non-null value assigned to it; the default property meta-state can be specified as part of its definition by declaring annotation \emph{Required}; it can be changed at runtime as part of some logic such as ACE handlers.
+    \item[\textbf{isVisible()}] -- indicates whether property should be visible as part of UI; this information is only idicative and should be explicitly reused if to make any impact (e.g. as part of UI logic one should check if property is visible before constructing a UI element that represents it\footnote{Making a property invisible at runtime after a corresponding UI element has been explicitly added to application UI has no effect.}); the default property meta-state can be specified as part of its definition by declaring annotation \emph{Invisible}; it can be changed at runtime as part of some logic such as ACE handlers.
+  \end{description}  
+
+
+  \subsubsection*{Property value change information.}
+  
+  \emph{MetaProperty} provides a way to track property value changes at various stages during its entity lifecycle.
+  The tracking is initiated automatically at the moment of either entity instantiation or its retrieval from a data storage, and completes at the moment when entity gets persisted or discarded.
+  The following \emph{MetaProperty} methods are of the most interest.
+  \begin{description}
+    \item[\textbf{getValue()}] -- returns the current value of the property.
+    \item[\textbf{getOriginalValue()}] -- returns the original value of the property; for newly created entities, the original property value is always \emph{null}; for a modified property of previously persisted entities, the original value is the one retrieved from a data storage; newly assigned property value becomes original when entity is persisted.
+    \item[\textbf{getPrevValue()}] -- if property was changed, this method returns a previous property value; it should not be confused with the original value -- if property of some persisted entity is changed several times (without persisting that entity in between) then the original value would match the one in the data store, while the previous value would be modified each time property changes to match its previously assigned value (i.e. original value after the first changes, the first assigned value after the second change and so on).
+    \item[\textbf{getLastAttemptedValue()}] -- returns a value that was (successfully or otherwise) attempted to be set as a new property value; it may be a successfully assigned or an invalid value that did not pass property validation; if no value was attempted to be set them \emph{null} is returned.
+    \item[\textbf{getLastInvalidValue()}] -- if an attempt to set property value was not successful (usually due to some validation failure), this method returns that invalid value; otherwise, \emph{null} is returned; setting a valid value after a failed attempted reset the invalid value resulting in \emph{null} value returned for subsequent method calls.
+    \item[\textbf{isDirty()}] -- returns \emph{true} for all properties of new entity instance, and successfully modified properties of the previously persisted entities.
+    \item[\textbf{isChangedFromOriginal()}] -- indicates whether the current property value is different to its original; does not take into account the dirty state of the property -- works directly with the current and original values.
+    \item[\textbf{isChangedFromPrevious()}] -- indicates whether the current and previous property values are different.
+  \end{description}  
+  
+\section{Business Logic and Controllers}
+
+% \section{User Management}
+% 
+% \section{Configuration Management}
+% 
+% \section{Single Sign On}
+% 
+% \section{Security}
+% 
+\section{Injection of Control (IoC)}\label{ch01:01:IoC}
