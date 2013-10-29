@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.security;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.Request;
@@ -61,9 +62,9 @@ public class SecurityTokenControllerRao implements ISecurityTokenController {
     }
 
     @Override
-    public void saveSecurityToken(final Map<Class<? extends ISecurityToken>, List<UserRole>> tokenToRoleAssocations) {
+    public void saveSecurityToken(final Map<Class<? extends ISecurityToken>, Set<UserRole>> tokenToRoleAssocations) {
 	// prepare an envelope
-	final Map<String, List<Long>> envelopeContent = convert(tokenToRoleAssocations);
+	final Map<String, Set<Long>> envelopeContent = convert(tokenToRoleAssocations);
 	final Representation envelope = restUtil.represent(envelopeContent);
 	// prepare a request
 	final Request request = restUtil.newRequest(Method.POST, restUtil.getBaseUri(getDefaultWebResourceType()) + "/securitytokens");
@@ -76,10 +77,10 @@ public class SecurityTokenControllerRao implements ISecurityTokenController {
     }
 
     /** Converts map of entity instances into a map of IDs. */
-    private Map<String, List<Long>> convert(final Map<Class<? extends ISecurityToken>, List<UserRole>> tokenToRoleAssocations) {
-	final Map<String, List<Long>> result = new HashMap<String, List<Long>>();
+    private Map<String, Set<Long>> convert(final Map<Class<? extends ISecurityToken>, Set<UserRole>> tokenToRoleAssocations) {
+	final Map<String, Set<Long>> result = new HashMap<String, Set<Long>>();
 	for (final Class<? extends ISecurityToken> token : tokenToRoleAssocations.keySet()) {
-	    final List<Long> roleIds = new ArrayList<Long>();
+	    final Set<Long> roleIds = new HashSet<Long>();
 	    for (final UserRole role : tokenToRoleAssocations.get(token)) {
 		roleIds.add(role.getId());
 	    }

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.security.provider;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -28,7 +29,7 @@ public interface ISecurityTokenController {
      * @param tokenToRoleAssocations
      *            -- a map between tokens and roles that need to be associated
      */
-    void saveSecurityToken(final Map<Class<? extends ISecurityToken>, List<UserRole>> tokenToRoleAssocations);
+    void saveSecurityToken(final Map<Class<? extends ISecurityToken>, Set<UserRole>> tokenToRoleAssocations);
 
     /**
      * Returns all distinct {@link UserRole}s (It is needed for building SecurityTreeTableModel)

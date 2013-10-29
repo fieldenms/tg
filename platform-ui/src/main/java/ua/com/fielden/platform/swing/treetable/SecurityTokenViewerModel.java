@@ -2,6 +2,8 @@ package ua.com.fielden.platform.swing.treetable;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -16,13 +18,14 @@ import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Model for {@link SecurityTokenViewer}. That model has load and save actions, {@link ISecurityTokenController} - logic for retrieving data and also tree table model for data
  * presentation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class SecurityTokenViewerModel {
 
@@ -36,8 +39,13 @@ public class SecurityTokenViewerModel {
     private final SecurityTokenProvider tokenProvider;
 
     /**
+     * Holds the data that is currently loaded.
+     */
+    private SecurityData currentData  = null;
+
+    /**
      * Creates new instance of {@link SecurityTokenViewerModel} for the given {@link ISecurityTokenController}, initiates the tree table model.
-     * 
+     *
      * @param controller
      * @throws Exception
      */
@@ -49,7 +57,7 @@ public class SecurityTokenViewerModel {
 
     /**
      * Returns the action that save the security token - user role associations
-     * 
+     *
      * @param pane
      * @return
      */
@@ -66,7 +74,18 @@ public class SecurityTokenViewerModel {
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		controller.saveSecurityToken(treeTableModel.getModelData());
+		final Map<Class<? extends ISecurityToken>, Set<UserRole>> curModel = treeTableModel.getModelData();
+		curModel.remove(ISecurityToken.class);
+		final Map<Class<? extends ISecurityToken>, Set<UserRole>> oldModel = currentData.getSecurityTokens();
+		final Map<Class<? extends ISecurityToken>, Set<UserRole>> changedModel = new HashMap<>();
+		for(final Class<? extends ISecurityToken> clazz : curModel.keySet()) {
+		    final Set<UserRole> curUserRoles = curModel.get(clazz);
+		    final Set<UserRole> oldUserRoles = oldModel.get(clazz);
+		    if (!EntityUtils.safeEquals(curUserRoles, oldUserRoles)) {
+			changedModel.put(clazz, curUserRoles);
+		    }
+		}
+		controller.saveSecurityToken(changedModel);
 		return null;
 	    }
 
@@ -78,7 +97,7 @@ public class SecurityTokenViewerModel {
 
     /**
      * Returns the actions that loads data with controller and then pass it to the tree table model
-     * 
+     *
      * @param pane
      * @return
      */
@@ -95,11 +114,11 @@ public class SecurityTokenViewerModel {
 
 	    @Override
 	    protected SecurityData action(final ActionEvent e) throws Exception {
-		final Map<Class<? extends ISecurityToken>, List<UserRole>> securityTokens = new Hashtable<Class<? extends ISecurityToken>, List<UserRole>>();
+		final Map<Class<? extends ISecurityToken>, Set<UserRole>> securityTokens = new Hashtable<Class<? extends ISecurityToken>, Set<UserRole>>();
 		final List<SecurityTokenNode> tokenList = new ArrayList<SecurityTokenNode>(tokenProvider.getTopLevelSecurityTokenNodes());
 		while (tokenList.size() > 0) {
 		    final SecurityTokenNode tokenNode = tokenList.get(0);
-		    securityTokens.put(tokenNode.getToken(), controller.findUserRolesFor(tokenNode.getToken()));
+		    securityTokens.put(tokenNode.getToken(), new HashSet<UserRole>(controller.findUserRolesFor(tokenNode.getToken())));
 		    tokenList.addAll(tokenNode.getSubTokenNodes());
 		    tokenList.remove(tokenNode);
 		}
@@ -109,6 +128,7 @@ public class SecurityTokenViewerModel {
 
 	    @Override
 	    protected void postAction(final SecurityData data) {
+		currentData = data;
 		treeTableModel.loadData(data.getTokenNodes(), data.getSecurityTokens(), data.getRoles());
 		super.postAction(data);
 	    }
@@ -121,7 +141,7 @@ public class SecurityTokenViewerModel {
 
     /**
      * see {@link #createLoadAction(BlockingIndefiniteProgressLayer)}
-     * 
+     *
      * @param pane
      * @return
      */
@@ -134,7 +154,7 @@ public class SecurityTokenViewerModel {
 
     /**
      * see {@link #createSaveAction(BlockingIndefiniteProgressLayer)}
-     * 
+     *
      * @param pane
      * @return
      */
@@ -147,7 +167,7 @@ public class SecurityTokenViewerModel {
 
     /**
      * Returns the {@link ISecurityTokenController}
-     * 
+     *
      * @return
      */
     public ISecurityTokenController getController() {
@@ -156,7 +176,7 @@ public class SecurityTokenViewerModel {
 
     /**
      * Returns the tree table model
-     * 
+     *
      * @return
      */
     public SecurityTreeTableModel getTreeTableModel() {
@@ -165,25 +185,25 @@ public class SecurityTokenViewerModel {
 
     /**
      * Inner class that holds data loaded with {@link ISecurityTokenController}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     private static class SecurityData {
 
 	private final List<UserRole> roles;
-	private final Map<Class<? extends ISecurityToken>, List<UserRole>> securityTokens;
+	private final Map<Class<? extends ISecurityToken>, Set<UserRole>> securityTokens;
 	private final Set<SecurityTokenNode> tokenNodes;
 
 	/**
 	 * Instantiates the {@link SecurityData} class with list of available user roles, map that holds association between security token and it's user roles, and the hierarchy
 	 * of security token nodes.
-	 * 
+	 *
 	 * @param roles
 	 * @param securityTokens
 	 * @param tokenNodes
 	 */
-	public SecurityData(final List<UserRole> roles, final Map<Class<? extends ISecurityToken>, List<UserRole>> securityTokens, final Set<SecurityTokenNode> tokenNodes) {
+	public SecurityData(final List<UserRole> roles, final Map<Class<? extends ISecurityToken>, Set<UserRole>> securityTokens, final Set<SecurityTokenNode> tokenNodes) {
 
 	    this.roles = roles;
 	    this.securityTokens = securityTokens;
@@ -192,7 +212,7 @@ public class SecurityTokenViewerModel {
 
 	/**
 	 * Returns the list of available user roles
-	 * 
+	 *
 	 * @return
 	 */
 	public List<UserRole> getRoles() {
@@ -201,16 +221,16 @@ public class SecurityTokenViewerModel {
 
 	/**
 	 * Returns the map of associations between the security token and the list of user roles
-	 * 
+	 *
 	 * @return
 	 */
-	public Map<Class<? extends ISecurityToken>, List<UserRole>> getSecurityTokens() {
+	public Map<Class<? extends ISecurityToken>, Set<UserRole>> getSecurityTokens() {
 	    return securityTokens;
 	}
 
 	/**
 	 * Returns the hierarchy of the security token nodes
-	 * 
+	 *
 	 * @return
 	 */
 	public Set<SecurityTokenNode> getTokenNodes() {

@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.web.resources;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
@@ -99,8 +101,8 @@ public class SecurityTokenResource extends ServerResource {
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
 	try {
-	    final Map<String, List<Long>> map = (Map<String, List<Long>>)restUtil.restoreMap(envelope);
-	    final Map<Class<? extends ISecurityToken>, List<UserRole>> associations = convert(map);
+	    final Map<String, Set<Long>> map = (Map<String, Set<Long>>)restUtil.restoreMap(envelope);
+	    final Map<Class<? extends ISecurityToken>, Set<UserRole>> associations = convert(map);
 	    controller.saveSecurityToken(associations);
 	    // if there  was no exception then report a success back to client
 	    //getResponse().setEntity(restUtil.resultRepresentation(new Result("Security tokens updated successfully.")));
@@ -117,12 +119,12 @@ public class SecurityTokenResource extends ServerResource {
      *
      * @throws Exception
      */
-    private Map<Class<? extends ISecurityToken>, List<UserRole>> convert(final Map<String, List<Long>> tokenToRoleAssocations) throws Exception {
-	final Map<Class<? extends ISecurityToken>, List<UserRole>> result = new HashMap<Class<? extends ISecurityToken>, List<UserRole>>();
+    private Map<Class<? extends ISecurityToken>, Set<UserRole>> convert(final Map<String, Set<Long>> tokenToRoleAssocations) throws Exception {
+	final Map<Class<? extends ISecurityToken>, Set<UserRole>> result = new HashMap<Class<? extends ISecurityToken>, Set<UserRole>>();
 	for (final String tokenName : tokenToRoleAssocations.keySet()) {
 	    final Class<? extends ISecurityToken> token = (Class<? extends ISecurityToken>) Class.forName(tokenName);
 	    final List<UserRole> roles = userRoleDao.findByIds(tokenToRoleAssocations.get(tokenName).toArray(new Long[] {}));
-	    result.put(token, roles);
+	    result.put(token, new HashSet<UserRole>(roles));
 	}
 	return result;
     }

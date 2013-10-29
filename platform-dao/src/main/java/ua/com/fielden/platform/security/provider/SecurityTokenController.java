@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.provider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -50,10 +51,10 @@ public class SecurityTokenController implements ISecurityTokenController {
 
     @Transactional
     @Override
-    public void saveSecurityToken(final Map<Class<? extends ISecurityToken>, List<UserRole>> tokenToRoleAssocations) {
-	for (final Class<? extends ISecurityToken> token : tokenToRoleAssocations.keySet()) {
+    public void saveSecurityToken(final Map<Class<? extends ISecurityToken>, Set<UserRole>> tokenToRoleAssociations) {
+	for (final Class<? extends ISecurityToken> token : tokenToRoleAssociations.keySet()) {
 	    securityAssociationDao.removeAssociationsFor(token);
-	    final List<UserRole> roles = tokenToRoleAssocations.get(token);
+	    final Set<UserRole> roles = tokenToRoleAssociations.get(token);
 	    for (final UserRole role : roles) {
 		securityAssociationDao.save(role.getEntityFactory().newByKey(SecurityRoleAssociation.class, token, role));
 	    }

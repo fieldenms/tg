@@ -6,8 +6,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 import org.restlet.Restlet;
@@ -49,11 +51,11 @@ public class SecurityTokenManagementTestCase extends WebBasedTestCase {
 
     @Test
     public void test_can_save_changes_to_token_role_association() {
-	final List<? extends UserRole> roles = tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class);
+	final List<? extends UserRole> roles = new ArrayList<>(tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class));
 	assertEquals("Incorrect number of roles for token.", 2, roles.size());
 
-	final Map<Class<? extends ISecurityToken>, List<UserRole>> newAssociations = new HashMap<Class<? extends ISecurityToken>, List<UserRole>>();
-	newAssociations.put(FirstLevelSecurityToken1.class, new ArrayList<UserRole>(){{add(roles.get(0));}});
+	final Map<Class<? extends ISecurityToken>, Set<UserRole>> newAssociations = new HashMap<Class<? extends ISecurityToken>, Set<UserRole>>();
+	newAssociations.put(FirstLevelSecurityToken1.class, new HashSet<UserRole>(){{add(roles.get(0));}});
 	tokenControllerRao.saveSecurityToken(newAssociations);
 
 	assertEquals("Incorrect number of roles for token after update.", 1, tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class).size());
