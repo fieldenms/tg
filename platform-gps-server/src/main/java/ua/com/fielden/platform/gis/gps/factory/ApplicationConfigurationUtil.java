@@ -11,6 +11,7 @@ import ua.com.fielden.platform.gis.gps.actors.AbstractActors;
 import ua.com.fielden.platform.gis.gps.actors.AbstractAvlMachineActor;
 import ua.com.fielden.platform.gis.gps.monitoring.DefaultMachineMonitoringProvider;
 import ua.com.fielden.platform.gis.gps.monitoring.IMachineMonitoringProvider;
+import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
 
@@ -41,10 +42,10 @@ public abstract class ApplicationConfigurationUtil<T extends AbstractAvlMessage,
     }
 
     /** Creates specific {@link AbstractActors} implementation. */
-    protected abstract AbstractActors<T, M, N> createActors(final Map<String, M> machines);
+    protected abstract AbstractActors<T, M, N> createActors(final Map<String, Pair<M, T>> machines);
 
     /** Fetches all machines from the database that should be used for message processing. */
-    protected abstract Map<String, M> fetchMachinesToTrack(final Injector injector);
+    protected abstract Map<String, Pair<M, T>> fetchMachinesToTrack(final Injector injector);
 
     protected Logger getLogger() {
 	return logger;

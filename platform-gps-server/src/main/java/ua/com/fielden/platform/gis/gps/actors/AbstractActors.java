@@ -23,6 +23,7 @@ import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
 import ua.com.fielden.platform.gis.gps.AvlData;
 import ua.com.fielden.platform.gis.gps.factory.DefaultGpsHandlerFactory;
 import ua.com.fielden.platform.gis.gps.server.ServerTeltonika;
+import ua.com.fielden.platform.utils.Pair;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -48,7 +49,7 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
     private final Map<Long, ActorRef> machineActors;
     private final ActorRef machinesCounter;
 
-    private final Map<String, M> cache;
+    private final Map<String, Pair<M, T>> cache;
     private final String gpsHost;
     private final Integer gpsPort;
 
@@ -60,13 +61,13 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
      * TODO IMPORTANT: creating of a new machine is not supported yet in server runtime.
      *
      */
-    public AbstractActors(final Injector injector, final Map<String, M> cache, final String gpsHost, final Integer gpsPort) {
+    public AbstractActors(final Injector injector, final Map<String, Pair<M, T>> cache, final String gpsHost, final Integer gpsPort) {
 	this.gpsHost = gpsHost;
 	this.gpsPort = gpsPort;
 
 	this.system = ActorSystem.create("machine-actors");
 
-	this.cache = new HashMap<String, M>(cache);
+	this.cache = new HashMap<String, Pair<M, T>>(cache);
 	machinesCounter = MachinesCounterActor.create(system, this.cache.size(), this);
 
 	this.machineActors = new HashMap<>();
@@ -80,8 +81,8 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
      */
     public AbstractActors<T, M, N> startMachines(final Injector injector) {
 	logger.info("\tMachine actors starting...");
-	for (final M machine : this.cache.values()) {
-	    this.machineActors.put(machine.getId(), create(injector, system, machine, machinesCounter));
+	for (final Pair<M, T> machineAndMessage : this.cache.values()) {
+	    this.machineActors.put(machineAndMessage.getKey().getId(), create(injector, system, machineAndMessage, machinesCounter));
 	}
 	return this;
     }
@@ -94,15 +95,15 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
      * @param machine
      * @return
      */
-    protected final ActorRef create(final Injector injector, final ActorSystem system, final M machine, final ActorRef machinesCounterRef) {
+    protected final ActorRef create(final Injector injector, final ActorSystem system, final Pair<M, T> machineAndMessage, final ActorRef machinesCounterRef) {
 	final ActorRef machineActorRef = system.actorOf(new Props(new UntypedActorFactory() {
 	    private static final long serialVersionUID = -6677642334839003771L;
 
 	    @Override
 	    public UntypedActor create() {
-		return createMachineActor(injector, machine, machinesCounterRef);
+		return createMachineActor(injector, machineAndMessage, machinesCounterRef);
 	    }
-	}), createName(machine));
+	}), createName(machineAndMessage.getKey()));
 	return machineActorRef;
     }
 
@@ -113,7 +114,7 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
      * @param machine
      * @return
      */
-    protected abstract N createMachineActor(final Injector injector, final M machine, final ActorRef machinesCounterRef);
+    protected abstract N createMachineActor(final Injector injector, final Pair<M, T> machineAndMessage, final ActorRef machinesCounterRef);
 
     /**
      * Creates a machine actor name using a transliterated version of machine's key.
@@ -165,7 +166,7 @@ public abstract class AbstractActors<T extends AbstractAvlMessage, M extends Abs
 	}
     }
 
-    public Map<String, M> getCache() {
+    public Map<String, Pair<M, T>> getCache() {
 	return cache;
     }
 
