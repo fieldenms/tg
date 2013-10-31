@@ -80,6 +80,8 @@
 		</developer>
 	</developers>
 	<modules>
+		<module>platform-annotations</module>
+		<module>platform-annotation-processor</module>
 		<module>platform-application-bootstrap</module>
 		<module>platform-db-evolution</module>
 		<module>platform-dao</module>
