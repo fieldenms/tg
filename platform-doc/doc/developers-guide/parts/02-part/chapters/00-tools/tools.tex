@@ -243,62 +243,135 @@
   This is done by calling static method \texttt{add} with the class for entity object as an argument in the static initialisation block of class \texttt{ApplicationDomain}.
   Every TG-based application is provided with class \texttt{ApplicationDomain}, and the place where new entities should registered becomes obvious once \texttt{ApplicationDomain} is open in the code editor.
   
-  In order to describe the generated artefacts let's consider a concrete example based on our illustrative application \emph{collapp}.
+  In order to describe the generated artefacts let's consider a concrete example based on our illustrative application \emph{collapp} that models a fraction of the rail domain.
   Let the name of the generated master entity be \texttt{Bogie}, and let's also consider that its package is \texttt{fielden.rail} and that all options on the entity wizard have been selected (including deletion and mixin options).
   Fig.~\ref{img:ch02:00:model-actions-new-master-entity-artefacts} depicts a UML diagram that specifies all classes that are generated and their location in terms of packages and application modules.
   
-  \begin{image}{Create Master Entity/Companion Objects Artefacts.}{\label{img:ch02:00:model-actions-new-master-entity-artefacts}}    
-    \scalebox{1.0} {
+  \begin{image}{Create Master Entity/Companion Objects Artefacts.}{\label{img:ch02:00:model-actions-new-master-entity-artefacts}}
     \begin{tikzpicture}
-      \draw[very thick, dashed, color=blue!50!black, rounded corners] (-2.3, 2.5) rectangle (3.0,-1.5);
+      \draw[very thick, dashed, color=blue!30, rounded corners] (-2.3, 2.5) rectangle (3.0,-1.5);
       \node[rotate=90,color=blue!50!black] at (-2.6, 1.5) {\small coolapp-dao};
-      
-      \begin{umlpackage}[x=0,y=0]{fielden-rail} 
+      \begin{umlpackage}[x=0,y=0,fill=blue!30]{fielden-rail}
         \umlemptyclass[x=0,y=0,template={Bogie}]{BogieDao}
       \end{umlpackage}
       
-      
-      \draw[very thick, dashed, color=red!50!black, rounded corners] (3.5, 2.0) rectangle (11.0,-3.0);
-      \node[color=red!50!black] at (9.5, 2.3) {\small coolapp-pojo-bl};
-      \begin{umlpackage}[x=6.0,y=-1]{fielden-rail}       
-        \umlemptyclass[x=0,y=0,template={Bogie},type=interface]{IBogie}
-        \umlemptyclass[x=3,y=0]{Bogie}
-      \end{umlpackage}      
-      
-    \end{tikzpicture}
-    }
-  \end{image}  
+      \draw[very thick, dashed, color=green!30, rounded corners] (4.5, 2.5) rectangle (9.8,-1.5);
+      \node[rotate=90,color=green!50!black] at (4.2, 1.5) {\small coolapp-rao};
+      \begin{umlpackage}[x=7.0,y=0,fill=green!30]{fielden-rail}
+        \umlemptyclass[x=0,y=0,template={Bogie}]{BogieRao}
+      \end{umlpackage}
 
-%       \umlbasiccomponent[x=8, y=0, fill=blue!10]{coolapp-web-server}
-% 
-%       \draw[very thick, dashed, color=red!50!black, rounded corners] (1.8, -3.3) rectangle (6.2,-6.1);
-%       \node[color=red!50!black] at (4.9, -3) {\small Shared Module};
-%       \umlbasiccomponent[x=4, y=-5]{coolapp-pojo-bl}
-%       
-%       \umlnote[x=-2, y=3.5, width=5.5cm, fill=annotationbgcolor]{coolapp-dao}{\scriptsize Date Access Objects layer, which provides RDBMS-based implementation for domain controllers.}
-%       \umlnote[x=-2, y=-3.5, width=5.5cm, fill=annotationbgcolor]{coolapp-pojo-bl}{\scriptsize Defines business domain model (entities and controllers), shared between client and server tiers.}
-% 
-%       \umluniassoc{coolapp-dao}{coolapp-pojo-bl}
-%       \umluniassoc[name=w2d]{coolapp-web-server}{coolapp-dao}
-%       \umlnote[x=5, y=3.5, width=5.5cm, fill=annotationbgcolor]{w2d-1}{\scriptsize Web resources use DB driven implementation of domain controllers} 
-% 
-%       \draw[very thick, dashed, color=green!50!black, rounded corners] (-1, -8.1) rectangle (8.9,-15.2);
-%       \node[rotate=90,color=green!50!black] at (-1.3, -9.7) {\small Client Modules};
-% 
-%       \umlbasiccomponent[x=7, y=-10, fill=green!30]{coolapp-ui}
-%       \umlbasiccomponent[x=1, y=-10, fill=green!30]{coolapp-rao}
-%       \umlbasiccomponent[x=4, y=-14, fill=green!30]{coolapp-web-client}   
-% 
-%       \umlnote[x=-2, y=-6.5, width=5.5cm, fill=annotationbgcolor]{coolapp-rao}{\scriptsize Resource Access Objects, which provides HTTP-based implementation for domain controllers.}
-%       \umlnote[x=-3, y=-13.7, width=3cm, fill=annotationbgcolor]{coolapp-web-client}{\scriptsize Binds together UI and RAO implementation of domain controllers to define a web client application.}
-% 
-%       \umluniassoc[name=u2m]{coolapp-ui}{coolapp-pojo-bl}
-%       \umlnote[x=9, y=-6, width=3.5cm, fill=annotationbgcolor]{u2m-1}{\scriptsize Accessed domain model and controller via their contracts (not implementation).} 
-%       \umluniassoc{coolapp-rao}{coolapp-pojo-bl}
-%       \umluniassoc{coolapp-web-client}{coolapp-ui}
-%       \umluniassoc{coolapp-web-client}{coolapp-rao}  
+      \draw[very thick, dashed, color=red!30, rounded corners] (-2.0, -2.3) rectangle (9.5,-7.0);
+      \node[rotate=90,color=red!50!black] at (-2.3, -3.5) {\small coolapp-pojo-bl};
+      \begin{umlpackage}[x=-1.5,y=-5,fill=red!30]{fielden-rail}
+        \umlemptyclass[x=1,y=0]{Bogie}
+        \umlemptyclass[x=3.5,y=0,width=3cm,template={Bogie},type=companion]{IBogie}
+      \end{umlpackage}
+      \begin{umlpackage}[x=7.0,y=-5,fill=red!30]{fielden-rail-mixin}
+        \umlemptyclass[x=0.2,y=0,type=mixin, width=3cm]{BogieMixin}
+      \end{umlpackage}            
+
+      % associations
+      \umluniaggreg{BogieMixin}{IBogie}
+      \umluniaggreg{BogieRao}{BogieMixin}
+      \umluniaggreg[anchors=-30 and 160]{BogieDao}{BogieMixin}
+      \umlVHVinherit[anchors=-120 and 60]{BogieRao}{IBogie}
+      \umlVHVinherit{BogieDao}{IBogie}
+    \end{tikzpicture}
+  \end{image}  
   
+  The depicted diagram consists of three application modules:
+  \begin{description}
+   \item[\textbf{coolapp-pojo-bl}] -- contains class \texttt{Bogie} that defines an entity object with the same name and an interface \texttt{IBogie} that defines a corresponding companion object; both are located in the same package \texttt{fielden.rail}; the generated mixin class \texttt{BogieMixin} is placed into a subpackage \texttt{fielden.rail.mixin}; as can be understood from the diagram, it aggregates the companion object;
+   \item[\textbf{coolapp-rao}] -- contains class \texttt{BogieRao} that provides RAO implementation for the companion object; it also aggregates the mixin class;
+   \item[\textbf{coolapp-dao}] -- contains class \texttt{BogieDao} that provides DAO implementation for the companion object; it also aggregates the mixin class.
+  \end{description}
+
+  The concept of a mixin is probably the most complex -- all other aspects of a domain entity implementation has been covered in previous parts.
+  Thus, it prompts to address mixins with greater care.
+  Please recall that neither module \texttt{coolapp-pojo-bl} is aware of modules \texttt{coolapp-rao} and \texttt{coolapp-dao} nor modules \texttt{coolapp-rao} and \texttt{coolapp-dao} are aware of each other.
+  Thus, there is a clean separation between the RAO and DAO implementations.  
+  The core functionality that is required by any companion object is implemented by classes \texttt{CommonEntityDao} and \texttt{CommonEntityRao}, which are extended by corresponding companion DAO and RAO implementations (\texttt{BogieDao} and \texttt{BogieRao} in this case).  
+  However, both these implementations must adhere to the contract defined by the companion object (\texttt{IBogie} in this case).
   
+  When a new method is defined at the companion object then both \texttt{BogieDao} and \texttt{BogieRao} must implement it.
+  Often, implementation for domain specific methods that are defied as part of companion objects are identical between the RAO and DAO counterparts.
+  So, it only makes sense to have a single implementation that could be reused by both classes.  
+  Let's consider that companion object \texttt{IBogie} defines method \texttt{lastMovement} as per listing~\ref{lst:ch02:00:IBogie}, and let's also consider that this method can be implemented identically for RAO and DAO.
+  This means that both \texttt{BogieDao} and \texttt{BogieRao} would have code duplication that is very much error prone as someone could later update implementation only in DAO, but not in RAO or wise versa.
+  
+   \lstset{language=Java,
+	  escapechar=\%,
+	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+  \begin{code}{\texttt{IBogie} definition.}{\label{lst:ch02:00:IBogie}}{codebgcolor}
+    \begin{lstlisting}
+public interface IBogie extends IEntityDao<Bogie> {
+    BogieMovement lastMovement(final Bogie bogie);
+}
+    \end{lstlisting}
+  \end{code}
+  
+  This is where the concept of a mixin comes handy.
+  Instead of duplicating the code, class \texttt{BogieMixin} gets created in the \texttt{coolapp-pojo-bl} module, so that both  \texttt{BogieDao} and \texttt{BogieRao} could reuse it.
+  This is a very simple class with no special inheritance requirements.
+  Its only concern is to provide implementation for the required methods (\texttt{lastMovement} in this case).
+  
+  As can be observed from method definition, its return type is \texttt{BogieMovement}, which identifies another domain entity with its companion \texttt{IBogieMovement}\footnote{In order to keep this example concise we won't present any source for entity \texttt{BogieMovement} -- strictly speaking this is not necessary as it would be very similar to what we're currently discussing.}.
+  This means that the implementation of method \texttt{lastMovement} depends on this domain entity (both entity and companion object).
+  A special interest here is in the companion object \texttt{IBogieMovement}, which is required in order to make requests about the movement data.
+  This means that our mixin would need to aggregates an instance of \texttt{IBogieMovement}.
+  
+  Listing~\ref{lst:ch02:00:BogieMixin-def} shows the definition for \texttt{BogieMixin}, but without the implementation for method \texttt{lastMovement}.
+  As can be observed it contains two fields \texttt{coBogie} and \texttt{coBogieMovement} that get assigned in the constructor~(lines 9--10).
+  The constructor can be modified to accept as many arguments as required to provide the necessary functionality.
+  Please note that both the fields and arguments are defined in terms of companion object types, which are interfaces.
+  The relevant DAO or RAO implementations are provided at the time of mixin construction as discussed later.
+  
+  Strictly speaking \texttt{BogieMixin} does not require \texttt{coBogie} as only \texttt{coBogieMovement} is used for implementing method \texttt{lastMovement}.
+  However, it is a recommend practice to provide mixins with corresponding companion objects as in most cases they do get used, and not providing them early would require later modification to both DAO and RAO implementations in order to pass in an additional constructor argument.
+  
+  %// prefix co stands for Companion Object followed by the entity name
+    \begin{code}{\texttt{BogieMixin} definition.}{\label{lst:ch02:00:BogieMixin-def}}{codebgcolor}
+    \begin{lstlisting}
+public class BogieMixin {
+
+    private final IBogie coBogie; 
+    private final IBogieMovement coBogieMovement; 
+
+    public BogieMixin(
+           final IBogie coBogie,
+           final IBogieMovement coBogieMovement) {
+      this.coBogie = coBogie;
+      this.coBogieMovement = coBogieMovement;
+    }
+    
+    public BogieMovement lastMovement(final Bogie bogie) { ... }
+    
+}
+    \end{lstlisting}
+  \end{code}
+  
+  Listing~\ref{lst:ch02:00:BogieMixin-impl} provides a possible implementation for method \texttt{lastMovement}.
+  
+  \begin{code}{Implementation of method \texttt{lastMovement}.}{\label{lst:ch02:00:BogieMixin-impl}}{codebgcolor}
+  \begin{lstlisting}
+...
+public BogieMovement lastMovement(final Bogie bogie) { 
+  final EntityResultQueryModel<BogieMovement> select = 
+	      select(BogieMovement.class).
+	      where().
+		prop("bogie").eq().val(bogie).and().
+		notExists(
+		  select(BogieMovement.class).where().
+		  prop("bogie").eq().extProp("bogie").and().
+		  prop("inDate").gt().extProp("inDate").model()).
+	      model();
+  return coBogieMovement.getEntity(
+         from(select).with(fetchAll(BogieMovement.class)).model());    
+}
+  ...
+  \end{lstlisting}
+\end{code}
   
   \subsection{Creation of Main Menu Items and Entity Centres}
   
