@@ -157,32 +157,7 @@
   It is most natural for this action to be invoked on a package within the pojo-bl application module where an intended entity object should reside.
   This way the plugin automatically populates the package entry as illustrated in Fig.~\ref{img:ch02:00:model-actions-new-master-entity-01}.
   Otherwise, the package should be specified.
-  
-  Most of the options in this wizard are described in Fig.~\ref{img:ch02:00:model-actions-new-master-entity-01}.
-  However, the provided checkbox options require a little bit more explanation:
-  \begin{description}
-   \item[\textbf{should have property 'desc'}] -- 
-   specifies whether entity object should have the description property; most entities requires or may use such property as comes at no cost; 
-   presence or absence of property \texttt{desc} is controlled via annotation \texttt{@DescTitle}; 
-   if this annotation is not declared as part of entity object definition then property \texttt{desc} is recognised by the platform as absent;
 
-   \item[\textbf{should be persistent}] -- 
-   if a synthesised or a functional entity needs to be created then this option should be unchecked; such entities do not usually have a persistent state; 
-   however, if a persistent entity needs to be created then this option should be left on; from our experience the number of persistent entities is significantly greater than that of synthesised or a functional entities, thus by default this option if on;
-
-   \item[\textbf{use mixin for common RAO/DAO code}] -- 
-   often methods in RAO and DAO that implement companion object contract have exactly the same implementation\footnote{This happens mainly due to the universal execution model for CRUD operations (including EQL queries) that works seamlessly at both the client and server sides.)}; 
-   in order to avoid code duplication to improve system maintainability, it makes sense to place the common for RAO and DAO methods into a single class that could be than reused in both places; 
-   the platform provides a convenient support for this in a form of a \emph{\href{http://en.wikipedia.org/wiki/Mixin}{mixin}} -- a class that should contains common methods and has a companion object (an interface) as its constructor argument; such mixin can be naturally mixed into both RAO and DAO implementations by means of composition; 
-   if this option is selected then a mixin class would get generated and integrated into the RAO and DAO classes that also get generated as part of entity object creation;
-
-   \item[\textbf{support deletion}] -- 
-   many, especially persistent entities, may require deletion support; 
-   by default deletion is disabled at the base level of the common companion object ancestor that is provided by the platform, and needs to be enabled explicitly by overriding corresponding methods; 
-   in most cases deletion is safe due to automatic management of dependencies between entities, but due to severity of such action by default it is disabled; 
-   this option should be selected if support for deletion is required for the entity being created.
-  \end{description}
- 
   \begin{image}{Create Master Entity/Companion Objects.}{\label{img:ch02:00:model-actions-new-master-entity-01}}
     \begin{tikzpicture}[remember picture, >=latex', note/.style={rectangle callout, rounded corners = 1pt, fill=annotationbgcolor, drop shadow}]
       \pgftext{%
@@ -224,7 +199,7 @@
 	\begin{minipage}{4cm}
 	\tiny
 	\textbf{Superclass}\newline
-	All entity objects are descendant of class \texttt{AbstractEntity}.
+	All entity objects are descendants of class \texttt{AbstractEntity}.
 	The assumed key type for master entity is \texttt{String} with \texttt{Integer} as an option that could be specified one classes are created.	
 	\end{minipage}
       };      
@@ -239,8 +214,33 @@
 	\end{minipage}
       };
     \end{tikzpicture}  
-  \end{image}
+  \end{image}  
   
+  Most of the options in this wizard are described in Fig.~\ref{img:ch02:00:model-actions-new-master-entity-01}.
+  However, the provided checkbox options require a little bit more explanation.
+  \begin{description}
+   \item[\textbf{should have property 'desc'}] -- 
+   specifies whether entity object should have the description property; most entities requires or may use such property as comes at no cost; 
+   presence or absence of property \texttt{desc} is controlled via annotation \texttt{@DescTitle}; 
+   if this annotation is not declared as part of entity object definition then property \texttt{desc} is recognised by the platform as absent;
+
+   \item[\textbf{should be persistent}] -- 
+   if a synthesised or a functional entity needs to be created then this option should be unchecked; such entities do not usually have a persistent state; 
+   however, if a persistent entity needs to be created then this option should be left on; from our experience the number of persistent entities is significantly greater than that of synthesised or a functional entities, thus by default this option if on;
+
+   \item[\textbf{use mixin for common RAO/DAO code}] -- 
+   often methods in RAO and DAO that implement companion object contract have exactly the same implementation\footnote{This happens mainly due to the universal execution model for CRUD operations (including EQL queries) that works seamlessly at both the client and server sides.)}; 
+   in order to avoid code duplication to improve system maintainability, it makes sense to place the common for RAO and DAO methods into a single class that could be than reused in both places; 
+   the platform provides a convenient support for this in a form of a \emph{\href{http://en.wikipedia.org/wiki/Mixin}{mixin}} -- a class that should contains common methods and has a companion object (an interface) as its constructor argument; such mixin can be naturally mixed into both RAO and DAO implementations by means of composition; 
+   if this option is selected then a mixin class would get generated and integrated into the RAO and DAO classes that also get generated as part of entity object creation;
+
+   \item[\textbf{support deletion}] -- 
+   many, especially persistent entities, may require deletion support; 
+   by default deletion is disabled at the base level of the common companion object ancestor that is provided by the platform, and needs to be enabled explicitly by overriding corresponding methods; 
+   in most cases deletion is safe due to automatic management of dependencies between entities, but due to severity of such action by default it is disabled; 
+   this option should be selected if support for deletion is required for the entity being created.
+  \end{description}
+ 
   Once all the required inputs are populated, button \emph{Finish} becomes enabled.
   Pressing it leads to the generation of a number of classes and interfaces that together represent an entity object, a companion object, RAO and DAO implementations for a companion object, and a mixin class (depending on options selected).
   At the end, the wizard produces a warning advising the developer to register the generated entity type as part of the application domain.
@@ -404,10 +404,6 @@ public BogieMovement lastMovement(final Bogie bogie) {
   Such integration is basically identical for both RAO and DAO, and consists of two basic steps -- mixin instantiation and invocation of its methods for reuse.
   Listings~\ref{lst:ch02:00:BogieDao-mixin} and~\ref{lst:ch02:00:BogieRao-mixin} outline these steps and provide relevant code annotations.
   
-  It is worth mentioning that due to dependency of mixin \texttt{BogieMixin} on companion object \texttt{IBogieMovement}, there is a need to provide an instance of RAO implementation of \texttt{IBogieMovement} into \texttt{BogieRao} and DAO implementation into \texttt{BogieDao}.
-  Fortunately, passing of constructor arguments that are companion objects is trivial due to inherent support of the \emph{injection of control} mechanism by the platform.
-  The only requirement for the right instance of \texttt{IBogieMovement} to be injected into \texttt{BogieRao} and \texttt{BogieDao} is to annotate their constructors with annotation \texttt{@Inject} and declare an argument of type \texttt{IBogieMovement}.
-  
   \begin{code}{Mixin reuse in \texttt{BogieDao}.}{\label{lst:ch02:00:BogieDao-mixin}}{codebgcolor}
   \begin{lstlisting}
 @EntityType(Bogie.class)
@@ -425,6 +421,20 @@ public class BogieDao extends CommonEntityDao<Bogie> implements IBogie {
   public BogieMovement lastMovement(final Bogie bogie) { 
     return mixin.lastMovement(bogie);%\tikzref{mixin-reuse}{0.1cm}{0.1cm}%
   }
+  
+  @Override
+  @SessionRequired
+  public void delete(final Bogie entity) {
+    defaultDelete(entity);
+  }
+                                           %\tikzref{support-deletion}{0.0cm}{0.0cm}%
+  @Override
+  @SessionRequired
+  public void delete(
+                 final EntityResultQueryModel<Bogie> model, 
+                 final Map<String, Object> paramValues) {
+    defaultDelete(model, paramValues);
+  }  
 }
   \end{lstlisting}
   \tikznote{mixin-declaration-annotation}{mixin-declaration}{3.8cm}{-0.2cm}{4cm}{Mixin declaration}{
@@ -439,6 +449,11 @@ public class BogieDao extends CommonEntityDao<Bogie> implements IBogie {
   \tikznote{mixin-reuse-annotation}{mixin-reuse}{3.8cm}{-0.5cm}{4cm}{Mixin reuse}{
     Mixin reuse boils down to a simple invocation of method \texttt{lastMovement} that is implemented by the mixin.
   }
+  \tikznote{support-deletion-annotation}{support-deletion}{5.0cm}{-1.0cm}{4cm}{Support deletion}{
+    Selecting support deletion option leads to generation of two methods in DAO that override the default implementation inherited from CommonEntityDao.
+    The default implementation throws \texttt{UnsupportedOperation} exception.
+    The RAO implementation does not require such modification as its default deletion support delegates request to a corresponding entity web resource, which in turn delegates the call to DAO.
+  }  
 \end{code}  
   
   \begin{code}{Mixin reuse in \texttt{BogieRao}.}{\label{lst:ch02:00:BogieRao-mixin}}{codebgcolor}
@@ -464,7 +479,7 @@ public class BogieRao extends CommonEntityRao<Bogie> implements IBogie {
   \tikznote{mixin-declaration-annotation}{mixin-declaration}{3.8cm}{0.0cm}{4cm}{Mixin declaration}{
     An immutable instance of mixin, which is initialised in the constructor.
   }
-  \tikznote{co-argument-annotation}{co-argument}{2.0cm}{1.0cm}{4cm}{\texttt{IBogieMovement} argument}{
+  \tikznote{co-argument-annotation}{co-argument}{0.5cm}{2.0cm}{4cm}{\texttt{IBogieMovement} argument}{
     An instance of \texttt{IBogieMovement} as concrete class \texttt{BogieMovementRao} is provided automatically by the injector.
   }
   \tikznote{mixin-instantiation-annotation}{mixin-instantiation}{3.8cm}{-0.5cm}{4cm}{Mixin instantiation}{
@@ -475,10 +490,103 @@ public class BogieRao extends CommonEntityRao<Bogie> implements IBogie {
   }
 \end{code}  
 
+  It is worth mentioning that due to dependency of mixin \texttt{BogieMixin} on companion object \texttt{IBogieMovement}, there is a need to provide an instance of RAO implementation of \texttt{IBogieMovement} into \texttt{BogieRao} and DAO implementation into \texttt{BogieDao}.
+  Fortunately, passing of constructor arguments that are companion objects is trivial due to inherent support of the \emph{injection of control} mechanism by the platform.
+  The only requirement for the right instance of \texttt{IBogieMovement} to be injected into \texttt{BogieRao} and \texttt{BogieDao} is to annotate their constructors with annotation \texttt{@Inject} and declare an argument of type \texttt{IBogieMovement}.
+
   Just as a reminder from the previous part of the book, please recall that constructor argument \texttt{restUtil} in \texttt{BogieRao} and argument \texttt{filter} in \texttt{BogieDao} are standard for all RAO and DAO implementations of companion objects.
   This concludes the discussion of action \emph{Create Master Entity/Companion Objects\ldots} and the artefacts it generates.
  
+
   \subsection{Creation of Entities that Model One-2-One Association}  
+ 
+  All supported by the platform kinds of associations are discussed in great detail section~\ref{ch01:02}.
+  In essence all domain entities regardless of whether they're master or subordinate have almost identical structure -- all have an entity object, a companion object, its RAO and DAO implementation, need to be registered with class \texttt{ApplicationDomain} etc.
+  
+  The most significant difference is in the business key.  
+  For one-2-one (and one-2-many for that matter) entity the type of the master entity becomes its business key type.
+  Entities that model one-2-one association are designed to be used for composition rather than aggregation.
+  This means that they represent an integral part of the master entity -- if the master entity ceases to exist then the associated with it one-2-one (and one-2-many for that matter) entities should also cease to exist.
+  
+  Due to compositional relationship between master and one-2-one entities, the plugin requires to specify the master entity at the time of one-2-one entity creation.
+  The master entity can be provided once the creation dialog is up.
+  However, it is only natural to invoke one-2-one entity creation upon an entity object class in \emph{Package Explorer}.
+  This way, the plugin automatically fills in the \emph{Master Entity Type} entry as well as the package name.
+  As explained in section~\ref{ch01:02}, the role of the maser entity for a one-2-one entity (or one-2-many for that matter) can be played by any kind of entities -- not just the actual master entities as per previous section.
+  Other than requirement to enter master entity, the prompts are identical to the dialog for a master entity creation.
+  
+  Fig.~\ref{img:ch02:00:model-actions-new-one-2-one-entity} depicts the dialog presented once the action was invoked on class \texttt{Bogie}, which was selected to serve as a master entity for a new one-2-one entity being created.
+  All of the input prompts are annotated with relevant descriptions that explain their purpose.  
+ 
+  
+  \begin{image}{Create One-2-One Entity/Companion Objects.}{\label{img:ch02:00:model-actions-new-one-2-one-entity}}
+      \begin{tikzpicture}[remember picture, >=latex', note/.style={rectangle callout, rounded corners = 1pt, fill=annotationbgcolor, drop shadow}]
+	\pgftext{%
+	    \includegraphics[width=0.6\textwidth]{parts/02-part/chapters/00-tools/images/01-02-new-one-2-one-entity.png}
+	}%
+
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(-4,2.2)}] at (-6.5,3.5) 
+	{
+	  \begin{minipage}{3cm}
+	  \tiny
+	  \textbf{Source folder}\newline
+	  Regardless of where the context menu is invoked, the source folder is identified automatically and always points to the pojo-bl module of the application.
+	  \end{minipage}
+	};
+	
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(-4.4,1.5)}] at (-6.5,0.5) 
+	{
+	  \begin{minipage}{3cm}
+	  \tiny
+	  \textbf{Package name}\newline
+	  If the action is selected from a context menu that was invoked on a package then the package name gets populated automatically.
+	  Otherwise it needs to be specified manually or selected for a dialog that is accessible via button \emph{Browse}.
+	  \end{minipage}
+	};
+	
+
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(0.0,1.2)}] at (3.0,3.2) 
+	{
+	  \begin{minipage}{3cm}
+	  \tiny
+	  \textbf{Master Entity Type}\newline
+	  This is a name of the class representing an entity object that should be used as a master to the one-2-one class being created.
+	  \end{minipage}
+	};      
+	
+	
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(0.0,0.7)}] at (5.0,-0.1) 
+	{
+	  \begin{minipage}{3.5cm}
+	  \tiny
+	  \textbf{Name}\newline
+	  This is a class name that should adhere to camel case naming convention.
+	  It is used as the name for a class representing an entity object.
+	  \end{minipage}
+	};      
+
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(0.0,0.0)}] at (2.0,-2.1) 
+	{
+	  \begin{minipage}{4cm}
+	  \tiny
+	  \textbf{Superclass}\newline
+	  All entity objects are descendants of class \texttt{AbstractEntity}.
+	  The key for one-2-one entity is always the type of the specified master entity.
+	  In this case, class \texttt{Bogie} becomes entity's key.
+	  \end{minipage}
+	};      
+
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(-4.4,-1.0)}] at (-6.5,-2) 
+	{
+	  \begin{minipage}{3cm}
+	  \tiny
+	  \textbf{Options}\newline
+	  Provides support for customising an entity being generated.
+	  More details about each option are outlined in the text.
+	  \end{minipage}
+	};
+      \end{tikzpicture}  
+    \end{image}  
   
   \subsection{Creation of Entities that Model One-2-Many Association}  
   
