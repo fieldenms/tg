@@ -5,7 +5,7 @@
   The platform can be used for developing software using any IDE for Java such as IntelliJ IDEA or Netbeans.
   However, the recommended IDE for this is Eclipse due to provided set of plugins developed specifically to facilitate TG-based development.
   
-\section{Eclipse Plugins}
+\section{Overview of Eclipse Plugins}
 
   The main features that are provided by the developed plugin pertain to automating creation of fractal objects, main menu items and UI.
   The provided automation is easily comparable to that provided by inbuilt Delphi features such as creation of forms and data modules.
@@ -132,9 +132,11 @@
   Some of the actions should be invoked on specific classes or packages, and generate associated with them artefacts without any additional parameters.
   However, other actions bring up wizards that require specific inputs, and only once those inputs are populated, can be used to generated associated artefacts.
   Some of the inputs get populated based on the invocation context (e.g. package name can be populated if the context menu was invoked on a package).
-  The following subsections delves more into the details about specific plugin actions.
+  The following sections delves more into the details about specific plugin actions.
 
-  \subsection{Creation of Entity Objects}
+\section{Creation of Entity Objects}
+  
+  This section covers the first group of actions that are designed to assist developers in creation of entity objects that are the bread and butter of the domain modelling with the platform.
 
   As has been discussed in section~\ref{ch01:02} all entity objects can be distilled down to three principle kinds:
   
@@ -147,6 +149,8 @@
   In reality the situation could get a lot more complex as any of the one-2-one and one-2-many kinds may act in turn as master entities to other subordinate types. 
   This is, however, only natural if the domain inherently requires such complexity.  
   Thus, there are three actions -- one for creating each kind of an entity object.
+  
+  \subsection{Creation of Master Entities}
   
   The master entity together with its companion object can be created using action \emph{Create Master Entity/Companion Objects\ldots}.
   Fig.~\ref{img:ch02:00:model-actions-new-master-entity-01} depicts a wizard window that gets displayed upon action invocation.
@@ -316,10 +320,10 @@ public interface IBogie extends IEntityDao<Bogie> {
   This is a very simple class with no special inheritance requirements.
   Its only concern is to provide implementation for the required methods (\texttt{lastMovement} in this case).
   
-  As can be observed from method definition, its return type is \texttt{BogieMovement}, which identifies another domain entity with its companion \texttt{IBogieMovement}\footnote{In order to keep this example concise we won't present any source for entity \texttt{BogieMovement} -- strictly speaking this is not necessary as it would be very similar to what we're currently discussing.}.
+  As can be observed from the method definition, its return type is \texttt{BogieMovement}, which identifies another domain entity with its companion \texttt{IBogieMovement}\footnote{In order to keep this example concise we won't present any source for entity \texttt{BogieMovement} -- strictly speaking this is not necessary as it would be very similar to what we're currently discussing.}.
   This means that the implementation of method \texttt{lastMovement} depends on this domain entity (both entity and companion object).
   A special interest here is in the companion object \texttt{IBogieMovement}, which is required in order to make requests about the movement data.
-  This means that our mixin would need to aggregates an instance of \texttt{IBogieMovement}.
+  This means that our mixin would need to aggregate an instance of \texttt{IBogieMovement}.
   
   Listing~\ref{lst:ch02:00:BogieMixin-def} shows the definition for \texttt{BogieMixin}, but without the implementation for method \texttt{lastMovement}.
   As can be observed it contains two fields \texttt{coBogie} and \texttt{coBogieMovement} that get assigned in the constructor~(lines 9--10).
@@ -329,17 +333,18 @@ public interface IBogie extends IEntityDao<Bogie> {
   
   Strictly speaking \texttt{BogieMixin} does not require \texttt{coBogie} as only \texttt{coBogieMovement} is used for implementing method \texttt{lastMovement}.
   However, it is a recommend practice to provide mixins with corresponding companion objects as in most cases they do get used, and not providing them early would require later modification to both DAO and RAO implementations in order to pass in an additional constructor argument.
+  Also, providing them early does not introduce any difficulty and does not inflict any additional complexity.
   
   %// prefix co stands for Companion Object followed by the entity name
     \begin{code}{\texttt{BogieMixin} definition.}{\label{lst:ch02:00:BogieMixin-def}}{codebgcolor}
     \begin{lstlisting}
 public class BogieMixin {
 
-    private final IBogie coBogie; 
+    private final IBogie coBogie; %\tikzref{fields-definitions}{0.5cm}{0.0cm}%
     private final IBogieMovement coBogieMovement; 
 
     public BogieMixin(
-           final IBogie coBogie,
+           final IBogie coBogie, %\tikzref{argument-definitions}{0.5cm}{0.0cm}%
            final IBogieMovement coBogieMovement) {
       this.coBogie = coBogie;
       this.coBogieMovement = coBogieMovement;
@@ -349,9 +354,21 @@ public class BogieMixin {
     
 }
     \end{lstlisting}
+    \tikznote{fields-definitions_annotation}{fields-definitions}{5cm}{1.0cm}{5cm}{Field definitions}{
+           Both fields are immutable and defined as interface values that represent respective companion objects.
+           
+           The name of the fields follow a naming convention whereby the prefix \texttt{co} stends for Companion Object, followed by the entity name.
+    }
+    \tikznote{argument-definitions_annotation}{argument-definitions}{5cm}{0.5cm}{4cm}{Argument definitions}{
+           Argument definitions resemble the definitions of the fields that they initialise.
+    }        
   \end{code}
   
   Listing~\ref{lst:ch02:00:BogieMixin-impl} provides a possible implementation for method \texttt{lastMovement}.
+  First, a select model is constructed that declares filter conditions for bogie movements.
+  Then this model is provided with an object graph population model (aka fetch model) and used to get a single \texttt{BogieMovement} entity that represents the last movement of the specified bogie.
+  The fetch model should be specific to the usecase needs where the use of method \texttt{lastMovement} is intended.
+  It can be easily foreseen that in order to provide more flexibility, a fetch model could be provided as either a method or a constructor argument.
   
   \begin{code}{Implementation of method \texttt{lastMovement}.}{\label{lst:ch02:00:BogieMixin-impl}}{codebgcolor}
   \begin{lstlisting}
@@ -360,21 +377,113 @@ public BogieMovement lastMovement(final Bogie bogie) {
   final EntityResultQueryModel<BogieMovement> select = 
 	      select(BogieMovement.class).
 	      where().
-		prop("bogie").eq().val(bogie).and().
+		prop("bogie").eq().val(bogie).and(). %\tikzref{concrete-bogie}{0.1cm}{0.1cm}%
 		notExists(
-		  select(BogieMovement.class).where().
-		  prop("bogie").eq().extProp("bogie").and().
+		  select(BogieMovement.class).where(). 
+		  prop("bogie").eq().extProp("bogie").and(). %\tikzref{latest-movement}{0.1cm}{0.2cm}%
 		  prop("inDate").gt().extProp("inDate").model()).
 	      model();
-  return coBogieMovement.getEntity(
+  return coBogieMovement.getEntity( %\tikzref{fetch-model}{-0.5cm}{-0.3cm}%
          from(select).with(fetchAll(BogieMovement.class)).model());    
 }
   ...
   \end{lstlisting}
+  \tikznote{concrete-bogie-annotation}{concrete-bogie}{2.8cm}{1.7cm}{4cm}{Where condition 1}{
+	  Consider only movements for the specified bogie.
+  }
+  \tikznote{latest-movement-annotation}{latest-movement}{3.0cm}{1.0cm}{3cm}{Where condition 2}{
+	  Consider only those movements that none other exists, which were performed later.
+	  This effectively means the condition to select the latest movement.
+  }
+  \tikznote{fetch-model-annotation}{fetch-model}{3.8cm}{-0.9cm}{4cm}{Fetch model}{
+	  The fetch model declares that all non-collectional properties of the resultant \texttt{BogieMovement} instance are to be fetched.
+  }    
 \end{code}
+ 
+  Once the mixin is implemented it needs to be integrated into both RAO and DAO implementations of the companion object.
+  Such integration is basically identical for both RAO and DAO, and consists of two basic steps -- mixin instantiation and invocation of its methods for reuse.
+  Listings~\ref{lst:ch02:00:BogieDao-mixin} and~\ref{lst:ch02:00:BogieRao-mixin} outline these steps and provide relevant code annotations.
   
-  \subsection{Creation of Main Menu Items and Entity Centres}
+  It is worth mentioning that due to dependency of mixin \texttt{BogieMixin} on companion object \texttt{IBogieMovement}, there is a need to provide an instance of RAO implementation of \texttt{IBogieMovement} into \texttt{BogieRao} and DAO implementation into \texttt{BogieDao}.
+  Fortunately, passing of constructor arguments that are companion objects is trivial due to inherent support of the \emph{injection of control} mechanism by the platform.
+  The only requirement for the right instance of \texttt{IBogieMovement} to be injected into \texttt{BogieRao} and \texttt{BogieDao} is to annotate their constructors with annotation \texttt{@Inject} and declare an argument of type \texttt{IBogieMovement}.
+  
+  \begin{code}{Mixin reuse in \texttt{BogieDao}.}{\label{lst:ch02:00:BogieDao-mixin}}{codebgcolor}
+  \begin{lstlisting}
+@EntityType(Bogie.class)
+public class BogieDao extends CommonEntityDao<Bogie> implements IBogie {
+      
+  private final BogieMixin mixin;%\tikzref{mixin-declaration}{0.1cm}{0.1cm}%
+    
+  @Inject
+  protected BogieDao(final IFilter filter, final IBogieMovement coBogieMovement) {%\tikzref{co-argument}{-2.0cm}{0.2cm}%
+    super(filter);
+    mixin = new BogieMixin(this, coBogieMovement);%\tikzref{mixin-instantiation}{0.1cm}{0.1cm}%
+  }
+
+  @Override
+  public BogieMovement lastMovement(final Bogie bogie) { 
+    return mixin.lastMovement(bogie);%\tikzref{mixin-reuse}{0.1cm}{0.1cm}%
+  }
+}
+  \end{lstlisting}
+  \tikznote{mixin-declaration-annotation}{mixin-declaration}{3.8cm}{-0.2cm}{4cm}{Mixin declaration}{
+    An immutable instance of mixin, which is initialised in the constructor.
+  }
+  \tikznote{co-argument-annotation}{co-argument}{2.0cm}{2.0cm}{4cm}{\texttt{IBogieMovement} argument}{
+    An instance of \texttt{IBogieMovement} as concrete class \texttt{BogieMovementRao} is provided automatically by the injector.
+  }
+  \tikznote{mixin-instantiation-annotation}{mixin-instantiation}{3.8cm}{-0.5cm}{4cm}{Mixin instantiation}{
+    Mixin is instantiated as an ordinary object using operation \texttt{new} and passing in the expected constructor arguments.
+  }
+  \tikznote{mixin-reuse-annotation}{mixin-reuse}{3.8cm}{-0.5cm}{4cm}{Mixin reuse}{
+    Mixin reuse boils down to a simple invocation of method \texttt{lastMovement} that is implemented by the mixin.
+  }
+\end{code}  
+  
+  \begin{code}{Mixin reuse in \texttt{BogieRao}.}{\label{lst:ch02:00:BogieRao-mixin}}{codebgcolor}
+  \begin{lstlisting}
+@EntityType(Bogie.class)
+public class BogieRao extends CommonEntityRao<Bogie> implements IBogie {
+  
+  private final BogieMixin mixin;%\tikzref{mixin-declaration}{0.1cm}{0.1cm}%
+  
+  @Inject
+  public BogieRao(final RestClientUtil restUtil, final IBogieMovement coBogieMovement) {%\tikzref{co-argument}{-2.0cm}{0.2cm}%
+    super(restUtil);
+    mixin = new BogieMixin(this, coBogieMovement);%\tikzref{mixin-instantiation}{0.1cm}{0.1cm}%
+  }
+
+  @Override
+  public BogieMovement lastMovement(final Bogie bogie) { 
+    return mixin.lastMovement(bogie);%\tikzref{mixin-reuse}{0.1cm}{0.1cm}%
+  }
+}
+  
+  \end{lstlisting}
+  \tikznote{mixin-declaration-annotation}{mixin-declaration}{3.8cm}{0.0cm}{4cm}{Mixin declaration}{
+    An immutable instance of mixin, which is initialised in the constructor.
+  }
+  \tikznote{co-argument-annotation}{co-argument}{2.0cm}{1.0cm}{4cm}{\texttt{IBogieMovement} argument}{
+    An instance of \texttt{IBogieMovement} as concrete class \texttt{BogieMovementRao} is provided automatically by the injector.
+  }
+  \tikznote{mixin-instantiation-annotation}{mixin-instantiation}{3.8cm}{-0.5cm}{4cm}{Mixin instantiation}{
+    Mixin is instantiated as an ordinary object using operation \texttt{new} and passing in the expected constructor arguments.
+  }
+  \tikznote{mixin-reuse-annotation}{mixin-reuse}{3.8cm}{-0.5cm}{4cm}{Mixin reuse}{
+    Mixin reuse boils down to a simple invocation of method \texttt{lastMovement} that is implemented by the mixin.
+  }
+\end{code}  
+
+  Just as a reminder from the previous part of the book, please recall that constructor argument \texttt{restUtil} in \texttt{BogieRao} and argument \texttt{filter} in \texttt{BogieDao} are standard for all RAO and DAO implementations of companion objects.
+  This concludes the discussion of action \emph{Create Master Entity/Companion Objects\ldots} and the artefacts it generates.
+ 
+  \subsection{Creation of Entities that Model One-2-One Association}  
+  
+  \subsection{Creation of Entities that Model One-2-Many Association}  
+  
+\section{Creation of Main Menu Items and Entity Centres}  
   
   
-  \subsection{Creation Entity Masters}
+\section{Creation Entity Masters}
   
