@@ -51,6 +51,18 @@ public class SecurityTokenControllerRao implements ISecurityTokenController {
 	return userRoleDao.findAll();
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations() {
+	final Request request = restUtil.newRequest(Method.GET, restUtil.getBaseUri(getDefaultWebResourceType()) + "/tokenroleassociation");
+	final Pair<Response, Result> result = restUtil.process(request);
+	if (!result.getValue().isSuccessful()) {
+	    throw result.getValue();
+	}
+	return (Map<Class<? extends ISecurityToken>, Set<UserRole>>) result.getValue().getInstance();
+    }
+
+    @SuppressWarnings("unchecked")
     @Override
     public List<UserRole> findUserRolesFor(final Class<? extends ISecurityToken> securityTokenClass) {
 	final Request request = restUtil.newRequest(Method.GET, restUtil.getBaseUri(getDefaultWebResourceType()) + "/securitytokens/" + securityTokenClass.getName() + "/useroles");

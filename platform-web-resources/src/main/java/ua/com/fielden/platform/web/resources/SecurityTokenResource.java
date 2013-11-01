@@ -64,7 +64,6 @@ public class SecurityTokenResource extends ServerResource {
 	} catch (final ClassNotFoundException e) {
 	    throw new IllegalStateException("Token " + tokenName + " could not be found.");
 	}
-
     }
 
     ///////////////////////////////////////////////////////////////////

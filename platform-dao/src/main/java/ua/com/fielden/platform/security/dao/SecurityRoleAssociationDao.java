@@ -1,7 +1,16 @@
 package ua.com.fielden.platform.security.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
@@ -12,14 +21,10 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * DbDriven implementation of the {@link ISecurityRoleAssociationDao}
@@ -44,6 +49,27 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).where().prop("securityToken").eq().val(securityToken.getName()).model();
 	final OrderingModel orderBy = orderBy().prop("role").asc().model();
 	return getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).with(orderBy).model());
+    }
+
+    @Override
+    @SessionRequired
+    public Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations() {
+
+	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
+
+	final List<SecurityRoleAssociation> associations = getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).model());
+
+	final Map<Class<? extends ISecurityToken>, Set<UserRole>> associationMap = new HashMap<>();
+	for(final SecurityRoleAssociation association : associations) {
+	    Set<UserRole> roles = associationMap.get(association.getSecurityToken());
+	    if (roles == null) {
+		roles = new HashSet<>();
+		associationMap.put(association.getSecurityToken(), roles);
+	    }
+	    roles.add(association.getRole());
+	}
+
+	return associationMap;
     }
 
     @Override

@@ -20,6 +20,7 @@ import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.web.ResourceGuard;
 import ua.com.fielden.platform.web.SecurityTokenResourceFactory;
+import ua.com.fielden.platform.web.TokenRoleAssociationResourceFactory;
 import ua.com.fielden.platform.web.UserRoleAssociationResourceFactory;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.RouterHelper;
@@ -81,10 +82,13 @@ public abstract class BasicServerApplication extends Application {
 	// register user role association resource
 	routerForResources.attach("/users/{username}/useroles", new UserRoleAssociationResourceFactory(injector));
 	// register role token association resource
-	final Restlet tokenRoleAssociationRestlet = new SecurityTokenResourceFactory(injector);
-	routerForResources.attach("/users/{username}/securitytokens", tokenRoleAssociationRestlet);
-	routerForResources.attach("/users/{username}/securitytokens/{token}", tokenRoleAssociationRestlet); // authorisation resources
-	routerForResources.attach("/users/{username}/securitytokens/{token}/useroles", tokenRoleAssociationRestlet);
+	final Restlet securityTokenRestlet = new SecurityTokenResourceFactory(injector);
+	routerForResources.attach("/users/{username}/securitytokens", securityTokenRestlet);
+	routerForResources.attach("/users/{username}/securitytokens/{token}", securityTokenRestlet); // authorisation resources
+	routerForResources.attach("/users/{username}/securitytokens/{token}/useroles", securityTokenRestlet);
+	final Restlet tokenRoleAssociationRestlet = new TokenRoleAssociationResourceFactory(injector);
+	routerForResources.attach("/users/{username}/tokenroleassociation", tokenRoleAssociationRestlet);
+
 	// register resource for handling entity aggregation and generated type related requests
 	helper.registerAggregates(routerForResources);
 	helper.registerGeneratedTypeResources(routerForResources);

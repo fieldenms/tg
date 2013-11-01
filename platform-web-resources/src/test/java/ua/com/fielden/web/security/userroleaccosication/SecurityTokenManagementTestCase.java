@@ -23,6 +23,7 @@ import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.SecurityTokenResourceFactory;
+import ua.com.fielden.platform.web.TokenRoleAssociationResourceFactory;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 
@@ -49,6 +50,7 @@ public class SecurityTokenManagementTestCase extends WebBasedTestCase {
 	assertEquals("Incorrect number of roles for token.", 2, roles.size());
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void test_can_save_changes_to_token_role_association() {
 	final List<? extends UserRole> roles = new ArrayList<>(tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class));
@@ -59,6 +61,16 @@ public class SecurityTokenManagementTestCase extends WebBasedTestCase {
 	tokenControllerRao.saveSecurityToken(newAssociations);
 
 	assertEquals("Incorrect number of roles for token after update.", 1, tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class).size());
+    }
+
+    @Test
+    public void test_that_retreive_all_association_works() {
+	final Map<Class<? extends ISecurityToken>, Set<UserRole>> associations = tokenControllerRao.findAllAssociations();
+	assertEquals("Incorrect number of token roles aasociation.", 6, associations.size());
+
+	for (final Map.Entry<Class<? extends ISecurityToken>, Set<UserRole>> associationEntry : associations.entrySet()) {
+	    assertEquals("Incorrect number of roles aasociated with " + associationEntry.getKey().getSimpleName(), 2, associationEntry.getValue().size());
+	}
     }
 
     @Test
@@ -79,10 +91,12 @@ public class SecurityTokenManagementTestCase extends WebBasedTestCase {
 	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
 	helper.register(router, IUserRoleDao.class);
 
-	final Restlet tokenRoleAssociationRestlet = new SecurityTokenResourceFactory(DbDrivenTestCase.injector);
-	router.attach("/users/{username}/securitytokens", tokenRoleAssociationRestlet);
-	router.attach("/users/{username}/securitytokens/{token}", tokenRoleAssociationRestlet);
-	router.attach("/users/{username}/securitytokens/{token}/useroles", tokenRoleAssociationRestlet);
+	final Restlet securityTokenRestlet = new SecurityTokenResourceFactory(DbDrivenTestCase.injector);
+	router.attach("/users/{username}/securitytokens", securityTokenRestlet);
+	router.attach("/users/{username}/securitytokens/{token}", securityTokenRestlet); // authorisation resources
+	router.attach("/users/{username}/securitytokens/{token}/useroles", securityTokenRestlet);
+	final Restlet tokenRoleAssociationRestlet = new TokenRoleAssociationResourceFactory(DbDrivenTestCase.injector);
+	router.attach("/users/{username}/tokenroleassociation", tokenRoleAssociationRestlet);
 
 	return router;
     }

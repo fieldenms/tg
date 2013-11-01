@@ -72,7 +72,10 @@ public class SecurityTreeTableModel extends DynamicTreeTableModel {
     // builds the tree of the security tokens
     private void buildTreeModel(final AbstractMutableTreeTableNode root, final Set<SecurityTokenNode> tokens, final Map<Class<? extends ISecurityToken>, Set<UserRole>> mapOfAssociation) {
 	for (final SecurityTokenNode tokenNode : tokens) {
-	    final Set<UserRole> userRoles = mapOfAssociation.get(tokenNode.getToken());
+	    Set<UserRole> userRoles = mapOfAssociation.get(tokenNode.getToken());
+	    if (userRoles == null) {
+		userRoles = new HashSet<>();
+	    }
 
 	    final List<Boolean> userRolesIndicators = new ArrayList<Boolean>();
 	    for (final UserRole userRole : getAvailableUserRoles()) {

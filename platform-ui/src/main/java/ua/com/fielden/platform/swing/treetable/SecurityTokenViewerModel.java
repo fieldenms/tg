@@ -3,8 +3,6 @@ package ua.com.fielden.platform.swing.treetable;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -114,14 +112,15 @@ public class SecurityTokenViewerModel {
 
 	    @Override
 	    protected SecurityData action(final ActionEvent e) throws Exception {
-		final Map<Class<? extends ISecurityToken>, Set<UserRole>> securityTokens = new Hashtable<Class<? extends ISecurityToken>, Set<UserRole>>();
 		final List<SecurityTokenNode> tokenList = new ArrayList<SecurityTokenNode>(tokenProvider.getTopLevelSecurityTokenNodes());
-		while (tokenList.size() > 0) {
-		    final SecurityTokenNode tokenNode = tokenList.get(0);
-		    securityTokens.put(tokenNode.getToken(), new HashSet<UserRole>(controller.findUserRolesFor(tokenNode.getToken())));
+		final List<Class<? extends ISecurityToken>> securityTokenClasses = new ArrayList<>();
+		for (int tokenInd = 0; tokenInd < tokenList.size(); tokenInd++){
+		    final SecurityTokenNode tokenNode = tokenList.get(tokenInd);
+		    securityTokenClasses.add(tokenNode.getToken());
 		    tokenList.addAll(tokenNode.getSubTokenNodes());
-		    tokenList.remove(tokenNode);
 		}
+		System.out.println(securityTokenClasses.size());
+		final Map<Class<? extends ISecurityToken>, Set<UserRole>> securityTokens = controller.findAllAssociations();
 		final List<UserRole> roles = controller.findUserRoles();
 		return new SecurityData(roles, securityTokens, tokenProvider.getTopLevelSecurityTokenNodes());
 	    }

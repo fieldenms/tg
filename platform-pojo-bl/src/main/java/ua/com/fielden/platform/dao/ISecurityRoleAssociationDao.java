@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.dao;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.UserRole;
 
 /**
  * Interface that defines the API for retrieving saving and removing the {@link SecurityRoleAssociation} instances.
@@ -20,6 +23,14 @@ public interface ISecurityRoleAssociationDao extends IEntityDao<SecurityRoleAsso
      * @return
      */
     List<SecurityRoleAssociation> findAssociationsFor(final Class<? extends ISecurityToken> securityToken);
+
+    /**
+     * Returns the map between security tokens and set of associated user roles.
+     *
+     * @param securityToken
+     * @return
+     */
+    Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations();
 
     /**
      * Removes all role association with the specified token.

@@ -26,6 +26,11 @@ public class SecurityTokenController implements ISecurityTokenController {
 
     private final IUserRoleDao roleDao;
 
+    @Override
+    public Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations() {
+	return securityAssociationDao.findAllAssociations();
+    }
+
     /**
      * Creates new instance of SecurityTokenController with twelve user roles and security tokens
      */

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
@@ -149,6 +150,25 @@ public class RestServerUtil {
 	try {
 	    // create a Result enclosing entity list
 	    final Result result = new Result(new ArrayList<T>(entities), "All is cool");
+	    final byte[] bytes = serialiser.serialise(result);
+	    logger.debug("SIZE: " + bytes.length);
+	    return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
+	} catch (final Exception ex) {
+	    logger.error(ex);
+	    return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
+	}
+    }
+
+    /**
+     * Composes representation of a map.
+     *
+     * @return
+     */
+    public Representation mapRepresentation(final Map<?, ?> map) {
+	logger.debug("Start building representation:" + new DateTime());
+	try {
+	    // create a Result enclosing entity list
+	    final Result result = new Result(new HashMap<>(map), "All is cool");
 	    final byte[] bytes = serialiser.serialise(result);
 	    logger.debug("SIZE: " + bytes.length);
 	    return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);

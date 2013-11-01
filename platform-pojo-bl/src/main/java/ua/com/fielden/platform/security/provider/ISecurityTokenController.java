@@ -16,6 +16,14 @@ import ua.com.fielden.platform.security.user.UserRole;
 public interface ISecurityTokenController {
 
     /**
+     * Returns the map between security tokens and set of associated user roles.
+     *
+     * @param securityToken
+     * @return
+     */
+    Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations();
+
+    /**
      * Returns the set of {@link UserRole} associated with specified {@link ISecurityToken}
      *
      * @param securityTokenClass
