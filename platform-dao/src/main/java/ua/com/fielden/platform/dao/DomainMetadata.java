@@ -1,5 +1,39 @@
 package ua.com.fielden.platform.dao;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.PERSISTED;
+import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.PURE;
+import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.QUERY_BASED;
+import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.UNION;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_AS_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION_COMMON;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ID;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_AS_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_HEADER;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,40 +81,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.PERSISTED;
-import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.PURE;
-import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.QUERY_BASED;
-import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.UNION;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_AS_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION_COMMON;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ID;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_AS_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_HEADER;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 public class DomainMetadata {
     public final static List<String> specialProps = Arrays.asList(new String[] { AbstractEntity.ID, AbstractEntity.KEY, AbstractEntity.VERSION });
@@ -252,13 +252,13 @@ public class DomainMetadata {
 	    if (!result.containsKey(field.getName())) {
 		if (Collection.class.isAssignableFrom(field.getType()) && Finder.hasLinkProperty(entityType, field.getName())) {
 		    safeMapAdd(result, getCollectionalPropInfo(entityType, field));
-		} else if (field.isAnnotationPresent(Calculated.class)) {
+		} else if (AnnotationReflector.isAnnotationPresent(field, Calculated.class)) {
 		    safeMapAdd(result, getCalculatedPropInfo(entityType, field));
-		} else if (field.isAnnotationPresent(MapTo.class)) {
+		} else if (AnnotationReflector.isAnnotationPresent(field, MapTo.class)) {
 		    safeMapAdd(result, getCommonPropHibInfo(entityType, field));
 		} else if (Finder.isOne2One_association(entityType, field.getName())) {
 		    safeMapAdd(result, getOneToOnePropInfo(entityType, field));
-		} else if (!field.isAnnotationPresent(CritOnly.class)) {
+		} else if (!AnnotationReflector.isAnnotationPresent(field, CritOnly.class)) {
 		    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
 		} else {
 		    //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
@@ -365,7 +365,7 @@ public class DomainMetadata {
 	final boolean isUnionEntity = isUnionEntityType(javaType);
 	final MapTo mapTo = getMapTo(entityType, propName);
 	final boolean isCompositeKeyMember = getCompositeKeyMember(entityType, propName) != null;
-	final boolean isRequired = field.isAnnotationPresent(Required.class);
+	final boolean isRequired = AnnotationReflector.isAnnotationPresent(field, Required.class);
 	final PersistedType persistedType = getPersistedType(entityType, propName);
 	final boolean nullable = !(isRequired || isCompositeKeyMember);
 
@@ -413,7 +413,7 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-	final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(calculatedPropfield.getAnnotation(Calculated.class).category());
+	final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(AnnotationReflector.getAnnotation(calculatedPropfield, Calculated.class).category());
 
 	final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
@@ -446,7 +446,7 @@ public class DomainMetadata {
     }
 
     private MapEntityTo getMapEntityTo(final Class entityType) {
-	return getAnnotation(MapEntityTo.class, entityType);
+	return getAnnotation(entityType, MapEntityTo.class);
     }
 
     private MapTo getMapTo(final Class entityType, final String propName) {
@@ -494,7 +494,7 @@ public class DomainMetadata {
 	    return null;
 	}
 
-	final MapEntityTo mapEntityToAnnotation = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType);
+	final MapEntityTo mapEntityToAnnotation = AnnotationReflector.getAnnotation(entityType, MapEntityTo.class);
 
 	final String providedTableName = mapEntityToAnnotation.value();
 	if (!StringUtils.isEmpty(providedTableName)) {

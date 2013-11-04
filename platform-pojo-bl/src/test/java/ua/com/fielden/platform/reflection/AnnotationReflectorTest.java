@@ -49,8 +49,8 @@ public class AnnotationReflectorTest {
     public void testHierarchicalAnnotationDetermination() {
 	// Class FirstLevelEntity is annotated with KeyTitle; SecondLevelEntity is not, but it is derived from First Level
 	// Expect KeyTitle from FirstLevelEntity to be picked up for SecondLevel
-	assertTrue("KeyTitle annotation should have been determined for SecondLevelEntity.", AnnotationReflector.isAnnotationPresent(KeyTitle.class, SecondLevelEntity.class));
-	assertEquals("Incorrect title for key property in SecondLevelEntity.", "Leveled Entity No", AnnotationReflector.getAnnotation(KeyTitle.class, SecondLevelEntity.class).value());
+	assertTrue("KeyTitle annotation should have been determined for SecondLevelEntity.", AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, SecondLevelEntity.class));
+	assertEquals("Incorrect title for key property in SecondLevelEntity.", "Leveled Entity No", AnnotationReflector.getAnnotation(SecondLevelEntity.class, KeyTitle.class).value());
     }
 
     @Test

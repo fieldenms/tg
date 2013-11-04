@@ -37,6 +37,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
@@ -127,8 +128,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public void defaultValues(){
 	final IAddToCriteriaTickRepresentation ftr = getCentreDomainTreeMangerAndEnhancer().getRepresentation().getFirstTick();
 	for(final Field propertyField : CriteriaReflector.getCriteriaProperties(getType())){
-	    final SecondParam secondParam = propertyField.getAnnotation(SecondParam.class);
-	    final CriteriaProperty critProperty = propertyField.getAnnotation(CriteriaProperty.class);
+	    final SecondParam secondParam = AnnotationReflector.getAnnotation(propertyField, SecondParam.class);
+	    final CriteriaProperty critProperty = AnnotationReflector.getAnnotation(propertyField, CriteriaProperty.class);
 	    final Class<T> root = getEntityClass();
 	    set(propertyField.getName(), secondParam == null ? ftr.getValueByDefault(root, critProperty.propertyName()) : ftr.getValue2ByDefault(root, critProperty.propertyName()));
 	}

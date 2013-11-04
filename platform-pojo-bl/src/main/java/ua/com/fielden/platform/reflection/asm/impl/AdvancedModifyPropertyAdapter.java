@@ -5,11 +5,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ua.com.fielden.platform.entity.Mutator;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-
 import org.kohsuke.asm3.AnnotationVisitor;
 import org.kohsuke.asm3.Attribute;
 import org.kohsuke.asm3.ClassAdapter;
@@ -19,6 +14,12 @@ import org.kohsuke.asm3.MethodAdapter;
 import org.kohsuke.asm3.MethodVisitor;
 import org.kohsuke.asm3.Opcodes;
 import org.kohsuke.asm3.Type;
+
+import ua.com.fielden.platform.entity.Mutator;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 
 /**
  * A class adapter designed for modification of existing fields based on the new specification.
@@ -258,8 +259,8 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
 		final AnnotationVisitor av = fv.visitAnnotation(Type.getDescriptor(IsProperty.class), true);
 		av.visit("value", Type.getType(np.type));
 
-		if (field.isAnnotationPresent(IsProperty.class)) {
-		    av.visit("linkProperty", field.getAnnotation(IsProperty.class).linkProperty());
+		if (AnnotationReflector.isAnnotationPresent(field, IsProperty.class)) {
+		    av.visit("linkProperty", AnnotationReflector.getAnnotation(field, IsProperty.class).linkProperty());
 		}
 
 		av.visitEnd();

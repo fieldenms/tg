@@ -46,6 +46,7 @@ import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.ast.visitor.LevelAllocatingVisitor;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -671,7 +672,7 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
 	validatePath(managedType, realOriginationProperty, "The origination property [" + newOriginationProperty + "] does not exist in type [" + managedType + "].");
 
 	final Field field = StringUtils.isEmpty(realOriginationProperty) ? null : Finder.findFieldByName(managedType, realOriginationProperty);
-	final String originationPropExpression = field != null && field.isAnnotationPresent(Calculated.class) ? field.getAnnotation(Calculated.class).value() : newOriginationProperty;
+	final String originationPropExpression = field != null && AnnotationReflector.isAnnotationPresent(field, Calculated.class) ? AnnotationReflector.getAnnotation(field, Calculated.class).value() : newOriginationProperty;
 	if (cp.getContextualExpression() == null || !cp.getContextualExpression().contains(originationPropExpression)) {
 	    throw new CalcPropertyWarning("The origination property does not take a part in the expression. Is that correct?");
 	}

@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.javafx.gis.GisViewPanel;
 import ua.com.fielden.platform.pagination.PageHolder;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
@@ -125,7 +126,7 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 	for (final String resultProp : this.parentView.getModel().getCdtme().getSecondTick().checkedProperties(this.parentView.getModel().getEntityType())) {
 	    final String property = StringUtils.isEmpty(resultProp) ? AbstractEntity.KEY : resultProp;
 	    final Class<?> enhancedType = this.parentView.getModel().getCdtme().getEnhancer().getManagedType(this.parentView.getModel().getEntityType());
-	    if (!Finder.findFieldByName(enhancedType, property).isAnnotationPresent(Calculated.class)) {
+	    if (!AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(enhancedType, property), Calculated.class)) {
 		// TODO
 		// TODO
 		// TODO can be calc -- except Calc AGGREGATION_EXPRESSION!

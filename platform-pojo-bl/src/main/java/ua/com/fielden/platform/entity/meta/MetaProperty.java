@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity.meta;
 
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
+
 import java.beans.PropertyChangeListener;
-
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.*;
-
 import java.beans.PropertyChangeSupport;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -23,18 +23,13 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Mutator;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.NotNullValidator;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 /**
  * Implements the concept of a meta-property.
@@ -905,7 +900,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @param valAnnotation
      */
     private void putValidator(final ValidationAnnotation valAnnotation) {
-	final Map<IBeforeChangeEventHandler, Result> map = new HashMap<IBeforeChangeEventHandler, Result>();
+	final Map<IBeforeChangeEventHandler, Result> map = new HashMap<IBeforeChangeEventHandler, Result>(2); // optimised with 2 as default value for this map -- not to create map with unnecessary 16 elements
 	map.put(StubValidator.singleton, null);
 	getValidators().put(valAnnotation, map);
     }

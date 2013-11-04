@@ -325,7 +325,7 @@ public class Finder {
 	final List<Field> compositeKeyFields = findRealProperties(type, CompositeKeyMember.class);
 
 	for (final Field field : compositeKeyFields) {
-	    final CompositeKeyMember annotation = field.getAnnotation(CompositeKeyMember.class);
+	    final CompositeKeyMember annotation = AnnotationReflector.getAnnotation(field, CompositeKeyMember.class);
 	    final int order = annotation.value();
 	    if (properties.containsKey(order)) {
 		throw new IllegalArgumentException("Annotation " + CompositeKeyMember.class.getName() + " in class " + type.getName() + " for property '" + field.getName()
@@ -505,7 +505,7 @@ public class Finder {
 	for (final Field field : fields) {
 	    int count = 0;
 	    for (final Class<? extends Annotation> annotation : allAnnotations) {
-		if (field.isAnnotationPresent(annotation)) {
+		if (AnnotationReflector.isAnnotationPresent(field, annotation)) {
 		    count++;
 		}
 	    }
@@ -908,11 +908,11 @@ public class Finder {
      */
     public static String findLinkProperty(final Class<? extends AbstractEntity<?>> type, final String dotNotationExp) {
 	final Field field = Finder.findFieldByName(type, dotNotationExp);
-	if (!field.isAnnotationPresent(IsProperty.class)) {
+	if (!AnnotationReflector.isAnnotationPresent(field, IsProperty.class)) {
 	    throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " is not a property.");
 	}
 
-	final IsProperty propAnnotation = field.getAnnotation(IsProperty.class);
+	final IsProperty propAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
 	// check if meta-data is present and if so use it
 	if (!IsProperty.stubForLinkProperty.equals(propAnnotation.linkProperty())) {
 	    return propAnnotation.linkProperty();

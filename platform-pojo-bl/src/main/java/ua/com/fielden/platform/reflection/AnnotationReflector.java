@@ -1,12 +1,16 @@
 package ua.com.fielden.platform.reflection;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -30,10 +34,150 @@ import ua.com.fielden.platform.utils.Pair;
 public final class AnnotationReflector {
     private final static Logger logger = Logger.getLogger(AnnotationReflector.class);
 
+    /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
+    private final static Map<FieldOrMethodKey, Map<Class<? extends Annotation>, Annotation>> annotations = new HashMap<>();
+
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
     private AnnotationReflector() {
+    }
+
+    /**
+     * Returns true if an annotation for the specified type is present on this element, else false.
+     */
+    public static boolean isAnnotationPresent(final AnnotatedElement annotatedElement, final Class<? extends Annotation> annotationClass) {
+        return getAnnotation(annotatedElement, annotationClass) != null;
+    }
+
+    /**
+     * Similar to {@link #getAnnotation(Class, Class)}, but instead of an actual annotation returns <code>true</code> if annotation is present, <code>false</code> otherwise.
+     *
+     * @param annotationType
+     * @param forType
+     * @return
+     */
+    public static boolean isAnnotationPresentForClass(final Class<? extends Annotation> annotationType, final Class<?> forType) {
+	return getAnnotationForClass(annotationType, forType) != null;
+    }
+
+    /** Clear cached annotations. */
+    public static void clearAnnotationsCache() {
+	annotations.clear();
+    }
+
+    private static Collection<Annotation> getAnnotations(final Method method) {
+	final FieldOrMethodKey methodKey = new FieldOrMethodKey(method);
+	final Map<Class<? extends Annotation>, Annotation> cached = annotations.get(methodKey);
+	if (cached == null) {
+	    final Map<Class<? extends Annotation>, Annotation> newCached = new HashMap<>();
+	    for (final Annotation ann : method.getAnnotations()) {
+		newCached.put(ann.annotationType(), ann);
+	    }
+	    annotations.put(methodKey, newCached);
+	}
+	return annotations.get(methodKey).values();
+//	return Arrays.asList(method.getAnnotations()); // make some caching
+    }
+
+    private static class FieldOrMethodKey {
+	private final String klassName;
+	private final String name;
+	private final Boolean isField;
+
+	public FieldOrMethodKey(final AccessibleObject accessibleObject) {
+	    isField = accessibleObject instanceof Field;
+	    if (isField) {
+		final Field field = (Field) accessibleObject;
+		klassName = field.getDeclaringClass().getName();
+		name = field.getName();
+	    } else {
+		final Method method = (Method) accessibleObject;
+		klassName = method.getDeclaringClass().getName();
+		name = method.getName();
+	    }
+	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = 1;
+	    result = prime * result + ((isField == null) ? 0 : isField.hashCode());
+	    result = prime * result + ((klassName == null) ? 0 : klassName.hashCode());
+	    result = prime * result + ((name == null) ? 0 : name.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj)
+		return true;
+	    if (obj == null)
+		return false;
+	    if (getClass() != obj.getClass())
+		return false;
+	    final FieldOrMethodKey other = (FieldOrMethodKey) obj;
+	    if (isField == null) {
+		if (other.isField != null)
+		    return false;
+	    } else if (!isField.equals(other.isField))
+		return false;
+	    if (klassName == null) {
+		if (other.klassName != null)
+		    return false;
+	    } else if (!klassName.equals(other.klassName))
+		return false;
+	    if (name == null) {
+		if (other.name != null)
+		    return false;
+	    } else if (!name.equals(other.name))
+		return false;
+	    return true;
+	}
+    }
+
+    private static Map<Class<? extends Annotation>, Annotation> cacheAllAnnotations(final AccessibleObject accesibleObject, final FieldOrMethodKey fieldOrMethodKey) {
+	// When at least one annotation on accesibleObject is requested -- all existing annotations will be cached.
+	// It guarantees that when all annotations are requested afterwards -- no additional caching will be performed.
+	final Map<Class<? extends Annotation>, Annotation> newCached = new HashMap<>();
+	for (final Annotation ann : accesibleObject.getAnnotations()) {
+	    newCached.put(ann.annotationType(), ann);
+	}
+	annotations.put(fieldOrMethodKey, newCached);
+	return newCached;
+    }
+
+    private static <T extends Annotation> Annotation cacheAnnotation(final AccessibleObject accesibleObject, final Class<T> annotationClass, final Map<Class<? extends Annotation>, Annotation> annByAccObjectNotNull) {
+	final T ann = accesibleObject.getAnnotation(annotationClass);
+	final Annotation annNotNull = ann == null ? new Empty() : ann; // TODO a singleton object for Empty?!
+	annByAccObjectNotNull.put(annotationClass, annNotNull);
+	return annNotNull;
+    }
+
+    /**
+     * Returns this element's annotation for the specified type if
+     * such an annotation is present, else null.
+     *
+     * @param annotationClass the Class object corresponding to the
+     *        annotation type
+     * @return this element's annotation for the specified annotation type if
+     *     present on this element, else null
+     * @throws NullPointerException if the given annotation class is null
+     * @since 1.5
+     */
+    public static <T extends Annotation> T getAnnotation(final AnnotatedElement annotatedElement, final Class<T> annotationClass) {
+	if (annotatedElement instanceof Class) {
+	    return getAnnotationForClass(annotationClass, (Class<?>) annotatedElement);
+	} else {
+	    // return annotatedElement.getAnnotation(annotationClass); // make some caching
+	    final AccessibleObject accesibleObject = (AccessibleObject) annotatedElement;
+	    final FieldOrMethodKey fieldOrMethodKey = new FieldOrMethodKey(accesibleObject);
+	    final Map<Class<? extends Annotation>, Annotation> annByAccObject = annotations.get(fieldOrMethodKey);
+	    final Map<Class<? extends Annotation>, Annotation> annByAccObjectNotNull = annByAccObject == null ? cacheAllAnnotations(accesibleObject, fieldOrMethodKey) : annByAccObject;
+	    final Annotation annByAccObjectAndAnnClass = annByAccObjectNotNull.get(annotationClass);
+	    final Annotation annByAccObjectAndAnnClassNotNull = annByAccObjectAndAnnClass == null ? cacheAnnotation(accesibleObject, annotationClass, annByAccObjectNotNull) : annByAccObjectAndAnnClass;
+	    return annByAccObjectAndAnnClassNotNull instanceof Empty ? null : (T) annByAccObjectAndAnnClassNotNull;
+	}
     }
 
     // //////////////////////////////////METHOD RELATED ////////////////////////////////////////
@@ -58,7 +202,7 @@ public final class AnnotationReflector {
 		allMethods.addAll(AbstractUnionEntity.commonMethods((Class<? extends AbstractUnionEntity>) klass));
 	    }
 	    for (final Method method : allMethods) {
-		if (annotation == null || method.isAnnotationPresent(annotation)) {
+		if (!method.isBridge() && (annotation == null || AnnotationReflector.isAnnotationPresent(method, annotation))) {
 		    methods.add(method);
 		}
 	    }
@@ -100,10 +244,10 @@ public final class AnnotationReflector {
      * @param mutator
      * @return
      */
-    public static Set<Annotation> getValidationAnnotations(final Method mutator) {
-	final Set<Annotation> validationAnnotations = new HashSet<Annotation>();
-	for (final ValidationAnnotation annotationKey : ValidationAnnotation.values()) { // iterate through all validation annotations
-	    for (final Annotation annotation : mutator.getAnnotations()) { // and through all annotation on the method
+    public static List<Annotation> getValidationAnnotations(final Method mutator) {
+	final List<Annotation> validationAnnotations = new ArrayList<Annotation>();
+	for (final Annotation annotation : getAnnotations(mutator)) { // and through all annotation on the method
+	    for (final ValidationAnnotation annotationKey : ValidationAnnotation.values()) { // iterate through all validation annotations
 		if (annotation.annotationType() == annotationKey.getType()) { // to find matches
 		    validationAnnotations.add(annotation);
 		    break;
@@ -126,7 +270,7 @@ public final class AnnotationReflector {
      * @return
      */
     public static Class<? extends Comparable> getKeyType(final Class<?> type) {
-	final KeyType keyType = getAnnotation(KeyType.class, type);
+	final KeyType keyType = getAnnotationForClass(KeyType.class, type);
 	return keyType != null ? keyType.value() : null;
     }
 
@@ -137,7 +281,7 @@ public final class AnnotationReflector {
      * @param forType
      * @return
      */
-    public static <T extends Annotation> T getAnnotation(final Class<T> annotationType, final Class<?> forType) {
+    private static <T extends Annotation> T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
 	Class<?> runningType = forType;
 	while (runningType != null && !runningType.equals(Object.class)) { // need to iterated thought entity hierarchy
 	    if (runningType.isAnnotationPresent(annotationType)) {
@@ -149,24 +293,13 @@ public final class AnnotationReflector {
     }
 
     /**
-     * Similar to {@link #getAnnotation(Class, Class)}, but instead of an actual annotation returns <code>true</code> if annotation is present, <code>false</code> otherwise.
-     *
-     * @param annotationType
-     * @param forType
-     * @return
-     */
-    public static boolean isAnnotationPresent(final Class<? extends Annotation> annotationType, final Class<?> forType) {
-	return getAnnotation(annotationType, forType) != null;
-    }
-
-    /**
      * Determines if the entity type represents a "transaction entity". See {@link TransactionEntity} for more details.
      *
      * @param forType
      * @return
      */
     public static boolean isTransactionEntity(final Class<?> forType) {
-	return isAnnotationPresent(TransactionEntity.class, forType);
+	return isAnnotationPresentForClass(TransactionEntity.class, forType);
     }
 
     /**
@@ -176,7 +309,7 @@ public final class AnnotationReflector {
      * @return
      */
     public static String getTransactionDateProperty(final Class<?> forType) {
-	return getAnnotation(TransactionEntity.class, forType).value();
+	return getAnnotationForClass(TransactionEntity.class, forType).value();
     }
 
     // //////////////////////////////////PROPERTY RELATED ////////////////////////////////////////
@@ -208,9 +341,9 @@ public final class AnnotationReflector {
 		dotNotationExp.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) || //
 		dotNotationExp.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
 	    final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(forType, dotNotationExp);
-	    return getAnnotation(annotationType, transformed.getKey());
+	    return getAnnotationForClass(annotationType, transformed.getKey());
 	} else {
-	    return Finder.findFieldByName(forType, dotNotationExp).getAnnotation(annotationType);
+	    return AnnotationReflector.getAnnotation(Finder.findFieldByName(forType, dotNotationExp), annotationType);
 	}
     }
 
@@ -269,5 +402,4 @@ public final class AnnotationReflector {
 	    }
 	}
     }
-
 }

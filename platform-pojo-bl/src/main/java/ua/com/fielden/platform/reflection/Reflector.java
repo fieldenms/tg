@@ -6,7 +6,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -26,6 +28,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class Reflector {
+    private final static Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new HashMap<>();
+
     /** A symbol that represents a separator between properties in property path expressions. */
     public static final String DOT_SPLITTER = "\\.";
     /**
@@ -77,6 +81,11 @@ public final class Reflector {
 		+ "].");
     }
 
+    /** Clear cached methods. */
+    public static void clearMethodsCache() {
+	methods.clear();
+    }
+
     /**
      * Returns method specified with methodName from {@code startWithClass} class.
      *
@@ -92,12 +101,95 @@ public final class Reflector {
 	    // order to retrieve fields from above
 	    // the current instance
 	    try {
-		return klass.getDeclaredMethod(methodName, arguments);
+		return getDeclaredMethod(klass, methodName, arguments);
 	    } catch (final NoSuchMethodException e) {
 		klass = klass.getSuperclass();
 	    }
 	}
 	throw new NoSuchMethodException(methodName);
+    }
+
+    private static class MethodKey {
+	private final String klassName;
+	private final String methodName;
+	private final List<String> argumentsTypeNames;
+
+	public MethodKey(final Class<?> klass, final String methodName, final Class<?>... arguments) {
+	    this.klassName = klass.getName();
+	    this.methodName = methodName;
+	    argumentsTypeNames = new ArrayList<>();
+	    for (final Class<?> argument : arguments) {
+		argumentsTypeNames.add(argument.getName());
+	    }
+	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = 1;
+	    result = prime * result + ((argumentsTypeNames == null) ? 0 : argumentsTypeNames.hashCode());
+	    result = prime * result + ((klassName == null) ? 0 : klassName.hashCode());
+	    result = prime * result + ((methodName == null) ? 0 : methodName.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj) {
+		return true;
+	    }
+	    if (obj == null) {
+		return false;
+	    }
+	    if (getClass() != obj.getClass()) {
+		return false;
+	    }
+	    final MethodKey other = (MethodKey) obj;
+	    if (argumentsTypeNames == null) {
+		if (other.argumentsTypeNames != null) {
+		    return false;
+		}
+	    } else if (!argumentsTypeNames.equals(other.argumentsTypeNames)) {
+		return false;
+	    }
+	    if (klassName == null) {
+		if (other.klassName != null) {
+		    return false;
+		}
+	    } else if (!klassName.equals(other.klassName)) {
+		return false;
+	    }
+	    if (methodName == null) {
+		if (other.methodName != null) {
+		    return false;
+		}
+	    } else if (!methodName.equals(other.methodName)) {
+		return false;
+	    }
+	    return true;
+	}
+    }
+
+    private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException, SecurityException {
+	// return klass.getDeclaredMethod(methodName, arguments);
+	final MethodKey methodKey = new MethodKey(klass, methodName, arguments);
+	final Pair<Method, NoSuchMethodException> methodOrException = methods.get(methodKey);
+	if (methodOrException == null) {
+	    try {
+		final Method method = klass.getDeclaredMethod(methodName, arguments);
+		methods.put(methodKey, new Pair<Method, NoSuchMethodException>(method, null));
+		return method;
+	    } catch (final NoSuchMethodException e1) {
+		methods.put(methodKey, new Pair<Method, NoSuchMethodException>(null, e1));
+		throw e1;
+	    } catch (final SecurityException e2) {
+		throw e2;
+	    }
+	} else if (methodOrException.getKey() != null) {
+	    return methodOrException.getKey();
+	} else {
+	    throw methodOrException.getValue();
+	}
     }
 
     /**
@@ -428,5 +520,4 @@ public final class Reflector {
 	// return absolute path
 	return absProp.toString();
     }
-
 }

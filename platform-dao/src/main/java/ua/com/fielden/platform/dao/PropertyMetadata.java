@@ -1,5 +1,18 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION_COMMON;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_HEADER;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,19 +31,8 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.EntityUtils;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_DETAILS;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION_COMMON;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_DETAILS;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_HEADER;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
 
 public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final String name;
@@ -197,7 +199,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	if (UNION_ENTITY_HEADER.equals(type)) {
 	    final List<Field> propsFields = AbstractUnionEntity.unionProperties(javaType);
 	    for (final Field subpropField : propsFields) {
-		final MapTo mapTo = subpropField.getAnnotation(MapTo.class);
+		final MapTo mapTo = AnnotationReflector.getAnnotation(subpropField, MapTo.class);
 		if (mapTo == null) {
 		    throw new IllegalStateException("Property [" + subpropField.getName() + "] in union entity type [" + javaType + "] is not annotated  no MapTo ");
 		}

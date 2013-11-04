@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
@@ -51,7 +52,7 @@ public class ServerEntityConverter extends AbstractEntityConverter {
 	    for (final Field property : properties) {
 		final String propertyName = property.getName();
 		final Object propertyValue = entity.get(propertyName);
-		if (!property.isAnnotationPresent(Calculated.class)) {
+		if (!AnnotationReflector.isAnnotationPresent(property, Calculated.class)) {
 		    if (propertyValue != null) {
 			// let's check if we're not operating on a Hibernate proxied collectional item
 			// TODO clean up - no hibernate proxies any longer
@@ -117,7 +118,7 @@ public class ServerEntityConverter extends AbstractEntityConverter {
 	    writer.addAttribute("dirty", "false");
 	    context.convertAnother(value);
 	    writer.endNode();
-	} else if (Collection.class.isAssignableFrom(property.getType()) && AbstractEntity.class.isAssignableFrom(property.getAnnotation(IsProperty.class).value())
+	} else if (Collection.class.isAssignableFrom(property.getType()) && AbstractEntity.class.isAssignableFrom(AnnotationReflector.getAnnotation(property, IsProperty.class).value())
 		&& ((Collection) propertyValue).size() > 0) {
 	    final Collection elements = (Collection) propertyValue;
 	    writer.startNode(propertyName);

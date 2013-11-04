@@ -157,7 +157,7 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 
 	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	    final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
-	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(KeyType.class, propertyType);
+	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(propertyType, KeyType.class);
 	    final Calculated calculatedAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(Calculated.class, managedType, property);
 	    //final String origination = calculatedAnnotation != null ? Reflector.fromRelative2AbsotulePath(calculatedAnnotation.contextPath(), calculatedAnnotation.origination()) : null;
 

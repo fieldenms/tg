@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.components.ValidationLayer;
@@ -97,7 +98,7 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
     public ReadonlyPropertyColumnMapping(final Class<T> entityClass, final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final boolean initConverter) {
 	this(propertyName,//
 	PropertyTypeDeterminator.determinePropertyType(entityClass, propertyName),//
-	initConverter ? Finder.findFieldByName(entityClass, propertyName).getAnnotation(IsProperty.class).value() : null,//
+	initConverter ? AnnotationReflector.getAnnotation(Finder.findFieldByName(entityClass, propertyName), IsProperty.class).value() : null,//
 	columnName,//
 	prefSize,//
 	headerTooltip,//

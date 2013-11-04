@@ -94,7 +94,7 @@ public class DashboardRow<T extends AbstractEntity<?>> {
 	this.centreName = centreName;
 	this.analysisName = analysisName;
 
-	this.rootType = (Class<T>) AnnotationReflector.getAnnotation(EntityType.class, this.menuItemType).value();
+	this.rootType = (Class<T>) AnnotationReflector.getAnnotation(this.menuItemType, EntityType.class).value();
         this.sentinelTitle = new SimpleStringProperty(centreName + " " + TitlesDescsGetter.LEFT_ARROW + " " + analysisName);
         this.countOfBad = new SimpleIntegerProperty();
         model = new TrafficLightsModel();

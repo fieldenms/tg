@@ -157,7 +157,7 @@ public class TitlesDescsGetter {
      * @return
      */
     public static Pair<String, String> getEntityTitleAndDesc(final Class<?> entityType) {
-	final EntityTitle entityTitleAnnotation = AnnotationReflector.getAnnotation(EntityTitle.class, entityType);
+	final EntityTitle entityTitleAnnotation = AnnotationReflector.getAnnotation(entityType, EntityTitle.class);
 	final String title = entityTitleAnnotation != null ? entityTitleAnnotation.value() : "";
 	final String desc = entityTitleAnnotation != null ? entityTitleAnnotation.desc() : "";
 
@@ -198,14 +198,14 @@ public class TitlesDescsGetter {
     public static String processReqErrorMsg(final String propName, final Class<?> entityType) {
 	String errorMsg = "";
 	if (AbstractEntity.KEY.equals(propName)) {
-	    if (AnnotationReflector.isAnnotationPresent(KeyTitle.class, entityType)) {
-		errorMsg = AnnotationReflector.getAnnotation(KeyTitle.class, entityType).reqErrorMsg();
+	    if (AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, entityType)) {
+		errorMsg = AnnotationReflector.getAnnotation(entityType, KeyTitle.class).reqErrorMsg();
 	    } else {
 		errorMsg = "";
 	    }
 	} else if (AbstractEntity.DESC.equals(propName)) {
-	    if (AnnotationReflector.isAnnotationPresent(DescRequired.class, entityType)) {
-		errorMsg = AnnotationReflector.getAnnotation(DescRequired.class, entityType).value();
+	    if (AnnotationReflector.isAnnotationPresentForClass(DescRequired.class, entityType)) {
+		errorMsg = AnnotationReflector.getAnnotation(entityType, DescRequired.class).value();
 	    } else {
 		errorMsg = "";
 	    }
@@ -228,8 +228,8 @@ public class TitlesDescsGetter {
 
 	try {
 	    final Method setter = Reflector.obtainPropertySetter(entityType, propName);
-	    if (setter.isAnnotationPresent(EntityExists.class)) {
-		errorMsg = setter.getAnnotation(EntityExists.class).errorMsg();
+	    if (AnnotationReflector.isAnnotationPresent(setter, EntityExists.class)) {
+		errorMsg = AnnotationReflector.getAnnotation(setter, EntityExists.class).errorMsg();
 		final String propTitle = TitlesDescsGetter.getTitleAndDesc(propName, entityType).getKey();
 		errorMsg = errorMsg.replace("{{prop-title}}", StringUtils.isEmpty(propTitle) ? propName : propTitle);
 		errorMsg = errorMsg.replace("{{prop-value}}", errouneousValue + "");

@@ -67,7 +67,7 @@ public class RetrieverDeadReferencesSeeker {
 //	sb.append(") AND NOT EXISTS (SELECT * " + rsp.getCoreSqlWithCriteria(referenceSources.iterator().next().retriever, criteria) + ")");
 	sb.append(")");
 	for (final RetrieverProps retrieverProps : referenceSources) {
-	    if (!AnnotationReflector.isAnnotationPresent(Updater.class, retrieverProps.retriever.getClass())) {
+	    if (!AnnotationReflector.isAnnotationPresentForClass(Updater.class, retrieverProps.retriever.getClass())) {
 		sb.append(" AND NOT EXISTS (SELECT * " + rsp.getCoreSqlWithCriteria(retrieverProps.retriever, criteria) + ")");
 	    }
 	}

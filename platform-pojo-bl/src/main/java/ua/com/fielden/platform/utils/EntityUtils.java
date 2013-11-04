@@ -623,7 +623,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isPersistedEntityType(final Class<?> type) {
-	return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(MapEntityTo.class, type) != null;
+	return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
     }
 
     /**
@@ -632,7 +632,7 @@ public class EntityUtils {
      * @return
      */
     public static <ET extends AbstractEntity<?>> boolean isQueryBasedEntityType(final Class<ET> type) {
-	return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(MapEntityTo.class, type) == null && getEntityModelsOfQueryBasedEntityType(type).size() > 0;
+	return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(type, MapEntityTo.class) == null && getEntityModelsOfQueryBasedEntityType(type).size() > 0;
     }
 
     /**
@@ -867,7 +867,7 @@ public class EntityUtils {
      */
     public static boolean isProperty(final Class<?> type, final String dotNotationProp) {
 	try {
-	    return Finder.findFieldByName(type, dotNotationProp).isAnnotationPresent(IsProperty.class);
+	    return AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(type, dotNotationProp), IsProperty.class);
 	} catch (final Exception ex) {
 	    return false;
 	}
@@ -893,7 +893,7 @@ public class EntityUtils {
 
 
     public static <ET extends AbstractEntity<?>> boolean hasDescProperty(final Class<ET> entityType) {
-	return AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType);
+	return AnnotationReflector.isAnnotationPresentForClass(DescTitle.class, entityType);
     }
 
     /**

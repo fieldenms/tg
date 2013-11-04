@@ -31,6 +31,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
@@ -495,7 +496,7 @@ public class PropertyTableModelBuilder<T extends AbstractEntity> extends Abstrac
 	}
 
 	// the field was found (not null).
-	if (field.isAnnotationPresent(IsProperty.class)) { // we should use simple property column mapping for it - field is property.
+	if (AnnotationReflector.isAnnotationPresent(field, IsProperty.class)) { // we should use simple property column mapping for it - field is property.
 	    return new ReadonlyPropertyColumnMapping<T>(getEntityClass(), propertyName, columnName, preferredSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction, true);
 	} else { // we should use property column mapping by expression for it - field is not property.
 	    return new PropertyColumnMappingByExpression<T>(getEntityClass(), propertyName, columnName, preferredSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction);

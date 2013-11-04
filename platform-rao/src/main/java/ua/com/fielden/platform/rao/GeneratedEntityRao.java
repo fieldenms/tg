@@ -99,7 +99,7 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	    final java.lang.reflect.Method[] methods = coType.getDeclaredMethods();
 	    for (final java.lang.reflect.Method method : methods) {
 		if (methodName.equalsIgnoreCase(method.getName())) {
-		    final Authorise annotation = method.getAnnotation(Authorise.class);
+		    final Authorise annotation = AnnotationReflector.getAnnotation(method, Authorise.class);
 		    if (annotation != null) {
 			authModel.start();
 			final Result result = authModel.authorise(annotation.value());

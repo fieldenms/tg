@@ -6,6 +6,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 import com.google.inject.Injector;
 
@@ -43,7 +44,7 @@ public class AuthorisationInterceptor implements MethodInterceptor {
 	} else { // this is the first intercepted method call requiring authorisation
 	    getModel().start();
 	    final Method method = invocation.getMethod();
-	    final Authorise annotation = method.getAnnotation(Authorise.class);
+	    final Authorise annotation = AnnotationReflector.getAnnotation(method, Authorise.class);
 	    final Result result = getModel().authorise(annotation.value());
 	    try {
 		if (result.isSuccessful()) {

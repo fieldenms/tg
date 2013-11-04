@@ -5,6 +5,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -116,7 +117,7 @@ public class DynamicCriteriaPropertyAnalyser {
 	    return false;
 	}
 	for (final Field propertyField : propertyFields) {
-	    if (propertyField.isAnnotationPresent(annotationClass)) {
+	    if (AnnotationReflector.isAnnotationPresent(propertyField, annotationClass)) {
 		return true;
 	    }
 	}

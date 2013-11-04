@@ -89,6 +89,6 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 
     @Override
     public final boolean isUpdater() {
-	return AnnotationReflector.isAnnotationPresent(Updater.class, getClass());
+	return AnnotationReflector.isAnnotationPresentForClass(Updater.class, getClass());
     }
 }

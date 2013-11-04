@@ -158,7 +158,7 @@ public class EntityDescriptor {
      * @return
      */
     public static boolean hasDesc(final Class<?> klass){
-	return AnnotationReflector.isAnnotationPresent(DescTitle.class, klass);
+	return AnnotationReflector.isAnnotationPresentForClass(DescTitle.class, klass);
     }
 
 }

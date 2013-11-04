@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.List;
@@ -19,8 +22,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class DomainMetadataExpressionsGenerator {
 
@@ -58,7 +59,7 @@ public class DomainMetadataExpressionsGenerator {
     }
 
     ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-	final Calculated calcAnnotation = calculatedPropfield.getAnnotation(Calculated.class);
+	final Calculated calcAnnotation = AnnotationReflector.getAnnotation(calculatedPropfield, Calculated.class);
 	if (!"".equals(calcAnnotation.value())) {
 	    return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
 	} else {

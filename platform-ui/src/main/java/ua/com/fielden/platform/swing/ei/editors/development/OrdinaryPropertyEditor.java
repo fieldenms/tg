@@ -134,8 +134,8 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 	    int length = 0;
 	    try {
 		final Method setter = Reflector.getMethod(entity/* .getType() */, Mutator.SETTER.getName(bindingPropertyName), String.class);
-		if (setter.isAnnotationPresent(Max.class)) {
-		    length = setter.getAnnotation(Max.class).value();
+		if (AnnotationReflector.isAnnotationPresent(setter, Max.class)) {
+		    length = AnnotationReflector.getAnnotation(setter, Max.class).value();
 		}
 	    } catch (final Throwable ex) {
 		// TODO log exception... usually it should be a harmless situation where a property was not provided with a setter, which is a legitimate case

@@ -187,7 +187,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	boolean hasEntityExists = false;
 	try {
 	    final Method setter = isEntityItself ? null : Reflector.obtainPropertySetter(managedType, propertyName);
-	    hasEntityExists = setter == null ? false : setter.isAnnotationPresent(EntityExists.class);
+	    hasEntityExists = setter == null ? false : AnnotationReflector.isAnnotationPresent(setter, EntityExists.class);
 	} catch (final NoSuchMethodException e) {
 	    logger.error("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName(), e);
 	}
@@ -245,8 +245,8 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity){
 	final IAddToCriteriaTickManager ftm = entity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	for(final Field propertyField : CriteriaReflector.getCriteriaProperties(entity.getType())){
-	    final SecondParam secondParam = propertyField.getAnnotation(SecondParam.class);
-	    final CriteriaProperty critProperty = propertyField.getAnnotation(CriteriaProperty.class);
+	    final SecondParam secondParam = AnnotationReflector.getAnnotation(propertyField, SecondParam.class);
+	    final CriteriaProperty critProperty = AnnotationReflector.getAnnotation(propertyField, CriteriaProperty.class);
 	    final Class<T> root = entity.getEntityClass();
 	    entity.set(propertyField.getName(), secondParam == null ? ftm.getValue(root, critProperty.propertyName()) : ftm.getValue2(root, critProperty.propertyName()));
 	}

@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
@@ -81,6 +82,7 @@ public class DynamicEntityTypeGenerationTest {
     public void setUp() {
 	observed = false;
 	cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+	Reflector.clearMethodsCache();
     }
 
     @Test
@@ -103,6 +105,11 @@ public class DynamicEntityTypeGenerationTest {
 		endModification();
 	assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced"));
 	assertEquals("Incorrect inheritance.", Entity.class, newType.getSuperclass());
+
+	System.err.println("cl == " + cl);
+	System.err.println("newType.getClassLoader() == " + newType.getClassLoader());
+	System.err.println("Reflector.obtainPropertySetter(newType, firstProperty).getReturnType().getClassLoader() == " + Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType().getClassLoader());
+
 	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(), newType);
 
 	assertEquals("The type of properties (previously of root type) also becomes changed.", Entity.class.getName() + "_enhanced", newType.getDeclaredField("entity").getType().getName());
@@ -159,7 +166,7 @@ public class DynamicEntityTypeGenerationTest {
 	final Field field = Finder.findFieldByName(newType, NEW_PROPERTY_BOOL);
 	assertNotNull("The field should exist.", field);
 	assertEquals("Incorrect type.", boolean.class, field.getType());
-	final Calculated calcAnno = field.getAnnotation(Calculated.class);
+	final Calculated calcAnno = AnnotationReflector.getAnnotation(field, Calculated.class);
 	assertNotNull("The annotation Calculated should exist.", calcAnno);
 	assertEquals("Incorrect expression.", NEW_PROPERTY_EXPRESSION_BOOL, calcAnno.value());
     }
@@ -233,7 +240,7 @@ public class DynamicEntityTypeGenerationTest {
 
 	final Field field = Finder.findFieldByName(newType, NEW_PROPERTY_1);
 	assertNotNull("The field should exist.", field);
-	final Calculated calcAnno = field.getAnnotation(Calculated.class);
+	final Calculated calcAnno = AnnotationReflector.getAnnotation(field, Calculated.class);
 	assertNotNull("The annotation Calculated should exist.", calcAnno);
 	assertEquals("Incorrect expression.", "2 * 3 - [integerProp]", calcAnno.value());
 
@@ -305,13 +312,13 @@ public class DynamicEntityTypeGenerationTest {
 	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd).endModification();
 
 	final Field field = Finder.findFieldByName(newType, NEW_PROPERTY_1);
-	final Annotation1 an1 = field.getAnnotation(Annotation1.class);
+	final Annotation1 an1 = AnnotationReflector.getAnnotation(field, Annotation1.class);
 	assertNotNull("Annotation should be present.", an1);
 	assertEquals("Incorrect annotation parameter value.", "string", an1.value());
 	assertEquals("Incorrect annotation parameter value.", 0.1, an1.doubleValue(), 0.0000000001);
 	assertEquals("Incorrect annotation parameter value.", ENUM1.E2, an1.enumValue());
 
-	final Annotation2 an2 = field.getAnnotation(Annotation2.class);
+	final Annotation2 an2 = AnnotationReflector.getAnnotation(field, Annotation2.class);
 	assertNotNull("Annotation should be present.", an2);
 	assertEquals("Incorrect annotation parameter value.", "value", an2.value());
 	assertEquals("Incorrect annotation parameter value.", 1, an2.intValue());
@@ -331,7 +338,7 @@ public class DynamicEntityTypeGenerationTest {
 	final Field collectionalPropertyField = Finder.findFieldByName(enhancedType, "collectionalProperty");
 	assertTrue("Incorrect collectional type.", Collection.class.isAssignableFrom(collectionalPropertyField.getType()));
 
-	final IsProperty annotation = collectionalPropertyField.getAnnotation(IsProperty.class);
+	final IsProperty annotation = AnnotationReflector.getAnnotation(collectionalPropertyField, IsProperty.class);
 	assertNotNull("There should be IsProperty annotation", annotation);
 	assertEquals("Incorrect value in IsProperty annotation", String.class, annotation.value());
     }
@@ -382,7 +389,7 @@ public class DynamicEntityTypeGenerationTest {
 	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
 
 	final Field field = Finder.findFieldByName(enhancedType, PROP_NAME);
-	final BeforeChange bceAnnotation = field.getAnnotation(BeforeChange.class);
+	final BeforeChange bceAnnotation = AnnotationReflector.getAnnotation(field, BeforeChange.class);
 	assertNotNull("BeforeChange annotation should be present.", bceAnnotation);
 
 	final Handler[] handlerAnnotations = bceAnnotation.value();
@@ -411,7 +418,7 @@ public class DynamicEntityTypeGenerationTest {
 	final NewProperty pd = new NewProperty("one2manyAssociationSpecialCase2", DetailsEntityForOneToManyAssociation.class, false, "One2Many Special Case Association Property", "One2Many Special Case Association Property Description",	isProperty);
 	final Class<? extends AbstractEntity<?>> enhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(MasterEntityWithOneToManyAssociation.class.getName()).addProperties(pd).endModification();
 
-	assertEquals("key1", Finder.findFieldByName(enhancedType, "one2manyAssociationSpecialCase2").getAnnotation(IsProperty.class).linkProperty());
+	assertEquals("key1", AnnotationReflector.getAnnotation(Finder.findFieldByName(enhancedType, "one2manyAssociationSpecialCase2"), IsProperty.class).linkProperty());
     }
 
     @Test
@@ -421,8 +428,8 @@ public class DynamicEntityTypeGenerationTest {
 	final NewProperty pd = new NewProperty("one2manyAssociationCollectional2", List.class, false, "One2Many Collectional Association Property", "One2Many Collectional Association Property Description", isProperty);
 	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(MasterEntityWithOneToManyAssociation.class.getName()).addProperties(pd).endModification();
 
-	assertEquals("key1", Finder.findFieldByName(enhancedType, "one2manyAssociationCollectional2").getAnnotation(IsProperty.class).linkProperty());
-	assertEquals(DetailsEntityForOneToManyAssociation.class, Finder.findFieldByName(enhancedType, "one2manyAssociationCollectional2").getAnnotation(IsProperty.class).value());
+	assertEquals("key1", AnnotationReflector.getAnnotation(Finder.findFieldByName(enhancedType, "one2manyAssociationCollectional2"), IsProperty.class).linkProperty());
+	assertEquals(DetailsEntityForOneToManyAssociation.class, AnnotationReflector.getAnnotation(Finder.findFieldByName(enhancedType, "one2manyAssociationCollectional2"), IsProperty.class).value());
     }
 
     @Test

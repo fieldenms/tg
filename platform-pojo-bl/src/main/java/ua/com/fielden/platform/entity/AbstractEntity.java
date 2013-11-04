@@ -534,11 +534,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	    //	    final Method setter = Reflector.getMethod(/* getType() */this, "set" + propertyName.toUpperCase().charAt(0) + propertyName.substring(1), propertyType);
 	    final Class<?> type = getType();
 	    final Method setter = Reflector.obtainPropertySetter(type, propertyName);
-	    return setter.isAnnotationPresent(Observable.class);
+	    return AnnotationReflector.isAnnotationPresent(setter, Observable.class);
 	} catch (final NoSuchMethodException e) {
 	    try {
 		final Method setter = Reflector.obtainPropertySetter(getType(), propertyName);//
-		return setter.isAnnotationPresent(Observable.class);
+		return AnnotationReflector.isAnnotationPresent(setter, Observable.class);
 
 	    } catch (final NoSuchMethodException ex) {
 	    }
@@ -636,7 +636,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		final boolean isCollectional = Collection.class.isAssignableFrom(type);
 		//logger.debug("IS_COLLECTIONAL (" + field.getName() + ") : " + isCollectional);
 
-		final IsProperty isPropertyAnnotation = field.getAnnotation(IsProperty.class);
+		final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
 		final Class<?> propertyAnnotationType = isPropertyAnnotation.value();
 
 		// perform some early runtime validation whether property was defined correctly
@@ -669,9 +669,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		final IAfterChangeEventHandler definer = metaPropertyFactory.create(this, field);
 		// create meta-property
 		//logger.debug("Creating meta-property for " + field.getName());
-		final boolean isUpperCase = field.isAnnotationPresent(UpperCase.class);
+		final boolean isUpperCase = AnnotationReflector.isAnnotationPresent(field, UpperCase.class);
 		//logger.debug("IS_UPPERCASE (" + field.getName() + ") : " + isUpperCase);
-		final MetaProperty metaProperty = new MetaProperty(this, field, type, isKey, isCollectional, propertyAnnotationType, field.isAnnotationPresent(Calculated.class), isUpperCase, declatedValidationAnnotations, validators, definer, extractDependentProperties(field, fields));
+		final MetaProperty metaProperty = new MetaProperty(this, field, type, isKey, isCollectional, propertyAnnotationType, AnnotationReflector.isAnnotationPresent(field, Calculated.class), isUpperCase, declatedValidationAnnotations, validators, definer, extractDependentProperties(field, fields));
 		// define meta-property properties used most commonly for UI construction: required, editable, title and desc //
 		//logger.debug("Initialising meta-property for " + field.getName());
 		initProperty(keyMembers, field, metaProperty);
@@ -749,27 +749,27 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     private void initProperty(final List<Field> keyMembers, final Field field, final MetaProperty metaProperty) {
 	if (KEY.equals(field.getName())) {
 	    metaProperty.setVisible(!(KEY.equals(field.getName()) && keyMembers.size() > 1)); // if entity is composite then "key" should be inactive
-	    metaProperty.setEditable(!AnnotationReflector.isAnnotationPresent(KeyReadonly.class, getType()));
+	    metaProperty.setEditable(!AnnotationReflector.isAnnotationPresentForClass(KeyReadonly.class, getType()));
 	    metaProperty.setRequired(true);
-	    if (AnnotationReflector.isAnnotationPresent(KeyTitle.class, getType())) {
-		final KeyTitle title = AnnotationReflector.getAnnotation(KeyTitle.class, getType());
+	    if (AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, getType())) {
+		final KeyTitle title = AnnotationReflector.getAnnotation(getType(), KeyTitle.class);
 		metaProperty.setTitle(title.value());
 		metaProperty.setDesc(StringUtils.isEmpty(title.desc()) ? title.value() : title.desc());
 	    }
 	} else if (DESC.equals(field.getName())) {
-	    metaProperty.setEditable(!AnnotationReflector.isAnnotationPresent(DescReadonly.class, getType()));
-	    metaProperty.setRequired(AnnotationReflector.isAnnotationPresent(DescRequired.class, getType()));
-	    if (AnnotationReflector.isAnnotationPresent(DescTitle.class, getType())) {
-		final DescTitle title = AnnotationReflector.getAnnotation(DescTitle.class, getType());
+	    metaProperty.setEditable(!AnnotationReflector.isAnnotationPresentForClass(DescReadonly.class, getType()));
+	    metaProperty.setRequired(AnnotationReflector.isAnnotationPresentForClass(DescRequired.class, getType()));
+	    if (AnnotationReflector.isAnnotationPresentForClass(DescTitle.class, getType())) {
+		final DescTitle title = AnnotationReflector.getAnnotation(getType(), DescTitle.class);
 		metaProperty.setTitle(title.value());
 		metaProperty.setDesc(StringUtils.isEmpty(title.desc()) ? title.value() : title.desc());
 	    }
 	} else {
-	    metaProperty.setVisible(!field.isAnnotationPresent(Invisible.class));
-	    metaProperty.setEditable(!field.isAnnotationPresent(Readonly.class));
-	    metaProperty.setRequired(field.isAnnotationPresent(Required.class) || field.isAnnotationPresent(CompositeKeyMember.class));
-	    if (field.isAnnotationPresent(Title.class)) {
-		final Title title = field.getAnnotation(Title.class);
+	    metaProperty.setVisible(!AnnotationReflector.isAnnotationPresent(field, Invisible.class));
+	    metaProperty.setEditable(!AnnotationReflector.isAnnotationPresent(field, Readonly.class));
+	    metaProperty.setRequired(AnnotationReflector.isAnnotationPresent(field, Required.class) || AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class));
+	    if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {
+		final Title title = AnnotationReflector.getAnnotation(field, Title.class);
 		metaProperty.setTitle(title.value());
 		metaProperty.setDesc(StringUtils.isEmpty(title.desc()) ? title.value() : title.desc());
 	    }
@@ -785,12 +785,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     private String[] extractDependentProperties(final Field field, final List<Field> allFields) {
-	if (field.isAnnotationPresent(Dependent.class)) {
+	if (AnnotationReflector.isAnnotationPresent(field, Dependent.class)) {
 	    final List<String> allFieldsNames = new ArrayList<String>();
 	    for (final Field f : allFields) {
 		allFieldsNames.add(f.getName());
 	    }
-	    final String[] dependentPropertyNames = field.getAnnotation(Dependent.class).value();
+	    final String[] dependentPropertyNames = AnnotationReflector.getAnnotation(field, Dependent.class).value();
 	    for (final String propName : dependentPropertyNames) {
 		if (!allFieldsNames.contains(propName)) {
 		    throw new IllegalArgumentException("There is no dependent property [" + propName + "].");
@@ -836,20 +836,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private Set<Annotation> extractDecrementorAnnotations(final Field field, final Class<?> type) {
-	final Set<Annotation> propertyValidationAnotations = new HashSet<Annotation>();
+    private List<Annotation> extractDecrementorAnnotations(final Field field, final Class<?> type) {
 	try {
 	    final Method decrementor = Reflector.getMethod(/* getType() */this, "removeFrom" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-	    final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
-	    if (annotations.size() > 0 && decrementor.getAnnotation(Observable.class) == null) {
+	    final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
+	    if (annotations.size() > 0 && AnnotationReflector.getAnnotation(decrementor, Observable.class) == null) {
 		throw new IllegalStateException("Property " + field.getName() + " in " + getType()
 			+ " requires validation, but corresponding decrementor is not observable (no Observable annotation).");
 	    }
-	    propertyValidationAnotations.addAll(annotations);
+	    return annotations;
 	} catch (final NoSuchMethodException e) {
 	    // do nothing if decrementor does not exist
 	}
-	return propertyValidationAnotations;
+	return new ArrayList<Annotation>();
     }
 
     /**
@@ -861,19 +860,18 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     private List<Annotation> extractIncrementorAnnotations(final Field field, final Class<?> type) {
-	final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
 	try {
 	    final Method incremetor = Reflector.getMethod(/* getType() */this, "addTo" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-	    final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
-	    if (annotations.size() > 0 && incremetor.getAnnotation(Observable.class) == null) {
+	    final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
+	    if (annotations.size() > 0 && AnnotationReflector.getAnnotation(incremetor, Observable.class) == null) {
 		throw new IllegalStateException("Property " + field.getName() + " in " + getType()
 			+ " requires validation, but corresponding incremetor is not observable (no Observable annotation).");
 	    }
-	    propertyValidationAnotations.addAll(annotations);
+	    return annotations;
 	} catch (final NoSuchMethodException e1) {
 	    // do nothing if incrementor does not exist
 	}
-	return propertyValidationAnotations;
+	return new ArrayList<Annotation>();
     }
 
     /**
@@ -885,22 +883,21 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     private List<Annotation> extractSetterAnnotations(final Field field, final Class<?> type) {
 	//logger.debug("Extracting validation annotations for property " + field.getName() + ".");
-	final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
 	try {
-	    final Method setter = Reflector.getMethod(this, "set" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-	    if (setter.getAnnotation(Observable.class) == null) {
+	    final Method setter = Reflector.getMethod(this, "set" + Character.toUpperCase(field.getName().charAt(0)) + field.getName().substring(1), type);
+	    if (AnnotationReflector.getAnnotation(setter, Observable.class) == null) {
 		final String errorMsg = "Setter " + setter.getName() + " for property " + field.getName() + " is not observable (no Observable annotation).";
 		logger.error(errorMsg);
 		throw new IllegalStateException(errorMsg);
 	    }
-	    final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(setter);
+	    final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(setter);
 	    //logger.debug("Number of validation annotations for property " + field.getName() + ": " + annotations.size());
-	    propertyValidationAnotations.addAll(annotations);
+	    return annotations;
 	} catch (final NoSuchMethodException e1) {
 	    // do nothing if setter does not exist
 	    logger.debug("There is no setter for property " + field.getName() + ".");
 	}
-	return propertyValidationAnotations;
+	return new ArrayList<Annotation>();
     }
 
     /**
@@ -912,7 +909,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     private List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
 	final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
-	final BeforeChange bce = field.getAnnotation(BeforeChange.class);
+	final BeforeChange bce = AnnotationReflector.getAnnotation(field, BeforeChange.class);
 	if (bce != null) {
 	    propertyValidationAnotations.add(bce);
 	}

@@ -292,14 +292,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	// logger().info("\t\t\tstarted conditions...");
 	final boolean excl = manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
-		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
+		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType) || // exclude "key" -- "key" is not of entity type
 		!isEntityItself && AbstractEntity.DESC.equals(lastPropertyName) && !EntityDescriptor.hasDesc(penultType) || // exclude "desc" -- no DescTitle annotation exists in direct owner of "desc"
-		!isEntityItself && !Finder.findFieldByName(root, property).isAnnotationPresent(IsProperty.class) || // exclude non-TG properties (not annotated by @IsProperty)
+		!isEntityItself && !AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(root, property), IsProperty.class) || // exclude non-TG properties (not annotated by @IsProperty)
 		isEntityItself && !rootTypes().contains(propertyType) || // exclude entities of non-"root types"
 		EntityUtils.isEnum(propertyType) || // exclude enumeration properties / entities
 		EntityUtils.isEntityType(propertyType) && Modifier.isAbstract(propertyType.getModifiers()) || // exclude properties / entities of entity type with 'abstract' modifier
-		EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresent(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
+		EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresentForClass(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
 		!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
 		!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude invisible properties
 		// !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy

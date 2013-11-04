@@ -38,6 +38,7 @@ import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.StringConverter;
@@ -413,7 +414,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	IAfterChangeEventHandler propHandler = typeHandlers.get(propertyName);
 	if (propHandler == null) {
 
-	    final AfterChange ach = propertyField.getAnnotation(AfterChange.class);
+	    final AfterChange ach = AnnotationReflector.getAnnotation(propertyField, AfterChange.class);
 	    if (ach == null) {
 		return null;
 	    }

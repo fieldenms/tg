@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -41,6 +41,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -506,7 +507,7 @@ public class CriteriaGeneratorTest {
 	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
 	final Field critField = Finder.findFieldByName(criteriaEntity.getType(), "topLevelEntity_critSingleEntity");
 	assertNotNull(critField);
-	final BeforeChange beforeChange = critField.getAnnotation(BeforeChange.class);
+	final BeforeChange beforeChange = AnnotationReflector.getAnnotation(critField, BeforeChange.class);
 	assertNotNull(beforeChange);
 	final Handler[] handlers = beforeChange.value();
 	assertNotNull(handlers);
@@ -555,8 +556,8 @@ public class CriteriaGeneratorTest {
     private void assertNewPropertyValues(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity, final List<Field> criteriaProperties) {
 	final IAddToCriteriaTickManager ftm = criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	for (final Field propertyField : criteriaProperties) {
-	    final SecondParam secondParam = propertyField.getAnnotation(SecondParam.class);
-	    final CriteriaProperty critProperty = propertyField.getAnnotation(CriteriaProperty.class);
+	    final SecondParam secondParam = AnnotationReflector.getAnnotation(propertyField, SecondParam.class);
+	    final CriteriaProperty critProperty = AnnotationReflector.getAnnotation(propertyField, CriteriaProperty.class);
 	    final Class<TopLevelEntity> root = criteriaEntity.getEntityClass();
 	    final Object value = secondParam == null ? ftm.getValue(root, critProperty.propertyName()) : ftm.getValue2(root, critProperty.propertyName());
 	    assertEquals("The property with " + critProperty.propertyName() + " name has unsynchronised value", newValues.get(propertyField.getName()), value);

@@ -85,8 +85,8 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 	    } else {
 		entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao((Class<AbstractEntity<?>>) propType)));
 	    }
-	} else if (propField.isAnnotationPresent(EntityType.class)) {
-	    final EntityType elType = propField.getAnnotation(EntityType.class);
+	} else if (AnnotationReflector.isAnnotationPresent(propField, EntityType.class)) {
+	    final EntityType elType = AnnotationReflector.getAnnotation(propField, EntityType.class);
 	    if (elType.value().isEnum()) {
 		entityEntry.put(propertyName, new EnumValueMatcher(elType.value()));
 	    } else if (!isPropertyAnEntity(elType.value())) {
@@ -94,11 +94,11 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 			+ " is not a valid property type and thus cannot have a value matcher.");
 	    }
 
-	    if (PropertyDescriptor.class.isAssignableFrom(propField.getAnnotation(IsProperty.class).value())) {
+	    if (PropertyDescriptor.class.isAssignableFrom(AnnotationReflector.getAnnotation(propField, IsProperty.class).value())) {
 		createPropertyDescriptorMatcherForCollection(propertyOwnerEntityType, propertyName, entityEntry);
 	    } else {
 		final Class<?> keyType = AnnotationReflector.getKeyType(elType.value());
-		final Class<? extends AbstractEntity<?>> notEnhancedElType = (Class<AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(elType.value());
+		final Class<? extends AbstractEntity<?>> notEnhancedElType = DynamicEntityClassLoader.getOriginalType(elType.value());
 		if (keyType != null && AbstractEntity.class.isAssignableFrom(keyType)) {
 		    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao(notEnhancedElType), "key.key", "key.key"));
 		} else {

@@ -120,7 +120,7 @@ public class ClassesRetriever {
 
 	    @Override
 	    public boolean isSatisfies(final Class<?> testClass) {
-		return AnnotationReflector.isAnnotationPresent(annotation, testClass);
+		return AnnotationReflector.isAnnotationPresentForClass(annotation, testClass);
 	    }
 
 	});

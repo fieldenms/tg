@@ -26,6 +26,7 @@ import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -198,14 +199,14 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	// check type
 	assertEquals("Incorrect type.", calcPropType, field.getType());
 	// check Calculated annotation
-	final Calculated calcAnno = field.getAnnotation(Calculated.class);
+	final Calculated calcAnno = AnnotationReflector.getAnnotation(field, Calculated.class);
 	assertNotNull("The annotation Calculated should exist.", calcAnno);
 	assertEquals("Incorrect expression.", expr, calcAnno.value());
 	assertEquals("Incorrect root.", type.getName(), calcAnno.rootTypeName());
 	assertEquals("Incorrect origination property.", originationProp, calcAnno.origination());
 	assertEquals("Incorrect category.", category, calcAnno.category());
 	// check Title annotation
-	final Title titleAnno = field.getAnnotation(Title.class);
+	final Title titleAnno = AnnotationReflector.getAnnotation(field, Title.class);
 	assertNotNull("The annotation Title should exist.", titleAnno);
 	assertEquals("Incorrect title.", title, titleAnno.value());
 	assertEquals("Incorrect desc.", desc, titleAnno.desc());

@@ -416,9 +416,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	} else {
 	    // add all first level calculated properties if any exist
 	    for (final Field calculatedField : Finder.findRealProperties(type, Calculated.class)) {
-		final Calculated calcAnnotation = calculatedField.getAnnotation(Calculated.class);
+		final Calculated calcAnnotation = AnnotationReflector.getAnnotation(calculatedField, Calculated.class);
 		if (calcAnnotation != null && !StringUtils.isEmpty(calcAnnotation.value()) && AnnotationReflector.isContextual(calcAnnotation)) {
-		    final Title titleAnnotation = calculatedField.getAnnotation(Title.class);
+		    final Title titleAnnotation = AnnotationReflector.getAnnotation(calculatedField, Title.class);
 		    final String title = titleAnnotation == null ? "" : titleAnnotation.value();
 		    final String desc = titleAnnotation == null ? "" : titleAnnotation.desc();
 		    final CalculatedProperty calculatedProperty = CalculatedProperty.createCorrect(dte.getFactory(), root, calcAnnotation.contextPath(), calcAnnotation.value(), title, desc, calcAnnotation.attribute(), "".equals(calcAnnotation.origination()) ? null : calcAnnotation.origination(), dte, validateTitleContextOfExtractedProperties);

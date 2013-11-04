@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.dao.eql;
 
+import static ua.com.fielden.platform.dao.DomainMetadata.specialProps;
+
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
@@ -9,7 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
-import static ua.com.fielden.platform.dao.DomainMetadata.specialProps;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
@@ -92,7 +94,7 @@ public class HibernateMappingsGenerator {
 	    sb.append("\t<component name=\"" + info.getName() + "\" class=\"" + info.getJavaType().getName() + "\">\n");
 	    final List<Field> propsFields = AbstractUnionEntity.unionProperties(info.getJavaType());
 	    for (final Field subpropField : propsFields) {
-		final MapTo mapTo = subpropField.getAnnotation(MapTo.class);
+		final MapTo mapTo = AnnotationReflector.getAnnotation(subpropField, MapTo.class);
 		if (mapTo == null) {
 		    throw new IllegalStateException("Property [" + subpropField.getName() + "] in union entity type [" + info.getJavaType() + "] is not annotated  no MapTo ");
 		}

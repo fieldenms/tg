@@ -39,7 +39,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
      */
     public <T extends Annotation> T getPropertyFieldAnnotation(final Class<T> annotationType) {
 	final Field propertyField = getPropertyField();
-	return propertyField == null ? null : propertyField.getAnnotation(annotationType);
+	return propertyField == null ? null : AnnotationReflector.getAnnotation(propertyField, annotationType);
     }
 
     /**

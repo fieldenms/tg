@@ -90,7 +90,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	public boolean isDisabledImmutablyLightweight(final Class<?> root, final String property) {
 	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	    final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(KeyType.class, propertyType);
+	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(propertyType, KeyType.class);
 
 	    return (super.isDisabledImmutablyLightweight(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
 		    (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
@@ -260,7 +260,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	    final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
 	    final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
-	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(KeyType.class, propertyType);
+	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(propertyType, KeyType.class);
 
 	    return (super.isDisabledImmutablyLightweight(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
 		    (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())) || // disable crit-only properties (the children should be excluded!)

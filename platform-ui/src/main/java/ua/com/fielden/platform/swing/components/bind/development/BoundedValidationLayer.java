@@ -209,7 +209,7 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 
 		    if (entity.get(propertyName) != null && entity.get(propertyName) instanceof AbstractEntity) {
 			final AbstractEntity value = (AbstractEntity) entity.get(propertyName);
-			if (AnnotationReflector.isAnnotationPresent(DisplayDescription.class, value.getType())) {
+			if (AnnotationReflector.isAnnotationPresentForClass(DisplayDescription.class, value.getType())) {
 			    final String desc = (String) value.get("desc");
 
 			    final String prev = autocompl ? ((JTextField) getIncapsulatedComponent()).getText()
