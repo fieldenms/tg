@@ -1,11 +1,26 @@
-package test;
+package ua.com.fielden.platform.reflection;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import ua.com.fielden.platform.entity.annotation.Observable;
 
-public class Test {
+public class BridgeMethodsSpike {
+
+    public class A<T extends Comparable<?>> {
+	@Observable
+	public void setKey(final T test) {
+
+	}
+    }
+
+    public class B extends A<String> {
+
+	@Override
+	@Observable
+	public void setKey(final String test) {
+	}
+    }
 
     /**
      * @param args
