@@ -500,24 +500,35 @@ public class BogieRao extends CommonEntityRao<Bogie> implements IBogie {
 
   \subsection{Creation of Entities that Model One-2-One Association}  
  
-  All supported by the platform kinds of associations are discussed in great detail section~\ref{ch01:02}.
-  In essence all domain entities regardless of whether they're master or subordinate have almost identical structure -- all have an entity object, a companion object, its RAO and DAO implementation, need to be registered with class \texttt{ApplicationDomain} etc.
+  All supported by the platform kinds of associations are discussed in great detail in section~\ref{ch01:02}.
+  In essence all domain entities regardless of whether they're master or subordinate have almost identical structure -- all have an entity object, a companion object, its RAO and DAO implementation, and need to be registered with class \texttt{ApplicationDomain} etc.
   
-  The most significant difference is in the business key.  
-  For one-2-one (and one-2-many for that matter) entity the type of the master entity becomes its business key type.
+  The most significant difference between the different kinds of entities is in their business key.
+  For the one-2-one (and one-2-many for that matter) entity the type of the master entity becomes its business key type.
   Entities that model one-2-one association are designed to be used for composition rather than aggregation.
-  This means that they represent an integral part of the master entity -- if the master entity ceases to exist then the associated with it one-2-one (and one-2-many for that matter) entities should also cease to exist.
+  This means that they represent an integral part of the master entity -- if the master entity ceases to exist then the associated with it one-2-one (and one-2-many for that matter) entities should also cease from existence.
   
   Due to compositional relationship between master and one-2-one entities, the plugin requires to specify the master entity at the time of one-2-one entity creation.
   The master entity can be provided once the creation dialog is up.
   However, it is only natural to invoke one-2-one entity creation upon an entity object class in \emph{Package Explorer}.
   This way, the plugin automatically fills in the \emph{Master Entity Type} entry as well as the package name.
   As explained in section~\ref{ch01:02}, the role of the maser entity for a one-2-one entity (or one-2-many for that matter) can be played by any kind of entities -- not just the actual master entities as per previous section.
-  Other than requirement to enter master entity, the prompts are identical to the dialog for a master entity creation.
+  Other than the requirement to enter master entity, the prompts are identical to the dialog for a master entity creation.
   
-  Fig.~\ref{img:ch02:00:model-actions-new-one-2-one-entity} depicts the dialog presented once the action was invoked on class \texttt{Bogie}, which was selected to serve as a master entity for a new one-2-one entity being created.
-  All of the input prompts are annotated with relevant descriptions that explain their purpose.  
+  Fig.~\ref{img:ch02:00:model-actions-new-one-2-one-entity} depicts the dialog that is resulted from an action invoked on class \texttt{Bogie}.
+  Entity \texttt{Bogie} is automatically selected to serve as a master entity for a new one-2-one entity being created.
+  The provided figure contains relevant annotations that explain the purpose of all inputs.
  
+  As before, let's discuss the generated artefacts using a concrete example.
+  Due to the fact that most artefacts are almost identical to those discussed in the previous chapter, we shall concentrate only on the aspects specific to one-2-one entities.
+  
+  Let's consider a new entity \texttt{BogieTechDetails} that models technical specification for a bogie.
+  Each bogie should have its own specific technical specification such as serial number, extended description etc.
+  Thus, domain entity \texttt{BogieTechDetails} nicely fits the one-2-one entity kind.
+  As can be seen from Fig.~\ref{img:ch02:00:model-actions-new-one-2-one-entity} by default the option to support deletion is unchecked.
+  This is a very reasonable choice as there is no a really good reason to delete \texttt{BogieTechDetails} separately from its master entity.
+  It is more likely to modify such entity, and delete is only as part of the \texttt{Bogie} deletion process.
+  This can be done as part of the implementation for \texttt{delete} methods in class \texttt{BogieDao}.
   
   \begin{image}{Create One-2-One Entity/Companion Objects.}{\label{img:ch02:00:model-actions-new-one-2-one-entity}}
       \begin{tikzpicture}[remember picture, >=latex', note/.style={rectangle callout, rounded corners = 1pt, fill=annotationbgcolor, drop shadow}]
@@ -587,7 +598,67 @@ public class BogieRao extends CommonEntityRao<Bogie> implements IBogie {
 	};
       \end{tikzpicture}  
     \end{image}  
+
+  Listing~\ref{lst:ch02:00:BogieTechDetails} outlines the source of the created entity object \texttt{BogieTechDetails}.
+  Its most important aspect is the use of type \texttt{Bogie} as the key type parameter.
+  This ensures that the identity of concrete \texttt{Bogie} instances become the identity for corresponding to them \texttt{BogieTechDetails} instances (including the database side of things).
   
+  \begin{code}{One-2-One entity \texttt{BogieTechDetails}.}{\label{lst:ch02:00:BogieTechDetails}}{codebgcolor}
+  \begin{lstlisting}
+@MapEntityTo
+@KeyType(Bogie.class)
+@KeyTitle(value = "Tech Details", desc = "Technical bogie details.")
+@CompanionObject(IBogieTechDetails.class)
+public class BogieTechDetails extends AbstractEntity<Bogie> { %\tikzref{bogie-key-type-parameter}{-1.0cm}{0.1cm}%
+...    
+}    
+  \end{lstlisting}
+  \tikznote{bogie-key-type-parameter-annotation}{bogie-key-type-parameter}{1.0cm}{1.5cm}{5cm}{Key type parameter}{
+    One-2-one entity has its master type as the key type parameter.
+    The same value is specified for annotation \texttt{@KeyType}.
+  }
+\end{code}      
+    
+
+  Usually it is desirable to have a one-2-one entity object to be accessible via an instance of its master entity object.
+  This can be easily achieved by declaring property of type \texttt{BogieTechDetails} as part of \texttt{Bogie} type definition.
+  As discussed earlier in the book, new property can be easily crated by using template \texttt{tgprop-entity} in the source of entity \texttt{Bogie}.
+  Listing~\ref{lst:ch02:00:Bogie-with-tech-details} outlines a snippet of the modified \texttt{Bogie} source.
+  Incorporation of property \texttt{techDetails} into \texttt{Bogie} makes it automatically available for data analysis and modification as part of the \texttt{Bogie} context.
+  
+  \begin{code}{\texttt{Bogie} with \texttt{BogieTechDetails}.}{\label{lst:ch02:00:Bogie-with-tech-details}}{codebgcolor}
+  \begin{lstlisting}
+@MapEntityTo
+@KeyType(String.class)
+@KeyTitle(value = "Bogie Code", desc = "A code uniquely representing a bogie.")
+@DescTitle("Description")
+@CompanionObject(IBogie.class)
+public class Bogie extends AbstractEntity<String> { 
+...
+  @IsProperty
+  @MapTo
+  @Title(value = "Tech Details", desc = "Techical details of this bogie.")
+  private BogieTechDetails techDetails;%\tikzref{tech-det-prop}{0.1cm}{0.1cm}%
+
+  @Observable
+  @EntityExists(BogieTechDetails.class)
+  public Bogie setTechDetails(final BogieTechDetails techDetails) {
+    this.techDetails = techDetails;
+    return this;
+  }
+
+  public BogieTechDetails getTechDetails() {
+    return techDetails;
+  }
+...    
+}    
+  \end{lstlisting}
+  \tikznote{tech-det-prop-annotation}{tech-det-prop}{4.0cm}{-2.5cm}{5cm}{One-2-one property}{
+    Property \texttt{techDetails} represents a composition of entity \texttt{BogieTechDetails} into its master entity \texttt{Bogie}.
+  }
+\end{code}      
+
+    
   \subsection{Creation of Entities that Model One-2-Many Association}  
   
 \section{Creation of Main Menu Items and Entity Centres}  
