@@ -204,7 +204,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	}
 	if (isEntity && isSingle && finalHasEntityExists) {
 	    final Class<? extends IEntityDao<?>> controllerType = CompanionObjectAutobinder.companionObjectType((Class<? extends AbstractEntity<?>>) newPropertyType);
-	    annotations.add(new BeforeChangeAnnotation(new Handler[] { new HandlerAnnotation(EntityExistsValidator.class).non_ordinary(new ClassParam[] { ParamAnnotation.classParam("controller", controllerType) }).newInstance() }).newInstance());
+	    annotations.add(new BeforeChangeAnnotation(new Handler[] { new HandlerAnnotation(EntityExistsValidator.class).non_ordinary(new ClassParam[] { ParamAnnotation.classParam("companionObject", controllerType) }).newInstance() }).newInstance());
 	}
 	annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
 	annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());

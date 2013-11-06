@@ -18,19 +18,19 @@ import ua.com.fielden.platform.error.Result;
  */
 public class EntityExistsValidator implements IBeforeChangeEventHandler<Object> {
 
-    private IEntityDao controller;
+    private IEntityDao companionObject;
 
     protected EntityExistsValidator() {
     }
 
     public EntityExistsValidator(final IEntityDao dao) {
-	this.controller = dao;
+	this.companionObject = dao;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-	if (controller == null) {
+	if (companionObject == null) {
 	    throw new IllegalStateException("Entity exists validator is not fully initialise: entity controller is missing");
 	}
 	final AbstractEntity<?> entity = property.getEntity();
@@ -39,7 +39,7 @@ public class EntityExistsValidator implements IBeforeChangeEventHandler<Object> 
 		return new Result(entity, "EntityExists validator : Entity " + newValue + " is null.");
 	    }
 
-	    final boolean exists = newValue instanceof AbstractEntity ? controller.entityExists((AbstractEntity<?>) newValue) : controller.entityWithKeyExists(newValue);
+	    final boolean exists = newValue instanceof AbstractEntity ? companionObject.entityExists((AbstractEntity<?>) newValue) : companionObject.entityWithKeyExists(newValue);
 	    if (!exists) {
 		return new Result(entity, new Exception("EntityExists validator : Could not find entity " + newValue));
 	    } else {
