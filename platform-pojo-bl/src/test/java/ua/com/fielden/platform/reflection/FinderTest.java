@@ -1,5 +1,12 @@
 package ua.com.fielden.platform.reflection;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,13 +40,6 @@ import ua.com.fielden.platform.reflection.test_entities.UnionEntityWithoutDesc;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
 import com.google.inject.Injector;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Test case for {@link Finder}.
@@ -253,8 +253,8 @@ public class FinderTest {
 	assertEquals("Incorrect number of properties in class SecondLevelEntity.", 8, properties.size());
 	assertEquals("Incorrect property name.", "anotherProperty", properties.get(0).getName());
 	assertEquals("Incorrect property type.", Long.class, properties.get(0).getType());
-	assertEquals("Incorrect property name.", "propertyOfSelfType", properties.get(1).getName());
-	assertEquals("Incorrect property type.", SecondLevelEntity.class, properties.get(1).getType());
+	assertEquals("Incorrect property name.", "propertyOfSelfType", properties.get(4).getName());
+	assertEquals("Incorrect property type.", SecondLevelEntity.class, properties.get(4).getType());
 
 	properties = Finder.findProperties(SecondLevelEntity.class, CompositeKeyMember.class);
 	assertEquals("Incorrect number of composite key properties in class SecondLevelEntity.", 3, properties.size());

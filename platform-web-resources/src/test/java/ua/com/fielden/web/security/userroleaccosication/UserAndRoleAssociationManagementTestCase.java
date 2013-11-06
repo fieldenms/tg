@@ -1,6 +1,7 @@
 package ua.com.fielden.web.security.userroleaccosication;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.security.UserRoleRao;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.UserRoleAssociationResourceFactory;
@@ -39,6 +41,15 @@ public class UserAndRoleAssociationManagementTestCase extends WebBasedTestCase {
 	final List<? extends UserRole> roles = userControllerRao.findAllUserRoles();
 	assertEquals("Incorrect number of roles.", 8, roles.size());
     }
+
+    @Test
+    public void test_collection_correctness() {
+	final List<User> users = userControllerRao.findAllUsersWithRoles();
+	final User user = users.get(0);
+	final UserAndRoleAssociation role1 = user.getRoles().iterator().next();
+	assertTrue(user.getRoles().contains(role1));
+    }
+
 
     @Test
     public void test_that_all_users_can_be_found() {

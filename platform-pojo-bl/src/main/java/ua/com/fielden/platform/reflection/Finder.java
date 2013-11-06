@@ -549,17 +549,31 @@ public class Finder {
 
     private static List<Field> removeDuplicates(final List<Field> wholeHierarchyProperties) {
 	final List<Field> properties = new ArrayList<Field>();
+	final List<Field> keyProps = new ArrayList<>();
 	final Set<String> fieldNames = new HashSet<>();
 	for (final Field field : wholeHierarchyProperties) {
 	    if (!fieldNames.contains(field.getName())) {
 		fieldNames.add(field.getName());
-		properties.add(field);
+		if (isKey(field)) {
+		    keyProps.add(field);
+		} else {
+		    properties.add(field);
+		}
 	    }
 	}
 
-	return properties;
+	// prepend key properties at the beginning of the list of properties
+	// this is essential for serialisation to correctly initialise collectional properties
+	final List<Field> propertiesWithKeys = new ArrayList<Field>(keyProps);
+	propertiesWithKeys.addAll(properties);
+
+	return propertiesWithKeys;
     }
 
+
+    private static boolean isKey(final Field field) {
+	return field.getName().equals(AbstractEntity.KEY) || field.isAnnotationPresent(CompositeKeyMember.class);
+    }
 
     /**
      * Returns a list of fields (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
