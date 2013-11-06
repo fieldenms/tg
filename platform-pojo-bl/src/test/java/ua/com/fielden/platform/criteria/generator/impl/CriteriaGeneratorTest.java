@@ -518,7 +518,7 @@ public class CriteriaGeneratorTest {
 	assertNotNull(classParams);
 	assertEquals("The number of class params is incorrect", 1, classParams.length);
 	final ClassParam classParam = classParams[0];
-	assertEquals("The name of class param property is incorrect", "controller", classParam.name());
+	assertEquals("The name of class param property is incorrect", "companionObject", classParam.name());
 	assertEquals("The value of class param annottion is incorrect", ILastLevelEntity.class, classParam.value());
     }
 
