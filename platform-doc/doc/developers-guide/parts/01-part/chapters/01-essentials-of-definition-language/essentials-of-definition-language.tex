@@ -131,7 +131,7 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
   If required, method \emph{toString()} can be overridden by descendent entity types in order to provide more appropriate entity specific standard output.
 
   \begin{notebox}{Composite key template.}{\label{nb:EclipseTemplatesForCompositeKey}}
-    Typing \texttt{tgp} in the body of the class and pressing \texttt{Ctrl + Space} key combination will present a dialog with an option \texttt{tgpcompositekey} for generating a property that is a member of the composite key.
+    Typing \texttt{tgp} in the body of the class and pressing \texttt{Ctrl + Space} key combination will present a dialog with an option \texttt{tgp-composite-key-entity-member} for generating a property that is the member of a composite key.
   \end{notebox}
 
   \subsubsection*{Property definitions.}
@@ -176,7 +176,9 @@ public class Wagon extends AbstractEntity<String> {
 
 
   \begin{notebox}{Property template.}{\label{nb:EclipseTemplatesForProperty}}
-    Typing \texttt{tgp} in the body of the class and pressing \texttt{Ctrl + Space} key combination will present a dialog with an option \texttt{tgprop} for generating a property template.
+    Typing \texttt{tgp} in the body of the class and pressing \texttt{Ctrl + Space} key combination will present a dialog with an number of different property generation related templates. 
+    For example, option \texttt{tgprop-entity} can be used to generate template for a property that is an entity itself.
+    Option \texttt{tgprop-ordinary} can be used to generate template for a property of an ordinary type such as \texttt{Integer}, \texttt{String}. \texttt{Monay}, \texttt{BigDecimal} or \texttt{boolean}.
   \end{notebox}
 
   \subsubsection*{Pre- and post- conditions for property value change.}
