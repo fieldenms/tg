@@ -31,7 +31,7 @@ public class EntityExistsValidator implements IBeforeChangeEventHandler<Object> 
     @Override
     public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	if (companionObject == null) {
-	    throw new IllegalStateException("Entity exists validator is not fully initialise: entity controller is missing");
+	    throw new IllegalStateException("Entity exists validator is not fully initialise: companion object is missing");
 	}
 	final AbstractEntity<?> entity = property.getEntity();
 	try {
