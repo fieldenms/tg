@@ -18,10 +18,12 @@ import org.restlet.data.Method;
 import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.security.provider.IUserController;
@@ -42,7 +44,7 @@ import com.google.inject.Inject;
 
 @EntityType(User.class)
 public class UserControllerRao extends CommonEntityRao<User> implements IUserController {
-    private final fetch<User> fetchModel = fetch(User.class).with("basedOnUser").with("roles", fetch(UserAndRoleAssociation.class).with("userRole"));
+    private final fetch<User> fetchModel = fetch(User.class).with("basedOnUser").with("roles", fetchAll(UserAndRoleAssociation.class));//.with("userRole").with("user")
 
     private final IUserRoleDao userRoleDao;
 
@@ -60,6 +62,13 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUserCon
     @Override
     public List<User> findAllUsers() {
 	return findAllUsersWithRoles();
+    }
+
+    @Override
+    public IPage<? extends User> firstPageOfUsersWithRoles(final int capacity) {
+	final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
+	final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
+	return firstPage(from(model).with(fetchModel).with(orderBy).model(), capacity);
     }
 
     @Override

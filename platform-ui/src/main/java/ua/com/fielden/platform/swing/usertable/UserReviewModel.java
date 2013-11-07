@@ -8,11 +8,16 @@ import java.util.Set;
 
 import javax.swing.Action;
 
+import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPageChangedListener;
+import ua.com.fielden.platform.pagination.PageChangedEvent;
+import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -30,9 +35,42 @@ public class UserReviewModel {
 
     private final IUserController userController;
 
+    /**
+     * Holds the current page of data.
+     */
+    private final PageHolder pageHolder;
+
     public UserReviewModel(final IUserController userController) {
 	this.userTableModel = new UserTableModel();
 	this.userController = userController;
+	this.pageHolder = new PageHolder();
+	this.pageHolder.addPageChangedListener(createUserDataChangedListener());
+    }
+
+    private IPageChangedListener createUserDataChangedListener() {
+	return new IPageChangedListener() {
+
+	    @SuppressWarnings("unchecked")
+	    @Override
+	    public void pageChanged(final PageChangedEvent e) {
+		SwingUtilitiesEx.invokeLater(new Runnable() {
+
+		    @Override
+		    public void run() {
+			userTableModel.setUsers((List<? extends User>)e.getNewPage().data());
+		    }
+		});
+	    }
+	};
+    }
+
+    /**
+     * Returns the {@link PageHolder} instance that holds the currently viewed page.
+     *
+     * @return
+     */
+    public PageHolder getPageHolder() {
+	return pageHolder;
     }
 
     /**
@@ -75,10 +113,11 @@ public class UserReviewModel {
      * Returns the action that loads data into the {@link UserTableModel}
      *
      * @param pane
+     * @param review
      * @return
      */
-    private Action createLoadAction(final BlockingIndefiniteProgressLayer pane) {
-	final Action action = new BlockingLayerCommand<Pair<List<? extends User>, List<? extends UserRole>>>("Load", pane) {
+    private Action createLoadAction(final UserReview review) {
+	final Action action = new BlockingLayerCommand<Pair<IPage<? extends User>, List<? extends UserRole>>>("Load", review) {
 	    private static final long serialVersionUID = 1L;
 
 	    @Override
@@ -89,14 +128,15 @@ public class UserReviewModel {
 	    }
 
 	    @Override
-	    protected Pair<List<? extends User>, List<? extends UserRole>> action(final ActionEvent e) throws Exception {
-		final List<? extends User> users = userController.findAllUsers();
-		return new Pair<List<? extends User>, List<? extends UserRole>>(users, userController.findAllUserRoles());
+	    protected Pair<IPage<? extends User>, List<? extends UserRole>> action(final ActionEvent e) throws Exception {
+		final IPage<? extends User> users = userController.firstPageOfUsersWithRoles(review.getPageSize());
+		return new Pair<IPage<? extends User>, List<? extends UserRole>>(users, userController.findAllUserRoles());
 	    }
 
 	    @Override
-	    protected void postAction(final Pair<List<? extends User>, List<? extends UserRole>> value) {
-		userTableModel.loadData(value.getKey(), value.getValue());
+	    protected void postAction(final Pair<IPage<? extends User>, List<? extends UserRole>> value) {
+		userTableModel.setRoles(value.getValue());
+		pageHolder.newPage(value.getKey());
 		super.postAction(value);
 	    }
 
@@ -130,9 +170,9 @@ public class UserReviewModel {
      * @param pane
      * @return
      */
-    public Action getLoadAction(final BlockingIndefiniteProgressLayer pane) {
+    public Action getLoadAction(final UserReview review) {
 	if (loadAction == null) {
-	    loadAction = createLoadAction(pane);
+	    loadAction = createLoadAction(review);
 	}
 	return loadAction;
     }

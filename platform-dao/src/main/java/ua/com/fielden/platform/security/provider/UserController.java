@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -55,6 +56,13 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
     @Override
     public List<User> findAllUsers() {
 	return findAllUsersWithRoles();
+    }
+
+    @Override
+    public IPage<? extends User> firstPageOfUsersWithRoles(final int capacity) {
+	final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
+	final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
+	return firstPage(from(model).with(fetchModel).with(orderBy).model(), capacity);
     }
 
     @Override

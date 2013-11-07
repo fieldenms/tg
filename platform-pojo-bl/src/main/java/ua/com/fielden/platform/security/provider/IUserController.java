@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -22,6 +23,14 @@ public interface IUserController extends IUserDao {
      * @return
      */
     List<? extends UserRole> findAllUserRoles();
+
+    /**
+     * Returns the first page of users fetched with user roles. The page will have less or equal number of items specified by the capacity parameter.
+     *
+     * @param capacity - the number of users in the page. (Notice that page may have less then the value specified by the capacity parameter).
+     * @return
+     */
+    IPage<? extends User> firstPageOfUsersWithRoles(int capacity);
 
     /**
      * Returns the list of users. Users must be associated with user roles.

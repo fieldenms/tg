@@ -48,9 +48,9 @@ public class UserAndRoleAssociation extends AbstractEntity<DynamicEntityKey> {
      * @param userRole
      */
     public UserAndRoleAssociation(final User user, final UserRole userRole) {
-	setKey(new DynamicEntityKey(this));
 	setUser(user);
 	setUserRole(userRole);
+	setKey(new DynamicEntityKey(this));
     }
 
     public User getUser() {

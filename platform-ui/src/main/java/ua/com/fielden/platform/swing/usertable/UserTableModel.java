@@ -41,7 +41,8 @@ public class UserTableModel extends AbstractTableModel {
      * @param userRoles
      */
     public UserTableModel(final List<User> users, final List<UserRole> userRoles) {
-	loadData(users, userRoles);
+	setRoles(userRoles);
+	setUsers(users);
     }
 
     @Override
@@ -116,11 +117,28 @@ public class UserTableModel extends AbstractTableModel {
      */
     public void addUser(final User newUser) {
 	users.add(newUser);
-	final List<Boolean> userRoleIndicator = new ArrayList<Boolean>(userRoles.size());
-	for (int userRoleIndex = 0; userRoleIndex < userRoles.size(); userRoleIndex++) {
-	    final boolean flag = newUser.getRoles().contains(new UserAndRoleAssociation(newUser, userRoles.get(userRoleIndex)));
-	    userRoleIndicator.set(userRoleIndex, flag);
+	final List<Boolean> userRoleIndicator = new ArrayList<Boolean>();
+	for (final UserRole role : userRoles) {
+	    final boolean flag = newUser.getRoles().contains(new UserAndRoleAssociation(newUser, role));
+	    userRoleIndicator.add(flag);
 	}
+	System.out.println("================whether contains itself===================");
+	for (final UserAndRoleAssociation assoc : newUser.getRoles()) {
+	    System.out.println("contains association " + assoc + ": " + newUser.getRoles().contains(assoc));
+	}
+	System.out.println("==========================================================");
+	System.out.println("============new user roles association hash===================");
+	for(final UserAndRoleAssociation assoc : newUser.getRoles()) {
+	    System.out.println(assoc.toString() + " hash: " + assoc.hashCode());
+	}
+	System.out.println("============end of new user roles association hash===================");
+	System.out.println("============this user roles association hash===================");
+	for(final UserRole role : userRoles) {
+	    final UserAndRoleAssociation assoc = new UserAndRoleAssociation(newUser, role);
+	    System.out.println(assoc.toString() + " hash: " + assoc.hashCode());
+	}
+	System.out.println("============end of this user roles association hash===================");
+
 	data.add(userRoleIndicator);
 	fireTableRowsInserted(data.size() - 1, data.size() - 1);
     }
@@ -141,23 +159,31 @@ public class UserTableModel extends AbstractTableModel {
     }
 
     /**
+     * Set the list of {@link UserRole}s that should be displayed in the table header.
+     * Throws {@link NullPointerException} if the given userRoles parameter is null.
+     * @param userRoles
+     */
+    public void setRoles(final List<? extends UserRole> userRoles) {
+	this.userRoles.clear();
+	for(final List<Boolean> association : data){
+	    association.clear();
+	}
+	for (final UserRole userRole : userRoles) {
+	    addUserRole(userRole);
+	}
+    }
+
+    /**
      * Clears the previous data from model and loads the specified list of users and list of user roles in to the table model
      *
      * @param users
      * @param userRoles
      */
-    public void loadData(final List<? extends User> users, final List<? extends UserRole> userRoles) {
+    public void setUsers(final List<? extends User> users) {
 	this.users.clear();
-	this.userRoles.clear();
 	this.data.clear();
-	for (int userIndex = 0; userIndex < users.size(); userIndex++) {
-	    data.add(new ArrayList<Boolean>());
-	}
 	for (final User user : users) {
 	    addUser(user);
-	}
-	for (final UserRole userRole : userRoles) {
-	    addUserRole(userRole);
 	}
     }
 

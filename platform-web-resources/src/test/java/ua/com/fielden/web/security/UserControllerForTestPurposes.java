@@ -231,4 +231,10 @@ public class UserControllerForTestPurposes implements IUserController {
     public Integer progress() {
         return null;
     }
+
+    @Override
+    public IPage<? extends User> firstPageOfUsersWithRoles(final int capacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
 }
