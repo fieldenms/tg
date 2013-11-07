@@ -155,7 +155,6 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	final List<EntityContainer<T>> properties = getCollectionalDataInBatches(parentIds.keySet(), parentPropName, fetchModel);
 
 	// group retrieved collections by parents
-	@SuppressWarnings("unchecked")
 	final Map<Long, List<EntityContainer<T>>> results = new HashMap<Long, List<EntityContainer<T>>>();
 	for (final EntityContainer<T> collectionalItem : properties) {
 	    final Long currentParentId = collectionalItem.getEntities().get(parentPropName).getId();
