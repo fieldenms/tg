@@ -115,17 +115,20 @@ public class Paginator {
 	    @Override
 	    protected boolean preAction() {
 		blockingLayerProvider.getBlockingLayer().enableIncrementalLocking();
+		super.preAction();
+		if (!paginatorModel.pageNavigationPhases(PageNavigationPhases.PRE_NAVIGATE)) {
+		    return false;
+		}
 		setMessage(pageMessage.get());
 		setEnableActions(false, true);
-		paginatorModel.pageNavigationPhases(PageNavigationPhases.PRE_NAVIGATE);
-		return super.preAction();
+		return true;
 	    }
 
 	    @Override
 	    protected List<? extends AbstractEntity<?>> action(final ActionEvent e) throws Exception {
+		paginatorModel.pageNavigationPhases(PageNavigationPhases.NAVIGATE);
 		pageNavigator.navigatePage();
 		final List<? extends AbstractEntity<?>> data = paginatorModel.getCurrentPage().data();
-		paginatorModel.pageNavigationPhases(PageNavigationPhases.NAVIGATE);
 		return data;
 	    }
 

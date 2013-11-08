@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.usertable;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -95,15 +96,27 @@ public class UserReview extends BlockingIndefiniteProgressLayer {
 
 	final JPanel controlPanel = new JPanel(new MigLayout("fill, insets 0", "push[][][][]20[]push", "[c,fill]"));
 
-	controlPanel.add(new JButton(paginator.getFirst()));
-	controlPanel.add(new JButton(paginator.getPrev()));
-	controlPanel.add(new JButton(paginator.getNext()));
-	controlPanel.add(new JButton(paginator.getLast()));
+	controlPanel.add(newUnfocusableButton(paginator.getFirst()));
+	controlPanel.add(newUnfocusableButton(paginator.getPrev()));
+	controlPanel.add(newUnfocusableButton(paginator.getNext()));
+	controlPanel.add(newUnfocusableButton(paginator.getLast()));
 	controlPanel.add(feedBack);
 
 	return controlPanel;
 
     }
+
+    /**
+     * Creates new unfocusable button with specified action.
+     *
+     * @param action
+     * @return
+     */
+    private JButton newUnfocusableButton(final Action action) {
+   	final JButton button = new JButton(action);
+   	button.setFocusable(false);
+   	return button;
+       }
 
     /**
      * Creates and returns the pagination {@link IPageChangeFeedback} implementation

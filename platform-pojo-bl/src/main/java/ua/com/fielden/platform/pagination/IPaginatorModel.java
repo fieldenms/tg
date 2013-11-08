@@ -61,7 +61,7 @@ public interface IPaginatorModel {
      *
      * @param pageNavigationPhases
      */
-    void pageNavigationPhases(PageNavigationPhases pageNavigationPhases);
+    boolean pageNavigationPhases(PageNavigationPhases pageNavigationPhases);
 
     /**
      * Adds the specified {@link IPageChangedListener} that listens the page changed events.

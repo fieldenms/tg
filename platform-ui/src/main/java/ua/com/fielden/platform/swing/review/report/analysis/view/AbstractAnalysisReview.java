@@ -326,7 +326,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	return new IPageNavigationListener() {
 
 	    @Override
-	    public void pageNavigated(final PageNavigationEvent event) {
+	    public boolean pageNavigated(final PageNavigationEvent event) {
 		switch (event.getPageNavigationPhases()) {
 		case PRE_NAVIGATE:
 		    enableRelatedActions(false, true);
@@ -339,6 +339,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 		default:
 		    break;
 		}
+		return true;
 	    }
 	};
     }

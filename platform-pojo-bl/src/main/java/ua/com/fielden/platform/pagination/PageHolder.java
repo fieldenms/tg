@@ -89,10 +89,13 @@ public class PageHolder {
      *
      * @param pageNavigationPhases
      */
-    public void pageNavigated(final PageNavigationPhases pageNavigationPhases) {
+    public boolean pageNavigated(final PageNavigationPhases pageNavigationPhases) {
 	final PageNavigationEvent event = new PageNavigationEvent(this, pageNavigationPhases);
 	for (final IPageNavigationListener l : listenerList.getListeners(IPageNavigationListener.class)) {
-	    l.pageNavigated(event);
+	    if (!l.pageNavigated(event)){
+		return false;
+	    }
 	}
+	return true;
     }
 }

@@ -171,6 +171,8 @@ public class UserTableModel extends AbstractTableModel {
 	for (final UserRole userRole : userRoles) {
 	    addUserRole(userRole);
 	}
+
+	fireTableDataChanged();
     }
 
     /**
@@ -185,6 +187,8 @@ public class UserTableModel extends AbstractTableModel {
 	for (final User user : users) {
 	    addUser(user);
 	}
+
+	fireTableDataChanged();
     }
 
     /**

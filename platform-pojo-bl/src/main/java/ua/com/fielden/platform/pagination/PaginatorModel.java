@@ -122,10 +122,11 @@ public class PaginatorModel implements IPaginatorModel, IPageHolderManager{
     }
 
     @Override
-    public void pageNavigationPhases(final PageNavigationPhases pageNavigationPhases) {
+    public boolean pageNavigationPhases(final PageNavigationPhases pageNavigationPhases) {
         if(getCurrentPageHolder() != null){
-            getCurrentPageHolder().pageNavigated(pageNavigationPhases);
+            return getCurrentPageHolder().pageNavigated(pageNavigationPhases);
         }
+        return false;
     }
 
     private void firePageHolderChanged(final PageHolderChangedEvent pageHolderChangedEvent) {
