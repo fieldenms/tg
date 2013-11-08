@@ -677,6 +677,182 @@ public class Bogie extends AbstractEntity<String> {
     
   \subsection{Creation of Entities that Model One-2-Many Association}  
   
+  The one-2-many kind of entities have a composite key, where a corresponding mater entity is always a part of -- one of the composite key members.
+  From the entity object definition perspective this is the only principle differentiator of this entity kind from the rest.
+  However, semantically one-2-many entities are more rich than one-2-one kind.
+  Their association with master entity may have either aggregational or compositional meaning, which depends strictly on the specific nature of the modelled domain.
+  
+  A good example for compositional association is the purchase order that may have multiple items.
+  If a purchase order is removed then it is only natural to remove its items.
+  As the same time, in the library domain, books associated with library are not necessarily removed if a library that holds them gets closed.
+  Those books could be relocated to another library before their master library closes.
+  
+  As before, let's consider a concrete example to demonstrate plugin in action and discuss the generated artefacts.
+  The \texttt{Bogie} entity is chosen as the master enitity, which is used to create a new one-2-many entity \texttt{WheelsetSlot}.
+  Each bogie may have one or more slots.
+  Fig.~\ref{img:ch02:00:model-actions-new-one-2-many-entity} depicts a dialog invoked from a context menu on entity \texttt{Bogie}.
+  This enityt is then automatically used as the master entity type.
+  The provided annotations describe the dialog prompts, which are almost identical to the ones used for one-2-one entity creation.
+  
+  The new entity \texttt{WheelsetSlot} models a physical part of a bogie that is used for mounting wheelsets onto the bogie.
+  Every instance of this entity, represents a concrete physical part and thus needs to be associated with a specific instance of entity \texttt{Bogie}.
+  Also, every wheelset slot has a sequential number starting with 1 that represents slot's position on a bogie.
+  Together, a bogie and a slot position on that bogie, uniquely identify a concrete wheelset slot.
+  Therefore, entity \texttt{WheelsetSlot} has a composite business key, which is modelled with type \texttt{DynamicEntityKey}.
+  
+
+  \begin{image}{Create One-2-Many Entity/Companion Objects.}{\label{img:ch02:00:model-actions-new-one-2-many-entity}}
+      \begin{tikzpicture}[remember picture, >=latex', note/.style={rectangle callout, rounded corners = 1pt, fill=annotationbgcolor, drop shadow}]
+	\pgftext{%
+	    \includegraphics[width=0.6\textwidth]{parts/02-part/chapters/00-tools/images/01-03-new-one-2-many-entity.png}
+	}%
+
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(-4,2.2)}] at (-6.5,3.5) 
+	{
+	  \begin{minipage}{3cm}
+	  \tiny
+	  \textbf{Source folder}\newline
+	  Regardless of where the context menu is invoked, the source folder is identified automatically and always points to the pojo-bl module of the application.
+	  \end{minipage}
+	};
+	
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(-4.4,1.5)}] at (-6.5,0.5) 
+	{
+	  \begin{minipage}{3cm}
+	  \tiny
+	  \textbf{Package name}\newline
+	  If the action is selected from a context menu that was invoked on a package then the package name gets populated automatically.
+	  Otherwise it needs to be specified manually or selected for a dialog that is accessible via button \emph{Browse}.
+	  \end{minipage}
+	};
+	
+
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(0.0,1.2)}] at (3.0,3.2) 
+	{
+	  \begin{minipage}{3cm}
+	  \tiny
+	  \textbf{Master Entity Type}\newline
+	  This is a name of the class representing an entity object that should be used as a master to the one-2-many class being created.
+	  \end{minipage}
+	};      
+	
+	
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(0.0,0.7)}] at (5.0,-0.1) 
+	{
+	  \begin{minipage}{3.5cm}
+	  \tiny
+	  \textbf{Name}\newline
+	  This is a class name that should adhere to camel case naming convention.
+	  It is used as the name for a class representing an entity object.
+	  \end{minipage}
+	};      
+
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(0.0,0.0)}] at (2.0,-2.1) 
+	{
+	  \begin{minipage}{4cm}
+	  \tiny
+	  \textbf{Superclass}\newline
+	  All entity objects are descendants of class \texttt{AbstractEntity}.
+	  The key for one-2-many entity has always type \texttt{DynamicEntityKey}.
+	  \end{minipage}
+	};      
+
+	\node [overlay, note=annotationbgcolor, callout absolute pointer={(-4.4,-1.0)}] at (-6.5,-2) 
+	{
+	  \begin{minipage}{3cm}
+	  \tiny
+	  \textbf{Options}\newline
+	  Provides support for customising an entity being generated.
+	  More details about each option are outlined in the text.
+	  \end{minipage}
+	};
+      \end{tikzpicture}  
+    \end{image}  
+
+    Listing~\ref{lst:ch02:00:WheelsetSlot} outlines the generated source of the \texttt{WheelsetSlot} class.
+    The only modification that was done to this class after it was created, pertains to values in annotations \texttt{@KeyTitle}, \texttt{@DescTitle} and \texttt{@Title}.
+    This was needed in order to provide more meaningful description of the entity and its properties.
+    
+  \begin{code}{One-2-many entity \texttt{WheelsetSlot}.}{\label{lst:ch02:00:WheelsetSlot}}{codebgcolor}
+  \begin{lstlisting}
+@MapEntityTo
+@KeyType(DynamicEntityKey.class)
+@KeyTitle(value = "Wheelset Slot", desc = "A slot on a bogie for mounting a wheelset.")
+@CompanionObject(IWheelsetSlot.class)
+@DescTitle(value = "Desc", desc = "Short annotation about this specific wheelset slot.")
+public class WheelsetSlot extends AbstractEntity<DynamicEntityKey> {%\tikzref{key-type}{-2.0cm}{0.1cm}%
+
+    @IsProperty
+    @Title(value = "Bogie", desc = "Bogie where this slot belongs")
+    @MapTo
+    @CompositeKeyMember(1)%\tikzref{key-member-1}{0.1cm}{0.0cm}%
+    private Bogie bogie;
+
+    @Observable
+    @EntityExists(Bogie.class)
+    public WheelsetSlot setBogie(final Bogie value) {
+        this.bogie = value;
+        return this;
+    }                        %\tikzref{key-member-1-accessors}{1.0cm}{0.1cm}%
+
+    public Bogie getBogie() {
+        return bogie;
+    }
+
+}
+  \end{lstlisting}
+  \tikznote{key-type-annotation}{key-type}{1.5cm}{1.7cm}{7cm}{Key type parameter}{
+    All one-2-many entities have \texttt{DynamicEntityKey} as their key type, which represents a composite key that is identified dynamically from class structure.
+  }
+  \tikznote{key-member-1-annotation}{key-member-1}{6.0cm}{-0.3cm}{9cm}{Master as key member}{
+    The master entity (\texttt{Bogie} in this case) is always one of the composite key members.
+    Both the property name and its type are determined automatically using the specified master entity type.
+    It is suggested to always make master entity to be the first key member, which is governed by value in annotation \texttt{@CompositeKeyMember}.
+  }
+  \tikznote{key-member-1-accessors-annotation}{key-member-1-accessors}{5.0cm}{-0.7cm}{5cm}{Key member accessors}{
+    Accessors for composite key members are ordinary and have nothing special that would differentiate them form any other property accessors.
+  }    
+  \vspace*{-7px}
+\end{code}          
+    
+    The generated entity includes only one key member, which was determined automatically based on the specified master entity type.
+    Any additional members need to be added manually.
+    This, however, can be conveniently done using template \texttt{tgprop-composite-key-entity-member} or \texttt{tgprop-composite-key-ordinary-member} in the source of entity \texttt{WheelsetSlot} in the place where a new property should be generated (e.g. underneath the \texttt{bogie} property).
+    In our case, it is required to have the second key member \texttt{position} of type \texttt{Integer}.
+    Therefore, template \texttt{tgprop-composite-key-ordinary-member} should be used to generate it.
+    Listing~\ref{lst:ch02:00:WheelsetSlot-key-2} 
+    
+   \lstset{firstnumber=13}
+  \begin{code}{Second key member for entity \texttt{WheelsetSlot}.}{\label{lst:ch02:00:WheelsetSlot-key-2}}{codebgcolor}
+  \begin{lstlisting}
+...
+    @IsProperty
+    @MapTo
+    @Title(value = "Position", desc = "Slot's position")
+    @CompositeKeyMember(2)%\tikzref{key-member-2}{0.1cm}{0.1cm}%
+    private Integer position;
+
+    @Observable
+    public WheelsetSlot setPosition(final Integer position) {
+	this.position = position;
+	return this;
+    }                           %\tikzref{key-member-2-accessors}{0.1cm}{0.0cm}%
+                                            
+    public Integer getPosition() {
+	return position;
+    }
+...
+  \end{lstlisting}
+  \tikznote{key-member-2-annotation}{key-member-2}{3.5cm}{1.cm}{6cm}{Second key member}{
+    Annotation \texttt{@CompositeKeyMember} for the second key member \texttt{position} should specify $2$ as its value.
+  }
+  \tikznote{key-member-2-accessors-annotation}{key-member-2-accessors}{5.0cm}{-0.7cm}{5cm}{Key member accessors}{
+    Accessors for composite key members are ordinary and have nothing special that would differentiate them form any other property accessors.
+  }    
+  \vspace*{-7px}
+\end{code}              
+    
+    
 \section{Creation of Main Menu Items and Entity Centres}  
   
   
