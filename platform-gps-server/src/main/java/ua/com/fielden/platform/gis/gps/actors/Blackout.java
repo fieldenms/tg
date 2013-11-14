@@ -19,8 +19,6 @@ import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
  * @param <T>
  */
 public class Blackout<T extends AbstractAvlMessage> {
-    private T start;
-    private T finish;
     private final SortedSet<T> messages;
     private final Set<Long> gpsTimes = new HashSet<>();
 
@@ -33,14 +31,9 @@ public class Blackout<T extends AbstractAvlMessage> {
 	    if (!gpsTimes.contains(message.getGpsTime().getTime())) {
 		messages.add(message);
 		gpsTimes.add(message.getGpsTime().getTime());
-
-		if (start == null || (start != null && message.getGpsTime().getTime() < start.getGpsTime().getTime())) {
-		    start = message;
-		}
-
-		if (finish == null || (finish != null && message.getGpsTime().getTime() > finish.getGpsTime().getTime())) {
-		    finish = message;
-		}
+	    } else {
+		final boolean rm = messages.remove(message);
+		final boolean ad = messages.add(message);
 	    }
 	}
     }
@@ -51,8 +44,6 @@ public class Blackout<T extends AbstractAvlMessage> {
 	    for (final T message : messages) {
 		result.add(message);
 	    }
-	    start = null;
-	    finish = null;
 	    messages.clear();
 	    gpsTimes.clear();
 	    return result;
@@ -66,10 +57,10 @@ public class Blackout<T extends AbstractAvlMessage> {
     }
 
     public T getStart() {
-	return start;
+	return messages.isEmpty() ? null : messages.first();
     }
 
     public T getFinish() {
-	return finish;
+	return messages.isEmpty() ? null : messages.last();
     }
 }

@@ -18,14 +18,12 @@ public class Packet<T extends AbstractAvlMessage> {
     private static BigDecimal TWO_MINUS = new BigDecimal(-2);
 
     private final Long created;
-    private T start;
-    private T finish;
     private final SortedSet<T> messages;
     private final Set<Long> gpsTimes = new HashSet<>();
 
     @Override
     public String toString() {
-	return messages.size() == 1 ? ("packet: " + start) : ("packet: " + start + " - " + finish + " (" + messages.size() + ")");
+	return messages.size() == 1 ? ("packet: " + getStart()) : ("packet: " + getStart() + " - " + getFinish() + " (" + messages.size() + ")");
     }
 
     public Packet(final Date created, final MessagesComparator<T> messagesComparator) {
@@ -35,15 +33,13 @@ public class Packet<T extends AbstractAvlMessage> {
     }
 
     public void add(final T message) {
-	if (!gpsTimes.contains(message.getGpsTime().getTime()) && isValid(message)) {
-	    gpsTimes.add(message.getGpsTime().getTime());
-	    messages.add(message);
-	    if (start == null || (start != null && message.getGpsTime().getTime() < start.getGpsTime().getTime())) {
-		start = message;
-	    }
-
-	    if (finish == null || (finish != null && message.getGpsTime().getTime() > finish.getGpsTime().getTime())) {
-		finish = message;
+	if (isValid(message)) {
+	    if (!gpsTimes.contains(message.getGpsTime().getTime())) {
+		gpsTimes.add(message.getGpsTime().getTime());
+		messages.add(message);
+	    } else {
+		final boolean rm = messages.remove(message);
+		final boolean ad = messages.add(message);
 	    }
 	}
     }
@@ -102,11 +98,11 @@ public class Packet<T extends AbstractAvlMessage> {
     }
 
     public T getStart() {
-	return start;
+	return messages.isEmpty() ? null : messages.first();
     }
 
     public T getFinish() {
-	return finish;
+	return messages.isEmpty() ? null : messages.last();
     }
 
     public SortedSet<T> getMessages() {

@@ -267,7 +267,7 @@ public abstract class AbstractAvlMachineActor<T extends AbstractAvlMessage, M ex
 	final Date packetReceived = new Date();
 	final Packet<T> packet = new Packet<T>(packetReceived, messagesComparator);
 	for (int i = data.length - 1; i >= 0; i--) {
-	    final T msg = completeMessage(avlToMessageConverter.populateData(createMessage(), data[i], packetReceived)); // AvlToMessageConverter.convert(data[i], machine, machineRouteDriverHistoryMaintainer, packetReceived);
+	    final T msg = completeMessage(avlToMessageConverter.populateData(createMessage(), data[i], packetReceived));
 	    packet.add(msg);
 	}
 	return packet;
