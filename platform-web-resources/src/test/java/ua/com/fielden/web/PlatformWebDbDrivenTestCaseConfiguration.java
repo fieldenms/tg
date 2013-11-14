@@ -23,6 +23,7 @@ import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.MoneyUserType;
+import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -74,6 +75,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 	    domainTypes.add(User.class);
 	    domainTypes.add(UserRole.class);
 	    domainTypes.add(UserAndRoleAssociation.class);
+	    domainTypes.add(UserAndRoleAssociationBatchAction.class);
 	    domainTypes.add(SecurityRoleAssociation.class);
 	    domainTypes.add(InspectedEntity.class);
 	    domainTypes.add(Attachment.class);

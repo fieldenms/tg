@@ -9,6 +9,8 @@ import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
+import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionDao;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
@@ -63,5 +65,6 @@ public class WebHibernateModule extends CommonFactoryModule {
 	bind(IUserDao.class).to(UserController.class);
 	bind(ISecurityTokenController.class).to(SecurityTokenController.class);
 	bind(IAttachmentController.class).to(AttachmentDao.class);
+	bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
     }
 }

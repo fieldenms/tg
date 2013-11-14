@@ -8,8 +8,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
-import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 
 import com.google.inject.Inject;
 
@@ -160,6 +159,7 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
 	types.add(Exception.class);
 	types.add(StackTraceElement[].class);
 	types.addAll(applicationDomain.entityTypes());
+	types.add(UserAndRoleAssociationBatchAction.class);
     }
 
     @Override
@@ -175,4 +175,6 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
     public static List<Class<?>> utilityGeneratedClasses(){
 	return Collections.unmodifiableList(utilityGeneratedClasses);
     }
+
+
 }
