@@ -195,4 +195,10 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
         return null;
     }
 
+    @Override
+    public LastLevelEntity findByEntityAndFetch(final fetch<LastLevelEntity> fetchModel, final LastLevelEntity entity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
 }

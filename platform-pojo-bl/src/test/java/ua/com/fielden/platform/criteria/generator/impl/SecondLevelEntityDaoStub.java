@@ -192,4 +192,10 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
         return null;
     }
 
+    @Override
+    public SecondLevelEntity findByEntityAndFetch(final fetch<SecondLevelEntity> fetchModel, final SecondLevelEntity entity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
 }

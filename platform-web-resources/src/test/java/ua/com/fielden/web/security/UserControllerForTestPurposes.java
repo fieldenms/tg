@@ -237,4 +237,10 @@ public class UserControllerForTestPurposes implements IUserController {
 	// TODO Auto-generated method stub
 	return null;
     }
+
+    @Override
+    public User findByEntityAndFetch(final fetch<User> fetchModel, final User entity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
 }

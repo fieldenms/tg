@@ -174,6 +174,12 @@ public class StubDaoFactory implements IDaoFactory {
 		public Integer progress() {
 		    return null;
 		}
+
+		@Override
+		public TopLevelEntity findByEntityAndFetch(final fetch<TopLevelEntity> fetchModel, final TopLevelEntity entity) {
+		    // TODO Auto-generated method stub
+		    return null;
+		}
 	    };
 	}
 	return null;

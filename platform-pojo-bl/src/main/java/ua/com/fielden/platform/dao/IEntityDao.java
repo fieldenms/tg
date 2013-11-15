@@ -107,6 +107,15 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     T findByKeyAndFetch(fetch<T> fetchModel, final Object... keyValues);
 
     /**
+     * Finds entity by its instance and enhances it according to provided fetch model.
+     *
+     * @param fetchModel
+     * @param entity
+     * @return
+     */
+    T findByEntityAndFetch(fetch<T> fetchModel, T entity);
+
+    /**
      * Should return a reference to the first page of the specified size containing entity instances.
      *
      * @param pageCapacity
