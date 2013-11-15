@@ -57,14 +57,18 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
     @Override
     protected T findById(final Long id, final boolean forceRetrieval) {
 	if (id == null) {
-	    return getEntity();
+	    if (forceRetrieval) {
+		return getCompanion().findByEntityAndFetch(getFetchModel(), getEntity());
+	    } else {
+		return getEntity();
+	    }
+
+	    //return getEntity();
 	}
 
 	final T entity = getEntity().getId() == id ? getEntity() : getPrevEntity();
 
-	if (forceRetrieval) {
-	    return getFetchModel() != null ? getCompanion().findById(id, getFetchModel()) : getCompanion().findById(id);
-	} else if (getCompanion().isStale(id, entity.getVersion())) {
+	if (forceRetrieval || getCompanion().isStale(id, entity.getVersion())) {
 	    return getFetchModel() != null ? getCompanion().findById(id, getFetchModel()) : getCompanion().findById(id);
 	} else {
 	    return entity;
