@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.bind.development.Binder;
@@ -57,13 +58,11 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
     @Override
     protected T findById(final Long id, final boolean forceRetrieval) {
 	if (id == null) {
-	    if (forceRetrieval) {
+	    if (Reflector.isSynthetic(getEntity().getType()) && forceRetrieval) {
 		return getCompanion().findByEntityAndFetch(getFetchModel(), getEntity());
 	    } else {
 		return getEntity();
 	    }
-
-	    //return getEntity();
 	}
 
 	final T entity = getEntity().getId() == id ? getEntity() : getPrevEntity();
