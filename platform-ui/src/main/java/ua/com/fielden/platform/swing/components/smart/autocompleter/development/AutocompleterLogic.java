@@ -148,10 +148,12 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 	return (JTextField) super.getTextComponent();
     }
 
+    @Override
     public void focusGained(final FocusEvent e) {
 	State.NONE.next(layeredTextComponent.getUi());
     }
 
+    @Override
     public void focusLost(final FocusEvent e) {
 	cancelSwingWorker(findMatchesWorker); // cancel any retrieval if control looses focus
 	updatePreValue("");
@@ -213,6 +215,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
      * <code>updateHints</code> incorporates the logic to determine the matching values for the provided context, and whether these values should be displayed. It also handles life
      * cycle of the progress indicator.
      */
+    @Override
     public boolean updateHints(final Object context) {
 	final JTextField components = getTextComponent();
 	if (context == null || StringUtils.isEmpty(context.toString())) {
@@ -259,8 +262,9 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 		protected void done() {
 		    if (!isCancelled()) { // there is no need to proceed with popup update if SwingWorker was cancelled
 			try {
-			    final List<T> result = get();
-			    setListData(result == null ? new ArrayList<T>() : result);
+			    List<T> result = get();
+			    result = (result == null ? new ArrayList<T>() : result);
+			    setListData(result);
 
 			    if (result.size() > 0) { // there are matching values
 				nextStage();
@@ -302,6 +306,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
     private synchronized void updatePreValue(final String value) {
 	if (StringUtils.isEmpty(value) && getTextComponent().hasFocus()) {
 	    SwingUtilities.invokeLater(new Runnable() {
+		@Override
 		public void run() {
 		    State.NONE.next(layeredTextComponent.getUi());
 		}
