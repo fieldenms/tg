@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.LayoutManager;
 import java.util.Map;
 
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
@@ -236,6 +237,12 @@ public abstract class BaseNotifPanel<MODEL extends UModel> extends BasePanelWith
     protected void add(final JPanel panel, final Map<String, IPropertyEditor> editors, final String propertyName) {
 	addWithParamsForEditor(panel, editors, propertyName, "");
     }
+
+    /** This is a convenient layout helper method, which does accepts any component and simply adds it to the panel with the specified parameters. */
+    protected void addComponent(final JPanel panel, final JComponent component, final String layoutParameter) {
+	panel.add(component, layoutParameter);
+    }
+
 
     /** This is a convenient layout helper method for adding editor following the wrap setting. */
     protected void addAndWrap(final JPanel panel, final Map<String, IPropertyEditor> editors, final String propertyName) {
