@@ -10,7 +10,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -327,6 +329,8 @@ public class EntityView {
 	    panel.add(createPropertyPanel(commitOnValidRadioButtonOKT, null, commitOnValidRadioButtonOTC, new JLabel("")));
 
 	    final String keyExpression = "key";
+	    final Set<String> highlightProps = new HashSet<>();
+	               	       highlightProps.add(keyExpression);
 	    final IValueMatcher<DemoAbstractEntity> matcher = new PojoValueMatcher<DemoAbstractEntity>(Arrays.asList(acceptableValues), keyExpression, 10) {
 		@Override
 		public List<DemoAbstractEntity> findMatches(final String value) {
@@ -339,14 +343,14 @@ public class EntityView {
 	    };
 
 	    panel.add(createPropertyPanel(null, new JLabel("Entity autocompleters :"), null, null));
-	    final BoundedValidationLayer<AutocompleterTextFieldLayer> singleValueAutocompleterOnFocusLost = ComponentFactory.createOnFocusLostAutocompleter(entity, Entity.PROPERTY_DEMO_ENTITY, "enter demoEntity name...", DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, null, matcher, "singleValueAutocompleterOnFocusLost", false);
-	    final BoundedValidationLayer<AutocompleterTextFieldLayer<DemoAbstractEntity>> singleValueAutocompleterOnSaveButton = ComponentFactory.createTriggeredAutocompleter(entity, Entity.PROPERTY_DEMO_ENTITY, "enter demoEntity name...", saveButtonTrigger, DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, null, matcher, "singleValueAutocompleterOnSaveButton", false, new SimpleOnCommitSysoutMessageAction("**************************************************************this postCommitAction invokes after OnSaveButtonCommit"), new SimpleOnCommitSysoutMessageAction("--------------------------------------------------------------this postCommitAction invokes after OnSaveButtonCommit"));
+	    final BoundedValidationLayer<AutocompleterTextFieldLayer> singleValueAutocompleterOnFocusLost = ComponentFactory.createOnFocusLostAutocompleter(entity, Entity.PROPERTY_DEMO_ENTITY, "enter demoEntity name...", DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, highlightProps, null, matcher, "singleValueAutocompleterOnFocusLost", false);
+	    final BoundedValidationLayer<AutocompleterTextFieldLayer<DemoAbstractEntity>> singleValueAutocompleterOnSaveButton = ComponentFactory.createTriggeredAutocompleter(entity, Entity.PROPERTY_DEMO_ENTITY, "enter demoEntity name...", saveButtonTrigger, DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, highlightProps, null, matcher, "singleValueAutocompleterOnSaveButton", false, new SimpleOnCommitSysoutMessageAction("**************************************************************this postCommitAction invokes after OnSaveButtonCommit"), new SimpleOnCommitSysoutMessageAction("--------------------------------------------------------------this postCommitAction invokes after OnSaveButtonCommit"));
 	    singleValueAutocompleterOnSaveButton.addOnCommitAction(new SimpleOnCommitSysoutMessageAction("==============================================================this postCommitAction invokes after OnSaveButtonCommit"));
 	    final BoundedValidationLayer<ReadOnlyLabel> label5 = ComponentFactory.createLabel(entity, Entity.PROPERTY_DEMO_ENTITY, "PROPERTY_DEMO_ENTITY");
 	    panel.add(createPropertyPanel(null, singleValueAutocompleterOnFocusLost, singleValueAutocompleterOnSaveButton, label5));
 
-	    final BoundedValidationLayer<AutocompleterTextFieldLayer> multValueAutocompleterOnFocusLost = ComponentFactory.createOnFocusLostAutocompleter(entity, Entity.PROPERTY_LIST, "enter demoEntity name...", DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, ",", matcher, "multValueAutocompleterOnFocusLost", false);
-	    final BoundedValidationLayer<AutocompleterTextFieldLayer<DemoAbstractEntity>> multValueAutocompleterOnSaveButton = ComponentFactory.createTriggeredAutocompleter(entity, Entity.PROPERTY_LIST, "enter demoEntity name...", saveButtonTrigger, DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, ",", matcher, "multValueAutocompleterOnSaveButton", false);
+	    final BoundedValidationLayer<AutocompleterTextFieldLayer> multValueAutocompleterOnFocusLost = ComponentFactory.createOnFocusLostAutocompleter(entity, Entity.PROPERTY_LIST, "enter demoEntity name...", DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, highlightProps, ",", matcher, "multValueAutocompleterOnFocusLost", false);
+	    final BoundedValidationLayer<AutocompleterTextFieldLayer<DemoAbstractEntity>> multValueAutocompleterOnSaveButton = ComponentFactory.createTriggeredAutocompleter(entity, Entity.PROPERTY_LIST, "enter demoEntity name...", saveButtonTrigger, DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, highlightProps, ",", matcher, "multValueAutocompleterOnSaveButton", false);
 	    final BoundedValidationLayer<ReadOnlyLabel> label6 = ComponentFactory.createLabel(entity, Entity.PROPERTY_LIST, "PROPERTY_LIST");
 	    panel.add(createPropertyPanel(null, multValueAutocompleterOnFocusLost, multValueAutocompleterOnSaveButton, label6));
 
@@ -358,15 +362,15 @@ public class EntityView {
 
 	    // stringBinding autocompleters :
 	    panel.add(createPropertyPanel(null, new JLabel("String autocompleters :"), null, null));
-	    final BoundedValidationLayer<AutocompleterTextFieldLayer> stringValueAutocompleterOnFocusLost = ComponentFactory.createOnFocusLostAutocompleter(entity, Entity.PROPERTY_STRING_DEMO_ENTITY, "enter demoEntity name...", DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, null, matcher, "stringValueAutocompleterOnFocusLost", true);
+	    final BoundedValidationLayer<AutocompleterTextFieldLayer> stringValueAutocompleterOnFocusLost = ComponentFactory.createOnFocusLostAutocompleter(entity, Entity.PROPERTY_STRING_DEMO_ENTITY, "enter demoEntity name...", DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, highlightProps, null, matcher, "stringValueAutocompleterOnFocusLost", true);
 
-	    final BoundedValidationLayer<AutocompleterTextFieldLayer<DemoAbstractEntity>> stringValueAutocompleterOnSaveButton = ComponentFactory.createTriggeredAutocompleter(entity, Entity.PROPERTY_STRING_DEMO_ENTITY, "enter demoEntity name...", saveButtonTrigger, DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, null, matcher, "stringValueAutocompleterOnSaveButton", true);
+	    final BoundedValidationLayer<AutocompleterTextFieldLayer<DemoAbstractEntity>> stringValueAutocompleterOnSaveButton = ComponentFactory.createTriggeredAutocompleter(entity, Entity.PROPERTY_STRING_DEMO_ENTITY, "enter demoEntity name...", saveButtonTrigger, DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, highlightProps, null, matcher, "stringValueAutocompleterOnSaveButton", true);
 	    final BoundedValidationLayer<ReadOnlyLabel> label10 = ComponentFactory.createLabel(entity, Entity.PROPERTY_STRING_DEMO_ENTITY, "PROPERTY_STRING_DEMO_ENTITY");
 	    panel.add(createPropertyPanel(null, stringValueAutocompleterOnFocusLost, stringValueAutocompleterOnSaveButton, label10));
 
 	    // mult valued:
-	    final BoundedValidationLayer<AutocompleterTextFieldLayer> multStringValueAutocompleterOnFocusLost = ComponentFactory.createOnFocusLostAutocompleter(entity, Entity.PROPERTY_LIST_OF_STRINGS, "enter demoEntity name...", DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, ",", matcher, "multValueAutocompleterOnFocusLost", true);
-	    final BoundedValidationLayer<AutocompleterTextFieldLayer<DemoAbstractEntity>> multStringValueAutocompleterOnSaveButton = ComponentFactory.createTriggeredAutocompleter(entity, Entity.PROPERTY_LIST_OF_STRINGS, "enter demoEntity name...", saveButtonTrigger, DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, ",", matcher, "multValueAutocompleterOnSaveButton", true);
+	    final BoundedValidationLayer<AutocompleterTextFieldLayer> multStringValueAutocompleterOnFocusLost = ComponentFactory.createOnFocusLostAutocompleter(entity, Entity.PROPERTY_LIST_OF_STRINGS, "enter demoEntity name...", DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, highlightProps, ",", matcher, "multValueAutocompleterOnFocusLost", true);
+	    final BoundedValidationLayer<AutocompleterTextFieldLayer<DemoAbstractEntity>> multStringValueAutocompleterOnSaveButton = ComponentFactory.createTriggeredAutocompleter(entity, Entity.PROPERTY_LIST_OF_STRINGS, "enter demoEntity name...", saveButtonTrigger, DemoAbstractEntity.class, keyExpression, new Pair[] {new Pair<String, String>("Desc", "desc")}, highlightProps, ",", matcher, "multValueAutocompleterOnSaveButton", true);
 	    final BoundedValidationLayer<ReadOnlyLabel> label11 = ComponentFactory.createLabel(entity, Entity.PROPERTY_LIST_OF_STRINGS, "PROPERTY_LIST_OF_STRINGS");
 	    panel.add(createPropertyPanel(null, multStringValueAutocompleterOnFocusLost, multStringValueAutocompleterOnSaveButton, label11));
 

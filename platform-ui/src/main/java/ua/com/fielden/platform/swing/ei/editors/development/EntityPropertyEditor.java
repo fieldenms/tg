@@ -1,11 +1,18 @@
 package ua.com.fielden.platform.swing.ei.editors.development;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
@@ -85,17 +92,40 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
 	return editor;
     }
 
-    private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditor(final AbstractEntity<?> bindingEntity, final String bindingPropertyName, final Class elementType, final String caption, final String tooltip, final boolean isSingle, final boolean stringBinding, final Pair<String, String>... titleExprToDisplay) {
+    private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditor(final AbstractEntity<?> bindingEntity, //
+	    final String bindingPropertyName, final Class elementType, final String caption, final String tooltip, //
+	    final boolean isSingle, final boolean stringBinding, final Pair<String, String>... titleExprToDisplay) {
 	if (!AbstractEntity.class.isAssignableFrom(elementType)) {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + elementType + ".");
 	}
-	final Pair<String, String>[] secExpressions;
-	if(titleExprToDisplay.length == 0){
-	    secExpressions = EntityUtils.hasDescProperty(elementType) ? new Pair[] {new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc("desc", elementType).getKey(), "desc")} : null;
-	} else {
-	    secExpressions = titleExprToDisplay;
+	return ComponentFactory.createOnFocusLostAutocompleter(bindingEntity, bindingPropertyName, caption, elementType, //
+		"key", secondaryExpressions(elementType), highlightProperties(elementType), //
+		isSingle ? null : ",", getValueMatcher(), tooltip, stringBinding);
+    }
+
+    private Set<String> highlightProperties(final Class entityType) {
+	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+	final Set<String> highlightProps = new HashSet<>();
+	highlightProps.add("key");
+	for(final Field keyMember : keyMembers) {
+	    highlightProps.add(keyMember.getName());
 	}
-	return ComponentFactory.createOnFocusLostAutocompleter(bindingEntity, bindingPropertyName, caption, elementType, "key", secExpressions, isSingle ? null : ",", getValueMatcher(), tooltip, stringBinding);
+	return highlightProps;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Pair<String, String>[] secondaryExpressions(final Class entityType) {
+	final List<Pair<String, String>> props = new ArrayList<>();
+	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+	if(keyMembers.size() > 1) {
+	    for (final Field keyMember : keyMembers) {
+		props.add(new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc(keyMember.getName(), entityType).getKey(), keyMember.getName()));
+	    }
+	}
+	if (EntityUtils.hasDescProperty(entityType)) {
+	    props.add(new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc("desc", entityType).getKey(), "desc"));
+	}
+	return props.toArray(new Pair[0]);
     }
 
     public void setPropertyToHighlight(final String property, final boolean highlight) {

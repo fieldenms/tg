@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.example.swing.components.autocompleter;
 
 import java.awt.event.ActionEvent;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -47,8 +49,9 @@ public class AutocompleterEnumMultiExample {
 			return super.findMatches(value);
 		    }
 		};
-
-		final MultiplePropertiesListCellRenderer<DemoEnum> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEnum>("name()", new Pair[] {new Pair<String, String>("string", "toString()")});
+		final Set<String> highlightProps = new HashSet<String>();
+		highlightProps.add("name()");
+		final MultiplePropertiesListCellRenderer<DemoEnum> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEnum>("name()", new Pair[] {new Pair<String, String>("string", "toString()")}, highlightProps);
 		final AutocompleterTextFieldLayer<DemoEnum> autocompleter = new AutocompleterTextFieldLayer<DemoEnum>(new UpperCaseTextField(), matcher, DemoEnum.class, "name()", cellRenderer, "caption...", ";");
 		cellRenderer.setAuto(autocompleter.getAutocompleter());
 

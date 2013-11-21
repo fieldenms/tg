@@ -5,12 +5,18 @@ package ua.com.fielden.platform.swing.egi.models.mappings.simplified;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.swing.Action;
 import javax.swing.JTextField;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
@@ -88,9 +94,8 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
     @Override
     public EditorComponent<BoundedValidationLayer<AutocompleterTextFieldLayer>, JTextField> createBoundedEditorFor(final T entity) {
 	final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
-	final Pair<String, String>[] secExpressions = EntityUtils.hasDescProperty(valueClass) ? new Pair[] {new Pair<String, String> (TitlesDescsGetter.getTitleAndDesc("desc", entity.getType()).getKey(),"desc")} : null;
 
-	final BoundedValidationLayer<AutocompleterTextFieldLayer> boundedLayer = ComponentFactory.createOnFocusLostAutocompleter(entity, originalPropertyName, "", valueClass, "key", secExpressions, (String) null, valueMatcher, (String) null, stringBinding, onCommitActionWrappers); //
+	final BoundedValidationLayer<AutocompleterTextFieldLayer> boundedLayer = ComponentFactory.createOnFocusLostAutocompleter(entity, originalPropertyName, "", valueClass, "key", secondaryExpressions(valueClass), highlightProperties(valueClass), (String) null, valueMatcher, (String) null, stringBinding, onCommitActionWrappers); //
 	boundedLayer.getView().getView().addKeyListener(new KeyAdapter() {
 	    @Override
 	    public void keyReleased(final KeyEvent e) {
@@ -101,6 +106,31 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
 	});
 
 	return new EditorComponent<BoundedValidationLayer<AutocompleterTextFieldLayer>, JTextField>(boundedLayer, (JTextField) boundedLayer.getView().getView());
+    }
+
+    private Set<String> highlightProperties(final Class entityType) {
+	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+	final Set<String> highlightProps = new HashSet<>();
+	highlightProps.add("key");
+	for(final Field keyMember : keyMembers) {
+	    highlightProps.add(keyMember.getName());
+	}
+	return highlightProps;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Pair<String, String>[] secondaryExpressions(final Class entityType) {
+	final List<Pair<String, String>> props = new ArrayList<>();
+	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+	if(keyMembers.size() > 1) {
+	    for (final Field keyMember : keyMembers) {
+		props.add(new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc(keyMember.getName(), entityType).getKey(), keyMember.getName()));
+	    }
+	}
+	if (EntityUtils.hasDescProperty(entityType)) {
+	    props.add(new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc("desc", entityType).getKey(), "desc"));
+	}
+	return props.toArray(new Pair[0]);
     }
 
 }

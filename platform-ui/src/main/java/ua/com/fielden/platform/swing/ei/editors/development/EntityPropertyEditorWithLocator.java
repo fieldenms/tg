@@ -2,8 +2,11 @@ package ua.com.fielden.platform.swing.ei.editors.development;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -177,13 +180,34 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	if (!AbstractEntity.class.isAssignableFrom(entityType)) {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + entityType + ".");
 	}
-	final Pair<String, String>[] secExpressions;
-	if(titleExprToDisplay.length == 0){
-	    secExpressions = EntityUtils.hasDescProperty(entityType) ? new Pair[] {new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc("desc", entityType).getKey(), "desc")} : null;
-	} else {
-	    secExpressions = titleExprToDisplay;
+	return ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, //
+		locatorConfigurationModel, entityType, getValueMatcher(), "key", secondaryExpressions(entityType), //
+		highlightProperties(entityType), caption, isSingle ? null : ",", toolTip, stringBinding);
+    }
+
+    private Set<String> highlightProperties(final Class entityType) {
+	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+	final Set<String> highlightProps = new HashSet<>();
+	highlightProps.add("key");
+	for(final Field keyMember : keyMembers) {
+	    highlightProps.add(keyMember.getName());
 	}
-	return ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, locatorConfigurationModel, entityType, getValueMatcher(), "key", secExpressions, caption, isSingle ? null : ",", toolTip, stringBinding);
+	return highlightProps;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Pair<String, String>[] secondaryExpressions(final Class entityType) {
+	final List<Pair<String, String>> props = new ArrayList<>();
+	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+	if(keyMembers.size() > 1) {
+	    for (final Field keyMember : keyMembers) {
+		props.add(new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc(keyMember.getName(), entityType).getKey(), keyMember.getName()));
+	    }
+	}
+	if (EntityUtils.hasDescProperty(entityType)) {
+	    props.add(new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc("desc", entityType).getKey(), "desc"));
+	}
+	return props.toArray(new Pair[0]);
     }
 
     private static class EntityLocatorValueMatcher<T extends AbstractEntity<?>, R extends AbstractEntity<?>> implements IValueMatcher<T>{
@@ -282,7 +306,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		final fetch<?> finalFetchModel = fetchModel != null ? fetchModel : fetchKeyAndDescOnly(entityType);
 		return EntityUtils.makeNotEnhanced(criteria.runLocatorQuery(getPageSize(), value, finalFetchModel, dependentValues.toArray(new Pair[0])));
 	    }else{
-		bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("key", true);
+		highlightKeyProps(true);
 		if(EntityUtils.hasDescProperty(entityType)) {
 		    bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("desc", false);
 		}
@@ -293,6 +317,19 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		}
 	    }
 
+	}
+
+	/**
+	 * Set properties to highlight in autocompleter.
+	 *
+	 * @param highlight
+	 */
+	private void highlightKeyProps(final boolean highlight) {
+	    final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+	    bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("key", highlight);
+	    for (final Field keyMember : keyMembers) {
+		bindedPropertyEditor.getEditor().getView().setPropertyToHighlight(keyMember.getName(), highlight);
+	    }
 	}
 
 	/**
@@ -315,7 +352,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		    break;
 		}
 
-		bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("key", highlightKey);
+		highlightKeyProps(highlightKey);
 		if (EntityUtils.hasDescProperty(entityType)) {
 		    bindedPropertyEditor.getEditor().getView().setPropertyToHighlight("desc", highlightDesc);
 		}

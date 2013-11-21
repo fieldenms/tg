@@ -13,6 +13,7 @@ import java.awt.FontMetrics;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,16 +30,15 @@ import org.apache.commons.jexl.ExpressionFactory;
 import org.apache.commons.jexl.JexlContext;
 import org.apache.commons.jexl.JexlHelper;
 
-import com.jidesoft.swing.StyledLabel;
-import com.jidesoft.swing.StyledLabelBuilder;
-
 import sun.swing.SwingUtilities2;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterLogic;
 import ua.com.fielden.platform.swing.components.smart.development.Hover;
-import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import com.jidesoft.swing.StyledLabel;
+import com.jidesoft.swing.StyledLabelBuilder;
 
 /**
  * This list cell renderer is designed to represent instances with two specified in the constructor properties: First property is in bold and located above the second property; the
@@ -70,7 +70,8 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
 
     private int firstColumnPrefWidth = 0;
 
-    public MultiplePropertiesListCellRenderer(final String mainExpression, final Pair<String, String>... secondaryExpressions) {
+    public MultiplePropertiesListCellRenderer(final String mainExpression, final Pair<String, String>[] secondaryExpressions,//
+	    final Set<String> expressionsToHighlight) {
 	// create expression for mainExpression
 	titleExprToDisplay = new ArrayList<>();
 	titleExprToDisplay.add(new Pair<>("dummy", mainExpression));
@@ -84,7 +85,7 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
 	    propertyExpressions[0] = ExpressionFactory.createExpression(("entity." + mainExpression.trim()));
 	    jlProperties[0] = createMainLabel();
 	    exprProperties[0] = mainExpression;
-	    exprHighlights.add(true);
+	    exprHighlights.add(expressionsToHighlight.contains(mainExpression) ? true : false);
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new IllegalArgumentException("Failed to create expression " + mainExpression + ": " + e.getMessage());
@@ -108,7 +109,7 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
 		rowConstraint += "[c]";
 		jlProperties[exprIndex] = createSecondartLabel();
 		exprProperties[exprIndex] = expressionValue;
-		exprHighlights.add(false);
+		exprHighlights.add(expressionsToHighlight.contains(expressionValue) ? true : false);
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new IllegalArgumentException("Failed to create expression " + secondaryExpressions[exprIndex - 1] + ": " + e.getMessage());
@@ -119,10 +120,10 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
 	final boolean skipTitles = titleExprToDisplay.size() <= 2;
 	if (skipTitles) {
 	    firstColumnPrefWidth = 0;
-	    setLayout(new MigLayout("debug, fill, insets " + insets, "[grow]", "[c]" + rowConstraint + insets)); // there will be a gap after each entry in the list
+	    setLayout(new MigLayout("fill, insets " + insets, "[grow]", "[c]" + rowConstraint + insets)); // there will be a gap after each entry in the list
 	    add(jlProperties[0], "wrap");
 	} else {
-	    setLayout(new MigLayout("debug, fill, insets " + insets, "[right]rel[grow]", "[c]" + rowConstraint + insets)); // there will be a gap after each entry in the list
+	    setLayout(new MigLayout("fill, insets " + insets, "[right]rel[grow]", "[c]" + rowConstraint + insets)); // there will be a gap after each entry in the list
 	    add(jlProperties[0], "skip 1, wrap");
 	}
 

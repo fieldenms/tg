@@ -2,7 +2,9 @@ package ua.com.fielden.platform.example.swing.components.autocompleter;
 
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -58,8 +60,9 @@ public class AutocompleterWithLongNameExample {
 			return super.findMatches(value);
 		    }
 		};
-
-		final MultiplePropertiesListCellRenderer<DemoEntity> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEntity>("name", new Pair[] {new Pair<String, String>("Description", "desc")});
+		final Set<String> highlightProps = new HashSet<String>();
+		highlightProps.add("name");
+		final MultiplePropertiesListCellRenderer<DemoEntity> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEntity>("name", new Pair[] {new Pair<String, String>("Description", "desc")}, highlightProps);
 		final AutocompleterTextFieldLayer<DemoEntity> autocompleter = new AutocompleterTextFieldLayer<DemoEntity>(new UpperCaseTextField(), matcher, DemoEntity.class, "name", cellRenderer, "caption...", ";");
 		cellRenderer.setAuto(autocompleter.getAutocompleter());
 

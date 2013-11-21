@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.example.swing.components.autocompleter;
 
 import java.awt.event.ActionEvent;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -52,8 +54,9 @@ public class AutocompleterForPropertyDescriptorsMultiExample {
 			return super.findMatches(value);
 		    }
 		};
-
-		final MultiplePropertiesListCellRenderer<PropertyDescriptor<DemoEntity>> cellRenderer = new MultiplePropertiesListCellRenderer<PropertyDescriptor<DemoEntity>>("key", new Pair[] {new Pair<String, String>("Description", "desc")});
+		final Set<String> highlightProps = new HashSet<String>();
+		highlightProps.add("key");
+		final MultiplePropertiesListCellRenderer<PropertyDescriptor<DemoEntity>> cellRenderer = new MultiplePropertiesListCellRenderer<PropertyDescriptor<DemoEntity>>("key", new Pair[] {new Pair<String, String>("Description", "desc")}, highlightProps);
 		final AutocompleterTextFieldLayer<PropertyDescriptor<DemoEntity>> autocompleter = new AutocompleterTextFieldLayer(new JTextField(), matcher, PropertyDescriptor.class, "key", cellRenderer, "caption...", ",");
 		cellRenderer.setAuto(autocompleter.getAutocompleter());
 

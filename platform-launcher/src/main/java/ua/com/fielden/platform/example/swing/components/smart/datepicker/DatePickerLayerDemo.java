@@ -6,8 +6,10 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
@@ -95,8 +97,9 @@ public class DatePickerLayerDemo {
 		return super.findMatches(value);
 	    }
 	};
-
-	final MultiplePropertiesListCellRenderer<DemoEntity> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEntity>("name", new Pair[] {new Pair<String, String>("Description", "desc")});
+	final Set<String> highlightProps = new HashSet<String>();
+	highlightProps.add("name");
+	final MultiplePropertiesListCellRenderer<DemoEntity> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEntity>("name", new Pair[] {new Pair<String, String>("Description", "desc")}, highlightProps);
 	final AutocompleterTextFieldLayer<DemoEntity> autocompleter = new AutocompleterTextFieldLayer<DemoEntity>(new UpperCaseTextField(), matcher, DemoEntity.class, "name", cellRenderer, "caption...", ";");
 	cellRenderer.setAuto(autocompleter.getAutocompleter());
 	return autocompleter;

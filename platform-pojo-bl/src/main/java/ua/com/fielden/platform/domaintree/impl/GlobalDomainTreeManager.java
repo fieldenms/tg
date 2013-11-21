@@ -24,8 +24,11 @@ import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAnd
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer.AddToCriteriaTickManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.domaintree.master.impl.MasterDomainTreeManager;
+import ua.com.fielden.platform.entity.AbstractBatchAction;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -200,14 +203,31 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	}
     }
 
+    @SuppressWarnings("rawtypes")
     private static Class<?> validateMenuItemTypeRootType(final Class<?> menuItemType) {
 	final EntityType etAnnotation = menuItemType.getAnnotation(EntityType.class);
 	if (etAnnotation == null || etAnnotation.value() == null) {
 	    error("The menu item type " + menuItemType.getSimpleName() + " has no 'EntityType' annotation, which is necessary to specify the root type of the centre.");
 	}
-	final Class<?> root = etAnnotation.value();
+	final Class<? extends AbstractEntity> root = etAnnotation.value();
 	validateRootType(root);
-	return root;
+	return getValidatedRootIfAssociation(root);
+    }
+
+    /**
+     * Returns the key type of the entity if it is a association batch action entity.
+     *
+     * @param value
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    private static Class<?> getValidatedRootIfAssociation(final Class<? extends AbstractEntity> value) {
+	if (AbstractBatchAction.class.isAssignableFrom(value)) {
+	    final Class<?> root = AnnotationReflector.getKeyType(value);
+	    validateRootType(root);
+	    return root;
+	}
+	return value;
     }
 
     @Override
@@ -263,6 +283,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 		// But if base user haven't done that yet, it will be done by non-base user automatically.
 		final boolean owning = currentUser().isBase();
 
+		//TODO next line of code must take in to account that the menu item is for association centre.
 		final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{ add(root); }});
 		// initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
 		c.getFirstTick().checkedProperties(root);
