@@ -765,7 +765,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		metaProperty.setDesc(StringUtils.isEmpty(title.desc()) ? title.value() : title.desc());
 	    }
 	} else {
-	    metaProperty.setVisible(!AnnotationReflector.isAnnotationPresent(field, Invisible.class));
+	    metaProperty.setVisible(!AnnotationReflector.isAnnotationPresent(field, Invisible.class) || (AnnotationReflector.isAnnotationPresent(field, Invisible.class) && AnnotationReflector.getAnnotation(field, Invisible.class).centreOnly()));
 	    metaProperty.setEditable(!AnnotationReflector.isAnnotationPresent(field, Readonly.class));
 	    metaProperty.setRequired(AnnotationReflector.isAnnotationPresent(field, Required.class) || AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class));
 	    if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {
