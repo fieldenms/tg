@@ -3,7 +3,7 @@
 @Calculated
 @Title(value = "${Title}", desc = "${Desc}")
 private ${type} ${name};
-private static ExpressionModel ${name}_ = expr().val(null).model();
+private static ExpressionModel ${name}_ = expr().val(${cursor}null).model();
 
 @Observable
 private ${enclosing_type} set${Name}(final ${type} ${name}) {
@@ -26,7 +26,7 @@ ${imp:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.query.model.ExpressionModel)}
 </template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for collectional one-to-many association" enabled="true" name="tgprop-collectional">@IsProperty(${type}.class)
 @Title(value = "${Title}", desc = "${Desc}")
-private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();
+private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();${cursor}
 
 @Observable
 protected ${enclosing_type} set${Name}(final Set&lt;${type}&gt; ${name}) {
@@ -45,7 +45,7 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           java.util.HashSet, java.util.Set, java.util.Collections)}
 </template><template autoinsert="true" context="java" deleted="false" description="Generates a collectional one-to-many association with mutators addTo and removeFrom" enabled="true" name="tgprop-collectional-with-mutation">@IsProperty(${type}.class)
 @Title(value = "${Title}", desc = "${Desc}")
-private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();
+private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();${cursor}
 
 @Observable
 protected ${enclosing_type} set${Name}(final Set&lt;${type}&gt; ${name}) {
@@ -78,7 +78,7 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
 @MapTo
 @Title(value = "${Title}", desc = "${Desc}")
 @CompositeKeyMember(${index})
-private ${type} ${name};
+private ${type} ${name};${cursor}
 
 @Observable
 @EntityExists(${type}.class)
@@ -101,7 +101,7 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
 @MapTo
 @Title(value = "${Title}", desc = "${Desc}")
 @CompositeKeyMember(${index})
-private ${type} ${name};
+private ${type} ${name};${cursor}
 
 @Observable
 public ${enclosing_type} set${Name}(final ${type} ${name}) {
@@ -121,7 +121,7 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
 </template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a property of an entity type" enabled="true" name="tgprop-entity">@IsProperty
 @MapTo
 @Title(value = "${Title}", desc = "${Desc}")
-private ${type} ${name};
+private ${type} ${name};${cursor}
 
 @Observable
 @EntityExists(${type}.class)
@@ -149,7 +149,7 @@ private ${type} ${name1};
 @MapTo
 @Dependent("${name1}")
 @Title(value = "${Title2}", desc = "${Desc2}")
-private ${type} ${name2};
+private ${type} ${name2};${cursor}
 
 @Observable
 @LeProperty("${name2}")
@@ -183,7 +183,7 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
 </template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for the most ordinary entity property." enabled="true" name="tgprop-ordinary">@IsProperty
 @MapTo
 @Title(value = "${Title}", desc = "${Desc}")
-private ${type} ${name};
+private ${type} ${name};${cursor}
 
 @Observable
 public ${enclosing_type} set${Name}(final ${type} ${name}) {
@@ -199,7 +199,7 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
           ua.com.fielden.platform.entity.annotation.MapTo)}
-</template><template autoinsert="true" context="java-statements" deleted="false" description="Query stub for EntityAggregates" enabled="true" name="tgquery-aggregates">final AggregatedResultQueryModel query = select(${type}.class).yield().prop("prop1").as("myresult").modelAsAggregate();
+</template><template autoinsert="true" context="java-statements" deleted="false" description="Query stub for EntityAggregates" enabled="true" name="tgquery-aggregates">final AggregatedResultQueryModel query = ${cursor}select(${type}.class).yield().prop("prop1").as("myresult").modelAsAggregate();
 final fetch&lt;EntityAggregates&gt; fetch = fetch(EntityAggregates.class).with("prop1");
 final OrderingModel orderBy = orderBy().prop("prop1").asc().model();
 final QueryExecutionModel&lt;EntityAggregates, AggregatedResultQueryModel&gt; qem = from(query).with(fetch).with(orderBy).model();
@@ -215,7 +215,7 @@ ${:import(ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel,
 	  ua.com.fielden.platform.entity.query.fluent.fetch,
 	  ua.com.fielden.platform.dao.QueryExecutionModel
 )}
-</template><template autoinsert="true" context="java-statements" deleted="false" description="Query stub for Entity" enabled="true" name="tgquery-entity">final EntityResultQueryModel&lt;${type}&gt; query = select(${type}.class).model();
+</template><template autoinsert="true" context="java-statements" deleted="false" description="Query stub for Entity" enabled="true" name="tgquery-entity">final EntityResultQueryModel&lt;${type}&gt; query = ${cursor}select(${type}.class).model();
 final fetch&lt;${type}&gt; fetch = fetch(${type}.class).with("prop1");
 final OrderingModel orderBy = orderBy().prop("prop1").asc().model();
 final QueryExecutionModel&lt;${type}, EntityResultQueryModel&lt;${type}&gt;&gt; qem = from(query).with(fetch).with(orderBy).model();
