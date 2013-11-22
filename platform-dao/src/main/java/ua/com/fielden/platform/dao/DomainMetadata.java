@@ -76,6 +76,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -228,7 +229,7 @@ public class DomainMetadata {
 		return null;
 	    }
 	} else if (DynamicEntityKey.class.equals(getKeyType(entityType))) {
-	    return getVirtualPropInfoForDynamicEntityKey(entityType);
+	    return getVirtualPropInfoForDynamicEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType);
 	} else {
 	    return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), true).hibType(TypeFactory.basic(getKeyType(entityType).getName())).build();
 	}
@@ -385,7 +386,7 @@ public class DomainMetadata {
 	return new PropertyMetadata.Builder(propName, javaType, nullable).type(propertyCategory).hibType(hibernateType).columns(getPropColumns(field, mapTo, hibernateType)).build();
     }
 
-    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) throws Exception {
 	return new PropertyMetadata.Builder("key", String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType)).hibType(Hibernate.STRING).type(VIRTUAL_OVERRIDE).build();
     }
 

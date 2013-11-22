@@ -16,6 +16,7 @@ import org.apache.commons.jexl.JexlHelper;
 
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
 
 /**
  * Represents a composite entity key that should be used whenever entity key has a reference to another entity. This class provides dynamic implementation of required methods (i.e.
@@ -44,7 +45,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     private transient final JexlContext jc = JexlHelper.createContext();
     private static final SimpleDateFormat dateFormatter = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
     private static final String ENTITY = "entity";
-    public static final String KEY_MEMBERS_SEPARATOR = " ";
+    public final String KEY_MEMBERS_SEPARATOR;
     /** There case where key members do not implement Comparable. In such cases a comparator class should be provided. */
     private transient final Map<Integer, Comparator<?>> keyMemberComparables = new HashMap<Integer, Comparator<?>>();
 
@@ -56,6 +57,8 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
      */
     public DynamicEntityKey(final AbstractEntity<DynamicEntityKey> entity) {
 	this.entity = entity;
+
+	KEY_MEMBERS_SEPARATOR = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) entity.getType());
 
 	final List<Field> compositeKeyMambers = Finder.getKeyMembers(entity.getType());
 	if (compositeKeyMambers.size() == 1) {

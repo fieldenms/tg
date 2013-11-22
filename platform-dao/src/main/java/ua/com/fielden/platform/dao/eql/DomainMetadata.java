@@ -228,7 +228,7 @@ public class DomainMetadata {
 		return null;
 	    }
 	} else if (DynamicEntityKey.class.equals(getKeyType(entityType))) {
-	    return getVirtualPropInfoForDynamicEntityKey(entityType);
+	    return getVirtualPropInfoForDynamicEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType);
 	} else {
 	    return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), true).hibType(TypeFactory.basic(getKeyType(entityType).getName())).build();
 	}
@@ -382,7 +382,7 @@ public class DomainMetadata {
 	return new PropertyMetadata.Builder(commonInfo.propName, commonInfo.javaType, nullable).type(propertyCategory).hibType(commonInfo.hibernateType).columns(getPropColumns(field, mapTo, commonInfo.hibernateType)).build();
     }
 
-    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) throws Exception {
 	return new PropertyMetadata.Builder("key", String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType)).hibType(Hibernate.STRING).type(VIRTUAL_OVERRIDE).build();
     }
 

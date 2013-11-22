@@ -12,12 +12,24 @@ import java.lang.annotation.Target;
  * an instance). This annotation is a compromise between the need to know key type at runtime and having a developer to do an extra little to specify this annotation on every
  * concrete entity class.
  *
- * @author 01es
+ * @author TG Team
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
 public @interface KeyType {
+    /**
+     * Type of the entity key.
+     *
+     * @return
+     */
     @SuppressWarnings("rawtypes")
     Class<? extends Comparable> value();
+    /**
+     * Used for concatenation of composite key members.
+     * Ignored for non-composite keys.
+     *
+     * @return
+     */
+    String keyMemberSeparator() default " ";
 }

@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -39,12 +40,12 @@ public class DomainMetadataExpressionsGenerator {
 	return expressionModelInProgress.otherwise().val(null).end().model();
     }
 
-    ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<?>> entityType) {
+    ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
 	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
 	final Iterator<Field> iterator = keyMembers.iterator();
 	IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().concat().prop(getKeyMemberConcatenationExpression(iterator.next()));
 	for (; iterator.hasNext();) {
-	    expressionModelInProgress = expressionModelInProgress.with().val(DynamicEntityKey.KEY_MEMBERS_SEPARATOR);
+	    expressionModelInProgress = expressionModelInProgress.with().val(Reflector.getKeyMemberSeparator(entityType));
 	    expressionModelInProgress = expressionModelInProgress.with().prop(getKeyMemberConcatenationExpression(iterator.next()));
 	}
 	return expressionModelInProgress.end().model();

@@ -520,4 +520,14 @@ public final class Reflector {
 	// return absolute path
 	return absProp.toString();
     }
+
+    /**
+     * A convenient method returning a separator that is used to represent a composite entity as a single string value.
+     *
+     * @param type
+     * @return
+     */
+    public static String getKeyMemberSeparator(final Class<? extends AbstractEntity<DynamicEntityKey>> type) {
+	return AnnotationReflector.getAnnotation(type, KeyType.class).keyMemberSeparator();
+    }
 }
