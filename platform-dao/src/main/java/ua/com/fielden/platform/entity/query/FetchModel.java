@@ -269,6 +269,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
     public String toString() {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("Fetch model:\n------------------------------------------------\n");
+	sb.append("\t original:\n" + originalFetch + "\n\n");
 	sb.append(primProps);
 	if (entityProps.size() > 0) {
 	    sb.append("\n------------------------------------------------");

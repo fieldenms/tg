@@ -95,6 +95,7 @@ public class EntityFetcher {
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetch(modelResult.getResultType());
 	final FetchModel<E> entFetch = new FetchModel<E>(/*queryModel.getFetchModel()*/fetchModel, domainMetadataAnalyser);
+	logger.info("Fetch model:\n" + entFetch);
 	return new EntityEnhancer<E>(this, domainMetadataAnalyser).enhance(result, entFetch);
     }
 
