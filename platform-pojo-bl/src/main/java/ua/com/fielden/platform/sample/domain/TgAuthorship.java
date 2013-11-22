@@ -28,6 +28,20 @@ public class TgAuthorship extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(2)
     private String title;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Year", desc = "Year of publication")
+    private Integer year;
+
+    @Observable
+    public TgAuthorship setYear(final Integer year) {
+	this.year = year;
+	return this;
+    }
+
+    public Integer getYear() {
+	return year;
+    }
 
     public TgAuthor getAuthor() {
         return author;
