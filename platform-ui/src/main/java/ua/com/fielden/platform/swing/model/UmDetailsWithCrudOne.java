@@ -17,6 +17,7 @@ import ua.com.fielden.platform.swing.components.bind.development.Binder;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.utils.Dialogs;
 
 /**
  * This is a CRUD UI model representing one-to-one master/details association.
@@ -132,6 +133,12 @@ public abstract class UmDetailsWithCrudOne<M extends AbstractEntity<?>, D extend
 
 	    @Override
 	    protected boolean preAction() {
+		final Result editability = getManagedEntity().isEditable();
+		if (!editability.isSuccessful()) {
+		    Dialogs.showMessageDialog(getView(), editability.getMessage(), "Edit action", Dialogs.WARNING_MESSAGE);
+		    return false;
+		}
+
 		getNewAction().setEnabled(false);
 		getEditAction().setEnabled(false);
 		getSaveAction().setEnabled(true);

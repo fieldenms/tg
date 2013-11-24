@@ -23,6 +23,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.utils.Dialogs;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
 
@@ -217,6 +218,12 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D exten
 
 	    @Override
 	    protected boolean preAction() {
+		final Result editability = getManagedEntity().isEditable();
+		if (!editability.isSuccessful()) {
+		    Dialogs.showMessageDialog(getView(), editability.getMessage(), "Edit action", Dialogs.WARNING_MESSAGE);
+		    return false;
+		}
+
 		getNewAction().setEnabled(false);
 		getEditAction().setEnabled(false);
 		getSaveAction().setEnabled(true);

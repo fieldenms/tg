@@ -20,6 +20,7 @@ import ua.com.fielden.platform.swing.components.bind.development.Binder;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
+import ua.com.fielden.platform.swing.utils.Dialogs;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 
@@ -177,6 +178,12 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
 
 	    @Override
 	    protected boolean preAction() {
+		final Result editability = getManagedEntity().isEditable();
+		if (!editability.isSuccessful()) {
+		    Dialogs.showMessageDialog(getView(), editability.getMessage(), "Edit action", Dialogs.WARNING_MESSAGE);
+		    return false;
+		}
+
 		notifyActionStageChange(ActionStage.EDIT_PRE_ACTION);
 		setState(UmState.UNDEFINED);
 		return super.preAction();
@@ -186,8 +193,8 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
 	    protected T action(final ActionEvent arg0) throws Exception {
 		try {
 		    return getManagedEntity().isPersisted()//
-		    ? findById(getManagedEntity().getId(), false)
-			    : getManagedEntity();
+			    ? findById(getManagedEntity().getId(), false)
+				    : getManagedEntity();
 		} finally {
 		    notifyActionStageChange(ActionStage.EDIT_ACTION);
 		}
@@ -264,8 +271,8 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
 	    protected T action(final ActionEvent event) throws Exception {
 		try {
 		    return getManagedEntity().isPersisted()//
-		    ? findById(getManagedEntity().getId(), true)
-			    : getManagedEntity();
+			    ? findById(getManagedEntity().getId(), true)
+				    : getManagedEntity();
 		} catch(final Exception ex) {
 		    setState(UmState.VIEW);
 		    throw ex;
