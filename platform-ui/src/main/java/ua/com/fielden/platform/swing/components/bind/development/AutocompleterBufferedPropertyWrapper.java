@@ -587,18 +587,23 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
 		    } else {
 			for (final Object v : values) {
 			    final AbstractEntity value = (AbstractEntity) v;
-			    final Object that;
+			    Object that;
 			    if (value.getKeyType() == DynamicEntityKey.class) {
 				that = value.getKey().toString();
 			    } else {
 				that =  value.getKey();
+			    }
+			    
+			    // well... the internal logic is really all about strings, so for better Integer support make it a String...
+			    if (that instanceof Integer) {
+				that = value.getKey().toString();
 			    }
 
 //			    if (bufferedValue.equals(that)) {
 //				return false;
 //			    }
 			    // TODO take into account case sensitivity from upper logic
-			    if (bufferedValue instanceof String && ((String) bufferedValue).equalsIgnoreCase((String) that)) {
+			    if ((bufferedValue instanceof String) && (that instanceof String) && ((String) bufferedValue).equalsIgnoreCase((String) that)) {
 				return false;
 			    } else if (bufferedValue.equals(that)) {
 				return false;
