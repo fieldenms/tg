@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.components.bind.development;
 
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Date;
@@ -20,11 +18,11 @@ import ua.com.fielden.platform.types.Money;
 /**
  * This is the value based connector for BigDecimal/Money/Integer spinner. Can use OnKeyTyped binding with direct entity's property or Triggered binding with
  * BufferedPropertyWrapper.
- * 
+ *
  * This connector is very similar to FormattedFieldConnector, but it plays commonly with spinner's inner formatted field.
- * 
+ *
  * @author Jhou
- * 
+ *
  */
 public final class SpinnerConnector extends FormattedFieldConnector {
     private final JSpinner spinner;
@@ -32,7 +30,7 @@ public final class SpinnerConnector extends FormattedFieldConnector {
     /**
      * Initializes all needed listeners, textChangeHandlers, onCommitActions and so on.. All listeners adds to appropriate object, whether it is BufferedPropertyWrapper or direct
      * IBindingEntity
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param boundedValidationLayer
@@ -52,12 +50,6 @@ public final class SpinnerConnector extends FormattedFieldConnector {
 	// this is necessary to perform update after "spinner" field initiated. (logic depends on it)
 	updateByActualOrLastIncorrectValue();
 
-	boundedValidationLayer.addFocusListener(new FocusAdapter() {
-	    @Override
-	    public void focusGained(final FocusEvent e) {
-		getFormattedField().requestFocusInWindow();
-	    }
-	});
     }
 
     @Override
@@ -100,7 +92,7 @@ public final class SpinnerConnector extends FormattedFieldConnector {
     /**
      * Initializes all needed listeners, textChangeHandlers, onCommitActions and so on.. All listeners adds to the specified BufferedPropertyWrapper and other FormattedField
      * related objects (document etc.)
-     * 
+     *
      * @param bufferedPropertyWrapper
      * @param validationLayer
      */
@@ -155,7 +147,7 @@ public final class SpinnerConnector extends FormattedFieldConnector {
 
     /**
      * converts and set specified value silently
-     * 
+     *
      * @param value
      */
     @Override

@@ -105,4 +105,8 @@ public class EditableSpinner extends JSpinner {
 	}
     }
 
+    @Override
+    public boolean requestFocusInWindow() {
+        return getEditor().requestFocusInWindow();
+    }
 }

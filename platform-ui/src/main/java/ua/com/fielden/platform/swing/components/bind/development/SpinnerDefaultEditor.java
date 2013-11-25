@@ -17,9 +17,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This DefaultEditor modified to use special Bind API formatted field and to control property change event's firing.
- * 
+ *
  * @author Jhou
- * 
+ *
  */
 public class SpinnerDefaultEditor extends JSpinner.DefaultEditor {
     private static final long serialVersionUID = -3691001676531098943L;
@@ -27,6 +27,7 @@ public class SpinnerDefaultEditor extends JSpinner.DefaultEditor {
     private static final Action DISABLED_ACTION = new DisabledAction();
     private final Class<?> propertyType;
     private final Logger logger = Logger.getLogger(this.getClass());
+    private final JFormattedTextField formattedTextField;
 
     public SpinnerDefaultEditor(final JSpinner spinner, final boolean decimal, final Class<?> propertyType) {
 	super(spinner);
@@ -38,6 +39,7 @@ public class SpinnerDefaultEditor extends JSpinner.DefaultEditor {
 
 	final Pair<NumberFormat, NumberFormat> formats = ComponentFactory.createNumberFormats(decimal);
 	final JFormattedTextField ftf = new SpecialFormattedField(ComponentFactory.createNumberFormatterFactory(formats.getKey(), formats.getValue()));
+	this.formattedTextField = ftf;
 	ftf.setName("Spinner.formattedTextField");
 	ftf.setValue(spinner.getValue());
 	ftf.addPropertyChangeListener(this);
@@ -130,5 +132,10 @@ public class SpinnerDefaultEditor extends JSpinner.DefaultEditor {
 
 	public void actionPerformed(final ActionEvent ae) {
 	}
+    }
+
+    @Override
+    public boolean requestFocusInWindow() {
+        return this.formattedTextField.requestFocusInWindow();
     }
 }
