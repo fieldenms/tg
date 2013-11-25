@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
@@ -133,7 +134,14 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
 	    return null;
 	}
 	final Object clickedObject = getPropertyValue((AbstractEntity<?>) e.getSource());
-	return clickedObject instanceof AbstractEntity ? (AbstractEntity<?>) clickedObject : null;
+
+	if (clickedObject instanceof AbstractUnionEntity) {
+	    return ((AbstractUnionEntity) clickedObject).activeEntity();
+	} else if (clickedObject instanceof AbstractEntity) {
+	    return (AbstractEntity<?>) clickedObject;
+	} else {
+	    return null;
+	}
     }
 
     @Override
