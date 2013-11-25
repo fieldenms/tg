@@ -132,21 +132,24 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		    if (level(property) >= LOADING_LEVEL && !EntityUtils.isUnionEntityType(propertyType) //
 			    || propertyTypeWasInHierarchyBefore && !isLinkProperty /*!isKeyPart*/) {
 			newIncludedProps.add(createDummyMarker(property));
-		    } else if (EntityUtils.isUnionEntityType(propertyType)) { // "union entity" property
-			final Pair<List<Field>, List<Field>> commonAndUnion = commonAndUnion((Class<? extends AbstractUnionEntity>) propertyType);
-			// a new tree branch should be created for "common" properties under "property"
-			final String commonBranch = createCommonBranch(property);
-			newIncludedProps.add(commonBranch); // final DefaultMutableTreeNode nodeForCommonProperties = addHotNode("common", null, false, klassNode, new Pair<String, String>("Common", TitlesDescsGetter.italic("<b>Common properties</b>")));
-			newIncludedProps.addAll(constructProperties(managedType, commonBranch, commonAndUnion.getKey()));
-			// "union" properties should be added directly to "property"
-			newIncludedProps.addAll(constructProperties(managedType, property, commonAndUnion.getValue()));
-		    } else if (EntityUtils.isUnionEntityType(parentType)) { // property under "union entity"
-			// the property under "union entity" should have only "non-common" properties added
-			final List<Field> propertiesWithoutCommon = constructKeysAndProperties(propertyType);
-			final List<String> parentCommonNames = AbstractUnionEntity.commonProperties((Class<? extends AbstractUnionEntity>) parentType);
-			propertiesWithoutCommon.removeAll(constructKeysAndProperties(propertyType, parentCommonNames));
-			newIncludedProps.addAll(constructProperties(managedType, property, propertiesWithoutCommon));
-		    } else { // collectional or non-collectional entity property
+		    }
+// TODO Need to review the following commet during removal of the "common properties" concept for union entities.
+//		    else if (EntityUtils.isUnionEntityType(propertyType)) { // "union entity" property
+//			final Pair<List<Field>, List<Field>> commonAndUnion = commonAndUnion((Class<? extends AbstractUnionEntity>) propertyType);
+//			// a new tree branch should be created for "common" properties under "property"
+//			final String commonBranch = createCommonBranch(property);
+//			newIncludedProps.add(commonBranch); // final DefaultMutableTreeNode nodeForCommonProperties = addHotNode("common", null, false, klassNode, new Pair<String, String>("Common", TitlesDescsGetter.italic("<b>Common properties</b>")));
+//			newIncludedProps.addAll(constructProperties(managedType, commonBranch, commonAndUnion.getKey()));
+//			// "union" properties should be added directly to "property"
+//			newIncludedProps.addAll(constructProperties(managedType, property, commonAndUnion.getValue()));
+//		    } else if (EntityUtils.isUnionEntityType(parentType)) { // property under "union entity"
+//			// the property under "union entity" should have only "non-common" properties added
+//			final List<Field> propertiesWithoutCommon = constructKeysAndProperties(propertyType);
+//			final List<String> parentCommonNames = AbstractUnionEntity.commonProperties((Class<? extends AbstractUnionEntity>) parentType);
+//			propertiesWithoutCommon.removeAll(constructKeysAndProperties(propertyType, parentCommonNames));
+//			newIncludedProps.addAll(constructProperties(managedType, property, propertiesWithoutCommon));
+//		    }
+		    else { // collectional or non-collectional entity property
 			newIncludedProps.addAll(constructProperties(managedType, property, constructKeysAndProperties(propertyType)));
 		    }
 		}
