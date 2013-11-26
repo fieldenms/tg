@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.Function;
@@ -110,6 +111,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_non_TG_properties_are_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("Non-TG property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -119,6 +121,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_non_existent_properties_cause_exception() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().isExcludedImmutably(MasterEntity.class, name);
@@ -133,6 +136,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_specifically_excluded_properties_are_actually_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("Specifically excluded property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -153,6 +157,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_Key_properties_with_AE_KeyType_and_with_KeyTitle_on_parent_type_are_NOT_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertFalse("'key' property without 'KeyType' on parent type should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -162,6 +167,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_Key_properties_without_KeyType_on_parent_type_are_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("'key' property without 'KeyType' on parent type should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -171,6 +177,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_Key_properties_without_KeyTitle_on_parent_type_are_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("'key' property without 'KeyTitle' on parent type should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -180,6 +187,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_Key_properties_of_non_entity_type_are_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("'key' property of non-AE type should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -190,6 +198,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_enumeration_type_properties_are_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("Enumeration property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -205,6 +214,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_properties_of_entity_type_with_abstract_nature_are_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("AbstractEntity property with 'abstract' modifier should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -214,6 +224,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_properties_of_entity_type_without_KeyType_are_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("AbstractEntity property without 'KeyType' annotation should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -238,6 +249,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_invisible_properties_are_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("Invisible property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -247,6 +259,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_ignore_properties_are_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("Ignore property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -257,6 +270,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_children_of_crit_only_AE_or_AE_collection_property_are_excluded() {
 	// test that crit-only entity properties itself are included
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertFalse("Crit-only AE property/collection itself should not be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -264,6 +278,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 
 	// test that crit-only entity properties children are excluded (1-level children)
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("Crit-only AE property/collection child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -289,6 +304,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_children_of_excluded_property_are_excluded() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertTrue("Excluded property or child of excluded property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
 	    }
@@ -330,6 +346,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     }
 
     @Test
+    @Ignore
     public void test_that_included_properties_for_union_entities_hierarchy_are_correct_and_manage_Common_and_Union_properties() {
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "unionEntityProp", "unionEntityProp.common-properties", "unionEntityProp.common-properties.desc", "unionEntityProp.common-properties.commonProp", "unionEntityProp.unionProp1", "unionEntityProp.unionProp1.dummy-property", "unionEntityProp.unionProp2", "unionEntityProp.unionProp2.dummy-property").toString(), dtm().includedProperties(MasterEntityWithUnionForIncludedPropertiesLogic.class).toString());
     }
@@ -361,6 +378,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_non_existent_properties_first_tick_disabling_cause_exception() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name);
@@ -375,6 +393,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_any_excluded_properties_first_tick_disabling_and_isDisabled_checking_cause_IllegalArgument_exception() {
 	// excluded manually stuff and excluded stuff manual disabling
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name);
@@ -391,6 +410,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 
 
 	oneLevel(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name);
@@ -409,6 +429,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_specifically_disabled_properties_first_tick_are_actually_disabled() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
 		    assertTrue("Specifically disabled property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
@@ -431,6 +452,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_non_existent_properties_second_tick_disabling_cause_exception() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name);
@@ -445,6 +467,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_any_excluded_properties_second_tick_disabling_and_isDisabled_checking_cause_IllegalArgument_exception() {
 	// excluded manually stuff and excluded stuff manual disabling
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name);
@@ -461,6 +484,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 
 
 	oneLevel(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name);
@@ -478,6 +502,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_specifically_disabled_properties_second_tick_are_actually_disabled() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
 		    assertTrue("Specifically disabled property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
@@ -509,6 +534,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_non_existent_properties_first_tick_checking_and_isChecked_cause_exception() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, name);
@@ -523,6 +549,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_any_excluded_properties_first_tick_checking_and_isChecked_cause_IllegalArgument_exception() {
 	// excluded manually stuff and excluded stuff manual disabling
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, name);
@@ -533,6 +560,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 	}, "excludedManuallyProp");
 
 	oneLevel(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, name);
@@ -550,6 +578,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_specifically_checked_properties_first_tick_are_actually_checked() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
 		    assertFalse("By contract should be unchecked.", dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, name));
@@ -562,6 +591,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_checked_properties_first_tick_are_actually_disabled() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		assertFalse("By contract of 'checked immutably' it should NOT be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
 	    }
@@ -583,6 +613,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_non_existent_properties_second_tick_checking_and_isChecked_cause_exception() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getSecondTick().isCheckedImmutably(MasterEntity.class, name);
@@ -597,6 +628,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_any_excluded_properties_second_tick_checking_and_isChecked_cause_IllegalArgument_exception() {
 	// excluded manually stuff and excluded stuff manual disabling
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getSecondTick().isCheckedImmutably(MasterEntity.class, name);
@@ -607,6 +639,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 	}, "excludedManuallyProp");
 
 	oneLevel(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().getSecondTick().isCheckedImmutably(MasterEntity.class, name);
@@ -624,6 +657,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_specifically_checked_properties_second_tick_are_actually_checked() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
 		    assertFalse("By the contract all the properties should not be be 'checked immutably'.", dtm().getSecondTick().isCheckedImmutably(MasterEntity.class, name));
@@ -711,6 +745,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_any_excluded_properties_available_functions_cause_IllegalArgument_exception() {
 	allLevels(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		//available functions.
 		//excluded manually stuff (available functions)
@@ -724,6 +759,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 
 	// other excluded stuff
 	oneLevel(new IAction() {
+	    @Override
 	    public void action(final String name) {
 		try {
 		    dtm().availableFunctions(MasterEntity.class, name);

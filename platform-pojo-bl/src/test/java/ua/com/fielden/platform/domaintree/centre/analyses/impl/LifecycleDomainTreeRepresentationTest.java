@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
@@ -183,6 +184,7 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
 
     @Override
     @Test
+    @Ignore
     public void test_that_included_properties_for_union_entities_hierarchy_are_correct_and_manage_Common_and_Union_properties() {
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "unionEntityProp", "unionEntityProp.common-properties", "unionEntityProp.common-properties.desc", "unionEntityProp.common-properties.commonProp", "unionEntityProp.unionProp1", "unionEntityProp.unionProp1.dummy-property", "unionEntityProp.unionProp2", "unionEntityProp.unionProp2.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(MasterEntityWithUnionForIncludedPropertiesLogic.class));
     }
