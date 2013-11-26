@@ -1,13 +1,17 @@
 package ua.com.fielden.platform.gis.gps.monitoring;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
+import ua.com.fielden.platform.gis.gps.AbstractAvlMachineModuleTemporalAssociation;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
+import ua.com.fielden.platform.gis.gps.AbstractAvlModule;
 import ua.com.fielden.platform.gis.gps.actors.AbstractActors;
-import ua.com.fielden.platform.gis.gps.actors.AbstractAvlMachineActor;
+import ua.com.fielden.platform.gis.gps.actors.Changed;
+import ua.com.fielden.platform.gis.gps.actors.New;
 
 
 /**
@@ -16,19 +20,51 @@ import ua.com.fielden.platform.gis.gps.actors.AbstractAvlMachineActor;
  * @author TG Team
  *
  */
-public class DefaultMachineMonitoringProvider<T extends AbstractAvlMessage, M extends AbstractAvlMachine<T>, N extends AbstractAvlMachineActor<T, M>> implements IMachineMonitoringProvider<T, M, N> {
-    private AbstractActors<T, M, N> actors;
+public class DefaultMachineMonitoringProvider<
+	MESSAGE extends AbstractAvlMessage,
+	MACHINE extends AbstractAvlMachine<MESSAGE>,
+	MODULE extends AbstractAvlModule,
+	ASSOCIATION extends AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>
+> implements IMachineMonitoringProvider<MESSAGE, MACHINE, MODULE, ASSOCIATION> {
 
-    public void setActors(final AbstractActors<T, M, N> actors) {
+    private AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, ?, ?> actors;
+
+    public void setActors(final AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, ?, ?> actors) {
 	this.actors = actors;
     }
 
-    public AbstractActors<T, M, N> getActors() {
+    public AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, ?, ?> getActors() {
 	return actors;
     }
 
     @Override
-    public Map<Long, List<T>> getLastMessagesUpdate(final Map<Long, Date> machinesTiming) {
+    public Map<Long, List<MESSAGE>> getLastMessagesUpdate(final Map<Long, Date> machinesTiming) {
         return actors.getLastMessagesUpdate(machinesTiming);
+    }
+
+    @Override
+    public void promoteNewMachineAssociation(final ASSOCIATION machineModuleTemporalAssociation) {
+        final MODULE module = machineModuleTemporalAssociation.getModule();
+        actors.getModuleActor(module.getKey()).tell(new New<ASSOCIATION>(machineModuleTemporalAssociation), null);
+    }
+
+    @Override
+    public void promoteChangedMachineAssociation(final ASSOCIATION machineModuleTemporalAssociation) {
+        final MODULE module = machineModuleTemporalAssociation.getModule();
+        actors.getModuleActor(module.getKey()).tell(new Changed<ASSOCIATION>(machineModuleTemporalAssociation), null);
+    }
+
+    @Override
+    public void promoteNewModule(final MODULE module) {
+	actors.registerAndStartModuleActor(module, Arrays.<ASSOCIATION>asList());
+	// FIXME please note that associations will not be retrieved for newly created module!
+	// This has been done under assumption that no association will be appeared so quickly for new module.
+    }
+
+    @Override
+    public void promoteNewMachine(final MACHINE machine) {
+	actors.registerAndStartMachineActor(machine, null);
+	// FIXME please note that last message will not be retrieved for newly created machine!
+	// This has been done under assumption that no message will be appeared so quickly for new machine.
     }
 }

@@ -16,10 +16,10 @@ public class MachinesCounterActor extends UntypedActor {
     private final Logger logger = Logger.getLogger(MachinesCounterActor.class);
 
     private final int machinesCount;
-    private final AbstractActors<?, ?, ?> actors;
+    private final AbstractActors<?, ?, ?, ?, ?, ?> actors;
     private int startedMachinesCount;
 
-    public MachinesCounterActor(final int machinesCount, final AbstractActors<?, ?, ?> actors) {
+    public MachinesCounterActor(final int machinesCount, final AbstractActors<?, ?, ?, ?, ?, ?> actors) {
 	this.machinesCount = machinesCount;
 	this.startedMachinesCount = 0;
 	this.actors = actors;
@@ -32,7 +32,7 @@ public class MachinesCounterActor extends UntypedActor {
      * @param machinesCount
      * @return
      */
-    public static ActorRef create(final ActorSystem system, final int machinesCount, final AbstractActors<?, ?, ?> actors) {
+    public static ActorRef create(final ActorSystem system, final int machinesCount, final AbstractActors<?, ?, ?, ?, ?, ?> actors) {
 	final ActorRef machinesCounterRef = system.actorOf(new Props(new UntypedActorFactory() {
 	    private static final long serialVersionUID = -6677642334839003771L;
 
@@ -46,21 +46,16 @@ public class MachinesCounterActor extends UntypedActor {
     @Override
     public void onReceive(final Object data) throws Exception {
 	if (data instanceof MachineActorStarted) {
+	    final MachineActorStarted info = (MachineActorStarted) data;
 	    startedMachinesCount++;
 
-	    logger.info("\t\t" + startedMachinesCount + " / " + machinesCount);
+	    logger.info("\t\t" + startedMachinesCount + " / " + machinesCount + " [" + info.getKey() + " -- " + info.getDesc() + "]");
 	    if (startedMachinesCount > machinesCount) {
-		// this is illegal situation!
-		final String m = "The number of started machine actors exceeds the number of machines.";
-		logger.error(m);
-		unhandled(m);
+		logger.info("\t\t[Additional machine actor created after registration of new machine].");
 	    } else if (startedMachinesCount == machinesCount) {
 		logger.info("\tMachine actors started.");
 
-		this.actors.actorsStartedPostAction();
-
-		// Stops this actor and all its supervised children
-		getContext().stop(getSelf());
+		this.actors.machineActorsStartedPostAction();
 	    }
 	} else {
 	    logger.error("Unrecognizable message (" + data + ") has been obtained.");

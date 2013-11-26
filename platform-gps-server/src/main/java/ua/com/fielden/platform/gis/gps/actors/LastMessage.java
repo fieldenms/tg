@@ -1,23 +1,21 @@
 package ua.com.fielden.platform.gis.gps.actors;
 
-import java.util.List;
-
 import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
 
 /**
  * A message type that contains response with a last {@link Message}.
  */
-public class LastMessages<T extends AbstractAvlMessage> extends LastMessagesResponse {
+public class LastMessage<T extends AbstractAvlMessage> extends LastMessageResponse {
     private final Long machineId;
-    private final List<T> messages;
+    private final T message;
 
-    public LastMessages(final Long machineId, final List<T> messages) {
+    public LastMessage(final Long machineId, final T message) {
 	this.machineId = machineId;
-	this.messages = messages;
+	this.message = message;
     }
 
-    public List<T> getMessages() {
-	return messages;
+    public T getMessage() {
+	return message;
     }
 
     public Long getMachineId() {

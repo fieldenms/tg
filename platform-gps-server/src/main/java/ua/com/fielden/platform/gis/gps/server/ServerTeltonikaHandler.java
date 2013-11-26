@@ -17,12 +17,17 @@ import org.jboss.netty.channel.group.ChannelGroup;
 
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
+import ua.com.fielden.platform.gis.gps.AbstractAvlModule;
 import ua.com.fielden.platform.gis.gps.AvlData;
-import ua.com.fielden.platform.gis.gps.IMachineLookup;
 import ua.com.fielden.platform.gis.gps.IMessageHandler;
+import ua.com.fielden.platform.gis.gps.IModuleLookup;
 import ua.com.fielden.platform.gis.gps.Option;
 
-public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends AbstractAvlMachine<T>> extends SimpleChannelUpstreamHandler {
+public class ServerTeltonikaHandler<
+	MESSAGE extends AbstractAvlMessage,
+	MACHINE extends AbstractAvlMachine<MESSAGE>,
+	MODULE extends AbstractAvlModule
+> extends SimpleChannelUpstreamHandler {
 
     private static final byte LOGIN_DENY = 0x0;
     private static final byte LOGIN_ALLOW = 0x1;
@@ -31,16 +36,16 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
     private final ConcurrentHashMap<String, Channel> existingConnections;
 
     private String imei;
-    private M machine;
+    private MODULE module;
     private final Logger log = Logger.getLogger(ServerTeltonikaHandler.class);
     private final ChannelBuffer ack = ChannelBuffers.buffer(4);
-    private final IMachineLookup<T, M> machineLookup;
-    private final IMessageHandler<T, M> messageHandler;
+    private final IModuleLookup<MODULE> moduleLookup;
+    private final IMessageHandler<MODULE> messageHandler;
 
-    public ServerTeltonikaHandler(final ConcurrentHashMap<String, Channel> existingConnections, final ChannelGroup allChannels, final IMachineLookup<T, M> machineLookup, final IMessageHandler<T, M> messageHandler) {
+    public ServerTeltonikaHandler(final ConcurrentHashMap<String, Channel> existingConnections, final ChannelGroup allChannels, final IModuleLookup<MODULE> moduleLookup, final IMessageHandler<MODULE> messageHandler) {
 	this.existingConnections = existingConnections;
 	this.allChannels = allChannels;
-	this.machineLookup = machineLookup;
+	this.moduleLookup = moduleLookup;
 	this.messageHandler = messageHandler;
     }
 
@@ -64,7 +69,7 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
 	    // IMEI
 	    handleLogin(ctx, getImei()); // process the initial handshake that result is successful or unsuccessful IMEI recognition
 	} else if (msg instanceof AvlData[]) { // AVL data array
-	    handleData(ctx, getMachine(), (AvlData[]) msg);
+	    handleData(ctx, getModule(), (AvlData[]) msg);
 	} else {
 	    super.messageReceived(ctx, e);
 	}
@@ -110,12 +115,12 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
 	final Channel channel = ctx.getChannel();
 	final ChannelBuffer msg = ChannelBuffers.buffer(1);
 	try {
-	    final Option<M> machine = machineLookup.get(imei);
-	    if (machine.hasValue()) {
+	    final Option<MODULE> module = moduleLookup.get(imei);
+	    if (module.hasValue()) {
 		log.debug("Authorised IMEI [" + imei + "].");
 		msg.writeByte(LOGIN_ALLOW);
 		setImei(imei);
-		setMachine(machine.value());
+		setModule(module.value());
 	    } else {
 		log.warn("Unrecognised IMEI [" + imei + "].");
 		msg.writeByte(LOGIN_DENY);
@@ -130,13 +135,13 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
 	log.debug("Logging off client [" + getImei() + "].");
     }
 
-    private void handleData(final ChannelHandlerContext ctx, final M machine, final AvlData[] data) {
+    private void handleData(final ChannelHandlerContext ctx, final MODULE module, final AvlData[] data) {
 	final Channel channel = ctx.getChannel();
 	log.debug("Received GPS data from IMEI [" + getImei() + "]");
 	final int count = data.length;
 	log.debug("AVL data count = [" + count + "]");
 
-	messageHandler.handle(machine, data);
+	messageHandler.handle(module, data);
 
 	ack.resetWriterIndex();
 	ack.writeInt(count);
@@ -151,11 +156,11 @@ public class ServerTeltonikaHandler<T extends AbstractAvlMessage, M extends Abst
 	this.imei = deviceId;
     }
 
-    public M getMachine() {
-	return machine;
+    public MODULE getModule() {
+	return module;
     }
 
-    private void setMachine(final M machine) {
-	this.machine = machine;
+    private void setModule(final MODULE module) {
+	this.module = module;
     }
 }

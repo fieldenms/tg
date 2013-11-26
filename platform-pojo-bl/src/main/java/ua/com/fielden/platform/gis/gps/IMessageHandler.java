@@ -2,11 +2,11 @@ package ua.com.fielden.platform.gis.gps;
 
 
 /**
- * A contract for persisting GPS related data for a machine.
+ * A contract for processing GPS related data for a module.
  *
  * @author TG Team
  *
  */
-public interface IMessageHandler<T extends AbstractAvlMessage, M extends AbstractAvlMachine<T>> {
-    IMessageHandler<T, M> handle(final M machine, final AvlData[] data);
+public interface IMessageHandler<MODULE extends AbstractAvlModule> {
+    IMessageHandler<MODULE> handle(final MODULE module, final AvlData[] data);
 }

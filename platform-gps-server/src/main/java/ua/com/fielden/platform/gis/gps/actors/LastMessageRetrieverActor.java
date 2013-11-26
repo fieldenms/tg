@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.gis.gps.actors;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -76,15 +77,15 @@ public class LastMessageRetrieverActor<T extends AbstractAvlMessage> extends Unt
 	    for (final Entry<Long, Date> idAndDate : mt.getMachinesTiming().entrySet()) {
 		if (machineActors.get(idAndDate.getKey()) != null) { // there are machines without GPS modules! No machine actor exists in this case
 		    machinesCount++;
-		    machineActors.get(idAndDate.getKey()).tell(new LastMessagesRequest(idAndDate.getValue()), getSelf());
+		    machineActors.get(idAndDate.getKey()).tell(new LastMessagesRequest(idAndDate.getKey(), idAndDate.getValue()), getSelf());
 		}
 	    }
-	} else if (data instanceof LastMessagesResponse) {
+	} else if (data instanceof LastMessageResponse) {
 	    receivedMachinesCount++;
-	    if (data instanceof LastMessages) {
-		final LastMessages<T> lm = (LastMessages<T>) data;
+	    if (data instanceof LastMessage) {
+		final LastMessage<T> lm = (LastMessage<T>) data;
 		logger.debug("Non-empty last messages response has been obtained for [" + getSelf() + "] actor for machine id [" + lm.getMachineId() + "]. receivedMachinesCount == " + receivedMachinesCount + " (from " + machinesCount + ").");
-		lastMessages.put(lm.getMachineId(), lm.getMessages());
+		lastMessages.put(lm.getMachineId(), Arrays.asList(lm.getMessage()));
 	    } else if (data instanceof NoLastMessage) {
 		logger.debug("Empty last messages response has been obtained for [" + getSelf() + "] actor. receivedMachinesCount == " + receivedMachinesCount + " (from " + machinesCount + ").");
 		// no messages for this machine
