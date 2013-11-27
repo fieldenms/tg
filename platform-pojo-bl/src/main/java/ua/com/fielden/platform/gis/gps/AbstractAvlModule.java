@@ -54,18 +54,18 @@ public abstract class AbstractAvlModule extends AbstractEntity<String> {
     @IsProperty
     @Required
     @MapTo
-    @Title(value = "Imlet Version", desc = "Loaded implet version")
+    @Title(value = "Imlet версія", desc = "Іmlet версія")
     private String imletVersion;
 
     @IsProperty
     @Required
     @MapTo
-    @Title(value = "Identifier", desc = "Indentifier for configuration commands and requests sent by user")
+    @Title(value = "Ідентифікатор", desc = "Ідентифікатор для конфігураційних команд та запитів")
     private String identifier;
 
     @IsProperty
     @MapTo
-    @Title(value = "Password", desc = "Password for configuration commands and requests sent by user")
+    @Title(value = "Пароль", desc = "Пароль для конфігураційних команд та запитів")
     private String password;
 
     @Observable
