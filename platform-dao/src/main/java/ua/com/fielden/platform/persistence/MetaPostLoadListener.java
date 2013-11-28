@@ -20,8 +20,9 @@ public class MetaPostLoadListener extends DefaultPostLoadEventListener {
     @Override
     public void onPostLoad(final PostLoadEvent event) {
 	final AbstractEntity<?> instance = (AbstractEntity<?>) event.getEntity();
-	//	System.out.println("<<< >>> onPostLoad : entity == " + instance.getId() + "(" + instance.getType().getSimpleName() + ")");
+	instance.setInitialising(true);
 	EntityUtils.handleMetaProperties(instance);
+	instance.setInitialising(false);
 	super.onPostLoad(event);
     }
 }
