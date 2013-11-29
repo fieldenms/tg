@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.gis.gps.actors;
 
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -39,7 +40,8 @@ public abstract class AbstractAvlModuleActor<
 	ASSOCIATION extends AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>
 	> extends UntypedActor {
 
-    private final Logger logger = Logger.getLogger(AbstractAvlModuleActor.class);
+    private final static Logger logger = Logger.getLogger(AbstractAvlModuleActor.class);
+    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 
     private final MessagesComparator<MESSAGE> messagesComparator;
     private final Comparator<ASSOCIATION> machineAssociationsComparator;
@@ -50,7 +52,7 @@ public abstract class AbstractAvlModuleActor<
     private final List<ASSOCIATION> machineAssociations;
     private final AbstractActors<?, ?, ?, ?, ?, ?> actors;
 
-    public AbstractAvlModuleActor(final EntityFactory factory, final MODULE module, final List<ASSOCIATION> machineAssociations, final HibernateUtil hibUtil, final ActorRef modulesCounterRef, final AbstractActors<?, ?, ?, ?, ?, ?> actors) {
+    public AbstractAvlModuleActor(final EntityFactory factory, final MODULE module, final List<ASSOCIATION> machineAssociations, final HibernateUtil hibUtil, final ActorRef modulesCounterRef, final AbstractActors<?, ?, ?, ?,?, ?> actors) {
 	this.modulesCounterRef = modulesCounterRef;
 	this.actors = actors;
 	this.module = module;
@@ -92,17 +94,16 @@ public abstract class AbstractAvlModuleActor<
 		final Map<MACHINE, Packet<MESSAGE>> machinePackets = splitByMachine(packet);
 		for (final Entry<MACHINE, Packet<MESSAGE>> machinePacket : machinePackets.entrySet()) {
 		    if (machinePacket.getKey() == null) {
-			logger.warn("No machine exists for messages [" + machinePacket.getValue().getMessages() + "]. These messages will be disregarded at this stage.");
+			logger.warn("No machine exists for [" + module.getKey() + "] messages [" + machinePacket.getValue().getMessages() + "]. These messages will be disregarded at this stage.");
 		    } else {
+			logger.debug("[" + machinePacket.getKey() + "] machine is active for [" + module.getKey() + "] messages [" + machinePacket.getValue().getMessages() + "]. The messages will be redirected to appropriate machine actor.");
 			actors.getMachineActor(machinePacket.getKey().getId()).tell(machinePacket.getValue(), getSelf());
 		    }
 		}
 	    } else if (data instanceof New) {
-		final New<ASSOCIATION> newAssoc = (New<ASSOCIATION>) data;
-		promoteNewMachineAssociation(newAssoc);
+		promoteNewMachineAssociation((New<ASSOCIATION>) data);
 	    } else if (data instanceof Changed) {
-		final Changed<ASSOCIATION> changedAssoc = (Changed<ASSOCIATION>) data;
-		promoteChangedMachineAssociation(changedAssoc);
+		promoteChangedMachineAssociation((Changed<ASSOCIATION>) data);
 	    } else {
 		unhandled(data);
 	    }
@@ -112,36 +113,32 @@ public abstract class AbstractAvlModuleActor<
 	}
     }
 
+    private static String toString(final Date date) {
+	return date == null ? "+\u221E" : dateFormatter.format(date);
+    }
+
     protected void promoteNewMachineAssociation(final New<ASSOCIATION> newAssoc) {
 	final ASSOCIATION assoc = newAssoc.getValue();
 
-	final ASSOCIATION lastOldAssoc = machineAssociations.isEmpty() ? null : machineAssociations.get(machineAssociations.size() - 1);
-	if (lastOldAssoc != null && lastOldAssoc.getTo() == null) {
-	    final IllegalStateException e = new IllegalStateException("Old association should be closed before promoting new one (new = " + assoc + " (to = " + assoc.getTo() + "), old = " + lastOldAssoc + " (to = " + lastOldAssoc.getTo() + ")).");
-	    logger.error(e.getMessage(), e);
-	    throw e;
-	} else if (lastOldAssoc != null && lastOldAssoc.getTo() != null && lastOldAssoc.getTo().getTime() > assoc.getFrom().getTime()) {
-	    final IllegalStateException e = new IllegalStateException("New association should after old last one (new = " + assoc + " (to = " + assoc.getTo() + "), old = " + lastOldAssoc + " (to = " + lastOldAssoc.getTo() + ")).");
-	    logger.error(e.getMessage(), e);
-	    throw e;
-	}
 	machineAssociations.add(assoc);
 	Collections.sort(this.machineAssociations, machineAssociationsComparator);
+
+	logger.info("A new association [" + assoc + " to " + toString(assoc.getTo()) + "] has been appeared and sucessfully promoted to module actor.");
     }
 
     protected void promoteChangedMachineAssociation(final Changed<ASSOCIATION> changedAssoc) {
-	// at this stage only changing of "to", "changed" and "changedBy" is supported:
 	final ASSOCIATION assoc = changedAssoc.getValue();
 
 	final ASSOCIATION oldAssoc = findContaining(assoc.getFrom(), machineAssociations, machineAssociationsComparator);
 	if (oldAssoc == null) {
-	    final IllegalStateException e = new IllegalStateException("There is no association in cache that is trying to be changed (changed = " + assoc + ", old = " + oldAssoc + ").");
-	    logger.error(e.getMessage(), e);
-	    throw e;
+	    throw new IllegalStateException("There should be an association instance in the cache that should be updated [" + assoc + " to " + toString(assoc.getTo()) + "]! But there is no such instance.");
 	}
+
 	machineAssociations.remove(oldAssoc);
 	machineAssociations.add(assoc);
 	Collections.sort(this.machineAssociations, machineAssociationsComparator);
+
+	logger.info("An existent association, that has been closed [" + assoc + " to " + toString(assoc.getTo()) + "], has been sucessfully promoted to module actor.");
     }
 
     /**

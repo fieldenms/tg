@@ -6,6 +6,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Dependent;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -13,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.annotation.TransactionUser;
@@ -29,7 +30,9 @@ import ua.com.fielden.platform.security.user.User;
  *
  */
 @KeyType(DynamicEntityKey.class)
-@KeyTitle(value = "Machine/Module", desc = "Temporal association between machines and modules")
+@KeyTitle(value = "Прив'язка машини з модулем", desc = "Прив'язка машини з модулем")
+@DescTitle(value = "Коментар", desc = "Додатковий коментар щодо проведеної асоціації машини з модулем")
+@EntityTitle(value = "Прив'язка машини з модулем", desc = "Прив'язка машини з модулем")
 // TODO do not forget to provide companion object in its descendants -- @CompanionObject(IMachineModuleAssociation.class)
 @MapEntityTo
 public abstract class AbstractAvlMachineModuleTemporalAssociation <MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>, MODULE extends AbstractAvlModule> extends AbstractEntity<DynamicEntityKey> {
@@ -50,20 +53,19 @@ public abstract class AbstractAvlMachineModuleTemporalAssociation <MESSAGE exten
     @IsProperty
     @MapTo
     @Dependent("to")
-    @Title(value = "From", desc = "The date since when a module is assocaited with a machine")
+    @Title(value = "Від", desc = "Дата, починаючи з якої модуль був прив'язаний до машини")
     @CompositeKeyMember(3)
     private Date from;
 
     @IsProperty
     @MapTo
     @Dependent("from")
-    @Title(value = "To", desc = "The date when a module was disassociated with a machine")
+    @Title(value = "До", desc = "Дата до якої модуль був прив'язаний до машини")
     private Date to;
 
     @IsProperty
     @MapTo
     @TransactionDate
-    @Required
     @Title(value = "Дата створення", desc = "Дата створення асоціації")
     private Date created;
 
@@ -74,15 +76,14 @@ public abstract class AbstractAvlMachineModuleTemporalAssociation <MESSAGE exten
 
     @IsProperty
     @MapTo
-    @Title(value = "Користувач", desc = "Користувач, що провів асоціацію Машини з Модулем в часі")
+    @Title(value = "Прив'язувач", desc = "Користувач, що провів асоціацію Машини з Модулем в часі")
     @TransactionUser
-    @Required
     @Readonly
     private User createdBy;
 
     @IsProperty
     @MapTo
-    @Title(value = "Користувач", desc = "Користувач, що змінив асоціацію Машини з Модулем в часі")
+    @Title(value = "Відв'язувач", desc = "Користувач, що змінив асоціацію Машини з Модулем в часі")
     // @TransactionUser
     // @Required
     @Readonly

@@ -13,8 +13,6 @@ import ua.com.fielden.platform.gis.gps.AbstractAvlModule;
 import ua.com.fielden.platform.gis.gps.actors.AbstractActors;
 import ua.com.fielden.platform.gis.gps.actors.AbstractAvlMachineActor;
 import ua.com.fielden.platform.gis.gps.actors.AbstractAvlModuleActor;
-import ua.com.fielden.platform.gis.gps.monitoring.DefaultMachineMonitoringProvider;
-import ua.com.fielden.platform.gis.gps.monitoring.IMachineMonitoringProvider;
 
 import com.google.inject.Injector;
 
@@ -44,9 +42,10 @@ public abstract class ApplicationConfigurationUtil<
 	final AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR> actors = createActors(fetchMachinesWithLastMessages(injector), fetchModulesWithAssociations(injector));
 	actors.startActorSystem();
 
-	final DefaultMachineMonitoringProvider<MESSAGE, MACHINE, MODULE, ASSOCIATION> mmProvider = (DefaultMachineMonitoringProvider<MESSAGE, MACHINE, MODULE, ASSOCIATION>) injector.getInstance(IMachineMonitoringProvider.class);
-	mmProvider.setActors(actors);
+	promoteActors(injector, actors);
     }
+
+    protected abstract void promoteActors(final Injector injector, final AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR> actors);
 
     /** Creates specific {@link AbstractActors} implementation. */
     protected abstract AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR> createActors(final Map<MACHINE, MESSAGE> machinesWithLastMessages, final Map<MODULE, List<ASSOCIATION>> modulesWithAssociations);

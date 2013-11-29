@@ -19,6 +19,7 @@ import org.joda.time.Period;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachineModuleTemporalAssociation;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
@@ -54,7 +55,7 @@ public abstract class AbstractActors<
 	MACHINE_ACTOR extends AbstractAvlMachineActor<MESSAGE, MACHINE>,
 	MODULE_ACTOR extends AbstractAvlModuleActor<MESSAGE, MACHINE, MODULE, ASSOCIATION>
 	> implements IModuleLookup<MODULE> {
-    private final Logger logger = Logger.getLogger(AbstractActors.class);
+    private final static Logger logger = Logger.getLogger(AbstractActors.class);
 
     private final ActorSystem system;
     // an actors that represent machine processors, that contain last messages
@@ -309,5 +310,37 @@ public abstract class AbstractActors<
     @Override
     public Option<MODULE> get(final String imei) {
 	return isModuleRegistered(imei) ? new Option<MODULE>(moduleActors.get(imei).getKey()) : new Option<MODULE>(null);
+    }
+
+    /**
+     * Gets an response from actor using blocking (!). If response is an exception -> returns unsuccessful result, otherwise
+     * returns result that wraps response object.
+     *
+     * @param actor
+     * @param message
+     * @param waitSeconds
+     * @return
+     */
+    public static Result getResponseFromActor(final ActorRef actor, final Object message, final int waitSeconds) {
+	final DateTime st = new DateTime();
+	final Timeout timeout = new Timeout(Duration.create(waitSeconds, "seconds"));
+
+	final Future<Object> future = Patterns.ask(actor, message, timeout);
+	try {
+	    final Object result = Await.result(future, timeout.duration());
+	    final Period p = new Period(st, new DateTime());
+	    logger.info("Operation has been done in " + (p.getHours() == 0 ? "" : p.getHours() + " h ") + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms.");
+
+	    if (result instanceof Exception) {
+		final Exception ex = (Exception) result;
+		logger.error(ex);
+		return Result.failure((Exception) result);
+	    } else { // in other case -- successful
+		return Result.successful(result);
+	    }
+	} catch (final Exception ex) {
+	    logger.error(ex);
+	    return Result.failure(ex);
+	}
     }
 }
