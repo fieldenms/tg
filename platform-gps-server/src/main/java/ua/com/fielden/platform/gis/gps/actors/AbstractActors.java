@@ -192,7 +192,7 @@ public abstract class AbstractActors<
      * @return
      */
     private final String createName(final MACHINE machine) {
-	return "machine_" + Transliterator.transliterate(machine.getKey()).replaceAll(" ", "_").toLowerCase();
+	return "machine_" + Transliterator.transliterate(machine.getKey()).replaceAll(" ", "_").replaceAll("/", "_").toLowerCase();
     }
 
     /**
