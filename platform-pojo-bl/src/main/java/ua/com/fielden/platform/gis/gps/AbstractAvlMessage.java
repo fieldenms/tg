@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.Ignore;
+import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -103,6 +104,22 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     @MapTo("packet_")
     @Title(value = "Packet received date")
     private Date packetReceived;
+
+    @IsProperty
+    @MapTo
+    @Ignore
+    @Invisible
+    private Integer status;
+
+    @Observable
+    public AbstractAvlMessage setStatus(final Integer status) {
+	this.status = status;
+	return this;
+    }
+
+    public Integer getStatus() {
+	return status;
+    }
 
     @Observable
     public AbstractAvlMessage setPacketReceived(final Date packetReceived) {

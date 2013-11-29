@@ -103,6 +103,15 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
 	final Packet<MESSAGE> packet = categorisedByViolations.getKey();
 
 	if (!packet.isEmpty()) {
+
+	    if (latestGpsMessage != null && latestGpsMessage.getGpsTime().getTime() > packet.getStart().getGpsTime().getTime()) {
+		for (final MESSAGE message : packet.getMessages()) {
+		    if (message.getGpsTime().getTime() < latestGpsMessage.getGpsTime().getTime()) {
+			message.setStatus(1);
+		    }
+		}
+	    }
+
 	    if (latestGpsMessage == null || latestGpsMessage.getGpsTime().getTime() < packet.getFinish().getGpsTime().getTime()) {
 		latestGpsMessage = packet.getFinish();
 	    }
