@@ -14,6 +14,7 @@ import ua.com.fielden.platform.gis.MapUtils;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
 import ua.com.fielden.platform.persistence.HibernateUtil;
+import ua.com.fielden.platform.utils.Pair;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 
@@ -73,7 +74,34 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
 
     protected abstract void persist(final Collection<MESSAGE> messages, final MESSAGE latestPersistedMessage) throws Exception;
 
-    protected final void processSinglePacket(final Packet<MESSAGE> packet, final boolean onStart) throws Exception {
+    private Pair<Packet<MESSAGE>, Packet<MESSAGE>> categoriseByViolations(final Packet<MESSAGE> packet, final MESSAGE lastProcesseMessage) {
+	if (lastProcesseMessage == null) {
+	    return new Pair<Packet<MESSAGE>, Packet<MESSAGE>>(packet, null);
+	}
+
+	final Packet<MESSAGE> goodPart = new Packet<MESSAGE>(new Date(packet.getCreated()), messagesComparator);
+	final Packet<MESSAGE> badPart = new Packet<MESSAGE>(new Date(packet.getCreated()), messagesComparator);
+
+	for (final MESSAGE message : packet.getMessages()) {
+	    if (message.getGpsTime().getTime() < lastProcesseMessage.getGpsTime().getTime()) {
+		badPart.add(message);
+	    } else {
+		goodPart.add(message);
+	    }
+	}
+
+	return new Pair<Packet<MESSAGE>, Packet<MESSAGE>>(goodPart, badPart);
+    }
+
+    protected final void processSinglePacket(final Packet<MESSAGE> originalPacket, final boolean onStart) throws Exception {
+	final Pair<Packet<MESSAGE>, Packet<MESSAGE>> categorisedByViolations = categoriseByViolations(originalPacket, lastProcessedMessage);
+	final Packet<MESSAGE> packetWithViolatingMessages = categorisedByViolations.getValue();
+	if (packetWithViolatingMessages != null && !packetWithViolatingMessages.isEmpty()) {
+	    persistError(packetWithViolatingMessages);
+	}
+
+	final Packet<MESSAGE> packet = categorisedByViolations.getKey();
+
 	if (!packet.isEmpty()) {
 	    if (latestGpsMessage == null || latestGpsMessage.getGpsTime().getTime() < packet.getFinish().getGpsTime().getTime()) {
 		latestGpsMessage = packet.getFinish();
@@ -87,9 +115,7 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
 	    if (fillBuffer()) {
 		final Packet<MESSAGE> first = inspectionBuffer.poll();
 
-		if (lastProcessedMessage != null && lastProcessedMessage.getGpsTime().getTime() >= first.getStart().getGpsTime().getTime()) {
-		    persistError(first);
-		} else if (blackout.getFinish() != null && blackout.getFinish().getGpsTime().getTime() >= first.getStart().getGpsTime().getTime()) {
+		if (blackout.getFinish() != null && blackout.getFinish().getGpsTime().getTime() >= first.getStart().getGpsTime().getTime()) {
 		    blackout.add(first);
 		} else {
 		    final int maximumIndexOfPacketBreakingChronologyOfFirstPacket = findMaximumIndexOfPacketBreakingChronologyOfGivenPacket(first);
