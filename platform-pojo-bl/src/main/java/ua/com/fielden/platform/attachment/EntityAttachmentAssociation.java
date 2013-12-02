@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
@@ -22,6 +23,7 @@ import ua.com.fielden.platform.entity.validation.annotation.NotNull;
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("ATTACHMENT_ENTITY_ASSOCIATIONS")
+@CompanionObject(IEntityAttachmentAssociationController.class)
 public class EntityAttachmentAssociation extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
@@ -47,8 +49,9 @@ public class EntityAttachmentAssociation extends AbstractEntity<DynamicEntityKey
     }
     @Observable
     @EntityExists(Attachment.class)
-    public void setAttachment(final Attachment attachment) {
+    public EntityAttachmentAssociation setAttachment(final Attachment attachment) {
         this.attachment = attachment;
+        return this;
     }
 
 
@@ -57,8 +60,9 @@ public class EntityAttachmentAssociation extends AbstractEntity<DynamicEntityKey
     }
     @Observable
     @NotNull
-    public void setEntityId(final Long entityId) {
+    public EntityAttachmentAssociation setEntityId(final Long entityId) {
         this.entityId = entityId;
+        return this;
     }
 
     @Override

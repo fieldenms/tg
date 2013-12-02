@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 
 /**
@@ -38,13 +39,29 @@ public class Attachment extends AbstractEntity<String> {
     /** Used purely to represent a new file being attached. */
     private File file;
 
+    @Override
+    @Observable
+    public Attachment setDesc(final String desc) {
+        super.setDesc(desc);
+        return this;
+    }
+
+    @Override
+    @NotNull
+    @Observable
+    public Attachment setKey(final String key) {
+        super.setKey(key);
+        return this;
+    }
+
     public File getFile() {
 	return file;
     }
 
-    public void setFile(final File file) {
+    public Attachment setFile(final File file) {
 	this.file = file;
 	setKey(file.getName());
+	return this;
     }
 
     @Override
