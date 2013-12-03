@@ -8,12 +8,12 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
@@ -34,10 +34,11 @@ import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorM
  */
 public class CentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>{
 
+    private final CentreManagerConfigurator centreConfigurator;
     /**
      * The type of menu item with which this centre configuration model is associated.
      */
-    private final Class<? extends MiWithConfigurationSupport<T>> menuItemType;
+    private final Class<?> menuItemType;
 
     /**
      * The associated {@link GlobalDomainTreeManager} instance.
@@ -56,9 +57,10 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * @param gdtm - Associated {@link GlobalDomainTreeManager} instance.
      * @param entityFactory - {@link EntityFactory} needed for wizard model creation.
      */
-    public CentreConfigurationModel(final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final String name, final IAnalysisBuilder<T> analysisBuilder, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
-	super(getEntityTypeForMenuItemClass(menuItemType), name, entityFactory, masterManager, criteriaGenerator);
-	this.menuItemType = menuItemType;
+    public CentreConfigurationModel(final CentreManagerConfigurator centreConfigurator, final String name, final IAnalysisBuilder<T> analysisBuilder, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
+	super(CentreConfigurationModel.<T>getEntityTypeForMenuItemClass(centreConfigurator.getMenuItemClass()), name, entityFactory, masterManager, criteriaGenerator);
+	this.centreConfigurator = centreConfigurator;
+	this.menuItemType = centreConfigurator.getMenuItemClass();
 	this.analysisBuilder = analysisBuilder;
 	this.gdtm = gdtm;
     }
@@ -139,7 +141,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * Initialises the entity centre.
      */
     public void initEntityCentreManager(){
-	gdtm.initEntityCentreManager(menuItemType, getName());
+	gdtm.initEntityCentreManager(centreConfigurator, getName());
     }
 
     /**
@@ -236,7 +238,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @SuppressWarnings("unchecked")
-    private static <T extends AbstractEntity<?>> Class<T> getEntityTypeForMenuItemClass(final Class<? extends MiWithConfigurationSupport<T>> menuItemType){
+    private static <T extends AbstractEntity<?>> Class<T> getEntityTypeForMenuItemClass(final Class<?> menuItemType){
 	final EntityType etAnnotation = menuItemType.getAnnotation(EntityType.class);
 	if (etAnnotation == null || etAnnotation.value() == null) {
 	    throw new IllegalArgumentException("The menu item type " + menuItemType.getSimpleName() + " has no 'EntityType' annotation, which is necessary to specify the root type of the centre.");

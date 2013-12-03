@@ -11,6 +11,7 @@ import net.miginfocom.swing.MigLayout;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -45,7 +46,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
     //Entity centre related properties.
     private final IEntityCentreBuilder<T> centreBuilder;
     private final CentreConfigurationView<T, ?> entityCentreConfigurationView;
-    private final Class<? extends MiWithConfigurationSupport<T>> menuItemClass;
+    private final CentreManagerConfigurator centreConfigurator;
 
     /**
      * Creates new {@link DynamicReportWrapper} for the given {@link DynamicCriteriaModelBuilder} and with specified title and information about the wrapped report.
@@ -62,16 +63,16 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	    final TreeMenuWithTabs<?> treeMenu,//
 	    //Entity centre related parameters
 	    final String name,//
-	    final Class<? extends MiWithConfigurationSupport<T>> menuItemClass,//
+	    final CentreManagerConfigurator centreConfigurator,//
 	    final IEntityCentreBuilder<T> centreBuilder) {
 	super(caption, new DefaultUiModel(true));
 	this.description = description;
 	this.treeMenu = treeMenu;
 	this.centreBuilder = centreBuilder;
-	this.menuItemClass = menuItemClass;
+	this.centreConfigurator = centreConfigurator;
 	//Create and configure entity centre;
 	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
-	this.entityCentreConfigurationView = centreBuilder.createEntityCentre(menuItemClass, name, progressLayer);
+	this.entityCentreConfigurationView = centreBuilder.createEntityCentre(centreConfigurator, name, progressLayer);
 	this.entityCentreConfigurationView.addCentreConfigurationEventListener(createContreConfigurationListener());
 	this.entityCentreConfigurationView.addConfigurationEventListener(createConfigurationEventListener());
 	progressLayer.setView(entityCentreConfigurationView);
@@ -168,8 +169,8 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	return true;
     }
 
-    public final Class<? extends MiWithConfigurationSupport<T>> getMenuItemClass() {
-	return menuItemClass;
+    public CentreManagerConfigurator getCentreConfigurator() {
+	return centreConfigurator;
     }
 
     public TreeMenuWithTabs<?> getTreeMenu() {

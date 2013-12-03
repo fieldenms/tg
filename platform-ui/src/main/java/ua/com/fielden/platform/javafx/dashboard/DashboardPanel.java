@@ -29,6 +29,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -90,7 +91,22 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
 	    final List<String> centreNames = globalManager.entityCentreNames(mmiType);
 	    for (final String centreName : centreNames) {
 		if (globalManager.getEntityCentreManager(mmiType, centreName) == null) {
-		    globalManager.initEntityCentreManager(mmiType, centreName); // TODO this operation consumes a lot of time / memory during load
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO
+		    //TODO The initEntityCentreManager must be called with custom centre configurator.
+		    globalManager.initEntityCentreManager(new CentreManagerConfigurator(mmiType), centreName); // TODO this operation consumes a lot of time / memory during load
 		}
 		final ICentreDomainTreeManagerAndEnhancer centreManager = globalManager.getEntityCentreManager(mmiType, centreName);
 		final List<String> analysisKeys = centreManager.analysisKeys();

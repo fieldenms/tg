@@ -264,9 +264,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public IGlobalDomainTreeManager initEntityCentreManager(final Class<?> menuItemType, final String name) {
+    public IGlobalDomainTreeManager initEntityCentreManager(final CentreManagerConfigurator centreConfigurator, final String name) {
+	final Class<?> menuItemType = centreConfigurator.getMenuItemClass();
 	validateMenuItemType(menuItemType);
-	final Class<?> root = validateMenuItemTypeRootType(menuItemType);
 	if (isFreezedEntityCentreManager(menuItemType, name)) {
 	    error("Unable to Init the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
 	}
@@ -275,21 +275,14 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, title);
 	final int count = entityCentreConfigController.count(model);
 	if (count == 1) { // the persistence layer contains a entity-centre, so it should be retrieved and deserialised
-	    retrieveAndInit(menuItemType, name, model);
+	    retrieveAndInit(centreConfigurator, name, model);
 	    return this;
 	} else if (count < 1) { // there is no entity-centre
 	    if (name == null) { // principle entity-centre
 		// Principle entity-centre should be initialised and then saved. This can be done naturally by base user.
 		// But if base user haven't done that yet, it will be done by non-base user automatically.
 		final boolean owning = currentUser().isBase();
-
-		//TODO next line of code must take in to account that the menu item is for association centre.
-		final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{ add(root); }});
-		// initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
-		c.getFirstTick().checkedProperties(root);
-		c.getSecondTick().checkedProperties(root);
-
-		init(menuItemType, name, c, owning);
+		init(menuItemType, name, centreConfigurator.configCentre(createEmptyCentre(menuItemType)), owning);
 		// save a new instance of EntityCentreConfig
 		final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(menuItemTypeName));
 		ecc.setPrincipal(true);
@@ -305,7 +298,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    final int count1 = entityCentreConfigController.count(model1);
 	    if (count1 == 1) { // for current user => 1 entity-centre, for base => another one with same title
 		// initialise an instance for current user (base configuration will be ignored)
-		retrieveAndInit(menuItemType, name, model1);
+		retrieveAndInit(centreConfigurator, name, model1);
 	    } else {
 		error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    }
@@ -461,17 +454,33 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param name
      * @param model
      */
-    private void retrieveAndInit(final Class<?> menuItemType, final String name, final EntityResultQueryModel<EntityCentreConfig> model) {
+    private void retrieveAndInit(final CentreManagerConfigurator centreConfigurator, final String name, final EntityResultQueryModel<EntityCentreConfig> model) {
 	final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
 	final boolean owning = ecc.getOwner().equals(currentUser());
+	final Class<?> menuItemType = centreConfigurator.getMenuItemClass();
 	try {
 	    init(menuItemType, name, versionMaintainer.maintainCentreVersion(ecc), owning);
 	    return;
 	} catch (final Exception e) {
+	    init(menuItemType, name, centreConfigurator.configCentre(createEmptyCentre(menuItemType)), owning);
+	    final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
+	    ecc.setConfigBody(getSerialiser().serialise(centre));
+	    saveCentre(getEntityCentreManager(menuItemType, null), ecc);
 	    e.printStackTrace();
-	    final String message = "Unable to deserialise a entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "].";
+	    final String message = "Unable to deserialise a entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "]. The  default configuration was opened.";
 	    error(message);
 	}
+    }
+
+    private ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> menuItemType) {
+	final Class<?> root = validateMenuItemTypeRootType(menuItemType);
+	//TODO next line of code must take in to account that the menu item is for association centre.
+	final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{add(root);}});
+	// initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
+	c.getFirstTick().checkedProperties(root);
+	c.getSecondTick().checkedProperties(root);
+
+	return c;
     }
 
     /**

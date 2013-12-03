@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.security.user.IUserProvider;
 
@@ -146,7 +147,7 @@ public interface IGlobalDomainTreeManager {
      * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    IGlobalDomainTreeManager initEntityCentreManager(final Class<?> menuItemType, final String name);
+    IGlobalDomainTreeManager initEntityCentreManager(final CentreManagerConfigurator centreConfigurator, final String name);
 
     /**
      * Discards a current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.

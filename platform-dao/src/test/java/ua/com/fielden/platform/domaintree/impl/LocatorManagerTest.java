@@ -575,7 +575,7 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
 	final Class<?> propertyType = EntityWithStringKeyType.class;
 
 	final GlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityCentreManager(MENU_ITEM_TYPE, null);
+	managerForNonBaseUser.initEntityCentreManager(new CentreManagerConfigurator(MENU_ITEM_TYPE), null);
 	managerForNonBaseUser.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, NON_BASE_USERS_SAVE_AS);
 
 	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MENU_ITEM_TYPE, NON_BASE_USERS_SAVE_AS);
