@@ -61,6 +61,29 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
 	return new GridConfigurationView<>(model, owner, toolbarCustomiser, analysisViewCustomiser, progressLayer);
     }
 
+    /**
+     * Creates the {@link GridConfigurationView} instance with both customiser: tool bar, details and view customisers.
+     *
+     * @param model
+     * @param detailsCache
+     * @param detailsCustomiser
+     * @param owner
+     * @param toolbarCustomiser
+     * @param analysisViewCustomiser
+     * @param progressLayer
+     * @return
+     */
+    public static <E extends AbstractEntity<?>, C extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationView<E, C> createCustomisableConfigView(//
+	    final GridConfigurationModel<E, C> model, //
+	    final AbstractEntityCentre<E, C> owner, //
+	    final Map<Object, DetailsFrame> detailsCache, //
+	    final IDetailsCustomiser detailsCustomiser, //
+	    final IToolbarCustomiser<GridAnalysisView<E, C>> toolbarCustomiser, //
+	    final IAnalysisViewCustomiser<GridAnalysisView<E, C>> analysisViewCustomiser, //
+	    final BlockingIndefiniteProgressLayer progressLayer) {
+	return new GridConfigurationView<>(model, detailsCache, detailsCustomiser, owner, toolbarCustomiser, analysisViewCustomiser, progressLayer);
+    }
+
 
     /**
      * Initiates new {@link GridConfigurationView} with tool bar and view customisers.

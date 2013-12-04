@@ -7,6 +7,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
@@ -25,6 +26,8 @@ import org.jfree.chart.axis.SymbolAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.entity.ChartEntity;
 import org.jfree.chart.entity.XYItemEntity;
+import org.jfree.chart.labels.XYItemLabelGenerator;
+import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
@@ -49,7 +52,10 @@ public class ScheduleChartPanel<T extends AbstractEntity<?>> extends ChartPanel 
     private final List<T> data = new ArrayList<>();
 
     private IDomainLabelGenerator<T> labelGenerator = new DefaultDomainLabelGenerator<>();
+    private ITooltipGenerator<T> tooltipGenerator = new DefaultTooltipGenerator<>();
     private double stretchFactor = 0.05;
+
+    private boolean labelVisible = false;
 
     //Temporary parameters needed for dragging and stretching
     private ScheduleChangedEventType eventType= null;
@@ -126,12 +132,10 @@ public class ScheduleChartPanel<T extends AbstractEntity<?>> extends ChartPanel 
         if (currentTask != null) {
             final Pair<Date, String> coordinates = getCoordinates(e.getPoint());
             final long delta = coordinates.getKey().getTime() - previousPosition.getTime();
-            System.out.println(coordinates.getKey() + " " + previousPosition + " " + delta);
             if (eventType == ScheduleChangedEventType.MOVE) {
         	setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
         	final Date newLeftValue = new Date(currentTask.getFrom().getTime() + delta);
         	final Date newRightValue = new Date(currentTask.getTo().getTime() + delta);
-        	System.out.println( delta + " " + newLeftValue + " " + newRightValue);
         	currentTask.setDuration(new SimpleTimePeriod(newLeftValue, newRightValue));
         	fireScheduleChangedEvent(new ScheduleChangedEvent<>(this, currentTask.getEntity(), currentTask.getScheduleSeries(), newLeftValue, newRightValue));
             } else if (eventType == ScheduleChangedEventType.STRETCH) {
@@ -147,6 +151,7 @@ public class ScheduleChartPanel<T extends AbstractEntity<?>> extends ChartPanel 
             }
             previousPosition = coordinates.getKey();
             getChart().setNotify(true);
+            getRangeAxis().configure();
         } else {
             super.mouseDragged(e);
         }
@@ -167,6 +172,25 @@ public class ScheduleChartPanel<T extends AbstractEntity<?>> extends ChartPanel 
         }
     }
 
+    public boolean isLabelVisible() {
+	return labelVisible;
+    }
+
+    public void setLabelVisible(final boolean labelVisible) {
+	this.labelVisible = labelVisible;
+    }
+
+    public void setTooltipGenerator(final ITooltipGenerator<T> tooltipGenerator) {
+	if(tooltipGenerator == null) {
+	    throw new NullPointerException("Tooltip generator can not be null");
+	}
+	this.tooltipGenerator = tooltipGenerator;
+    }
+
+    public ITooltipGenerator<T> getTooltipGenerator() {
+	return tooltipGenerator;
+    }
+
     private Pair<T, ScheduleSeries<T>> getEntityWithSeries(final Point point) {
 	final ScheduleTask<T> task = getTask(point);
 	if (task != null) {
@@ -183,13 +207,17 @@ public class ScheduleChartPanel<T extends AbstractEntity<?>> extends ChartPanel 
 	return null;
     }
 
-    @SuppressWarnings("unchecked")
     private ScheduleTask<T> getTask(final Point p) {
 	final XYItemEntity e = getXYItem(p);
 	if (e != null) {
-	    return (ScheduleTask<T>)((XYTaskDataset)e.getDataset()).getTasks().getSeries(e.getSeriesIndex()).get(e.getItem());
+	    return getTask(e.getDataset(), e.getSeriesIndex(), e.getItem());
 	}
 	return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private ScheduleTask<T> getTask(final XYDataset dataset, final int series, final int item) {
+	return (ScheduleTask<T>)((XYTaskDataset)dataset).getTasks().getSeries(series).get(item);
     }
 
     private Pair<Date, String> getCoordinates(final Point point) {
@@ -347,12 +375,44 @@ public class ScheduleChartPanel<T extends AbstractEntity<?>> extends ChartPanel 
 	    {
 		setMargin(series.getCutOfFactor());
 		setUseYInterval(true);
+		setBaseToolTipGenerator(createTooltipGenerator());
+		//setBaseItemLabelsVisible(true);
+		//setBaseItemLabelGenerator(createLabelGenerator());
+		//setNegativeItemLabelPositionFallback(position)
 	    }
 
 	    @Override
 	    public Paint getSeriesPaint(final int ind) {
 	        return series.getPainter().getPainterFor(data.get(ind));
 	    }
+
+
+	    private XYToolTipGenerator createTooltipGenerator() {
+		return new XYToolTipGenerator() {
+
+		    @Override
+		    public String generateToolTip(final XYDataset dataset, final int seriesInd, final int item) {
+			final ScheduleTask<T> task = getTask(dataset, seriesInd, item);
+			return tooltipGenerator.getTooltip(task.getEntity(), series);
+		    }
+		};
+	    }
+
+
+	    private XYItemLabelGenerator createLabelGenerator() {
+		return new XYItemLabelGenerator() {
+
+		    @Override
+		    public String generateLabel(final XYDataset dataset, final int series, final int item) {
+			final ScheduleTask<T> task = getTask(dataset, series, item);
+			if (task == currentTask || labelVisible) {
+			}
+			return null;
+		    }
+		};
+	    }
+
+
 	};
     }
 
@@ -411,7 +471,7 @@ public class ScheduleChartPanel<T extends AbstractEntity<?>> extends ChartPanel 
     }
 
     /**
-     * Set the {@link IDomainLabelGenerator}. Throws {@link NullPointerException} if the lableGenerator parameter is null.
+     * Set the {@link ITooltipGenerator}. Throws {@link NullPointerException} if the lableGenerator parameter is null.
      *
      * @param labelGenerator
      * @return
@@ -460,5 +520,9 @@ public class ScheduleChartPanel<T extends AbstractEntity<?>> extends ChartPanel 
 	    plot.setDataset(datasetIndex, datasets[datasetIndex]);
 	}
 	plot.setDomainAxis(createDomainAxis(plot.getDomainAxis().getLabel()));
+    }
+
+    public List<T> getData() {
+	return Collections.unmodifiableList(data);
     }
 }

@@ -27,6 +27,11 @@ public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements 
 
     private IAnalysisQueryCustomiser<T, GridAnalysisModel<T,ICentreDomainTreeManagerAndEnhancer>> queryCustomiser;
 
+    /**
+     * Details customiser for chart analysis.
+     */
+    private IDetailsCustomiser detailsCustomiser = null;
+
     @Override
     public GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createAnalysis(//
 	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
@@ -34,7 +39,7 @@ public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements 
 	    final String name, //
 	    final Map<Object, DetailsFrame> detailsCache, //
 	    final BlockingIndefiniteProgressLayer progressLayer) {
-	return GridConfigurationView.createCustomisableConfigView(createAnalysisModel(criteria), owner, toolbarCustomiser, analysisViewCustomiser, progressLayer);
+	return GridConfigurationView.createCustomisableConfigView(createAnalysisModel(criteria), owner, detailsCache, detailsCustomiser, toolbarCustomiser, analysisViewCustomiser, progressLayer);
     }
 
     protected GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> createAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria){
@@ -64,7 +69,8 @@ public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements 
 
     @Override
     public IAnalysisFactory<T, GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
-	throw new UnsupportedOperationException("The details are not supported yet for the main grid analysis");
+	this.detailsCustomiser = detailsCustomiser;
+	return this;
     }
 
     protected IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> getQueryCustomiser() {

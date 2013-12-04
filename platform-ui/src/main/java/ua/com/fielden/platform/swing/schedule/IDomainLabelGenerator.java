@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.schedule;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
+
+
 
 /**
  * Contract that allows to specify domain axis lable for entity.
