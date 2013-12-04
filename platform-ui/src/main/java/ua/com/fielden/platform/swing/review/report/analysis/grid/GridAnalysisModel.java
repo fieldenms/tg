@@ -443,6 +443,12 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    return result;
 	}
 	final PropertyTableModel<T> tableModel = getAnalysisView().getEgiPanel().getEgi().getActualModel();
+	final Pair<List<String>, List<String>> propertyNamesAndTitles = propertyNamesAndTitles(tableModel);
+	getCriteria().export(fileName, queryModel.composeQuery(), propertyNamesAndTitles.getKey().toArray(new String[] {}), propertyNamesAndTitles.getValue().toArray(new String[] {}));
+	return Result.successful(this);
+    }
+
+    protected Pair<List<String>, List<String>> propertyNamesAndTitles(final PropertyTableModel<T> tableModel) {
 	final List<String> propertyNames = new ArrayList<String>(tableModel.getPropertyColumnMappings().size());
 	final List<String> propertyTitles = new ArrayList<String>(tableModel.getPropertyColumnMappings().size());
 	for (final AbstractPropertyColumnMapping<T> mapping : tableModel.getPropertyColumnMappings()) {
@@ -450,8 +456,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    propertyNames.add(propertyAnalyser.getCriteriaFullName());
 	    propertyTitles.add(mapping.getPropertyTitle());
 	}
-	getCriteria().export(fileName, queryModel.composeQuery(), propertyNames.toArray(new String[] {}), propertyTitles.toArray(new String[] {}));
-	return Result.successful(this);
+	return new Pair<>(propertyNames, propertyTitles);
     }
 
     @Override
