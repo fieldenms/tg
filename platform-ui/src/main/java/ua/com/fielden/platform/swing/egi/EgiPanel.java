@@ -41,6 +41,8 @@ import javax.swing.KeyStroke;
 import javax.swing.SortOrder;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.PopupMenuEvent;
@@ -142,6 +144,13 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * @return
      */
     private QuickTableFilterField createFilterField(final PropertyTableModel<?> _tableModel) {
+	// FIXME NOTE: this is temporary fix for JIDE 2.3.0 bug when no border is specified in UiDefaults.
+	// This is resolved in version 3.4.2. Please upgrade and remove temporary fix.
+	final Object border = UIManager.get("TextField.border");
+	if (border == null) {
+	    UIManager.put("TextField.border", BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
+	}
+
 	final QuickTableFilterField _filterField = new QuickTableFilterField(_tableModel);
 	_filterField.setHintText("Type here to filter...");
 	_filterField.getTextField().setEnabled(true);
