@@ -462,10 +462,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    init(menuItemType, name, versionMaintainer.maintainCentreVersion(ecc), owning);
 	    return;
 	} catch (final Exception e) {
+	    //TODO must take into account the entity centre name.
 	    init(menuItemType, name, centreConfigurator.configCentre(createEmptyCentre(menuItemType)), owning);
-	    final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
+	    final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, name);
 	    ecc.setConfigBody(getSerialiser().serialise(centre));
-	    saveCentre(getEntityCentreManager(menuItemType, null), ecc);
+	    saveCentre(getEntityCentreManager(menuItemType, name), ecc);
 	    e.printStackTrace();
 	    final String message = "Unable to deserialise a entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "]. The  default configuration was opened.";
 	    error(message);

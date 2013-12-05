@@ -3,8 +3,10 @@ package ua.com.fielden.platform.swing.review.report.analysis.multipledec;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.entity.CategoryItemEntity;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
+import org.jfree.data.category.CategoryDataset;
 
 import ua.com.fielden.platform.swing.categorychart.ChartPanel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AnalysisDataEvent;
@@ -28,14 +30,25 @@ public class DecChartPanel extends ChartPanel {
 		    event.getTrigger().consume();
 		    if (getChart().getPlot() instanceof CategoryPlot) {
 			final CategoryPlot plot = getChart().getCategoryPlot();
-			switchRendererLabels(plot);
+			if (event.getEntity() instanceof CategoryItemEntity) {
+			    switchRendererLabels(getDataSetIndex(((CategoryItemEntity)event.getEntity()).getDataset()));
+			}
 		    }
 		}
 	    }
 
-	    private void switchRendererLabels(final CategoryPlot plot){
-		for(int renderIndex = 0; renderIndex < plot.getRendererCount(); renderIndex++){
-		    final CategoryItemRenderer renderer = plot.getRenderer(renderIndex);
+	    private int getDataSetIndex(final CategoryDataset dataset) {
+		for (int ind = 0; ind < getChart().getCategoryPlot().getDatasetCount(); ind++) {
+		    if (getChart().getCategoryPlot().getDataset(ind) == dataset) {
+			return ind;
+		    }
+		}
+		return -1;
+	    }
+
+	    private void switchRendererLabels(final int i){
+		if(i >= 0){
+		    final CategoryItemRenderer renderer = getChart().getCategoryPlot().getRenderer(i);
 		    renderer.setBaseItemLabelsVisible(!renderer.getBaseItemLabelsVisible());
 		}
 	    }

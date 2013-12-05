@@ -15,8 +15,10 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.labels.AbstractCategoryItemLabelGenerator;
 import org.jfree.chart.labels.CategoryItemLabelGenerator;
 import org.jfree.chart.labels.CategoryToolTipGenerator;
+import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.DatasetRenderingOrder;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
@@ -127,6 +129,7 @@ public class DecModel<T extends AbstractEntity<?>> {
 	    plot.setDataset(1, datasets.getValue());
 	    plot.setRenderer(1, createLineRenderer());
 	}
+	plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 
 	final List<IDescriptionRetriever> descriptionRetrievers = new ArrayList<IDescriptionRetriever>();
 	/*				*/descriptionRetrievers.add(createBarChartDescriptionRetriever());
@@ -181,6 +184,8 @@ public class DecModel<T extends AbstractEntity<?>> {
     private void initItemLabels(final CategoryPlot categoryPlot){
 	for(int renderIndex = 0; renderIndex < categoryPlot.getRendererCount(); renderIndex++){
 	    categoryPlot.getRenderer(renderIndex).setBaseItemLabelGenerator(new AnalysisChartLabelGenerator(numberFormat));
+	    categoryPlot.getRenderer(renderIndex).setBasePositiveItemLabelPosition(new ItemLabelPosition());
+	    categoryPlot.getRenderer(renderIndex).setBaseNegativeItemLabelPosition(new ItemLabelPosition());
 	}
     }
 

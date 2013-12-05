@@ -19,6 +19,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.chart.GroupAnalysisD
 import ua.com.fielden.platform.swing.review.report.analysis.chart.ICategoryAnalysisDataProvider;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class MultipleDecModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IMultipleDecDomainTreeManager> {
@@ -159,7 +160,7 @@ public class MultipleDecModel<T extends AbstractEntity<?>> extends AbstractAnaly
 		    if (o2 == null) {
 			return 1;
 		    } else {
-			return o1.toString().compareTo(o2.toString());
+			return EntityUtils.safeCompare(o1.toString(), o2.toString());
 		    }
 		}
 	    }

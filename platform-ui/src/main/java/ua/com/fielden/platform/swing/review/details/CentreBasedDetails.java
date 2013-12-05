@@ -52,7 +52,7 @@ public abstract class CentreBasedDetails<T extends AbstractAnalysisDetailsData<E
     public DetailsFrame createDetailsView(final T detailsParam, final ICloseHook<DetailsFrame> closeHook) {
 	final CentreConfigurationWithoutCriteriaModel<ET> detailsModel = new CentreConfigurationWithoutCriteriaModel<>(//
 		detailsParam.root, //
-		null, createDetailsFactory(detailsParam),//
+		null, createDefaultAnalysisFactory(detailsParam),//
 		entityFactory, criteriaGenerator, masterManager, getCdtme(detailsParam));
 	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "Loading");
 	final CentreConfigurationWithoutCriteriaView<ET> detailsConfigView = new CentreConfigurationWithoutCriteriaView<>(detailsModel, progressLayer);
@@ -68,7 +68,7 @@ public abstract class CentreBasedDetails<T extends AbstractAnalysisDetailsData<E
      * @param detailsParam
      * @return
      */
-    protected IAnalysisFactory<ET, ?> createDetailsFactory(final T detailsParam) {
+    protected IAnalysisFactory<ET, ?> createDefaultAnalysisFactory(final T detailsParam) {
 	final DefaultGridAnalysisFactory<ET> analysisFactory = new DefaultGridAnalysisFactory<>();
 	analysisFactory.setToolbarCustomiser(new IToolbarCustomiser<GridAnalysisView<ET, ICentreDomainTreeManagerAndEnhancer>>() {
 

@@ -37,7 +37,7 @@ public class DecView<T extends AbstractEntity<?>>{
 
 	    }
 	}else{
-	    calculatedNumberPanel = null;
+	    calculatedNumberPanel = new JPanel();
 	}
 	chartPanel = new DecChartPanel(model.createChart());
 	model.getChartModel().addAnalysisModelChangedListener(createChartModelChangedListener(chartPanel));
