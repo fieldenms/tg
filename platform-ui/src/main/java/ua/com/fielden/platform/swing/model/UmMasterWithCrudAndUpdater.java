@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.model;
 
-import java.nio.channels.SeekableByteChannel;
-
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
