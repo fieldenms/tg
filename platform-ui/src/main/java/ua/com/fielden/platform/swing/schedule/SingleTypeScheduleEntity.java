@@ -38,7 +38,7 @@ public abstract class SingleTypeScheduleEntity<T extends AbstractEntity<?>> impl
     @Override
     public Date getTo(final T entity) {
 	final Object value = entity.get(to);
-	return value == null ? defaultValue : (Date) value;
+	return value == null && (getFrom(entity) != null && getFrom(entity).before(defaultValue)) ? defaultValue : (Date) value;
     }
 
     @Override
