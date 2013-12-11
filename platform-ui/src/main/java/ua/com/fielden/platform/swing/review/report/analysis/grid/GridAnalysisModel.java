@@ -7,13 +7,13 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
@@ -22,6 +22,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.SinglePage;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -69,14 +70,17 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      *
      */
     public class DeltaRetriever {
-	private final TreeSet<T> entities;
+	// private final TreeSet<T> entities;
+	private final List<T> entities;
 	private Timer timer;
 	private Date oldNow;
+	private final Comparator<T> comparator;
 
 	public DeltaRetriever(final IPage<T> initialPage, final Comparator<T> comparator, final Date oldNow) {
 	    this.oldNow = oldNow;
-	    entities = new TreeSet<T>(comparator);
-	    entities.addAll(initialPage.data());
+	    this.comparator = comparator;
+	    entities = new ArrayList<T>(initialPage.data());
+	    Collections.sort(entities, this.comparator);
 	}
 
 	public void scheduleDeltaRetrieval() {
@@ -130,9 +134,14 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
 	public IPage<T> produceEnhancedPage(final IPage<T> retrievedPage) {
 	    for (final T entity : retrievedPage.data()) {
-		entities.remove(entity); // remove old entity if exists
-		entities.add(entity); // efficient adding (merging) to a tree structure
+		final boolean removed = entities.remove(entity); // remove old entity if exists
+		if (!removed) {
+		    throw new IllegalStateException("There is no entity [" + entity + "] to be removed!");
+		}
 	    }
+	    entities.addAll(retrievedPage.data());
+	    Collections.sort(entities, this.comparator);
+
 	    return createSinglePage(retrievedPage, new ArrayList<T>(entities));
 	}
 
@@ -332,10 +341,70 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	return result;
     }
 
-    //TODO maybe it should be removed.
+    private Comparator<T> comparator0(final List<Pair<String, Ordering>> orderedProps, final Comparator<T> accumulatedComparator) {
+	if (orderedProps.isEmpty()) {
+	    return accumulatedComparator;
+	} else {
+	    final Pair<String, Ordering> lastPropertyOrdering = orderedProps.get(orderedProps.size() - 1);
+	    final String property = lastPropertyOrdering.getKey().equals("") ? AbstractEntity.KEY : lastPropertyOrdering.getKey();
+	    final Ordering ordering = lastPropertyOrdering.getValue();
+	    return comparator0(new ArrayList<Pair<String, Ordering>>(orderedProps.subList(0, orderedProps.size() - 1)), new Comparator<T>() {
+		@Override
+		public int compare(final T o1, final T o2) {
+		    final int compare = compare2(o1.get(property), o2.get(property), ordering);
+		    return compare == 0 ? (accumulatedComparator == null ? 0 : accumulatedComparator.compare(o1, o2)) : compare;
+		}
+	    });
+	}
+    }
+
+    private static int compare2(final Object value1, final Object value2, final Ordering ordering) {
+	return Ordering.ASCENDING.equals(ordering) ? compare1(value1, value2) : (-compare1(value1, value2));
+    }
+
+    private static int compare1(final Object value1, final Object value2) {
+	if (value1 == null) {
+	    if (value2 == null) {
+		return 0;
+	    } else {
+		return -1;
+	    }
+	} else {
+	    if (value2 == null) {
+		return 1;
+	    } else {
+		if (!(value1 instanceof Comparable)) {
+		    throw new IllegalStateException("Property value [" + value1 + "] of entity is not comparable.");
+		}
+		final int compare = ((Comparable) value1).compareTo(value2);
+		return compare;
+	    }
+	}
+    }
+
     private Comparator<T> createComparator() {
-	// TODO create comparator based on the ordering properties of CDTMAE.
-	return null;
+	if (queryCustomiser.getQueryGenerator(this) instanceof GridAnalysisQueryGenerator) {
+	    final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> qGenerator = (GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>) queryCustomiser.getQueryGenerator(this);
+	    final Class<T> root = qGenerator.entityClass();
+	    final ICentreDomainTreeManagerAndEnhancer cdtme = qGenerator.getCdtme();
+	    return comparator0(cdtme.getSecondTick().orderedProperties(root), new Comparator<T>() {
+		@Override
+		public int compare(final T o1, final T o2) {
+		    if (o1 == null) {
+			throw new IllegalArgumentException("Cannot order 'null' objects (first one).");
+		    }
+		    if (o2 == null) {
+			throw new IllegalArgumentException("Cannot order 'null' objects (second one).");
+		    }
+		    if (!(o1 instanceof Comparable)) {
+			throw new IllegalArgumentException("Cannot order 'non-comparable' objects.");
+		    }
+		    return ((Comparable) o1).compareTo(o2);
+		}
+	    });
+	} else {
+	    throw new IllegalStateException("Comparator for delta-centre cannot be used for query customiser which type is not GridAnalysisQueryGenerator.");
+	}
     }
 
     public IPage<T> promotePage(final Result result) {

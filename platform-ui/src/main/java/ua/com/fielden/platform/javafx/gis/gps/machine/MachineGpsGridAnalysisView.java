@@ -1,11 +1,8 @@
 package ua.com.fielden.platform.javafx.gis.gps.machine;
 
 import java.awt.Color;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.util.List;
 
-import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -16,7 +13,6 @@ import ua.com.fielden.platform.javafx.gis.gps.MessagePoint;
 import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.coloring.IColouringScheme;
-import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.CategoryChartFactory;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
 
@@ -29,7 +25,8 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisVie
 public class MachineGpsGridAnalysisView<T extends AbstractEntity<?>> extends GpsGridAnalysisView<T, MachineGpsGisViewPanel<T>> {
     private static final long serialVersionUID = 553731585658593055L;
 
-    private AbstractEntity<?> viewFocusedEntity;
+    // private AbstractEntity<?> viewFocusedEntity;
+    private int horizontalScrollBarPosition, verticalScrollBarPosition;
     private List<T> oldSelected;
 
     public MachineGpsGridAnalysisView(final GpsGridAnalysisModel<T> model, final GpsGridConfigurationView<T> owner) {
@@ -62,14 +59,17 @@ public class MachineGpsGridAnalysisView<T extends AbstractEntity<?>> extends Gps
 	    getGisViewPanel().setCalloutChangeShouldBeForced(false);
 	}
 
-        final JViewport viewport = getEgiPanel().getEgiScrollPane().getViewport();
-        final Rectangle viewRect = viewport.getViewRect();
-        final Point position = new Point((int) viewRect.getX(), (int) (viewRect.getY() + viewRect.getHeight() - 1));
-        final int topRow = getEgiPanel().getEgi().rowAtPoint(position);
+//        final JViewport viewport = getEgiPanel().getEgiScrollPane().getViewport();
+//        final Rectangle viewRect = viewport.getViewRect();
+//        final Point position = new Point((int) viewRect.getX(), (int) (viewRect.getY() + viewRect.getHeight() - 1));
+//        final int topRow = getEgiPanel().getEgi().rowAtPoint(position);
+//
+//	final PropertyTableModel tableModel = getEgiPanel().getEgi().getActualModel();
+//	viewFocusedEntity = tableModel.getEntityAt(topRow);
+//	System.out.println("BRINGTOVIEW: viewFocusedEntity == " + viewFocusedEntity);
 
-	final PropertyTableModel tableModel = getEgiPanel().getEgi().getActualModel();
-	viewFocusedEntity = tableModel.getEntityAt(topRow);
-	System.out.println("BRINGTOVIEW: viewFocusedEntity == " + viewFocusedEntity);
+	horizontalScrollBarPosition = getEgiPanel().getEgiScrollPane().getHorizontalScrollBar().getValue();
+	verticalScrollBarPosition = getEgiPanel().getEgiScrollPane().getVerticalScrollBar().getValue();
 
 	oldSelected = super.beforePromotingDataAction();
 	return oldSelected;
@@ -82,8 +82,11 @@ public class MachineGpsGridAnalysisView<T extends AbstractEntity<?>> extends Gps
 	    getGisViewPanel().setCalloutChangeShouldBeForced(true);
 	}
 
-	if (viewFocusedEntity != null) {
-	    bringToView(viewFocusedEntity);
-	}
+	getEgiPanel().getEgiScrollPane().getHorizontalScrollBar().setValue(horizontalScrollBarPosition);
+	getEgiPanel().getEgiScrollPane().getVerticalScrollBar().setValue(verticalScrollBarPosition);
+
+//	if (viewFocusedEntity != null) {
+//	    bringToView(viewFocusedEntity);
+//	}
     }
 }

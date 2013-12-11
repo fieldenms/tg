@@ -245,7 +245,7 @@ public abstract class AbstractActors<
 	try {
 	    final Map<Long, List<MESSAGE>> result = (Map<Long, List<MESSAGE>>) Await.result(future, timeout.duration());
 	    final Period p = new Period(st, new DateTime());
-	    logger.info("Last messages for " + machinesTiming.size() + " machines retrieved in " + (p.getHours() == 0 ? "" : p.getHours() + " h ") + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms");
+	    logger.info("Last messages [" + result.size() + "] for " + machinesTiming.size() + " machines retrieved in " + (p.getHours() == 0 ? "" : p.getHours() + " h ") + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms.");
 	    return result;
 	} catch (final Exception e) {
 	    logger.error(e);
