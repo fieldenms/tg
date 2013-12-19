@@ -29,7 +29,6 @@ public class ParsingArithmeticExpressionsWithAggreagationFunctionsTest {
 	assertEquals("Incorrectly formed AST", "(+ 1 2)", ast.treeToString());
     }
 
-
     @Test
     public void parantheses_usage_case1() throws RecognitionException, SequenceRecognitionFailed {
 	final Token[] tokens = new ExpressionLexer("(1 + 2)").tokenize();
@@ -48,7 +47,6 @@ public class ParsingArithmeticExpressionsWithAggreagationFunctionsTest {
 	assertEquals("Incorrectly formed AST", "(* (+ 1 2) 2)", ast.treeToString());
     }
 
-
     @Test
     public void parantheses_usage_case3() throws RecognitionException, SequenceRecognitionFailed {
 	final Token[] tokens = new ExpressionLexer("1 * (2 + 3)").tokenize();
@@ -66,7 +64,6 @@ public class ParsingArithmeticExpressionsWithAggreagationFunctionsTest {
 	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
 	assertEquals("Incorrectly formed AST", "(* (+ 1 4) (+ 2 3))", ast.treeToString());
     }
-
 
     @Test
     public void test_application_of_rules_term_op_term_op_term() throws RecognitionException, SequenceRecognitionFailed {
@@ -111,6 +108,26 @@ public class ParsingArithmeticExpressionsWithAggreagationFunctionsTest {
 	final AstNode ast = parser.parse();
 	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
 	assertEquals("Incorrectly formed AST", "(AVG property)", ast.treeToString());
+    }
+
+    @Test
+    public void test_parsing_of_functions_with_date_constants() throws SequenceRecognitionFailed, RecognitionException {
+	final Token[] tokens = new ExpressionLexer("AVG(property + 1d)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+	assertEquals("Incorrectly formed AST", "(AVG (+ property 1d))", ast.treeToString());
+    }
+
+    @Test
+    public void test_parsing_of_functions_with_property_that_is_similar_to_date_constant() throws SequenceRecognitionFailed, RecognitionException {
+	for (int index = 0; index < 1000; index++) {
+	    final Token[] tokens = new ExpressionLexer("SUM(dcProperty)").tokenize();
+	    final ExpressionParser parser = new ExpressionParser(tokens);
+	    final AstNode ast = parser.parse();
+	    assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+	    assertEquals("Incorrectly formed AST", "(SUM dcProperty)", ast.treeToString());
+	}
     }
 
     @Test
