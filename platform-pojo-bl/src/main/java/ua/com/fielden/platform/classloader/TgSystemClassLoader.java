@@ -5,6 +5,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandlerFactory;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -18,7 +19,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
  */
 public class TgSystemClassLoader extends URLClassLoader {
 
-    private List<WeakReference<DynamicEntityClassLoader>> derivedClassLoaders = new ArrayList<WeakReference<DynamicEntityClassLoader>>();
+    private List<WeakReference<DynamicEntityClassLoader>> derivedClassLoaders =  Collections.synchronizedList(new ArrayList<WeakReference<DynamicEntityClassLoader>>());
 
     public TgSystemClassLoader(final ClassLoader parent) {
 	super(((URLClassLoader) parent).getURLs(), parent);
