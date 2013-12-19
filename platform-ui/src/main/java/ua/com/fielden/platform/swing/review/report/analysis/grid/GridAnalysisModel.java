@@ -456,7 +456,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * @param entities
      * @return
      */
-    protected List<T> getUpdatedEntitiesById(final List<Long> ids) {
+    protected synchronized List<T> getUpdatedEntitiesById(final List<Long> ids) {
 	final boolean isSynthetic = Reflector.isSynthetic(getCriteria().getEntityClass());
 	final boolean isEntityKey = EntityUtils.isEntityType(AnnotationReflector.getKeyType(getCriteria().getEntityClass()));
 	if (analysisQueries != null) {
