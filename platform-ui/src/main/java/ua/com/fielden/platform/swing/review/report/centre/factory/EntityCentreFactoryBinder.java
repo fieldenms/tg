@@ -9,11 +9,11 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
@@ -151,11 +151,11 @@ public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> implements I
 
     @Override
     public CentreConfigurationView<T, ?> createEntityCentre(//
-	    final CentreManagerConfigurator centreConfigurator, //
+	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType, //
 		    final String name, //
 		    final BlockingIndefiniteProgressLayer progressLayer) {
 	return getEntityCentreFactory().createEntityCentre(//
-		centreConfigurator, //
+		menuItemType, //
 		name, //
 		this, //
 		gdtm, entityFactory, masterManager, criteriaGenerator,//

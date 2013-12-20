@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -203,8 +205,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	}
     }
 
-    @SuppressWarnings("rawtypes")
-    private static Class<?> validateMenuItemTypeRootType(final Class<?> menuItemType) {
+    public static Class<?> validateMenuItemTypeRootType(final Class<?> menuItemType) {
 	final EntityType etAnnotation = menuItemType.getAnnotation(EntityType.class);
 	if (etAnnotation == null || etAnnotation.value() == null) {
 	    error("The menu item type " + menuItemType.getSimpleName() + " has no 'EntityType' annotation, which is necessary to specify the root type of the centre.");
@@ -263,32 +264,47 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	return name == null ? menuItemType.getName() : name;
     }
 
+    public static CentreManagerConfigurator createEntityCentreConfigurator(final Class<?> menuItemType, final Class<?> root) {
+	try {
+	    final Method method = Reflector.getMethod(menuItemType, "createCentreConfigurator");
+	    final boolean isAccessible = method.isAccessible();
+	    method.setAccessible(true);
+	    final Object obj = method.invoke(null);
+	    method.setAccessible(isAccessible);
+	    return (CentreManagerConfigurator) obj;
+	} catch (final NoSuchMethodException noSuchMethod) {
+	    logger.warn("No centre configurator has been specified for menu item [" + menuItemType + "]. Please add method 'private static CentreManagerConfigurator createCentreConfigurator()' " + //
+	    		"into menu item (e.g. into MiDriver class) in case when custom defalt configuration is needed.");
+	    return new CentreManagerConfigurator((Class<? extends AbstractEntity<?>>) root); // legal situation -- no centre configurator has been specified
+	} catch (final Throwable t) {
+	    t.printStackTrace();
+	    logger.error(t.getMessage());
+	    throw new IllegalArgumentException(t.getMessage());
+	}
+    }
+
     @Override
-    public IGlobalDomainTreeManager initEntityCentreManager(final CentreManagerConfigurator centreConfigurator, final String name) {
-	final Class<?> menuItemType = centreConfigurator.getMenuItemClass();
+    public IGlobalDomainTreeManager initEntityCentreManager(final Class<?> menuItemType, final String name) {
 	validateMenuItemType(menuItemType);
+	final Class<?> root = validateMenuItemTypeRootType(menuItemType);
 	if (isFreezedEntityCentreManager(menuItemType, name)) {
 	    error("Unable to Init the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
 	}
+	final CentreManagerConfigurator centreConfigurator = createEntityCentreConfigurator(menuItemType, root);
+
 	final String title = title(menuItemType, name);
 	final String menuItemTypeName = menuItemType.getName();
 	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, title);
 	final int count = entityCentreConfigController.count(model);
 	if (count == 1) { // the persistence layer contains a entity-centre, so it should be retrieved and deserialised
-	    retrieveAndInit(centreConfigurator, name, model);
+	    retrieveAndInit(menuItemType, name, root, centreConfigurator, model);
 	    return this;
 	} else if (count < 1) { // there is no entity-centre
 	    if (name == null) { // principle entity-centre
 		// Principle entity-centre should be initialised and then saved. This can be done naturally by base user.
 		// But if base user haven't done that yet, it will be done by non-base user automatically.
 		final boolean owning = currentUser().isBase();
-		init(menuItemType, name, centreConfigurator.configCentre(createEmptyCentre(menuItemType)), owning);
-		// save a new instance of EntityCentreConfig
-		final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(menuItemTypeName));
-		ecc.setPrincipal(true);
-		final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
-		ecc.setConfigBody(getSerialiser().serialise(centre));
-		saveCentre(centre, ecc);
+		init(menuItemType, name, createDefaultCentre(centreConfigurator, root), owning);
 		return this;
 	    } else {
 		error("Unable to initialise a non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
@@ -298,7 +314,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    final int count1 = entityCentreConfigController.count(model1);
 	    if (count1 == 1) { // for current user => 1 entity-centre, for base => another one with same title
 		// initialise an instance for current user (base configuration will be ignored)
-		retrieveAndInit(centreConfigurator, name, model1);
+		retrieveAndInit(menuItemType, name, root, centreConfigurator, model1);
 	    } else {
 		error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    }
@@ -358,11 +374,12 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param title
      * @return
      */
-    private EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String menuItemTypeName) {
+    private EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsersNonPrincipal(final String menuItemTypeName) {
 	final EntityResultQueryModel<EntityCentreConfig> model =
 	    /*    */select(EntityCentreConfig.class).where().//
 	    /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
-	    /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
+	    /*    */prop("menuItem.key").eq().val(menuItemTypeName).and().
+	    /*    */prop("principal").eq().val(false).model();
 	return model;
     }
 
@@ -454,16 +471,14 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param name
      * @param model
      */
-    private void retrieveAndInit(final CentreManagerConfigurator centreConfigurator, final String name, final EntityResultQueryModel<EntityCentreConfig> model) {
+    private void retrieveAndInit(final Class<?> menuItemType, final String name, final Class<?> root, final CentreManagerConfigurator centreConfigurator, final EntityResultQueryModel<EntityCentreConfig> model) {
 	final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
 	final boolean owning = ecc.getOwner().equals(currentUser());
-	final Class<?> menuItemType = centreConfigurator.getMenuItemClass();
 	try {
 	    init(menuItemType, name, versionMaintainer.maintainCentreVersion(ecc), owning);
 	    return;
 	} catch (final Exception e) {
-	    //TODO must take into account the entity centre name.
-	    init(menuItemType, name, centreConfigurator.configCentre(createEmptyCentre(menuItemType)), owning);
+	    init(menuItemType, name, createDefaultCentre(centreConfigurator, root), owning);
 	    final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, name);
 	    ecc.setConfigBody(getSerialiser().serialise(centre));
 	    saveCentre(getEntityCentreManager(menuItemType, name), ecc);
@@ -473,10 +488,13 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	}
     }
 
-    private ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> menuItemType) {
-	final Class<?> root = validateMenuItemTypeRootType(menuItemType);
-	//TODO next line of code must take in to account that the menu item is for association centre.
-	final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{add(root);}});
+    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final CentreManagerConfigurator centreConfigurator, final Class<?> root) {
+	return centreConfigurator.configCentre(createEmptyCentre(root));
+    }
+
+    private ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root) {
+	// TODO next line of code must take in to account that the menu item is for association centre.
+	final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{ add(root); }});
 	// initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
 	c.getFirstTick().checkedProperties(root);
 	c.getSecondTick().checkedProperties(root);
@@ -714,8 +732,26 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 		// TODO entityCentreAnalysisConfigController.save(entity)
 
 		persistentCentres.put(key(menuItemType, name), copyCentre(currentMgr));
-	    } else if (count < 1) { // there is no entity-centre
-		error("Unable to save a non-existent (non-visible for current user) entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+	    } else if (count < 1) { // there is no saved entity-centre
+		if (name == null) { // principle centre
+		    if (!isEntityCentreManagerOwner(menuItemType, null)) {
+			error("Unable to save PRINCIPLE entity-centre instance for type [" + menuItemType.getSimpleName() + "] for current NON-base user [" + currentUser() + "].");
+		    } else {
+			// In this case the centre can exist virtually, without its cloud counter-part
+			// But explicit save has been requested by base user => in this case save should be done.
+			final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(menuItemType.getName()));
+			ecc.setPrincipal(true);
+			final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
+			ecc.setConfigBody(getSerialiser().serialise(centre));
+			saveCentre(centre, ecc);
+		    }
+		} else {
+		    if (!isEntityCentreManagerOwner(menuItemType, null)) {
+			error("Unable to save a NON-PRINCIPLE entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "] -- the base user [" + baseOfTheCurrentUser() + "] owns this entity centre.");
+		    } else {
+			error("Unable to save non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+		    }
+		}
 	    } else { // > 1
 		error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    }
@@ -848,26 +884,22 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public List<String> entityCentreNames(final Class<?> menuItemType) {
+    public List<String> nonPrincipleEntityCentreNames(final Class<?> menuItemType) {
 	validateMenuItemType(menuItemType);
 	validateMenuItemTypeRootType(menuItemType);
 
 	final List<String> names = new ArrayList<String>();
 
-	final List<EntityCentreConfig> centresFromTheCloud = entityCentreConfigController.getAllEntities(from(modelForCurrentAndBaseUsers(menuItemType.getName())).with(fetchOnly(EntityCentreConfig.class).with("title").with("principal")).model());
-	for (final EntityCentreConfig ecc : centresFromTheCloud) {
+	final List<EntityCentreConfig> nonPricipalCentresFromTheCloud = entityCentreConfigController.getAllEntities(from(modelForCurrentAndBaseUsersNonPrincipal(menuItemType.getName())).with(fetchOnly(EntityCentreConfig.class).with("title").with("principal")).model());
+	for (final EntityCentreConfig ecc : nonPricipalCentresFromTheCloud) {
 	    if (ecc.isPrincipal()) {
-		names.add(null);
+		throw new IllegalStateException("There should be no principal entity centre retrieved.");
 	    } else {
 		names.add(ecc.getTitle());
 	    }
 	}
-//	for (final Pair<Class<?>, String> key : currentCentres.keySet()) {
-//	    if (menuItemType.equals(key.getKey())) {
-//		names.add(key.getValue());
-//	    }
-//	}
-
+	// sort 'names' by ascending:
+	Collections.sort(names);
 	return Collections.unmodifiableList(names);
     }
 

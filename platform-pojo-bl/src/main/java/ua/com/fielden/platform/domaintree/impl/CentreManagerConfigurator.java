@@ -1,13 +1,9 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
-
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToResultTickRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 /**
  *
@@ -15,17 +11,10 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
  *
  */
 public class CentreManagerConfigurator {
-
-    private final Class<?> menuItemClass;
     private final Class<?> root;
 
-    public CentreManagerConfigurator(final Class<?> menuItemClass) {
-	this.menuItemClass = menuItemClass;
-	this.root = getEntityTypeForMenuItemClass(menuItemClass);
-    }
-
-    public Class<?> getMenuItemClass() {
-	return menuItemClass;
+    public CentreManagerConfigurator(final Class<? extends AbstractEntity<?>> root) {
+	this.root = root;
     }
 
     public ICentreDomainTreeManagerAndEnhancer configCentre(final ICentreDomainTreeManagerAndEnhancer cdtme) {
@@ -53,21 +42,7 @@ public class CentreManagerConfigurator {
     public CentreManagerConfigurator addTotal(final ICentreDomainTreeManagerAndEnhancer cdtme, final String title, final String description, final String formula, final String relatedProperty) {
 	cdtme.getEnhancer().addCalculatedProperty(root, "", formula, title, description, CalculatedPropertyAttribute.NO_ATTR, relatedProperty);
 	cdtme.getEnhancer().apply();
-	cdtme.getSecondTick().check(root, getNameForTitle(title), true);
+	cdtme.getSecondTick().check(root, CalculatedProperty.generateNameFrom(title), true);
 	return this;
-    }
-
-    private String getNameForTitle(final String title) {
-	return StringUtils.uncapitalize(WordUtils.capitalize(title.trim()).
-		/*remove non-words, but keep digits and underscore*/replaceAll("[^\\p{L}\\d_]", "").
-		/*remove the digit at the beginning of the word*/replaceFirst("\\d*", ""));
-    }
-
-    private Class<?> getEntityTypeForMenuItemClass(final Class<?> menuItemType){
-	final EntityType etAnnotation = menuItemType.getAnnotation(EntityType.class);
-	if (etAnnotation == null || etAnnotation.value() == null || !AbstractEntity.class.isAssignableFrom(etAnnotation.value())) {
-	    throw new IllegalArgumentException("The menu item type " + menuItemType.getSimpleName() + " has no 'EntityType' annotation, which must specify the entity type type of the centre.");
-	}
-	return etAnnotation.value();
     }
 }

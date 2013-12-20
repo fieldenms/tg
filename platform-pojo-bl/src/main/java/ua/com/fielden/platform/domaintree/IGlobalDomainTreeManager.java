@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.security.user.IUserProvider;
 
@@ -147,7 +146,7 @@ public interface IGlobalDomainTreeManager {
      * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    IGlobalDomainTreeManager initEntityCentreManager(final CentreManagerConfigurator centreConfigurator, final String name);
+    IGlobalDomainTreeManager initEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
      * Discards a current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.
@@ -258,7 +257,7 @@ public interface IGlobalDomainTreeManager {
     IGlobalDomainTreeManager removeEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Returns distinct ordered (as in the cloud) names of persisted in the cloud <b>entity-centre managers</b> for menu item type <b>menuItemType</b>.<br><br>
+     * Returns distinct names of persisted in the cloud <b>entity-centre managers</b> (NON-PRINCIPLE), that are ordered by ascending, for menu item type <b>menuItemType</b>.<br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
      * Non-base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but cannot save/remove base user's reports (throws {@link IllegalArgumentException}).
@@ -271,7 +270,7 @@ public interface IGlobalDomainTreeManager {
      * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @return
      */
-    List<String> entityCentreNames(final Class<?> menuItemType);
+    List<String> nonPrincipleEntityCentreNames(final Class<?> menuItemType);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////// ENTITY MASTER MANAGERS //////////////////////////////////////////////

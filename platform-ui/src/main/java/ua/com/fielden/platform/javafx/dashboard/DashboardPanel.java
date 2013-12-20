@@ -29,7 +29,6 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
-import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -88,25 +87,15 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
 	final ObservableList<DashboardRow<T>> data = FXCollections.observableArrayList();
 	final List<Class<?>> mmiTypes = globalManager.entityCentreMenuItemTypes();
 	for (final Class<?> mmiType : mmiTypes) {
-	    final List<String> centreNames = globalManager.entityCentreNames(mmiType);
+	    final List<String> centreNames = globalManager.nonPrincipleEntityCentreNames(mmiType);
+
+	    // IMPORTANT: a principle centre will be initialised too! This means that if such a centre exists
+	    // in the cloud -- it will be retrieved and deserialised, otherwise -- default centre will be created
+	    centreNames.add(0, null); // insert at the beginning
+
 	    for (final String centreName : centreNames) {
 		if (globalManager.getEntityCentreManager(mmiType, centreName) == null) {
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO
-		    //TODO The initEntityCentreManager must be called with custom centre configurator.
-		    globalManager.initEntityCentreManager(new CentreManagerConfigurator(mmiType), centreName); // TODO this operation consumes a lot of time / memory during load
+		    globalManager.initEntityCentreManager(mmiType, centreName); // TODO this operation consumes a lot of time / memory during load
 		}
 		final ICentreDomainTreeManagerAndEnhancer centreManager = globalManager.getEntityCentreManager(mmiType, centreName);
 		final List<String> analysisKeys = centreManager.analysisKeys();

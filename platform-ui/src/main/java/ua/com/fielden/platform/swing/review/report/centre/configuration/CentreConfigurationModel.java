@@ -8,14 +8,13 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
@@ -34,11 +33,10 @@ import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorM
  */
 public class CentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>{
 
-    private final CentreManagerConfigurator centreConfigurator;
     /**
      * The type of menu item with which this centre configuration model is associated.
      */
-    private final Class<?> menuItemType;
+    private final Class<? extends MiWithConfigurationSupport<T>> menuItemType;
 
     /**
      * The associated {@link GlobalDomainTreeManager} instance.
@@ -57,10 +55,9 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * @param gdtm - Associated {@link GlobalDomainTreeManager} instance.
      * @param entityFactory - {@link EntityFactory} needed for wizard model creation.
      */
-    public CentreConfigurationModel(final CentreManagerConfigurator centreConfigurator, final String name, final IAnalysisBuilder<T> analysisBuilder, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
-	super(CentreConfigurationModel.<T>getEntityTypeForMenuItemClass(centreConfigurator.getMenuItemClass()), name, entityFactory, masterManager, criteriaGenerator);
-	this.centreConfigurator = centreConfigurator;
-	this.menuItemType = centreConfigurator.getMenuItemClass();
+    public CentreConfigurationModel(final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final String name, final IAnalysisBuilder<T> analysisBuilder, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
+	super((Class<T>) GlobalDomainTreeManager.validateMenuItemTypeRootType(menuItemType), name, entityFactory, masterManager, criteriaGenerator);
+	this.menuItemType = menuItemType;
 	this.analysisBuilder = analysisBuilder;
 	this.gdtm = gdtm;
     }
@@ -141,7 +138,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * Initialises the entity centre.
      */
     public void initEntityCentreManager(){
-	gdtm.initEntityCentreManager(centreConfigurator, getName());
+	gdtm.initEntityCentreManager(menuItemType, getName());
     }
 
     /**
@@ -157,9 +154,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     public List<String> loadNonPrincipleEntityCentreNames(){
-	final List<String> names = new ArrayList<String>(gdtm.entityCentreNames(menuItemType));
-	names.remove(null); // remove principle centre key (null), which is returned in case when principle entity centre is persisted
-	return names;
+	return new ArrayList<String>(gdtm.nonPrincipleEntityCentreNames(menuItemType));
     }
 
     /**
@@ -229,21 +224,5 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     private EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao<T>> criteria){
 	return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao<T>>>(criteria,//
 		CentrePropertyBinder.<T>createCentrePropertyBinder(getCriteriaGenerator()));
-    }
-
-    /**
-     * Returns the entity type for the specified menu item type.
-     *
-     * @param menuItemType
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private static <T extends AbstractEntity<?>> Class<T> getEntityTypeForMenuItemClass(final Class<?> menuItemType){
-	final EntityType etAnnotation = menuItemType.getAnnotation(EntityType.class);
-	if (etAnnotation == null || etAnnotation.value() == null) {
-	    throw new IllegalArgumentException("The menu item type " + menuItemType.getSimpleName() + " has no 'EntityType' annotation, which is necessary to specify the root type of the centre.");
-	}
-	final Class<T> root = (Class<T>)etAnnotation.value();
-	return root;
     }
 }

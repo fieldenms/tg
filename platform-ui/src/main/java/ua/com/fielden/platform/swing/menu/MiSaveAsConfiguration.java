@@ -68,7 +68,7 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 		parentItem.getView().getInfo(),//
 		parentItem.getView().getTreeMenu(),//
 		name,//
-		parentItem.getView().getCentreConfigurator(),//
+		parentItem.getView().getMenuItemClass(),//
 		parentItem.getView().getCentreBuilder()));
 
 	this.analysisListener = createAnalysisListener(parentItem.getView().getTreeMenu());
