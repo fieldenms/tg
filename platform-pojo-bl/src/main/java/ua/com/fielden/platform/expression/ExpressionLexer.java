@@ -69,7 +69,7 @@ public class ExpressionLexer {
     protected int curPosition = 0; // index into input of current character
     protected char currChar; // current character
 
-    private static final BaseNonDeterministicAutomata[] tokenLexers = {//
+    private final BaseNonDeterministicAutomata[] tokenLexers = {//
 	new LparenTokenAutomata(), new RparenTokenAutomata(), new CommaTokenAutomata(), //
 	new PlusTokenAutomata(), new MinusTokenAutomata(), new MultTokenAutomata(), new DivTokenAutomata(), //
 	///////////////////// functions ////////////////////
