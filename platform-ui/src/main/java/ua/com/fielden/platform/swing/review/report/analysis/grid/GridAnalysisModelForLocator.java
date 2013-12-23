@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid;
 
+import java.util.List;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -9,13 +11,19 @@ import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAn
 
 public class GridAnalysisModelForLocator<T extends AbstractEntity<?>> extends GridAnalysisModel<T, ILocatorDomainTreeManagerAndEnhancer> {
 
-    public GridAnalysisModelForLocator(final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ILocatorDomainTreeManagerAndEnhancer>> queryCustomiser) {
+    private final List<T> locatorSelectionModel;
+
+    public GridAnalysisModelForLocator(//
+	    final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria,//
+	    final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ILocatorDomainTreeManagerAndEnhancer>> queryCustomiser,//
+	    final List<T> locatorSelectionModel) {
 	super(criteria, queryCustomiser);
+	this.locatorSelectionModel = locatorSelectionModel;
     }
 
     @Override
     public Result executeAnalysisQuery() {
-	getAnalysisView().resetLocatorSelection();
+	locatorSelectionModel.clear();
 	getAnalysisView().getEgiPanel().getEgi().getSelectionModel().clearSelection();
 	return super.executeAnalysisQuery();
 
@@ -24,6 +32,10 @@ public class GridAnalysisModelForLocator<T extends AbstractEntity<?>> extends Gr
     @Override
     protected GridAnalysisViewForLocator<T> getAnalysisView() {
         return (GridAnalysisViewForLocator<T>)super.getAnalysisView();
+    }
+
+    public List<T> getLocatorSelectionModel() {
+	return locatorSelectionModel;
     }
 
 }

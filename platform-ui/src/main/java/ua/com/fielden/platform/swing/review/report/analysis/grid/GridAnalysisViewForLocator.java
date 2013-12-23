@@ -22,10 +22,11 @@ public class GridAnalysisViewForLocator<T extends AbstractEntity<?>> extends Gri
 
     private static final long serialVersionUID = -2079610293855993403L;
 
-    private final List<T> selectedEntities = new ArrayList<T>();
+    private final List<T> selectedEntities;
 
     public GridAnalysisViewForLocator(final GridAnalysisModelForLocator<T> model, final GridConfigurationViewForLocator<T> owner) {
 	super(model, owner);
+	this.selectedEntities = model.getLocatorSelectionModel();
 	final EntityGridInspector<T> egi = getEgiPanel().getEgi();
 	final ListSelectionListener listener = createEgiSelectionListener(egi, getCentre().getOwner().isMultipleSelection());
 	egi.setSelectionMode(getCentre().getOwner().isMultipleSelection() ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
@@ -47,10 +48,6 @@ public class GridAnalysisViewForLocator<T extends AbstractEntity<?>> extends Gri
     @Override
     public GridConfigurationViewForLocator<T> getOwner() {
         return (GridConfigurationViewForLocator<T>)super.getOwner();
-    }
-
-    public void resetLocatorSelection() {
-	selectedEntities.clear();
     }
 
     @Override

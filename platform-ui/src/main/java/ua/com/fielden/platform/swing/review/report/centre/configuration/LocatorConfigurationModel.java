@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
@@ -29,6 +32,10 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
      * The associated {@link ILocatorManager} instance.
      */
     private final ILocatorManager locatorManager;
+    /**
+     * Holds the selected entities in the locator.
+     */
+    private final List<T> locatorSelectionModel = new ArrayList<T>();
 
     /**
      * Initiates this {@link LocatorConfigurationModel} with instance of {@link IGlobalDomainTreeRepresentation}, entity type and {@link EntityFactory}.
@@ -158,6 +165,14 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 	return rootType;
     }
 
+    public List<T> getLocatorSelectionModel() {
+        return locatorSelectionModel;
+    }
+
+    public void resetLocatorSelectionModel() {
+        locatorSelectionModel.clear();
+    }
+
     @Override
     protected Result canSetMode(final ReportMode mode) {
 	if(isInUsagePhase()){
@@ -184,7 +199,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 	if(ldtme == null || ldtme.getSecondTick().checkedProperties(getEntityType()).isEmpty()){
 	    throw new IllegalStateException("The locator manager is not specified correctly!");
 	}
-	return new EntityLocatorModel<T>(createInspectorModel(getCriteriaGenerator().generateLocatorQueryCriteria(getEntityType(), ldtme)), getName());
+	return new EntityLocatorModel<T>(createInspectorModel(getCriteriaGenerator().generateLocatorQueryCriteria(getEntityType(), ldtme)), locatorSelectionModel, getName());
     }
 
     @Override

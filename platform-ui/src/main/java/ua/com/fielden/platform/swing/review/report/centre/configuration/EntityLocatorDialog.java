@@ -8,7 +8,6 @@ import java.awt.event.FocusListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JDialog;
@@ -168,19 +167,14 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
      * @return
      */
     private List<VT> getSelectedEntities(){
-	if(locatorConfigurationView.getPreviousView() != null){
-	    return EntityUtils.makeNotEnhanced(locatorConfigurationView.getPreviousView().getSelectedEntities());
-	}
-	return new ArrayList<VT>();
+	return EntityUtils.makeNotEnhanced(locatorConfigurationView.getSelectedEntities());
     }
 
     /**
      * Resets the locator's selection.
      */
     private void resetLocatorSelection(){
-	if(locatorConfigurationView.getPreviousView() != null){
-	    locatorConfigurationView.getPreviousView().getAnalysisView().resetLocatorSelection();
-	}
+	locatorConfigurationView.resetLocatorSelection();
     }
 
     /**

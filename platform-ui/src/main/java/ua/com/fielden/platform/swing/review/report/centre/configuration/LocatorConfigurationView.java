@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.Action;
@@ -151,6 +153,14 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
      */
     public void removeLocatorConfigurationEventListener(final ILocatorConfigurationEventListener l){
 	listenerList.remove(ILocatorConfigurationEventListener.class, l);
+    }
+
+    public List<T> getSelectedEntities() {
+        return new ArrayList<T>(getModel().getLocatorSelectionModel());
+    }
+
+    public void resetLocatorSelection() {
+        getModel().resetLocatorSelectionModel();
     }
 
     @Override

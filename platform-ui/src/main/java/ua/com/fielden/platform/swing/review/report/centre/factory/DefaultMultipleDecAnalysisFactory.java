@@ -15,7 +15,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAn
 
 import com.google.inject.Inject;
 
-public abstract class DefaultMultipleDecAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, ua.com.fielden.platform.swing.review.report.analysis.multipledec.configuration.MultipleDecConfigurationView<T>> {
+public abstract class DefaultMultipleDecAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, MultipleDecConfigurationView<T>> {
 
     /**
      * Details customiser for chart analysis.
