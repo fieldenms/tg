@@ -45,4 +45,9 @@ public class CentreManagerConfigurator {
 	cdtme.getSecondTick().check(root, CalculatedProperty.generateNameFrom(title), true);
 	return this;
     }
+
+    /** Root type, which domain tree is configured by this configurator. */
+    protected Class<?> root() {
+	return root;
+    }
 }
