@@ -83,7 +83,7 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
 	final Packet<MESSAGE> badPart = new Packet<MESSAGE>(new Date(packet.getCreated()), messagesComparator);
 
 	for (final MESSAGE message : packet.getMessages()) {
-	    if (message.getGpsTime().getTime() < lastProcesseMessage.getGpsTime().getTime()) {
+	    if (message.getGpsTime().getTime() <= lastProcesseMessage.getGpsTime().getTime()) {
 		badPart.add(message);
 	    } else {
 		goodPart.add(message);
