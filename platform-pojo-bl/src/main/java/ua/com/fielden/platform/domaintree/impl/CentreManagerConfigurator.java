@@ -1,5 +1,13 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToResultTickRepresentation;
@@ -49,5 +57,17 @@ public class CentreManagerConfigurator {
     /** Root type, which domain tree is configured by this configurator. */
     protected Class<?> root() {
 	return root;
+    }
+
+    /** Convenient entity strings conversion method. */
+    protected static List<String> entityVal(final String ... strs) {
+	return Arrays.asList(strs);
+    }
+
+    /** Convenient date conversion method in format 'yyyy-MM-dd HH:mm:ss'. */
+    protected static Date dateVal(final String str) {
+	final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+	final DateTime dt = formatter.parseDateTime(str);
+	return dt.toDate();
     }
 }
