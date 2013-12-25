@@ -90,7 +90,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	}
 
 	@Override
-	public void use(final Class<?> root, final String property, final boolean check) {
+	public IUsageManager use(final Class<?> root, final String property, final boolean check) {
 	    final List<String> listOfUsedProperties = getAndInitUsedProperties(root, property);
 	    if (check && !listOfUsedProperties.contains(property)) {
 		listOfUsedProperties.clear();
@@ -98,6 +98,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	    } else if (!check) {
 		listOfUsedProperties.remove(property);
 	    }
+	    return this;
 	}
     }
 

@@ -87,7 +87,7 @@ public interface IAbstractAnalysisDomainTreeManager extends IDomainTreeManager {
          * @param check -- an action to perform (<code>true</code> to use, <code>false</code> to un-use)
          *
          */
-        void use(final Class<?> root, final String property, final boolean check);
+        IUsageManager use(final Class<?> root, final String property, final boolean check);
 
         /**
          * Returns an <b>ordered</b> list of used properties for concrete <code>root</code> type.
@@ -117,14 +117,14 @@ public interface IAbstractAnalysisDomainTreeManager extends IDomainTreeManager {
          * @param listener
          * @return
          */
-        void addPropertyUsageListener(final IPropertyUsageListener listener);
+        IUsageManager addPropertyUsageListener(final IPropertyUsageListener listener);
 
         /**
          * Ads a weak {@link IPropertyUsageListener} listener.
          *
          * @param listener
          */
-        void addWeakPropertyUsageListener(final IPropertyUsageListener listener);
+        IUsageManager addWeakPropertyUsageListener(final IPropertyUsageListener listener);
 
         /**
          * Removes a {@link IPropertyUsageListener} listener.
@@ -132,7 +132,7 @@ public interface IAbstractAnalysisDomainTreeManager extends IDomainTreeManager {
          * @param listener
          * @return
          */
-        void removePropertyUsageListener(final IPropertyUsageListener listener);
+        IUsageManager removePropertyUsageListener(final IPropertyUsageListener listener);
     }
 
     /**

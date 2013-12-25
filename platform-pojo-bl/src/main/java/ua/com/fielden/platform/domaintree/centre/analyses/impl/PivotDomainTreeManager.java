@@ -78,7 +78,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	}
 
 	@Override
-	public void use(final Class<?> root, final String property, final boolean check) {
+	public IUsageManager use(final Class<?> root, final String property, final boolean check) {
 	    // inject an enhanced type into method implementation
 	    final Class<?> managedType = managedType(root);
 
@@ -90,6 +90,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 		listOfUsedProperties.remove(property);
 	    }
 	    usedPropertiesChanged(root, property, check);
+	    return this;
 	}
 
 	@Override
@@ -177,7 +178,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	    }
 
 	    @Override
-	    public void use(final Class<?> root, final String property, final boolean check) {
+	    public IUsageManager use(final Class<?> root, final String property, final boolean check) {
 		// inject an enhanced type into method implementation
 		final Class<?> managedType = managedType(root);
 
@@ -192,6 +193,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 		for (final IPropertyUsageListener listener : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
 		    listener.propertyStateChanged(managedType, property, check, null);
 		}
+		return this;
 	    }
 
 	    @Override
@@ -210,19 +212,21 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	    }
 
 	    @Override
-	    public void addPropertyUsageListener(final IPropertyUsageListener listener) {
+	    public IUsageManager addPropertyUsageListener(final IPropertyUsageListener listener) {
 		removeEmptyPropertyUsageListeners();
 		propertyUsageListeners.add(IPropertyUsageListener.class, listener);
+		return this;
 	    }
 
 	    @Override
-	    public void addWeakPropertyUsageListener(final IPropertyUsageListener listener) {
+	    public IUsageManager addWeakPropertyUsageListener(final IPropertyUsageListener listener) {
 		removeEmptyPropertyUsageListeners();
 		propertyUsageListeners.add(IPropertyUsageListener.class, new WeakPropertyUsageListener(this, listener));
+		return this;
 	    }
 
 	    @Override
-	    public void removePropertyUsageListener(final IPropertyUsageListener listener) {
+	    public IUsageManager removePropertyUsageListener(final IPropertyUsageListener listener) {
 		for (final IPropertyUsageListener obj : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
 		    if (listener == obj) {
 			propertyUsageListeners.remove(IPropertyUsageListener.class, listener);
@@ -233,6 +237,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 			}
 		    }
 		}
+		return this;
 	    }
 
 	    private void removeEmptyPropertyUsageListeners() {
@@ -275,7 +280,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	}
 
 	@Override
-	public void use(final Class<?> root, final String property, final boolean check) {
+	public IUsageManager use(final Class<?> root, final String property, final boolean check) {
 	    // inject an enhanced type into method implementation
 	    final Class<?> managedType = managedType(root);
 
@@ -291,6 +296,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 		listOfUsedProperties.remove(property);
 	    }
 	    usedPropertiesChanged(root, property, check);
+	    return this;
 	}
 
 	@Override

@@ -93,7 +93,7 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
 	}
 
 	@Override
-	public void use(final Class<?> root, final String property, final boolean check) {
+	public IUsageManager use(final Class<?> root, final String property, final boolean check) {
 	    throw new UnsupportedOperationException("Usage operation is prohibited due to automatic management 'used' properties by 'check' operation. It was tried to '[un]use' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
 
@@ -124,7 +124,7 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
 	}
 
 	@Override
-	public void use(final Class<?> root, final String property, final boolean check) {
+	public IUsageManager use(final Class<?> root, final String property, final boolean check) {
 	    throw new UnsupportedOperationException("Usage operation is prohibited due to automatic management 'used' properties by 'check' operation. It was tried to '[un]use' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
 

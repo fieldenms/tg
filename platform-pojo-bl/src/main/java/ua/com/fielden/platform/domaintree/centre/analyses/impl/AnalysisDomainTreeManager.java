@@ -72,7 +72,7 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
 	}
 
 	@Override
-	public void use(final Class<?> root, final String property, final boolean check) {
+	public IUsageManager use(final Class<?> root, final String property, final boolean check) {
 	    final List<String> listOfUsedProperties = getAndInitUsedProperties(root, property);
 	    if (check && !listOfUsedProperties.contains(property)) {
 		listOfUsedProperties.clear();
@@ -80,6 +80,7 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
 	    } else if (!check) {
 		listOfUsedProperties.remove(property);
 	    }
+	    return this;
 	}
     }
 
