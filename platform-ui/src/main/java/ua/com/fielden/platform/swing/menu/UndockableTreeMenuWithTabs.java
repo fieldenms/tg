@@ -18,12 +18,14 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.border.LineBorder;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
@@ -44,6 +46,7 @@ import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.swing.view.ICloseHook;
 
 import com.jidesoft.swing.JideTabbedPane;
+
 
 public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenuWithTabs<V> {
 
@@ -105,20 +108,20 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
 	if (userProvider.getUser().isBase()) {
 	    popupMenu.add(visibilityItem);
 	}
-	setCellRenderer(new FilterCellRenderer(getModel()) {
+	setCellRenderer(new FilterCellRendererWithIcon(getModel(), (DefaultTreeCellRenderer)getCellRenderer()) {
 
-	    private static final long serialVersionUID = -4546437533197407357L;
+	    private static final long serialVersionUID = -7182894223108124514L;
 
 	    @Override
 	    public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
-		super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-		final String oldText = TitlesDescsGetter.removeItalic(getText());
+		final JLabel label = (JLabel)super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+		final String oldText = TitlesDescsGetter.removeItalic(label.getText());
 		if (!isMenuItemVisible((TreeMenuItem<?>) value)) {
-		    setText(TitlesDescsGetter.italic(oldText));
+		    label.setText(TitlesDescsGetter.italic(oldText));
 		} else {
-		    setText(oldText);
+		    label.setText(oldText);
 		}
-		return this;
+		return label;
 	    }
 	});
 	final PopupMenuListener listener = new PopupMenuListener();

@@ -5,6 +5,7 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeWillExpandListener;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -79,6 +80,7 @@ public class TreeMenu<V extends BaseNotifPanel> extends FilterableTree implement
 
 	addTreeWillExpandListener(this);
 	addTreeSelectionListener(this);
+	setCellRenderer(new FilterCellRendererWithIcon(getModel(), (DefaultTreeCellRenderer)getCellRenderer()));
     }
 
     /**

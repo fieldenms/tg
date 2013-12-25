@@ -4,6 +4,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
+import javax.swing.Icon;
 import javax.swing.tree.MutableTreeNode;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.IAnalysisListener;
@@ -203,5 +204,10 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
     @Override
     public void selectTreeMenuItem() {
 	getView().getCentreConfigurationView().selectAnalysis(GridConfigurationModel.gridAnalysisName);
+    }
+
+    @Override
+    public Icon getIcon() {
+        return ((TreeMenuItem<?>)getParent()).getIcon();
     }
 }

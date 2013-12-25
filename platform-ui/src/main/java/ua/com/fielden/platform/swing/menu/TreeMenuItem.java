@@ -5,6 +5,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.Icon;
 import javax.swing.JPanel;
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -17,7 +18,7 @@ import ua.com.fielden.platform.swing.view.BaseNotifPanel;
  * The provided view should become visible upon menu item selection. This behaviour should be controlled by a tree selection listener associated with a tree representing a menu.
  * <p>
  * The <code>toString</code> method of the provided view is used as a menu item title. Thus, one should take care by overriding view's <code>toString</code>.
- * 
+ *
  * @author TG Team
  */
 public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNode implements ITreeNode<ITreeNode>{
@@ -32,6 +33,11 @@ public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNo
     private final String title;
 
     /**
+     * The custom icon for this instance of tree menu item.
+     */
+    private Icon icon;
+
+    /**
      * Determines current tree menut item state (DOCK, UNDOCK, NONE, ALL)
      */
     private TreeMenuItemState state;
@@ -43,7 +49,7 @@ public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNo
 
     /**
      * This is a primary constructor accepting both the view and info panel.
-     * 
+     *
      * @param view
      * @param infoPanel
      */
@@ -62,7 +68,7 @@ public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNo
 
     /**
      * This is a convenience constructor, which can be used where info panel is not required.
-     * 
+     *
      * @param view
      */
     public TreeMenuItem(final V view) {
@@ -71,7 +77,7 @@ public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNo
 
     /**
      * This is a convenience constructor, which can be used for constructing group items.
-     * 
+     *
      * @param view
      */
     public TreeMenuItem(final String title, final String info) {
@@ -85,7 +91,7 @@ public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNo
 
     /**
      * Returns title of this {@link TreeMenuItem}.
-     * 
+     *
      * @return
      */
     public String getTitle() {
@@ -94,7 +100,7 @@ public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNo
 
     /**
      * A convenient wrapper around vector's add method for appending menu items.
-     * 
+     *
      * @param item
      * @return
      */
@@ -113,7 +119,7 @@ public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNo
 
     /**
      * A convenient method advising if an info panel is associated with this menu item.
-     * 
+     *
      * @return
      */
     public boolean hasInfoPanel() {
@@ -130,6 +136,14 @@ public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNo
 
     public void setState(final TreeMenuItemState state) {
 	this.state = state;
+    }
+
+    public Icon getIcon() {
+	return icon;
+    }
+
+    public void setIcon(final Icon icon) {
+	this.icon = icon;
     }
 
     public boolean isVisible() {

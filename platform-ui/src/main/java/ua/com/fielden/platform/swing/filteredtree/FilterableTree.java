@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.filteredtree;
 
 import javax.swing.JTree;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
@@ -16,9 +17,9 @@ import ua.com.fielden.platform.swing.treewitheditors.development.Tree;
 
 /**
  * {@link JTree} that supports filtering.
- * 
+ *
  * @author oleh
- * 
+ *
  */
 public class FilterableTree extends Tree{
     private static final long serialVersionUID = 3587126586223668990L;
@@ -28,7 +29,7 @@ public class FilterableTree extends Tree{
     /**
      * Creates new {@link FilterableTree} with specified {@link IFilter}. Also it may select first item of the tree if the shouldSelectFirstMenuItem parameter is true. If the
      * rootVisible parameter is true then root of the tree will be visible otherwise not.
-     * 
+     *
      * @param root
      *            - The root of the tree.
      * @param filter
@@ -42,7 +43,7 @@ public class FilterableTree extends Tree{
 
     /**
      * See {@link #FilterableTree(TreeNode, IFilter, boolean, boolean)}.
-     * 
+     *
      * @param treeModel
      *            - specified {@link TreeModel} of the tree.
      * @param filter
@@ -88,7 +89,7 @@ public class FilterableTree extends Tree{
 	});
 
 
-	setCellRenderer(new FilterCellRenderer(getModel()));
+	setCellRenderer(new FilterCellRenderer(getModel(), (DefaultTreeCellRenderer)getCellRenderer()));
 	final TreeSelectionModel selectionModel = getSelectionModel();
 	selectionModel.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
