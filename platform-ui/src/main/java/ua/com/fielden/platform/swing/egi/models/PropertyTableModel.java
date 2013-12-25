@@ -13,8 +13,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.Deflater;
 
 import javax.swing.JTable;
@@ -61,9 +63,10 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
     /**
      * Contains the actual instances which properties are displayed in the table governed by this model.
      */
-    private final List<List<T>> groups = new ArrayList<List<T>>();
+    private final List<List<T>> groups = new ArrayList<>();
 
-    private final List<AbstractPropertyColumnMapping<T>> propertyColumnMappings = new ArrayList<AbstractPropertyColumnMapping<T>>();
+    private final List<AbstractPropertyColumnMapping<T>> propertyColumnMappings;
+    private final Map<String, AbstractPropertyColumnMapping<T>> propertyColumnMappingsMap;
 
     private final GroupingAlgorithm groupingAlgorithm;
 
@@ -97,7 +100,10 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      *            - algorithm, which takes part in grouping. If null is passed, then {@link SingleGroupAlgorithm} is used.
      */
     public PropertyTableModel(final List<T> instances, final List<? extends AbstractPropertyColumnMapping<T>> propertyColumnMappings, final GroupingAlgorithm<T> groupingAlgorithm, final EgiColoringScheme<T> egiColoringScheme) {
-	this.propertyColumnMappings.addAll(propertyColumnMappings);
+	this.propertyColumnMappings = new ArrayList<AbstractPropertyColumnMapping<T>>();
+	this.propertyColumnMappings.addAll(propertyColumnMappings);	
+	this.propertyColumnMappingsMap = new HashMap<>();
+	
 	this.groupingAlgorithm = groupingAlgorithm != null ? groupingAlgorithm : new SingleGroupAlgorithm<T>();
 	this.egiColoringScheme = egiColoringScheme;
 
@@ -105,6 +111,8 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	boolean hasGroupTotals = false;
 	boolean hasGrandTotalsSeparateFooter = false;
 	for (final AbstractPropertyColumnMapping<T> mapping : propertyColumnMappings) {
+	    this.propertyColumnMappingsMap.put(mapping.getPropertyName(), mapping);
+	    
 	    if (mapping.getColumnTotals().hasGrandTotals()) {
 		hasGrandTotals = true;
 	    }
@@ -384,6 +392,16 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      */
     public List<? extends AbstractPropertyColumnMapping<T>> getPropertyColumnMappings() {
 	return Collections.unmodifiableList(propertyColumnMappings);
+    }
+    
+    /**
+     * Return an unmodifiable map between property names and column mappings.
+     * It should be used where there is a need to get a column mapping for a specific property by its name. 
+     * 
+     * @return
+     */
+    public final Map<String, AbstractPropertyColumnMapping<T>> getPropertyColumnMappingsMap() {
+        return Collections.unmodifiableMap(propertyColumnMappingsMap);
     }
 
     /**
