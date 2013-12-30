@@ -7,7 +7,7 @@ import org.restlet.data.Method;
 import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -43,7 +43,7 @@ public class AttachmentQueryResourceFactory extends Restlet {
 	    final String username = (String) request.getAttributes().get("username");
 	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	    new EntityQueryResource<Attachment>(router, injector, injector.getInstance(IAttachmentController.class), restUtil, getContext(), request, response).handle();
+	    new EntityQueryResource<Attachment>(router, injector, injector.getInstance(IAttachment.class), restUtil, getContext(), request, response).handle();
 	}
     }
 }

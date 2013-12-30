@@ -11,5 +11,5 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  */
 public interface IEntityAttachmentAssociationController extends IEntityDao<EntityAttachmentAssociation>, IMasterDetailsDao<AbstractEntity<?>, EntityAttachmentAssociation> {
-    IAttachmentController getAttachmentController();
+    IAttachment getAttachmentController();
 }

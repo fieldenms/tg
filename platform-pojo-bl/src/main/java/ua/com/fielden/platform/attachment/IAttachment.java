@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  *
  */
-public interface IAttachmentController extends IEntityDao<Attachment> {
+public interface IAttachment extends IEntityDao<Attachment> {
     byte[] download(final Attachment attachment);
 }

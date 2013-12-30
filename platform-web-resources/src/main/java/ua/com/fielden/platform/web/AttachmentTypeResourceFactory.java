@@ -6,7 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -45,7 +45,7 @@ public class AttachmentTypeResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
 	super.handle(request, response);
 
-	final IAttachmentController dao = injector.getInstance(IAttachmentController.class);
+	final IAttachment dao = injector.getInstance(IAttachment.class);
 
 	final String username = (String) request.getAttributes().get("username");
 	injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));

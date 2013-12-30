@@ -16,7 +16,7 @@ import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Put;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.utils.MiscUtilities;
 
@@ -35,7 +35,7 @@ public class AttachmentTypeResource extends EntityTypeResource<Attachment> {
     /** A directory location where all attachments should be stored */
     private final String location;
 
-    public AttachmentTypeResource(final String location, final IAttachmentController controller, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public AttachmentTypeResource(final String location, final IAttachment controller, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(controller, factory, restUtil, context, request, response);
 	this.location = location;
     }

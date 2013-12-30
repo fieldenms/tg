@@ -2,7 +2,7 @@ package ua.com.fielden.web;
 
 import org.hibernate.SessionFactory;
 
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
@@ -64,7 +64,7 @@ public class WebHibernateModule extends CommonFactoryModule {
 	bind(IUserController.class).to(UserController.class); // UserControllerForTestPurposes.class
 	bind(IUserDao.class).to(UserController.class);
 	bind(ISecurityTokenController.class).to(SecurityTokenController.class);
-	bind(IAttachmentController.class).to(AttachmentDao.class);
+	bind(IAttachment.class).to(AttachmentDao.class);
 	bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
     }
 }

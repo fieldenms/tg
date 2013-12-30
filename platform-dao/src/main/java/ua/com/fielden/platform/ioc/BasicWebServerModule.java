@@ -3,7 +3,7 @@ package ua.com.fielden.platform.ioc;
 import java.util.Map;
 import java.util.Properties;
 
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -117,7 +117,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 	bind(IKeyNumber.class).to(KeyNumberDao.class);
 
 	// bind attachment controllers
-	bind(IAttachmentController.class).to(AttachmentDao.class);
+	bind(IAttachment.class).to(AttachmentDao.class);
 	bind(IEntityAttachmentAssociationController.class).to(EntityAttachmentAssociationDao.class);
 
 	// configuration related binding

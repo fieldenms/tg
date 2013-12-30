@@ -11,7 +11,7 @@ import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Delete;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.roa.HttpHeaders;
 
@@ -24,7 +24,7 @@ public class AttachmentInstanceResource extends EntityInstanceResource<Attachmen
 
     private final String location;
 
-    public AttachmentInstanceResource(final String location, final IAttachmentController dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public AttachmentInstanceResource(final String location, final IAttachment dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(dao, factory, restUtil, context, request, response);
 	this.location = location;
     }

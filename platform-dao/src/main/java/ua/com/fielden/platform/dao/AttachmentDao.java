@@ -3,7 +3,7 @@ package ua.com.fielden.platform.dao;
 import java.util.Map;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
@@ -11,7 +11,7 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import com.google.inject.Inject;
 
 @EntityType(Attachment.class)
-public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttachmentController {
+public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttachment {
 
     @Inject
     protected AttachmentDao(final IFilter filter) {

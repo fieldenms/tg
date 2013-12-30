@@ -27,7 +27,7 @@ import ua.com.fielden.platform.error.Result;
 @DescRequired
 @KeyReadonly
 @MapEntityTo("ATTACHMENTS")
-@CompanionObject(IAttachmentController.class)
+@CompanionObject(IAttachment.class)
 @DisplayDescription
 public class Attachment extends AbstractEntity<String> {
 

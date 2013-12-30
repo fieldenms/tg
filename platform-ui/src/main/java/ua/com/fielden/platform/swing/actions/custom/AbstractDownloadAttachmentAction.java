@@ -11,7 +11,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 
@@ -23,11 +23,11 @@ import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
  */
 public abstract class AbstractDownloadAttachmentAction extends Command<File> {
 
-    private final IAttachmentController attachmentController;
+    private final IAttachment attachmentController;
     private File prevLocation = new File(".");
     final IBlockingLayerProvider blockingLayerProvider;
 
-    public AbstractDownloadAttachmentAction(final IAttachmentController attachmentController, final IBlockingLayerProvider blockingLayerProvider) {
+    public AbstractDownloadAttachmentAction(final IAttachment attachmentController, final IBlockingLayerProvider blockingLayerProvider) {
 	super("Download");
 	this.attachmentController = attachmentController;
 	this.blockingLayerProvider = blockingLayerProvider;

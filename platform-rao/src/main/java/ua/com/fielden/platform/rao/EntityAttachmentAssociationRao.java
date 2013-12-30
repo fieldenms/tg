@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.rao;
 
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.dao.SinglePage;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -27,16 +27,16 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 @EntityType(EntityAttachmentAssociation.class)
 public class EntityAttachmentAssociationRao extends CommonEntityRao<EntityAttachmentAssociation> implements IEntityAttachmentAssociationController {
 
-    private final IAttachmentController attachmentController;
+    private final IAttachment attachmentController;
 
     @Inject
-    public EntityAttachmentAssociationRao(final RestClientUtil restUtil, final IAttachmentController attachmentController) {
+    public EntityAttachmentAssociationRao(final RestClientUtil restUtil, final IAttachment attachmentController) {
 	super(restUtil);
 	this.attachmentController = attachmentController;
     }
 
     @Override
-    public IAttachmentController getAttachmentController() {
+    public IAttachment getAttachmentController() {
         return attachmentController;
     }
 

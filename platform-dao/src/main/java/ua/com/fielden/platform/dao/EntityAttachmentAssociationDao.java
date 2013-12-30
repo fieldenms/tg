@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -28,16 +28,16 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 @EntityType(EntityAttachmentAssociation.class)
 public class EntityAttachmentAssociationDao extends CommonEntityDao<EntityAttachmentAssociation> implements IEntityAttachmentAssociationController {
 
-    private final IAttachmentController attachmentController;
+    private final IAttachment attachmentController;
 
     @Inject
-    protected EntityAttachmentAssociationDao(final IFilter filter, final IAttachmentController attachmentController) {
+    protected EntityAttachmentAssociationDao(final IFilter filter, final IAttachment attachmentController) {
 	super(filter);
 	this.attachmentController = attachmentController;
     }
 
     @Override
-    public IAttachmentController getAttachmentController() {
+    public IAttachment getAttachmentController() {
         return attachmentController;
     }
 

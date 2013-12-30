@@ -20,7 +20,7 @@ import org.restlet.data.Method;
 import org.restlet.data.Status;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
@@ -33,7 +33,7 @@ import com.google.inject.Inject;
  *
  */
 @EntityType(Attachment.class)
-public class AttachmentRao extends CommonEntityRao<Attachment> implements IAttachmentController {
+public class AttachmentRao extends CommonEntityRao<Attachment> implements IAttachment {
 
     @Inject
     public AttachmentRao(final RestClientUtil restUtil) {

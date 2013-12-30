@@ -4,7 +4,7 @@ import org.restlet.Restlet;
 import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -77,7 +77,7 @@ public final class RouterHelper {
 	final Restlet queryResource = new AttachmentQueryResourceFactory(injector, router);
 	router.attach("/users/{username}/query/" + Attachment.class.getSimpleName(), queryResource);
 
-	final Restlet queryExportResource = new EntityQueryExportResourceFactory<Attachment, IAttachmentController>(router, IAttachmentController.class, injector);
+	final Restlet queryExportResource = new EntityQueryExportResourceFactory<Attachment, IAttachment>(router, IAttachment.class, injector);
 	router.attach("/users/{username}/export/" + Attachment.class.getSimpleName(), queryExportResource);
 
 	final Restlet downloadResource = new AttachmentDownloadResourceFactory(location, injector);
