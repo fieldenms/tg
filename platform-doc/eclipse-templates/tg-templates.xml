@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a calcualted property" enabled="true" name="tgprop-calculated">@IsProperty
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a calculated property" enabled="true" name="tgprop-calculated">@IsProperty
 @Readonly
 @Calculated
 @Title(value = "${Title}", desc = "${Desc}")
@@ -6,7 +6,7 @@ private ${type} ${name};
 private static ExpressionModel ${name}_ = expr().val(${cursor}null).model();
 
 @Observable
-private ${enclosing_type} set${Name}(final ${type} ${name}) {
+protected ${enclosing_type} set${Name}(final ${type} ${name}) {
     this.${name} = ${name};
     return this;
 }
@@ -97,7 +97,7 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.MapTo,
           ua.com.fielden.platform.entity.validation.annotation.EntityExists,
   	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember)}
-</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a composite key member of an oridnary type" enabled="true" name="tgprop-composite-key-ordinary-member">@IsProperty
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a composite key member of an ordinary type" enabled="true" name="tgprop-composite-key-ordinary-member">@IsProperty
 @MapTo
 @Title(value = "${Title}", desc = "${Desc}")
 @CompositeKeyMember(${index})
