@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -17,7 +18,9 @@ import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import org.joda.time.DateTime;
 
+import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.handlers.IAfterSave;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
@@ -35,6 +38,7 @@ import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -44,6 +48,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
@@ -69,6 +74,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private DomainMetadata domainMetadata;
 
     private EntityFactory entityFactory;
+
+    @Inject
+    private Injector injector;
 
     private final IFilter filter;
 
@@ -167,6 +175,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	    throw new IllegalArgumentException("Entity should not be null when saving.");
 	}
 	logger.info("Start saving entity " + entity + " (ID = " + entity.getId() + ")");
+	final List<String> dirtyProperties = toStringList(entity.getDirtyProperties());
 	try {
 	    if (!entity.isPersisted()) {
 		// first check if the passed in entity is valid
@@ -270,7 +279,33 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	getSession().flush();
 	getSession().clear();
 
+	// this call never throws any exceptions
+	processAfterSaveEvent(entity, dirtyProperties);
+
 	return entity;
+    }
+
+    private List<String> toStringList(final List<MetaProperty> dirtyProperties) {
+	final List<String> result = new ArrayList<>(dirtyProperties.size());
+	for (final MetaProperty prop: dirtyProperties) {
+	    result.add(prop.getName());
+	}
+	return result;
+    }
+
+    private void processAfterSaveEvent(final T entity, final List<String> dirtyProperties) {
+	try {
+	    final AfterSave afterSave = AnnotationReflector.getAnnotation(getClass(), AfterSave.class);
+	    // if after save annotation is present then need to instantiate the declared event handler.
+	    if (afterSave != null) {
+		final Class<? extends IAfterSave<T>> typeForAfterSaveHandler = (Class<? extends IAfterSave<T>>) afterSave.value();
+		final IAfterSave<T> handler = injector.getInstance(typeForAfterSaveHandler);
+		handler.perfrom(entity, dirtyProperties);
+	    }
+	} catch (final Exception ex) {
+	    logger.warn("Could not process after save event.", ex);
+	}
+
     }
 
     private void assignTransactionDate(final T entity) throws Exception {
