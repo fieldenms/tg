@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.roa.HttpHeaders;
 
 /**
- * Attachment instance resource, which has a specific deletion implementation.
+ * Attachment instance resource, which has a specific deletion implementation that deletes the associated with the attachment file.
  *
  * @author TG Team
  */

@@ -23,9 +23,8 @@ import ua.com.fielden.platform.utils.MiscUtilities;
 /**
  * This resource should be associated with {@link Attachment}.
  *
- *  Its behaviour is similar to {@link EntityTypeResource} with the difference that new attachment instances are saved upon POST instead of PUT request, which is required to multi-request form processing.
- *
- *  POSTing a new attachments results in uploading of the associated file.
+ *  Its behaviour is similar to {@link EntityTypeResource}j, but in addition it uploads an associated file that gets saved into
+ *  a designated location on the server.
  *
  * @author TG Team
  *
