@@ -49,6 +49,22 @@ public abstract class AbstractAvlMachine <T extends AbstractAvlMessage> extends 
     @Invisible
     private boolean enabled;
 
+    @IsProperty
+    @MapTo
+    @Invisible
+    @Title(value = "Title", desc = "Desc")
+    private boolean ignitionTracked;
+
+    @Observable
+    public  AbstractAvlMachine<T> setIgnitionTracked(final boolean ignitionTracked) {
+	this.ignitionTracked = ignitionTracked;
+	return this;
+    }
+
+    public boolean getIgnitionTracked() {
+	return ignitionTracked;
+    }
+
     // IMPORTANT: a similar lastMessage property should be added to AbstractAvlMessage descendant (+getter and setter)
 //    @IsProperty
 //    @Readonly

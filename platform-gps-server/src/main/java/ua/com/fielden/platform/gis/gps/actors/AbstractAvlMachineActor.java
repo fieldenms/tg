@@ -5,7 +5,6 @@ import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
@@ -50,9 +49,6 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
 	this.machine = machine;
 	this.latestGpsMessage = lastMessage;
 	this.lastProcessedMessage = lastMessage;
-
-	final Properties props = new Properties();
-	props.setProperty("user", "postgres");
 
 	this.hibUtil = hibUtil;
 	// do not forget to invoke processTempMessages()!
