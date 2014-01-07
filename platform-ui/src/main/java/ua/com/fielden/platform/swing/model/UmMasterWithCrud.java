@@ -264,6 +264,10 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
 		notifyActionStageChange(ActionStage.REFRESH_PRE_ACTION);
 		setState(UmState.UNDEFINED);
 		Binder.commitFocusOwner();
+
+		lockBlockingLayerIfProvided(true);
+		setMessageForBlockingLayerIfProvided("Refreshing...");
+
 		return super.preAction();
 	    }
 
@@ -283,10 +287,14 @@ public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IE
 
 	    @Override
 	    protected void postAction(final T entity) {
-		setEntity(entity);
-		setState(UmState.VIEW);
-		updateDetailsModels();
-		notifyActionStageChange(ActionStage.REFRESH_POST_ACTION);
+		try {
+		    setEntity(entity);
+		    setState(UmState.VIEW);
+		    updateDetailsModels();
+		    notifyActionStageChange(ActionStage.REFRESH_POST_ACTION);
+		} finally {
+		    lockBlockingLayerIfProvided(false);
+		}
 	    }
 
 	};
