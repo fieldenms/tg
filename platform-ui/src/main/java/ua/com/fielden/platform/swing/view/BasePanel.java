@@ -4,9 +4,14 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.LayoutManager;
 
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 
+import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
+import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
+import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
+import ua.com.fielden.platform.swing.model.IOpenGuard;
 
 /**
  * A base class for all guarded panels.
@@ -14,8 +19,10 @@ import ua.com.fielden.platform.swing.model.ICloseGuard;
  * @author 01es
  * 
  */
-public abstract class BasePanel extends JPanel implements ICloseGuard {
+public abstract class BasePanel extends JPanel implements ICloseGuard, IOpenGuard {
     private static final long serialVersionUID = 1L;
+
+    private TreeMenuItem<? extends BasePanel> associatedTreeMenuItem = null;
 
     public BasePanel() {
     }
@@ -90,4 +97,61 @@ public abstract class BasePanel extends JPanel implements ICloseGuard {
      * @return
      */
     public abstract String getInfo();
+
+    /**
+     * Returns {@link TreeMenuItem} associated with this {@link BaseNotifPanel}.
+     *
+     * @return
+     */
+    public TreeMenuItem<? extends BasePanel> getAssociatedTreeMenuItem() {
+	return associatedTreeMenuItem;
+    }
+
+    /**
+     * Set the associated {@link TreeMenuItem} to the specified one. Please notice that it is possible to set associated tree menu item just once.
+     *
+     * @param associatedTreeMenuItem
+     */
+    public void setAssociatedTreeMenuItem(final TreeMenuItem<? extends BasePanel> associatedTreeMenuItem) {
+	if (this.associatedTreeMenuItem == null) {
+	    this.associatedTreeMenuItem = associatedTreeMenuItem;
+	}
+    }
+
+    /**
+     * This method should be used to notify the panel of some message.
+     * Exactly how this modification is handled visually is controlled by subclasses of this class.
+     *
+     * @param message
+     * @param messageType
+     */
+    public void notify(final String message, final MessageType messageType) {};
+
+    /**
+     * Should be overridden by subtypes in order to implement custom initialisation logic for the view.
+     * 
+     * @param blockingPane -- this blocking pane is used to block the view during its initialisation.
+     * @param toBeFocusedAfterInit -- this component
+     */
+    public void init(final BlockingIndefiniteProgressPane blockingPane, final JComponent toBeFocusedAfterInit) {}
+
+    /**
+     * Similar as above, but does not specify that component should be focused once initialisation is completed.
+     * This method is really just a convenience that simply invokes method {@link #init(BlockingIndefiniteProgressPane, JComponent)} with <code>null</code> as the second argument.
+     * 
+     * @param blockingPane
+     */
+    public final void init(final BlockingIndefiniteProgressPane blockingPane) {
+	init(blockingPane, null);
+    }
+
+    @Override
+    public boolean canOpen() {
+	return true;
+    }
+
+    @Override
+    public String whyCannotOpen() {
+	return "default implementation: should have been overridden";
+    }
 }

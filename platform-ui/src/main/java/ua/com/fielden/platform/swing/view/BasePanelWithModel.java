@@ -2,6 +2,9 @@ package ua.com.fielden.platform.swing.view;
 
 import java.awt.LayoutManager;
 
+import javax.swing.JComponent;
+
+import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.model.UModel;
 
 /**
@@ -39,5 +42,20 @@ public abstract class BasePanelWithModel<MODEL extends UModel> extends BasePanel
      */
     public void buildUi() {
 	throw new UnsupportedOperationException(getClass().getName() + ": UI building is not implemented by this view");
+    }
+
+    @Override
+    public void init(final BlockingIndefiniteProgressPane blockingPane, final JComponent toBeFocusedAfterInit) {
+	getModel().init(blockingPane, toBeFocusedAfterInit);
+    }
+
+    @Override
+    public boolean canOpen() {
+	return getModel().canOpen();
+    }
+
+    @Override
+    public String whyCannotOpen() {
+	return getModel().whyCannotClose();
     }
 }

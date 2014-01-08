@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
-import ua.com.fielden.platform.swing.view.BaseNotifPanel;
+import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
  * A tree-based menu item. Sub-menu items can be added by using method <code>addItem</code>, which is a convenient wrapper around {@link Vector#add(Object)}.
@@ -21,7 +21,7 @@ import ua.com.fielden.platform.swing.view.BaseNotifPanel;
  *
  * @author TG Team
  */
-public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNode implements ITreeNode<ITreeNode>{
+public class TreeMenuItem<V extends BasePanel> extends DefaultMutableTreeNode implements ITreeNode<ITreeNode>{
     private static final long serialVersionUID = 1L;
 
     private final V view;

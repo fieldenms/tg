@@ -44,7 +44,7 @@ import com.jidesoft.swing.JideTabbedPane;
  * @author TG Team
  *
  */
-public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
+public class TreeMenuWithTabs<V extends BasePanel> extends TreeMenu<V> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -277,7 +277,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 	     * @return
 	     */
 	    private boolean shouldCheck(final int fromIndex, final int toIndex) {
-		return fromIndex < tabPane.getTabCount() && fromIndex != toIndex && ((fromIndex >= 0 && firstTabClosable) || (fromIndex > 0 && !firstTabClosable));
+		return fromIndex < tabPane.getTabCount() && fromIndex != toIndex && (fromIndex >= 0 && firstTabClosable || fromIndex > 0 && !firstTabClosable);
 	    }
 	};
     }
@@ -356,7 +356,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
 		final int selectedTabIndex = tabPane.getSelectedIndex();
-		if (selectedTabIndex < (tabPane.getTabCount() - 1)) { // can still move to the right
+		if (selectedTabIndex < tabPane.getTabCount() - 1) { // can still move to the right
 		    tabPane.setSelectedIndex(selectedTabIndex + 1);
 		} else {
 		    tabPane.setSelectedIndex(0);
@@ -469,7 +469,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 		if (item != null && !item.isGroupItem()) {
 		    final int tabIndex = menuItemTab(item);
 		    if (tabIndex >= 0) { // item's view is present -- activate corresponding tab and request focus for the view
-			if (!item.getView().getModel().canOpen()) {
+			if (!item.getView().canOpen()) {
 			    // TODO potentially need to notify user of the reason for view opening restriction
 			} else {
 			    tabPane.setSelectedIndex(tabIndex);
@@ -477,7 +477,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 			    item.getView().requestFocus();
 			}
 		    } else { // item is not present -- add a new tab with item's view
-			if (!item.getView().getModel().canOpen()) {
+			if (!item.getView().canOpen()) {
 			    // TODO potentially need to notify user of the reason for view opening restriction
 			} else if (item.getState() == TreeMenuItemState.ALL) {
 			    item.setState(TreeMenuItemState.DOCK);
@@ -485,7 +485,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
 			    tabPane.setSelectedIndex(tabPane.getTabCount() - 1);
 			    // initialisation must occur after a new tab is selected to ensure correct focus traversal
 			    selectMenuItem(item);
-			    item.getView().getModel().init(getBlockingPane(), item.getView());
+			    item.getView().init(getBlockingPane(), item.getView());
 			}
 		    }
 
@@ -516,7 +516,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenu<V> {
      * @param item
      * @return
      */
-    protected int viewItemTab(final BaseNotifPanel<?> view){
+    protected int viewItemTab(final BasePanel view){
 	for (int index = 0; index < tabPane.getTabCount(); index++) {
 	    if (tabPane.getComponentAt(index) == view) {
 		return index;

@@ -16,7 +16,7 @@ import ua.com.fielden.platform.swing.filteredtree.FilterableTree;
 import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
-import ua.com.fielden.platform.swing.view.BaseNotifPanel;
+import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
  * A convenient tree implementation targeted at providing a tree-menu consisting of {@link TreeMenuItem} instances.
@@ -26,7 +26,7 @@ import ua.com.fielden.platform.swing.view.BaseNotifPanel;
  *
  * @author TG Team
  */
-public class TreeMenu<V extends BaseNotifPanel> extends FilterableTree implements TreeSelectionListener, TreeWillExpandListener {
+public class TreeMenu<V extends BasePanel> extends FilterableTree implements TreeSelectionListener, TreeWillExpandListener {
     private static final long serialVersionUID = 1L;
 
     private TreePath prevPath = null;
@@ -144,7 +144,7 @@ public class TreeMenu<V extends BaseNotifPanel> extends FilterableTree implement
 	if (!item.isGroupItem()) {
 	    holder.removeAll();
 	    holder.add(item.getView());
-	    item.getView().getModel().init(blockingPane);
+	    item.getView().init(blockingPane);
 	    holder.invalidate();
 	    holder.revalidate();
 	    holder.repaint();

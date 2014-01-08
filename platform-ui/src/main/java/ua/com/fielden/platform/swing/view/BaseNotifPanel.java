@@ -17,7 +17,6 @@ import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.menu.MenuNotificationPanel;
-import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.model.UModel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
@@ -40,7 +39,6 @@ public abstract class BaseNotifPanel<MODEL extends UModel> extends BasePanelWith
     private final JPanel holdingPanel = new JPanel(new MigLayout("fill, insets 0", "[fill, grow]", "[][c,grow,fill]"));
     private final BlockingIndefiniteProgressLayer blockingLayer = new BlockingIndefiniteProgressLayer(holdingPanel, "");
 
-    private TreeMenuItem<? extends BaseNotifPanel> associatedTreeMenuItem = null;
 
     /**
      * Principle constructor, which specifies the panel caption represented on the left side of the notification area, and a model.
@@ -168,6 +166,7 @@ public abstract class BaseNotifPanel<MODEL extends UModel> extends BasePanelWith
      * @param message
      * @param messageType
      */
+    @Override
     public void notify(final String message, final MessageType messageType) {
 	notifPanel.setMessage(message, messageType);
     }
@@ -191,7 +190,7 @@ public abstract class BaseNotifPanel<MODEL extends UModel> extends BasePanelWith
 
     @Override
     public boolean canLeave() {
-        return getModel().canLeave();
+	return getModel().canLeave();
     }
 
     @Override
@@ -259,24 +258,6 @@ public abstract class BaseNotifPanel<MODEL extends UModel> extends BasePanelWith
 	return holdingPanel;
     }
 
-    /**
-     * Returns {@link TreeMenuItem} associated with this {@link BaseNotifPanel}.
-     *
-     * @return
-     */
-    public TreeMenuItem<? extends BaseNotifPanel> getAssociatedTreeMenuItem() {
-	return associatedTreeMenuItem;
-    }
 
-    /**
-     * Set the associated {@link TreeMenuItem} to the specified one. Please notice that it is possible to set associated tree menu item just once.
-     *
-     * @param associatedTreeMenuItem
-     */
-    public void setAssociatedTreeMenuItem(final TreeMenuItem<? extends BaseNotifPanel> associatedTreeMenuItem) {
-	if (this.associatedTreeMenuItem == null) {
-	    this.associatedTreeMenuItem = associatedTreeMenuItem;
-	}
-    }
 
 }

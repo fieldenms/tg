@@ -48,7 +48,7 @@ import ua.com.fielden.platform.swing.view.ICloseHook;
 import com.jidesoft.swing.JideTabbedPane;
 
 
-public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends TreeMenuWithTabs<V> {
+public class UndockableTreeMenuWithTabs<V extends BasePanel> extends TreeMenuWithTabs<V> {
 
     private static final long serialVersionUID = 2081673364500267565L;
 
@@ -139,10 +139,10 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
 
     @Override
     public boolean closeView(final BaseNotifPanel<?> panel) {
-        if(!super.closeView(panel)){
-            return closeViewInFrame(panel);
-        }
-        return true;
+	if(!super.closeView(panel)){
+	    return closeViewInFrame(panel);
+	}
+	return true;
     }
 
     private boolean closeViewInFrame(final BaseNotifPanel<?> panel) {
@@ -344,7 +344,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
 	return viewItemFrame(item.getView());
     }
 
-    private int viewItemFrame(final BaseNotifPanel<?> view){
+    private int viewItemFrame(final BasePanel view){
 	for (int frameIndex = 0; frameIndex < undockedFrames.size(); frameIndex++) {
 	    if (undockedFrames.get(frameIndex).getView() == view) {
 		return frameIndex;
@@ -387,7 +387,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
 	    getTabPane().setSelectedIndex(getTabPane().getTabCount() - 1);
 	    item.setState(TreeMenuItemState.DOCK);
 	    // initialisation must occur after a new tab is selected to ensure correct focus traversal
-	    item.getView().getModel().init(getBlockingPane(), item.getView());
+	    item.getView().init(getBlockingPane(), item.getView());
 	} else {
 	    final UndockTreeMenuItemFrame undockedItem = createUndockedFrame(item);
 	    undockedFrames.add(undockedItem);
@@ -395,7 +395,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
 	    undockedItem.pack();
 	    RefineryUtilities.centerFrameOnScreen(undockedItem);
 	    undockedItem.setVisible(true);
-	    item.getView().getModel().init(undockedItem.getBlockingPane(), item.getView());
+	    item.getView().init(undockedItem.getBlockingPane(), item.getView());
 	}
     }
 
@@ -601,7 +601,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
     }
 
     private void setChildrenVisible(final TreeMenuItem<?> menuItem, final boolean visible) {
-	if ((menuItem instanceof MiSaveAsConfiguration) || (menuItem instanceof TreeMenuItemWrapper)) {
+	if (menuItem instanceof MiSaveAsConfiguration || menuItem instanceof TreeMenuItemWrapper) {
 	    return;
 	}
 	if (menuItem.getChildCount() > 0) {
@@ -645,7 +645,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
     }
 
     private void setMenuItemVisible(final TreeMenuItem<?> menuItem, final boolean visible) {
-	if ((menuItem instanceof MiSaveAsConfiguration) || (menuItem instanceof TreeMenuItemWrapper)) {
+	if (menuItem instanceof MiSaveAsConfiguration || menuItem instanceof TreeMenuItemWrapper) {
 	    return;
 	}
 	menuItem.setVisible(visible);
@@ -653,7 +653,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel<?>> extends Tre
 
     private void traceTree(final TreePath treePath, final boolean visible) {
 	final Object lastPathComponent = treePath.getLastPathComponent();
-	if ((lastPathComponent instanceof MiSaveAsConfiguration) || (lastPathComponent instanceof TreeMenuItemWrapper)) {
+	if (lastPathComponent instanceof MiSaveAsConfiguration || lastPathComponent instanceof TreeMenuItemWrapper) {
 	    return;
 	}
 	final TreeMenuItem<?> node = (TreeMenuItem<?>) treePath.getLastPathComponent();

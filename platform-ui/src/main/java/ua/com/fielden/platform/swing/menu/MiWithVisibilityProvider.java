@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.swing.menu;
 
-import ua.com.fielden.platform.swing.view.BaseNotifPanel;
+import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
  * {@link TreeMenuItem} that must be initiated with specified {@link ITreeMenuItemVisibilityProvider} instance.
@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.view.BaseNotifPanel;
  *
  * @param <V>
  */
-public class MiWithVisibilityProvider<V extends BaseNotifPanel> extends TreeMenuItem<V> {
+public class MiWithVisibilityProvider<V extends BasePanel> extends TreeMenuItem<V> {
 
     private static final long serialVersionUID = -7646023613806982744L;
 
