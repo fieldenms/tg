@@ -100,6 +100,14 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	return getModel().getCriteria().companionObject();
     }
 
+    //TODO The implementation should use the load action. Yet it invokes the execute analysis query.
+    /**
+     * Refreshes the view. Pleas these method must be invoked after the analysis has loaded the page.
+     */
+    public void refresh() {
+	getModel().executeAnalysisQuery();
+    }
+
     @Override
     protected ConfigureAction createConfigureAction() {
 	return new ConfigureAction(getOwner()) {

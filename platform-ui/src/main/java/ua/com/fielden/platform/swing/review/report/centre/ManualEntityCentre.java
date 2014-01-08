@@ -6,15 +6,16 @@ import javax.swing.Action;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.ManualCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 
-public class ManualEntityCentre<T extends AbstractEntity<?>, M extends AbstractEntity<?>> extends AbstractSingleAnalysisEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> {
+public class ManualEntityCentre<T extends AbstractEntity<?>> extends AbstractSingleAnalysisEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> {
 
     private static final long serialVersionUID = 6117616238278637453L;
 
-    public ManualEntityCentre(final EntityCentreModel<T> model, final ManualCentreConfigurationView<T, M> owner) {
+    public ManualEntityCentre(final EntityCentreModel<T> model, final ManualCentreConfigurationView<T> owner) {
 	super(model, owner);
 	layoutComponents();
     }
@@ -26,8 +27,8 @@ public class ManualEntityCentre<T extends AbstractEntity<?>, M extends AbstractE
 
     @SuppressWarnings("unchecked")
     @Override
-    public ManualCentreConfigurationView<T, M> getOwner() {
-	return (ManualCentreConfigurationView<T, M>) super.getOwner();
+    public ManualCentreConfigurationView<T> getOwner() {
+	return (ManualCentreConfigurationView<T>) super.getOwner();
     }
 
     @Override
@@ -41,14 +42,7 @@ public class ManualEntityCentre<T extends AbstractEntity<?>, M extends AbstractE
     }
 
     @Override
-    public GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> getSingleAnalysis() {
-	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>) super.getSingleAnalysis();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createDefaultAnalysis() {
-	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>) getModel().getAnalysisBuilder()//
-	.createAnalysis(null, null, null, this, getModel().getCriteria(), getReviewProgressLayer());
+    protected AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> createDefaultAnalysis() {
+	return getModel().getAnalysisBuilder().createAnalysis(null, null, null, this, getModel().getCriteria(), getReviewProgressLayer());
     }
 }

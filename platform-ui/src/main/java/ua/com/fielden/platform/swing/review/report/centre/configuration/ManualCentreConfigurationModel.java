@@ -12,45 +12,30 @@ import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
 import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder;
 import ua.com.fielden.platform.swing.review.report.centre.factory.DefaultAnalysisBuilder;
-import ua.com.fielden.platform.swing.review.report.centre.factory.DefaultGridForManualEntityCentreFactory;
 import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuilder;
+import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisFactory;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
-/**
- * A base calass for manual centre-based configuration model.
- * It is used for building details view for compound masters where the relationship between dependent entity and its master should be represented as an entity centre.
- *
- * @author TG TM
- *
- * @param <T> -- dependent entity type
- * @param <M> -- master entity type
- */
-public class ManualCentreConfigurationModel<T extends AbstractEntity<?>, M extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
-
-    private final String linkProperty;
+public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>{
 
     private final IAnalysisBuilder<T> analysisBuilder;
-    private final DefaultGridForManualEntityCentreFactory<T> analysisFactory;
-    private ManualCentreConfigurationView<T, M> view;
+    private final IAnalysisFactory<T, ?> analysisFactory;
+    private ManualCentreConfigurationView<T> view;
 
     /**
      * The {@link ICentreDomainTreeManagerAndEnhancer} instance for this analysis details.
      */
     private final ICentreDomainTreeManagerAndEnhancer cdtme;
 
-    private M linkEntity;
-
     public ManualCentreConfigurationModel(final Class<T> entityType, //
-	    final DefaultGridForManualEntityCentreFactory<T> analysisFactory,//
+	    final IAnalysisFactory<T, ?> analysisFactory,//
 	    final ICentreDomainTreeManagerAndEnhancer cdtme, //
 	    final IEntityMasterManager masterManager, //
-	    final ICriteriaGenerator criteriaGenerator,//
-	    final String linkProperty) {
+	    final ICriteriaGenerator criteriaGenerator) {
 	super(entityType, null, null, masterManager, criteriaGenerator);
 	this.cdtme = cdtme;
 	this.analysisFactory = analysisFactory;
 	this.analysisBuilder = new DefaultAnalysisBuilder<>(analysisFactory);
-	this.linkProperty = linkProperty;
     }
 
     @Override
@@ -66,14 +51,9 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>, M exten
 	throw new UnsupportedOperationException("The manual centre can not be configured!");
     }
 
-    /**
-     * Set the binding entity for this manual entity centre.
-     *
-     * @param masterEntity
-     */
-    public ManualCentreConfigurationModel<T, M> setLinkPropertyValue(final M linkEntity) {
-	this.linkEntity = linkEntity;
-	return this;
+    @Override
+    protected EntityCentreModel<T> createEntityCentreModel() {
+	return new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
     }
 
     /**
@@ -85,27 +65,28 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>, M exten
 	return cdtme;
     }
 
-    /**
-     * Returns the binding entity for this manual entity centre.
-     *
-     * @return
-     */
-    public M getLinkPropertyValue() {
-	return linkEntity;
+    public IAnalysisFactory<T, ?> getAnalysisFactory() {
+        return analysisFactory;
     }
 
     /**
-     * Returns the property name to which this manual entity centre was binded.
-     *
-     * @return
+     * Builds and executes query.
      */
-    public String getLinkProperty() {
-	return linkProperty;
+    public void refresh() {
+	if (view != null && view.getPreviousView() != null) {
+	    if (view.getPreviousView().getSingleAnalysis().getModel().getMode() == ReportMode.REPORT) {
+		view.getPreviousView().getSingleAnalysis().getPreviousView().refresh();
+	    }
+	}
     }
 
-    @Override
-    protected EntityCentreModel<T> createEntityCentreModel() {
-	return new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
+
+    public ManualCentreConfigurationView<T> getView() {
+        return view;
+    }
+
+    public void setView(final ManualCentreConfigurationView<T> view) {
+        this.view = view;
     }
 
     /**
@@ -117,29 +98,5 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>, M exten
     private EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria) {
 	return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>(criteria,//
 		CentrePropertyBinder.<T> createLocatorPropertyBinder());
-    }
-
-    public DefaultGridForManualEntityCentreFactory<T> getAnalysisFactory() {
-        return analysisFactory;
-    }
-
-    /**
-     * Builds and executes query.
-     */
-    public void refresh() {
-	if (view != null && view.getPreviousView() != null) {
-	    if (view.getPreviousView().getSingleAnalysis().getModel().getMode() == ReportMode.REPORT) {
-		view.getPreviousView().getSingleAnalysis().getPreviousView().getModel().executeAnalysisQuery();
-	    }
-	}
-    }
-
-
-    public ManualCentreConfigurationView<T, M> getView() {
-        return view;
-    }
-
-    public void setView(final ManualCentreConfigurationView<T, M> view) {
-        this.view = view;
     }
 }
