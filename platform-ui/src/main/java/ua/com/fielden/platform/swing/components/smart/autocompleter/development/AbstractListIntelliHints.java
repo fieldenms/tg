@@ -16,8 +16,12 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.JTextComponent;
 
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.components.smart.development.AbstractIntelliHints;
 import ua.com.fielden.platform.swing.components.smart.development.Hover;
 
@@ -34,20 +38,22 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
     private JList _list;
     protected KeyStroke[] _keyStrokes;
     private JideScrollPane _scroll;
+    private final boolean isMultiValued;
 
     /**
      * Creates a Completion for JTextComponent
      *
      * @param textComponent
      */
-    public AbstractListIntelliHints(final JTextComponent textComponent, final ListCellRenderer cellRenderer) {
+    public AbstractListIntelliHints(final JTextComponent textComponent, final ListCellRenderer cellRenderer, final boolean isMultiValued) {
 	super(textComponent, cellRenderer);
+	this.isMultiValued = isMultiValued;
     }
 
     public JComponent createHintsComponent(final ListCellRenderer cellRenderer) {
 	final JPanel panel = new JPanel(new BorderLayout());
 
-	_list = createList(cellRenderer);
+	_list = createList(cellRenderer, isMultiValued);
 	Hover.install(_list);
 	_scroll = new JideScrollPane(getList());
 	getList().setFocusable(false);
@@ -58,7 +64,22 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
 	_scroll.getHorizontalScrollBar().setFocusable(false);
 
 	panel.add(_scroll, BorderLayout.CENTER);
+
+	if (getHintsCellRenderer() instanceof MultiplePropertiesListCellRenderer) {
+	    getScroll().getViewport().addChangeListener(createViewportSizeChangeListener());
+	}
+
 	return panel;
+    }
+
+    private ChangeListener createViewportSizeChangeListener() {
+	return new ChangeListener() {
+
+	    @Override
+	    public void stateChanged(final ChangeEvent e) {
+		((MultiplePropertiesListCellRenderer) getHintsCellRenderer()).setPreferredWidth(getList().getWidth());
+	    }
+	};
     }
 
     /**
@@ -83,8 +104,8 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
      * @return the list.
      */
     @SuppressWarnings({ "rawtypes", "unused" })
-    protected JList createList(final ListCellRenderer cellRenderer) {
-	return new JList() {
+    protected JList createList(final ListCellRenderer cellRenderer, final boolean isMultiValued) {
+	final JList list = new JList() {
 	    private static final long serialVersionUID = 1L;
 
 	    @Override
@@ -107,6 +128,8 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
 	        return true;
 	    }
 	};
+	list.getSelectionModel().setSelectionMode(isMultiValued ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
+	return list;
     }
 
     /**

@@ -64,13 +64,13 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
     }
 
     public static Pair<LocatorDomainTreeManagerAndEnhancer, Boolean> retrieveLocator(final String elcKey, final byte[] array, final ISerialiser serialiser, final ISerialiser serialiser0) throws Exception {
-	logger.info("Started maintaining the version of default locator instance for [" + elcKey + "].");
+	logger.debug("Started maintaining the version of default locator instance for [" + elcKey + "].");
 	try {
 	    // try to deserialise with a current version of serialiser
 	    final LocatorDomainTreeManagerAndEnhancer ldtmae = serialiser.deserialise(array, LocatorDomainTreeManagerAndEnhancer.class);
-	    logger.info("\tA default locator instance for [" + elcKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
+	    logger.debug("\tA default locator instance for [" + elcKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
 	    // all is okay -- the version is current
-	    logger.info("Ended maintaining the version of default locator instance for [" + elcKey + "].");
+	    logger.debug("Ended maintaining the version of default locator instance for [" + elcKey + "].");
 	    return new Pair<LocatorDomainTreeManagerAndEnhancer, Boolean>(ldtmae, false);
 	} catch (final Exception e) {
 	    System.out.println("EXCEPTION:" +  e.getMessage());
@@ -95,10 +95,10 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
 	    final EntityLocatorConfig updatedElc = elcController.save(downloadedElc);
 	    logger.warn("\tA default locator instance, converted to CURRENT (1) version, for [" + downloadedElc + "] has been succesfully saved (promoted to the cloud).");
 
-	    logger.info("Ended maintaining the version of default locator instance for [" + downloadedElc + "].");
+	    logger.debug("Ended maintaining the version of default locator instance for [" + downloadedElc + "].");
 	    return maintainLocatorVersion(updatedElc);
 	} else {
-	    logger.info("Ended maintaining the version of default locator instance for [" + downloadedElc + "].");
+	    logger.debug("Ended maintaining the version of default locator instance for [" + downloadedElc + "].");
 	    return ldtmaeAndShouldBePromoted.getKey();
 	}
     }
@@ -147,13 +147,13 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
     }
 
     public static Pair<CentreDomainTreeManagerAndEnhancer, Boolean> retrieveCentre(final String eccKey, final byte[] array, final ISerialiser serialiser, final ISerialiser0 serialiser0) throws Exception {
-	logger.info("Started maintaining the version of centre instance for [" + eccKey + "].");
+	logger.debug("Started maintaining the version of centre instance for [" + eccKey + "].");
 	try {
 	    // try to deserialise with a current version of serialiser
 	    final CentreDomainTreeManagerAndEnhancer cdtmae = serialiser.deserialise(array, CentreDomainTreeManagerAndEnhancer.class);
-	    logger.info("\tA centre instance for [" + eccKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
+	    logger.debug("\tA centre instance for [" + eccKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
 	    // all is okay -- the version is current
-	    logger.info("Ended maintaining the version of centre instance for [" + eccKey + "].");
+	    logger.debug("Ended maintaining the version of centre instance for [" + eccKey + "].");
 	    return new Pair<CentreDomainTreeManagerAndEnhancer, Boolean>(cdtmae, false);
 	} catch (final Exception e) {
 	    System.out.println("EXCEPTION:" +  e.getMessage());
@@ -178,10 +178,10 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
 	    final EntityCentreConfig updatedEcc = eccController.save(downloadedEcc);
 	    logger.warn("\tA centre instance, converted to CURRENT (1) version, for [" + downloadedEcc + "] has been succesfully saved (promoted to the cloud).");
 
-	    logger.info("Ended maintaining the version of centre instance for [" + downloadedEcc + "].");
+	    logger.debug("Ended maintaining the version of centre instance for [" + downloadedEcc + "].");
 	    return maintainCentreVersion(updatedEcc);
 	} else {
-	    logger.info("Ended maintaining the version of centre instance for [" + downloadedEcc + "].");
+	    logger.debug("Ended maintaining the version of centre instance for [" + downloadedEcc + "].");
 	    return cdtmaeAndShouldBePromoted.getKey();
 	}
     }
@@ -228,13 +228,13 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
     }
 
     public static Pair<MasterDomainTreeManager, Boolean> retrieveMaster(final String emcKey, final byte[] array, final ISerialiser serialiser, final ISerialiser0 serialiser0) throws Exception {
-	logger.info("Started maintaining the version of master instance for [" + emcKey + "].");
+	logger.debug("Started maintaining the version of master instance for [" + emcKey + "].");
 	try {
 	    // try to deserialise with a current version of serialiser
 	    final MasterDomainTreeManager mdtm = serialiser.deserialise(array, MasterDomainTreeManager.class);
-	    logger.info("\tA master instance for [" + emcKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
+	    logger.debug("\tA master instance for [" + emcKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
 	    // all is okay -- the version is current
-	    logger.info("Ended maintaining the version of master instance for [" + emcKey + "].");
+	    logger.debug("Ended maintaining the version of master instance for [" + emcKey + "].");
 	    return new Pair<MasterDomainTreeManager, Boolean>(mdtm, false);
 	} catch (final Exception e) {
 	    System.out.println("EXCEPTION:" +  e.getMessage());
@@ -259,10 +259,10 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
 	    final EntityMasterConfig updatedEmc = emcController.save(downloadedEmc);
 	    logger.warn("\tA master instance, converted to CURRENT (1) version, for [" + downloadedEmc + "] has been succesfully saved (promoted to the cloud).");
 
-	    logger.info("Ended maintaining the version of master instance for [" + downloadedEmc + "].");
+	    logger.debug("Ended maintaining the version of master instance for [" + downloadedEmc + "].");
 	    return maintainMasterVersion(updatedEmc);
 	} else {
-	    logger.info("Ended maintaining the version of master instance for [" + downloadedEmc + "].");
+	    logger.debug("Ended maintaining the version of master instance for [" + downloadedEmc + "].");
 	    return mdtmAndShouldBePromoted.getKey();
 	}
     }

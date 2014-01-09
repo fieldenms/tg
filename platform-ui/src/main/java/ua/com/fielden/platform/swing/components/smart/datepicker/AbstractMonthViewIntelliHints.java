@@ -70,8 +70,6 @@ public abstract class AbstractMonthViewIntelliHints extends AbstractIntelliHints
 	this.defaultTimePortionMillis = defaultTimePortionMillis;
 
 	setAutoPopup(false);
-
-	init();
     }
 
     /**

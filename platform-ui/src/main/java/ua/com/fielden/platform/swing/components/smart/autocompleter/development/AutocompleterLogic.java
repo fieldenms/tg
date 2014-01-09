@@ -23,8 +23,6 @@ import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.apache.commons.jexl.Expression;
 import org.apache.commons.jexl.ExpressionFactory;
@@ -95,7 +93,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
      *            lookup value(e) itself.
      */
     public AutocompleterLogic(final AutocompleterTextFieldLayer<T> layeredTextComponent, final String separator, final ListCellRenderer customListCellRenderer, final Class<T> lookupClass, final String expression) {
-	super(layeredTextComponent.getView(), customListCellRenderer);
+	super(layeredTextComponent.getView(), customListCellRenderer, !StringUtils.isEmpty(separator));
 	this.layeredTextComponent = layeredTextComponent;
 
 	this.lookupClass = lookupClass;
@@ -125,22 +123,6 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 	valueSeparator = separator;
 
 	layeredTextComponent.getView().addFocusListener(this);
-	// initialise selection model based on isMultiValued() value
-	// this code could not be put into createList() method simply because valueSeparator is not initialise yet when super constructor is invoked
-	final ListSelectionModel model = getList().getSelectionModel();
-	model.setSelectionMode(isMultiValued() ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
-
-	getScroll().getViewport().addChangeListener(createViewportSizeChangeListener());
-    }
-
-    private ChangeListener createViewportSizeChangeListener() {
-	return new ChangeListener() {
-
-	    @Override
-	    public void stateChanged(final ChangeEvent e) {
-		getHintsCellRenderer().setPreferredWidth(getList().getWidth());
-	    }
-	};
     }
 
     @Override
@@ -322,7 +304,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
      */
     @SuppressWarnings("rawtypes")
     @Override
-    protected JList createList(final ListCellRenderer cellRenderer) {
+    protected JList createList(final ListCellRenderer cellRenderer, final boolean isMultiValued) {
 	final JList list = new JList() {
 	    private static final long serialVersionUID = 1L;
 
@@ -349,6 +331,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
 	if (cellRenderer != null) {
 	    list.setCellRenderer(cellRenderer);
 	}
+	list.getSelectionModel().setSelectionMode(isMultiValued ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
 	return list;
     }
 
@@ -518,6 +501,7 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
      */
     @Override
     public void showHints() {
+	popup();
 	resetSelection();
 	super.showHints();
 	if (isHintsPopupVisible()) { // if popup is shown then this is the result of the search

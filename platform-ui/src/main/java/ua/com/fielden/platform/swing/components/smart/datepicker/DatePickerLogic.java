@@ -62,6 +62,7 @@ public class DatePickerLogic extends AbstractMonthViewIntelliHints implements Fo
      */
     @Override
     public void showHints() {
+	popup();
 	// clears selection date to make "month hints" usable for clicks and other manipulations.
 	getMonthView().setSelectionDate(null);
 
