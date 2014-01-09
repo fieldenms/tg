@@ -23,6 +23,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.jdesktop.jxlayer.JXLayer;
 import org.jdesktop.jxlayer.plaf.AbstractLayerUI;
 
@@ -63,7 +64,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CriteriaModificationLayer extends JXLayer<JComponent> implements ItemListener {
-
+    private static final Logger logger = Logger.getLogger(CriteriaModificationLayer.class);
     private static final long serialVersionUID = -9123603131112707930L;
 
     private final static String MISSING_VALUE = "Missing value", NOT = "Not", EXCLUSIVE = "Exclusive";
@@ -428,7 +429,6 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
      * Updates a state of crit-modif layer according to an ignore state property editor which is wrapped. Also triggers repainting of a component which state has been updated.
      */
     public void updateState() {
-	System.out.print("Update state for property = [" + propertyEditor.getPropertyName() + "]. ");
 	if (propertyEditor instanceof RangePropertyEditor) {
 	    final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
 	    if (!rpe.isSingle() && !rpe.isBool()) { // update exclusiveness according to an ignore state of each sub-editor:

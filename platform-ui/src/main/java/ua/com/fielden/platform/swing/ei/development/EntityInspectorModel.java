@@ -37,7 +37,7 @@ public class EntityInspectorModel<T extends AbstractEntity> {
      */
     public EntityInspectorModel(final T entity, final IPropertyBinder binder) {
 	final Date curr = new Date();
-	logger.debug("EIM creation (with binding) started ...");
+	logger.debug("Creating EntityInspectorModel (with binding)...");
 	this.entity = entity;
 	this.binder = binder;
 	if (binder instanceof ILightweightPropertyBinder) {
@@ -46,7 +46,7 @@ public class EntityInspectorModel<T extends AbstractEntity> {
 	} else {
 	    editors = binder.bind(entity);
 	}
-	logger.debug("EIM creation (with binding) finished in ..." + (new Date().getTime() - curr.getTime()) + "ms");
+	logger.debug("Creating EntityInspectorModel (with binding)...done in ..." + (new Date().getTime() - curr.getTime()) + "ms");
     }
 
     /**

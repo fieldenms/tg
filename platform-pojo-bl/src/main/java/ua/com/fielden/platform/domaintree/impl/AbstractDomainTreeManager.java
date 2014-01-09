@@ -473,7 +473,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 			}
 		    }
 		}
-		logger().info("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + checkedProps.size() + " checked properties."); //  => [" + checkedProps + "]
+		logger().debug("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + checkedProps.size() + " checked properties."); //  => [" + checkedProps + "]
 	    }
 	    return checkedProperties.get(root);
 	}

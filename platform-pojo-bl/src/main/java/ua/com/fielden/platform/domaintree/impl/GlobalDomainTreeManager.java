@@ -113,14 +113,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     private Map<Class<?>, Map<String, List<String>>> loadEntityCentreSkeleton() {
-	System.err.println("=====***=============================================");
-	System.err.println("========***==========================================");
-	System.err.println("===========***=======================================");
-	System.err.println("==============***====================================");
-	System.err.println("=================***=================================");
-	System.err.println("====================***==============================");
-	System.err.println("=======================***===========================");
-	System.err.println("==========================***========================");
+	logger.info("Loading entity centre skeleton...");
 	// load all non-principle entity centres for this user
 	final List<EntityCentreConfig> centresFromTheCloud =
 		entityCentreConfigController.getAllEntities(
@@ -147,6 +140,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    final Class<?> miType = getMiType(ecac.getEntityCentreConfig().getMenuItem().getKey());
 	    map.get(miType).get(ecac.getEntityCentreConfig().getTitle()).add(ecac.getTitle());
 	}
+	logger.info("Loading entity centre skeleton...done");
 	return map;
     }
 
@@ -285,6 +279,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public IGlobalDomainTreeManager initEntityCentreManager(final Class<?> menuItemType, final String name) {
+	logger.info("Initialising entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "]...");
 	validateMenuItemType(menuItemType);
 	final Class<?> root = validateMenuItemTypeRootType(menuItemType);
 	if (isFreezedEntityCentreManager(menuItemType, name)) {
@@ -298,14 +293,12 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final int count = entityCentreConfigController.count(model);
 	if (count == 1) { // the persistence layer contains a entity-centre, so it should be retrieved and deserialised
 	    retrieveAndInit(menuItemType, name, root, centreConfigurator, model);
-	    return this;
 	} else if (count < 1) { // there is no entity-centre
 	    if (name == null) { // principle entity-centre
 		// Principle entity-centre should be initialised and then saved. This can be done naturally by base user.
 		// But if base user haven't done that yet, it will be done by non-base user automatically.
 		final boolean owning = currentUser().isBase();
 		init(menuItemType, name, createDefaultCentre(centreConfigurator, root), owning);
-		return this;
 	    } else {
 		error("Unable to initialise a non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    }
@@ -321,6 +314,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	} else {
 	    error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	}
+	logger.info("Initialised_ entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "]...done");
 	return this;
     }
 
@@ -584,10 +578,12 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @return
      */
     private ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre) {
+	logger.debug("Copying centre...");
 	// final TgKryo kryo = (TgKryo) getSerialiser();
 	// TODO kryo.register(CentreDomainTreeManager.class, new CentreDomainTreeManagerSerialiserWithTransientAnalyses(kryo));
 	final ICentreDomainTreeManagerAndEnhancer copy = initCentreManagerCrossReferences(EntityUtils.deepCopy(centre, getSerialiser()));
 	// TODO kryo.register(CentreDomainTreeManager.class);
+	logger.debug("Copying centre...done");
 	return copy;
     }
 

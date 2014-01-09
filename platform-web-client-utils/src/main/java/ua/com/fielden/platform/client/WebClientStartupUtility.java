@@ -68,7 +68,7 @@ import com.jidesoft.plaf.LookAndFeelFactory;
  *
  */
 public class WebClientStartupUtility {
-
+    private static final Logger logger = Logger.getLogger(WebClientStartupUtility.class);
     /**
      * Constructs and displays login prompt. Successful login results in the invocation of the passed in {@link IClientLauncher} contract.
      *
@@ -335,7 +335,7 @@ public class WebClientStartupUtility {
 	final List<MainMenuItem> itemsFromCloud = persistedMainMenuStructureBuilder.build();
 
 	pd = new Period(st, new DateTime());
-	System.out.println("\t\t" + "PersistedMainMenuStructureBuilder.build()...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	logger.info("Build using PersistedMainMenuStructureBuilder...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
 
 	final ITreeMenuFactory menuFactory = new TreeMenuFactory(rootMenuItem, menu, injector);
 	mmBinder.bindMainMenuItemFactories(menuFactory);
@@ -345,7 +345,7 @@ public class WebClientStartupUtility {
 	menu.getModel().getOriginModel().reload();
 
 	pd = new Period(st, new DateTime());
-	System.out.println("\t\t" + "menuFactory.build(itemsFromCloud);...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	logger.info("Building menu items from cloud using menu factory...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
 
 	menu.selectFirtItem();
     }

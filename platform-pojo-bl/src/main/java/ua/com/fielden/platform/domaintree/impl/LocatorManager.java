@@ -246,6 +246,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     @Override
     public ILocatorManager refreshLocatorManager(final Class<?> root, final String property) {
+	logger.debug("Refreshing locator for [" + property + "]...");
 	nonEntityTypedPropertyError(root, property);
 	if (USAGE_PHASE == phase(root, property)) {
 	    if (GLOBAL == type(root, property)) {
@@ -259,6 +260,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	} else { // not applicable
 	    error("Could not Refresh locator while it is editing. Please Accept or Discard it before Refresh (maybe multiple times in case of freezed locator). Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
+	logger.debug("Refreshing locator for [" + property + "]...done");
 	return this;
     }
 

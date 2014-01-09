@@ -73,18 +73,18 @@ public final class MainMenuItemMixin {
 	st = new DateTime();
 	final List<MainMenuItem> allItems = findPrincipalMenuItems();
 	pd = new Period(st, new DateTime());
-	System.err.println("findPrincipalMenuItems...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	logger.info("Find principal menu items...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
 
 	st = new DateTime();
 	allItems.addAll(findSaveAsMenuItems());
 	pd = new Period(st, new DateTime());
-	System.err.println("findSaveAsMenuItems...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	logger.info("Find saveAs menu items...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
 
 	st = new DateTime();
 	// once there is a linear list of menu items need to build a hierarchical structure
 	final List<MainMenuItem> result = buildMenuHierarchy(allItems);
 	pd = new Period(st, new DateTime());
-	System.err.println("buildMenuHierarchy...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	logger.info("Build menu hierarchy...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
 	return result;
     }
 

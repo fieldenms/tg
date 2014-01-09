@@ -19,6 +19,9 @@ import javax.swing.JToolBar;
 import javax.swing.border.EtchedBorder;
 
 import net.miginfocom.swing.MigLayout;
+
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
@@ -49,7 +52,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManager> implements IUmViewOwner, IBlockingLayerProvider {
-
+    private static final Logger logger = Logger.getLogger(GridAnalysisView.class);
     private static final long serialVersionUID = 8538099803371092525L;
 
     private final EgiPanel<T> egiPanel;
@@ -62,6 +65,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final GridConfigurationView<T, CDTME> owner) {
 	super(model, owner);
+	logger.info("Creating GridAnalysisView (after super AbstractAnalysisReview has been created)...");
 	this.egiPanel = createEgiPanel();
 	this.openMasterWithNewEntityCommand = createOpenMasterWithNewCommand();
 	this.openMasterAndEditEntityCommand = createOpenMasterCommand();
@@ -106,6 +110,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
 	layoutView();
 	getOwner().getAnalysisViewCustomiser().customiseView(this);
+	logger.info("Creating GridAnalysisView...done");
     }
 
     protected EgiPanel<T> createEgiPanel() {

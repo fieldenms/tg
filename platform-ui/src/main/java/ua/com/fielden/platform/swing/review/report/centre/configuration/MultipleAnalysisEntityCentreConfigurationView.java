@@ -3,6 +3,8 @@ package ua.com.fielden.platform.swing.review.report.centre.configuration;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.analysis.DetailsFrame;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -10,7 +12,7 @@ import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.report.centre.MultipleAnalysisEntityCentre;
 
 public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEntity<?>> extends CentreConfigurationView<T, MultipleAnalysisEntityCentre<T>> {
-
+    private final static Logger logger = Logger.getLogger(MultipleAnalysisEntityCentreConfigurationView.class);
     private static final long serialVersionUID = -6434256458143463705L;
 
     private final Map<String, Map<Object, DetailsFrame>> detailsCache;
@@ -65,7 +67,10 @@ public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEnt
 	if(getPreviousView() != null && isPrincipal()){
 	    selectAnalysis(getPreviousView().getCurrentAnalysisConfigurationView().getModel().getName());
 	}
-	return new MultipleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), this);
+	logger.info("Creating MultipleAnalysisEntityCentre...");
+	final MultipleAnalysisEntityCentre<T> maec = new MultipleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), this);
+	logger.info("Creating MultipleAnalysisEntityCentre...done");
+	return maec;
     }
 
     /**

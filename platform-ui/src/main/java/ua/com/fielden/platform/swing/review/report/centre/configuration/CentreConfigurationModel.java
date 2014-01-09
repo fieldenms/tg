@@ -3,6 +3,8 @@ package ua.com.fielden.platform.swing.review.report.centre.configuration;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -32,7 +34,7 @@ import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorM
  * @param <DAO>
  */
 public class CentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>{
-
+    private final static Logger logger = Logger.getLogger(CentreConfigurationModel.class);
     /**
      * The type of menu item with which this centre configuration model is associated.
      */
@@ -185,11 +187,14 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     protected final EntityCentreModel<T> createEntityCentreModel() {
+	logger.debug("Creating EntityCentreModel...");
 	final ICentreDomainTreeManagerAndEnhancer cdtme = getEntityCentreManager();
 	if(cdtme == null || cdtme.getSecondTick().checkedProperties(getEntityType()).isEmpty()){
 	    throw new IllegalStateException("The centre manager is not specified");
 	}
-	return new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
+	final EntityCentreModel<T> ecm = new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
+	logger.debug("Creating EntityCentreModel...done");
+	return ecm;
     }
 
     @Override

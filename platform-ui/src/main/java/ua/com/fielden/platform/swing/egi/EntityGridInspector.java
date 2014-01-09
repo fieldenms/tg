@@ -107,6 +107,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
     @SuppressWarnings("unchecked")
     public EntityGridInspector(final FilterableTableModel filterableTableModel, final boolean sortable) {
 	super(filterableTableModel);
+	logger.debug("Creating EntityGridInspector (after super HierarchicalTable has been created)...");
 
 	if(!(filterableTableModel.getActualModel() instanceof PropertyTableModel)) {
 	    throw new IllegalArgumentException("The underlying table model for the filterable table model must be property table model");
@@ -130,6 +131,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 	afterModelSet(this.actualTableModel);
 	// setting "magic" property to stop editing when focus moves out of the table
 	putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
+	logger.debug("Creating EntityGridInspector...done");
     }
 
     /**

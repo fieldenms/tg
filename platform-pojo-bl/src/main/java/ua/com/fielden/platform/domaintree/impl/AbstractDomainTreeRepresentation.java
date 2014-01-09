@@ -584,7 +584,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    }
 	    enableListening(true);
 	    includedProperties.put(root, includedProps);
-	    logger().info("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size() + " included properties."); // => [" + includedProps + "]
+	    logger().debug("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size() + " included properties."); // => [" + includedProps + "]
 	}
 	return includedProperties.get(root);
     }
@@ -701,7 +701,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	illegalExcludedProperties(this, managedType, reflectionProperty(property), "Could not 'warm up' an 'excluded' property [" + property + "] in type [" + managedType.getSimpleName() + "]. Only properties that are not excluded can be 'warmed up'.");
 	includedPropertiesMutable(managedType); // ensure "included properties" to be loaded
 	if (warmUp(managedType, "", property)) {
-	    logger().info("Warmed up root's [" + managedType.getSimpleName() + "] property [" + property + "] within " + (new Date().getTime() - st.getTime()) + "ms.");
+	    logger().debug("Warmed up root's [" + managedType.getSimpleName() + "] property [" + property + "] within " + (new Date().getTime() - st.getTime()) + "ms.");
 	}
 	return this;
     }

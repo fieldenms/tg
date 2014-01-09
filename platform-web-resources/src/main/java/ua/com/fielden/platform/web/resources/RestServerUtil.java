@@ -94,7 +94,9 @@ public class RestServerUtil {
      * @return
      */
     public Representation errorRepresentation(final String string) {
+	logger.debug("Start building error representation:" + new DateTime());
 	final byte[] bytes = serialiser.serialise(new Result(null, new Exception(string)));
+	logger.debug("SIZE: " + bytes.length);
 	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
@@ -106,7 +108,9 @@ public class RestServerUtil {
      * @return
      */
     public Representation errorRepresentation(final Exception ex) {
+	logger.debug("Start building error representation:" + new DateTime());
 	final byte[] bytes = serialiser.serialise(new Result(ex));
+	logger.debug("SIZE: " + bytes.length);
 	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
@@ -117,7 +121,9 @@ public class RestServerUtil {
      * @return
      */
     public Representation resultRepresentation(final Result result) {
+	logger.debug("Start building result representation:" + new DateTime());
 	final byte[] bytes = serialiser.serialise(result);
+	logger.debug("SIZE: " + bytes.length);
 	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
@@ -146,7 +152,7 @@ public class RestServerUtil {
      * @return
      */
     public <T extends AbstractEntity> Representation listRepresentation(final List<T> entities) {
-	logger.debug("Start building representation:" + new DateTime());
+	logger.debug("Start building entities representation.");
 	try {
 	    // create a Result enclosing entity list
 	    final Result result = new Result(new ArrayList<T>(entities), "All is cool");
@@ -165,7 +171,7 @@ public class RestServerUtil {
      * @return
      */
     public Representation mapRepresentation(final Map<?, ?> map) {
-	logger.debug("Start building representation:" + new DateTime());
+	logger.debug("Start building map representation.");
 	try {
 	    // create a Result enclosing entity list
 	    final Result result = new Result(new HashMap<>(map), "All is cool");

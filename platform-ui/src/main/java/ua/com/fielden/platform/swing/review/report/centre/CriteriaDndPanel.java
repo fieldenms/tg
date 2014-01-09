@@ -30,6 +30,9 @@ import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 
 import net.miginfocom.swing.MigLayout;
+
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager.IPropertyCheckingListener;
@@ -54,6 +57,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class CriteriaDndPanel extends StubCriteriaPanel {
+    private final static Logger logger = Logger.getLogger(CriteriaDndPanel.class);
 
     private enum CriteriaPanelMode {
 	DESIGN, VIEW;
@@ -100,6 +104,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     public CriteriaDndPanel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> eqc, final Map<String, IPropertyEditor> editors) {
 	super(null);
+	logger.debug("Creating CriteriaDndPanel...");
 	this.eqc = eqc;
 	this.editors.clear();
 	if(editors != null){
@@ -125,6 +130,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
 	this.rowRemoverListener = createPropertyRemoveListener();
 	this.eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick().addWeakPropertyCheckingListener(rowRemoverListener);
+	logger.debug("Creating CriteriaDndPanel...done");
     }
 
     private IPropertyCheckingListener createPropertyRemoveListener() {
@@ -486,7 +492,9 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     private void addDraggable(final IPropertyEditor propertyEditor, final int column, final int row) {
 	final Position position = new Position(column, row, "", "grow"); // grow
 
+	logger.debug("\tCreating CriteriaModifLayer for [" + propertyEditor.getPropertyName() + "]...");
 	final Pair<JLabel, CriteriaModificationLayer> pair = new Pair<JLabel, CriteriaModificationLayer>(propertyEditor.getLabel(), new CriteriaModificationLayer(propertyEditor));
+	logger.debug("\tCreating CriteriaModifLayer for [" + propertyEditor.getPropertyName() + "]...done");
 	add(pair.getKey(), position.getLabelConstraints());
 	add(pair.getValue(), position.getEditorConstraints());
 

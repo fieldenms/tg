@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -30,7 +32,7 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
  * @param <T> - The centre's entity type.
  */
 public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILightweightPropertyBinder<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> {
-
+    private final static Logger logger = Logger.getLogger(CentrePropertyBinder.class);
     private final EntityCentreType entityCentreType;
 
     private final ICriteriaGenerator criteriaGenerator;
@@ -93,7 +95,7 @@ public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILight
     }
 
     private IPropertyEditor bindProperty(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> entity, final String property) {
-
+	logger.debug("\tBinding [" + property + "] property...");
 	final MetaProperty metaProp = entity.getProperty(property);
 	final IsProperty propertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, entity.getType(), property);
 	final EntityType entityTypeAnnotation = AnnotationReflector.getPropertyAnnotation(EntityType.class, entity.getType(), property);
@@ -101,11 +103,15 @@ public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILight
 	final boolean stringBinding = isSingle ? false : String.class.isAssignableFrom(propertyAnnotation.value());
 	final Class<?> elementType = isSingle ? metaProp.getType() : (stringBinding ? entityTypeAnnotation.value() : propertyAnnotation.value());
 
+	final IPropertyEditor pe;
 	if (AbstractEntity.class.isAssignableFrom(elementType)) { // property is of entity type
-	    return createAutocompleter(entity, metaProp.getName());
-	}else { // the only possible case is property of an ordinary type
-	    return createOrdinaryPropertyEditor(entity, property);
+	    pe = createAutocompleter(entity, metaProp.getName());
+	    logger.debug("\tBinding [" + property + "] property (autocompleter)...done");
+	} else { // the only possible case is property of an ordinary type
+	    pe = createOrdinaryPropertyEditor(entity, property);
+	    logger.debug("\tBinding [" + property + "] property (ordinary)...done");
 	}
+	return pe;
     }
 
     private IPropertyEditor createAutocompleter(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> entity, final String propertyName) {
