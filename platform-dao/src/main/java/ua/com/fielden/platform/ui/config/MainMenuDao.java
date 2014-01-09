@@ -163,7 +163,7 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
 
     private Pair<String, DateTime> info(final Pair<String, DateTime> oldMessageAndOldSt, final String newMessage) {
 	final Period pd = new Period(oldMessageAndOldSt.getValue(), new DateTime());
-	final int width = 120;
+	final int width = 60;
 	final String row = str('=', width);
 	logger.info(str('-', width));
 	logger.info(row);

@@ -77,7 +77,7 @@ public abstract class BasicServerApplication extends Application {
 	try {
 	    helper.registerReportResource(routerForResources, serverRestUtil);
 	} catch (final Exception e) {
-	    logger.warn("Could not register a report resource.", e);
+	    logger.debug("Could not register a report resource.", e);
 	}
 	// register user role association resource
 	routerForResources.attach("/users/{username}/useroles", new UserRoleAssociationResourceFactory(injector));
