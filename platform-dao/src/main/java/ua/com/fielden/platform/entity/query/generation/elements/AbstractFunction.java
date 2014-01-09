@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.Date;
 
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
+import ua.com.fielden.platform.entity.query.DbVersion;
 
 public abstract class AbstractFunction {
     private final DbVersion dbVersion;

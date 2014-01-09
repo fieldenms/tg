@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
+import ua.com.fielden.platform.entity.query.DbVersion;
 
 
 public class MaxOf extends SingleOperandFunction {

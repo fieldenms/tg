@@ -453,6 +453,10 @@ final class Tokens {
 	return add(TokenCategory.END_FUNCTION, null);
     }
 
+    public Tokens endOfFunction(final ITypeCast typeCast) {
+	return add(TokenCategory.END_FUNCTION, typeCast);
+    }
+
     public Tokens where() {
 	return add(TokenCategory.QUERY_TOKEN, QueryTokens.WHERE);
     }

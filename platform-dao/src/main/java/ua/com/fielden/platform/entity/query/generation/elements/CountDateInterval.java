@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.DateIntervalUnit;
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
 
 
 public class CountDateInterval extends TwoOperandsFunction {

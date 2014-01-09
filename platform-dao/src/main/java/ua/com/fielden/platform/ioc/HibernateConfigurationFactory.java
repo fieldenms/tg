@@ -9,7 +9,7 @@ import org.hibernate.cfg.Configuration;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
+import ua.com.fielden.platform.entity.query.DbVersion;
 
 import com.google.inject.Guice;
 

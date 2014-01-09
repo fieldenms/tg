@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.Collections;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
+import ua.com.fielden.platform.entity.query.DbVersion;
 
 
 public class Now implements ISingleOperand {

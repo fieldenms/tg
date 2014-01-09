@@ -30,9 +30,9 @@ import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurpose
 import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.Functions;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
@@ -209,6 +210,10 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
     protected TokenCategory getLastCat() {
 	return tokens.size() > 0 ? tokens.get(tokens.size() - 1).getKey() : null;
+    }
+
+    protected Object getLastValue() {
+	return tokens.size() > 0 ? tokens.get(tokens.size() - 1).getValue() : null;
     }
 
     protected ITokensBuilder getChild() {

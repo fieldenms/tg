@@ -20,6 +20,7 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PurePropInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;

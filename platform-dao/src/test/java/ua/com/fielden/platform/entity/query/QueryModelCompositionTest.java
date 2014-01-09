@@ -14,7 +14,6 @@ import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryCompositionTCase;
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.entity.query.generation.elements.CaseWhen;
 import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;

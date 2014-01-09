@@ -36,11 +36,28 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @Readonly
     @Calculated
+    @Title("Has more than 1 publication")
+    private boolean hasMultiplePublications;
+    private static ExpressionModel hasMultiplePublications_ = expr().caseWhen().model(select(TgAuthorship.class).where().prop("author").eq().extProp("id").yield().countAll().modelAsPrimitive()). //
+	    gt().val(1).then().val(true).otherwise().val(false).endAsBool().model();
+
+    @IsProperty
+    @Readonly
+    @Calculated
     @Title("Last royalty")
     private TgAuthorRoyalty lastRoyalty;
     private static ExpressionModel lastRoyalty_ = expr().model(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("id").model()).model();
-    // TODO EQL
-    //private static ExpressionModel lastRoyalty_ = expr().model(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("author").model()).model();
+
+
+    @Observable
+    protected TgAuthor setHasMultiplePublications(final boolean hasMultiplePublications) {
+	this.hasMultiplePublications = hasMultiplePublications;
+	return this;
+    }
+
+    public boolean getHasMultiplePublications() {
+	return hasMultiplePublications;
+    }
 
     @Observable
     private TgAuthor setLastRoyalty(final TgAuthorRoyalty lastRoyalty) {

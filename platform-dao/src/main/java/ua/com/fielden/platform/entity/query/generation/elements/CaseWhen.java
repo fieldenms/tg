@@ -3,6 +3,8 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.utils.Pair;
 
 
@@ -10,12 +12,21 @@ public class CaseWhen implements ISingleOperand {
 
     private List<Pair<ICondition, ISingleOperand>> whenThenPairs = new ArrayList<Pair<ICondition, ISingleOperand>>();
     private final ISingleOperand elseOperand;
+    private final ITypeCast typeCast;
+    private final DbVersion dbVersion;
 
     public CaseWhen(final List<Pair<ICondition, ISingleOperand>> whenThenPairs, final ISingleOperand elseOperand) {
+	this(whenThenPairs, elseOperand, null, DbVersion.H2);
+    }
+
+    public CaseWhen(final List<Pair<ICondition, ISingleOperand>> whenThenPairs, final ISingleOperand elseOperand, final ITypeCast typeCast, final DbVersion dbVersion) {
 	super();
 	this.whenThenPairs.addAll(whenThenPairs);
 	this.elseOperand = elseOperand;
+	this.typeCast = typeCast;
+	this.dbVersion = dbVersion;
     }
+
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
@@ -81,13 +92,13 @@ public class CaseWhen implements ISingleOperand {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("CASE");
 	for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
-	    sb.append(" WHEN " + whenThen.getKey().sql() + " THEN " + whenThen.getValue().sql());
+	    sb.append(" WHEN " + whenThen.getKey().sql() + " THEN " + (typeCast == null ? whenThen.getValue().sql() : typeCast.typecast(whenThen.getValue().sql(), dbVersion)));
 	}
 	if (elseOperand != null) {
-	    sb.append(" ELSE " + elseOperand.sql());
+	    sb.append(" ELSE " + (typeCast == null ? elseOperand.sql() : typeCast.typecast(elseOperand.sql(), dbVersion)));
 	}
 	sb.append(" END");
-	return sb.toString();//"CASE WHEN " + getOperand1().sql() + " THEN  " + getOperand2().sql() + " END";
+	return sb.toString();
     }
 
     @Override

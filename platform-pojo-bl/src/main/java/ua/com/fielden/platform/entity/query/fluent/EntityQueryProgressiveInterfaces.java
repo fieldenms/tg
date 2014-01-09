@@ -203,6 +203,10 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface ICaseWhenFunctionEnd<T> {
         T end();
+        T endAsInt();
+        T endAsBool();
+        T endAsStr(int length);
+        T endAsDecimal(int scale, int presicion);
     }
 
     interface ICaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> //

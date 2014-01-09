@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.hibernate.Hibernate;
 
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
+import ua.com.fielden.platform.entity.query.DbVersion;
 
 
 public class Concat extends AbstractFunction implements ISingleOperand {
