@@ -165,15 +165,15 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
 	final Period pd = new Period(oldMessageAndOldSt.getValue(), new DateTime());
 	final int width = 120;
 	final String row = str('=', width);
-	System.err.println(str('-', width));
-	System.err.println(row);
-	System.err.println(oldMessageAndOldSt.getKey() == null ? row : wrap(oldMessageAndOldSt.getKey() + "...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms", width));
-	System.err.println(row);
-	System.err.println(wrap(newMessage, width));
-	System.err.println(row);
-	System.err.println(row);
-	System.err.println(row);
-	System.err.println(str('-', width));
+	logger.info(str('-', width));
+	logger.info(row);
+	logger.info(oldMessageAndOldSt.getKey() == null ? row : wrap(oldMessageAndOldSt.getKey() + "...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms", width));
+	logger.info(row);
+	logger.info(wrap(newMessage, width));
+	logger.info(row);
+	logger.info(row);
+	logger.info(row);
+	logger.info(str('-', width));
 	return new Pair<String, DateTime>(newMessage, new DateTime()); // return newMessageAndNewSt
     }
 

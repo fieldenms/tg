@@ -174,7 +174,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	if (entity == null) {
 	    throw new IllegalArgumentException("Entity should not be null when saving.");
 	}
-	logger.info("Start saving entity " + entity + " (ID = " + entity.getId() + ")");
+	logger.debug("Start saving entity " + entity + " (ID = " + entity.getId() + ")");
 	final List<String> dirtyProperties = toStringList(entity.getDirtyProperties());
 	try {
 	    if (!entity.isPersisted()) {
@@ -273,7 +273,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	    entity.setDirty(false);
 	    entity.resetMetaState();
 	} finally {
-	    logger.info("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
+	    logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
 	}
 
 	getSession().flush();
