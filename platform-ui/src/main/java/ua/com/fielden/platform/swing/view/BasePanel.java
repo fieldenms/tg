@@ -1,18 +1,25 @@
 package ua.com.fielden.platform.swing.view;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.LayoutManager;
+import java.util.Map;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JTextField;
 
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.model.IOpenGuard;
+import ua.com.fielden.platform.swing.utils.DummyBuilder;
 
 /**
  * A base class for all guarded panels.
@@ -158,4 +165,56 @@ public abstract class BasePanel extends JPanel implements ICloseGuard, IOpenGuar
     public String whyCannotOpen() {
 	return "default implementation: should have been overridden";
     }
+
+    // ///////////////////////////////////////////////////////////////////////////////////
+    // ////////////////////// A set of UI layout helper methods //////////////////////////
+    // ///////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Determines an editor from a map of editors by property name and adds its label and the editor itself to the provide panel.
+     * The last parameter is responsible for layout settings of the editor component.
+     */
+    protected void addWithParamsForEditor(final JPanel panel, final Map<String, IPropertyEditor> editors, final String propertyName, final String layoutParameter) {
+	final IPropertyEditor editor = editors.get(propertyName);
+	panel.add(editor.getLabel());
+	panel.add(editor.getEditor(), layoutParameter);
+    }
+
+    protected void addWithParamsForEditorPlaceholder(final JPanel panel, final String layoutParameter) {
+	panel.add(new JLabel("<html><b><font color=\"red\">Placeholder:</font></b></html>"));
+	panel.add(new JTextField(" "), layoutParameter);
+    }
+
+    /**
+     * Determines an editor from a map of editors by property name and adds its label and the editor itself to the provide panel.
+     * The last parameter is responsible for layout settings of the label component.
+     */
+    protected void addWithParamsForLabel(final JPanel panel, final Map<String, IPropertyEditor> editors, final String propertyName, final String layoutParameter) {
+	final IPropertyEditor editor = editors.get(propertyName);
+	panel.add(editor.getLabel(), layoutParameter);
+	panel.add(editor.getEditor());
+    }
+
+
+    /** This is a convenient layout helper method, which does not require any layout settings. */
+    protected void add(final JPanel panel, final Map<String, IPropertyEditor> editors, final String propertyName) {
+	addWithParamsForEditor(panel, editors, propertyName, "");
+    }
+
+    /** This is a convenient layout helper method, which does accepts any component and simply adds it to the panel with the specified parameters. */
+    protected void addComponent(final JPanel panel, final JComponent component, final String layoutParameter) {
+	panel.add(component, layoutParameter);
+    }
+
+
+    /** This is a convenient layout helper method for adding editor following the wrap setting. */
+    protected void addAndWrap(final JPanel panel, final Map<String, IPropertyEditor> editors, final String propertyName) {
+	addWithParamsForEditor(panel, editors, propertyName, "wrap");
+    }
+
+    /** Adds a named separator */
+    protected void addSeparator(final JPanel panel, final String label) {
+	panel.add(DummyBuilder.label(label, new Color(0x175c9a)), "gapbottom 5, gaptop 20px, span, split 2, aligny center");
+	panel.add(new JSeparator(), "gapleft rel, gapbottom 5, gaptop 20px, growx");
+    }
+
 }

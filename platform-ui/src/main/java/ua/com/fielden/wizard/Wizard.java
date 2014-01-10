@@ -3,7 +3,6 @@ package ua.com.fielden.wizard;
 import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +31,7 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
     private final String info;
     private final T model;
     private final ILightweightPropertyBinder<T> propBinder;
-    private Map<String, IPropertyEditor> editors = new HashMap<String, IPropertyEditor>();
+    private final Map<String, IPropertyEditor> editors;
 
     private IWizState<T> currState;
     private IWizState<T> startState;
@@ -64,7 +63,7 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 	this.info = info;
 	this.model = model;
 	this.propBinder = MasterPropertyBinder.<T> createPropertyBinderWithoutLocatorSupport(valueMatcherFactory);
-	buildEditors(model, propBinder);
+	this.editors = buildEditors(model, propBinder);
 
 	next = createNextCommand();
 	prev = createPrevCommand();
