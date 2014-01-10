@@ -2,9 +2,11 @@ package ua.com.fielden.platform.gis.gps.actors;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
@@ -19,6 +21,7 @@ import org.joda.time.Period;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachineModuleTemporalAssociation;
@@ -83,13 +86,21 @@ public abstract class AbstractActors<
 	this.system = ActorSystem.create("actors");
 
 	this.machinesWithLastMessages = new HashMap<MACHINE, MESSAGE>(machinesWithLastMessages);
-	machinesCounter = MachinesCounterActor.create(system, this.machinesWithLastMessages.size(), this);
+	machinesCounter = MachinesCounterActor.create(system, keys(this.machinesWithLastMessages.keySet()), this);
 
 	this.modulesWithAssociations = new HashMap<MODULE, List<ASSOCIATION>>(modulesWithAssociations);
-	modulesCounter = ModulesCounterActor.create(system, this.modulesWithAssociations.size(), this);
+	modulesCounter = ModulesCounterActor.create(system, keys(this.modulesWithAssociations.keySet()), this);
 
 	this.machineActors = new HashMap<>();
 	this.moduleActors = new HashMap<>();
+    }
+
+    private static <T extends AbstractEntity<String>> Set<String> keys(final Set<T> keySet) {
+	final Set<String> keys = new LinkedHashSet<String>();
+	for (final T entity : keySet) {
+	    keys.add(entity.getKey());
+	}
+	return keys;
     }
 
     /**
