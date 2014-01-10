@@ -53,7 +53,10 @@ public class DefaultMachineMonitoringProvider<
 
     @Override
     public void promoteNewMachine(final MACHINE machine) {
-	actors.registerAndStartMachineActor(machine, null);
+	if (actors != null) {
+	    actors.registerAndStartMachineActor(machine, null);
+	}
+
 	// FIXME please note that last message will not be retrieved for newly created machine!
 	// This has been done under assumption that no message will be appeared so quickly for new machine.
     }
