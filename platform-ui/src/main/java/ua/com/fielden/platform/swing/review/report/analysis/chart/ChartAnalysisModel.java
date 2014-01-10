@@ -88,14 +88,15 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     @Override
     protected Result exportData(final String fileName) throws IOException {
-	return new Result(new UnsupportedOperationException("Chart analysis doesnt supports data exporting!"));
+	return new Result(new UnsupportedOperationException("Chart analysis doesn't supports data exporting!"));
     }
 
     @Override
     protected String[] getExportFileExtensions() {
-	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");    }
+	throw new UnsupportedOperationException("Chart analysis doesn't supports data exporting!");
+    }
 
     @Override
     protected String getDefaultExportFileExtension() {
-	throw new UnsupportedOperationException("Chart analysis doesnt supports data exporting!");    }
+	throw new UnsupportedOperationException("Chart analysis doesn't supports data exporting!");    }
 }

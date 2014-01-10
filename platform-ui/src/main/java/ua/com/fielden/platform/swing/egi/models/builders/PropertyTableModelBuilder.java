@@ -517,7 +517,7 @@ public class PropertyTableModelBuilder<T extends AbstractEntity> extends Abstrac
      *
      * Important : header tooltips and captions modifies only for builder that contains no mappings with explicitly specified "propertyTitle" and "headerToolTip".
      */
-    private void enhanceColumnTitlesAndTooltips() {
+    void enhanceColumnTitlesAndTooltips() {
 	final EntityDescriptor ed = new EntityDescriptor(getEntityClass(), propertyNames());
 	for (final AbstractPropertyColumnMapping mapping : getPropertyColumnMappings()) {
 	    final Pair<String, String> tad = ed.getTitleAndDesc(isEmpty(mapping.getPropertyName()) ? "key" : mapping.getPropertyName());

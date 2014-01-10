@@ -101,9 +101,9 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
      */
     public PropertyTableModel(final List<T> instances, final List<? extends AbstractPropertyColumnMapping<T>> propertyColumnMappings, final GroupingAlgorithm<T> groupingAlgorithm, final EgiColoringScheme<T> egiColoringScheme) {
 	this.propertyColumnMappings = new ArrayList<AbstractPropertyColumnMapping<T>>();
-	this.propertyColumnMappings.addAll(propertyColumnMappings);	
+	this.propertyColumnMappings.addAll(propertyColumnMappings);
 	this.propertyColumnMappingsMap = new HashMap<>();
-	
+
 	this.groupingAlgorithm = groupingAlgorithm != null ? groupingAlgorithm : new SingleGroupAlgorithm<T>();
 	this.egiColoringScheme = egiColoringScheme;
 
@@ -112,7 +112,7 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
 	boolean hasGrandTotalsSeparateFooter = false;
 	for (final AbstractPropertyColumnMapping<T> mapping : propertyColumnMappings) {
 	    this.propertyColumnMappingsMap.put(mapping.getPropertyName(), mapping);
-	    
+
 	    if (mapping.getColumnTotals().hasGrandTotals()) {
 		hasGrandTotals = true;
 	    }
@@ -130,7 +130,8 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
     }
 
     public PropertyTableModel(final PropertyTableModelBuilder<T> builder, final List<T> instances) {
-	this(instances, builder.getPropertyColumnMappings(), null, null);
+	this(instances, builder.getPropertyColumnMappings(), null,//
+		new EgiColoringScheme<T>(builder.getRowColoringScheme(), builder.getPropertyColoringSchemes()));
     }
 
     /**
@@ -393,11 +394,11 @@ public class PropertyTableModel<T extends AbstractEntity> extends AbstractTableM
     public List<? extends AbstractPropertyColumnMapping<T>> getPropertyColumnMappings() {
 	return Collections.unmodifiableList(propertyColumnMappings);
     }
-    
+
     /**
      * Return an unmodifiable map between property names and column mappings.
-     * It should be used where there is a need to get a column mapping for a specific property by its name. 
-     * 
+     * It should be used where there is a need to get a column mapping for a specific property by its name.
+     *
      * @return
      */
     public final Map<String, AbstractPropertyColumnMapping<T>> getPropertyColumnMappingsMap() {

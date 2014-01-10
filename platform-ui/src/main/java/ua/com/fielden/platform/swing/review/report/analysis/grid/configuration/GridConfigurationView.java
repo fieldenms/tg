@@ -166,7 +166,6 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
 	if (getPreviousView() != null) {
 	    getPreviousView().getModel().stopDeltaRetrievalIfAny();
 	}
-
 	super.close();
     }
 

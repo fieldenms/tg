@@ -576,7 +576,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * @return
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private PropertyTableModel<?> createGridModel(final Class<?> managedType, final List<Pair<String, Integer>> properties) {
+    protected PropertyTableModel<?> createGridModel(final Class<?> managedType, final List<Pair<String, Integer>> properties) {
 	final PropertyTableModelBuilder<?> tableModelBuilder = new PropertyTableModelBuilder(managedType);
 	for(final Pair<String, Integer> property : properties){
 	    tableModelBuilder.addReadonly(property.getKey(), property.getValue());
@@ -592,7 +592,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * @return
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private PropertyTableModel<?> createGridModelWithColouringScheme(final Class<?> managedType, final List<Pair<String, Integer>> properties, final IColouringScheme egiColouringScheme) {
+    protected PropertyTableModel<?> createGridModelWithColouringScheme(final Class<?> managedType, final List<Pair<String, Integer>> properties, final IColouringScheme egiColouringScheme) {
 	final PropertyTableModelBuilder<?> tableModelBuilder = new PropertyTableModelBuilder(managedType);
 	for(final Pair<String, Integer> property : properties){
 	    tableModelBuilder.addReadonly(property.getKey(), property.getValue());
@@ -609,7 +609,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * @return
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private EntityGridInspector<T> createEgi(final FilterableTableModel model) {
+    protected EntityGridInspector<T> createEgi(final FilterableTableModel model) {
 	final EntityGridInspector<T> egi = new EntityGridInspector(model, false);
 	egi.setRowHeight(ROW_HEIGHT);
 	egi.setSelectionMode(MULTIPLE_INTERVAL_SELECTION);
@@ -643,7 +643,7 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * @author TG Team
      *
      */
-    private static class SortableTableHeaderCellRenderer<T extends AbstractEntity<?>> extends DefaultTableHeaderCellRenderer{
+    public static class SortableTableHeaderCellRenderer<T extends AbstractEntity<?>> extends DefaultTableHeaderCellRenderer{
 
 	private static final long serialVersionUID = -6294136148685562497L;
 
