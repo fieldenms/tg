@@ -22,7 +22,7 @@ public class ResourceLoader {
 	try {
 	    return Toolkit.getDefaultToolkit().getImage(getURL(pathAndFileName));
 	} catch (final Exception e) {
-	    logger.error(e.getMessage());
+	    logger.error("Error loading " + pathAndFileName + ". Cause: " +  e.getMessage(), e);
 	    return null;
 	}
     }
