@@ -19,7 +19,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTree;
@@ -41,7 +40,6 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
-import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.swing.view.ICloseHook;
 
@@ -138,14 +136,14 @@ public class UndockableTreeMenuWithTabs<V extends BasePanel> extends TreeMenuWit
     }
 
     @Override
-    public boolean closeView(final BaseNotifPanel<?> panel) {
+    public boolean closeView(final BasePanel panel) {
 	if(!super.closeView(panel)){
 	    return closeViewInFrame(panel);
 	}
 	return true;
     }
 
-    private boolean closeViewInFrame(final BaseNotifPanel<?> panel) {
+    private boolean closeViewInFrame(final BasePanel panel) {
 	final int index = viewItemFrame(panel);
 	if(index >= 0){
 	    final UndockTreeMenuItemFrame frame = undockedFrames.get(index);
@@ -158,11 +156,7 @@ public class UndockableTreeMenuWithTabs<V extends BasePanel> extends TreeMenuWit
 		}
 	    } else {
 		final String message = unclosable.whyCannotClose();
-		if (panel.getNotifPanel().getParent() != null && message != null) {
-		    panel.notify(message, MessageType.WARNING);
-		} else if (message != null) {
-		    JOptionPane.showMessageDialog(frame, message, "Warning", JOptionPane.WARNING_MESSAGE);
-		}
+		panel.notify(message, MessageType.WARNING);
 	    }
 	    return true;
 	} else {
@@ -209,9 +203,9 @@ public class UndockableTreeMenuWithTabs<V extends BasePanel> extends TreeMenuWit
 		if (componentAt instanceof ICloseGuard) {
 		    result = ((ICloseGuard) componentAt).canClose();
 		    if (result == null) {
-			if (componentAt instanceof BaseNotifPanel) {
-			    ((BaseNotifPanel<?>) componentAt).getAssociatedTreeMenuItem().setState(TreeMenuItemState.ALL);
-			    ((BaseNotifPanel<?>) componentAt).close();
+			if (componentAt instanceof BasePanel) {
+			    ((BasePanel) componentAt).getAssociatedTreeMenuItem().setState(TreeMenuItemState.ALL);
+			    ((BasePanel) componentAt).close();
 			}
 			tabPanel.removeTabAt(shiftTabCount);
 		    } else {
@@ -292,10 +286,10 @@ public class UndockableTreeMenuWithTabs<V extends BasePanel> extends TreeMenuWit
 
 	    private static final long serialVersionUID = -8376589711459657749L;
 
-	    @SuppressWarnings("rawtypes")
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
-		final TreeMenuItem<?> treeMenuItem = getTabPane().getSelectedComponent() instanceof BaseNotifPanel ? ((BaseNotifPanel) getTabPane().getSelectedComponent()).getAssociatedTreeMenuItem()
+		final TreeMenuItem<?> treeMenuItem =
+			getTabPane().getSelectedComponent() instanceof BasePanel ? ((BasePanel) getTabPane().getSelectedComponent()).getAssociatedTreeMenuItem()
 			: null;
 		if (treeMenuItem != null) {
 		    activateItem(treeMenuItem, false);
@@ -460,7 +454,7 @@ public class UndockableTreeMenuWithTabs<V extends BasePanel> extends TreeMenuWit
     }
 
     @Override
-    public void selectItemWithView(final BaseNotifPanel<?> view) {
+    public void selectItemWithView(final BasePanel view) {
 	if (view.getAssociatedTreeMenuItem().getState() == TreeMenuItemState.DOCK) {
 	    super.selectItemWithView(view);
 	} else if (view.getAssociatedTreeMenuItem().getState() == TreeMenuItemState.UNDOCK) {

@@ -17,7 +17,7 @@ public interface IWizState<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    AbstractWizardPage<T> view();
+    AbstractWizPage<T> view();
 
     /**
      * Returns an entity instance that serves as a wizard's model.

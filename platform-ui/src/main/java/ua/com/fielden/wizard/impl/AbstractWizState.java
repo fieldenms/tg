@@ -13,6 +13,7 @@ import ua.com.fielden.wizard.IWizState;
 public abstract class AbstractWizState<T extends AbstractEntity<?>> implements IWizState<T> {
 
     protected final T model;
+    protected IWizState<T> state;
 
     protected AbstractWizState(final T model) {
 	this.model  = model;
@@ -21,6 +22,16 @@ public abstract class AbstractWizState<T extends AbstractEntity<?>> implements I
     @Override
     public T model() {
         return model;
+    }
+
+    @Override
+    public IWizState<T> getTransitionedFrom() {
+	return state;
+    }
+
+    @Override
+    public void setTransitionedFrom(final IWizState<T> state) {
+	this.state = state;
     }
 
 }

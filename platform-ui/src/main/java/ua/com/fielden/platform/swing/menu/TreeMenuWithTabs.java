@@ -14,7 +14,6 @@ import java.awt.event.MouseEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultSingleSelectionModel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.SingleSelectionModel;
@@ -258,7 +257,7 @@ public class TreeMenuWithTabs<V extends BasePanel> extends TreeMenu<V> {
 		// it cannot be associated with any of the menu item
 		if (shouldCheck(getSelectedIndex(), index)) {
 		    // a different tab is being selected and thus need to check whether the current one can be closed/left
-		    final BaseNotifPanel<?> view = (BaseNotifPanel<?>) tabPane.getComponentAt(getSelectedIndex());
+		    final BasePanel view = (BasePanel) tabPane.getComponentAt(getSelectedIndex());
 		    if (view.canLeave()) {
 			super.setSelectedIndex(index);
 		    } else {
@@ -295,7 +294,7 @@ public class TreeMenuWithTabs<V extends BasePanel> extends TreeMenu<V> {
 	    public void actionPerformed(final ActionEvent e) {
 		final int selectedTabIndex = tabPane.getSelectedIndex();
 		if (selectedTabIndex > 0) {
-		    final BaseNotifPanel<?> view = (BaseNotifPanel<?>) tabPane.getComponentAt(selectedTabIndex);
+		    final BasePanel view = (BasePanel) tabPane.getComponentAt(selectedTabIndex);
 		    closeViewInTab(view);
 		}
 	    }
@@ -317,7 +316,7 @@ public class TreeMenuWithTabs<V extends BasePanel> extends TreeMenu<V> {
 	return item.getView().canLeave();
     }
 
-    private boolean closeViewInTab(final BaseNotifPanel<?> view){
+    private boolean closeViewInTab(final BasePanel view){
 	final int tabIndex = viewItemTab(view);
 	if(tabIndex >= 0){
 	    final ICloseGuard unclosable = view.canClose();
@@ -329,11 +328,7 @@ public class TreeMenuWithTabs<V extends BasePanel> extends TreeMenu<V> {
 		}
 	    } else {
 		final String message = unclosable.whyCannotClose();
-		if (view.getNotifPanel().getParent() != null && message != null) {
-		    view.notify(message, MessageType.WARNING);
-		} else if (message != null) {
-		    JOptionPane.showMessageDialog(view, message, "Warning", JOptionPane.WARNING_MESSAGE);
-		}
+		view.notify(message, MessageType.WARNING);
 	    }
 	    if (tabPane.getTabCount() == 0) {
 		tabPane.updateUI();
@@ -607,7 +602,7 @@ public class TreeMenuWithTabs<V extends BasePanel> extends TreeMenu<V> {
     /**
      * Closes selected tab sheet, and returns value that indicates whether panel was found among tab sheets or not.
      */
-    public boolean closeView(final BaseNotifPanel<?> panel) {
+    public boolean closeView(final BasePanel panel) {
 	return closeViewInTab(panel);
     }
 
@@ -616,7 +611,7 @@ public class TreeMenuWithTabs<V extends BasePanel> extends TreeMenu<V> {
      *
      * @param view
      */
-    public void selectItemWithView(final BaseNotifPanel<?> view) {
+    public void selectItemWithView(final BasePanel view) {
 	for (int index = 0; index < tabPane.getTabCount(); index++) {
 	    if (tabPane.getComponentAt(index) == view) {
 		tabPane.setSelectedIndex(index);

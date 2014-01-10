@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.view.BasePanel;
  * @author TG Team
  *
  */
-public abstract class AbstractWizardPage<T extends AbstractEntity<?>> extends BasePanel {
+public abstract class AbstractWizPage<T extends AbstractEntity<?>> extends BasePanel {
 
     private static final long serialVersionUID = 1L;
 

@@ -5,6 +5,7 @@ import java.awt.Container;
 import java.awt.LayoutManager;
 
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
@@ -15,9 +16,9 @@ import ua.com.fielden.platform.swing.model.IOpenGuard;
 
 /**
  * A base class for all guarded panels.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public abstract class BasePanel extends JPanel implements ICloseGuard, IOpenGuard {
     private static final long serialVersionUID = 1L;
@@ -48,7 +49,7 @@ public abstract class BasePanel extends JPanel implements ICloseGuard, IOpenGuar
 
     /**
      * Closes guarded items. Even if guarded container has guarded children only this guarded (top level) container is closed.
-     * 
+     *
      * @param parent
      */
     private void tryClosing(final Container parent) {
@@ -64,7 +65,7 @@ public abstract class BasePanel extends JPanel implements ICloseGuard, IOpenGuar
 
     /**
      * Traverses the tree of components in search for the first {@link ICloseGuard} descendant, which cannot be closed.
-     * 
+     *
      * @param parent
      * @return
      */
@@ -93,7 +94,7 @@ public abstract class BasePanel extends JPanel implements ICloseGuard, IOpenGuar
 
     /**
      * Should be overwritten to provide at least some short information about panel's purpose.
-     * 
+     *
      * @return
      */
     public abstract String getInfo();
@@ -121,15 +122,18 @@ public abstract class BasePanel extends JPanel implements ICloseGuard, IOpenGuar
     /**
      * This method should be used to notify the panel of some message.
      * Exactly how this modification is handled visually is controlled by subclasses of this class.
+     * By default a message dialog is displayed.
      *
      * @param message
      * @param messageType
      */
-    public void notify(final String message, final MessageType messageType) {};
+    public void notify(final String message, final MessageType messageType) {
+	JOptionPane.showMessageDialog(this, message, "Warning", messageType.jopMessageType);
+    };
 
     /**
      * Should be overridden by subtypes in order to implement custom initialisation logic for the view.
-     * 
+     *
      * @param blockingPane -- this blocking pane is used to block the view during its initialisation.
      * @param toBeFocusedAfterInit -- this component
      */
@@ -138,7 +142,7 @@ public abstract class BasePanel extends JPanel implements ICloseGuard, IOpenGuar
     /**
      * Similar as above, but does not specify that component should be focused once initialisation is completed.
      * This method is really just a convenience that simply invokes method {@link #init(BlockingIndefiniteProgressPane, JComponent)} with <code>null</code> as the second argument.
-     * 
+     *
      * @param blockingPane
      */
     public final void init(final BlockingIndefiniteProgressPane blockingPane) {

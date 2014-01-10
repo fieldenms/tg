@@ -7,13 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
@@ -29,29 +28,30 @@ import ua.com.fielden.platform.swing.view.BasePanel;
 public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 
     private static final long serialVersionUID = 1L;
+    private final String title;
     private final String info;
     private final T model;
-    private final IEntityDao<T> companion;
     private final ILightweightPropertyBinder<T> propBinder;
     private Map<String, IPropertyEditor> editors = new HashMap<String, IPropertyEditor>();
 
     private IWizState<T> currState;
     private IWizState<T> startState;
 
-    private final JPanel holdingPanel = new JPanel(new MigLayout("fill, insets 0", "[fill, grow]", "[c,grow,fill][c]"));
+    private final JPanel holdingPanel = new JPanel(new MigLayout("fill", "[fill, grow]", "[c,grow,fill][fill,c]"));
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel pagePanel = new JPanel(cardLayout);
-    private final JPanel navPanel = new JPanel(new MigLayout("fill, insets 0", "[:50:]20push[:250:][:250:]", "[cc]"));
+    private final JPanel navPanel = new JPanel(new MigLayout("fill, insets 0", "[:50:]20:push[:50:][:50:]", "[c]"));
     private final BlockingIndefiniteProgressLayer blockingLayer = new BlockingIndefiniteProgressLayer(holdingPanel, "");
 
     private final Command<IWizState<T>> next;
     private final Command<IWizState<T>> prev;
     private final Command<IWizState<T>> cancel;
+    private final JButton nextButton;
 
     public Wizard(//
-    final String info,//
+	    final String title,
+    /*	  */final String info,//
 	    final T model, //
-	    final ICompanionObjectFinder coFinder,//
 	    final IValueMatcherFactory valueMatcherFactory, //
 	    final List<IWizState<T>> states) {
 	super.setLayout(new MigLayout("fill, insets 0", "[c,fill,grow]", "[c,grow,fill]"));
@@ -60,9 +60,9 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 	holdingPanel.add(pagePanel, "wrap");
 	holdingPanel.add(navPanel);
 
+	this.title = title;
 	this.info = info;
 	this.model = model;
-	this.companion = coFinder.find((Class<T>) model.getType());
 	this.propBinder = MasterPropertyBinder.<T> createPropertyBinderWithoutLocatorSupport(valueMatcherFactory);
 	buildEditors(model, propBinder);
 
@@ -70,9 +70,13 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 	prev = createPrevCommand();
 	cancel = createCancelCommand();
 
+	navPanel.add(new JButton(cancel));
+	navPanel.add(new JButton(prev));
+	navPanel.add(nextButton = new JButton(next));
+
 	// initialise all pages by building their UI
 	for (final IWizState<T> state : states) {
-	    final AbstractWizardPage<T> page = state.view();
+	    final AbstractWizPage<T> page = state.view();
 	    page.buildUi(this);
 	    pagePanel.add(page, state.name());
 	}
@@ -105,9 +109,9 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 		} else if (currState instanceof IWizTransState) {
 		    setMessage("Next...");
 		    setCurrState(((IWizTransState<T>) currState).next());
-		} else if (currState instanceof IWizFinishState) {
+		} else if (currState instanceof IWizFinalState) {
 		    setMessage("Finishing...");
-		    setCurrState(((IWizFinishState<T>) currState).finish());
+		    setCurrState(((IWizFinalState<T>) currState).finish());
 		}
 		if (currState != null) {
 		    currState.setTransitionedFrom(prevState);
@@ -136,23 +140,24 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 
 	    @Override
 	    protected IWizState<T> action(final ActionEvent e) throws Exception {
-		final IWizState<T> prevState = currState;
 		if (currState instanceof IWizTransState) {
 		    setMessage("Previous...");
 		    setCurrState(((IWizTransState<T>) currState).prev());
-		} else if (currState instanceof IWizFinishState) {
+		} else if (currState instanceof IWizFinalState) {
 		    setMessage("Previous...");
-		    setCurrState(((IWizFinishState<T>) currState).prev());
+		    setCurrState(((IWizFinalState<T>) currState).prev());
 		}
 		return currState;
 	    }
 
 	    @Override
-	    protected void postAction(final IWizState<T> value) {
-		if (currState != null) {
-		    cardLayout.show(pagePanel, currState.name());
+	    protected void postAction(final IWizState<T> state) {
+		if (state != null) {
+		    cardLayout.show(pagePanel, state.name());
 		}
-		super.postAction(value);
+		super.postAction(state);
+		setCurrState(state);
+		nextButton.requestFocusInWindow();
 	    }
 	};
 	return command;
@@ -166,18 +171,22 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 		setMessage("Cancelling...");
 		if (currState instanceof IWizTransState) {
 		    setCurrState(((IWizTransState<T>) currState).cancel());
-		} else if (currState instanceof IWizFinishState) {
-		    setCurrState(((IWizFinishState<T>) currState).cancel());
+		} else if (currState instanceof IWizFinalState) {
+		    setCurrState(((IWizFinalState<T>) currState).cancel());
 		}
 		return currState;
 	    }
 
 	    @Override
-	    protected void postAction(final IWizState<T> value) {
-		if (currState != null) {
-		    cardLayout.show(pagePanel, currState.name());
+	    protected void postAction(final IWizState<T> state) {
+		if (state != null) {
+		    model.restoreToOriginal();
+		    propBinder.rebind(editors, model);
+		    cardLayout.show(pagePanel, state.name());
 		}
-		super.postAction(value);
+		super.postAction(state);
+		setCurrState(state);
+		nextButton.requestFocusInWindow();
 	    }
 	};
 	return command;
@@ -197,7 +206,7 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 		    cancel.setEnabled(true);
 		    next.setEnabled(true);
 		    prev.setEnabled(true);
-		} else if (currState instanceof IWizFinishState) {
+		} else if (currState instanceof IWizFinalState) {
 		    cancel.setEnabled(true);
 		    next.setEnabled(true);
 		    prev.setEnabled(true);
@@ -237,6 +246,11 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
     @Override
     public String getInfo() {
 	return info;
+    }
+
+    @Override
+    public String toString() {
+        return title;
     }
 
 }

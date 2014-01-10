@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IWizFinishState<T extends AbstractEntity<?>> extends IWizState<T> {
+public interface IWizFinalState<T extends AbstractEntity<?>> extends IWizState<T> {
     IWizState<T> prev();
 
     IWizState<T> cancel();
