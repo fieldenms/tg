@@ -56,6 +56,11 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	return WebResourceType.VERSIONED;
     }
 
+    @Override
+    protected boolean getFilterable() {
+	return true;
+    }
+
     /**
      * Sends a HEAD request to /entity-type-alias/{entity-id}. The response should contain attribute "exists" with value "true" or "false" to indicate entity existence.
      */

@@ -36,6 +36,11 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     private final Class<T> entityType;
     private final QueryExecutionModel<T, EntityResultQueryModel<T>> defaultModel;
 
+
+    protected boolean getFilterable() {
+	return false;
+    }
+
     /**
      * A principle constructor, which requires entity type that should be managed by this DAO instance. Entity's key type is determined automatically.
      *
@@ -53,6 +58,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
 	final EntityResultQueryModel<T> query = select(entityType).model();
+	query.setFilterable(getFilterable());
 	final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
 	return from(query).with(orderBy).model();
     }
@@ -84,6 +90,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
 	try {
 	    final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
+	    query.setFilterable(getFilterable());
 	    return getEntity(from(query).with(fetchModel).model());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
@@ -161,12 +168,15 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 	    for (int index = 1; index < list.size(); index++) {
 		cc = cc.and().condition(buildConditionForKeyMember(list.get(index).getName(), list.get(index).getType(), realKeyValues[index]));
 	    }
-
-	    return cc.model();
+	    final EntityResultQueryModel<T> query = cc.model();
+	    query.setFilterable(getFilterable());
+	    return query;
 	} else if (keyValues.length != 1) {
 	    throw new IllegalArgumentException("Only one key value is expected instead of " + keyValues.length + " when looking for an entity by a non-composite key.");
 	} else {
-	    return qry.where().condition(buildConditionForKeyMember(AbstractEntity.KEY, getKeyType(), keyValues[0])).model();
+	    final EntityResultQueryModel<T> query = qry.where().condition(buildConditionForKeyMember(AbstractEntity.KEY, getKeyType(), keyValues[0])).model();
+	    query.setFilterable(getFilterable());
+	    return query;
 	}
     }
 
