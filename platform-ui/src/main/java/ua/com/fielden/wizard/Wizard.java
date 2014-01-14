@@ -2,25 +2,25 @@ package ua.com.fielden.wizard;
 
 import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
-import ua.com.fielden.platform.swing.utils.Dialogs;
+import ua.com.fielden.platform.swing.ei.editors.development.ReadonlyEntityPropertyViewer;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
@@ -32,6 +32,7 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
     private final T model;
     private final ILightweightPropertyBinder<T> propBinder;
     private final Map<String, IPropertyEditor> editors;
+    private final Map<String, IPropertyEditor> aliasedEditors = new HashMap<>(); // cannot be rebound by standard means
 
     private IWizState<T> currState;
     private IWizState<T> startState;
@@ -47,14 +48,18 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
     private final Command<IWizState<T>> cancel;
     private final JButton nextButton;
 
+    private final List<IWizState<T>> states = new ArrayList<>();
+
     public Wizard(//
-	    final String title,
+    final String title,
     /*	  */final String info,//
 	    final T model, //
 	    final IValueMatcherFactory valueMatcherFactory, //
 	    final List<IWizState<T>> states) {
 	super.setLayout(new MigLayout("fill, insets 0", "[c,fill,grow]", "[c,grow,fill]"));
 	super.add(blockingLayer);
+
+	this.states.addAll(states);
 
 	holdingPanel.add(pagePanel, "wrap");
 	holdingPanel.add(navPanel);
@@ -73,14 +78,17 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 	navPanel.add(new JButton(prev));
 	navPanel.add(nextButton = new JButton(next));
 
+	startState = states.get(0);
+	setCurrState(startState);
+    }
+
+    public void buildUi() {
 	// initialise all pages by building their UI
 	for (final IWizState<T> state : states) {
 	    final AbstractWizPage<T> page = state.view();
 	    page.buildUi(this);
 	    pagePanel.add(page, state.name());
 	}
-	startState = states.get(0);
-	setCurrState(startState);
     }
 
     protected Command<IWizState<T>> createNextCommand() {
@@ -88,14 +96,9 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 
 	    @Override
 	    protected boolean preAction() {
-		setMessage("Validating...");
-		final Result result = model.isValid();
-		if (!result.isSuccessful()) {
-		    if (JOptionPane.NO_OPTION == Dialogs.showYesNoDialog(Wizard.this, "<html><b>There are errors:</b><br/><p/>" + result.getMessage()
-			    + "<br/><p/>Would you line to proceed?", "Going to next page warning.")) {
-			return false;
-		    }
-		}
+		setMessage("Next...");
+		commitEditors();
+
 		return super.preAction();
 	    }
 
@@ -112,7 +115,7 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 		    setMessage("Finishing...");
 		    setCurrState(((IWizFinalState<T>) currState).finish());
 		}
-		if (currState != null) {
+		if (currState != null && currState != prevState) {
 		    currState.setTransitionedFrom(prevState);
 		}
 		return currState;
@@ -124,7 +127,7 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 		    cardLayout.show(pagePanel, currState.name());
 		} else {
 		    model.restoreToOriginal();
-		    propBinder.rebind(editors, model);
+		    rebindEditors();
 		    setCurrState(startState);
 		    cardLayout.show(pagePanel, currState.name());
 		}
@@ -139,6 +142,8 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 
 	    @Override
 	    protected IWizState<T> action(final ActionEvent e) throws Exception {
+		commitEditors();
+
 		if (currState instanceof IWizTransState) {
 		    setMessage("Previous...");
 		    setCurrState(((IWizTransState<T>) currState).prev());
@@ -168,6 +173,9 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 	    @Override
 	    protected IWizState<T> action(final ActionEvent e) throws Exception {
 		setMessage("Cancelling...");
+
+		commitEditors();
+
 		if (currState instanceof IWizTransState) {
 		    setCurrState(((IWizTransState<T>) currState).cancel());
 		} else if (currState instanceof IWizFinalState) {
@@ -180,7 +188,7 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 	    protected void postAction(final IWizState<T> state) {
 		if (state != null) {
 		    model.restoreToOriginal();
-		    propBinder.rebind(editors, model);
+		    rebindEditors();
 		    cardLayout.show(pagePanel, state.name());
 		}
 		super.postAction(state);
@@ -190,6 +198,25 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 	};
 	return command;
     }
+
+    protected void rebindEditors() {
+	propBinder.rebind(editors, model);
+	for (final IPropertyEditor editor : aliasedEditors.values()) {
+	    editor.bind(model);
+	}
+    }
+
+    protected void commitEditors() {
+	for (final IPropertyEditor component : editors.values()) {
+	    if (component.getEditor() instanceof BoundedValidationLayer) {
+		final BoundedValidationLayer bvl = (BoundedValidationLayer) component.getEditor();
+		if (bvl.canCommit()) {
+		    bvl.commit();
+		}
+	    }
+	}
+    }
+
 
     protected void setCurrState(final IWizState<T> state) {
 	this.currState = state;
@@ -235,7 +262,17 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
     }
 
     public Map<String, IPropertyEditor> getEditors() {
-	return Collections.unmodifiableMap(editors);
+	final Map<String, IPropertyEditor> allEditors = new HashMap<>(editors);
+	allEditors.putAll(aliasedEditors);
+	return allEditors;
+    }
+
+    public final void addPropertyViewer(final String dotNotatatedPropertyName, final String alias) {
+	aliasedEditors.put(alias, new ReadonlyEntityPropertyViewer(model, dotNotatatedPropertyName));
+    }
+
+    public final void addPropertyViewer(final String dotNotatatedPropertyName) {
+	editors.put(dotNotatatedPropertyName, new ReadonlyEntityPropertyViewer(model, dotNotatatedPropertyName));
     }
 
     protected Map<String, IPropertyEditor> buildEditors(final T entity, final ILightweightPropertyBinder<T> propertyBinder) {
@@ -249,7 +286,7 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 
     @Override
     public String toString() {
-        return title;
+	return title;
     }
 
 }
