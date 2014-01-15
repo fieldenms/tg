@@ -49,6 +49,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
+import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -249,32 +250,32 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @IsProperty
     @MapTo("DESC_")
     private String desc;
-//    @IsProperty
-//    @Title(value = "Has references?", desc = "Desc")
-//    private boolean referenced;
-//    @IsProperty
-//    @Title(value = "References Count", desc = "Desc")
-//    private Integer referencesCount;
-//
-//    @Observable
-//    public AbstractEntity setReferencesCount(final Integer referencesCount) {
-//	this.referencesCount = referencesCount;
-//	return this;
-//    }
-//
-//    public Integer getReferencesCount() {
-//	return referencesCount;
-//    }
-//
-//    @Observable
-//    public AbstractEntity setReferenced(final boolean referenced) {
-//	this.referenced = referenced;
-//	return this;
-//    }
-//
-//    public boolean getReferenced() {
-//	return referenced;
-//    }
+    //    @IsProperty
+    //    @Title(value = "Has references?", desc = "Desc")
+    //    private boolean referenced;
+    //    @IsProperty
+    //    @Title(value = "References Count", desc = "Desc")
+    //    private Integer referencesCount;
+    //
+    //    @Observable
+    //    public AbstractEntity setReferencesCount(final Integer referencesCount) {
+    //	this.referencesCount = referencesCount;
+    //	return this;
+    //    }
+    //
+    //    public Integer getReferencesCount() {
+    //	return referencesCount;
+    //    }
+    //
+    //    @Observable
+    //    public AbstractEntity setReferenced(final boolean referenced) {
+    //	this.referenced = referenced;
+    //	return this;
+    //    }
+    //
+    //    public boolean getReferenced() {
+    //	return referenced;
+    //    }
 
     /** Convenient constants to reference properties by name */
     public static final String ID = "id";
@@ -323,9 +324,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     private transient IMetaPropertyFactory metaPropertyFactory;
 
     /**
-     * Preferred property should be used by custom logic to set what property is from certain perspective is preferred.
-     * The original requirement for this was due to custom logic driven determination as to what property should be focused by default on an entity master.
-     * So, depending where in the business process an entity was instantiated would determine what of its properties should be facused by default.
+     * Preferred property should be used by custom logic to set what property is from certain perspective is preferred. The original requirement for this was due to custom logic
+     * driven determination as to what property should be focused by default on an entity master. So, depending where in the business process an entity was instantiated would
+     * determine what of its properties should be facused by default.
      */
     private transient String preferredProperty;
 
@@ -603,8 +604,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
-     * This setter is responsible for meta-property creation. It is envisaged that {@link IMetaPropertyFactory} is be provided as an injection.
-     * An thus, meta-property instantiation should happen immediately after entity creation when being created via IoC mechanism.
+     * This setter is responsible for meta-property creation. It is envisaged that {@link IMetaPropertyFactory} is be provided as an injection. An thus, meta-property instantiation
+     * should happen immediately after entity creation when being created via IoC mechanism.
      *
      * @param metaPropertyFactory
      */
@@ -642,20 +643,27 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		// perform some early runtime validation whether property was defined correctly
 		// TODO this kind of validation should really be implemented as part of the compilation process
 		if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
-		    final String error = "Property " + field.getName() + " in " + getType() + " is collectional (or property descriptor), but has missing type argument, which should be specified as part of annotation IsProperty.";
+		    final String error = "Property " + field.getName() + " in " + getType()
+			    + " is collectional (or property descriptor), but has missing type argument, which should be specified as part of annotation IsProperty.";
 		    logger.error(error);
 		    throw new IllegalStateException(error);
 		}
 
 		final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) getType();
 		if (isCollectional && EntityUtils.isPersistedEntityType(entityType) && !Finder.hasLinkProperty(entityType, field.getName())) {
-		    final String error = "Property " + field.getName() + " in " + getType() + " is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.";
+		    final String error = "Property "
+			    + field.getName()
+			    + " in "
+			    + getType()
+			    + " is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.";
 		    logger.error(error);
 		    throw new IllegalStateException(error);
 		}
 
-		if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY)) && !Finder.isOne2One_association(entityType, field.getName())) {
-		    final String error = "Property " + field.getName() + " in " + getType() + " has AE key type, but it does not form correct one2one association due to non-parent type of property key.";
+		if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY))
+			&& !Finder.isOne2One_association(entityType, field.getName())) {
+		    final String error = "Property " + field.getName() + " in " + getType()
+			    + " has AE key type, but it does not form correct one2one association due to non-parent type of property key.";
 		    logger.error(error);
 		    throw new IllegalStateException(error);
 		}
@@ -765,7 +773,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		metaProperty.setDesc(StringUtils.isEmpty(title.desc()) ? title.value() : title.desc());
 	    }
 	} else {
-	    metaProperty.setVisible(!AnnotationReflector.isAnnotationPresent(field, Invisible.class) || (AnnotationReflector.isAnnotationPresent(field, Invisible.class) && AnnotationReflector.getAnnotation(field, Invisible.class).centreOnly()));
+	    metaProperty.setVisible(!AnnotationReflector.isAnnotationPresent(field, Invisible.class)
+		    || (AnnotationReflector.isAnnotationPresent(field, Invisible.class) && AnnotationReflector.getAnnotation(field, Invisible.class).centreOnly()));
 	    metaProperty.setEditable(!AnnotationReflector.isAnnotationPresent(field, Readonly.class));
 	    metaProperty.setRequired(AnnotationReflector.isAnnotationPresent(field, Required.class) || AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class));
 	    if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {
@@ -976,6 +985,38 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
+     * {@link AbstractEntity} has a default way of validating, which has a support for descendants to override it. However, sometimes it is required to validate an entity ad-hoc from
+     * some specific perspective.
+     *
+     * <p>
+     * This method performs entity validation based on the provided custom validator. It is important to
+     * note that this validation process locks the entity being validated preventing concurrent modification while it is being processed. This is exactly the same invariant
+     * behaviour as per the default validation process.
+     *
+     * @param validator
+     * @return
+     */
+    public final Result isValid(final ICustomValidator validator) {
+	// employ locking
+	lock.lock();
+	try {
+	    while (lockCount != 0) {
+		try {
+		    validationInProgress.await();
+		} catch (final InterruptedException e) {
+		    // no need to handle
+		}
+	    }
+
+	    // invoke custom validation logic
+	    return validator.validate(this);
+
+	} finally {
+	    lock.unlock();
+	}
+    }
+
+    /**
      * This method is provided to implement entity specific validation.
      * <p>
      * The default implementation checks fields declared as property (see {@link IsProperty}) for validity. It is envisaged that descendants will invoke super implementation and
@@ -1160,8 +1201,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
-     * Copies the content of this instance into the provided instance. Does not touch system properties such as ID and version.
-     * This means that only properties returned from method call <code>getProperties()</code> are copied.
+     * Copies the content of this instance into the provided instance. Does not touch system properties such as ID and version. This means that only properties returned from method
+     * call <code>getProperties()</code> are copied.
      * <p>
      * <i>IMPORTANT: the type of provided instance and the type of this instance do not have to be the same or even be polymorphic; properties are copied on name by name basis.
      * properties.</i>
@@ -1221,9 +1262,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
-     * If this entity is persisted, then ID is used to identify whether this and that entities represent the same thing.
-     * If both entities are not persisted then equality is used, which is based on their keys for comparison.
-     * Otherwise, returns false.
+     * If this entity is persisted, then ID is used to identify whether this and that entities represent the same thing. If both entities are not persisted then equality is used,
+     * which is based on their keys for comparison. Otherwise, returns false.
      *
      * @param that
      * @return
@@ -1235,7 +1275,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
 	if (this.isPersisted()) {
 	    return this.getId().equals(that.getId());
-	} else if (!this.isPersisted() && !that.isPersisted()){
+	} else if (!this.isPersisted() && !that.isPersisted()) {
 	    return this.equals(that);
 	} else {
 	    return false;
