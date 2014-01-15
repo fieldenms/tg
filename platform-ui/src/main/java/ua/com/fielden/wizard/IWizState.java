@@ -1,6 +1,7 @@
 package ua.com.fielden.wizard;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.error.Result;
 
 /**
  * A class that represents a single state that is associated with a wizard page.
@@ -46,4 +47,12 @@ public interface IWizState<T extends AbstractEntity<?>> {
      * @return
      */
     String name();
+
+    /**
+     * Returns state's validation result. It could be successful or not.
+     *
+     * @return
+     */
+    Result isValid();
+
 }

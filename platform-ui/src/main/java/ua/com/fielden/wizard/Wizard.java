@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.ei.editors.development.ReadonlyEntityPropertyViewer;
+import ua.com.fielden.platform.swing.utils.Dialogs;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
@@ -94,9 +96,12 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
     protected Command<IWizState<T>> createNextCommand() {
 	final Command<IWizState<T>> command = new BlockingLayerCommand<IWizState<T>>("Next", blockingLayer) {
 
+	    private Result result = Result.successful(currState);
+
 	    @Override
 	    protected boolean preAction() {
-		setMessage("Next...");
+		result = Result.successful(currState);
+		setMessage("Validating...");
 		commitEditors();
 
 		return super.preAction();
@@ -104,34 +109,48 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 
 	    @Override
 	    protected IWizState<T> action(final ActionEvent e) throws Exception {
+		result = currState.isValid();
+		if (!result.isSuccessful()) {
+		    return currState;
+		}
+
 		final IWizState<T> prevState = currState;
+		final IWizState<T> nextState;
 		if (currState instanceof IWizStartState) {
 		    setMessage("Next...");
-		    setCurrState(((IWizStartState<T>) currState).next());
+		    nextState = ((IWizStartState<T>) currState).next();
 		} else if (currState instanceof IWizTransState) {
 		    setMessage("Next...");
-		    setCurrState(((IWizTransState<T>) currState).next());
+		    nextState = ((IWizTransState<T>) currState).next();
 		} else if (currState instanceof IWizFinalState) {
 		    setMessage("Finishing...");
-		    setCurrState(((IWizFinalState<T>) currState).finish());
+		    nextState = ((IWizFinalState<T>) currState).finish();
+		} else {
+		    nextState = null;
 		}
-		if (currState != null && currState != prevState) {
-		    currState.setTransitionedFrom(prevState);
+
+		if (nextState != null && nextState != prevState) {
+		    nextState.setTransitionedFrom(prevState);
 		}
-		return currState;
+		return nextState;
 	    }
 
 	    @Override
-	    protected void postAction(final IWizState<T> value) {
-		if (currState != null) {
-		    cardLayout.show(pagePanel, currState.name());
+	    protected void postAction(final IWizState<T> nextState) {
+		if (!result.isSuccessful()) {
+		    Dialogs.showMessageDialog(Wizard.this, //
+			    "<html>There are validation errors. Please correct them and try again."
+			    + "<br><br>" + result.getMessage() + "</html>", "Wizard Validaton Errors", Dialogs.ERROR_MESSAGE);
+		} else if (nextState != currState && nextState != null) {
+		    setCurrState(nextState);
+		    cardLayout.show(pagePanel, nextState.name());
 		} else {
 		    model.restoreToOriginal();
 		    rebindEditors();
 		    setCurrState(startState);
 		    cardLayout.show(pagePanel, currState.name());
 		}
-		super.postAction(value);
+		super.postAction(nextState);
 	    }
 	};
 	return command;
