@@ -141,16 +141,24 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
 		    Dialogs.showMessageDialog(Wizard.this, //
 			    "<html>There are validation errors. Please correct them and try again."
 			    + "<br><br>" + result.getMessage() + "</html>", "Wizard Validaton Errors", Dialogs.ERROR_MESSAGE);
+		    super.postAction(nextState);
 		} else if (nextState != currState && nextState != null) {
 		    setCurrState(nextState);
 		    cardLayout.show(pagePanel, nextState.name());
+		    super.postAction(nextState);
+
+		    // focus the preferred property editor if it was specified
+		    final IPropertyEditor editor = editors.get(model.getPreferredProperty());
+		    if (editor != null) {
+			editor.getEditor().requestFocusInWindow();
+		    }
 		} else {
 		    model.restoreToOriginal();
 		    rebindEditors();
 		    setCurrState(startState);
 		    cardLayout.show(pagePanel, currState.name());
+		    super.postAction(nextState);
 		}
-		super.postAction(nextState);
 	    }
 	};
 	return command;
