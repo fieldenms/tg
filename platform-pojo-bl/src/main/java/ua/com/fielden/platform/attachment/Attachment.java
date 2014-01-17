@@ -2,6 +2,8 @@ package ua.com.fielden.platform.attachment;
 
 import java.io.File;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -30,23 +32,25 @@ import ua.com.fielden.platform.error.Result;
 @CompanionObject(IAttachment.class)
 @DisplayDescription
 public class Attachment extends AbstractEntity<String> {
+    private static final long serialVersionUID = 1L;
 
-    /** Used purely to represent a new file being attached. */
+    /** Used purely to represent a new file being attached.
+     * Please note that this field is not a property. */
     private File file;
 
     @Override
     @Observable
     public Attachment setDesc(final String desc) {
-        super.setDesc(desc);
-        return this;
+	super.setDesc(desc);
+	return this;
     }
 
     @Override
     @NotNull
     @Observable
     public Attachment setKey(final String key) {
-        super.setKey(key);
-        return this;
+	super.setKey(key);
+	return this;
     }
 
     public File getFile() {
@@ -55,7 +59,10 @@ public class Attachment extends AbstractEntity<String> {
 
     public Attachment setFile(final File file) {
 	this.file = file;
-	setKey(file.getName());
+	// let's assign attachment key equal to file's name if the key is empty
+	if (StringUtils.isEmpty(getKey())) {
+	    setKey(file.getName());
+	}
 	return this;
     }
 

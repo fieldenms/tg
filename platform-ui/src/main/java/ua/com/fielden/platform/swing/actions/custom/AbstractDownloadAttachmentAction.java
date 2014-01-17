@@ -23,13 +23,13 @@ import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
  */
 public abstract class AbstractDownloadAttachmentAction extends Command<File> {
 
-    private final IAttachment attachmentController;
+    private final IAttachment coAttachment;
     private File prevLocation = new File(".");
     final IBlockingLayerProvider blockingLayerProvider;
 
     public AbstractDownloadAttachmentAction(final IAttachment attachmentController, final IBlockingLayerProvider blockingLayerProvider) {
 	super("Download");
-	this.attachmentController = attachmentController;
+	this.coAttachment = attachmentController;
 	this.blockingLayerProvider = blockingLayerProvider;
     }
 
@@ -91,7 +91,7 @@ public abstract class AbstractDownloadAttachmentAction extends Command<File> {
     @Override
     protected File action(final ActionEvent e) throws Exception {
 	try {
-	    final byte[] content = attachmentController.download(getAttachment());
+	    final byte[] content = coAttachment.download(getAttachment());
 	    final File file = new File(prevLocation.getPath() + "/" + getAttachment().getKey());
 	    if (!file.exists()) {
 		file.createNewFile();
