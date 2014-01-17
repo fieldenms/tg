@@ -32,9 +32,9 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
     private final String title;
     private final String info;
     private final T model;
-    private final ILightweightPropertyBinder<T> propBinder;
-    private final Map<String, IPropertyEditor> editors;
-    private final Map<String, IPropertyEditor> aliasedEditors = new HashMap<>(); // cannot be rebound by standard means
+    protected final ILightweightPropertyBinder<T> propBinder;
+    protected final Map<String, IPropertyEditor> editors;
+    protected final Map<String, IPropertyEditor> aliasedEditors = new HashMap<>(); // cannot be rebound by standard means
 
     private IWizState<T> currState;
     private IWizState<T> startState;
