@@ -92,10 +92,35 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
     public void test_saving_changes_to_existing_attachment() {
 	// FIXME needs to be resolved -- for some reason does not pass the correct type information during serialisation using XStream
 	final String desc = "Changed description";
-	final Attachment attachment = (Attachment) rao.findById(0L).setDesc(desc);
+	final Attachment attachment = rao.findById(0L).setDesc(desc);
 
 	assertEquals("Description changes have not been saved.", desc, rao.save(attachment).getDesc());
     }
+
+    @Test
+    public void test_attachment_replacement() throws Exception {
+	final Attachment attachment = rao.findById(0L);
+	final byte[] content = rao.download(attachment);
+	assertNotNull("Content should be present", content);
+	assertTrue("Content should not be empty", content.length > 0);
+
+	final File downloadedFile = new File(ATTACHMENT_LOCATION + "/DOWNLOADED_FILE.TXT");
+	final FileOutputStream fo = new FileOutputStream(downloadedFile);
+	fo.write(content);
+	fo.flush();
+	fo.close();
+
+	final File originalFile = new File(ATTACHMENT_LOCATION + "/" + ORIGINAL_FILE_NAME);
+	assertEquals("Invalid size of the downloaded file.", originalFile.length(), downloadedFile.length());
+
+	// upload the same file back as modified
+	attachment.setModified(true);
+	attachment.setFile(downloadedFile);
+	final Attachment modifiedAttachment = rao.save(attachment);
+
+	assertFalse("Modification state should be reset.", modifiedAttachment.isModified());
+    }
+
 
     @Test
     public void test_saving_new_attachment_which_should_result_in_file_upload() {

@@ -8,11 +8,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyReadonly;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
@@ -38,6 +40,10 @@ public class Attachment extends AbstractEntity<String> {
      * Please note that this field is not a property. */
     private File file;
 
+    @IsProperty
+    @Title(value = "Is modified?", desc = "Indicates whether the actual attachment file was modified.")
+    private boolean modified = false;
+
     @Override
     @Observable
     public Attachment setDesc(final String desc) {
@@ -57,6 +63,16 @@ public class Attachment extends AbstractEntity<String> {
 	return file;
     }
 
+    @Observable
+    public Attachment setModified(final boolean modified) {
+	this.modified = modified;
+	return this;
+    }
+
+    public boolean isModified() {
+	return modified;
+    }
+
     public Attachment setFile(final File file) {
 	this.file = file;
 	// let's assign attachment key equal to file's name if the key is empty
@@ -72,7 +88,9 @@ public class Attachment extends AbstractEntity<String> {
 	if (!result.isSuccessful()) {
 	    return result;
 	} else if (file == null && !isPersisted()) {
-	    return new Result(this, new IllegalStateException("Attachment is missing a file."));
+	    return new Result(this, new IllegalStateException("New attachment is missing a file."));
+	} else if (file == null && isModified()) {
+	    return new Result(this, new IllegalStateException("Modified attachment is missing a file."));
 	}
 	return result;
     }

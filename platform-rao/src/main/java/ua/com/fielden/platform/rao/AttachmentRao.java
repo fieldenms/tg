@@ -43,9 +43,10 @@ public class AttachmentRao extends CommonEntityRao<Attachment> implements IAttac
 
     @Override
     public Attachment save(final Attachment entity) {
-	// if attachment is persisted then there is no need to upload a file
+	// if attachment is persisted and its file has not been modified
+	// then there is no need to upload a file
 	// thus, can fully rely on the standard way of persisting domain entities
-	if (entity.isPersisted()) {
+	if (entity.isPersisted() && !entity.isModified()) {
 	    return super.save(entity);
 	}
 
@@ -66,6 +67,7 @@ public class AttachmentRao extends CommonEntityRao<Attachment> implements IAttac
 	try {
 	    mpe.addPart("KEY", new StringBody(entity.getKey()));
 	    mpe.addPart("DESC", new StringBody(entity.getDesc()));
+	    mpe.addPart("MODIFIED", new StringBody(Boolean.toString(entity.isModified())));
 	} catch (final UnsupportedEncodingException e) {
 	    throw new IllegalArgumentException(e);
 	}

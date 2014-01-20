@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.web.resources;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.apache.commons.fileupload.FileItem;
@@ -23,8 +27,7 @@ import ua.com.fielden.platform.utils.MiscUtilities;
 /**
  * This resource should be associated with {@link Attachment}.
  *
- *  Its behaviour is similar to {@link EntityTypeResource}j, but in addition it uploads an associated file that gets saved into
- *  a designated location on the server.
+ * Its behaviour is similar to {@link EntityTypeResource}j, but in addition it uploads an associated file that gets saved into a designated location on the server.
  *
  * @author TG Team
  *
@@ -70,15 +73,27 @@ public class AttachmentTypeResource extends EntityTypeResource<Attachment> {
 		    // Request is parsed by the handler which generates a list of FileItems
 		    final List<FileItem> items = upload.parseRepresentation(entity);
 
-		    if (items.size() != 3) {
+		    if (items.size() != 4) {
 			getResponse().setEntity(new StringRepresentation("Unexpected structure of the request.", MediaType.TEXT_PLAIN));
 			getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
 		    } else {
-			final String key =  MiscUtilities.convertToString(items.get(0).getInputStream());
+			final String key = MiscUtilities.convertToString(items.get(0).getInputStream());
 			final String desc = MiscUtilities.convertToString(items.get(1).getInputStream());
+			final boolean modified = Boolean.parseBoolean(MiscUtilities.convertToString(items.get(2).getInputStream()));
 			final File file = new File(location + "/" + key);
-			items.get(2).write(file);
-			Attachment attachment = getFactory().newEntity(Attachment.class, key, desc);
+
+			if (file.exists() && modified) {
+			    Files.copy(items.get(3).getInputStream(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			} else {
+			    items.get(3).write(file);
+			}
+
+			Attachment attachment;
+			if (modified) {
+			    attachment = getDao().findByKeyAndFetch(fetchAll(Attachment.class), key);
+			} else {
+			    attachment = getFactory().newEntity(Attachment.class, key, desc);
+			}
 			attachment.setFile(file);
 			attachment = getDao().save(attachment);
 
