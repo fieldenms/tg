@@ -135,10 +135,6 @@ public class Callout extends Group {
 
 	    closeButton.setTranslateX(closeButton.getTranslateX() + transX + nodeToBeWrappedExtW - closeButton.getPrefWidth() - 3.0);
 	    closeButton.setTranslateY(closeButton.getTranslateY() + transY + 3.0);
-
-	    System.out.println("closeButton.getBoundsInLocal().getWidth() = " + closeButton.getBoundsInLocal().getWidth());
-	    System.out.println("closeButton.getWidth() = " + closeButton.getWidth());
-	    System.out.println("closeButton.getPrefWidth() = " + closeButton.getPrefWidth());
 	    return closeButton;
 	}
 
@@ -190,9 +186,6 @@ public class Callout extends Group {
 
 		setPrefHeight(15.0);
 		setPrefWidth(15.0);
-
-		System.out.println("getLabelPadding() == " + getLabelPadding());
-
 
 		// setGraphicTextGap(0);
 

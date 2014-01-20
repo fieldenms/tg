@@ -365,7 +365,11 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
      */
     private Pair<T, String> getEntityAndPropertyName(final MouseEvent e) {
 	final int row = TableModelWrapperUtils.getActualRowAt(getModel(), rowAtPoint(e.getPoint()));
-	final int column = getColumnModel().getColumn(columnAtPoint(e.getPoint())).getModelIndex();
+	final int columnAtPoint = columnAtPoint(e.getPoint());
+	if (columnAtPoint < 0 || columnAtPoint >= getColumnModel().getColumnCount()) {
+	    return null;
+	}
+	final int column = getColumnModel().getColumn(columnAtPoint).getModelIndex();
 	if (row == -1 || column == -1) {
 	    return null;
 	}

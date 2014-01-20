@@ -38,6 +38,8 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
 
     //Asynchronous loading related fields.
     private final DefaultLoadingNode gpsViewPanelLoadingNode;
+    private int horizontalScrollBarPosition, verticalScrollBarPosition;
+    private List<T> oldSelected;
 
     public GpsGridAnalysisView(final GpsGridAnalysisModel<T> model, final GpsGridConfigurationView<T> owner) {
 	super(model, owner);
@@ -141,5 +143,32 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
 
     public JSplitPane getTableAndGisViewSplitter() {
 	return tableAndGisViewSplitter;
+    }
+
+    @Override
+    protected final List<T> beforePromotingDataAction() {
+	if (getGisViewPanel() != null) {
+	    getGisViewPanel().setCalloutChangeShouldBeForced(false);
+	}
+	horizontalScrollBarPosition = getEgiPanel().getEgiScrollPane().getHorizontalScrollBar().getValue();
+	verticalScrollBarPosition = getEgiPanel().getEgiScrollPane().getVerticalScrollBar().getValue();
+
+	oldSelected = super.beforePromotingDataAction();
+	return oldSelected;
+    }
+
+    @Override
+    protected final void afterPromotingDataAction(final List<T> oldSelected) {
+	if (getGisViewPanel() != null) {
+	    selectEntities((List<AbstractEntity<?>>) oldSelected);
+	    getGisViewPanel().setCalloutChangeShouldBeForced(true);
+
+	    if (getEnhancedSelectedEntities().isEmpty()) {
+		getGisViewPanel().closeCallout();
+	    }
+	}
+
+	getEgiPanel().getEgiScrollPane().getHorizontalScrollBar().setValue(horizontalScrollBarPosition);
+	getEgiPanel().getEgiScrollPane().getVerticalScrollBar().setValue(verticalScrollBarPosition);
     }
 }

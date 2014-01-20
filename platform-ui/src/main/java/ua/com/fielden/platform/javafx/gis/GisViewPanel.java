@@ -55,6 +55,7 @@ import javax.swing.event.ListSelectionListener;
 
 import netscape.javascript.JSObject;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -81,6 +82,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point> extends JFXPanel implements IPoint<P> {
     private static final long serialVersionUID = 9202827128855362320L;
+    private static final Logger logger = Logger.getLogger(GisViewPanel.class);
 
     private static long ZOOM_DELAY = 300;
     private static double DEFAULT_PIXEL_THRESHOLD = 2.0;
@@ -117,6 +119,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
     private int currentZoomDelta = 0;
     private int zoom;
     protected boolean calloutChangeShouldBeForced = true;
+    private boolean mouseClicked = false;
 
     public void setCalloutChangeShouldBeForced(final boolean calloutChangeShouldBeForced) {
 	this.calloutChangeShouldBeForced = calloutChangeShouldBeForced;
@@ -154,23 +157,36 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	    }
 	});
 
-	this.egi.addMouseListener(new MouseAdapter() {
-	    @Override
-	    public void mouseClicked(final java.awt.event.MouseEvent e) {
-	        final int index = egi.rowAtPoint(e.getPoint());
-	        if (index != -1) {
-	            selectEntity(true); // when the user has been clicked -- callout change should be forced
-	        }
-	    }
-	});
-
 	listSelectionModel.addListSelectionListener(new ListSelectionListener() {
 	    @Override
 	    public void valueChanged(final ListSelectionEvent e) {
 		if (!e.getValueIsAdjusting()) {
-		    selectEntity(calloutChangeShouldBeForced);
+	            // logger.info("ListSelectionListener valueChanged");
+		    if (mouseClicked) {
+			// logger.info("mouseClicked = false");
+			mouseClicked = false;
+		    } else {
+			selectEntity(calloutChangeShouldBeForced);
+		    }
 		}
 		return;
+	    }
+	});
+
+	this.egi.addMouseListener(new MouseAdapter() {
+	    @Override
+	    public void mousePressed(final java.awt.event.MouseEvent e) {
+	        // logger.info("\tmousePressed " + e);
+		// logger.info("mouseClicked = true");
+	        mouseClicked = true;
+	    }
+
+	    @Override
+	    public void mouseClicked(final java.awt.event.MouseEvent e) {
+	        final int index = egi.rowAtPoint(e.getPoint());
+	        if (index != -1) {
+	            selectEntity(true);
+	        }
 	    }
 	});
 
@@ -216,6 +232,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
     }
 
     protected void selectEntity(final boolean forceCalloutChange) {
+	logger.info("select entity...[forceCalloutChange == " + forceCalloutChange + "]");
 	final AbstractEntity<?> unselectedEntity = previousSelectedEntity;
 	final AbstractEntity<?> selectedEntity = selectedEntity();
 	Platform.runLater(new Runnable() {
@@ -225,6 +242,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 		previousSelectedEntity = selectedEntity;
 	    }
 	});
+	logger.info("select entity...refered to JFX thread");
     }
 
     private static Group createSimplePath() {
@@ -551,7 +569,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	final DateTime start0 = new DateTime();
 	DateTime start = new DateTime();
 	Period pd;
-	System.err.println("REMOVING OLD AND ADDING NEW...");
+	logger.info("REMOVING OLD AND ADDING NEW...");
 
 	updateTransformation();
 
@@ -575,7 +593,7 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	    addPoint(webEngine, points.get(i));
 	}
 	pd = new Period(start, new DateTime());
-	System.out.println("PROCESSED nodes: " + countOfProcessed + " (new = " + newCountOfProcessed + "; old = " + oldCountOfProcessed + ") done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	logger.info("\tPROCESSED nodes: " + countOfProcessed + " (new = " + newCountOfProcessed + "; old = " + oldCountOfProcessed + ") done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
 	start = new DateTime();
 
 	countOfProcessed = 0;
@@ -586,11 +604,11 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	}
 
 	pd = new Period(start, new DateTime());
-	System.out.println("PROCESSED segments: " + countOfProcessed + " (new = " + newCountOfProcessed + "; old = " + oldCountOfProcessed + ") done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	logger.info("\tPROCESSED segments: " + countOfProcessed + " (new = " + newCountOfProcessed + "; old = " + oldCountOfProcessed + ") done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
 	start = new DateTime();
 
 	pd = new Period(start0, new DateTime());
-	System.err.println("REMOVING OLD AND ADDING NEW...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	logger.info("REMOVING OLD AND ADDING NEW...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
     }
 
     @Override

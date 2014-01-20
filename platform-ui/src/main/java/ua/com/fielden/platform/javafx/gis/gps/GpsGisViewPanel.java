@@ -10,6 +10,7 @@ import javafx.scene.web.WebEngine;
 import javax.swing.ListSelectionModel;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisViewPanel<T, MessagePoint> {
     private static final long serialVersionUID = -7032805070573512539L;
+    private static final Logger logger = Logger.getLogger(GpsGisViewPanel.class);
 
     private final GpsGridAnalysisView<T, ?> parentView;
     private final Map<MessagePoint, IMessagePointNode> components = new HashMap<>();
@@ -55,6 +57,7 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 
     @Override
     protected final void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity, final boolean forceCalloutChange) {
+	logger.info("findAndSelectPoint => selected == [" + selectedEntity + "] unselected = [" + unselectedEntity + "] entityWithCallout = [" + entityWithCallout + "] forceCalloutChange = [" + forceCalloutChange + "].");
 	if (forceCalloutChange) {
 	    closeCallout();
 	}
@@ -78,6 +81,7 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 		removeOldAndAddNew(getWebEngine(), zoom(getWebEngine()));
 	    }
 	}
+	logger.info("findAndSelectPoint...done");
     }
 
     protected IMessagePointNode ensureThatComponentExists(final MessagePoint point) {
@@ -141,7 +145,6 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 
     @Override
     protected void removeOldAndAddNew(final WebEngine webEngine, final int zoom) {
-	// System.err.println("\tentityWithCallout == " + entityWithCallout + " calloutHasBeenTurnedOff == " + calloutHasBeenTurnedOff);
 	selectedPoint = null;
 	super.removeOldAndAddNew(webEngine, zoom);
 
@@ -179,9 +182,9 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 	    final MessagePoint pointOfEntityWithCallout = getCorrespondingPoint(entityWithCallout);
 	    if (pointOfEntityWithCallout != null) {
 		ensureThatComponentExists(pointOfEntityWithCallout).closeCallout();
-		entityWithCallout = null;
-		calloutHasBeenTurnedOff = false;
 	    }
+	    entityWithCallout = null;
+	    calloutHasBeenTurnedOff = false;
 	}
     }
 
@@ -193,15 +196,20 @@ public abstract class GpsGisViewPanel<T extends AbstractEntity<?>> extends GisVi
 		updateCallout(getWebEngine());
 		return;
 	    } else {
-		throw new IllegalStateException("Old callout for entity [" + entityWithCallout + "] should be removed at this stage when new callout has been arrived (" + newEntityWithCallout + ").");
+		closeCallout();
+		openCallout0(newEntityWithCallout);
 	    }
 	} else {
-	    final MessagePoint pointOfNewEntityWithCallout = getCorrespondingPoint(newEntityWithCallout);
-	    if (pointOfNewEntityWithCallout != null) {
-		ensureThatComponentExists(pointOfNewEntityWithCallout).createAndAddCallout(path());
-		entityWithCallout = newEntityWithCallout;
-		// calloutHasBeenTurnedOff = false;
-	    }
+	    openCallout0(newEntityWithCallout);
+	}
+    }
+
+    public void openCallout0(final Long newEntityWithCallout) {
+	final MessagePoint pointOfNewEntityWithCallout = getCorrespondingPoint(newEntityWithCallout);
+	if (pointOfNewEntityWithCallout != null) {
+	    ensureThatComponentExists(pointOfNewEntityWithCallout).createAndAddCallout(path());
+	    entityWithCallout = newEntityWithCallout;
+	    // calloutHasBeenTurnedOff = false;
 	}
     }
 
