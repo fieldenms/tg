@@ -122,8 +122,8 @@ public abstract class AbstractEditAttachmentAction extends Command<File> {
 
 	    setMessage("Creating temp file...");
 
-	    final String tmp_file_prefix = "scope_";
-	    final String tmp_file_sufix = ".docx";
+	    final String tmp_file_prefix = "editing_";
+	    final String tmp_file_sufix = "." + attachment.getFileExtension();
 	    final File asFile;
 	    try {
 
