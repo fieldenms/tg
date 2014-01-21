@@ -109,7 +109,9 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
 	    }
 
 	    if (latestGpsMessage == null || latestGpsMessage.getGpsTime().getTime() < packet.getFinish().getGpsTime().getTime()) {
+		final MESSAGE oldLatestGpsMessage = latestGpsMessage;
 		latestGpsMessage = packet.getFinish();
+		processLatestGpsMessage(oldLatestGpsMessage, latestGpsMessage);
 	    }
 
 	    if (!onStart) {
@@ -150,6 +152,15 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
 		}
 	    }
 	}
+    }
+
+    /**
+     * Provides custom processing action after new 'latest GPS message' has been arrived.
+     *
+     * @param oldLatestGpsMessage
+     * @param newLatestGpsMessage
+     */
+    protected void processLatestGpsMessage(final MESSAGE oldLatestGpsMessage, final MESSAGE newLatestGpsMessage) {
     }
 
     @Override

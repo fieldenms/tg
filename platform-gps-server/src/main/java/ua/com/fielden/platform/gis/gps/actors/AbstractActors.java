@@ -147,7 +147,7 @@ public abstract class AbstractActors<
      * @return
      */
     protected final ActorRef create(final Injector injector, final ActorSystem system, final MODULE module, final List<ASSOCIATION> associations, final ActorRef machinesCounterRef) {
-	final ActorRef machineActorRef = system.actorOf(new Props(new UntypedActorFactory() {
+	final ActorRef moduleActorRef = system.actorOf(new Props(new UntypedActorFactory() {
 	    private static final long serialVersionUID = -6677642334839003771L;
 
 	    @Override
@@ -155,7 +155,7 @@ public abstract class AbstractActors<
 		return createModuleActor(injector, module, associations, machinesCounterRef);
 	    }
 	}), createName(module));
-	return machineActorRef;
+	return moduleActorRef;
     }
 
     /**
@@ -274,7 +274,7 @@ public abstract class AbstractActors<
     /**
      * Performs some custom action after the module actors has been started.
      */
-    protected final void moduleActorsStartedPostAction() {
+    protected void moduleActorsStartedPostAction() {
 	logger.info("\tMachine actors starting...");
 	for (final Entry<MACHINE, MESSAGE> machineAndMessage : this.machinesWithLastMessages.entrySet()) {
 	    registerAndStartMachineActor(machineAndMessage.getKey(), machineAndMessage.getValue());
