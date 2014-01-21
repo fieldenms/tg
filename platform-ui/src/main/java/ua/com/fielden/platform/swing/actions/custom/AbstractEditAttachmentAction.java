@@ -28,9 +28,9 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  * <li>Second stage -- the modified file, which was downloaded in the first stage, gets uploaded, resulting in the replacement of the original file. Action returns to the state as
  * before the first stage, including icon restoration to the default one.
  * </ul>
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public abstract class AbstractEditAttachmentAction extends Command<File> {
 
@@ -42,6 +42,12 @@ public abstract class AbstractEditAttachmentAction extends Command<File> {
 
     private Stage currentStage;
     private final boolean largeIcons;
+
+    private UploadOption uploadOption = UploadOption.YES_NO_CANCEL;
+
+    public static enum UploadOption {
+	YES_NO_CANCEL, YES_NO;
+    }
 
     public static enum Stage {
 	FIRST(ResourceLoader.getIcon("images/download-large.png"), ResourceLoader.getIcon("images/download-small.png")), //
@@ -92,14 +98,14 @@ public abstract class AbstractEditAttachmentAction extends Command<File> {
 
     /**
      * Implement to obtain context dependent attachment instance.
-     *
+     * 
      * @return
      */
     protected abstract Attachment getAttachment();
 
     /**
      * Implement to better position open directory dialog.
-     *
+     * 
      * @return
      */
     protected abstract Component getOwningComponent();
@@ -110,6 +116,8 @@ public abstract class AbstractEditAttachmentAction extends Command<File> {
 	if (!flag) {
 	    return false;
 	}
+
+	lock();
 
 	if (Stage.FIRST == currentStage) {
 	    // check if there is anything to download
@@ -122,16 +130,22 @@ public abstract class AbstractEditAttachmentAction extends Command<File> {
 	    setMessage("Preparing to download attachment...");
 	} else if (Stage.SECOND == currentStage) {
 	    setMessage("Preparing to upload attachment...");
-	    final int userChoice = Dialogs.showYesNoCancelDialog(getOwningComponent(), "Would you like to upload modified attachment " + attachment.getKey() + "?", "Modified attachment upload");
+	    final int userChoice = UploadOption.YES_NO_CANCEL == uploadOption ? Dialogs.showYesNoCancelDialog(getOwningComponent(), "Would you like to upload modified attachment "
+		    + attachment.getKey() + "?", "Modified attachment upload") : Dialogs.showYesNoDialog(getOwningComponent(), "Would you like to upload modified attachment "
+			    + attachment.getKey() + "?", "Modified attachment upload");
+
 	    if (JOptionPane.NO_OPTION == userChoice) {
+		if (uploadOption == UploadOption.YES_NO) {
+		    cancel();
+		}
+		unlock();
 		return false;
 	    } else if (JOptionPane.CANCEL_OPTION == userChoice) {
 		cancel();
+		unlock();
 		return false;
 	    }
 	}
-
-	lock();
 
 	// check if there is anything to download.
 	if (getAttachment() == null) {
@@ -238,5 +252,13 @@ public abstract class AbstractEditAttachmentAction extends Command<File> {
 	if (blockingLayerProvider.getBlockingLayer() != null) {
 	    blockingLayerProvider.getBlockingLayer().setText(msg);
 	}
+    }
+
+    public UploadOption getUploadOption() {
+	return uploadOption;
+    }
+
+    public void setUploadOption(final UploadOption uploadOption) {
+	this.uploadOption = uploadOption;
     }
 }
