@@ -39,7 +39,7 @@ public abstract class SubEgiPanel<T extends AbstractEntity<?>, C extends Abstrac
 	pageHolder.addPageChangedListener(createPageChangedListener(tableModel));
 	final Action loadDataAction = createLoadDataAction(value, pageHolder);
 
-	final JPanel view = new JPanel(new MigLayout("fill, insets 5", "[grow, fill]", "[][:143:,grow, fill]"));
+	final JPanel view = new JPanel(new MigLayout("fill, insets 5", "[grow, fill]", "[][:143:,grow,fill]"));
 
 	//Creating paginator view.
 	final PaginatorModel paginatorModel = new PaginatorModel();
@@ -62,7 +62,7 @@ public abstract class SubEgiPanel<T extends AbstractEntity<?>, C extends Abstrac
 	final JScrollPane scroll = new JScrollPane(egi);
 
 	view.add(paginatorPanel, "wrap");
-	view.add(scroll);
+	view.add(scroll, "gapbottom 35");
 	view.addComponentListener(createFirstTimeOpenHandler(view, loadDataAction));
 	setView(view);
     }
