@@ -17,6 +17,7 @@ import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.utils.Dialogs;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
@@ -40,24 +41,53 @@ public abstract class AbstractEditAttachmentAction extends Command<File> {
     final IBlockingLayerProvider blockingLayerProvider;
 
     private Stage currentStage;
+    private final boolean largeIcons;
 
-    private static enum Stage {
-	FIRST(ResourceLoader.getIcon("images/download.png")), SECOND(ResourceLoader.getIcon("images/upload.png"));
+    public static enum Stage {
+	FIRST(ResourceLoader.getIcon("images/download-large.png"), ResourceLoader.getIcon("images/download-small.png")), //
+	SECOND(ResourceLoader.getIcon("images/upload-large.png"), ResourceLoader.getIcon("images/upload-small.png"));
 
-	final ImageIcon icon;
+	final ImageIcon largeIcon;
+	final ImageIcon smallIcon;
 
-	Stage(final ImageIcon icon) {
-	    this.icon = icon;
+	Stage(final ImageIcon largeIcon, final ImageIcon smallIcon) {
+	    this.largeIcon = largeIcon;
+	    this.smallIcon = smallIcon;
 	}
     }
 
     public AbstractEditAttachmentAction(final IAttachment coAttachment, final IBlockingLayerProvider blockingLayerProvider) {
-	super("Download");
+	this("Edit", true, coAttachment, blockingLayerProvider);
+    }
+
+    public AbstractEditAttachmentAction(final String title, final boolean largeIcons, final IAttachment coAttachment, final IBlockingLayerProvider blockingLayerProvider) {
+	super(title);
+	this.largeIcons = largeIcons;
 	this.coAttachment = coAttachment;
 	this.blockingLayerProvider = blockingLayerProvider;
-	currentStage = Stage.FIRST;
-	putValue(Action.LARGE_ICON_KEY, currentStage.icon);
-	putValue(Action.SMALL_ICON, currentStage.icon);
+	setCurrentStage(Stage.FIRST);
+    }
+
+    private void setCurrentStage(final Stage stage) {
+	currentStage = stage;
+
+	SwingUtilitiesEx.invokeAndWaitIfPossible(new Runnable() {
+	    @Override
+	    public void run() {
+		if (largeIcons) {
+		    putValue(Action.LARGE_ICON_KEY, currentStage.largeIcon); // menu should use small icon anyway
+		    putValue(Action.SMALL_ICON, currentStage.smallIcon);
+		} else {
+		    putValue(Action.LARGE_ICON_KEY, currentStage.smallIcon);
+		    putValue(Action.SMALL_ICON, currentStage.smallIcon);
+		}
+	    }
+	});
+
+    }
+
+    public Stage getCurrentStage() {
+	return currentStage;
     }
 
     /**
@@ -96,11 +126,7 @@ public abstract class AbstractEditAttachmentAction extends Command<File> {
 	    if (JOptionPane.NO_OPTION == userChoice) {
 		return false;
 	    } else if (JOptionPane.CANCEL_OPTION == userChoice) {
-		file = null;
-		attachment = null;
-		currentStage = Stage.FIRST;
-		putValue(Action.LARGE_ICON_KEY, currentStage.icon);
-		putValue(Action.SMALL_ICON, currentStage.icon);
+		cancel();
 		return false;
 	    }
 	}
@@ -114,6 +140,15 @@ public abstract class AbstractEditAttachmentAction extends Command<File> {
 	}
 
 	return true;
+    }
+
+    /**
+     * Cancels the action in progress, returning to the first state.
+     */
+    public void cancel() {
+	file = null;
+	attachment = null;
+	setCurrentStage(Stage.FIRST);
     }
 
     @Override
@@ -175,16 +210,12 @@ public abstract class AbstractEditAttachmentAction extends Command<File> {
 	try {
 	    if (Stage.FIRST == currentStage) {
 		setMessage("Click again once changes are saved...");
-		currentStage = Stage.SECOND;
 		super.postAction(file);
-		putValue(Action.LARGE_ICON_KEY, currentStage.icon);
-		putValue(Action.SMALL_ICON, currentStage.icon);
+		setCurrentStage(Stage.SECOND);
 	    } else if (Stage.SECOND == currentStage) {
 		setMessage("Uploaded...");
-		currentStage = Stage.FIRST;
 		super.postAction(file);
-		putValue(Action.LARGE_ICON_KEY, currentStage.icon);
-		putValue(Action.SMALL_ICON, currentStage.icon);
+		setCurrentStage(Stage.FIRST);
 	    }
 	} finally {
 	    unlock();
