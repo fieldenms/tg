@@ -32,6 +32,9 @@ import net.miginfocom.swing.MigLayout;
 
 import org.jfree.ui.RefineryUtilities;
 
+import ua.com.fielden.platform.algorithm.search.ITreeNode;
+import ua.com.fielden.platform.algorithm.search.ITreeNodePredicate;
+import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
@@ -42,6 +45,7 @@ import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.swing.view.ICloseHook;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.jidesoft.swing.JideTabbedPane;
 
@@ -659,6 +663,63 @@ public class UndockableTreeMenuWithTabs<V extends BasePanel> extends TreeMenuWit
 		traceTree(path, visible);
 	    }
 	}
+    }
+
+    /**
+     * Activates the menu item based on menu item type and title. If the menu item is principle entity centre or any other menu item then title must be null, otherwise title must be a name of non-principle entity centre.
+     *
+     * @param menuItemClass
+     * @param title
+     * @return
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public boolean activateItem(final Class<? extends TreeMenuItem<?>> menuItemClass, final String title) {
+	final BreadthFirstSearch<TreeMenuItem, ITreeNode<TreeMenuItem>> searchAlg = new BreadthFirstSearch<>();
+	final ITreeNode<TreeMenuItem> node = searchAlg.search((TreeMenuItem)getModel().getRoot(), createTreeNodePredicate(menuItemClass, title));
+	if (node != null) {
+	    final TreePath path = new TreePath(((TreeMenuItem)node).getPath());
+	    scrollPathToVisible(path);
+	    activateOrOpenItem((TreeMenuItem)node);
+	    return true;
+	}
+	return false;
+    }
+
+    /**
+     * Selects the menu item based on menu item type and title. If the menu item is principle entity centre or any other menu item then title must be null, otherwise title must be a name of non-principle entity centre.
+     *
+     * @param menuItemClass
+     * @param title
+     * @return
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public boolean selectItem(final Class<? extends TreeMenuItem<?>> menuItemClass, final String title) {
+	final BreadthFirstSearch<TreeMenuItem, ITreeNode<TreeMenuItem>> searchAlg = new BreadthFirstSearch<>();
+	final ITreeNode<TreeMenuItem> node = searchAlg.search((TreeMenuItem)getModel().getRoot(), createTreeNodePredicate(menuItemClass, title));
+	if (node != null) {
+	    final TreePath path = new TreePath(((TreeMenuItem)node).getPath());
+	    setSelectionPath(path);
+	    scrollPathToVisible(path);
+	    return true;
+	}
+	return false;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private ITreeNodePredicate<TreeMenuItem, ITreeNode<TreeMenuItem>> createTreeNodePredicate(final Class<? extends TreeMenuItem<?>> menuItemClass, final String title) {
+	return new ITreeNodePredicate<TreeMenuItem, ITreeNode<TreeMenuItem>>() {
+
+	    @Override
+	    public boolean eval(final ITreeNode<TreeMenuItem> node) {
+		final TreeMenuItem item = (TreeMenuItem)node;
+		if ((title == null && item.getClass().equals(menuItemClass))
+			|| (EntityUtils.safeEquals(item.getTitle(), title) && item.getParent() != null && item.getParent().getClass().equals(menuItemClass))){
+		    return true;
+		}
+		return false;
+	    }
+
+	};
     }
 
 }

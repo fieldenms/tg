@@ -584,7 +584,7 @@ public class TreeMenuWithTabs<V extends BasePanel> extends TreeMenu<V> {
 	activateMenuItemAction.actionPerformed(null);
     }
 
-    public void selectFirtItem() {
+    public void selectFirstItem() {
 	setSelectionRow(0);
     }
 

@@ -192,6 +192,7 @@ public class WebClientStartupUtility {
 	    final String caption, //
 	    final Dimension dim, //
 	    final Image icon, //
+	    final IStartupCallback startupCallback, //
 	    final Logger logger) {
 	logger.info("Showing main window...");
 	SwingUtilitiesEx.invokeLater(new Runnable() {
@@ -203,10 +204,54 @@ public class WebClientStartupUtility {
 		SwingUtilitiesEx.installNimbusLnFifPossible();
 
 		if (restUtil.isUserConfigured()) {
-		    createAndRunMainApplicationFrame(restUtil, splash, loginScreen, injector, emm, mmBinder, developmentMainMenuStructureBuilder, caption, dim, icon);
+		    createAndRunMainApplicationFrame(restUtil, splash, loginScreen, injector, emm, mmBinder, developmentMainMenuStructureBuilder, caption, dim, icon, startupCallback);
 		}
 	    }// run
 	});
+    }
+
+    /**
+     * Constructs and displays the main application window with prior validation of user credentials.
+     *
+     * @param splash
+     * @param loginScreen
+     * @param restUtil
+     * @param injector
+     * @param emm -- entity master manager, which provides instantiation and caching of entity master review/edit windows.
+     * @param mmBinder -- main menu binder, which is used for instantiation and configuration of the application main menu.
+     * @param caption -- default application caption displayed in the title of the main window.
+     * @param dim -- default main window dimension
+     * @param icon -- application icon, which appears in the title of every application window.
+     * @param logger
+     */
+    public static void showMainWindow(//
+	    final SplashController splash, //
+	    final StyledLoginScreen loginScreen, //
+	    final RestClientUtil restUtil, //
+	    final Injector injector, //
+	    final EntityMasterManager emm, //
+	    final IMainMenuBinder mmBinder, //
+	    final IMainMenuStructureBuilder developmentMainMenuStructureBuilder, //
+	    final String caption, //
+	    final Dimension dim, //
+	    final Image icon, //
+	    final Logger logger) {
+	showMainWindow(splash, loginScreen, restUtil, injector, emm, mmBinder, developmentMainMenuStructureBuilder, caption, dim, icon, createDefaultStartupCallback(), logger);
+    }
+
+    /**
+     * Creates the default startup call back.
+     *
+     * @return
+     */
+    private static IStartupCallback createDefaultStartupCallback() {
+	return new IStartupCallback() {
+
+	    @Override
+	    public void doAfterStart(final UndockableTreeMenuWithTabs<?> menu) {
+		menu.selectFirstItem();
+	    }
+	};
     }
 
     public static boolean isApplicationAlreadyRunning(final IApplicationSettings settings) {
@@ -240,7 +285,8 @@ public class WebClientStartupUtility {
 	    final IMainMenuStructureBuilder developmentMainMenuStructureBuilder, //
 	    final String caption,//
 	    final Dimension dim,//
-	    final Image icon) {
+	    final Image icon, //
+	    final IStartupCallback startupCallback) {
 	message("Loading user configurations...", splash, loginScreen);
 	// Define all menu items for the main application frame menu
 	// compose all menu items into one vector
@@ -276,6 +322,7 @@ public class WebClientStartupUtility {
 				loginScreen.dispose();
 			    }
 
+			    startupCallback.doAfterStart(menu);
 			}
 		    });
 		} catch (final Exception ex) {
@@ -298,6 +345,7 @@ public class WebClientStartupUtility {
      * @param mmBinder
      * @param rootMenuItem
      * @param menu
+     * @param startupCallback
      */
     private static void buildMainMenu(//
 	    final RestClientUtil restUtil,//
@@ -347,7 +395,7 @@ public class WebClientStartupUtility {
 	pd = new Period(st, new DateTime());
 	logger.info("Building menu items from cloud using menu factory...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
 
-	menu.selectFirtItem();
+	menu.selectFirstItem();
     }
 
     /**
