@@ -51,7 +51,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      *            -- blocking layer provider that provides a way to block relevant UI components and display progress upon opening of entity masters.
      */
     private OpenMasterClickAction(//
-	    final IEntityMasterManager entityMasterFactory, //
+    final IEntityMasterManager entityMasterFactory, //
 	    final Class<?> entityType, //
 	    final String propertyName, //
 	    final GridAnalysisView<?, ?> ownerView, //
@@ -90,7 +90,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      * @param ownerView
      */
     private OpenMasterClickAction(//
-	    final IEntityMasterManager entityMasterFactory, //
+    final IEntityMasterManager entityMasterFactory, //
 	    final Class<?> entityType, //
 	    final String propertyName, //
 	    final GridAnalysisView<?, ?> ownerView) {
@@ -111,7 +111,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      * @param provider
      */
     private OpenMasterClickAction(//
-	    final IEntityMasterManager entityMasterFactory, //
+    final IEntityMasterManager entityMasterFactory, //
 	    final Class<?> entityType, //
 	    final String propertyName,//
 	    final IBlockingLayerProvider provider) {
@@ -175,22 +175,26 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      */
     public static void enhanceWithClickAction(final Iterable<? extends AbstractPropertyColumnMapping<?>> mappings, final Class<?> entityType, final IEntityMasterManager entityMasterFactory, final GridAnalysisView<?, ?> ownerView) {
 	for (final AbstractPropertyColumnMapping<?> mapping : mappings) {
-	    if (propertyIsOfAbstractEntityType(entityType, mapping.getPropertyName())) {
-		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, mapping.getPropertyName(), ownerView));
-	    } else {
-		final String propertyOwner = findClosesEntity(entityType, mapping.getPropertyName());
-		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, propertyOwner, ownerView));
+	    if (mapping.getClickAction() == null) {
+		if (propertyIsOfAbstractEntityType(entityType, mapping.getPropertyName())) {
+		    mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, mapping.getPropertyName(), ownerView));
+		} else {
+		    final String propertyOwner = findClosesEntity(entityType, mapping.getPropertyName());
+		    mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, propertyOwner, ownerView));
+		}
 	    }
 	}
     }
 
     public static void enhanceWithBlockingLayer(final Iterable<? extends AbstractPropertyColumnMapping<?>> mappings, final Class<?> entityType, final IEntityMasterManager entityMasterFactory, final IBlockingLayerProvider provider) {
 	for (final AbstractPropertyColumnMapping<?> mapping : mappings) {
-	    if (propertyIsOfAbstractEntityType(entityType, mapping.getPropertyName())) {
-		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, mapping.getPropertyName(), provider));
-	    } else {
-		final String propertyOwner = findClosesEntity(entityType, mapping.getPropertyName());
-		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, propertyOwner, provider));
+	    if (mapping.getClickAction() == null) {
+		if (propertyIsOfAbstractEntityType(entityType, mapping.getPropertyName())) {
+		    mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, mapping.getPropertyName(), provider));
+		} else {
+		    final String propertyOwner = findClosesEntity(entityType, mapping.getPropertyName());
+		    mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, propertyOwner, provider));
+		}
 	    }
 	}
     }
