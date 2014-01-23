@@ -26,6 +26,7 @@ import org.jdesktop.jxlayer.JXLayer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IBindingEntity;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
+import ua.com.fielden.platform.entity.annotation.WhenNullMessage;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -47,7 +48,7 @@ import com.jgoodies.binding.value.ValueModel;
  * Generalized ValidationLayer with opportunity to add/remove onCommitActions and flush/commit buffered values manually (only for OnFocusLost models). All create*() methods in
  * ComponentFactory returns BoundedValidationLayer
  *
- * @author jhou
+ * @author TG Team
  *
  * @param <T>
  */
@@ -92,7 +93,6 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
     }
 
     /**
-     *
      * Gets the insets of inner incapsulated component. In case of spinner incapsulated component, provides left inset as for inner text component in case when the editor of
      * spinner is a {@link DefaultEditor} instance.
      *
@@ -103,12 +103,28 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 	    final JSpinner spinner = ((JSpinner) getIncapsulatedComponent());
 	    final Insets spinnerInsets = spinner.getInsets();
 	    if (spinner.getEditor() instanceof DefaultEditor) {
-		return new Insets(spinnerInsets.top, ((DefaultEditor) spinner.getEditor()).getTextField().getInsets().left, spinnerInsets.bottom, spinnerInsets.right);
+		final DefaultEditor defaultEditor = (DefaultEditor) spinner.getEditor();
+		return defaultEditor.getTextField().getInsets();
+		//new Insets(spinnerInsets.top, defaultEditor.getTextField().getInsets().left, spinnerInsets.bottom, spinnerInsets.right);
 	    } else {
 		return spinnerInsets;
 	    }
 	} else {
 	    return getIncapsulatedComponent().getInsets();
+	}
+    }
+
+    public Color getIncapsulatedBackground() {
+	if (getIncapsulatedComponent() instanceof JSpinner) {
+	    final JSpinner spinner = ((JSpinner) getIncapsulatedComponent());
+	    if (spinner.getEditor() instanceof DefaultEditor) {
+		//TODO for some reason background colour is grey... final Color color = ((DefaultEditor) spinner.getEditor()).getTextField().getBackground();
+		return Color.WHITE;
+	    } else {
+		return spinner.getEditor().getBackground();
+	    }
+	} else {
+	    return getIncapsulatedComponent().getBackground();
 	}
     }
 
@@ -150,12 +166,10 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 
     class BoundedValidationUi extends ValidationUi {
 
-	@SuppressWarnings("unchecked")
 	public BoundedValidationUi(final JComponent component) {
 	    this(component, new HashMap<String, ValidationLayer>());
 	}
 
-	@SuppressWarnings("unchecked")
 	public BoundedValidationUi(final JComponent component, final Map<String, ? extends ValidationLayer> boundedLayers) {
 	    super(component, boundedLayers);
 	}
@@ -202,44 +216,57 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 		final boolean autocompl = getView() instanceof AutocompleterTextFieldLayer;
 		final boolean label = getView() instanceof JLabel;
 
-		if ((autocompl || label) && rebindable != null && rebindable.getSubjectBean() != null && Rebinder.getActualEntity(rebindable.getSubjectBean()) != null
-			&& rebindable.getPropertyName() != null) {
+		if (rebindable != null && rebindable.getSubjectBean() != null &&
+		    Rebinder.getActualEntity(rebindable.getSubjectBean()) != null && rebindable.getPropertyName() != null) {
 		    final IBindingEntity entity = Rebinder.getActualEntity(rebindable.getSubjectBean());
 		    final String propertyName = rebindable.getPropertyName();
 
-		    if (entity.get(propertyName) != null && entity.get(propertyName) instanceof AbstractEntity) {
-			final AbstractEntity value = (AbstractEntity) entity.get(propertyName);
+		    if (entity.get(propertyName) == null) {
+			final AbstractEntity<?> entityAs =  (AbstractEntity<?>) entity;
+			if (propertyName.equals(AbstractEntity.KEY) && AnnotationReflector.isAnnotationPresentForClass(WhenNullMessage.class, entityAs.getType())) {
+			    final String msg = AnnotationReflector.getAnnotation(entityAs.getType(), WhenNullMessage.class).value();
+			    drawMessage(g2, msg);
+			} else if (!propertyName.equals(AbstractEntity.KEY) && AnnotationReflector.isPropertyAnnotationPresent(WhenNullMessage.class, entityAs.getType(), propertyName)) {
+			    final String msg = AnnotationReflector.getPropertyAnnotation(WhenNullMessage.class, entityAs.getType(), propertyName).value();
+			    drawMessage(g2, msg);
+			}
+		    } else if ((autocompl || label) && entity.get(propertyName) != null && entity.get(propertyName) instanceof AbstractEntity) {
+			final AbstractEntity<?> value = (AbstractEntity<?>) entity.get(propertyName);
 			if (AnnotationReflector.isAnnotationPresentForClass(DisplayDescription.class, value.getType())) {
 			    final String desc = (String) value.get("desc");
-
 			    final String prev = autocompl ? ((JTextField) getIncapsulatedComponent()).getText()
 				    : TitlesDescsGetter.removeHtml(((JLabel) getIncapsulatedComponent()).getText());
 
-			    final JComponent component = getIncapsulatedComponent();
-			    final Insets insets = component.getInsets();
-
-			    g2.setColor(component.getBackground());
-			    int w = component.getSize().width - (component.getInsets().left + component.getInsets().right);
-			    int h = component.getSize().height - (component.getInsets().top + component.getInsets().bottom);
-			    g2.fillRect(component.getInsets().left, component.getInsets().top, w, h);
-			    // pain the caption
-			    g2.setColor(new Color(0f, 0f, 0f, 1.0f));
-			    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
-
-			    // define how many characters in the caption can be drawn
-			    final String textToDisplay = Utils2D.abbreviate(g2, prev + " \u2012 " + desc, w);
-
-			    w = component.getSize().width;
-			    h = component.getSize().height;
-			    final double xPos = insets.left;
-			    final Rectangle2D textBounds = g2.getFontMetrics().getStringBounds(textToDisplay, g2);
-			    final double yPos = (h - textBounds.getHeight()) / 2. + g2.getFontMetrics().getAscent();
-			    g2.drawString(textToDisplay, (float) xPos, (float) yPos);
-
+			    drawMessage(g2, prev + " \u2012 " + desc);
 			}
 		    }
 		}
 	    }
+	}
+
+	private void drawMessage(final Graphics2D g2, final String msg) {
+	    JComponent component = getIncapsulatedComponent();
+	    component = component instanceof JSpinner ? ((DefaultEditor) ((JSpinner) component).getEditor()).getTextField() : component;
+
+	    final Insets insets = getIncapsulatedInsets();
+
+	    g2.setColor(getIncapsulatedBackground());
+	    int w = component.getSize().width - (insets.left + insets.right);
+	    int h = component.getSize().height - (insets.top + insets.bottom);
+	    g2.fillRect(insets.left, insets.top, w, h);
+	    // pain the caption
+	    g2.setColor(new Color(0f, 0f, 0f, 1.0f));
+	    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+
+	    // define how many characters in the caption can be drawn
+	    final String textToDisplay = Utils2D.abbreviate(g2, msg, w);
+
+	    w = component.getSize().width;
+	    h = component.getSize().height;
+	    final double xPos = insets.left;
+	    final Rectangle2D textBounds = g2.getFontMetrics().getStringBounds(textToDisplay, g2);
+	    final double yPos = (h - textBounds.getHeight()) / 2. + g2.getFontMetrics().getAscent();
+	    g2.drawString(textToDisplay, (float) xPos, (float) yPos);
 	}
 
 	/**
