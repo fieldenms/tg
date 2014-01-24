@@ -12,6 +12,7 @@ import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
  * This action downloads an attachment into a temporary location and opens it up.
@@ -71,37 +72,40 @@ public abstract class AbstractOpenAttachmentAction extends Command<File> {
 
     @Override
     protected File action(final ActionEvent e) throws Exception {
-	    setMessage("Creating temp file...");
+	setMessage("Creating temp file...");
 
-	    final String tmp_file_prefix = "open_";
-	    final String tmp_file_sufix = "." + getAttachment().getFileExtension();
-	    final File asFile;
+	final String tmp_file_prefix = "open_";
+	final String tmp_file_sufix = "." + getAttachment().getFileExtension();
+	final File asFile;
 
+	try {
+	    final Path scopePath = Files.createTempFile(tmp_file_prefix, tmp_file_sufix);
+	    System.out.println("TMP: " + scopePath.toString());
+
+	    setMessage("Downloading attachment...");
+	    final byte[] content = coAttachment.download(getAttachment());
+
+	    asFile = scopePath.toFile();
+	    asFile.deleteOnExit();
+
+	    setMessage("Saving attachment...");
+	    final FileOutputStream fo = new FileOutputStream(asFile);
+	    fo.write(content);
+	    fo.flush();
+	    fo.close();
+
+	    setMessage("Opening attachment...");
 	    try {
-		final Path scopePath = Files.createTempFile(tmp_file_prefix, tmp_file_sufix);
-		System.out.println("TMP: " + scopePath.toString());
-
-		setMessage("Downloading attachment...");
-		final byte[] content = coAttachment.download(getAttachment());
-
-		asFile = scopePath.toFile();
-		asFile.deleteOnExit();
-
-		setMessage("Saving attachment...");
-		final FileOutputStream fo = new FileOutputStream(asFile);
-		fo.write(content);
-		fo.flush();
-		fo.close();
-
-		setMessage("Opening attachment...");
 		Desktop.getDesktop().open(asFile);
-
-		// TODO Need to place a watcher on the file.
-
-	    } catch (final Exception ex) {
-		unlock();
-		throw ex;
+	    } catch (final UnsupportedOperationException ex) {
+		Desktop.getDesktop().edit(asFile);
 	    }
+
+	} catch (final Exception ex) {
+	    setMessage("Could not open...");
+	    unlock();
+	    throw ex;
+	}
 	return asFile;
     }
 
@@ -116,20 +120,35 @@ public abstract class AbstractOpenAttachmentAction extends Command<File> {
     }
 
     protected void lock() {
-	if (blockingLayerProvider.getBlockingLayer() != null) {
-	    blockingLayerProvider.getBlockingLayer().setLocked(true);
-	}
+	SwingUtilitiesEx.invokeLater(new Runnable() {
+	    @Override
+	    public void run() {
+		if (blockingLayerProvider.getBlockingLayer() != null) {
+		    blockingLayerProvider.getBlockingLayer().setLocked(true);
+		}
+	    }
+	});
     }
 
     protected void unlock() {
-	if (blockingLayerProvider.getBlockingLayer() != null) {
-	    blockingLayerProvider.getBlockingLayer().setLocked(false);
-	}
+	SwingUtilitiesEx.invokeLater(new Runnable() {
+	    @Override
+	    public void run() {
+		if (blockingLayerProvider.getBlockingLayer() != null) {
+		    blockingLayerProvider.getBlockingLayer().setLocked(false);
+		}
+	    }
+	});
     }
 
     protected void setMessage(final String msg) {
-	if (blockingLayerProvider.getBlockingLayer() != null) {
-	    blockingLayerProvider.getBlockingLayer().setText(msg);
-	}
+	SwingUtilitiesEx.invokeLater(new Runnable() {
+	    @Override
+	    public void run() {
+		if (blockingLayerProvider.getBlockingLayer() != null) {
+		    blockingLayerProvider.getBlockingLayer().setText(msg);
+		}
+	    }
+	});
     }
 }
