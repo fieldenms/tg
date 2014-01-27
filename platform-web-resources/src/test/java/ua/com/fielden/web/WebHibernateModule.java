@@ -30,6 +30,7 @@ import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntityDao;
 
 import com.google.inject.Scopes;
+import com.google.inject.name.Names;
 
 /**
  * Guice injector module for Hibernate related injections, which are specific to testing.
@@ -64,6 +65,7 @@ public class WebHibernateModule extends CommonFactoryModule {
 	bind(IUserController.class).to(UserController.class); // UserControllerForTestPurposes.class
 	bind(IUserDao.class).to(UserController.class);
 	bind(ISecurityTokenController.class).to(SecurityTokenController.class);
+	bindConstant().annotatedWith(Names.named("attachments.location")).to(".");
 	bind(IAttachment.class).to(AttachmentDao.class);
 	bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
     }

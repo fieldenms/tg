@@ -62,7 +62,8 @@ import com.google.inject.name.Names;
  * <ul>
  * <li>Applications settings (refer {@link IApplicatonSettings});
  * <li>Serialisation mechanism;
- * <li>All essential DAO interfaces such as {@link IFilter}, {@link IUserController}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUserDao}, {@link IAuthorisationModel} and more;
+ * <li>All essential DAO interfaces such as {@link IFilter}, {@link IUserController}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUserDao},
+ * {@link IAuthorisationModel} and more;
  * <li>Provides application main menu configuration related DAO bindings.
  * </ul>
  *
@@ -77,9 +78,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
     private final Class<? extends IFilter> automaticDataFilterType;
 
-
-    public BasicWebServerModule(
-	    final Map<Class, Class> defaultHibernateTypes, //
+    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes, //
 	    final IApplicationDomainProvider applicationDomainProvider,//
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
@@ -105,6 +104,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
 	bindConstant().annotatedWith(Names.named("tokens.path")).to(props.getProperty("tokens.path"));
 	bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
 	bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
+	bindConstant().annotatedWith(Names.named("attachments.location")).to(props.getProperty("attachments.location")); // server only
+
 	bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
 	bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
 	// serialisation related binding

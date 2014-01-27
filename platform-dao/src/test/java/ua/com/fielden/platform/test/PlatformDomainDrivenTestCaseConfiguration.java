@@ -46,6 +46,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
 	    // Custom Hibernate configuration properties
 	    props.setProperty("hibernate.show_sql", "false");
 	    props.setProperty("hibernate.format_sql", "true");
+	    props.setProperty("attachments.location", ".");
 
 	    final PlatformTestDomainTypes domainProvider = new PlatformTestDomainTypes();
 
@@ -107,6 +108,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
 	return injector.getInstance(type);
     }
 
+    @Override
     public DomainMetadata getDomainMetadata() {
 	return hibernateModule.getDomainMetadata();
     }

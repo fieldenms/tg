@@ -80,7 +80,6 @@ public abstract class AbstractOpenAttachmentAction extends Command<File> {
 
 	try {
 	    final Path scopePath = Files.createTempFile(tmp_file_prefix, tmp_file_sufix);
-	    System.out.println("TMP: " + scopePath.toString());
 
 	    setMessage("Downloading attachment...");
 	    final byte[] content = coAttachment.download(getAttachment());

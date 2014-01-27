@@ -128,4 +128,9 @@ public class AttachmentRao extends CommonEntityRao<Attachment> implements IAttac
 	    throw new Result(e);
 	}
     }
+
+    @Override
+    public Attachment copy(final Attachment fromAttachment, final String key, final String desc) {
+	throw new UnsupportedOperationException("Not yet supported.");
+    }
 }
