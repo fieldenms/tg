@@ -96,7 +96,7 @@ public abstract class AbstractOpenAttachmentAction extends Command<File> {
 	    setMessage("Opening attachment...");
 	    try {
 		Desktop.getDesktop().open(asFile);
-	    } catch (final UnsupportedOperationException ex) {
+	    } catch (final Exception ex) {
 		Desktop.getDesktop().edit(asFile);
 	    }
 
