@@ -66,6 +66,13 @@ public class Attachment extends AbstractEntity<String> {
 	return key.substring(pos + 1, key.length());
     }
 
+    public String getFileNameWithoutExtension() {
+	final String key = getKey().toString();
+	final int pos = key.lastIndexOf(".");
+
+	return key.substring(0, pos);
+    }
+
     public File getFile() {
 	return file;
     }

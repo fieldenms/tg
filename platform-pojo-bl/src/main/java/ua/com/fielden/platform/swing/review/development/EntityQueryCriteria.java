@@ -39,6 +39,7 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
@@ -331,6 +332,25 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	} else {
 	    throw new IllegalArgumentException("Unexpeted entity type " + entity.getType() + " preventing deletion.");
 	}
+    }
+
+    /**
+     * Returns refetched with fetchModel entity for specified one.
+     *
+     * @param entity
+     * @param fetchModel
+     * @return
+     */
+    public T refetchEntity(final T entity, final fetch<T> fetchModel) {
+	if(entity.getType().equals(getEntityClass())) {
+	    return dao.findByEntityAndFetch(fetchModel, entity);
+	} else if (DynamicEntityClassLoader.isEnhanced(entity.getType())
+		&& DynamicEntityClassLoader.getOriginalType(entity.getType()).equals(getEntityClass())) {
+	    generatedEntityController.setEntityType(getManagedType());
+	    return generatedEntityController.findById(entity.getId(), fetchModel, getByteArrayForManagedType());
+	}
+	throw new IllegalArgumentException("The entity type is incorrect. The entity type must be: " + getEntityClass() + " but was " +
+		DynamicEntityClassLoader.getOriginalType(entity.getType()).equals(getEntityClass()));
     }
 
     /**
