@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -82,7 +83,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
 
 	try {
 	    final File toFile = new File(attachmentsLocation + "/" + key);
-	    Files.copy(fromFile.toPath(), toFile.toPath()); // will throw an exception if such toFile already exists
+	    Files.copy(fromFile.toPath(), toFile.toPath(), StandardCopyOption.REPLACE_EXISTING); // will replace is such file already exists
 	    final Attachment copy = factory.newEntity(Attachment.class, key, desc);
 	    copy.setFile(toFile);
 	    return save(copy);
