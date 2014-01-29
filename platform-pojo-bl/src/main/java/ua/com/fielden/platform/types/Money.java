@@ -282,11 +282,7 @@ public class Money implements Comparable<Money> {
 	if (!currency.equals(monetaryAmount.currency)) {
 	    return false;
 	}
-	if (!amount.equals(monetaryAmount.amount)) {
-	    return false;
-	}
-
-	return true;
+	return amount.compareTo(monetaryAmount.amount) == 0;
     }
 
     @Override
