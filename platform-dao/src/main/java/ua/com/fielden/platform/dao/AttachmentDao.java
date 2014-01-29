@@ -31,7 +31,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
 
     @Inject
     protected AttachmentDao(//
-    final IFilter filter,//
+	    final IFilter filter,//
 	    final EntityFactory factory, //
 	    final @Named("attachments.location") String attachmentsLocation) {
 	super(filter);
@@ -72,7 +72,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     @SessionRequired
     public Attachment copy(final Attachment fromAttachment, final String key, final String desc) {
 	if (findByKey(key) != null) {
-	    throw Result.failure("Attachmment " + key + " already exists.");
+	    throw Result.failure("Attachment " + key + " already exists.");
 	}
 
 	final File fromFile = new File(attachmentsLocation + "/" + fromAttachment.getKey());
