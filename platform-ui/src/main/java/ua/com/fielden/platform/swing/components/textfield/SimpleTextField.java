@@ -6,34 +6,34 @@ import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
 
 /**
- * <code>UpperCaseTextField</code> is a JTextField descendant that converts its content to uppercase.
+ * <code>SimpleTextField</code> is a {@link AbstractTextField} descendant that does nothing to its text.
  *
  * @author TG Team
  *
  */
-public class UpperCaseTextField extends AbstractTextField {
+public class SimpleTextField extends AbstractTextField {
     private static final long serialVersionUID = -1957909441638026543L;
 
-    public UpperCaseTextField(final Options... options) {
+    public SimpleTextField(final Options... options) {
 	super(options);
     }
 
-    public UpperCaseTextField(final String text, final Options... options) {
+    public SimpleTextField(final String text, final Options... options) {
 	super(text, options);
     }
 
     @Override
     protected Document createDefaultModel() {
-	return new UpperCaseDocument();
+	return new SimpleDocument();
     }
 
     /**
-     * Document which converts inserted string to uppercase.
+     * Document which does nothing to inserted string.
      *
      * @author TG Team
      *
      */
-    private static class UpperCaseDocument extends PlainDocument {
+    private static class SimpleDocument extends PlainDocument {
 	private static final long serialVersionUID = 0;
 
 	@Override
@@ -41,7 +41,7 @@ public class UpperCaseTextField extends AbstractTextField {
 	    if (str == null) {
 		return;
 	    }
-	    super.insertString(offs, str.toUpperCase(), a);
+	    super.insertString(offs, str, a);
 	}
     }
 }

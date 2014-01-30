@@ -17,22 +17,19 @@ import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
 /**
  * <code>IntegerTextField</code> is a JTextField that accepts only digits.
- * 
- * @author 01es
- * 
+ *
+ * @author TG Team
+ *
  */
-public class IntegerTextField extends JTextField {
-    private static final long serialVersionUID = 0;
+public class IntegerTextField extends AbstractTextField {
+    private static final long serialVersionUID = 4954244858909749947L;
 
     public IntegerTextField(final Long value, final Options... options) {
-	this(options);
-	setText(value != null ? value.toString() : "");
+	super(value != null ? value.toString() : "", options);
     }
 
     public IntegerTextField(final Options... options) {
-	for (final Options option : options) {
-	    option.set(this);
-	}
+	super(options);
     }
 
     @Override
@@ -42,9 +39,9 @@ public class IntegerTextField extends JTextField {
 
     /**
      * Document model that accepts only digits.
-     * 
-     * @author 01es
-     * 
+     *
+     * @author TG Team
+     *
      */
     private static class IntegerDocument extends PlainDocument {
 	private static final long serialVersionUID = 0;

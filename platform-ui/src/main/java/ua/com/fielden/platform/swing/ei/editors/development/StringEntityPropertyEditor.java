@@ -16,6 +16,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -35,9 +36,10 @@ public class StringEntityPropertyEditor extends AbstractEntityPropertyEditor {
 	    final AbstractEntity<?> entity, //
 	    final String propertyName, //
 	    final IValueMatcher<?> valueMatcher, //
+	    final EditorCase editorCase, //
 	    final Pair<String, String>... titleExprToDisplay) {
 	super(entity, propertyName, valueMatcher);
-	this.editor = createEditor(entity, entity.getProperty(propertyName), lookupClass, valueMatcher);
+	this.editor = createEditor(entity, entity.getProperty(propertyName), lookupClass, valueMatcher, editorCase);
     }
 
     private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditor(//
@@ -45,11 +47,12 @@ public class StringEntityPropertyEditor extends AbstractEntityPropertyEditor {
 	    final MetaProperty metaProperty, //
 	    final Class lookupClass, //
 	    final IValueMatcher<?> valueMatcher, //
+	    final EditorCase editorCase, //
 	    final Pair<String, String>... titleExprToDisplay) {
 	if (!String.class.isAssignableFrom(metaProperty.getType())) {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + metaProperty.getType() + ".");
 	}
-	final BoundedValidationLayer<AutocompleterTextFieldLayer> component = ComponentFactory.createOnFocusLostAutocompleter(entity, getPropertyName(), "", lookupClass, "key", secondaryExpressions(lookupClass), highlightProperties(lookupClass), null, valueMatcher, metaProperty.getDesc(), true);
+	final BoundedValidationLayer<AutocompleterTextFieldLayer> component = ComponentFactory.createOnFocusLostAutocompleter(entity, getPropertyName(), "", lookupClass, "key", secondaryExpressions(lookupClass), highlightProperties(lookupClass), null, valueMatcher, metaProperty.getDesc(), true, editorCase);
 	return component;
     }
 
