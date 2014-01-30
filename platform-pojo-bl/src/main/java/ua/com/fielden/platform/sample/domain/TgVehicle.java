@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
@@ -23,8 +26,6 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(String.class)
 @MapEntityTo
@@ -61,7 +62,7 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty(value = TgFuelUsage.class, linkProperty = "vehicle") @Title("Fuel usages")
     private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
 
-    @IsProperty @MapTo(length = 10, precision = 3, scale = 10)  @Title("Last meter reading")
+    @IsProperty @MapTo(length = 10, precision = 10, scale = 3)  @Title("Last meter reading")
     private BigDecimal lastMeterReading;
 
     @IsProperty(linkProperty = "vehicle") @Calculated  @Title("Last fuel usage")
