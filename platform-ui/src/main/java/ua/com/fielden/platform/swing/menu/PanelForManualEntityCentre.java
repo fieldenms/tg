@@ -35,4 +35,8 @@ public class PanelForManualEntityCentre<T extends AbstractEntity<?>> extends Bas
 	return description;
     }
 
+    public ManualCentreConfigurationView<T> getManualEntityCentre() {
+	return manualEntityCentre;
+    }
+
 }
