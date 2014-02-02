@@ -6,7 +6,11 @@ package ua.com.fielden.platform.swing.login;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -78,6 +82,13 @@ public class StyledLoginScreen extends JFrame {
 
 	    @Override
 	    protected void paintComponent(final Graphics g) {
+		final Map<RenderingHints.Key, Object> map = new HashMap<RenderingHints.Key, Object>();
+		map.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+		map.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		map.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		final RenderingHints renderHints = new RenderingHints(map);
+		((Graphics2D) g).setRenderingHints(renderHints);
+
 		// drawing image scaled to panel's size
 		final Dimension size = getSize();
 		g.drawImage(imageIcon.getImage(), 0, 0, (int) size.getWidth(), (int) size.getHeight(), null);
