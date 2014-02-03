@@ -489,8 +489,10 @@ public final class Binder {
 	    SwingUtilitiesEx.invokeLater(new Runnable() {
 		@Override
 		public void run() {
-		    boundedValidationlayer.setResult(!boundedMetaProperty.isValid() ? boundedMetaProperty.getFirstFailure()
-			    : new Result(boundedMetaProperty.getEntity(), "everything is cool"));
+		    boundedValidationlayer.setResult(
+			    !boundedMetaProperty.isValid() ? boundedMetaProperty.getFirstFailure() :
+				(boundedMetaProperty.hasWarnings() ? boundedMetaProperty.getFirstWarning() :
+				    new Result(boundedMetaProperty.getEntity(), "everything is cool")));
 		    boundedValidationlayer.updateTooltip();
 		}
 	    });
@@ -1128,7 +1130,7 @@ public final class Binder {
 	    if (listener instanceof PropertyChangeListenerProxy) {
 		final PropertyChangeListenerProxy proxy = (PropertyChangeListenerProxy) listener;
 		// Call two argument add method.
-		addPropertyChangeListener(proxy.getPropertyName(), (PropertyChangeListener) proxy.getListener());
+		addPropertyChangeListener(proxy.getPropertyName(), proxy.getListener());
 	    } else {
 		super.addPropertyChangeListener(new WeakPropertyChangeListener(listener));
 	    }
@@ -1152,7 +1154,7 @@ public final class Binder {
 	    if (listener instanceof PropertyChangeListenerProxy) {
 		final PropertyChangeListenerProxy proxy = (PropertyChangeListenerProxy) listener;
 		// Call two argument remove method.
-		removePropertyChangeListener(proxy.getPropertyName(), (PropertyChangeListener) proxy.getListener());
+		removePropertyChangeListener(proxy.getPropertyName(), proxy.getListener());
 		return;
 	    }
 	    final PropertyChangeListener[] listeners = getPropertyChangeListeners();
