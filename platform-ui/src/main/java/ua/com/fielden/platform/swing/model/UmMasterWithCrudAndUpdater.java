@@ -9,6 +9,7 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
+import ua.com.fielden.platform.swing.model.callback.IPostInitCallback;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 
 /**
@@ -23,15 +24,41 @@ import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity<?>, C extends IEntityDao<T>> extends UmMasterWithCrud<T, C> {
     private final FrameTitleUpdater titleUpdater;
     private final IUmViewOwner owner;
+    private final IPostInitCallback<T, C> postInitCallback;
 
-    protected UmMasterWithCrudAndUpdater(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C companion, final MasterPropertyBinder<T> propertyBinder, final fetch<T> fm, final FrameTitleUpdater titleUpdater, final IUmViewOwner owner, final boolean lazy) {
+    protected UmMasterWithCrudAndUpdater(//
+	    final IEntityProducer<T> entityProducer, //
+	    final IEntityMasterCache cache, //
+	    final T entity, //
+	    final C companion, //
+	    final MasterPropertyBinder<T> propertyBinder, //
+	    final fetch<T> fm, //
+	    final FrameTitleUpdater titleUpdater, //
+	    final IUmViewOwner owner, //
+	    final boolean lazy, //
+	    final IPostInitCallback<T, C> postInitCallback) {
 	super(entityProducer, cache, entity, companion, propertyBinder, fm, lazy);
 	this.titleUpdater = titleUpdater;
 	this.owner = owner;
+	this.postInitCallback = postInitCallback;
     }
 
+    protected UmMasterWithCrudAndUpdater(//
+	    final IEntityProducer<T> entityProducer, //
+	    final IEntityMasterCache cache, //
+	    final T entity, //
+	    final C companion, //
+	    final MasterPropertyBinder<T> propertyBinder, //
+	    final fetch<T> fm, //
+	    final FrameTitleUpdater titleUpdater, //
+	    final IUmViewOwner owner, //
+	    final boolean lazy) {
+	this(entityProducer, cache, entity, companion, propertyBinder, fm, titleUpdater, owner, lazy, null);
+    }
+
+
     protected UmMasterWithCrudAndUpdater(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C companion, final MasterPropertyBinder<T> propertyBinder, final fetch<T> fm, final FrameTitleUpdater titleUpdater, final boolean lazy) {
-	this(entityProducer, cache, entity, companion, propertyBinder, fm, titleUpdater, null, lazy);
+	this(entityProducer, cache, entity, companion, propertyBinder, fm, titleUpdater, null, lazy, null);
     }
 
     protected String now() {
@@ -73,6 +100,11 @@ public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity<?>, C 
     protected void notifyActionStageChange(final ActionStage actionState) {
 	final String title = defaultTitle();
 	switch (actionState) {
+	case INIT_POST_ACTION:
+	    if (postInitCallback != null) {
+		postInitCallback.run(this);
+	    }
+	    break;
 	case CANCEL_POST_ACTION:
 	    if (getManagedEntity().isPersisted()) {
 		updateTitle(title + ": " + getManagedEntity().getKey() + " -- " + getManagedEntity().getDesc());
