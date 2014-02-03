@@ -277,23 +277,18 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 	 */
 	@Override
 	protected Color determineColor(final Result result) {
-	    if (!BoundedValidationLayer.this.isEnabled()) {
-		return null;
-	    }
-	    if (result != null) {
-		if (!result.isSuccessful()) {
-		    return INVALID_COLOUR; // red
-		} else if (result.isWarning()) {
-		    return WARNING_COLOUR; // yellow
-		} else if (required) {
-		    return REQUIRED_COLOUR; // blue
-		}
+	    // show red & yellow alerts regardless of whether property is enabled / disabled
+	    if (result != null && !result.isSuccessful()) {
+		return INVALID_COLOUR; // red in case of error result, that exists on entity property (e.g. manually populated in definer)
+	    } else if (result != null && result.isWarning()) {
+		return WARNING_COLOUR; // yellow in case of warning result, that exists on entity property (e.g. manually populated in definer)
 	    } else {
-		if (required) {
-		    return REQUIRED_COLOUR; // blue
+		if (!BoundedValidationLayer.this.isEnabled()) {
+		    return null; // if property is disabled (can not be edited) -- do not show whether it is required or not
+		} else {
+		    return required ? REQUIRED_COLOUR : null; // blue in case of enabled for editing and required property
 		}
 	    }
-	    return null;
 	}
 
 	/**
