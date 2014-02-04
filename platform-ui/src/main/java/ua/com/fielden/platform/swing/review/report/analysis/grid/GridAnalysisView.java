@@ -39,6 +39,7 @@ import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.egi.EgiPanel;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
+import ua.com.fielden.platform.swing.model.callback.NewEditPostinitCallback;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.OpenMasterClickAction;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
@@ -415,7 +416,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
 	    @Override
 	    protected void postAction(final T entity) {
-		masterManager.<T, IEntityDao<T>> showMaster(entity, GridAnalysisView.this);
+		masterManager.<T, IEntityDao<T>> showMaster(entity, GridAnalysisView.this, new NewEditPostinitCallback<T, IEntityDao<T>>());
 		super.postAction(entity);
 	    }
 	};
@@ -454,7 +455,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    protected void postAction(final T entity) {
 		super.postAction(entity);
 		if (entity != null) {
-		    getMasterManager().<T, IEntityDao<T>> showMaster(entity, GridAnalysisView.this);
+		    getMasterManager().<T, IEntityDao<T>> showMaster(entity, GridAnalysisView.this, new NewEditPostinitCallback<T, IEntityDao<T>>());
 		}
 	    }
 	};

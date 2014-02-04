@@ -1,35 +1,33 @@
 package ua.master.com.fielden.platform.sample.domain.tgpublishedyearly;
 
-import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
-import ua.com.fielden.platform.sample.domain.ITgPublishedYearly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import java.util.Map;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.basic.autocompleter.EntityQueryValueMatcher;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.sample.domain.ITgPublishedYearly;
+import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
 import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
 import ua.com.fielden.platform.swing.model.FrameTitleUpdater;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.model.UmMasterWithCrudAndUpdater;
 import ua.com.fielden.platform.swing.model.UmState;
+import ua.com.fielden.platform.swing.model.callback.IPostInitCallback;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 
-/** 
+/**
  * Master model for entity {@link TgPublishedYearly}.
- * 
+ *
  * @author Developers
  *
  */
 public class TgPublishedYearlyMasterModel extends UmMasterWithCrudAndUpdater<TgPublishedYearly, ITgPublishedYearly> {
 
-    
+
     private final static fetch<TgPublishedYearly> qm = fetchAll(TgPublishedYearly.class);
-    
+
     public TgPublishedYearlyMasterModel(//
     	final IEntityProducer<TgPublishedYearly> entityProducer,//
     	final IEntityMasterCache cache,//
@@ -39,7 +37,8 @@ public class TgPublishedYearlyMasterModel extends UmMasterWithCrudAndUpdater<TgP
     	final IUmViewOwner owner,//
     	final FrameTitleUpdater titleUpdater,//
     	final IMasterDomainTreeManager masterManager,//
-    	final ICriteriaGenerator criteriaGenerator) {
+    	final ICriteriaGenerator criteriaGenerator,//
+    	final IPostInitCallback<TgPublishedYearly, ITgPublishedYearly> postInitCallback) {
         super(entityProducer, cache, entity, controller, //
               MasterPropertyBinder.<TgPublishedYearly> createPropertyBinderWithLocatorSupport(//
      			valueMatcherFactory, //
@@ -47,8 +46,11 @@ public class TgPublishedYearlyMasterModel extends UmMasterWithCrudAndUpdater<TgP
      			criteriaGenerator),//
      	     qm, titleUpdater, owner, false);
         setState(UmState.VIEW);
+        if (postInitCallback != null) {
+	    postInitCallback.run(this);
+	}
     }
-     
+
     @Override
     protected void notifyActionStageChange(final ActionStage actionState) {
         super.notifyActionStageChange(actionState);
@@ -60,12 +62,12 @@ public class TgPublishedYearlyMasterModel extends UmMasterWithCrudAndUpdater<TgP
             //getEditors().get("desc").getEditor().requestFocusInWindow();
          }
     }
-     
+
     @Override
     public String toString() {
         return  TitlesDescsGetter.getEntityTitleAndDesc(TgPublishedYearly.class).getKey() + " Master";
     }
-     
+
     @Override
     protected String defaultTitle() {
         return toString();

@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleCompositeEntityDao;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
+import ua.com.fielden.platform.swing.model.callback.IPostInitCallback;
 import ua.com.fielden.platform.swing.review.factory.IEntityMasterFactory;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
@@ -26,9 +27,9 @@ public class SimpleCompositeEntityMasterFactory implements IEntityMasterFactory<
     }
 
     @Override
-    public BaseFrame createMasterFrame(final IEntityProducer<SimpleCompositeEntity> entityProducer, final IEntityMasterCache cache, final SimpleCompositeEntity entity, final IValueMatcherFactory vmf, final IMasterDomainTreeManager masterManager, final IUmViewOwner ownerView) {
+    public BaseFrame createMasterFrame(final IEntityProducer<SimpleCompositeEntity> entityProducer, final IEntityMasterCache cache, final SimpleCompositeEntity entity, final IValueMatcherFactory vmf, final IMasterDomainTreeManager masterManager, final IUmViewOwner ownerView, final IPostInitCallback<SimpleCompositeEntity, ISimpleCompositeEntityDao> postInitCallback) {
 	final SimpleCompositeEntityFrame frame = new SimpleCompositeEntityFrame(entityProducer, cache, entity, dao, vmf, //
-		ownerView, masterManager, criteriaGenerator);
+		ownerView, masterManager, criteriaGenerator, postInitCallback);
 	if (!entity.isPersisted()) {
 	    frame.enforceNewState();
 	}

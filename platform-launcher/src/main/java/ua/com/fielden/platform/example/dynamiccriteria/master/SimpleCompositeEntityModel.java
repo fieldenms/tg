@@ -14,11 +14,13 @@ import ua.com.fielden.platform.swing.model.FrameTitleUpdater;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.model.UmMasterWithCrudAndUpdater;
 import ua.com.fielden.platform.swing.model.UmState;
+import ua.com.fielden.platform.swing.model.callback.IPostInitCallback;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 
 public class SimpleCompositeEntityModel extends UmMasterWithCrudAndUpdater<SimpleCompositeEntity, ISimpleCompositeEntityDao> {
 
-    /** Principle constructor */
+    /** Principle constructor
+     * @param postInitCallback */
     public SimpleCompositeEntityModel( //
 	    final IEntityProducer<SimpleCompositeEntity> entityProducer,//
 	    final IEntityMasterCache cache,//
@@ -28,7 +30,8 @@ public class SimpleCompositeEntityModel extends UmMasterWithCrudAndUpdater<Simpl
 	    final FrameTitleUpdater titleUpdater, //
 	    final IUmViewOwner owner, //
 	    //final IDaoFactory daoFactory, //
-	    final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator) {
+	    final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, //
+	    final IPostInitCallback<SimpleCompositeEntity, ISimpleCompositeEntityDao> postInitCallback) {
 	super(entityProducer, cache, entity, controller, //
 		MasterPropertyBinder.<SimpleCompositeEntity>createPropertyBinderWithLocatorSupport(//
 			valueMatcherFactory, //
@@ -36,6 +39,9 @@ public class SimpleCompositeEntityModel extends UmMasterWithCrudAndUpdater<Simpl
 			criteriaGenerator),
 			null, titleUpdater, owner, false);
 	setState(UmState.VIEW);
+	if (postInitCallback != null) {
+	    postInitCallback.run(this);
+	}
     }
 
     @Override

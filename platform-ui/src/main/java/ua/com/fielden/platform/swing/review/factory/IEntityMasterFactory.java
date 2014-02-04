@@ -9,6 +9,7 @@ import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
+import ua.com.fielden.platform.swing.model.callback.IPostInitCallback;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 
@@ -31,8 +32,9 @@ public interface IEntityMasterFactory<T extends AbstractEntity<?>, DAO extends I
      * @param vmf
      * @param masterManager
      * @param ownerView
+     * @param postInitCallback TODO
      * @return
      */
-    BaseFrame createMasterFrame(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final IValueMatcherFactory vmf, final IMasterDomainTreeManager masterManager, IUmViewOwner ownerView);
+    BaseFrame createMasterFrame(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final IValueMatcherFactory vmf, final IMasterDomainTreeManager masterManager, IUmViewOwner ownerView, IPostInitCallback<T, DAO> postInitCallback);
 
 }

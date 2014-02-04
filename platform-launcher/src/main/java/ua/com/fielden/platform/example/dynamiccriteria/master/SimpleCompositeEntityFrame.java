@@ -13,6 +13,7 @@ import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.model.FrameTitleUpdater;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
+import ua.com.fielden.platform.swing.model.callback.IPostInitCallback;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -32,13 +33,13 @@ public class SimpleCompositeEntityFrame extends BaseFrame {
 	    //final IEntityMasterManager entityMasterFactory,//
 	    //final IDaoFactory daoFactory, //
 	    final IUmViewOwner owner,//
-	    final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator) {
+	    final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, final IPostInitCallback<SimpleCompositeEntity, ISimpleCompositeEntityDao> postInitCallback) {
 	super(TitlesDescsGetter.getEntityTitleAndDesc(SimpleCompositeEntity.class).getKey() + " Master: " + entity.getKey() + " -- " + entity.getDesc());
 	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
 
 	final FrameTitleUpdater titleUpdater = new FrameTitleUpdater(this);
 
-	model = new SimpleCompositeEntityModel(entityProducer, cache, entity, controller, valueMatcherFactory, titleUpdater, owner, masterManager, criteriaGenerator);
+	model = new SimpleCompositeEntityModel(entityProducer, cache, entity, controller, valueMatcherFactory, titleUpdater, owner, masterManager, criteriaGenerator, postInitCallback);
 
 	add(view = new SimpleCompositeEntityView(model));
 

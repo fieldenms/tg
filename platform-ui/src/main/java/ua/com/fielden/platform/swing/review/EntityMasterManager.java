@@ -19,6 +19,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.model.DefaultEntityProducer;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
+import ua.com.fielden.platform.swing.model.callback.IPostInitCallback;
 import ua.com.fielden.platform.swing.review.factory.IEntityMasterFactory;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
@@ -97,62 +98,67 @@ public class EntityMasterManager implements IEntityMasterManager {
     }
 
     @Override
-    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner) {
+    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner, final IPostInitCallback<T, DAO> postInitCallback) {
 	// let's be defensive...
-	if (entity == null) {
-	    throw new IllegalArgumentException("<html>Master cannot be displayed for <b>null</b> domain entity.</html>");
-	}
-	// searching in cache first ...
+		if (entity == null) {
+		    throw new IllegalArgumentException("<html>Master cannot be displayed for <b>null</b> domain entity.</html>");
+		}
+		// searching in cache first ...
 
-	final Class<T> entityType = AbstractUnionEntity.class.isAssignableFrom(entity.getType()) ? //
-			      (Class<T>) ((AbstractUnionEntity) entity).activeEntity().getType() : //
-			      (Class<T>) entity.getType();
+		final Class<T> entityType = AbstractUnionEntity.class.isAssignableFrom(entity.getType()) ? //
+				      (Class<T>) ((AbstractUnionEntity) entity).activeEntity().getType() : //
+				      (Class<T>) entity.getType();
 
-	final IEntityMasterCache cache = getEntityMasterCache(entityType);
-	BaseFrame frame = cache.get(entity.getId());
-	if (frame == null) {
-	    // if not found in cache, then creating new master frame and putting it to the cache
-	    final IEntityMasterFactory<T, DAO> factory = factories.get(entityType);
-	    if (factory == null) {
-		throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey() + " domain entity.");
-	    }
-	    IMasterDomainTreeManager masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entityType);
-	    if (masterDomainTreeManager == null) {
-		gdtm.initMasterDomainTreeManager(entityType);
-		masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entityType);
-	    }
-	    frame = factory.createMasterFrame(getEntityProducer(entityType), //
-		    cache, //
-		    entity, //
-		    vmf, //
-		    masterDomainTreeManager, //
-		    owner);
-	    //TODO should be removed later.
-	    frame.addWindowListener(new WindowAdapter() {
-
-		@Override
-		public void windowClosed(final WindowEvent e) {
-		    super.windowClosed(e);
-		    new Command<Void>(null) {
-
-			private static final long serialVersionUID = 989921640239100437L;
+		final IEntityMasterCache cache = getEntityMasterCache(entityType);
+		BaseFrame frame = cache.get(entity.getId());
+		if (frame == null) {
+		    // if not found in cache, then creating new master frame and putting it to the cache
+		    final IEntityMasterFactory<T, DAO> factory = factories.get(entityType);
+		    if (factory == null) {
+			throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey() + " domain entity.");
+		    }
+		    IMasterDomainTreeManager masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entityType);
+		    if (masterDomainTreeManager == null) {
+			gdtm.initMasterDomainTreeManager(entityType);
+			masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entityType);
+		    }
+		    frame = factory.createMasterFrame(getEntityProducer(entityType), //
+			    cache, //
+			    entity, //
+			    vmf, //
+			    masterDomainTreeManager, //
+			    owner, postInitCallback);
+		    //TODO should be removed later.
+		    frame.addWindowListener(new WindowAdapter() {
 
 			@Override
-			protected Void action(final ActionEvent e) throws Exception {
-			    gdtm.saveMasterDomainTreeManager(entityType);
-			    return null;
+			public void windowClosed(final WindowEvent e) {
+			    super.windowClosed(e);
+			    new Command<Void>(null) {
+
+				private static final long serialVersionUID = 989921640239100437L;
+
+				@Override
+				protected Void action(final ActionEvent e) throws Exception {
+				    gdtm.saveMasterDomainTreeManager(entityType);
+				    return null;
+				}
+			    }.actionPerformed(null);
+
 			}
-		    }.actionPerformed(null);
 
+		    });
+		    cache.put(frame, entity.getId());
 		}
+		// bringing BaseFrame to front in this manner, because simple call won't do the trick
+		frame.setVisible(false);
+		frame.setVisible(true);
+		return frame;
+    }
 
-	    });
-	    cache.put(frame, entity.getId());
-	}
-	// bringing BaseFrame to front in this manner, because simple call won't do the trick
-	frame.setVisible(false);
-	frame.setVisible(true);
-	return frame;
+    @Override
+    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner) {
+	return showMaster(entity, owner, null);
     }
 
     /**
@@ -173,5 +179,4 @@ public class EntityMasterManager implements IEntityMasterManager {
     public Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> getEntityMasterCache() {
 	return Collections.unmodifiableMap(entityMasterCaches);
     }
-
 }
