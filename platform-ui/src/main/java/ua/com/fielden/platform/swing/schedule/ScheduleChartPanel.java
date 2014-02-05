@@ -75,7 +75,7 @@ public class ScheduleChartPanel<T extends AbstractEntity<?>> extends ChartPanel 
 	final Pair<Date, String> coordinates = getCoordinates(e.getPoint());
 	final Pair<T, ScheduleSeries<T>> entitySeries = getEntityWithSeries(e.getPoint());
 	for(final IScheduleChartMouseEventListener<T> l : getListeners(IScheduleChartMouseEventListener.class)) {
-	    l.mouseClick(new ScheduleMouseEvent<T>(this, entitySeries.getKey(), entitySeries.getValue(), coordinates.getKey(), coordinates.getValue()));
+	    l.mouseClick(new ScheduleMouseEvent<T>(this, e, entitySeries.getKey(), entitySeries.getValue(), coordinates.getKey(), coordinates.getValue()));
 	}
     }
 
@@ -98,7 +98,7 @@ public class ScheduleChartPanel<T extends AbstractEntity<?>> extends ChartPanel 
 	}
 	final Pair<T, ScheduleSeries<T>> entityWithSeries = getEntityWithSeries(e.getPoint());
 	for(final IScheduleChartMouseEventListener<T> l : getListeners(IScheduleChartMouseEventListener.class)) {
-	    l.mouseMove(new ScheduleMouseEvent<T>(this, entityWithSeries.getKey(), entityWithSeries.getValue(), coordinates.getKey(), coordinates.getValue()));
+	    l.mouseMove(new ScheduleMouseEvent<T>(this, e, entityWithSeries.getKey(), entityWithSeries.getValue(), coordinates.getKey(), coordinates.getValue()));
 	}
     }
 
