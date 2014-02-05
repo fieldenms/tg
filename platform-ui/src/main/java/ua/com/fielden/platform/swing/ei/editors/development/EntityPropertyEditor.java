@@ -129,7 +129,8 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
 	return props.toArray(new Pair[0]);
     }
 
-    public void setPropertyToHighlight(final String property, final boolean highlight) {
+    public EntityPropertyEditor setPropertyToHighlight(final String property, final boolean highlight) {
 	getEditor().getView().setPropertyToHighlight(property, highlight);
+	return this;
     }
 }
