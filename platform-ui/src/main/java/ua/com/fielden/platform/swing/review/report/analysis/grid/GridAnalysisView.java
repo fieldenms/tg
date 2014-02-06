@@ -64,6 +64,8 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     private final Action openMasterAndEditEntityCommand;
     private final Action deleteEntityCommand;
 
+    private final IDataPromotingListener<T, CDTME> defaultDataPromotingListener;
+
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final GridConfigurationView<T, CDTME> owner) {
 	super(model, owner);
 	logger.info("Creating GridAnalysisView (after super AbstractAnalysisReview has been created)...");
@@ -72,6 +74,8 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	this.openMasterAndEditEntityCommand = createOpenMasterCommand();
 	this.deleteEntityCommand = createDeleteCommand();
 	this.toolBar = createToolBar();
+	this.defaultDataPromotingListener = createDefaultDataPromotingListener();
+	addDataPromotListener(defaultDataPromotingListener);
 	if (getMasterManager() != null) {
 	    OpenMasterClickAction.enhanceWithClickAction(egiPanel.getEgi().getActualModel().getPropertyColumnMappings(),//
 		    model.getCriteria().getEntityClass(), //
@@ -87,9 +91,9 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
 		    @Override
 		    public void run() {
-			final List<T> oldSelected = beforePromotingDataAction();
+			fireBeforePromotDataEvent(new DataPromotingEvent<>(GridAnalysisView.this, (IPage<T>) e.getNewPage()));
 		        egiPanel.setData((IPage<T>) e.getNewPage());
-			afterPromotingDataAction(oldSelected);
+		        fireAfterPromotDataEvent(new DataPromotingEvent<>(GridAnalysisView.this, (IPage<T>) e.getNewPage()));
 		    }
 		});
 
@@ -112,6 +116,24 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	layoutView();
 	getOwner().getAnalysisViewCustomiser().customiseView(this);
 	logger.info("Creating GridAnalysisView...done");
+    }
+
+    private IDataPromotingListener<T, CDTME> createDefaultDataPromotingListener() {
+	return new IDataPromotingListener<T, CDTME>() {
+
+	    private final List<T> selectedData = new ArrayList<>();
+
+	    @Override
+	    public void beforeDataPromoting(final DataPromotingEvent<T, CDTME> event) {
+		selectedData.clear();
+		selectedData.addAll(getEnhancedSelectedEntities());
+	    }
+
+	    @Override
+	    public void afterDataPromoting(final DataPromotingEvent<T, CDTME> event) {
+		selectEntities((List<AbstractEntity<?>>) selectedData);
+	    }
+	};
     }
 
     protected EgiPanel<T> createEgiPanel() {
@@ -591,7 +613,32 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     @Override
     public void close() {
 	getModel().stopDeltaRetrievalIfAny();
-
         super.close();
+    }
+
+    public void addDataPromotListener(final IDataPromotingListener<T, CDTME> listener) {
+	listenerList.add(IDataPromotingListener.class, listener);
+    }
+
+    public void removeDataPromotListener(final IDataPromotingListener<T, CDTME> listener) {
+	listenerList.remove(IDataPromotingListener.class, listener);
+    }
+
+    public IDataPromotingListener<T, CDTME> getDefaultDataPromotingListener() {
+	return defaultDataPromotingListener;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void fireBeforePromotDataEvent(final DataPromotingEvent<T, CDTME> event) {
+	for (final IDataPromotingListener<T, CDTME> listener : listenerList.getListeners(IDataPromotingListener.class)){
+	    listener.beforeDataPromoting(event);
+	}
+    }
+
+    @SuppressWarnings("unchecked")
+    private void fireAfterPromotDataEvent(final DataPromotingEvent<T, CDTME> event) {
+	for (final IDataPromotingListener<T, CDTME> listener : listenerList.getListeners(IDataPromotingListener.class)){
+	    listener.afterDataPromoting(event);
+	}
     }
 }
