@@ -19,7 +19,9 @@ import ua.com.fielden.platform.swing.egi.EgiPanel;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.coloring.IColouringScheme;
 import ua.com.fielden.platform.swing.review.development.DefaultLoadingNode;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.DataPromotingEvent;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.IDataPromotingListener;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
@@ -38,14 +40,14 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
 
     //Asynchronous loading related fields.
     private final DefaultLoadingNode gpsViewPanelLoadingNode;
-    private int horizontalScrollBarPosition, verticalScrollBarPosition;
-    private List<T> oldSelected;
 
     public GpsGridAnalysisView(final GpsGridAnalysisModel<T> model, final GpsGridConfigurationView<T> owner) {
 	super(model, owner);
 
 	this.gpsViewPanelLoadingNode = new DefaultLoadingNode();
 	addLoadingChild(gpsViewPanelLoadingNode);
+	removeDataPromotListener(getDefaultDataPromotingListener());
+	addDataPromotListener(createDataPromotingListener());
 
 	gisViewPanel = createGisViewPanel(getEgiPanel().getEgi(), getEgiPanel().getEgi().getSelectionModel(), getModel().getPageHolder());
 	gisViewPanel.addGisPanelLoadListener(createLoadListener());
@@ -60,6 +62,40 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
 	});
 
 	layoutView();
+    }
+
+    private IDataPromotingListener<T, ICentreDomainTreeManagerAndEnhancer> createDataPromotingListener() {
+	return new IDataPromotingListener<T, ICentreDomainTreeManagerAndEnhancer>() {
+
+	    private int horizontalScrollBarPosition, verticalScrollBarPosition;
+	    private List<T> oldSelected;
+
+	    @Override
+	    public void beforeDataPromoting(final DataPromotingEvent<T, ICentreDomainTreeManagerAndEnhancer> event) {
+		if (getGisViewPanel() != null) {
+		    getGisViewPanel().setCalloutChangeShouldBeForced(false);
+		}
+		horizontalScrollBarPosition = getEgiPanel().getEgiScrollPane().getHorizontalScrollBar().getValue();
+		verticalScrollBarPosition = getEgiPanel().getEgiScrollPane().getVerticalScrollBar().getValue();
+
+		oldSelected = getEnhancedSelectedEntities();
+	    }
+
+	    @Override
+	    public void afterDataPromoting(final DataPromotingEvent<T, ICentreDomainTreeManagerAndEnhancer> event) {
+		if (getGisViewPanel() != null) {
+		    selectEntities((List<AbstractEntity<?>>) oldSelected);
+		    getGisViewPanel().setCalloutChangeShouldBeForced(true);
+
+		    if (getEnhancedSelectedEntities().isEmpty()) {
+			getGisViewPanel().closeCallout();
+		    }
+		}
+
+		getEgiPanel().getEgiScrollPane().getHorizontalScrollBar().setValue(horizontalScrollBarPosition);
+		getEgiPanel().getEgiScrollPane().getVerticalScrollBar().setValue(verticalScrollBarPosition);
+	    }
+	};
     }
 
     private IGisPanelLoadedListener createLoadListener() {
@@ -143,32 +179,5 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
 
     public JSplitPane getTableAndGisViewSplitter() {
 	return tableAndGisViewSplitter;
-    }
-
-    @Override
-    protected final List<T> beforePromotingDataAction() {
-	if (getGisViewPanel() != null) {
-	    getGisViewPanel().setCalloutChangeShouldBeForced(false);
-	}
-	horizontalScrollBarPosition = getEgiPanel().getEgiScrollPane().getHorizontalScrollBar().getValue();
-	verticalScrollBarPosition = getEgiPanel().getEgiScrollPane().getVerticalScrollBar().getValue();
-
-	oldSelected = super.beforePromotingDataAction();
-	return oldSelected;
-    }
-
-    @Override
-    protected final void afterPromotingDataAction(final List<T> oldSelected) {
-	if (getGisViewPanel() != null) {
-	    selectEntities((List<AbstractEntity<?>>) oldSelected);
-	    getGisViewPanel().setCalloutChangeShouldBeForced(true);
-
-	    if (getEnhancedSelectedEntities().isEmpty()) {
-		getGisViewPanel().closeCallout();
-	    }
-	}
-
-	getEgiPanel().getEgiScrollPane().getHorizontalScrollBar().setValue(horizontalScrollBarPosition);
-	getEgiPanel().getEgiScrollPane().getVerticalScrollBar().setValue(verticalScrollBarPosition);
     }
 }

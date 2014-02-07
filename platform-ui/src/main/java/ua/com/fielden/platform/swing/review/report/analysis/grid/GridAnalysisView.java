@@ -140,19 +140,6 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	return new EgiPanel<T>(getModel().getCriteria().getEntityClass(), getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer());
     }
 
-    /**
-     * A method to provide custom action just before promoting new data to EGI.
-     */
-    protected List<T> beforePromotingDataAction() {
-	return getEnhancedSelectedEntities();
-    }
-    /**
-     * A method to provide custom action just after new data has been promoted to EGI.
-     */
-    protected void afterPromotingDataAction(final List<T> oldSelected) {
-	selectEntities((List<AbstractEntity<?>>) oldSelected);
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public GridConfigurationView<T, CDTME> getOwner() {

@@ -402,12 +402,12 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 	totalEditors.clear();
 	for(int columnIndex = 0; columnIndex < colNumber; columnIndex++){
 	    final List<String> total = totals.get(columns.get(columnIndex).getPropertyName());
-	    final JPanel totalPanel = createTotalPanel(managedType, total, rowNumber, columns.get(columnIndex).getSize(), totalEditors);
+	    final JPanel totalPanel = createTotalPanel(managedType, total, columns.get(columnIndex).getSize(), totalEditors);
 	    footer.add(totalPanel, "grow, gap 0 0 0 0");
 	    totalComponents.add(totalPanel);
 	}
 	// adding last label so that it fill the space in the viewport under vertical scroll bar
-	final JPanel stubPanel = createTotalPanel(managedType, null, rowNumber, 50, totalEditors);
+	final JPanel stubPanel = createTotalPanel(managedType, null, 50, totalEditors);
 	footer.add(stubPanel, "grow, gap 0 0 0 0");
 	addResizingListener(footer, totalComponents);
 	return footer;
@@ -418,12 +418,11 @@ public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
      * Creates panel with totals for the specified column.
      *
      * @param total
-     * @param rowNumber
      * @param size
      * @param totalEditors2
      * @return
      */
-    private static JPanel createTotalPanel(final Class<?> managedType, final List<String> total, final int rowNumber, final Integer size, final Map<String, JTextField> totalEditors) {
+    private static JPanel createTotalPanel(final Class<?> managedType, final List<String> total, final Integer size, final Map<String, JTextField> totalEditors) {
 	final JPanel totalPanel = new JPanel(new MigLayout("fill, insets 0","[fill, grow]", "0[t]0"));
 	totalPanel.setPreferredSize(new Dimension(size, 0));
 	if (total != null) {
