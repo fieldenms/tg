@@ -24,20 +24,34 @@ import ua.com.fielden.platform.pagination.PaginatorModel;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
+import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.pagination.development.Paginator;
 import ua.com.fielden.platform.swing.pagination.development.Paginator.IPageChangeFeedback;
+import ua.com.fielden.platform.swing.review.IEntityMasterManager;
+import ua.com.fielden.platform.swing.review.OpenMasterClickAction;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
-public abstract class SubEgiPanel<T extends AbstractEntity<?>, C extends AbstractEntity<?>> extends BlockingIndefiniteProgressLayer {
+public abstract class SubEgiPanel<T extends AbstractEntity<?>, C extends AbstractEntity<?>> extends BlockingIndefiniteProgressLayer implements IUmViewOwner{
 
     private static final long serialVersionUID = -5587630205984698663L;
 
-    public SubEgiPanel(final T value) {
+    private final EntityGridInspector<C> egi;
+    private final Action loadDataAction;
+
+    public SubEgiPanel(final T value, final IEntityMasterManager masterManager) {
 	super(null, "Loading...");
 	final PropertyTableModel<C> tableModel = createTableModel();
+
+	if (masterManager != null) {
+	    OpenMasterClickAction.enhanceWithClickAction(tableModel.getPropertyColumnMappings(),//
+		    getEntityType(), //
+		    masterManager, //
+		    this, this);
+	}
+
 	final PageHolder pageHolder = new PageHolder();
 	pageHolder.addPageChangedListener(createPageChangedListener(tableModel));
-	final Action loadDataAction = createLoadDataAction(value, pageHolder);
+	this.loadDataAction = createLoadDataAction(value, pageHolder);
 
 	final JPanel view = new JPanel(new MigLayout("fill, insets 5", "[grow, fill]", "[][:143:,grow,fill]"));
 
@@ -55,7 +69,7 @@ public abstract class SubEgiPanel<T extends AbstractEntity<?>, C extends Abstrac
 	paginatorPanel.add(feedBack);
 
 	//Creating Egi panel.
-	final EntityGridInspector<?> egi = new EntityGridInspector<>(tableModel, false);
+	this.egi = new EntityGridInspector<>(tableModel, false);
 	egi.setRowHeight(EgiPanel.ROW_HEIGHT);
 	egi.setSelectionMode(MULTIPLE_INTERVAL_SELECTION);
 	egi.getColumnModel().getSelectionModel().setSelectionMode(SINGLE_INTERVAL_SELECTION);
@@ -63,9 +77,13 @@ public abstract class SubEgiPanel<T extends AbstractEntity<?>, C extends Abstrac
 
 	view.add(paginatorPanel, "wrap");
 	view.add(scroll, "gapbottom 35");
-	view.addComponentListener(createFirstTimeOpenHandler(view, loadDataAction));
+	view.addComponentListener(createFirstTimeOpenHandler(view));
 	setView(view);
     }
+
+    public <U extends AbstractEntity<?>> void notifyEntityChange(final U entity) {
+	loadDataAction.actionPerformed(null);
+    };
 
     private IPageChangedListener createPageChangedListener(final PropertyTableModel<C> model) {
 	return new IPageChangedListener() {
@@ -88,7 +106,9 @@ public abstract class SubEgiPanel<T extends AbstractEntity<?>, C extends Abstrac
 
     protected abstract IPage<C> getData(T value);
 
-    private ComponentListener createFirstTimeOpenHandler(final JPanel view, final Action loadDataAction) {
+    protected abstract Class<C> getEntityType();
+
+    private ComponentListener createFirstTimeOpenHandler(final JPanel view) {
 	return new ComponentAdapter() {
 	    @Override
 	    public void componentResized(final ComponentEvent e) {

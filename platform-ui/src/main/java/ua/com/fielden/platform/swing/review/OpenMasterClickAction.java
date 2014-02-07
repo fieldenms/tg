@@ -15,7 +15,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
-import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
+import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -34,7 +34,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
 
     private final IEntityMasterManager entityMasterFactory;
 
-    private final GridAnalysisView<?, ?> ownerView;
+    private final IUmViewOwner ownerView;
 
     /**
      * Principle constructor.
@@ -46,7 +46,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      * @param propertyName
      *            -- property name that gets associated with this action
      * @param ownerView
-     *            -- an instance of {@link GridAnalysisView} that should be used as the owner of a corresponding entity master instance.
+     *            -- an instance of {@link IUmViewOwner} that should be used as the owner of a corresponding entity master instance.
      * @param provider
      *            -- blocking layer provider that provides a way to block relevant UI components and display progress upon opening of entity masters.
      */
@@ -54,7 +54,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
     final IEntityMasterManager entityMasterFactory, //
 	    final Class<?> entityType, //
 	    final String propertyName, //
-	    final GridAnalysisView<?, ?> ownerView, //
+	    final IUmViewOwner ownerView, //
 	    final IBlockingLayerProvider provider) {
 	super("Double-click facility", provider);
 	this.propertyName = propertyName;
@@ -93,11 +93,12 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
     final IEntityMasterManager entityMasterFactory, //
 	    final Class<?> entityType, //
 	    final String propertyName, //
-	    final GridAnalysisView<?, ?> ownerView) {
+	    final IUmViewOwner ownerView, //
+	    final BlockingIndefiniteProgressLayer progressLayer) {
 	this(entityMasterFactory, entityType, propertyName, ownerView, new IBlockingLayerProvider() {
 	    @Override
 	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
-		return ownerView != null ? ownerView.getBlockingLayer() : null;
+		return progressLayer != null ? progressLayer : null;
 	    }
 
 	});
@@ -173,14 +174,14 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      * @param entityMasterFactory
      * @param ownerView
      */
-    public static void enhanceWithClickAction(final Iterable<? extends AbstractPropertyColumnMapping<?>> mappings, final Class<?> entityType, final IEntityMasterManager entityMasterFactory, final GridAnalysisView<?, ?> ownerView) {
+    public static void enhanceWithClickAction(final Iterable<? extends AbstractPropertyColumnMapping<?>> mappings, final Class<?> entityType, final IEntityMasterManager entityMasterFactory, final IUmViewOwner ownerView, final BlockingIndefiniteProgressLayer progressLayer) {
 	for (final AbstractPropertyColumnMapping<?> mapping : mappings) {
 	    if (mapping.getClickAction() == null) {
 		if (propertyIsOfAbstractEntityType(entityType, mapping.getPropertyName())) {
-		    mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, mapping.getPropertyName(), ownerView));
+		    mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, mapping.getPropertyName(), ownerView, progressLayer));
 		} else {
 		    final String propertyOwner = findClosesEntity(entityType, mapping.getPropertyName());
-		    mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, propertyOwner, ownerView));
+		    mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, entityType, propertyOwner, ownerView, progressLayer));
 		}
 	    }
 	}

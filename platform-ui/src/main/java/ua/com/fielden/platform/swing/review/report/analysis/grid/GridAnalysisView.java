@@ -80,7 +80,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    OpenMasterClickAction.enhanceWithClickAction(egiPanel.getEgi().getActualModel().getPropertyColumnMappings(),//
 		    model.getCriteria().getEntityClass(), //
 		    getMasterManager(), //
-		    this);
+		    this, this.getBlockingLayer());
 	}
 	getModel().getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
