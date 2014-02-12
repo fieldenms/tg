@@ -75,4 +75,13 @@ public class EntityAggregatesDao implements IEntityAggregatesDao {
 	return dao.count(model);
     }
 
+    @Override
+    public boolean stop() {
+        return dao.stop();
+    }
+
+    @Override
+    public Integer progress() {
+        return dao.progress();
+    }
 }

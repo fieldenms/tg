@@ -113,4 +113,14 @@ public class EntityAggregatesRao implements IEntityAggregatesDao {
     public int count(final AggregatedResultQueryModel model) {
 	return count(model, Collections.<String, Object> emptyMap());
     }
+
+    @Override
+    public boolean stop() {
+        return rao.stop();
+    }
+
+    @Override
+    public Integer progress() {
+        return rao.progress();
+    }
 }

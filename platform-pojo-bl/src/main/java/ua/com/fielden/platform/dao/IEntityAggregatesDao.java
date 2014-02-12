@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 
-public interface IEntityAggregatesDao {
+public interface IEntityAggregatesDao extends IComputationMonitor {
 
     /**
      * Username should be provided for every DAO instance in order to support data filtering and auditing.

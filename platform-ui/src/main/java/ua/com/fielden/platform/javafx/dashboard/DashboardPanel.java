@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDo
 import static ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeRepresentation.RED;
 import static ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeRepresentation.YELLOW;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javafx.application.Platform;
@@ -87,7 +88,7 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
 	final ObservableList<DashboardRow<T>> data = FXCollections.observableArrayList();
 	final List<Class<?>> mmiTypes = globalManager.entityCentreMenuItemTypes();
 	for (final Class<?> mmiType : mmiTypes) {
-	    final List<String> centreNames = globalManager.nonPrincipleEntityCentreNames(mmiType);
+	    final List<String> centreNames = new ArrayList<String>(globalManager.nonPrincipleEntityCentreNames(mmiType));
 
 	    // IMPORTANT: a principle centre will be initialised too! This means that if such a centre exists
 	    // in the cloud -- it will be retrieved and deserialised, otherwise -- default centre will be created
@@ -120,8 +121,7 @@ public class DashboardPanel<T extends AbstractEntity<?>> extends JFXPanel {
 		setGraphic(new TrafficLights(sentinel.getModel(),
 			new Runnable() { @Override public void run() { sentinel.invokeDetails(RED); }}, //
 			new Runnable() { @Override public void run() { sentinel.invokeDetails(YELLOW); }}, //
-			new Runnable() { @Override public void run() { sentinel.invokeDetails(GREEN); }} //
-			));
+			new Runnable() { @Override public void run() { sentinel.invokeDetails(GREEN); }}));
 	    }
 	}
     }
