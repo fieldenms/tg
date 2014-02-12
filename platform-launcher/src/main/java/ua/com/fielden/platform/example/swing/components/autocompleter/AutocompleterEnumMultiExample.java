@@ -55,6 +55,8 @@ public class AutocompleterEnumMultiExample {
 		final AutocompleterTextFieldLayer<DemoEnum> autocompleter = new AutocompleterTextFieldLayer<DemoEnum>(new UpperCaseTextField(), matcher, DemoEnum.class, "name()", cellRenderer, "caption...", ";");
 		cellRenderer.setAuto(autocompleter.getAutocompleter());
 
+		autocompleter.setPropertyToHighlight("toString()", true);
+
 		final JPanel panel = new JPanel(new MigLayout("fill"));
 		panel.add(autocompleter, "growx, h 25!, w 150, wrap");
 		panel.add(new JButton(new Command<Boolean>("Print values") {

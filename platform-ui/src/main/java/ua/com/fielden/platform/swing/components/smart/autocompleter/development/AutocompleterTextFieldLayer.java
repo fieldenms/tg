@@ -46,6 +46,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
     private static final long serialVersionUID = 1L;
 
     private final AutocompleterLogic<T> autocompleter;
+    private final MultiplePropertiesListCellRenderer<T> cellRenderer;
     private final IValueMatcher<T> valueMatcher;
     private final String valueSeparator;
 
@@ -94,6 +95,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 	super(textComponent);
 	this.valueSeparator = valueSeparator;
 	this.valueMatcher = valueMatcher;
+	this.cellRenderer = cellRenderer;
 	autocompleter = new AutocompleterLogic<T>(this, valueSeparator, cellRenderer, lookupClass, expression) {
 	    @Override
 	    protected List<T> findMatches(final String value) {
@@ -168,6 +170,6 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
     }
 
     public void setPropertyToHighlight(final String exprProperty, final boolean highlight) {
-	getAutocompleter().getHintsCellRenderer().setPropertyToHighlight(exprProperty, highlight);
+	cellRenderer.setPropertyToHighlight(exprProperty, highlight);
     }
 }

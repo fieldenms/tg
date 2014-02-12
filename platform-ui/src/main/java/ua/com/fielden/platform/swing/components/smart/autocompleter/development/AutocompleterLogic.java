@@ -31,7 +31,6 @@ import org.apache.commons.jexl.JexlHelper;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.IntRange;
 
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 import ua.com.fielden.platform.swing.components.smart.development.State;
 import ua.com.fielden.platform.swing.components.textfield.caption.CaptionTextFieldLayer;
 
@@ -170,12 +169,6 @@ public abstract class AutocompleterLogic<T> extends AbstractListIntelliHints imp
      * @return
      */
     protected void cancelFindMatches() {
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected MultiplePropertiesListCellRenderer<T> getHintsCellRenderer() {
-        return (MultiplePropertiesListCellRenderer<T>)super.getHintsCellRenderer();
     }
 
     /**

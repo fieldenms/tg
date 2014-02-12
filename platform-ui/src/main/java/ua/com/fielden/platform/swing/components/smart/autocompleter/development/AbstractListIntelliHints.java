@@ -65,19 +65,19 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
 
 	panel.add(_scroll, BorderLayout.CENTER);
 
-	if (getHintsCellRenderer() instanceof MultiplePropertiesListCellRenderer) {
-	    getScroll().getViewport().addChangeListener(createViewportSizeChangeListener());
+	if (cellRenderer instanceof MultiplePropertiesListCellRenderer) {
+	    getScroll().getViewport().addChangeListener(createViewportSizeChangeListener((MultiplePropertiesListCellRenderer)cellRenderer));
 	}
 
 	return panel;
     }
 
-    private ChangeListener createViewportSizeChangeListener() {
+    private ChangeListener createViewportSizeChangeListener(final MultiplePropertiesListCellRenderer cellRenderer) {
 	return new ChangeListener() {
 
 	    @Override
 	    public void stateChanged(final ChangeEvent e) {
-		((MultiplePropertiesListCellRenderer) getHintsCellRenderer()).setPreferredWidth(getList().getWidth());
+		cellRenderer.setPreferredWidth(getList().getWidth());
 	    }
 	};
     }
@@ -130,15 +130,6 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
 	};
 	list.getSelectionModel().setSelectionMode(isMultiValued ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
 	return list;
-    }
-
-    /**
-     * Returns the {@link ListCellRenderer} associated with hints pop up component.
-     *
-     * @return
-     */
-    protected ListCellRenderer getHintsCellRenderer() {
-	return _list.getCellRenderer();
     }
 
     /**
