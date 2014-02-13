@@ -121,4 +121,8 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
     public BlockingIndefiniteProgressLayer getMainLayer() {
 	return mainLayer;
     }
+
+    protected IDashboardParamsGetter getParamsGetter() {
+	return paramsGetter;
+    }
 }

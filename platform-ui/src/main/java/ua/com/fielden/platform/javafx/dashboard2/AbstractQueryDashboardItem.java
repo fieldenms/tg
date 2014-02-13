@@ -66,28 +66,28 @@ public abstract class AbstractQueryDashboardItem <RESULT extends IDashboardItemR
     protected final RESULT refresh(final List<QueryProperty> customParameters) {
 	final List<List<?>> pages = new ArrayList<>();
 	for (final IQueryBody<?> queryBody : queryBodies) {
-	    pages.add(queryBody.run());
+	    pages.add(queryBody.run(customParameters));
 	}
         return formResult(pages);
     }
 
     public interface IQueryBody<M extends AbstractEntity<?>> {
-	List<M> run();
+	List<M> run(final List<QueryProperty> customParameters);
 	IComputationMonitor computationMonitor();
     }
 
     public static class AggregatedQueryBody implements IQueryBody<EntityAggregates> {
-	private final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query;
+	private final IAggregatedQueryComposer aggregatedQueryComposer;
 	private final IEntityAggregatesDao controller;
 
-	public AggregatedQueryBody(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final IEntityAggregatesDao controller) {
-	    this.query = query;
+	public AggregatedQueryBody(final IAggregatedQueryComposer aggregatedQueryComposer, final IEntityAggregatesDao controller) {
+	    this.aggregatedQueryComposer = aggregatedQueryComposer;
 	    this.controller = controller;
 	}
 
 	@Override
-	public List<EntityAggregates> run() {
-	    return controller.getAllEntities(query);
+	public List<EntityAggregates> run(final List<QueryProperty> customParams) {
+	    return controller.getAllEntities(aggregatedQueryComposer.composeQuery(customParams));
 	}
 
 	@Override
@@ -96,43 +96,51 @@ public abstract class AbstractQueryDashboardItem <RESULT extends IDashboardItemR
 	}
     }
 
+    public static interface IAggregatedQueryComposer {
+	QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> composeQuery(final List<QueryProperty> customParams);
+    }
+
     public static class QueryBody<M extends AbstractEntity<?>> implements IQueryBody<M> {
-	private final QueryExecutionModel<M, ?> query;
+	private final IQueryComposer<M> queryComposer;
 	private final IEntityDao<M> controller;
 
-	public QueryBody(final QueryExecutionModel<M, EntityResultQueryModel<M>> query, final IEntityDao<M> controller) {
-	    this.query = query;
+	public QueryBody(final IQueryComposer<M> queryComposer, final IEntityDao<M> controller) {
+	    this.queryComposer = queryComposer;
 	    this.controller = controller;
 	}
 
 	@Override
-	public List<M> run() {
-	    return controller.getAllEntities(query);
+	public List<M> run(final List<QueryProperty> customParams) {
+	    return controller.getAllEntities(queryComposer.composeQuery(customParams));
 	}
 
 	@Override
 	public IComputationMonitor computationMonitor() {
 	    return controller;
 	}
+    }
+
+    public static interface IQueryComposer<M extends AbstractEntity<?>> {
+	QueryExecutionModel<M, EntityResultQueryModel<M>> composeQuery(final List<QueryProperty> customParams);
     }
 
     public static class GeneratedQueryBody<M extends AbstractEntity<?>> implements IQueryBody<M> {
 	private final Class<M> managedType;
 	private final List<byte[]> managedTypeArrays;
-	private final QueryExecutionModel<M, EntityResultQueryModel<M>> query;
+	private final IQueryComposer<M> queryComposer;
 	private final IGeneratedEntityController<M> controller;
 
-	public GeneratedQueryBody(final Class<M> managedType, final List<byte[]> managedTypeArrays, final QueryExecutionModel<M, EntityResultQueryModel<M>> query, final IGeneratedEntityController<M> controller) {
+	public GeneratedQueryBody(final Class<M> managedType, final List<byte[]> managedTypeArrays, final IQueryComposer<M> queryComposer, final IGeneratedEntityController<M> controller) {
 	    this.managedType = managedType;
 	    this.managedTypeArrays = managedTypeArrays;
-	    this.query = query;
+	    this.queryComposer = queryComposer;
 	    this.controller = controller;
 	}
 
 	@Override
-	public List<M> run() {
+	public List<M> run(final List<QueryProperty> customParams) {
 	    controller.setEntityType(managedType);
-	    return controller.getAllEntities(query, managedTypeArrays);
+	    return controller.getAllEntities(queryComposer.composeQuery(customParams), managedTypeArrays);
 	}
 
 	@Override

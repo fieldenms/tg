@@ -2,6 +2,8 @@ package ua.com.fielden.platform.javafx.dashboard2;
 
 import java.util.List;
 
+import javax.swing.JComponent;
+
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 
 /**
@@ -19,4 +21,5 @@ public interface IDashboardParamsGetter {
      */
     List<QueryProperty> getCustomParams();
 
+    JComponent getUI();
 }
