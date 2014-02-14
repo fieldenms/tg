@@ -43,15 +43,15 @@ public abstract class AbstractDashboardUi<DASHBOARD_MODEL extends AbstractDashbo
 	super(new MenuNotificationPanel("Dashboard"){
 	    @Override
 	    protected JPanel createLayerComponent(final String caption) {
-		final JPanel panel = new JPanel(new MigLayout("fill, insets 0 5 0 5", "[]", "[grow,fill,c,30:30:30]"));
+		final JPanel panel = new JPanel(new MigLayout("fill, insets 0 5 0 5", "[left][right]", "[grow,fill,c,30:30:30]"));
 		panel.setBorder(new EmptyBorder(0, 0, 0, 0));
 		final JLabel headerLable = new StyledLabelBuilder().add(caption, "bold,f:darkgray").createLabel();
-		panel.add(headerLable, ""); // TODO provide correct layout params
+		panel.add(headerLable);
 		panel.add(new ButtonsUI(new Runnable() {
 		    public void run() {
 			dashboardModel.refreshAll();
 		    }
-		}), "");
+		}));
 	        return panel;
 	    }
 	}, new StubUiModel(true));

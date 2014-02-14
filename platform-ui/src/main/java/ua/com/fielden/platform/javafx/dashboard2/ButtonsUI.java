@@ -46,7 +46,7 @@ public class ButtonsUI extends JFXPanel {
 
     private Group createButtonsNode() {
 	final Shape settingsShape = AbstractDashboardUi.createSettingsShape(configureAction);
-	final double width = 40, mainPosY = 0;
+	final double width = 60, mainPosY = 0;
 	settingsShape.setTranslateX(width - 40);
 	settingsShape.setTranslateY(mainPosY + 15);
 
