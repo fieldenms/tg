@@ -21,7 +21,7 @@ import com.jidesoft.swing.StyledLabelBuilder;
 /**
  * This is a panel with bevel border and a label at the left of the panel containing the specified text, which supports message notification mechanism based on
  * {@link NotificationLayer}.
- * 
+ *
  * @author TG Team
  */
 public class MenuNotificationPanel extends JPanel {
@@ -33,12 +33,17 @@ public class MenuNotificationPanel extends JPanel {
     public MenuNotificationPanel(final String caption) {
 	super(new MigLayout("fill, insets 0", "[fill, :200:]", "[]-1[top]"));
 	this.caption = caption;
+	final JPanel panel = createLayerComponent(caption);
+	add(notifLayer = new NotificationLayer<JPanel>(panel), "wrap");
+	add(new JSeparator());
+    }
+
+    protected JPanel createLayerComponent(final String caption) {
 	final JPanel panel = new JPanel(new MigLayout("fill, insets 0 5 0 5", "[]", "[grow,fill,c,30:30:30]"));
 	panel.setBorder(new EmptyBorder(0, 0, 0, 0));
 	final JLabel headerLable = new StyledLabelBuilder().add(caption, "bold,f:darkgray").createLabel();
 	panel.add(headerLable);
-	add(notifLayer = new NotificationLayer<JPanel>(panel), "wrap");
-	add(new JSeparator());
+	return panel;
     }
 
     public void setMessage(final String msg, final MessageType msgType) {
