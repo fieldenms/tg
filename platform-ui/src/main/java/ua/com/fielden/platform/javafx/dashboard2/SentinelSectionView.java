@@ -30,7 +30,7 @@ public class SentinelSectionView extends Group {
     private final Rectangle rect;
     private final Path path;
     private final Text text1;
-    private final Text text2;
+    private final Text text2, text2a;
     private final Text text3;
     // private final Font font = Font.font("Monospaced", FontWeight.EXTRA_BOLD, FontPosture.REGULAR, 14.0);  // Font.font(font.getFamily(), font.get, arg2, arg3);
     private final double gap = 25.0;
@@ -66,7 +66,7 @@ public class SentinelSectionView extends Group {
 	this.tooltip = tooltip;
     }
 
-    public SentinelSectionView(final SentinelSectionModel model, /*final double radius, */final double width, final double height, final Color lightingColor, final Runnable action) {
+    public SentinelSectionView(final SentinelSectionModel model, /*final double radius, */final double width, final double height, final Color lightingColor, final Runnable action, final boolean enableMoney, final boolean enableDecimal) {
 	this.width = width;
 	this.height = height;
 	// arc = new Arc(0, 0, radius, radius, 0, 360);
@@ -84,7 +84,14 @@ public class SentinelSectionView extends Group {
 
 	text2 = new Text();
 	text2.setFont(Font.font("Monospaced", FontWeight.EXTRA_BOLD, FontPosture.REGULAR, 21.0));
-	this.getChildren().add(text2);
+	if (enableMoney) {
+	    this.getChildren().add(text2);
+	}
+	text2a = new Text();
+	text2a.setFont(Font.font("Monospaced", FontWeight.EXTRA_BOLD, FontPosture.REGULAR, 21.0));
+	if (enableDecimal) {
+	    this.getChildren().add(text2a);
+	}
 
 	text3 = new Text();
 	text3.setFont(Font.font("Monospaced", FontWeight.EXTRA_BOLD, FontPosture.REGULAR, 15.0));
@@ -171,6 +178,7 @@ public class SentinelSectionView extends Group {
 
 	text1.setFill(this.model.getCount().longValue() > 0 ? realColor().interpolate(Color.BLACK, 0.15) : Color.GREY.interpolate(Color.WHITE, 0.85));
 	text2.setFill(this.model.getCount().longValue() > 0 ? realColor().interpolate(Color.BLACK, 0.15) : Color.GREY.interpolate(Color.WHITE, 0.85));
+	text2a.setFill(this.model.getCount().longValue() > 0 ? realColor().interpolate(Color.BLACK, 0.15) : Color.GREY.interpolate(Color.WHITE, 0.85));
 	text3.setFill(this.model.getCount().longValue() > 0 ? realColor().interpolate(Color.BLACK, 0.15) : Color.GREY.interpolate(Color.WHITE, 0.85));
 
 	text1.setText(this.model.getCount().toString());
@@ -180,6 +188,9 @@ public class SentinelSectionView extends Group {
 	text2.setText(moneyToString(this.model.getMoney()));
 	text2.setTranslateX(width - gap / 2.0 - text2.getBoundsInLocal().getWidth());
 	text2.setTranslateY(height / 2.0 + text2.getBoundsInLocal().getHeight() / 2.0 - (height / 2.0) / 2.0);
+	text2a.setText(this.model.getDecimal().toPlainString());
+	text2a.setTranslateX(width - gap / 2.0 - text2a.getBoundsInLocal().getWidth());
+	text2a.setTranslateY(height / 2.0 + text2a.getBoundsInLocal().getHeight() / 2.0 - (height / 2.0) / 2.0);
 
 	text3.setText(this.model.getDesc());
 	text3.setTranslateX(width - gap / 2.0 - text3.getBoundsInLocal().getWidth());

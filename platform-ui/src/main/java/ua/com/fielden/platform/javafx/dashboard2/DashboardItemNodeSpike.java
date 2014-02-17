@@ -117,8 +117,8 @@ public class DashboardItemNodeSpike extends Application {
 	};
 
 	final SentinelModel model = new SentinelModel("1", "2", "3");
-	model.getGreenLightingModel().setCountAndMoney(new BigInteger("3"), new Money(new BigDecimal(0.0)));
-	final SentinelView trafficLights = new SentinelView(model, a, a, a, 23, 7, 0, 0);
+	model.getGreenLightingModel().setCountAndMoneyAndDecimal(new BigInteger("3"), new Money(new BigDecimal(0.0)), new BigDecimal(0.0));
+	final SentinelView trafficLights = new SentinelView(model, a, a, a, 23, 7, 0, 0, true, false);
 	trafficLights.setTranslateX(0);
 	trafficLights.setTranslateY(0);
 
@@ -235,7 +235,7 @@ public class DashboardItemNodeSpike extends Application {
 		System.out.println("bla");
 	    }
 	};
-	final SentinelView trafficLights = new SentinelView(model, a, a, a, 30, 10, 0, 0);
+	final SentinelView trafficLights = new SentinelView(model, a, a, a, 30, 10, 0, 0, true, false);
 	trafficLights.setTranslateX(200);
 	trafficLights.setTranslateY(360);
 //	trafficLights.setTranslateX(0);

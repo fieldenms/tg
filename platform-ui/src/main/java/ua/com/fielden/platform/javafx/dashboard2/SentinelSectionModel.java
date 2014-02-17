@@ -11,6 +11,7 @@ public class SentinelSectionModel {
     // private boolean isLighting = false;
     private BigInteger count = new BigInteger("0");
     private Money money = new Money(new BigDecimal(0.0));
+    private BigDecimal decimal = new BigDecimal(0.0);
     private final List<Runnable> afterChangeActions = new ArrayList<>();
     private final String desc;
 
@@ -26,7 +27,7 @@ public class SentinelSectionModel {
 	afterChangeActions.add(action);
     }
 
-    public SentinelSectionModel setCountAndMoney(final BigInteger count, final Money money) {
+    public SentinelSectionModel setCountAndMoneyAndDecimal(final BigInteger count, final Money money, final BigDecimal decimal) {
 	this.count = count;
 	this.money = money;
 
@@ -46,5 +47,9 @@ public class SentinelSectionModel {
 
     public String getDesc() {
 	return desc;
+    }
+
+    public BigDecimal getDecimal() {
+	return decimal;
     }
 }

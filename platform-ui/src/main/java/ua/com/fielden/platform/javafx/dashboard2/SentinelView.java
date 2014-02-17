@@ -16,10 +16,10 @@ public class SentinelView extends Group {
     private final SentinelModel model;
     private final SentinelSectionView redLight, goldLight, greenLight;
 
-    public SentinelView(final SentinelModel model, final Runnable redAction, final Runnable goldAction, final Runnable greenAction, /* final double radius, */ final double width, final double height, final double gapX, final double gapY) {
+    public SentinelView(final SentinelModel model, final Runnable redAction, final Runnable goldAction, final Runnable greenAction, /* final double radius, */ final double width, final double height, final double gapX, final double gapY, final boolean enableMoney, final boolean enableDecimal) {
 	this.model = model;
 
-	greenLight = new SentinelSectionView(model.getGreenLightingModel(), width, height, GREEN_COLOUR, greenAction);
+	greenLight = new SentinelSectionView(model.getGreenLightingModel(), width, height, GREEN_COLOUR, greenAction, enableMoney, enableDecimal);
 	greenLight.getModel().addAfterChangeAction(new Runnable() {
 	    @Override
 	    public void run() {
@@ -28,7 +28,7 @@ public class SentinelView extends Group {
 	});
 	greenLight.setTranslateX(gapX);
 	greenLight.setTranslateY(0.0);
-	goldLight = new SentinelSectionView(model.getYellowLightingModel(), width, height, GOLD_COLOUR, goldAction);
+	goldLight = new SentinelSectionView(model.getYellowLightingModel(), width, height, GOLD_COLOUR, goldAction, enableMoney, enableDecimal);
 	goldLight.getModel().addAfterChangeAction(new Runnable() {
 	    @Override
 	    public void run() {
@@ -37,7 +37,7 @@ public class SentinelView extends Group {
 	});
 	goldLight.setTranslateY(gapY * 2 + height);
 	goldLight.setTranslateX(gapX);
-	redLight = new SentinelSectionView(model.getRedLightingModel(), width, height, RED_COLOUR, redAction);
+	redLight = new SentinelSectionView(model.getRedLightingModel(), width, height, RED_COLOUR, redAction, enableMoney, enableDecimal);
 	redLight.getModel().addAfterChangeAction(new Runnable() {
 	    @Override
 	    public void run() {
