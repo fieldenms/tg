@@ -186,14 +186,14 @@ public class SentinelSectionView extends Group {
 	text1.setTranslateY(height / 2.0 + text1.getBoundsInLocal().getHeight() / 2.0);
 
 	text2.setText(moneyToString(this.model.getMoney()));
-	text2.setTranslateX(width - gap / 2.0 - text2.getBoundsInLocal().getWidth());
+	text2.setTranslateX(width - gap / 4.0 - text2.getBoundsInLocal().getWidth());
 	text2.setTranslateY(height / 2.0 + text2.getBoundsInLocal().getHeight() / 2.0 - (height / 2.0) / 2.0);
 	text2a.setText(this.model.getDecimal().toPlainString());
-	text2a.setTranslateX(width - gap / 2.0 - text2a.getBoundsInLocal().getWidth());
+	text2a.setTranslateX(width - gap / 4.0 - text2a.getBoundsInLocal().getWidth());
 	text2a.setTranslateY(height / 2.0 + text2a.getBoundsInLocal().getHeight() / 2.0 - (height / 2.0) / 2.0);
 
 	text3.setText(this.model.getDesc());
-	text3.setTranslateX(width - gap / 2.0 - text3.getBoundsInLocal().getWidth());
+	text3.setTranslateX(width - gap / 4.0 - text3.getBoundsInLocal().getWidth());
 	text3.setTranslateY(height + text3.getBoundsInLocal().getHeight() / 2.0 - (height / 2.0) / 2.0); //  + text2.getBoundsInLocal().getHeight() / 2.0
     }
 

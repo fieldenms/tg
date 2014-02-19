@@ -48,7 +48,7 @@ public abstract class AbstractDashboard<UI extends AbstractDashboardUi> {
      */
     public void refreshAll() {
 	for (final IDashboardItem<?, ?> item : items) {
-	    item.runAndDisplay(paramsGetter.getCustomParams());
+	    item.runAndDisplay(paramsGetter.getCustomParams(item.mainType()));
 	}
     }
 

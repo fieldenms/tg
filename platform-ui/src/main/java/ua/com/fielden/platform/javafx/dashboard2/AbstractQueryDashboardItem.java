@@ -31,8 +31,8 @@ public abstract class AbstractQueryDashboardItem <RESULT extends IDashboardItemR
     private final List<IQueryBody<?>> queryBodies;
 
     @Inject
-    public AbstractQueryDashboardItem(final IDashboardParamsGetter paramsGetter, final IQueryBody<?> ... queryBodies) {
-	super(paramsGetter, createComputationMonitor(queryBodies));
+    public AbstractQueryDashboardItem(final IDashboardParamsGetter paramsGetter, final Class<? extends AbstractEntity<?>> mainType, final IQueryBody<?> ... queryBodies) {
+	super(paramsGetter, createComputationMonitor(queryBodies), mainType);
 	this.queryBodies = Arrays.asList(queryBodies);
     }
 

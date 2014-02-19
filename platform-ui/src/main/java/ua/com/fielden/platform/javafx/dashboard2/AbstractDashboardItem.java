@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import ua.com.fielden.platform.dao.IComputationMonitor;
 import ua.com.fielden.platform.dashboard.IDashboardItemResult;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -25,14 +26,16 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
     private final BlockingIndefiniteProgressLayer mainLayer;
     private final UI ui;
     private final IDashboardParamsGetter paramsGetter;
+    private final Class<? extends AbstractEntity<?>> mainType;
 
     @Inject
-    public AbstractDashboardItem(final IDashboardParamsGetter paramsGetter, final IComputationMonitor computationMonitor) {
+    public AbstractDashboardItem(final IDashboardParamsGetter paramsGetter, final IComputationMonitor computationMonitor, final Class<? extends AbstractEntity<?>> mainType) {
 	this.paramsGetter = paramsGetter;
+	this.mainType = mainType;
 	ui = createUi(new Runnable() {
 	    @Override
 	    public void run() {
-		runAndDisplay(AbstractDashboardItem.this.paramsGetter.getCustomParams());
+		runAndDisplay(AbstractDashboardItem.this.paramsGetter.getCustomParams(AbstractDashboardItem.this.mainType));
 	    }
 	}, new Runnable() {
 	    @Override
@@ -124,5 +127,10 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
 
     protected IDashboardParamsGetter getParamsGetter() {
 	return paramsGetter;
+    }
+
+    @Override
+    public Class<? extends AbstractEntity<?>> mainType() {
+        return mainType;
     }
 }

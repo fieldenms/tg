@@ -3,6 +3,7 @@ package ua.com.fielden.platform.javafx.dashboard2;
 import java.util.List;
 
 import ua.com.fielden.platform.dashboard.IDashboardItemResult;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 
@@ -27,4 +28,6 @@ public interface IDashboardItem <RESULT extends IDashboardItemResult, UI extends
     void invokeRegularDetails();
 
     UI getUi();
+
+    Class<? extends AbstractEntity<?>> mainType();
 }

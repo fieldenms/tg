@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.swing.JComponent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 
 /**
@@ -19,7 +20,7 @@ public interface IDashboardParamsGetter {
      *
      * @return
      */
-    List<QueryProperty> getCustomParams();
+    List<QueryProperty> getCustomParams(final Class<? extends AbstractEntity<?>> type);
 
     JComponent getUI();
 }
