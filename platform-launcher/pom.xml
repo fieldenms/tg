@@ -41,6 +41,27 @@
 			<artifactId>platform-web-client-utils</artifactId>
 			<version>${version}</version>
 		</dependency>
+		<!-- google-API -->
+		<dependency>
+      		<groupId>com.google.apis</groupId>
+      		<artifactId>google-api-services-calendar</artifactId>
+      		<version>v3-rev73-1.17.0-rc</version>
+   		</dependency>
+   		<dependency>
+			<groupId>com.google.http-client</groupId>
+			<artifactId>google-http-client-jackson2</artifactId>
+			<version>1.17.0-rc</version>
+    	</dependency>
+    	<dependency>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client-java6</artifactId>
+			<version>1.17.0-rc</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.oauth-client</groupId>
+			<artifactId>google-oauth-client-jetty</artifactId>
+			<version>1.17.0-rc</version>
+		</dependency>
 		<!-- C3P0 dependencies, which is the default database connection pooling facility -->
 		<dependency>
 			<groupId>c3p0</groupId>
