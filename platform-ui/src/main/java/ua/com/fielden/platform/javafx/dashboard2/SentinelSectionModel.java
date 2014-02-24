@@ -30,6 +30,7 @@ public class SentinelSectionModel {
     public SentinelSectionModel setCountAndMoneyAndDecimal(final BigInteger count, final Money money, final BigDecimal decimal) {
 	this.count = count;
 	this.money = money;
+	this.decimal = decimal;
 
 	for (final Runnable afterChange : afterChangeActions) {
 	    afterChange.run();

@@ -79,15 +79,21 @@ public abstract class AbstractQueryDashboardItem <RESULT extends IDashboardItemR
     public static class AggregatedQueryBody implements IQueryBody<EntityAggregates> {
 	private final IAggregatedQueryComposer aggregatedQueryComposer;
 	private final IEntityAggregatesDao controller;
+	private final Integer neededCount;
 
 	public AggregatedQueryBody(final IAggregatedQueryComposer aggregatedQueryComposer, final IEntityAggregatesDao controller) {
+	    this(aggregatedQueryComposer, controller, null);
+	}
+
+	public AggregatedQueryBody(final IAggregatedQueryComposer aggregatedQueryComposer, final IEntityAggregatesDao controller, final Integer neededCount) {
 	    this.aggregatedQueryComposer = aggregatedQueryComposer;
 	    this.controller = controller;
+	    this.neededCount = neededCount;
 	}
 
 	@Override
 	public List<EntityAggregates> run(final List<QueryProperty> customParams) {
-	    return controller.getAllEntities(aggregatedQueryComposer.composeQuery(customParams));
+	    return neededCount == null ? controller.getAllEntities(aggregatedQueryComposer.composeQuery(customParams)) : controller.getFirstEntities(aggregatedQueryComposer.composeQuery(customParams), neededCount);
 	}
 
 	@Override
@@ -103,15 +109,17 @@ public abstract class AbstractQueryDashboardItem <RESULT extends IDashboardItemR
     public static class QueryBody<M extends AbstractEntity<?>> implements IQueryBody<M> {
 	private final IQueryComposer<M> queryComposer;
 	private final IEntityDao<M> controller;
+	private final Integer neededCount;
 
-	public QueryBody(final IQueryComposer<M> queryComposer, final IEntityDao<M> controller) {
+	public QueryBody(final IQueryComposer<M> queryComposer, final IEntityDao<M> controller, final Integer neededCount) {
 	    this.queryComposer = queryComposer;
 	    this.controller = controller;
+	    this.neededCount = neededCount;
 	}
 
 	@Override
 	public List<M> run(final List<QueryProperty> customParams) {
-	    return controller.getAllEntities(queryComposer.composeQuery(customParams));
+	    return neededCount == null ? controller.getAllEntities(queryComposer.composeQuery(customParams)) : controller.getFirstEntities(queryComposer.composeQuery(customParams), neededCount);
 	}
 
 	@Override
@@ -129,18 +137,20 @@ public abstract class AbstractQueryDashboardItem <RESULT extends IDashboardItemR
 	private final List<byte[]> managedTypeArrays;
 	private final IQueryComposer<M> queryComposer;
 	private final IGeneratedEntityController<M> controller;
+	private final Integer neededCount;
 
-	public GeneratedQueryBody(final Class<M> managedType, final List<byte[]> managedTypeArrays, final IQueryComposer<M> queryComposer, final IGeneratedEntityController<M> controller) {
+	public GeneratedQueryBody(final Class<M> managedType, final List<byte[]> managedTypeArrays, final IQueryComposer<M> queryComposer, final IGeneratedEntityController<M> controller, final Integer neededCount) {
 	    this.managedType = managedType;
 	    this.managedTypeArrays = managedTypeArrays;
 	    this.queryComposer = queryComposer;
 	    this.controller = controller;
+	    this.neededCount = neededCount;
 	}
 
 	@Override
 	public List<M> run(final List<QueryProperty> customParams) {
 	    controller.setEntityType(managedType);
-	    return controller.getAllEntities(queryComposer.composeQuery(customParams), managedTypeArrays);
+	    return neededCount == null ? controller.getAllEntities(queryComposer.composeQuery(customParams), managedTypeArrays) : controller.getFirstEntities(queryComposer.composeQuery(customParams), neededCount, managedTypeArrays);
 	}
 
 	@Override
