@@ -3,6 +3,7 @@ package ua.com.fielden.platform.javafx.dashboard2;
 import java.util.List;
 
 import javafx.event.EventHandler;
+import javafx.scene.Group;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.InnerShadow;
 import javafx.scene.input.MouseEvent;
@@ -79,7 +80,15 @@ public abstract class AbstractDashboardUi<DASHBOARD_MODEL extends AbstractDashbo
 	return dashboardModel;
     }
 
-    public static Shape createSettingsShape(final Runnable action) {
+    public static Group createSettingsGroup(final Runnable action) {
+	return wrap(createSettingsShape(), action);
+    }
+
+    public static Group createRefreshGroup(final Runnable action) {
+	return wrap(createRefreshShape(), action);
+    }
+
+    private static Shape createSettingsShape() {
         final Circle circle = new Circle(20);
         Shape shape = circle;
         for (int i = 0; i < 7; i++) {
@@ -96,26 +105,39 @@ public abstract class AbstractDashboardUi<DASHBOARD_MODEL extends AbstractDashbo
         shape.setScaleY(.3);
 
         final Shape lastShape = shape;
+        return lastShape;
+    }
 
-        lastShape.setOnMousePressed(new EventHandler<MouseEvent>() {
+    private static Group wrap(final Shape shape, final Runnable action) {
+        final Group group = new Group();
+
+        final double w = shape.getBoundsInParent().getWidth();
+	final double h = shape.getBoundsInParent().getHeight();
+	final Rectangle basement = new Rectangle(-w / 2, -h / 2, w, h);
+        basement.setFill(Color.TRANSPARENT);
+        group.getChildren().add(basement);
+
+        group.getChildren().add(shape);
+
+        group.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
             public void handle(final MouseEvent event) {
-        	lastShape.setEffect(new InnerShadow(BlurType.GAUSSIAN, Color.RED, 15, 0, 0, 0));
+        	shape.setEffect(new InnerShadow(BlurType.GAUSSIAN, Color.RED, 15, 0, 0, 0));
             }
         });
-        lastShape.setOnMouseReleased(new EventHandler<MouseEvent>() {
+        group.setOnMouseReleased(new EventHandler<MouseEvent>() {
             @Override
             public void handle(final MouseEvent event) {
-        	lastShape.setEffect(null);
+        	shape.setEffect(null);
 
         	SwingUtilitiesEx.invokeLater(action);
         	// refreshAction.run();
             }
         });
-        return lastShape;
+        return group;
     }
 
-    public static Shape createRefreshShape(final Runnable action) {
+    private static Shape createRefreshShape() {
         final Circle circle = new Circle(20);
         Shape shape = circle;
         shape = Shape.subtract(shape, new Circle(10));
@@ -143,22 +165,6 @@ public abstract class AbstractDashboardUi<DASHBOARD_MODEL extends AbstractDashbo
         shape.setScaleY(.3);
 
         final Shape lastShape = shape;
-
-        lastShape.setOnMousePressed(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(final MouseEvent event) {
-        	lastShape.setEffect(new InnerShadow(BlurType.GAUSSIAN, Color.RED, 15, 0, 0, 0));
-            }
-        });
-        lastShape.setOnMouseReleased(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(final MouseEvent event) {
-        	lastShape.setEffect(null);
-
-        	SwingUtilitiesEx.invokeLater(action);
-        	// refreshAction.run();
-            }
-        });
         return lastShape;
     }
 }

@@ -5,7 +5,6 @@ import javafx.embed.swing.JFXPanel;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Shape;
 
 public class ButtonsUI extends JFXPanel {
     private static final long serialVersionUID = 2381155520490835378L;
@@ -45,16 +44,16 @@ public class ButtonsUI extends JFXPanel {
     }
 
     private Group createButtonsNode() {
-	final Shape settingsShape = AbstractDashboardUi.createSettingsShape(configureAction);
+	final Group settingsGroup = AbstractDashboardUi.createSettingsGroup(configureAction);
 	final double width = 60, mainPosY = 0;
-	settingsShape.setTranslateX(width - 40);
-	settingsShape.setTranslateY(mainPosY + 15);
+	settingsGroup.setTranslateX(width - 40);
+	settingsGroup.setTranslateY(mainPosY + 15);
 
-	final Shape refreshShape = AbstractDashboardUi.createRefreshShape(refreshAction);
-	refreshShape.setTranslateX(width - 15);
-	refreshShape.setTranslateY(mainPosY + 15);
+	final Group refreshGroup = AbstractDashboardUi.createRefreshGroup(refreshAction);
+	refreshGroup.setTranslateX(width - 15);
+	refreshGroup.setTranslateY(mainPosY + 15);
 
-	final Group dashboardNode = new Group(settingsShape, refreshShape);
+	final Group dashboardNode = new Group(settingsGroup, refreshGroup);
 	return dashboardNode;
     }
 }
