@@ -776,6 +776,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	    metaProperty.setVisible(!AnnotationReflector.isAnnotationPresent(field, Invisible.class)
 		    || (AnnotationReflector.isAnnotationPresent(field, Invisible.class) && AnnotationReflector.getAnnotation(field, Invisible.class).centreOnly()));
 	    metaProperty.setEditable(!AnnotationReflector.isAnnotationPresent(field, Readonly.class));
+	    // TODO may need to relax this condition for composite key member in order to support empty composite members
 	    metaProperty.setRequired(AnnotationReflector.isAnnotationPresent(field, Required.class) || AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class));
 	    if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {
 		final Title title = AnnotationReflector.getAnnotation(field, Title.class);
