@@ -116,7 +116,10 @@ public class DashboardItemNodeSpike extends Application {
 	    }
 	};
 
-	final SentinelModel model = new SentinelModel("1", "2", "3");
+	final SentinelModel model = new SentinelModel(
+		new IDescGetter() { public String desc() { return "1"; } },
+		new IDescGetter() { public String desc() { return "2"; } },
+		new IDescGetter() { public String desc() { return "3"; } });
 	model.getGreenLightingModel().setCountAndMoneyAndDecimal(new BigInteger("3"), new Money(new BigDecimal(0.0)), new BigDecimal(0.0));
 	final SentinelView trafficLights = new SentinelView(model, a, a, a, 23, 7, 0, 0, true, false);
 	trafficLights.setTranslateX(0);
@@ -222,7 +225,11 @@ public class DashboardItemNodeSpike extends Application {
 	titleNode.setFont(Font.font("Monospaced", FontWeight.EXTRA_BOLD, FontPosture.REGULAR, 14.0));
 	titleNode.setFill(/* Color.DARKORANGE */ Color.WHITE);
 
-	final SentinelModel model = new SentinelModel("Estimate > Budget by 20%", "Estimate > Budget by 10%", "Estimate does not exceed Budget by more than 10% -- normal situation");
+	final SentinelModel model = new SentinelModel(
+		new IDescGetter() { public String desc() { return "Estimate > Budget by 20%"; } },
+		new IDescGetter() { public String desc() { return "Estimate > Budget by 10%"; } },
+		new IDescGetter() { public String desc() { return "Estimate does not exceed Budget by more than 10% -- normal situation"; } }
+		);
 //	model.getGreenLightingModel().setCount(100);
 //	 model.getGreenLightingModel().setMoney(15700.0);
 //	 model.getRedLightingModel().setCount(14);

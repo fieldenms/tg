@@ -13,10 +13,10 @@ public class SentinelSectionModel {
     private Money money = new Money(new BigDecimal(0.0));
     private BigDecimal decimal = new BigDecimal(0.0);
     private final List<Runnable> afterChangeActions = new ArrayList<>();
-    private final String desc;
+    private final IDescGetter descGetter;
 
-    public SentinelSectionModel(final String desc) {
-	this.desc = desc;
+    public SentinelSectionModel(final IDescGetter descGetter) {
+	this.descGetter = descGetter;
     }
 
     public boolean isLighting() {
@@ -47,7 +47,7 @@ public class SentinelSectionModel {
     }
 
     public String getDesc() {
-	return desc;
+	return descGetter.desc();
     }
 
     public BigDecimal getDecimal() {

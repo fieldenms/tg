@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 
 import com.google.inject.Inject;
@@ -27,7 +28,7 @@ import com.google.inject.Inject;
  * @param <RESULT>
  * @param <UI>
  */
-public abstract class AbstractQueryDashboardItem <RESULT extends IDashboardItemResult, UI extends JFXPanel & IDashboardItemUi<RESULT>> extends AbstractDashboardItem<RESULT, UI> {
+public abstract class AbstractQueryDashboardItem <RESULT extends IDashboardItemResult, UI extends JFXPanel & IDashboardItemUi<RESULT> & IUmViewOwner> extends AbstractDashboardItem<RESULT, UI> {
     private final List<IQueryBody<?>> queryBodies;
 
     @Inject

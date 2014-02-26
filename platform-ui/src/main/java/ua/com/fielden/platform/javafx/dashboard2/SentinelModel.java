@@ -12,10 +12,10 @@ public class SentinelModel {
     private final SentinelSectionModel yellowLightingModel;
     private final SentinelSectionModel greenLightingModel;
 
-    public SentinelModel(final String redDesc, final String yellowDesc, final String greenDesc) {
-	redLightingModel = new SentinelSectionModel(redDesc);
-	yellowLightingModel = new SentinelSectionModel(yellowDesc);
-	greenLightingModel = new SentinelSectionModel(greenDesc);
+    public SentinelModel(final IDescGetter redDescGetter, final IDescGetter yellowDescGetter, final IDescGetter greenDescGetter) {
+	redLightingModel = new SentinelSectionModel(redDescGetter);
+	yellowLightingModel = new SentinelSectionModel(yellowDescGetter);
+	greenLightingModel = new SentinelSectionModel(greenDescGetter);
     }
 
     public SentinelSectionModel getRedLightingModel() {

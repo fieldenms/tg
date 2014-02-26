@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 
 import com.google.inject.Inject;
@@ -22,7 +23,7 @@ import com.google.inject.Inject;
  *
  * @param <RESULT>
  */
-public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult, UI extends JFXPanel & IDashboardItemUi<RESULT>> implements IDashboardItem<RESULT, UI> {
+public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult, UI extends JFXPanel & IDashboardItemUi<RESULT> & IUmViewOwner> implements IDashboardItem<RESULT, UI> {
     private final BlockingIndefiniteProgressLayer mainLayer;
     private final UI ui;
     private final IDashboardParamsGetter paramsGetter;
@@ -38,6 +39,12 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
 		runAndDisplay(AbstractDashboardItem.this.paramsGetter.getCustomParams(AbstractDashboardItem.this.mainType));
 	    }
 	}, new Runnable() {
+	    @Override
+	    public void run() {
+		configure();
+	    }
+	},
+	new Runnable() {
 	    @Override
 	    public void run() {
 		invokeErrorDetails();
@@ -65,7 +72,7 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
      * @param regularAction
      * @return
      */
-    protected abstract UI createUi(final Runnable runAndDisplayAction, final Runnable errorAction, final Runnable warningAction, final Runnable regularAction);
+    protected abstract UI createUi(final Runnable runAndDisplayAction, final Runnable configureAction, final Runnable errorAction, final Runnable warningAction, final Runnable regularAction);
 
     /**
      * Refreshes item information using custom parameters.
