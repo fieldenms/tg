@@ -45,7 +45,7 @@ public class ClientAuthenticationModel implements IAuthenticationModel {
 		final Result result = util.process(response);
 		util.setPrivateKey(privateKey);
 		util.setUsername(username);
-		return new Result(result.getInstance(), "User is authentic");
+		return new Result(result.getInstance(), "User successfully authenticated");
 	    } else {
 		util.resetUser();
 		return new Result(null, util.process(response).getMessage(), new IllegalArgumentException("The provided credentials are invalid."));
