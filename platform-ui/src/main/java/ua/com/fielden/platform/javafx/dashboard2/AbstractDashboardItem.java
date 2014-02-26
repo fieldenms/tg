@@ -2,6 +2,8 @@ package ua.com.fielden.platform.javafx.dashboard2;
 
 import java.awt.event.ActionEvent;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -13,6 +15,7 @@ import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 import com.google.inject.Inject;
 
@@ -28,12 +31,14 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
     private final UI ui;
     private final IDashboardParamsGetter paramsGetter;
     private final Class<? extends AbstractEntity<?>> mainType;
+    private final Runnable runAndDisplayAction;
+    private Timer refreshTimer;
 
     @Inject
     public AbstractDashboardItem(final IDashboardParamsGetter paramsGetter, final IComputationMonitor computationMonitor, final Class<? extends AbstractEntity<?>> mainType) {
 	this.paramsGetter = paramsGetter;
 	this.mainType = mainType;
-	ui = createUi(new Runnable() {
+	ui = createUi(runAndDisplayAction = new Runnable() {
 	    @Override
 	    public void run() {
 		runAndDisplay(AbstractDashboardItem.this.paramsGetter.getCustomParams(AbstractDashboardItem.this.mainType));
@@ -96,27 +101,22 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
 
             @Override
             protected RESULT action(final ActionEvent e) {
-                setMessage("Executing for 2 seconds...");
-                // Thread.sleep(2000);
-
+                setMessage("Refreshing...");
                 final RESULT result = refresh(customParameters);
-
                 setMessage("Completed");
-                // Thread.sleep(500); // this is just keep the above message visible for 0.5 second
                 return result;
             }
 
             @Override
             protected void postAction(final RESULT result) {
-                // Dialogs.showMessageDialog(getMainLayer(), "Post-action of the custom command.", "Custom command", Dialogs.INFORMATION_MESSAGE);
-
         	Platform.runLater(new Runnable() {
         	    @Override public void run() {
         		ui.update(result);
         	    }
         	});
 
-            	super.postAction(result);
+            	reScheduleRefreshAction();
+		super.postAction(result);
             }
         };
         command.setEnabled(true);
@@ -139,5 +139,27 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
     @Override
     public Class<? extends AbstractEntity<?>> mainType() {
         return mainType;
+    }
+
+    protected Runnable getRunAndDisplayAction() {
+	return runAndDisplayAction;
+    }
+
+    /**
+     * Discards all existing tasks (if any) and schedules new Refresh task.
+     */
+    public void reScheduleRefreshAction() {
+	if (refreshTimer != null) {
+	    refreshTimer.cancel();
+	    refreshTimer = null;
+	}
+	refreshTimer = new Timer();
+	refreshTimer.schedule(new TimerTask() {
+	    @Override
+	    public void run() {
+		refreshTimer = null;
+		SwingUtilitiesEx.invokeLater(runAndDisplayAction);
+	    }
+	}, 600000); // 10 min
     }
 }
