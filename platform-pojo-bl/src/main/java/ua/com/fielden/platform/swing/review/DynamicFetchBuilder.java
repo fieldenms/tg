@@ -39,7 +39,7 @@ public class DynamicFetchBuilder {
      */
     public static <T extends AbstractEntity<?>> fetch<T> createTotalFetchModel(final Class<T> managedType, final Set<String> fetchProperties) {
 	final fetch<T> result = fetch(managedType, fetchProperties, true);
-	return isQueryBasedEntityType(managedType) ? result : result.without("id").without("version");
+	return isQueryBasedEntityType(managedType) ? result.without("id") : result.without("id").without("version");
     }
 
     /**

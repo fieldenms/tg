@@ -42,6 +42,10 @@ public class EgiPanelWithTotals<T extends AbstractEntity<?>> extends JPanel {
      */
     private final List<Pair<ITotalCalculator<?, T>, JTextField>> totalEditors = new ArrayList<>();
 
+    public EgiPanelWithTotals(final EntityGridInspector<T> egi) {
+	this(egi, new TotalBuilder<T>());
+    }
+
     public EgiPanelWithTotals(final EntityGridInspector<T> egi, final TotalBuilder<T> totalBuilder) {
 	this.egi = egi;
 	if (!totalBuilder.isEmpty()) {

@@ -12,7 +12,6 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -38,7 +37,11 @@ public abstract class SubEgiPanel<T extends AbstractEntity<?>, C extends Abstrac
     private final EntityGridInspector<C> egi;
     private final Action loadDataAction;
 
-    public SubEgiPanel(final T value, final IEntityMasterManager masterManager) {
+    public SubEgiPanel(final T value, final IEntityMasterManager masterManager){
+	this(value, masterManager, new TotalBuilder<C>());
+    }
+
+    public SubEgiPanel(final T value, final IEntityMasterManager masterManager, final TotalBuilder<C> totalBuilder) {
 	super(null, "Loading...");
 	final PropertyTableModel<C> tableModel = createTableModel();
 
@@ -73,10 +76,10 @@ public abstract class SubEgiPanel<T extends AbstractEntity<?>, C extends Abstrac
 	egi.setRowHeight(EgiPanel.ROW_HEIGHT);
 	egi.setSelectionMode(MULTIPLE_INTERVAL_SELECTION);
 	egi.getColumnModel().getSelectionModel().setSelectionMode(SINGLE_INTERVAL_SELECTION);
-	final JScrollPane scroll = new JScrollPane(egi);
+	final EgiPanelWithTotals<C> egiPanel = new EgiPanelWithTotals<>(egi, totalBuilder);
 
 	view.add(paginatorPanel, "wrap");
-	view.add(scroll, "gapbottom 35");
+	view.add(egiPanel, "gapbottom 35");
 	view.addComponentListener(createFirstTimeOpenHandler(view));
 	setView(view);
     }

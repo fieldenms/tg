@@ -125,7 +125,7 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
      * @param toolbarCustomiser
      * @param progressLayer
      */
-    private GridConfigurationView(//
+    protected GridConfigurationView(//
 	    final GridConfigurationModel<T, CDTME> model, //
 	    final Map<Object, DetailsFrame> detailsCache, //
 	    final IDetailsCustomiser detailsCustomiser, //

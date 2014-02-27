@@ -21,16 +21,16 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 public class DefaultGridAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>> {
 
-    private IToolbarCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>> toolbarCustomiser;
+    protected IToolbarCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>> toolbarCustomiser;
 
-    private IAnalysisViewCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>> analysisViewCustomiser;
+    protected IAnalysisViewCustomiser<GridAnalysisView<T,ICentreDomainTreeManagerAndEnhancer>> analysisViewCustomiser;
 
-    private IAnalysisQueryCustomiser<T, GridAnalysisModel<T,ICentreDomainTreeManagerAndEnhancer>> queryCustomiser;
+    protected IAnalysisQueryCustomiser<T, GridAnalysisModel<T,ICentreDomainTreeManagerAndEnhancer>> queryCustomiser;
 
     /**
      * Details customiser for chart analysis.
      */
-    private IDetailsCustomiser detailsCustomiser = null;
+    protected IDetailsCustomiser detailsCustomiser = null;
 
     @Override
     public GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createAnalysis(//
