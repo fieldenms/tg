@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.types;
 
+import static java.math.RoundingMode.HALF_EVEN;
+import static java.math.RoundingMode.HALF_UP;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Currency.getInstance;
+import static java.util.Locale.getDefault;
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -11,11 +17,6 @@ import java.util.List;
 import java.util.Random;
 
 import ua.com.fielden.platform.entity.annotation.MapTo;
-import static java.math.RoundingMode.HALF_EVEN;
-import static java.math.RoundingMode.HALF_UP;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Currency.getInstance;
-import static java.util.Locale.getDefault;
 
 /**
  * Immutable class representing amount of money of particular currency. Instances of this class could be compared only if their currencies match.
@@ -73,9 +74,7 @@ public class Money implements Comparable<Money> {
      * @param currency
      */
     public Money(final BigDecimal amount, final Currency currency) {
-	checkParameters(amount, currency);
-
-	this.amount = amount.setScale(4, HALF_EVEN);
+	this.amount = checkParameters(amount, currency);
 	exTaxAmount = null;
 	taxAmount = null;
 	taxPercent = null;
@@ -92,11 +91,10 @@ public class Money implements Comparable<Money> {
      * @param currency
      */
     public Money(final BigDecimal amount, final int taxPercent, final Currency currency) {
-	checkParameters(amount, taxPercent, currency);
+	this.amount = checkParameters(amount, taxPercent, currency);
 	this.taxPercent = taxPercent;
-	this.amount = amount.setScale(4, HALF_EVEN);
 	final BigDecimal taxFrac = new BigDecimal(taxPercent / 100d, new MathContext(4));
-	exTaxAmount = new BigDecimal(1d, new MathContext(50)).divide(taxFrac.add(BigDecimal.ONE), new MathContext(50, HALF_EVEN)).multiply(amount).setScale(4, HALF_EVEN);
+	exTaxAmount = new BigDecimal(1d, new MathContext(50)).divide(taxFrac.add(BigDecimal.ONE), new MathContext(50, HALF_EVEN)).multiply(this.amount).setScale(4, HALF_EVEN);
 	taxAmount = amount.subtract(exTaxAmount).setScale(4, HALF_EVEN);
 
 	this.currency = currency;
@@ -123,10 +121,9 @@ public class Money implements Comparable<Money> {
      * @param currency
      */
     public Money(final BigDecimal amount, final BigDecimal taxAmount, final Currency currency) {
-	checkParameters(amount, taxAmount, currency);
+	this.amount = checkParameters(amount, taxAmount, currency);
 	this.taxAmount = taxAmount.setScale(4, HALF_EVEN);
-	this.amount = amount.setScale(4, HALF_EVEN);
-	this.taxPercent = taxAmount.multiply(BigDecimal.valueOf(100.0000d)).divide(amount.subtract(taxAmount), HALF_UP).setScale(0, HALF_EVEN).intValue();
+	this.taxPercent = taxAmount.multiply(BigDecimal.valueOf(100.0000d)).divide(this.amount.subtract(taxAmount), HALF_UP).setScale(0, HALF_EVEN).intValue();
 	exTaxAmount = getAmount().subtract(taxAmount).setScale(4, HALF_EVEN);
 
 	this.currency = currency;
@@ -326,12 +323,15 @@ public class Money implements Comparable<Money> {
      * @param value
      * @param currency
      */
-    private void checkParameters(final BigDecimal value, final Currency currency) {
-	if (value == null) {
-	    throw new IllegalArgumentException("value should not be null");
-	}
+    private BigDecimal checkParameters(final BigDecimal amount, final Currency currency) {
 	if (currency == null) {
-	    throw new IllegalArgumentException("currency should not be null");
+	    throw new IllegalArgumentException("Currency should not be null");
+	}
+
+	if (amount != null) {
+	    return amount.setScale(4, HALF_EVEN);
+	} else {
+	    return BigDecimal.ZERO.setScale(4, HALF_EVEN);
 	}
     }
 
@@ -342,15 +342,14 @@ public class Money implements Comparable<Money> {
      * @param taxPercent
      * @param currency
      */
-    private void checkParameters(final BigDecimal amount, final int taxPercent, final Currency currency) {
-	checkParameters(amount, currency);
+    private BigDecimal checkParameters(final BigDecimal amount, final int taxPercent, final Currency currency) {
 	if (taxPercent < 1 || taxPercent > 100) {
-	    throw new IllegalArgumentException("currency should not be null");
+	    throw new IllegalArgumentException("Tax percentage should not be outside of period [1,100].");
 	}
+	return checkParameters(amount, currency);
     }
 
-    private void checkParameters(final BigDecimal amount, final BigDecimal taxAmount, final Currency currency) {
-	checkParameters(amount, currency);
+    private BigDecimal checkParameters(final BigDecimal amount, final BigDecimal taxAmount, final Currency currency) {
 	if (taxAmount == null) {
 	    throw new IllegalArgumentException("Tax amount should not be null");
 	}
@@ -358,9 +357,12 @@ public class Money implements Comparable<Money> {
 	    throw new IllegalArgumentException("Tax amount should not be negative");
 	}
 
-	if (amount.compareTo(taxAmount) < 0) {
+	final BigDecimal updatedAmount = checkParameters(amount, currency);
+	if (updatedAmount.compareTo(taxAmount) < 0) {
 	    throw new IllegalArgumentException("Amount should not be less than its tax amount");
 	}
+
+	return updatedAmount;
     }
 
     public BigDecimal getExTaxAmount() {
