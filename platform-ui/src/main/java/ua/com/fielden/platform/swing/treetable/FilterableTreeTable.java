@@ -368,7 +368,7 @@ public class FilterableTreeTable extends JXTreeTable {
      * @return
      */
     private int getViewportRowCount(){
-	return (int)Math.floor(viewportSize.getHeight()/getRowHeight());
+	return (int)Math.ceil(viewportSize.getHeight()/getRowHeight());
     }
 
 

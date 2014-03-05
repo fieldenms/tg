@@ -281,7 +281,7 @@ public class Tree extends JTree {
      * @return
      */
     private int getViewportRowCount(final int rowHeight){
-	return (int)Math.floor(viewportSize.getHeight()/rowHeight);
+	return (int)Math.ceil(viewportSize.getHeight()/rowHeight);
     }
 
     /**
