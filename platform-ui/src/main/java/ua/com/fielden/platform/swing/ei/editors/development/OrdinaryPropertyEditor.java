@@ -92,8 +92,9 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
      *
      * @param entity
      * @param propertyName
-     * TODO
-     * @param defaultTimePortionMillis - ?
+     * @param defaultTimePortionMillis - this param is used for date properties: <code>null</code> in case when no time portion is needed in editor,
+     * zero or non-zero for default time portion after picking some date from date picker.
+     * See {@link ComponentFactory#createDatePickerLayer(ua.com.fielden.platform.entity.IBindingEntity, String, String, String, boolean, Long, ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction...)} for more details.
      */
     public OrdinaryPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final Long defaultTimePortionMillis) {
 
@@ -124,8 +125,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 	    editor = component;
 	} else if (Date.class == type) {
 	    // final BoundedValidationLayer<BoundedJXDatePicker> component = ComponentFactory.createBoundedJXDatePicker(entity, propertyName, desc, true);
-	    final BoundedValidationLayer<DatePickerLayer> component = ComponentFactory.createDatePickerLayer(entity, bindingPropertyName, desc, "", true, defaultTimePortionMillis/*propertyName.endsWith(DynamicEntityQueryCriteria._TO) ? DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()
-																						  : 0L*/);
+	    final BoundedValidationLayer<DatePickerLayer> component = ComponentFactory.createDatePickerLayer(entity, bindingPropertyName, desc, "", defaultTimePortionMillis != null, defaultTimePortionMillis != null ? defaultTimePortionMillis : 0L);
 	    rebindableEditor = component;
 	    radioEditor = null;
 	    editor = component;
