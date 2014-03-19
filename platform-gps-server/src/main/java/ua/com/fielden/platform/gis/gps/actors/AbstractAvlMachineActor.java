@@ -31,7 +31,7 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
     private static int windowSize3 = 30;
     private final Logger logger = Logger.getLogger(AbstractAvlMachineActor.class);
 
-    private final MACHINE machine;
+    private MACHINE machine;
     private final LinkedList<Packet<MESSAGE>> incomingPackets = new LinkedList<>();
     private final LinkedList<Packet<MESSAGE>> inspectionBuffer = new LinkedList<>();
     private final Blackout<MESSAGE> blackout;
@@ -182,6 +182,8 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
 		} else {
 		    getSender().tell(new NoLastMessage(), getSelf());
 		}
+	    } else if (data instanceof Changed) {
+		promoteChangedMachine((Changed<MACHINE>) data);
 	    } else {
 		unhandled(data);
 	    }
@@ -189,6 +191,11 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
 	    logger.error(e.getMessage(), e);
 	    throw e;
 	}
+    }
+
+    protected void promoteChangedMachine(final Changed<MACHINE> changedMachine) {
+	setMachine(changedMachine.getValue());
+	logger.info("An existent machine, that has been changed [" + changedMachine.getValue() + "], has been sucessfully promoted to its machine actor.");
     }
 
     private MESSAGE produceIncompleteLastMessage(final MESSAGE message) {
@@ -302,6 +309,10 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
 
     protected MACHINE getMachine() {
 	return machine;
+    }
+
+    protected void setMachine(final MACHINE machine) {
+	this.machine = machine;
     }
 
     protected HibernateUtil getHibUtil() {

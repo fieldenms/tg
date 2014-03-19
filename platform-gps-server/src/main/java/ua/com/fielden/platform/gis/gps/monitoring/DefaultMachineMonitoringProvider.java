@@ -74,4 +74,9 @@ public class DefaultMachineMonitoringProvider<
         actors.getModuleActor(module.getKey()).tell(new Changed<ASSOCIATION>(machineModuleTemporalAssociation), null);
         // return getResponseFromActor(actors.getModuleActor(module.getKey()), new Changed<ASSOCIATION>(machineModuleTemporalAssociation), 50000);
     }
+
+    @Override
+    public void promoteChangedMachine(final MACHINE machine) {
+        actors.getMachineActor(machine).tell(new Changed<MACHINE>(machine), null);
+    }
 }

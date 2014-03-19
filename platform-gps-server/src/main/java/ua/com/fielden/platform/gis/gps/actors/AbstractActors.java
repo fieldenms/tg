@@ -220,7 +220,7 @@ public abstract class AbstractActors<
 	return machineActors.get(machineId);
     }
 
-    protected ActorRef getMachineActor(final MACHINE machine) {
+    public ActorRef getMachineActor(final MACHINE machine) {
 	return getMachineActor(machine.getId());
     }
 

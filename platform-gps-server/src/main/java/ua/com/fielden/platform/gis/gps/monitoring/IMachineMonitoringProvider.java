@@ -46,4 +46,10 @@ public interface IMachineMonitoringProvider<
      * This API method does the job.
      */
     void promoteNewModule(final MODULE module);
+
+    /**
+     * Every changed machine needs to be promoted to server cache to correctly handle machine processing.
+     * This API method does the job.
+     */
+    void promoteChangedMachine(final MACHINE machine);
 }
