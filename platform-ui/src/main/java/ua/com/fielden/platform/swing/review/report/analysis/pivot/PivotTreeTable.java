@@ -206,26 +206,38 @@ public class PivotTreeTable extends FilterableTreeTable {
     }
 
 
-        /**
-         * Returns the column factory for this {@link PivotTreeTable} instance.
-         *
-         * @return
-         */
-        private ColumnFactory createPivotColumnFactory() {
-    	return new ColumnFactory() {
-    	    @Override
-    	    public void configureColumnWidths(final JXTable table, final TableColumnExt columnExt) {
-    		final int index = table.getColumnModel().getColumnIndex(columnExt.getIdentifier());
-    		final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-    		final int width = pivotModel.getColumnWidth(index);
-    		if (width == 0) {
-    		    super.configureColumnWidths(table, columnExt);
-    		} else {
-    		    columnExt.setPreferredWidth(width);
-    		}
-    	    }
-    	};
-        }
+    /**
+     * Returns the column factory for this {@link PivotTreeTable} instance.
+     *
+     * @return
+     */
+    private ColumnFactory createPivotColumnFactory() {
+	return new ColumnFactory() {
+	    @Override
+	    public void configureColumnWidths(final JXTable table, final TableColumnExt columnExt) {
+		final int index = table.getColumnModel().getColumnIndex(columnExt.getIdentifier());
+		final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
+		final int width = pivotModel.getColumnWidth(index);
+		if (width == 0) {
+		    superConfigureColumnWidths(table, columnExt);
+		} else {
+		    columnExt.setPreferredWidth(width);
+		}
+	    }
+
+	    private void superConfigureColumnWidths(final JXTable table, final TableColumnExt columnExt) {
+		int prefWidth = 0 - table.getColumnMargin();
+	        final int prototypeWidth = calcPrototypeWidth(table, columnExt);
+	        if (prototypeWidth > 0) {
+	            prefWidth = prototypeWidth;
+	        }
+	        final int headerWidth = calcHeaderWidth(table, columnExt);
+	        prefWidth = Math.max(prefWidth, headerWidth);
+	        prefWidth += table.getColumnModel().getColumnMargin();
+	        columnExt.setPreferredWidth(prefWidth);
+	    }
+	};
+    }
 
     /**
      * Adds the tool tips to the table headers.
