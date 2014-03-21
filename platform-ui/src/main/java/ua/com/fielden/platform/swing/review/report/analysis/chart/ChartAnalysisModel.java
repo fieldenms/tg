@@ -34,6 +34,9 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		    @Override
 		    public void run() {
 			groupAnalysisDataProvider.setLoadedData(((IPage<T>)e.getNewPage()).data());
+			if (getAnalysisView() != null) {
+			    getAnalysisView().setVisibleCategoryCount(groupAnalysisDataProvider.getCategoryDataEntryCount());
+			}
 		    }
 		});
 	    }

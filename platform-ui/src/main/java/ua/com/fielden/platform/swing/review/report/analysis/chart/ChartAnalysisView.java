@@ -177,6 +177,11 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	return (ChartAnalysisModel<T>)super.getModel();
     }
 
+    public void setVisibleCategoryCount(final int categoriesCount) {
+	spinner.getModel().setValue(new Integer(categoriesCount));
+	chartScroller.resetScrollRanges();
+    }
+
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
 	super.enableRelatedActions(enable, navigate);
