@@ -52,4 +52,10 @@ public interface IMachineMonitoringProvider<
      * This API method does the job.
      */
     void promoteChangedMachine(final MACHINE machine);
+
+    /**
+     * Every changed module needs to be promoted to server cache to correctly handle module processing.
+     * This API method does the job.
+     */
+    void promoteChangedModule(final MODULE module);
 }

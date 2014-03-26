@@ -92,7 +92,7 @@ public abstract class AbstractActors<
 	modulesCounter = ModulesCounterActor.create(system, keys(this.modulesWithAssociations.keySet()), this);
 
 	this.machineActors = new HashMap<>();
-	this.moduleActors = new HashMap<>();
+	this.moduleActors = new ConcurrentHashMap<>(); // needed thread-safe map not to produce conflicts by dataReceived() and promoteChangedModule()
     }
 
     private static <T extends AbstractEntity<String>> Set<String> keys(final Set<T> keySet) {
@@ -240,6 +240,31 @@ public abstract class AbstractActors<
      */
     public void dataReceived(final MODULE module, final AvlData[] data) {
 	getModuleActor(module.getKey()).tell(data, null);
+    }
+
+    private final String findModuleIMEIbyId(final Long id) {
+	for (final String imei : moduleActors.keySet()) {
+	    if (moduleActors.get(imei).getKey().getId().equals(id)) {
+		return imei;
+	    }
+	}
+	return null;
+    }
+
+    /**
+     * Promotes changed module to the server cache.
+     *
+     * @param module
+     */
+    public void promoteChangedModule(final MODULE module) {
+	final String prevIMEI = findModuleIMEIbyId(module.getId());
+
+	// final MODULE prevModule = moduleActors.get(prevIMEI).getKey();
+	final ActorRef prevModuleActor = moduleActors.get(prevIMEI).getValue();
+
+	prevModuleActor.tell(new ChangedModule<MODULE>(module), null);
+	moduleActors.remove(prevIMEI);
+	this.moduleActors.put(module.getKey(), new Pair<>(module, prevModuleActor));
     }
 
     /**

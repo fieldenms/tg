@@ -79,4 +79,9 @@ public class DefaultMachineMonitoringProvider<
     public void promoteChangedMachine(final MACHINE machine) {
         actors.getMachineActor(machine).tell(new Changed<MACHINE>(machine), null);
     }
+
+    @Override
+    public void promoteChangedModule(final MODULE module) {
+        actors.promoteChangedModule(module);
+    }
 }

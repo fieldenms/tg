@@ -45,11 +45,14 @@ public abstract class AbstractAvlModuleActor<
 
     private final MessagesComparator<MESSAGE> messagesComparator;
     private final Comparator<ASSOCIATION> machineAssociationsComparator;
-    private final MODULE module;
+    private MODULE module;
     private final HibernateUtil hibUtil;
     private final AvlToMessageConverter<MESSAGE> avlToMessageConverter = new AvlToMessageConverter<>();
     private ActorRef modulesCounterRef;
-    private final List<ASSOCIATION> machineAssociations;
+    private final List<ASSOCIATION> machineAssociations; // IMPORTANT (WARNING): the 'module' property in Association is irrelevant (the same in all associations)
+    							// and should not be used anywhere!
+    							// Please use 'module' property in this actor, which relevance is updated during moduleActor lifecycle
+    							// (e.g. module can have IMEI or serialNumber updated through promoteChangedModule(..) method).
     private final AbstractActors<?, ?, ?, ?, ?, ?> actors;
 
     public AbstractAvlModuleActor(final EntityFactory factory, final MODULE module, final List<ASSOCIATION> machineAssociations, final HibernateUtil hibUtil, final ActorRef modulesCounterRef, final AbstractActors<?, ?, ?, ?,?, ?> actors) {
@@ -102,6 +105,8 @@ public abstract class AbstractAvlModuleActor<
 		}
 	    } else if (data instanceof New) {
 		promoteNewMachineAssociation((New<ASSOCIATION>) data);
+	    } else if (data instanceof ChangedModule) {
+		promoteChangedModule((ChangedModule<MODULE>) data);
 	    } else if (data instanceof Changed) {
 		promoteChangedMachineAssociation((Changed<ASSOCIATION>) data);
 	    } else {
@@ -124,6 +129,12 @@ public abstract class AbstractAvlModuleActor<
 	Collections.sort(this.machineAssociations, machineAssociationsComparator);
 
 	logger.info("A new association [" + assoc + " to " + toString(assoc.getTo()) + "] has been appeared and sucessfully promoted to module actor.");
+    }
+
+    protected void promoteChangedModule(final ChangedModule<MODULE> changedModule) {
+	final MODULE oldModule = module;
+	module = changedModule.getValue();
+	logger.info("The module has been mutated from [" + oldModule + "] to [" + module + "], and these changes has been sucessfully promoted to module actor.");
     }
 
     protected void promoteChangedMachineAssociation(final Changed<ASSOCIATION> changedAssoc) {
