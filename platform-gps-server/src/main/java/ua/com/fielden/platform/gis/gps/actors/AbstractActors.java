@@ -235,11 +235,19 @@ public abstract class AbstractActors<
     /**
      * An API method for handling received module data.
      *
-     * @param module
+     * @param imei
      * @param data
      */
-    public void dataReceived(final MODULE module, final AvlData[] data) {
-	getModuleActor(module.getKey()).tell(data, null);
+    public void dataReceived(final String imei, final AvlData[] data) {
+	final ActorRef actor = getModuleActor(imei);
+	if (actor != null) { // the module is registered
+	    actor.tell(data, null);
+	} else {
+	    logger.warn("The module with imei [" + imei + "] is no longer registered. " +
+	    		"This is most likely caused by the changes of IMEI for the module. " +
+	    		"As soon as old cached message channel with old IMEI will be dead and new channel will handle login -- " +
+	    		"you will see the regular 'Unrecognised IMEI' message.");
+	}
     }
 
     private final String findModuleIMEIbyId(final Long id) {

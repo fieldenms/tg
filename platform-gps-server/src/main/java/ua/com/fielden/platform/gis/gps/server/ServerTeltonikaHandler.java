@@ -36,13 +36,12 @@ public class ServerTeltonikaHandler<
     private final ConcurrentHashMap<String, Channel> existingConnections;
 
     private String imei;
-    private MODULE module;
     private final Logger log = Logger.getLogger(ServerTeltonikaHandler.class);
     private final ChannelBuffer ack = ChannelBuffers.buffer(4);
     private final IModuleLookup<MODULE> moduleLookup;
-    private final IMessageHandler<MODULE> messageHandler;
+    private final IMessageHandler messageHandler;
 
-    public ServerTeltonikaHandler(final ConcurrentHashMap<String, Channel> existingConnections, final ChannelGroup allChannels, final IModuleLookup<MODULE> moduleLookup, final IMessageHandler<MODULE> messageHandler) {
+    public ServerTeltonikaHandler(final ConcurrentHashMap<String, Channel> existingConnections, final ChannelGroup allChannels, final IModuleLookup<MODULE> moduleLookup, final IMessageHandler messageHandler) {
 	this.existingConnections = existingConnections;
 	this.allChannels = allChannels;
 	this.moduleLookup = moduleLookup;
@@ -69,7 +68,7 @@ public class ServerTeltonikaHandler<
 	    // IMEI
 	    handleLogin(ctx, getImei()); // process the initial handshake that result is successful or unsuccessful IMEI recognition
 	} else if (msg instanceof AvlData[]) { // AVL data array
-	    handleData(ctx, getModule(), (AvlData[]) msg);
+	    handleData(ctx, getImei(), (AvlData[]) msg);
 	} else {
 	    super.messageReceived(ctx, e);
 	}
@@ -120,7 +119,6 @@ public class ServerTeltonikaHandler<
 		log.debug("Authorised IMEI [" + imei + "].");
 		msg.writeByte(LOGIN_ALLOW);
 		setImei(imei);
-		setModule(module.value());
 	    } else {
 		log.warn("Unrecognised IMEI [" + imei + "].");
 		msg.writeByte(LOGIN_DENY);
@@ -135,13 +133,13 @@ public class ServerTeltonikaHandler<
 	log.debug("Logging off client [" + getImei() + "].");
     }
 
-    private void handleData(final ChannelHandlerContext ctx, final MODULE module, final AvlData[] data) {
+    private void handleData(final ChannelHandlerContext ctx, final String imei, final AvlData[] data) {
 	final Channel channel = ctx.getChannel();
 	log.debug("Received GPS data from IMEI [" + getImei() + "]");
 	final int count = data.length;
 	log.debug("AVL data count = [" + count + "]");
 
-	messageHandler.handle(module, data);
+	messageHandler.handle(imei, data);
 
 	ack.resetWriterIndex();
 	ack.writeInt(count);
@@ -154,13 +152,5 @@ public class ServerTeltonikaHandler<
 
     private void setImei(final String deviceId) {
 	this.imei = deviceId;
-    }
-
-    public MODULE getModule() {
-	return module;
-    }
-
-    private void setModule(final MODULE module) {
-	this.module = module;
     }
 }

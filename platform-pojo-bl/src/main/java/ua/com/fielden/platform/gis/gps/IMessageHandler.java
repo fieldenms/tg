@@ -7,6 +7,6 @@ package ua.com.fielden.platform.gis.gps;
  * @author TG Team
  *
  */
-public interface IMessageHandler<MODULE extends AbstractAvlModule> {
-    IMessageHandler<MODULE> handle(final MODULE module, final AvlData[] data);
+public interface IMessageHandler {
+    IMessageHandler handle(final String imei, final AvlData[] data);
 }

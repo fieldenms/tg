@@ -5,7 +5,7 @@ import ua.com.fielden.platform.gis.gps.AvlData;
 import ua.com.fielden.platform.gis.gps.IMessageHandler;
 import ua.com.fielden.platform.gis.gps.actors.AbstractActors;
 
-public class GpsMessageHandler<MODULE extends AbstractAvlModule> implements IMessageHandler<MODULE> {
+public class GpsMessageHandler<MODULE extends AbstractAvlModule> implements IMessageHandler {
     private final AbstractActors<?, ?, MODULE, ?, ?, ?> actors;
 
     public GpsMessageHandler(final AbstractActors<?, ?, MODULE, ?, ?, ?> actors) {
@@ -13,8 +13,8 @@ public class GpsMessageHandler<MODULE extends AbstractAvlModule> implements IMes
     }
 
     @Override
-    public IMessageHandler<MODULE> handle(final MODULE module, final AvlData[] data) {
-	actors.dataReceived(module, data);
+    public IMessageHandler handle(final String imei, final AvlData[] data) {
+	actors.dataReceived(imei, data);
 	return this;
     }
 }
