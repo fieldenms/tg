@@ -1,19 +1,32 @@
 package ua.com.fielden.platform.utils;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.lang.reflect.Field;
+import java.math.BigInteger;
+import java.util.Iterator;
 import java.util.List;
 
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.TypeFilter;
+import ua.com.fielden.platform.reflection.TypeFilter.EntityHasPropertyOfType;
 
 public final class Validators {
     private Validators() {
@@ -89,6 +102,50 @@ public final class Validators {
             final String toDateProperty, //
             final String... matchProperties) {
         return findFirstOverlapping(entity, null, controller, fromDateProperty, toDateProperty, matchProperties);
+    }
+
+    /**
+     * Analyses all entity types on the subject of having an active dependency on the specified value.
+     * This implementation assumes that all involved entities have boolean property "active".
+     *
+     * @param entityTypes
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> int countActiveDependencies(final List<Class<? extends AbstractEntity<?>>> entityTypes, final T entity, final IEntityAggregatesDao coAggregate) {
+        final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getType();
+        final List<Class<? extends AbstractEntity<?>>> relevantTypes = TypeFilter.filter(entityTypes, new EntityHasPropertyOfType(entityType));
+
+        if (relevantTypes.isEmpty()) {
+            return 0;
+        } else {
+            final Iterator<Class<? extends AbstractEntity<?>>> iter = relevantTypes.iterator();
+            final Class<? extends AbstractEntity<?>> firstEntityType = iter.next();
+
+            final List<Field> props = Finder.findPropertiesOfSpecifiedType(firstEntityType, entityType);
+            IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(getReferenceCountForSingleProp(firstEntityType, props));
+
+            for (; iter.hasNext();) {
+                final Class<? extends AbstractEntity<?>> nextEntityType = iter.next();
+                expressionModelInProgress = expressionModelInProgress.add().model(getReferenceCountForSingleProp(nextEntityType, props));
+            }
+
+            final AggregatedResultQueryModel query = select(entityType).where().prop("id").eq().val(entity).yield().expr(expressionModelInProgress.model()).as("kount").modelAsAggregate();
+            final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = from(query).model();
+
+            final BigInteger kount = (BigInteger) coAggregate.getEntity(qem).get("kount");
+            return kount.intValue();
+        }
+    }
+
+    private static <T extends AbstractEntity<?>> PrimitiveResultQueryModel getReferenceCountForSingleProp(final Class<? extends AbstractEntity<?>> entityType, final List<Field> props) {
+        final Iterator<Field> iter = props.iterator();
+        final Field firstProp = iter.next();
+        ICompoundCondition0<? extends AbstractEntity<?>> cond = select(entityType).where().prop("active").eq().val(true).and().prop(firstProp.getName()).eq().extProp("id");
+        for (; iter.hasNext();) {
+            cond = cond.and().prop(iter.next().getName()).eq().extProp("id");
+        }
+        return cond.yield().countAll().modelAsPrimitive();
     }
 
     /**

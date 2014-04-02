@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 
@@ -29,14 +30,14 @@ public class TypeFilter {
     /**
      * Filters out those types from the provided list that do not satisfy the predicate.
      *
-     * @param types -- a list of types to filter
+     * @param entityTypes -- a list of types to filter
      * @param predicate -- a predicate that to be satisfied for a type to be chosen for a resultant list
      * @return
      */
-    public static List<Class<?>> filter(final List<Class<?>> types, final Predicate<Class<?>> predicate) {
-        final List<Class<?>> result = new ArrayList<>();
+    public static List<Class<? extends AbstractEntity<?>>> filter(final List<Class<? extends AbstractEntity<?>>> entityTypes, final Predicate<Class<?>> predicate) {
+        final List<Class<? extends AbstractEntity<?>>> result = new ArrayList<>();
 
-        for (final Class<?> type: types) {
+        for (final Class<? extends AbstractEntity<?>> type: entityTypes) {
             if (predicate.apply(type)) {
                 result.add(type);
             }
