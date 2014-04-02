@@ -20,6 +20,7 @@ import ua.com.fielden.platform.sample.domain.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgBogieClass;
 import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
+import ua.com.fielden.platform.sample.domain.ITgCategory;
 import ua.com.fielden.platform.sample.domain.ITgFuelType;
 import ua.com.fielden.platform.sample.domain.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgMakeCount;
@@ -30,6 +31,8 @@ import ua.com.fielden.platform.sample.domain.ITgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.ITgPersonName;
+import ua.com.fielden.platform.sample.domain.ITgSubSystem;
+import ua.com.fielden.platform.sample.domain.ITgSystem;
 import ua.com.fielden.platform.sample.domain.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.ITgVehicleFinDetails;
@@ -45,6 +48,7 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsageDao;
 import ua.com.fielden.platform.sample.domain.TgBogieClassDao;
 import ua.com.fielden.platform.sample.domain.TgBogieDao;
 import ua.com.fielden.platform.sample.domain.TgBogieLocationDao;
+import ua.com.fielden.platform.sample.domain.TgCategoryDao;
 import ua.com.fielden.platform.sample.domain.TgFuelTypeDao;
 import ua.com.fielden.platform.sample.domain.TgFuelUsageDao;
 import ua.com.fielden.platform.sample.domain.TgMakeCountDao;
@@ -55,6 +59,8 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit3Dao;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4Dao;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5Dao;
 import ua.com.fielden.platform.sample.domain.TgPersonNameDao;
+import ua.com.fielden.platform.sample.domain.TgSubSystemDao;
+import ua.com.fielden.platform.sample.domain.TgSystemDao;
 import ua.com.fielden.platform.sample.domain.TgTimesheetDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetailsDao;
@@ -75,9 +81,9 @@ import com.google.inject.TypeLiteral;
 
 /**
  * Serve IoC module for platform related testing.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PlatformTestServerModule extends BasicWebServerModule {
 
@@ -127,6 +133,9 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgWagonClassCompatibility.class).to(TgWagonClassCompatibilityDao.class);
         bind(ITgWorkshop.class).to(TgWorkshopDao.class);
         bind(ITgTimesheet.class).to(TgTimesheetDao.class);
+        bind(ITgSystem.class).to(TgSystemDao.class);
+        bind(ITgSubSystem.class).to(TgSubSystemDao.class);
+        bind(ITgCategory.class).to(TgCategoryDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
         bind(ITgVehicleFinDetails.class).to(TgVehicleFinDetailsDao.class);
         bind(ITgPersonName.class).to(TgPersonNameDao.class);

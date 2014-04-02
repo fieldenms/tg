@@ -18,6 +18,7 @@ import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
+import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
@@ -28,6 +29,8 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
+import ua.com.fielden.platform.sample.domain.TgSubSystem;
+import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
@@ -45,9 +48,9 @@ import ua.com.fielden.platform.test.entities.CompositeEntityKey;
 
 /**
  * A class to enlist platform test domain entities. Should be replaced with runtime generation via reflection.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PlatformTestDomainTypes implements IApplicationDomainProvider {
     public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
@@ -94,6 +97,9 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(EntityWithSimpleMoney.class);
         add(EntityWithDynamicCompositeKey.class);
         add(TgAverageFuelUsage.class);
+        add(TgSystem.class);
+        add(TgSubSystem.class);
+        add(TgCategory.class);
     }
 
     @Override
