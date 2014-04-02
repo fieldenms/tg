@@ -12,8 +12,9 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Represents the compatibility between certain wagon and bogie classes.
+ * 
  * @author nc
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
@@ -21,48 +22,51 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 public class TgWagonClassCompatibility extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo
+    @IsProperty
+    @MapTo
     @CompositeKeyMember(1)
     private TgWagonClass wagonClass;
 
-    @IsProperty @MapTo
+    @IsProperty
+    @MapTo
     @CompositeKeyMember(2)
     private TgBogieClass bogieClass;
 
-    @IsProperty @MapTo
+    @IsProperty
+    @MapTo
     private String status;
 
     public TgWagonClassCompatibility() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     public TgWagonClass getWagonClass() {
-	return wagonClass;
+        return wagonClass;
     }
 
     @Observable
     public TgWagonClassCompatibility setWagonClass(final TgWagonClass wagonClass) {
-	this.wagonClass = wagonClass;
-	return this;
+        this.wagonClass = wagonClass;
+        return this;
     }
 
     public TgBogieClass getBogieClass() {
-	return bogieClass;
+        return bogieClass;
     }
 
     @Observable
     public TgWagonClassCompatibility setBogieClass(final TgBogieClass bogieClass) {
-	this.bogieClass = bogieClass;
-	return this;
+        this.bogieClass = bogieClass;
+        return this;
     }
 
     public String getStatus() {
-	return status;
+        return status;
     }
 
     @Observable
     public TgWagonClassCompatibility setStatus(final String status) {
-	this.status = status;
-	return this;
+        this.status = status;
+        return this;
     }
 }

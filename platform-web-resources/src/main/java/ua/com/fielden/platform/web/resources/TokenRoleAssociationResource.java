@@ -19,7 +19,7 @@ import ua.com.fielden.platform.security.provider.ISecurityTokenController;
  * <li>POST -- accepts a map between token class names and lists of role ids, which results in persisting such associations; expected URI is ../securitytokens.
  * </ul>
  * <p>
- *
+ * 
  * @author TG Team
  */
 public class TokenRoleAssociationResource extends ServerResource {
@@ -32,12 +32,12 @@ public class TokenRoleAssociationResource extends ServerResource {
      * Principle constructor.
      */
     public TokenRoleAssociationResource(final ISecurityTokenController controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	setNegotiated(false);
-	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
-	this.controller = controller;
-	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
+        init(context, request, response);
+        setNegotiated(false);
+        getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
+        this.controller = controller;
+        this.restUtil = restUtil;
+        this.username = (String) request.getAttributes().get("username");
     }
 
     ///////////////////////////////////////////////////////////////////
@@ -50,12 +50,12 @@ public class TokenRoleAssociationResource extends ServerResource {
     @Get
     @Override
     public Representation get() {
-	// process GET request
-	try {
-	    return restUtil.mapRepresentation(controller.findAllAssociations());
-	} catch (final Exception ex) {
-	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-	    return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
-	}
+        // process GET request
+        try {
+            return restUtil.mapRepresentation(controller.findAllAssociations());
+        } catch (final Exception ex) {
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
+        }
     }
 }

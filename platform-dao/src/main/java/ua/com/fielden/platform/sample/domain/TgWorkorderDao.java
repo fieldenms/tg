@@ -14,21 +14,21 @@ import com.google.inject.Inject;
 
 /**
  * DAO for retrieving workorders.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(TgWorkOrder.class)
 public class TgWorkorderDao extends CommonEntityDao<TgWorkOrder> implements ITgWorkorder {
 
     @Inject
     protected TgWorkorderDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
     @Override
     @SessionRequired
     public void delete(final EntityResultQueryModel<TgWorkOrder> entityModel, final Map<String, Object> paramValues) {
-	defaultDelete(entityModel, paramValues);
+        defaultDelete(entityModel, paramValues);
     }
 }

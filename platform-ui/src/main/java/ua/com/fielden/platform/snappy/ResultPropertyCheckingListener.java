@@ -20,29 +20,24 @@ package ua.com.fielden.platform.snappy;
 /**
  * This listener used to add/remove the blocks and result columns corresponding to added/removed checking path (immediate synchronization between rule blocks+columns and entities
  * tree).
- *
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- *
+ * 
+ * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy
+ * related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy
+ * integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will
+ * be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been
+ * commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG
+ * platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until
+ * snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy
+ * integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will
+ * be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been
+ * commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG
+ * platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
+ * 
  * @author Jhou
- *
+ * 
  */
-public class ResultPropertyCheckingListener {}
+public class ResultPropertyCheckingListener {
+}
 //extends RulePropertyCheckingListener {
 //
 //    public ResultPropertyCheckingListener(final JTabbedPane rulesTabbedPane, final TgSnappyApplicationModel tgApplicationModel) {

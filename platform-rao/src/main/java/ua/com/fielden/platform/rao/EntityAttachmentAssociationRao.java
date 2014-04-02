@@ -20,9 +20,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 /**
  * This is a default RAO implementation for managing association between attachments and entities.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(EntityAttachmentAssociation.class)
 public class EntityAttachmentAssociationRao extends CommonEntityRao<EntityAttachmentAssociation> implements IEntityAttachmentAssociationController {
@@ -31,8 +31,8 @@ public class EntityAttachmentAssociationRao extends CommonEntityRao<EntityAttach
 
     @Inject
     public EntityAttachmentAssociationRao(final RestClientUtil restUtil, final IAttachment attachmentController) {
-	super(restUtil);
-	this.attachmentController = attachmentController;
+        super(restUtil);
+        this.attachmentController = attachmentController;
     }
 
     @Override
@@ -42,19 +42,19 @@ public class EntityAttachmentAssociationRao extends CommonEntityRao<EntityAttach
 
     @Override
     public IPage<EntityAttachmentAssociation> findDetails(final AbstractEntity<?> masterEntity, final fetch<EntityAttachmentAssociation> model, final int pageCapacity) {
-	final EntityResultQueryModel<EntityAttachmentAssociation> q = select(EntityAttachmentAssociation.class).where().prop("entityId").eq().val(masterEntity.getId()).model();
-	final OrderingModel orderBy = orderBy().prop("attachment.key").asc().model();
-	return new SinglePage<EntityAttachmentAssociation>(getAllEntities(from(q).with(fetchAll(EntityAttachmentAssociation.class)).with(orderBy).model()));
+        final EntityResultQueryModel<EntityAttachmentAssociation> q = select(EntityAttachmentAssociation.class).where().prop("entityId").eq().val(masterEntity.getId()).model();
+        final OrderingModel orderBy = orderBy().prop("attachment.key").asc().model();
+        return new SinglePage<EntityAttachmentAssociation>(getAllEntities(from(q).with(fetchAll(EntityAttachmentAssociation.class)).with(orderBy).model()));
     }
 
     @Override
     public EntityAttachmentAssociation saveDetails(final AbstractEntity<?> masterEntity, final EntityAttachmentAssociation detailEntity) {
-	return save(detailEntity);
+        return save(detailEntity);
     }
 
     @Override
     public void deleteDetails(final AbstractEntity<?> masterEntity, final EntityAttachmentAssociation detailEntity) {
-	delete(detailEntity);
+        delete(detailEntity);
     }
 
     @Override

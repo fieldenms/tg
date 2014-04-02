@@ -10,6 +10,6 @@ public class EChecksumMismatch extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     public EChecksumMismatch(final String expectedChecksum, final String actualChecksum) {
-	super("Mismatch between the expected " + expectedChecksum + " and the actual " + actualChecksum + " checksums.");
+        super("Mismatch between the expected " + expectedChecksum + " and the actual " + actualChecksum + " checksums.");
     }
 }

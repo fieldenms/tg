@@ -15,9 +15,9 @@ import com.google.inject.Inject;
 
 /**
  * DAO driven {@link IMetaPropertyFactory} implementation.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class DaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
 
@@ -25,19 +25,19 @@ public class DaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
 
     @Inject
     public DaoMetaPropertyFactory(final DaoFactory factory, final DomainValidationConfig domainConfig, final DomainMetaPropertyConfig domainMetaConfig) {
-	super(domainConfig, domainMetaConfig);
-	this.factory = factory;
+        super(domainConfig, domainMetaConfig);
+        this.factory = factory;
     }
 
     @Override
     protected synchronized IBeforeChangeEventHandler createEntityExists(final EntityExists anotation) {
-	final Class<? extends AbstractEntity<?>> key = anotation.value();
-	if (!entityExistsValidators.containsKey(key)) {
-	    final IEntityDao dao = factory.newDao(key);
-	    entityExistsValidators.put(key, new EntityExistsValidator(dao));
-	}
+        final Class<? extends AbstractEntity<?>> key = anotation.value();
+        if (!entityExistsValidators.containsKey(key)) {
+            final IEntityDao dao = factory.newDao(key);
+            entityExistsValidators.put(key, new EntityExistsValidator(dao));
+        }
 
-	return entityExistsValidators.get(key);
+        return entityExistsValidators.get(key);
     }
 
 }

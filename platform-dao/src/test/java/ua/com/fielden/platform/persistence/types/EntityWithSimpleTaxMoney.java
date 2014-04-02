@@ -13,9 +13,9 @@ import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAmountType;
 
 /**
  * This is a test entity, which is currently used for testing of db operations on tax sensitive {@link Money} instances.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(String.class)
 @DescTitle("Description")
@@ -24,29 +24,30 @@ public class EntityWithSimpleTaxMoney extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @MapTo("MONEY") @PersistedType(userType = ISimplyMoneyWithTaxAmountType.class)
+    @MapTo("MONEY")
+    @PersistedType(userType = ISimplyMoneyWithTaxAmountType.class)
     private Money money;
 
     protected EntityWithSimpleTaxMoney() {
     }
 
     public EntityWithSimpleTaxMoney(final String key, final String desc, final Money money) {
-	super(null, key, desc);
-	setMoney(money);
+        super(null, key, desc);
+        setMoney(money);
     }
 
     @Observable
     public void setMoney(final Money money) {
-	if (money == null) {
-	    throw new IllegalArgumentException("money should not be null");
-	}
-	if (money.getTaxAmount() == null) {
-	    throw new IllegalArgumentException("money should tax sensitive");
-	}
-	this.money = money;
+        if (money == null) {
+            throw new IllegalArgumentException("money should not be null");
+        }
+        if (money.getTaxAmount() == null) {
+            throw new IllegalArgumentException("money should tax sensitive");
+        }
+        this.money = money;
     }
 
     public Money getMoney() {
-	return money;
+        return money;
     }
 }

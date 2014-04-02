@@ -18,9 +18,9 @@ import com.google.inject.Injector;
 
 /**
  * A platform specific implementation for web-driven test configuration.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class PlatformWebDrivenTestCaseConfiguration implements IWebDrivenTestCaseConfiguration {
     private final RestClientUtil restClientUtil;
@@ -29,39 +29,39 @@ public class PlatformWebDrivenTestCaseConfiguration implements IWebDrivenTestCas
     private final ISerialiser clientSerialiser;
     private RestServerUtil restServerUtil;
 
-    private ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] {InspectedEntity.class});
+    private ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class });
 
     public PlatformWebDrivenTestCaseConfiguration() {
-	restClientUtil = new RestClientUtil(Protocol.HTTP, "localhost", PORT, "v1", "test");
-	injector = new ApplicationInjectorFactory().add(new CommonRestFactoryModuleForTestingPurposes(restClientUtil, serialisationClassProvider)).getInjector();
-	entityFactory = injector.getInstance(EntityFactory.class);
-	clientSerialiser = injector.getInstance(ISerialiser.class);
-	restClientUtil.initSerialiser(clientSerialiser);
+        restClientUtil = new RestClientUtil(Protocol.HTTP, "localhost", PORT, "v1", "test");
+        injector = new ApplicationInjectorFactory().add(new CommonRestFactoryModuleForTestingPurposes(restClientUtil, serialisationClassProvider)).getInjector();
+        entityFactory = injector.getInstance(EntityFactory.class);
+        clientSerialiser = injector.getInstance(ISerialiser.class);
+        restClientUtil.initSerialiser(clientSerialiser);
     }
 
     @Override
     public EntityFactory entityFactory() {
-	return entityFactory;
+        return entityFactory;
     }
 
     @Override
     public Injector injector() {
-	return injector;
+        return injector;
     }
 
     @Override
     public RestClientUtil restClientUtil() {
-	return restClientUtil;
+        return restClientUtil;
     }
 
     @Override
     public RestServerUtil restServerUtil() {
-	return restServerUtil;
+        return restServerUtil;
     }
 
     @Override
     public void setDbDrivenTestConfiguration(final IDbDrivenTestCaseConfiguration config) {
-	restServerUtil = new RestServerUtil(config.getInjector().getInstance(ISerialiser.class));
+        restServerUtil = new RestServerUtil(config.getInjector().getInstance(ISerialiser.class));
     }
 
 }

@@ -16,76 +16,76 @@ public class ResultQueryYieldDetails2 implements Comparable<ResultQueryYieldDeta
     private final YieldDetailsType yieldDetailsType;
 
     public ResultQueryYieldDetails2(final String name, final Class javaType, final Object hibType, final String column, final boolean nullable, final YieldDetailsType yieldDetailsType) {
-	super();
-	this.name = name;
-	this.javaType = javaType;
-	this.hibType = hibType;
-	this.column = column;
-	this.nullable = nullable;
-	this.yieldDetailsType = yieldDetailsType;
+        super();
+        this.name = name;
+        this.javaType = javaType;
+        this.hibType = hibType;
+        this.column = column;
+        this.nullable = nullable;
+        this.yieldDetailsType = yieldDetailsType;
     }
 
     public ResultQueryYieldDetails2(final String name, final Class javaType, final Object hibType, final String column, final YieldDetailsType yieldDetailsType) {
-	this(name, javaType, hibType, column, false, yieldDetailsType);
+        this(name, javaType, hibType, column, false, yieldDetailsType);
     }
 
     public Type getHibTypeAsType() {
-	return hibType instanceof Type ? (Type) hibType : null;
+        return hibType instanceof Type ? (Type) hibType : null;
     }
 
     public IUserTypeInstantiate getHibTypeAsUserType() {
-	return hibType instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibType : null;
+        return hibType instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibType : null;
     }
 
     public ICompositeUserTypeInstantiate getHibTypeAsCompositeUserType() {
-	return hibType instanceof ICompositeUserTypeInstantiate ? (ICompositeUserTypeInstantiate) hibType : null;
+        return hibType instanceof ICompositeUserTypeInstantiate ? (ICompositeUserTypeInstantiate) hibType : null;
     }
 
     @Override
     public String toString() {
-	return "\nname = " + name + "\njavaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + "\nhibType = "
-		+ (hibType != null ? hibType.getClass().getSimpleName() : hibType) + "\ncolumn(s) = " + column;
+        return "\nname = " + name + "\njavaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + "\nhibType = "
+                + (hibType != null ? hibType.getClass().getSimpleName() : hibType) + "\ncolumn(s) = " + column;
     }
 
     public boolean isCompositeProperty() {
-	return yieldDetailsType.equals(YieldDetailsType.COMPOSITE_TYPE_HEADER);
+        return yieldDetailsType.equals(YieldDetailsType.COMPOSITE_TYPE_HEADER);
     }
 
     public boolean isEntity() {
-	return isPersistedEntityType(javaType) && yieldDetailsType.equals(YieldDetailsType.USUAL_PROP);
+        return isPersistedEntityType(javaType) && yieldDetailsType.equals(YieldDetailsType.USUAL_PROP);
     }
 
     public boolean isUnionEntity() {
-	return yieldDetailsType.equals(YieldDetailsType.UNION_ENTITY_HEADER);
+        return yieldDetailsType.equals(YieldDetailsType.UNION_ENTITY_HEADER);
     }
 
     public String getTypeString() {
-	if (hibType != null) {
-	    return hibType.getClass().getName();
-	} else {
-	    return null;
-	}
+        if (hibType != null) {
+            return hibType.getClass().getName();
+        } else {
+            return null;
+        }
     }
 
     @Override
     public int compareTo(final ResultQueryYieldDetails2 o) {
-	return name.compareTo(o.name);
+        return name.compareTo(o.name);
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public Class getJavaType() {
-	return javaType;
+        return javaType;
     }
 
     public Object getHibType() {
-	return hibType;
+        return hibType;
     }
 
     public String getColumn() {
-	return column;
+        return column;
     }
 
     public boolean isNullable() {
@@ -93,10 +93,10 @@ public class ResultQueryYieldDetails2 implements Comparable<ResultQueryYieldDeta
     }
 
     public static enum YieldDetailsType {
-	USUAL_PROP, //
-	AGGREGATED_EXPRESSION, // as per PropertyMetadata property
-	UNION_ENTITY_HEADER, //
-	COMPOSITE_TYPE_HEADER;
+        USUAL_PROP, //
+        AGGREGATED_EXPRESSION, // as per PropertyMetadata property
+        UNION_ENTITY_HEADER, //
+        COMPOSITE_TYPE_HEADER;
     }
 
     public YieldDetailsType getYieldDetailsType() {

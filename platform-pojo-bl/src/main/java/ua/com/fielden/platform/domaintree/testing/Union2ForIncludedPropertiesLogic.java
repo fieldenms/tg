@@ -9,9 +9,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity for "included properties logic" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @DescTitle(value = "Desc title", desc = "Desc desc")
@@ -32,6 +32,7 @@ public class Union2ForIncludedPropertiesLogic extends AbstractEntity<String> {
     public Integer getCommonProp() {
         return commonProp;
     }
+
     @Observable
     public void setCommonProp(final Integer commonProp) {
         this.commonProp = commonProp;
@@ -40,6 +41,7 @@ public class Union2ForIncludedPropertiesLogic extends AbstractEntity<String> {
     public Integer getNonCommonPropFrom2() {
         return nonCommonPropFrom2;
     }
+
     @Observable
     public void setNonCommonPropFrom2(final Integer nonCommonPropFrom2) {
         this.nonCommonPropFrom2 = nonCommonPropFrom2;

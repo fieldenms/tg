@@ -5,9 +5,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 
 /**
  * Entity for "domain tree representation" testing (with 'abstract' modifier).
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 public abstract class EntityWithAbstractNature extends AbstractEntity<String> {

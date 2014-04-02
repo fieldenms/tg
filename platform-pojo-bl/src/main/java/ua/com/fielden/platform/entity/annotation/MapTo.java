@@ -8,7 +8,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * An annotation used for specifying mapping of properties to corresponding table columns.
- *
+ * 
  * @author TG Team
  */
 
@@ -18,6 +18,7 @@ public @interface MapTo {
 
     /**
      * Represents column name
+     * 
      * @return
      */
     String value() default "";

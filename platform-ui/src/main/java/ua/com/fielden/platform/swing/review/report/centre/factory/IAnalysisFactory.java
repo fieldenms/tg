@@ -18,9 +18,9 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 /**
  * Factory for analysis.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  * @param <A>
  */
@@ -28,7 +28,7 @@ public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends Abstrac
 
     /**
      * Creates an analysis configuration view.
-     *
+     * 
      * @param owner
      * @param criteria
      * @param name
@@ -36,22 +36,23 @@ public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends Abstrac
      * @return
      */
     A createAnalysis(final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
-	    final String name, //
-	    final Map<Object, DetailsFrame> detailsCache,//
-	    final BlockingIndefiniteProgressLayer progressLayer);
+            final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
+            final String name, //
+            final Map<Object, DetailsFrame> detailsCache,//
+            final BlockingIndefiniteProgressLayer progressLayer);
 
     /**
      * Specifies the {@link IToolbarCustomiser} instance for this analysis factory.
-     *
+     * 
      * @param analysisCustomiser
-     * @param returns self
+     * @param returns
+     *            self
      */
     IAnalysisFactory<T, A> setToolbarCustomiser(final IToolbarCustomiser<?> toolbarCustomiser);
 
     /**
      * Specifies the {@link IAnalysisViewCustomiser} instance for this analysis factory.
-     *
+     * 
      * @param analysisViewCustomiser
      * @return
      */
@@ -59,7 +60,7 @@ public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends Abstrac
 
     /**
      * Specifies the {@link IAnalysisQueryCustomiser} instance for this analysis factory.
-     *
+     * 
      * @param queryCustomiser
      * @return
      */
@@ -67,7 +68,7 @@ public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends Abstrac
 
     /**
      * Specifies the {@link IDetailsCustomiser} instance for this analysis factory.
-     *
+     * 
      * @param detailsCustomiser
      * @return
      */

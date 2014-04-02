@@ -13,28 +13,28 @@ public class NDecPanelModel<T extends AbstractEntity<?>> {
 
     private final List<String> orderedProperties;
 
-    public NDecPanelModel(){
-	decsMap = new HashMap<>();
-	orderedProperties = new ArrayList<>();
+    public NDecPanelModel() {
+        decsMap = new HashMap<>();
+        orderedProperties = new ArrayList<>();
     }
 
     public DecModel<T> getDec(final int index) {
-	return decsMap.get(orderedProperties.get(index));
+        return decsMap.get(orderedProperties.get(index));
     }
 
-    public int getDecCount(){
-	return orderedProperties.size();
+    public int getDecCount() {
+        return orderedProperties.size();
     }
 
-    public NDecPanelModel<T> setDecs(final List<String> orderedProperties, final Map<String, DecModel<T>> decsMap){
-	this.orderedProperties.clear();
-	if(orderedProperties != null){
-	    this.orderedProperties.addAll(orderedProperties);
-	}
-	this.decsMap.clear();
-	if(decsMap != null){
-	    this.decsMap.putAll(decsMap);
-	}
-	return this;
+    public NDecPanelModel<T> setDecs(final List<String> orderedProperties, final Map<String, DecModel<T>> decsMap) {
+        this.orderedProperties.clear();
+        if (orderedProperties != null) {
+            this.orderedProperties.addAll(orderedProperties);
+        }
+        this.decsMap.clear();
+        if (decsMap != null) {
+            this.decsMap.putAll(decsMap);
+        }
+        return this;
     }
 }

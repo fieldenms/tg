@@ -21,8 +21,8 @@ public abstract class ActionChanger<T> extends Command<T> {
      * @param name
      */
     public ActionChanger(final String name) {
-	super(name);
-	setButton(null);
+        super(name);
+        setButton(null);
     }
 
     /**
@@ -31,7 +31,7 @@ public abstract class ActionChanger<T> extends Command<T> {
      * @return
      */
     public ActionChangeButton getButton() {
-	return button;
+        return button;
     }
 
     /**
@@ -41,24 +41,24 @@ public abstract class ActionChanger<T> extends Command<T> {
      *            - specified button
      */
     public void setButton(final ActionChangeButton button) {
-	this.button = button;
+        this.button = button;
     }
 
     @Override
     protected boolean preAction() {
-	final boolean result = super.preAction();
-	if (button != null) {
-	    button.setDefaultAction(this);
-	    button.setEnabled(false);
-	}
-	return result;
+        final boolean result = super.preAction();
+        if (button != null) {
+            button.setDefaultAction(this);
+            button.setEnabled(false);
+        }
+        return result;
     }
 
     @Override
     protected void postAction(final T value) {
-	super.postAction(value);
-	if (button != null) {
-	    button.setEnabled(true);
-	}
+        super.postAction(value);
+        if (button != null) {
+            button.setEnabled(true);
+        }
     }
 }

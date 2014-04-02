@@ -11,37 +11,38 @@ import ua.com.fielden.platform.security.user.UserRole;
 
 /**
  * Controller that provides API for retrieving and saving user roles associated and users
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IUserController extends IUserDao {
 
     /**
      * Returns all available user roles
-     *
+     * 
      * @return
      */
     List<? extends UserRole> findAllUserRoles();
 
     /**
      * Returns the first page of users fetched with user roles. The page will have less or equal number of items specified by the capacity parameter.
-     *
-     * @param capacity - the number of users in the page. (Notice that page may have less then the value specified by the capacity parameter).
+     * 
+     * @param capacity
+     *            - the number of users in the page. (Notice that page may have less then the value specified by the capacity parameter).
      * @return
      */
     IPage<? extends User> firstPageOfUsersWithRoles(int capacity);
 
     /**
      * Returns the list of users. Users must be associated with user roles.
-     *
+     * 
      * @return
      */
     List<User> findAllUsers();
 
     /**
      * Updates association between user and a list of roles. Once completer user should be associated strictly with the specified list of roles.
-     *
+     * 
      * @param user
      * @param userRoles
      */
@@ -49,7 +50,7 @@ public interface IUserController extends IUserDao {
 
     /**
      * Finds user by name.
-     *
+     * 
      * @param username
      * @return
      */

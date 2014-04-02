@@ -24,31 +24,31 @@ public abstract class DefaultMultipleDecAnalysisFactory<T extends AbstractEntity
 
     @Inject
     public DefaultMultipleDecAnalysisFactory(//
-	    final EntityFactory entityFactory,//
-	    final ICriteriaGenerator criteriaGenerator,//
-	    final IEntityMasterManager masterManager){
-	detailsCustomiser = new MapBasedDetailsCustomiser()//
-	.addDetails(AnalysisDetailsData.class, new DefaultGroupingAnalysisDetails<T>(entityFactory, criteriaGenerator, masterManager));
+    final EntityFactory entityFactory,//
+            final ICriteriaGenerator criteriaGenerator,//
+            final IEntityMasterManager masterManager) {
+        detailsCustomiser = new MapBasedDetailsCustomiser()//
+        .addDetails(AnalysisDetailsData.class, new DefaultGroupingAnalysisDetails<T>(entityFactory, criteriaGenerator, masterManager));
     }
 
     @Override
     public IAnalysisFactory<T, MultipleDecConfigurationView<T>> setToolbarCustomiser(final IToolbarCustomiser<?> toolbarCustomiser) {
-	throw new UnsupportedOperationException("The analysis tool bar customiser can not be set for multiple dec analysis factory.");
+        throw new UnsupportedOperationException("The analysis tool bar customiser can not be set for multiple dec analysis factory.");
     }
 
     @Override
     public IAnalysisFactory<T, MultipleDecConfigurationView<T>> setQueryCustomiser(final IAnalysisQueryCustomiser<T, ?> queryCustomiser) {
-	throw new UnsupportedOperationException("The analysis query customiser can not be set for multiple dec analysis factory.");
+        throw new UnsupportedOperationException("The analysis query customiser can not be set for multiple dec analysis factory.");
     }
 
     @Override
     public IAnalysisFactory<T, MultipleDecConfigurationView<T>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
-	this.detailsCustomiser = detailsCustomiser;
-	return this;
+        this.detailsCustomiser = detailsCustomiser;
+        return this;
     }
 
     @Override
     public IAnalysisFactory<T, MultipleDecConfigurationView<T>> setAnalysisViewCustomiser(final IAnalysisViewCustomiser<?> analysisViewCustomiser) {
-	throw new UnsupportedOperationException("The analysis view customiser can not be set for multiple dec analysis factory.");
+        throw new UnsupportedOperationException("The analysis view customiser can not be set for multiple dec analysis factory.");
     }
 }

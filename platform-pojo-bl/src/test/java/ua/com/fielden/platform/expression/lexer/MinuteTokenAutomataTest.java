@@ -14,53 +14,53 @@ public class MinuteTokenAutomataTest {
 
     @Test
     public void test_full_recognition_of_correct_sequences() throws NoTransitionAvailable, SequenceRecognitionFailed {
-	assertEquals("Incorrect recognition result", "MINUTE", automata.recognisePartiallyFromStart("MINUTE(", 0));
-	assertEquals("Incorrect recognition result", "MINUTE", automata.recognisePartiallyFromStart("   MinUTE (", 0));
-	assertEquals("Incorrect recognition result", "MINUTE", automata.recognisePartiallyFromStart("\t\nMiNuTE\t(", 0));
+        assertEquals("Incorrect recognition result", "MINUTE", automata.recognisePartiallyFromStart("MINUTE(", 0));
+        assertEquals("Incorrect recognition result", "MINUTE", automata.recognisePartiallyFromStart("   MinUTE (", 0));
+        assertEquals("Incorrect recognition result", "MINUTE", automata.recognisePartiallyFromStart("\t\nMiNuTE\t(", 0));
     }
 
     @Test
     public void test_recognition_of_incorrect_sequences() {
-	try {
-	    automata.recognisePartiallyFromStart("", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("+MINUTE(", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("MINUTE_(", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("MI NUTE(", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("M INUTE(", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("MINUTE  ", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("MINUTE  d(", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("MINUTE)", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
+        try {
+            automata.recognisePartiallyFromStart("", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("+MINUTE(", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("MINUTE_(", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("MI NUTE(", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("M INUTE(", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("MINUTE  ", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("MINUTE  d(", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("MINUTE)", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
     }
 
 }

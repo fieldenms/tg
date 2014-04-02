@@ -7,11 +7,11 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 class Completed<ET extends AbstractEntity<?>> extends CompletedAndYielded<ET> implements ICompleted<ET> {
 
     Completed(final Tokens queryTokens) {
-	super(queryTokens);
+        super(queryTokens);
     }
 
     @Override
     public IFunctionLastArgument<ICompleted<ET>, ET> groupBy() {
-	return new FunctionLastArgument<ICompleted<ET>, ET>(getTokens().groupBy(), this);
+        return new FunctionLastArgument<ICompleted<ET>, ET>(getTokens().groupBy(), this);
     }
 }

@@ -17,18 +17,18 @@ public class DetailsFrame extends BaseFrame {
     private final Object associatedEntity;
 
     public DetailsFrame(final Object associatedEntity, final String title, final JComponent component, final ICloseHook<DetailsFrame> hook) {
-	super(hook);
-	this.associatedEntity = associatedEntity;
-	setTitle(title);
-	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
-	setPreferredSize(new Dimension(1000, 500));
-	pack();
-	RefineryUtilities.centerFrameOnScreen(this);
+        super(hook);
+        this.associatedEntity = associatedEntity;
+        setTitle(title);
+        setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
+        setPreferredSize(new Dimension(1000, 500));
+        pack();
+        RefineryUtilities.centerFrameOnScreen(this);
 
-	add(component);
+        add(component);
     }
 
     public Object getAssociatedEntity() {
-	return associatedEntity;
+        return associatedEntity;
     }
 }

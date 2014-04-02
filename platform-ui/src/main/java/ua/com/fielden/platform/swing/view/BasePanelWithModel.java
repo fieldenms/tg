@@ -19,21 +19,21 @@ public abstract class BasePanelWithModel<MODEL extends UModel> extends BasePanel
     private final MODEL model;
 
     public BasePanelWithModel(final MODEL model) {
-	this.model = model;
+        this.model = model;
     }
 
     public BasePanelWithModel(final MODEL model, final LayoutManager layoutManager) {
-	super(layoutManager);
-	this.model = model;
+        super(layoutManager);
+        this.model = model;
     }
 
     public MODEL getModel() {
-	return model;
+        return model;
     }
 
     @Override
     public String whyCannotClose() {
-	return getModel().whyCannotClose();
+        return getModel().whyCannotClose();
     }
 
     /**
@@ -41,21 +41,21 @@ public abstract class BasePanelWithModel<MODEL extends UModel> extends BasePanel
      * hand, if model is lazy then this method must be overridden.
      */
     public void buildUi() {
-	throw new UnsupportedOperationException(getClass().getName() + ": UI building is not implemented by this view");
+        throw new UnsupportedOperationException(getClass().getName() + ": UI building is not implemented by this view");
     }
 
     @Override
     public void init(final BlockingIndefiniteProgressPane blockingPane, final JComponent toBeFocusedAfterInit) {
-	getModel().init(blockingPane, toBeFocusedAfterInit);
+        getModel().init(blockingPane, toBeFocusedAfterInit);
     }
 
     @Override
     public boolean canOpen() {
-	return getModel().canOpen();
+        return getModel().canOpen();
     }
 
     @Override
     public String whyCannotOpen() {
-	return getModel().whyCannotClose();
+        return getModel().whyCannotClose();
     }
 }

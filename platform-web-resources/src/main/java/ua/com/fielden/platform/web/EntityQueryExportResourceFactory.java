@@ -19,9 +19,9 @@ import com.google.inject.Injector;
 /**
  * This is {@link Restlet} implementation that provides logic for correct entity export resource instantiation. Specifically, it should be used to instantiate
  * {@link EntityQueryExportResource} for specific entity types.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class EntityQueryExportResourceFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends Restlet {
     private final Class<DAO> daoType;
@@ -33,23 +33,23 @@ public class EntityQueryExportResourceFactory<T extends AbstractEntity<?>, DAO e
      * Instances of DAO and factory should be thread-safe as they are used by multiple instances of resources serving concurrent requests.
      */
     public EntityQueryExportResourceFactory(final Router router, final Class<DAO> daoType, final Injector injector) {
-	this.daoType = daoType;
-	this.injector = injector;
-	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
-	this.router = router;
+        this.daoType = daoType;
+        this.injector = injector;
+        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.router = router;
     }
 
     @Override
     public void handle(final Request request, final Response response) {
-	super.handle(request, response);
+        super.handle(request, response);
 
-	if (Method.POST.equals(request.getMethod())) {
-	    final DAO dao = injector.getInstance(daoType);
+        if (Method.POST.equals(request.getMethod())) {
+            final DAO dao = injector.getInstance(daoType);
 
-	    final String username = (String) request.getAttributes().get("username");
-	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+            final String username = (String) request.getAttributes().get("username");
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	    new EntityQueryExportResource<T>(router, injector, dao, restUtil, getContext(), request, response).handle();
-	}
+            new EntityQueryExportResource<T>(router, injector, dao, restUtil, getContext(), request, response).handle();
+        }
     }
 }

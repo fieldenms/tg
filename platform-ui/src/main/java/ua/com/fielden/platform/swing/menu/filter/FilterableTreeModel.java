@@ -20,7 +20,7 @@ public class FilterableTreeModel extends AbstractFilterableTreeModel {
      *            -- tree model to wrap.
      */
     public FilterableTreeModel(final DefaultTreeModel model) {
-	this(model, true);
+        this(model, true);
     }
 
     /**
@@ -32,22 +32,22 @@ public class FilterableTreeModel extends AbstractFilterableTreeModel {
      *            -- specifies whether filters should be chained with <code>AND</code> condition
      */
     public FilterableTreeModel(final DefaultTreeModel model, final boolean andMode) {
-	super(model, andMode);
+        super(model, andMode);
     }
 
     @Override
     public DefaultTreeModel getOriginModel() {
-	return (DefaultTreeModel) super.getOriginModel();
+        return (DefaultTreeModel) super.getOriginModel();
     }
 
     @Override
     public void reload() {
-	getOriginModel().reload();
+        getOriginModel().reload();
     }
 
     @Override
     public void valueForPathChanged(final TreePath path, final Object newValue) {
-	// super.valueForPathChanged(path, newValue);
+        // super.valueForPathChanged(path, newValue);
     }
 
 }

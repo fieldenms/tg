@@ -37,22 +37,22 @@ public abstract class SingleFrameApplication extends AbstractUiApplication {
      *            - factory, which should create master's title and panel. Will be used only when master is not visible and only during invocation of this method.
      */
     public void showMasterFor(final AbstractEntity<?> entity, final IEntityMasterFactory entityMasterFactory) {
-	if (entityMasters.get(entity.getId()) == null) {
-	    final ICloseHook<BaseFrame> entityMastersHook = new ICloseHook<BaseFrame>() {
-		@Override
-		public void closed(final BaseFrame frame) {
-		    entityMasters.remove(entity.getId());
-		}
-	    };
+        if (entityMasters.get(entity.getId()) == null) {
+            final ICloseHook<BaseFrame> entityMastersHook = new ICloseHook<BaseFrame>() {
+                @Override
+                public void closed(final BaseFrame frame) {
+                    entityMasters.remove(entity.getId());
+                }
+            };
 
-	    final Pair<String, JPanel> titleAndPanel = entityMasterFactory.createEntityMaster();
-	    final BaseFrame newEntityMaster = new BaseFrame(titleAndPanel.getKey(), entityMastersHook);
-	    newEntityMaster.add(titleAndPanel.getValue());
-	    newEntityMaster.pack();
-	    RefineryUtilities.centerFrameOnScreen(newEntityMaster);
-	    entityMasters.put(entity.getId(), newEntityMaster);
-	}
-	entityMasters.get(entity.getId()).setVisible(true);
+            final Pair<String, JPanel> titleAndPanel = entityMasterFactory.createEntityMaster();
+            final BaseFrame newEntityMaster = new BaseFrame(titleAndPanel.getKey(), entityMastersHook);
+            newEntityMaster.add(titleAndPanel.getValue());
+            newEntityMaster.pack();
+            RefineryUtilities.centerFrameOnScreen(newEntityMaster);
+            entityMasters.put(entity.getId(), newEntityMaster);
+        }
+        entityMasters.get(entity.getId()).setVisible(true);
     }
 
     /**
@@ -62,12 +62,12 @@ public abstract class SingleFrameApplication extends AbstractUiApplication {
      */
     public static interface IEntityMasterFactory {
 
-	/**
-	 * Should return master's title and master's main panel
-	 * 
-	 * @return
-	 */
-	public Pair<String, JPanel> createEntityMaster();
+        /**
+         * Should return master's title and master's main panel
+         * 
+         * @return
+         */
+        public Pair<String, JPanel> createEntityMaster();
 
     }
 

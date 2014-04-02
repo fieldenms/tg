@@ -23,208 +23,203 @@ public class UserControllerForTestPurposes implements IUserController {
     private User user;
 
     void initUser(final EntityFactory factory) throws Exception {
-	user =  factory.newByKey(DummyUser.class, USER_NAME);
-	final String password = new Cypher().encrypt(PASSWORD, UserAuthenticationTestCase.appWidePrivateKey);
-	user.setPassword(password);
+        user = factory.newByKey(DummyUser.class, USER_NAME);
+        final String password = new Cypher().encrypt(PASSWORD, UserAuthenticationTestCase.appWidePrivateKey);
+        user.setPassword(password);
     }
 
     @Override
     public User findUserByKeyWithRoles(final String key) {
-	return USER_NAME.equals(key) ? user : null;
+        return USER_NAME.equals(key) ? user : null;
     }
 
     @Override
     public User save(final User entity) {
-	user = entity;
-	return user;
+        user = entity;
+        return user;
     }
 
     @Override
     public List<? extends UserRole> findAllUserRoles() {
-	return null;
+        return null;
     }
 
     @Override
     public void updateUsers(final Map<User, Set<UserRole>> userRoleMap) {
     }
 
-
     @Override
     public User findUserByIdWithRoles(final Long id) {
-	return user;
+        return user;
     }
 
     @Override
     public List<User> findAllUsers() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
-	return null;
+        return null;
     }
 
     @Override
     public boolean entityExists(final User entity) {
-	return false;
+        return false;
     }
 
     @Override
     public boolean entityWithKeyExists(final Object... keyValues) {
-	return false;
+        return false;
     }
 
     @Override
     public User findByKey(final Object... keyValues) {
-	return USER_NAME.equals(keyValues[0]) ? user : null;
+        return USER_NAME.equals(keyValues[0]) ? user : null;
     }
-
 
     @Override
     public Class<User> getEntityType() {
-	return null;
+        return null;
     }
 
     @Override
     public Class<? extends Comparable> getKeyType() {
-	return null;
+        return null;
     }
-
 
     @Override
     public void delete(final User user) {
     }
 
-
     @Override
     public boolean isStale(final Long entityId, final Long version) {
-	return false;
+        return false;
     }
 
     @Override
     public boolean entityExists(final Long id) {
-	return false;
+        return false;
     }
 
     @Override
     public User findById(final Long id) {
-	return user;
+        return user;
     }
 
     @Override
     public User findByKeyAndFetch(final fetch<User> fetchModel, final Object... keyValues) {
-	return findByKey(keyValues);
+        return findByKey(keyValues);
     }
-
 
     @Override
     public User findUser(final String username) {
-	return findByKey(username);
+        return findByKey(username);
     }
 
     @Override
     public String getUsername() {
-	throw new UnsupportedOperationException("Getting username is not required at the client side, and this fact most likely points to a programming mistake.");
+        throw new UnsupportedOperationException("Getting username is not required at the client side, and this fact most likely points to a programming mistake.");
     }
 
     @Override
     public User getUser() {
-	return user;
+        return user;
     }
 
     @Override
     public User findById(final Long id, final fetch<User> fetchModel) {
-	return user;
+        return user;
     }
 
     @Override
     public IPage<User> firstPage(final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public IPage<User> getPage(final int pageNo, final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public IPage<User> firstPage(final QueryExecutionModel<User, ?> query, final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public IPage<User> firstPage(final QueryExecutionModel<User, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public IPage<User> getPage(final QueryExecutionModel<User, ?> query, final int pageNo, final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public IPage<User> getPage(final QueryExecutionModel<User, ?> query, final int pageNo, final int pageCount, final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public void delete(final EntityResultQueryModel<User> model, final Map<String, Object> paramValues) {
-	// TODO Auto-generated method stub
+        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void delete(final EntityResultQueryModel<User> model) {
-	// TODO Auto-generated method stub
+        // TODO Auto-generated method stub
 
     }
 
     @Override
     public User getEntity(final QueryExecutionModel<User, ?> model) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public int count(final EntityResultQueryModel<User> model, final Map<String, Object> paramValues) {
-	// TODO Auto-generated method stub
-	return 0;
+        // TODO Auto-generated method stub
+        return 0;
     }
 
     @Override
     public int count(final EntityResultQueryModel<User> model) {
-	// TODO Auto-generated method stub
-	return 0;
+        // TODO Auto-generated method stub
+        return 0;
     }
 
     @Override
     public List<User> getAllEntities(final QueryExecutionModel<User, ?> query) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public byte[] export(final QueryExecutionModel<User, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public List<User> getFirstEntities(final QueryExecutionModel<User, ?> query, final int numberOfEntities) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public boolean stop() {
-	return true;
+        return true;
     }
 
     @Override
@@ -234,13 +229,13 @@ public class UserControllerForTestPurposes implements IUserController {
 
     @Override
     public IPage<? extends User> firstPageOfUsersWithRoles(final int capacity) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public User findByEntityAndFetch(final fetch<User> fetchModel, final User entity) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * Annotation that marks first parameter of the criteria property.
  * 
  * @author TG Team
- *
+ * 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })

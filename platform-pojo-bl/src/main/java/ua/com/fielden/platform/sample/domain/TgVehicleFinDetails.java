@@ -14,19 +14,22 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Entity representing {@link Vehicle} financial details.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
-@EntityTitle(value="Vehicle Financial Details", desc="Vehicle Financial Details entity")
+@EntityTitle(value = "Vehicle Financial Details", desc = "Vehicle Financial Details entity")
 @KeyType(TgVehicle.class)
-@KeyTitle(value="Vehicle", desc="Vehicle")
+@KeyTitle(value = "Vehicle", desc = "Vehicle")
 @MapEntityTo
 @CompanionObject(ITgVehicleFinDetails.class)
 public class TgVehicleFinDetails extends AbstractEntity<TgVehicle> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo @UpperCase @Title(value = "Cap. Works No", desc = "Capital Works No")
+    @IsProperty
+    @MapTo
+    @UpperCase
+    @Title(value = "Cap. Works No", desc = "Capital Works No")
     private String capitalWorksNo;
 
     /**
@@ -37,13 +40,12 @@ public class TgVehicleFinDetails extends AbstractEntity<TgVehicle> {
     }
 
     public String getCapitalWorksNo() {
-	return capitalWorksNo;
+        return capitalWorksNo;
     }
-
 
     @Observable
     public TgVehicleFinDetails setCapitalWorksNo(final String capitalWorksNo) {
-	this.capitalWorksNo = capitalWorksNo;
-	return this;
+        this.capitalWorksNo = capitalWorksNo;
+        return this;
     }
 }

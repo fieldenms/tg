@@ -16,7 +16,7 @@ public abstract class AbstractApplication {
     private final Logger logger;
 
     public AbstractApplication() {
-	this.logger = Logger.getLogger(this.getClass().getName());
+        this.logger = Logger.getLogger(this.getClass().getName());
     }
 
     /**
@@ -25,7 +25,7 @@ public abstract class AbstractApplication {
      * @param logger
      */
     public AbstractApplication(final Logger logger) {
-	this.logger = logger;
+        this.logger = logger;
     }
 
     /**
@@ -34,7 +34,7 @@ public abstract class AbstractApplication {
      * @return
      */
     public Logger getLogger() {
-	return logger;
+        return logger;
     }
 
     /**
@@ -44,7 +44,7 @@ public abstract class AbstractApplication {
      * @param exception
      */
     public void throwException(final Throwable exception) {
-	handleException(exception);
+        handleException(exception);
     }
 
     /**
@@ -54,7 +54,7 @@ public abstract class AbstractApplication {
      * @param exception
      */
     protected void handleException(final Throwable exception) {
-	exception.printStackTrace();
+        exception.printStackTrace();
     }
 
     public abstract void launch(String... args);

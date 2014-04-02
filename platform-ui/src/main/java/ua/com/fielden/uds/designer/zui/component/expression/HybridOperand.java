@@ -22,109 +22,109 @@ public class HybridOperand implements IOperand, Serializable {
     private IOperator operator;
 
     public HybridOperand(String stringValue) {
-	setValue(new StringValue(stringValue));
+        setValue(new StringValue(stringValue));
     }
 
     public HybridOperand(IOperator operatorValue) {
-	setOperatorValue(operatorValue);
+        setOperatorValue(operatorValue);
     }
 
     public Object getValue() {
-	return operatorValue != null ? operatorValue : stringValue;
+        return operatorValue != null ? operatorValue : stringValue;
     }
 
     @SuppressWarnings("unchecked")
     public void setValue(Object value) {
-	if (value instanceof IOperator) {
-	    setOperatorValue((IOperator) value);
-	} else if (value instanceof IValue) {
-	    stringValue = (IValue) value;
-	    operatorValue = null;
-	} else if (value instanceof String) {
-	    if (stringValue == null) {
-		stringValue = new StringValue((String) value);
-	    } else {
-		stringValue.setValue((String) value);
-	    }
-	    operatorValue = null;
-	} else if (value == null) {
-	    setOperatorValue(null);
-	    stringValue = null;
-	} else {
-	    throw new IllegalArgumentException("Unexpected type");
-	}
+        if (value instanceof IOperator) {
+            setOperatorValue((IOperator) value);
+        } else if (value instanceof IValue) {
+            stringValue = (IValue) value;
+            operatorValue = null;
+        } else if (value instanceof String) {
+            if (stringValue == null) {
+                stringValue = new StringValue((String) value);
+            } else {
+                stringValue.setValue((String) value);
+            }
+            operatorValue = null;
+        } else if (value == null) {
+            setOperatorValue(null);
+            stringValue = null;
+        } else {
+            throw new IllegalArgumentException("Unexpected type");
+        }
     }
 
     @SuppressWarnings("unchecked")
     private void setOperatorValue(IOperator operator) {
-	operatorValue = operator;
-	if (operatorValue != null) {
-	    operatorValue.setContainingOperand(this);
-	}
-	stringValue = null;
+        operatorValue = operator;
+        if (operatorValue != null) {
+            operatorValue.setContainingOperand(this);
+        }
+        stringValue = null;
     }
 
     public String getRepresentation() {
-	return stringValue != null ? stringValue.getValue().toString() : operatorValue.getRepresentation();
+        return stringValue != null ? stringValue.getValue().toString() : operatorValue.getRepresentation();
     }
 
     public void erase() {
-	setValue(null);
+        setValue(null);
     }
 
     public IOperator getOperator() {
-	return operator;
+        return operator;
     }
 
     public void setOperator(IOperator operator) {
-	this.operator = operator;
+        this.operator = operator;
     }
 
     public Object clone() {
-	HybridOperand clone = null;
-	try {
-	    clone = (HybridOperand) super.clone();
-	    clone.setValue(null);
-	    if (operatorValue != null) {
-		clone.setValue(operatorValue.clone());
-	    } else {
-		clone.setValue(stringValue.clone());
-	    }
-	    // System.out.println(clone.getValue());
-	    return clone;
-	} catch (CloneNotSupportedException e) {
-	    throw new RuntimeException(e);
-	}
+        HybridOperand clone = null;
+        try {
+            clone = (HybridOperand) super.clone();
+            clone.setValue(null);
+            if (operatorValue != null) {
+                clone.setValue(operatorValue.clone());
+            } else {
+                clone.setValue(stringValue.clone());
+            }
+            // System.out.println(clone.getValue());
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
     @SuppressWarnings("unchecked")
     public void registerUpdater(IUpdater updater) {
-	if (getValue() instanceof IValue) {
-	    ((IValue) getValue()).registerUpdater(updater);
-	}
+        if (getValue() instanceof IValue) {
+            ((IValue) getValue()).registerUpdater(updater);
+        }
     }
 
     @SuppressWarnings("unchecked")
     public void removeUpdater(IUpdater updater) {
-	if (getValue() instanceof IValue) {
-	    ((IValue) getValue()).removeUpdater(updater);
-	}
+        if (getValue() instanceof IValue) {
+            ((IValue) getValue()).removeUpdater(updater);
+        }
     }
 
     public String getDefaultValue() {
-	return stringValue.getDefaultValue();
+        return stringValue.getDefaultValue();
     }
 
     public boolean isEmptyPermitted() {
-	return stringValue.isEmptyPermitted();
+        return stringValue.isEmptyPermitted();
     }
 
     public void setDefaultValue(String defaultValue) {
-	stringValue.setDefaultValue(defaultValue);
+        stringValue.setDefaultValue(defaultValue);
     }
 
     public void setEmptyPermitted(boolean emptyPermitted) {
-	stringValue.setEmptyPermitted(emptyPermitted);
+        stringValue.setEmptyPermitted(emptyPermitted);
     }
 }

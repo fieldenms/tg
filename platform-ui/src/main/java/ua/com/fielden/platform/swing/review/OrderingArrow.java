@@ -54,22 +54,22 @@ public class OrderingArrow extends JComponent {
     private static final Dimension MIN_SIZE = new Dimension(12, 24);
 
     static {
-	final float r = (float) MIN_SIZE.getWidth() / 2.0f - 1.0f;
-	ARROW_WIDTH = r * (float) Math.sqrt(3.0);
-	int degree = 90;
-	double x = r * Math.cos(degree * Math.PI / 180.0), y = r * Math.sin(degree * Math.PI / 180.0);
-	final double shiftY = MIN_SIZE.getHeight() / 2 - y;
-	final GeneralPath originTriangle = new GeneralPath();
-	originTriangle.moveTo(x, y);
-	for (degree += 120; degree < 360; degree += 120) {
-	    x = r * Math.cos(degree * Math.PI / 180.0);
-	    y = r * Math.sin(degree * Math.PI / 180.0);
-	    originTriangle.lineTo(x, y);
-	}
-	originTriangle.closePath();
+        final float r = (float) MIN_SIZE.getWidth() / 2.0f - 1.0f;
+        ARROW_WIDTH = r * (float) Math.sqrt(3.0);
+        int degree = 90;
+        double x = r * Math.cos(degree * Math.PI / 180.0), y = r * Math.sin(degree * Math.PI / 180.0);
+        final double shiftY = MIN_SIZE.getHeight() / 2 - y;
+        final GeneralPath originTriangle = new GeneralPath();
+        originTriangle.moveTo(x, y);
+        for (degree += 120; degree < 360; degree += 120) {
+            x = r * Math.cos(degree * Math.PI / 180.0);
+            y = r * Math.sin(degree * Math.PI / 180.0);
+            originTriangle.lineTo(x, y);
+        }
+        originTriangle.closePath();
 
-	DESC_TRIANGLE = new AffineTransform(1, 0, 0, 1, 0, shiftY + MIN_SIZE.getHeight() / 2.0f).createTransformedShape(originTriangle);
-	ASC_TRIANGLE = new AffineTransform(1, 0, 0, -1, 0, -shiftY + MIN_SIZE.getHeight() / 2.0f).createTransformedShape(originTriangle);
+        DESC_TRIANGLE = new AffineTransform(1, 0, 0, 1, 0, shiftY + MIN_SIZE.getHeight() / 2.0f).createTransformedShape(originTriangle);
+        ASC_TRIANGLE = new AffineTransform(1, 0, 0, -1, 0, -shiftY + MIN_SIZE.getHeight() / 2.0f).createTransformedShape(originTriangle);
     }
 
     /**
@@ -107,93 +107,93 @@ public class OrderingArrow extends JComponent {
      * @param propertyOrdering
      */
     public OrderingArrow() {
-	setMinimumSize(MIN_SIZE);
+        setMinimumSize(MIN_SIZE);
     }
 
     @Override
     public void paintComponent(final Graphics g) {
-	final Graphics2D g2 = (Graphics2D) g;
-	final Paint oldPaint = g2.getPaint();
-	final Font oldFont = g2.getFont();
+        final Graphics2D g2 = (Graphics2D) g;
+        final Paint oldPaint = g2.getPaint();
+        final Font oldFont = g2.getFont();
 
-	g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-	float shiftX = ARROW_WIDTH / 2.0f;
+        float shiftX = ARROW_WIDTH / 2.0f;
 
-	if (!getSortOrder().equals(SortOrder.UNSORTED) && isDrawNumber()) {
-	    g2.setPaint(Color.black);
-	    g2.setFont(FONT);
+        if (!getSortOrder().equals(SortOrder.UNSORTED) && isDrawNumber()) {
+            g2.setPaint(Color.black);
+            g2.setFont(FONT);
 
-	    final String label = String.valueOf(getOrder());
-	    final FontRenderContext frc = g2.getFontRenderContext();
-	    final Rectangle2D bounds = FONT.getStringBounds(label, frc);
-	    final LineMetrics fontMetrics = FONT.getLineMetrics(label, frc);
-	    final float baseLineX = bounds.getWidth() > ARROW_WIDTH ? 0 : (float) Math.ceil(ARROW_WIDTH / 2.0f - bounds.getWidth() / 2.0f);
-	    final float baseLineY = (float) Math.ceil(MIN_SIZE.getHeight() / 2.0f - (float) bounds.getHeight() / 2 + fontMetrics.getAscent());
-	    g2.drawString(label, baseLineX, baseLineY);
+            final String label = String.valueOf(getOrder());
+            final FontRenderContext frc = g2.getFontRenderContext();
+            final Rectangle2D bounds = FONT.getStringBounds(label, frc);
+            final LineMetrics fontMetrics = FONT.getLineMetrics(label, frc);
+            final float baseLineX = bounds.getWidth() > ARROW_WIDTH ? 0 : (float) Math.ceil(ARROW_WIDTH / 2.0f - bounds.getWidth() / 2.0f);
+            final float baseLineY = (float) Math.ceil(MIN_SIZE.getHeight() / 2.0f - (float) bounds.getHeight() / 2 + fontMetrics.getAscent());
+            g2.drawString(label, baseLineX, baseLineY);
 
-	    shiftX = bounds.getWidth() > ARROW_WIDTH ? (float) bounds.getWidth() / 2.0f : shiftX;
-	}
+            shiftX = bounds.getWidth() > ARROW_WIDTH ? (float) bounds.getWidth() / 2.0f : shiftX;
+        }
 
-	final boolean isDescending = SortOrder.DESCENDING.equals(getSortOrder());
-	final boolean isActive = !SortOrder.UNSORTED.equals(getSortOrder());
+        final boolean isDescending = SortOrder.DESCENDING.equals(getSortOrder());
+        final boolean isActive = !SortOrder.UNSORTED.equals(getSortOrder());
 
-	g2.translate(shiftX, 0);
-	g2.setPaint((isActive && isDescending) ? currentActiveColor : currentInactiveColor);
-	g2.fill(DESC_TRIANGLE);
-	g2.setPaint((isActive && !isDescending) ? currentActiveColor : currentInactiveColor);
-	g2.fill(ASC_TRIANGLE);
+        g2.translate(shiftX, 0);
+        g2.setPaint((isActive && isDescending) ? currentActiveColor : currentInactiveColor);
+        g2.fill(DESC_TRIANGLE);
+        g2.setPaint((isActive && !isDescending) ? currentActiveColor : currentInactiveColor);
+        g2.fill(ASC_TRIANGLE);
 
-	g2.setFont(oldFont);
-	g2.setPaint(oldPaint);
+        g2.setFont(oldFont);
+        g2.setPaint(oldPaint);
     }
 
     public boolean isDrawNumber() {
-	return drawNumber;
+        return drawNumber;
     }
 
     public void setDrawNumber(final boolean drawNumber) {
-	this.drawNumber = drawNumber;
-	repaint();
+        this.drawNumber = drawNumber;
+        repaint();
     }
 
     public int getOrder() {
-	return order;
+        return order;
     }
 
     public void setOrder(final int order) {
-	this.order = order;
-	repaint();
+        this.order = order;
+        repaint();
     }
 
     public SortOrder getSortOrder() {
-	return sortOrder;
+        return sortOrder;
     }
 
     public void setSortOrder(final SortOrder sortOrder) {
-	this.sortOrder = sortOrder;
-	repaint();
+        this.sortOrder = sortOrder;
+        repaint();
     }
 
     public void setMouseOver(final boolean isOver) {
-	currentActiveColor = isOver ? activeHighlightColor : activeColor;
-	currentInactiveColor = isOver ? inactiveHighlightColor : inactiveColor;
-	repaint();
+        currentActiveColor = isOver ? activeHighlightColor : activeColor;
+        currentInactiveColor = isOver ? inactiveHighlightColor : inactiveColor;
+        repaint();
     }
 
     public double getActualWidth(final Graphics g) {
-	if (g == null) {
-	    return MIN_SIZE.getWidth();
-	}
-	final Graphics2D g2 = (Graphics2D) g;
-	final String label = String.valueOf(getOrder());
-	final FontRenderContext frc = g2.getFontRenderContext();
-	final Rectangle2D bounds = FONT.getStringBounds(label, frc);
-	return bounds.getWidth() > ARROW_WIDTH ? (float) bounds.getWidth() : ARROW_WIDTH;
+        if (g == null) {
+            return MIN_SIZE.getWidth();
+        }
+        final Graphics2D g2 = (Graphics2D) g;
+        final String label = String.valueOf(getOrder());
+        final FontRenderContext frc = g2.getFontRenderContext();
+        final Rectangle2D bounds = FONT.getStringBounds(label, frc);
+        return bounds.getWidth() > ARROW_WIDTH ? (float) bounds.getWidth() : ARROW_WIDTH;
     }
 
     public double getActualHeight(final Graphics g) {
-	return getMinimumSize().getHeight();
+        return getMinimumSize().getHeight();
     }
 
 }

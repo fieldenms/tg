@@ -29,9 +29,9 @@ import com.google.inject.Inject;
 
 /**
  * Implementation of the user controller, which should be used managing system user information.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(User.class)
 public class UserController extends CommonEntityDao<User> implements IUserController {
@@ -43,84 +43,84 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
 
     @Inject
     public UserController(final IUserRoleDao userRoleDao, final IUserAndRoleAssociationDao userAssociationDao, final IFilter filter) {
-	super(filter);
-	this.userRoleDao = userRoleDao;
-	this.userAssociationDao = userAssociationDao;
+        super(filter);
+        this.userRoleDao = userRoleDao;
+        this.userAssociationDao = userAssociationDao;
     }
 
     @Override
     public List<? extends UserRole> findAllUserRoles() {
-	return userRoleDao.findAll();
+        return userRoleDao.findAll();
     }
 
     @Override
     public List<User> findAllUsers() {
-	return findAllUsersWithRoles();
+        return findAllUsersWithRoles();
     }
 
     @Override
     public IPage<? extends User> firstPageOfUsersWithRoles(final int capacity) {
-	final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
-	final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
-	return firstPage(from(model).with(fetchModel).with(orderBy).model(), capacity);
+        final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
+        return firstPage(from(model).with(fetchModel).with(orderBy).model(), capacity);
     }
 
     @Override
     public void updateUsers(final Map<User, Set<UserRole>> userRoleMap) {
-	for(final Map.Entry<User, Set<UserRole>> userRoleEntry : userRoleMap.entrySet()) {
-	    updateUser(userRoleEntry.getKey(), userRoleEntry.getValue());
-	}
+        for (final Map.Entry<User, Set<UserRole>> userRoleEntry : userRoleMap.entrySet()) {
+            updateUser(userRoleEntry.getKey(), userRoleEntry.getValue());
+        }
     }
 
     @SessionRequired
     private void updateUser(final User user, final Set<UserRole> checkedRoles) {
-	// remove list at the first stage of the algorithm contains the associations of the given user.
-	// At the last stage of the algorithm that list contains only associations those must be removed from the data base
-	final Set<UserAndRoleAssociation> removeList = new HashSet<UserAndRoleAssociation>(user.getRoles());
-	// contains the list of associations those must be saved
-	final Set<UserAndRoleAssociation> saveList = new HashSet<UserAndRoleAssociation>();
+        // remove list at the first stage of the algorithm contains the associations of the given user.
+        // At the last stage of the algorithm that list contains only associations those must be removed from the data base
+        final Set<UserAndRoleAssociation> removeList = new HashSet<UserAndRoleAssociation>(user.getRoles());
+        // contains the list of associations those must be saved
+        final Set<UserAndRoleAssociation> saveList = new HashSet<UserAndRoleAssociation>();
 
-	for (final UserRole role : checkedRoles) {
-	    final UserAndRoleAssociation roleAssociation = user.getEntityFactory().newByKey(UserAndRoleAssociation.class, user, role);
-	    if (!removeList.contains(roleAssociation)) {
-		saveList.add(roleAssociation);
-	    } else {
-		removeList.remove(roleAssociation);
-	    }
-	}
+        for (final UserRole role : checkedRoles) {
+            final UserAndRoleAssociation roleAssociation = user.getEntityFactory().newByKey(UserAndRoleAssociation.class, user, role);
+            if (!removeList.contains(roleAssociation)) {
+                saveList.add(roleAssociation);
+            } else {
+                removeList.remove(roleAssociation);
+            }
+        }
 
-	// first remove user/role associations
-	userAssociationDao.removeAssociation(removeList);
-	// then insert new user/role associations
-	saveAssociation(saveList);
+        // first remove user/role associations
+        userAssociationDao.removeAssociation(removeList);
+        // then insert new user/role associations
+        saveAssociation(saveList);
     }
 
     private void saveAssociation(final Set<UserAndRoleAssociation> associations) {
-	for (final UserAndRoleAssociation association : associations) {
-	    userAssociationDao.save(association);
-	}
+        for (final UserAndRoleAssociation association : associations) {
+            userAssociationDao.save(association);
+        }
     }
 
     @Override
     public User findUserByIdWithRoles(final Long id) {
-	return findById(id, fetchModel);
+        return findById(id, fetchModel);
     }
 
     @Override
     public User findUserByKeyWithRoles(final String key) {
-	final EntityResultQueryModel<User> query = select(User.class).where().prop(AbstractEntity.KEY).eq().val(key).model();
-	return getEntity(from(query).with(fetchModel).model());
+        final EntityResultQueryModel<User> query = select(User.class).where().prop(AbstractEntity.KEY).eq().val(key).model();
+        return getEntity(from(query).with(fetchModel).model());
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
-	final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
-	final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
-	return getAllEntities(from(model).with(fetchModel).with(orderBy).model());
+        final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
+        return getAllEntities(from(model).with(fetchModel).with(orderBy).model());
     }
 
     @Override
     public User findUser(final String username) {
-	return findByKeyAndFetch(fetch(User.class), username);
+        return findByKeyAndFetch(fetch(User.class), username);
     }
 }

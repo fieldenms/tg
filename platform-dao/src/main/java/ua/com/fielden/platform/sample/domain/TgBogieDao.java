@@ -13,6 +13,6 @@ public class TgBogieDao extends CommonEntityDao<TgBogie> implements ITgBogie {
 
     @Inject
     protected TgBogieDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

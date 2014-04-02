@@ -14,53 +14,53 @@ public class DateTokenAutomataTest {
 
     @Test
     public void test_full_recognition_of_correct_date_sequences() throws NoTransitionAvailable, SequenceRecognitionFailed {
-	assertEquals("Incorrect recognition result", "'2001-08-29'", automata.recognisePartiallyFromStart("'2001-08-29' ", 0));
-	assertEquals("Incorrect recognition result", "'2001-12-29'", automata.recognisePartiallyFromStart("'2001-12-29' ", 0));
-	assertEquals("Incorrect recognition result", "'2001-01-02'", automata.recognisePartiallyFromStart("'2001-01-02' ", 0));
-	assertEquals("Incorrect recognition result", "'2001-01-02'", automata.recognisePartiallyFromStart("    '2001-01-02'  ", 0));
-	assertEquals("Incorrect recognition result", "'2001-01-02'", automata.recognisePartiallyFromStart("\t\n'2001-01-02'\t(", 0));
+        assertEquals("Incorrect recognition result", "'2001-08-29'", automata.recognisePartiallyFromStart("'2001-08-29' ", 0));
+        assertEquals("Incorrect recognition result", "'2001-12-29'", automata.recognisePartiallyFromStart("'2001-12-29' ", 0));
+        assertEquals("Incorrect recognition result", "'2001-01-02'", automata.recognisePartiallyFromStart("'2001-01-02' ", 0));
+        assertEquals("Incorrect recognition result", "'2001-01-02'", automata.recognisePartiallyFromStart("    '2001-01-02'  ", 0));
+        assertEquals("Incorrect recognition result", "'2001-01-02'", automata.recognisePartiallyFromStart("\t\n'2001-01-02'\t(", 0));
     }
 
     @Test
     public void test_full_recognition_of_correct_date_time_sequences() throws NoTransitionAvailable, SequenceRecognitionFailed {
-	assertEquals("Incorrect recognition result", "'2001-01-02 03:09:09'", automata.recognisePartiallyFromStart("'2001-01-02 03:09:09' ", 0));
-	assertEquals("Incorrect recognition result", "'2001-01-02 23:59:10'", automata.recognisePartiallyFromStart("'2001-01-02 23:59:10' ", 0));
-	assertEquals("Incorrect recognition result", "'2001-01-02 23:59:10'", automata.recognisePartiallyFromStart("    '2001-01-02 23:59:10'  ", 0));
-	assertEquals("Incorrect recognition result", "'2001-01-02 23:59:10'", automata.recognisePartiallyFromStart("\t\n'2001-01-02 23:59:10'\t(", 0));
+        assertEquals("Incorrect recognition result", "'2001-01-02 03:09:09'", automata.recognisePartiallyFromStart("'2001-01-02 03:09:09' ", 0));
+        assertEquals("Incorrect recognition result", "'2001-01-02 23:59:10'", automata.recognisePartiallyFromStart("'2001-01-02 23:59:10' ", 0));
+        assertEquals("Incorrect recognition result", "'2001-01-02 23:59:10'", automata.recognisePartiallyFromStart("    '2001-01-02 23:59:10'  ", 0));
+        assertEquals("Incorrect recognition result", "'2001-01-02 23:59:10'", automata.recognisePartiallyFromStart("\t\n'2001-01-02 23:59:10'\t(", 0));
     }
 
     @Test
     public void test_recognition_of_incorrect_sequences() {
-	try {
-	    automata.recognisePartiallyFromStart("", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("'2001-01-02 24:59:10'", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart(" '2001-01-02", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart(" '2001-01-02 23:59:10", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("2001-01-02 22:59:10'", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("'2001-00-02'", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
+        try {
+            automata.recognisePartiallyFromStart("", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("'2001-01-02 24:59:10'", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart(" '2001-01-02", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart(" '2001-01-02 23:59:10", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("2001-01-02 22:59:10'", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("'2001-00-02'", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
     }
 
 }

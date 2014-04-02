@@ -6,7 +6,7 @@ import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
  * Contract for anything that is interested in receiving selection events.
  * 
  * @author TG Team
- *
+ * 
  */
 public interface ISelectable {
 
@@ -14,6 +14,7 @@ public interface ISelectable {
      * Performs selection and fires {@link SelectionEvent}.
      */
     public void select();
+
     /**
      * Adds {@link ISelectionEventListener} instance to listen selection events.
      * 

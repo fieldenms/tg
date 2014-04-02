@@ -1,15 +1,13 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-
-
 public class MaxOf2 extends SingleOperandFunction2 {
 
     public MaxOf2(final ISingleOperand2 operand) {
-	super(operand);
+        super(operand);
     }
 
     @Override
     public Class type() {
-	return getOperand().type();
+        return getOperand().type();
     }
 }

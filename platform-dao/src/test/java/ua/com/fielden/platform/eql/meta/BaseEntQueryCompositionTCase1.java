@@ -36,46 +36,46 @@ public class BaseEntQueryCompositionTCase1 extends BaseEntQueryTCase1 {
     protected final static ArithmeticalOperator _sub = ArithmeticalOperator.SUB;
 
     protected static Conditions1 group(final boolean negation, final ICondition1<? extends ICondition2> firstCondition, final CompoundCondition1... otherConditions) {
-	return new Conditions1(negation, firstCondition, Arrays.asList(otherConditions));
+        return new Conditions1(negation, firstCondition, Arrays.asList(otherConditions));
     }
 
     protected static CompoundCondition1 compound(final LogicalOperator operator, final ICondition1<? extends ICondition2> condition) {
-	return new CompoundCondition1(operator, condition);
+        return new CompoundCondition1(operator, condition);
     }
 
     protected static void assertModelsEquals(final Conditions1 exp, final Conditions1 act) {
-	assertEquals(("Condition models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+        assertEquals(("Condition models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
     }
 
     protected static void assertModelsEquals(final Yields1 exp, final Yields1 act) {
-	assertEquals(("Yields models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+        assertEquals(("Yields models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
     }
 
     protected static void assertModelsEquals(final Sources1 exp, final Sources1 act) {
-	assertEquals(("Sources models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+        assertEquals(("Sources models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
     }
 
     protected static void assertModelsEquals(final GroupBys1 exp, final GroupBys1 act) {
-	assertEquals(("Groups models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+        assertEquals(("Groups models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
     }
 
     protected static Conditions1 conditions(final ICompoundCondition0 condition) {
-	return entResultQry(condition.model()).getConditions();
+        return entResultQry(condition.model()).getConditions();
     }
 
     protected static Conditions1 conditions(final ICompoundCondition0 condition, final Map<String, Object> paramValues) {
-	return entResultQry(condition.model(), paramValues).getConditions();
+        return entResultQry(condition.model(), paramValues).getConditions();
     }
 
     protected static Conditions1 conditions(final ICondition1<? extends ICondition2> firstCondition, final CompoundCondition1... otherConditions) {
-	return new Conditions1(false, firstCondition, Arrays.asList(otherConditions));
+        return new Conditions1(false, firstCondition, Arrays.asList(otherConditions));
     }
 
-    protected static Expression1 expression(final ISingleOperand1<? extends ISingleOperand2> first, final CompoundSingleOperand1 ... others) {
-	return new Expression1(first, Arrays.asList(others));
+    protected static Expression1 expression(final ISingleOperand1<? extends ISingleOperand2> first, final CompoundSingleOperand1... others) {
+        return new Expression1(first, Arrays.asList(others));
     }
 
     protected static CompoundSingleOperand1 compound(final ArithmeticalOperator operator, final ISingleOperand1<? extends ISingleOperand2> operand) {
-	return new CompoundSingleOperand1(operand, operator);
+        return new CompoundSingleOperand1(operand, operator);
     }
 }

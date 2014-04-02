@@ -6,9 +6,9 @@ import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Wheelset rotable business entity
- *
+ * 
  * @author nc
- *
+ * 
  */
 public class Wheelset extends Rotable {
 
@@ -18,12 +18,12 @@ public class Wheelset extends Rotable {
     }
 
     public Wheelset(final String name, final String desc) {
-	super(name, desc);
+        super(name, desc);
     }
 
     @Override
     public WheelsetClass getRotableClass() {
-	return (WheelsetClass) super.getRotableClass();
+        return (WheelsetClass) super.getRotableClass();
     }
 
     @Override
@@ -31,21 +31,20 @@ public class Wheelset extends Rotable {
     @NotNull
     @EntityExists(WheelsetClass.class)
     public Wheelset setRotableClass(final RotableClass klass) {
-	super.setRotableClass(klass);
-	return this;
+        super.setRotableClass(klass);
+        return this;
     }
 
     @Override
     public String toString() {
-	final StringBuffer result = new StringBuffer();
-	result.append("Name: " + getKey() + "\n");
-	result.append("Desc: " + getDesc() + "\n");
-	if (getRotableClass() != null) {
-	    result.append(getRotableClass().toString() + "\n");
-	}
+        final StringBuffer result = new StringBuffer();
+        result.append("Name: " + getKey() + "\n");
+        result.append("Desc: " + getDesc() + "\n");
+        if (getRotableClass() != null) {
+            result.append(getRotableClass().toString() + "\n");
+        }
 
-	//result.append("Location: " + getLocation().getId());
-	return result.toString();
+        //result.append("Location: " + getLocation().getId());
+        return result.toString();
     }
 }
-

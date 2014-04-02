@@ -11,21 +11,21 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation of {@link IEntityLocatorConfigController}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(EntityLocatorConfig.class)
 public class EntityLocatorConfigControllerDao extends CommonEntityDao<EntityLocatorConfig> implements IEntityLocatorConfigController {
 
     @Inject
     protected EntityLocatorConfigControllerDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
     @Override
     @SessionRequired
     public void delete(final EntityLocatorConfig entity) {
-	defaultDelete(entity);
+        defaultDelete(entity);
     }
 }

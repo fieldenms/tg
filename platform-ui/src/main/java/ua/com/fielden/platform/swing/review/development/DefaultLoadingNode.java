@@ -32,24 +32,24 @@ public class DefaultLoadingNode implements ILoadingNode {
     /**
      * Creates {@link DefaultLoadingNode} without {@link ILoadNotifier}.
      */
-    public DefaultLoadingNode(){
-	this(null);
+    public DefaultLoadingNode() {
+        this(null);
     }
 
     /**
      * Creates {@link DefaultLoadingNode} with specific {@link ILoadNotifier}.
-     *
+     * 
      * @param loadNotifier
      */
-    public DefaultLoadingNode(final ILoadNotifier loadNotifier){
-	this.loadNotifier = loadNotifier;
-	this.parent = null;
-	this.loaded = false;
+    public DefaultLoadingNode(final ILoadNotifier loadNotifier) {
+        this.loadNotifier = loadNotifier;
+        this.parent = null;
+        this.loaded = false;
     }
 
     @Override
     public ILoadingNode getLoadingParent() {
-	return parent;
+        return parent;
     }
 
     @Override
@@ -59,83 +59,82 @@ public class DefaultLoadingNode implements ILoadingNode {
 
     @Override
     public List<ILoadingNode> loadingChildren() {
-	return new ArrayList<>(children);
+        return new ArrayList<>(children);
     }
 
     /**
      * Adds the specified child to the children list.
-     *
+     * 
      * @param child
      */
-    public void addLoadingChild(final ILoadingNode child){
-	if(!children.contains(child)){
-	    children.add(child);
-	    child.setLoadingParent(this);
-	}
+    public void addLoadingChild(final ILoadingNode child) {
+        if (!children.contains(child)) {
+            children.add(child);
+            child.setLoadingParent(this);
+        }
     }
 
     /**
      * Removes the loading node from the list of children.
-     *
+     * 
      * @param child
      * @return
      */
-    public boolean removeLoadingChild(final ILoadingNode child){
-	if(children.remove(child)){
-	    child.setLoadingParent(null);
-	    return true;
-	}
-	return false;
+    public boolean removeLoadingChild(final ILoadingNode child) {
+        if (children.remove(child)) {
+            child.setLoadingParent(null);
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void tryLoading() {
-	if(!loaded && wereChildrenLoaded()){
-	    loaded = true;
-	    fireLoadEvent(new LoadEvent(this));
-	    tryLoadParent();
-	}
+        if (!loaded && wereChildrenLoaded()) {
+            loaded = true;
+            fireLoadEvent(new LoadEvent(this));
+            tryLoadParent();
+        }
     }
 
     @Override
     public boolean isLoaded() {
-	return loaded;
+        return loaded;
     }
 
     /**
      * Resets the loaded state of this loading node.
      */
-    public void reset(){
-	loaded = false;
+    public void reset() {
+        loaded = false;
     }
 
     /**
      * Determines whether children were loaded or not.
-     *
+     * 
      * @return
      */
-    public boolean wereChildrenLoaded(){
-	for(final ILoadingNode child : children){
-	    if(!child.isLoaded()) {
-		return false;
-	    }
-	}
-	return true;
+    public boolean wereChildrenLoaded() {
+        for (final ILoadingNode child : children) {
+            if (!child.isLoaded()) {
+                return false;
+            }
+        }
+        return true;
     }
 
-
-    private void fireLoadEvent(final LoadEvent loadEvent){
-	if(loadNotifier != null){
-	    loadNotifier.fireLoadEvent(loadEvent);
-	}
+    private void fireLoadEvent(final LoadEvent loadEvent) {
+        if (loadNotifier != null) {
+            loadNotifier.fireLoadEvent(loadEvent);
+        }
     }
 
     /**
      * Tries to load parent if it is no null.
      */
-    private void tryLoadParent(){
-	if(parent != null){
-	    parent.tryLoading();
-	}
+    private void tryLoadParent() {
+        if (parent != null) {
+            parent.tryLoading();
+        }
     }
 }

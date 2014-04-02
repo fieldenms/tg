@@ -22,29 +22,29 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 public class TimePeriodSpike {
 
     public static void main(final String[] args) {
-	try {
-	    SwingUtilitiesEx.installNimbusLnFifPossible();
-	    final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy hh:mm a");
+        try {
+            SwingUtilitiesEx.installNimbusLnFifPossible();
+            final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy hh:mm a");
 
-	    final TimePeriodValues tpv = new TimePeriodValues("TimePeriodValues");
-	    tpv.add(new SimpleTimePeriod(dateFormat.parse("01/01/09 04:00 AM"), dateFormat.parse("01/01/09 05:00 AM")), 15);
-	    tpv.add(new SimpleTimePeriod(dateFormat.parse("01/01/09 05:00 AM"), dateFormat.parse("01/01/09 11:00 AM")), 10);
-	    final TimePeriodValuesCollection dataset = new TimePeriodValuesCollection(tpv);
+            final TimePeriodValues tpv = new TimePeriodValues("TimePeriodValues");
+            tpv.add(new SimpleTimePeriod(dateFormat.parse("01/01/09 04:00 AM"), dateFormat.parse("01/01/09 05:00 AM")), 15);
+            tpv.add(new SimpleTimePeriod(dateFormat.parse("01/01/09 05:00 AM"), dateFormat.parse("01/01/09 11:00 AM")), 10);
+            final TimePeriodValuesCollection dataset = new TimePeriodValuesCollection(tpv);
 
-	    final DateAxis xAxis = new DateAxis("Date/Time");
-	    final NumberAxis yAxis = new NumberAxis3D("number axis 3d");
+            final DateAxis xAxis = new DateAxis("Date/Time");
+            final NumberAxis yAxis = new NumberAxis3D("number axis 3d");
 
-	    xAxis.setRange(dateFormat.parse("01/01/09" + " 00:00 AM"), dateFormat.parse("01/01/09" + " 11:59 PM"));
-	    final XYPlot plot = new XYPlot(dataset, xAxis, yAxis, new XYBarRenderer());
+            xAxis.setRange(dateFormat.parse("01/01/09" + " 00:00 AM"), dateFormat.parse("01/01/09" + " 11:59 PM"));
+            final XYPlot plot = new XYPlot(dataset, xAxis, yAxis, new XYBarRenderer());
 
-	    final JFreeChart chart = new JFreeChart("01/01/09", plot);
-	    chart.setBackgroundPaint(Color.white);
-	    ChartUtilities.applyCurrentTheme(chart);
+            final JFreeChart chart = new JFreeChart("01/01/09", plot);
+            chart.setBackgroundPaint(Color.white);
+            ChartUtilities.applyCurrentTheme(chart);
 
-	    final ChartPanel chartPanel = new ChartPanel(chart);
-	    SimpleLauncher.show("XyDataSet example", chartPanel);
-	} catch (final Exception e) {
-	}
+            final ChartPanel chartPanel = new ChartPanel(chart);
+            SimpleLauncher.show("XyDataSet example", chartPanel);
+        } catch (final Exception e) {
+        }
     }
 
 }

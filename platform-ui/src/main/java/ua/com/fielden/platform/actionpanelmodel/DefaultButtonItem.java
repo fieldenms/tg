@@ -19,7 +19,7 @@ public class DefaultButtonItem implements IActionItem {
      * @param action
      */
     public DefaultButtonItem(final Action action) {
-	this.action = action;
+        this.action = action;
     }
 
     /**
@@ -27,7 +27,7 @@ public class DefaultButtonItem implements IActionItem {
      */
     @Override
     public void build(final JToolBar toolBar) {
-	toolBar.add(action);
+        toolBar.add(action);
     }
 
     /**
@@ -36,7 +36,7 @@ public class DefaultButtonItem implements IActionItem {
      * @return
      */
     public Action getAction() {
-	return action;
+        return action;
     }
 
 }

@@ -35,13 +35,13 @@ public abstract class SwingWorkerEx<T, V> extends SwingWorker<T, V> implements T
      */
     @Override
     protected final T doInBackground() throws Exception {
-	// for some reason this does not work: Thread.currentThread().setUncaughtExceptionHandler(this);
-	try {
-	    return backgroundAction();
-	} catch (final Throwable ex) {
-	    handleException(ex);
-	    throw new RuntimeException(ex);
-	}
+        // for some reason this does not work: Thread.currentThread().setUncaughtExceptionHandler(this);
+        try {
+            return backgroundAction();
+        } catch (final Throwable ex) {
+            handleException(ex);
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
@@ -49,6 +49,6 @@ public abstract class SwingWorkerEx<T, V> extends SwingWorker<T, V> implements T
      */
     @Override
     public final void uncaughtException(final Thread t, final Throwable e) {
-	handleException(e);
+        handleException(e);
     }
 }

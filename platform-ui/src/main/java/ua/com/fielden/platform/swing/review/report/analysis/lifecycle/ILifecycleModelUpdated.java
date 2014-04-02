@@ -4,9 +4,9 @@ import java.util.EventListener;
 
 /**
  * Listens the "lifecycle model update" event.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface ILifecycleModelUpdated extends EventListener {
 

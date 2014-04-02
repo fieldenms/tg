@@ -12,7 +12,7 @@ public class DllGenerationTest extends BaseEntQueryTCase {
     @Test
     @Ignore
     public void test1() {
-	final EntityMetadata<TgVehicleMake> metadata = DOMAIN_METADATA_ANALYSER.getEntityMetadata(MAKE);
-	assertEquals("CREATE TABLE TGVEHICLEMAKE_", metadata.ddl());
+        final EntityMetadata<TgVehicleMake> metadata = DOMAIN_METADATA_ANALYSER.getEntityMetadata(MAKE);
+        assertEquals("CREATE TABLE TGVEHICLEMAKE_", metadata.ddl());
     }
 }

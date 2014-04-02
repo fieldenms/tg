@@ -7,14 +7,14 @@ public class And extends AbstractOperator {
     }
 
     public String getExpression() {
-	return "AND";
+        return "AND";
     }
 
     public Object getDefaultValue() {
-	return "T";
+        return "T";
     }
 
     public OperatorType type() {
-	return OperatorType.BOOLEAN;
+        return OperatorType.BOOLEAN;
     }
 }

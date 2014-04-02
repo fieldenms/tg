@@ -16,21 +16,21 @@ public class EntityTwo extends AbstractEntity<Integer> {
     private Integer integerProperty;
 
     public String getStringProperty() {
-	return stringProperty;
+        return stringProperty;
     }
 
     @Observable
     public void setStringProperty(final String stringProperty) {
-	this.stringProperty = stringProperty;
+        this.stringProperty = stringProperty;
     }
 
     public Integer getIntegerProperty() {
-	return integerProperty;
+        return integerProperty;
     }
 
     @Observable
     public void setIntegerProperty(final Integer integerProperty) {
-	this.integerProperty = integerProperty;
+        this.integerProperty = integerProperty;
     }
 
 }

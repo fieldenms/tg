@@ -9,9 +9,9 @@ import com.google.inject.Inject;
 /**
  * This RAO is applicable for instantiation of any entity class specified at runtime. However, it is not type safe -- there is no way at compile time to ensure correct values for
  * entity and key types.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(AbstractEntity.class)
 public class DynamicEntityRao extends CommonEntityRao {
@@ -24,26 +24,26 @@ public class DynamicEntityRao extends CommonEntityRao {
      */
     @Inject
     public DynamicEntityRao(final RestClientUtil util) {
-	super(util);
+        super(util);
     }
 
     public void setEntityType(final Class<? extends AbstractEntity> type) {
-	this.entityType = type;
-	this.keyType = AnnotationReflector.getKeyType(entityType);
+        this.entityType = type;
+        this.keyType = AnnotationReflector.getKeyType(entityType);
     }
 
     @Override
     public Class<?> getEntityType() {
-	return entityType;
+        return entityType;
     }
 
     @Override
     public Class<? extends Comparable> getKeyType() {
-	return keyType;
+        return keyType;
     }
 
     @Override
     public AbstractEntity save(final AbstractEntity entity) {
-	throw new UnsupportedOperationException("");
+        throw new UnsupportedOperationException("");
     }
 }

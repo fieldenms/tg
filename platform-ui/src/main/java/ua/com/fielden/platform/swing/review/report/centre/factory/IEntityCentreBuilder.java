@@ -7,18 +7,18 @@ import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreCo
 
 /**
  * A contract for anything that interested in creating entity centre.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
 
     /**
      * Creates new entity centre.
-     *
+     * 
      * @return
      */
     CentreConfigurationView<T, ?> createEntityCentre(final Class<? extends MiWithConfigurationSupport<T>> menuItemType,//
-	    final String name,//
-	    final BlockingIndefiniteProgressLayer progressLayer);
+            final String name,//
+            final BlockingIndefiniteProgressLayer progressLayer);
 }

@@ -9,15 +9,15 @@ import ua.com.fielden.platform.security.user.UserRole;
 
 /**
  * Controller interface that provides a contract for retrieving and saving user roles associated with security tokens.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface ISecurityTokenController {
 
     /**
      * Returns the map between security tokens and set of associated user roles.
-     *
+     * 
      * @param securityToken
      * @return
      */
@@ -25,7 +25,7 @@ public interface ISecurityTokenController {
 
     /**
      * Returns the set of {@link UserRole} associated with specified {@link ISecurityToken}
-     *
+     * 
      * @param securityTokenClass
      * @return
      */
@@ -33,7 +33,7 @@ public interface ISecurityTokenController {
 
     /**
      * Override it to provide the ability to persist the {@link UserRole}s associated with {@link ISecurityToken}s.
-     *
+     * 
      * @param tokenToRoleAssocations
      *            -- a map between tokens and roles that need to be associated
      */
@@ -41,7 +41,7 @@ public interface ISecurityTokenController {
 
     /**
      * Returns all distinct {@link UserRole}s (It is needed for building SecurityTreeTableModel)
-     *
+     * 
      * @return
      */
     List<UserRole> findUserRoles();

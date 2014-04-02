@@ -13,32 +13,32 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
 public class AssociationAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IAbstractAnalysisDomainTreeManager> {
 
     public AssociationAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria) {
-	super(criteria, null);
-	// TODO Auto-generated constructor stub
+        super(criteria, null);
+        // TODO Auto-generated constructor stub
     }
 
     @Override
     protected Result executeAnalysisQuery() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     protected Result exportData(final String fileName) throws IOException {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     protected String[] getExportFileExtensions() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     protected String getDefaultExportFileExtension() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

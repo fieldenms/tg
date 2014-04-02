@@ -10,9 +10,9 @@ import com.google.inject.Inject;
 
 /**
  * RAO for {@link MigrationError}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(MigrationError.class)
 public class MigrationErrorRao extends CommonEntityRao<MigrationError> implements IMigrationErrorDao {
@@ -20,6 +20,6 @@ public class MigrationErrorRao extends CommonEntityRao<MigrationError> implement
 
     @Inject
     public MigrationErrorRao(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 }

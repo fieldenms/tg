@@ -7,9 +7,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 
 /**
  * Type representing the details side of One-to-One association.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(MasterEntity1.class)
 @KeyTitle(value = "Key")

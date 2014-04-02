@@ -21,45 +21,45 @@ public class SwingSpike extends PSwingFrame {
 
     @Override
     public void initialize() {
-	super.initialize();
-	// rendering settings
-	getCanvas().setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-	getCanvas().setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-	getCanvas().setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        super.initialize();
+        // rendering settings
+        getCanvas().setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        getCanvas().setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        getCanvas().setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 
-	getCanvas().removeInputEventListener(getCanvas().getZoomEventHandler());
-	getCanvas().addInputEventListener(new WheelRatoteZoomEventHandler(0.2, 2.0));
+        getCanvas().removeInputEventListener(getCanvas().getZoomEventHandler());
+        getCanvas().addInputEventListener(new WheelRatoteZoomEventHandler(0.2, 2.0));
 
-	getCanvas().getLayer().setPickable(false);
-	getCanvas().getLayer().setChildrenPickable(true);
+        getCanvas().getLayer().setPickable(false);
+        getCanvas().getLayer().setChildrenPickable(true);
 
-	final PLayer nodeLayer = getCanvas().getLayer();
-	final PLayer linkLayer = nodeLayer;
+        final PLayer nodeLayer = getCanvas().getLayer();
+        final PLayer linkLayer = nodeLayer;
 
-	GlobalObjects.canvas = getCanvas();
-	GlobalObjects.nodeLayer = linkLayer;
-	GlobalObjects.linkLayer = linkLayer;
-	GlobalObjects.frame = this;
+        GlobalObjects.canvas = getCanvas();
+        GlobalObjects.nodeLayer = linkLayer;
+        GlobalObjects.linkLayer = linkLayer;
+        GlobalObjects.frame = this;
 
-	final PDragEventHandler handler = new DragEventHandler(nodeLayer);
-	nodeLayer.addInputEventListener(handler);
+        final PDragEventHandler handler = new DragEventHandler(nodeLayer);
+        nodeLayer.addInputEventListener(handler);
 
-	final GenericContainerNode containerOne = new GenericContainerNode(new PDimension(50, 50));
-	containerOne.setBackgroundColor(new Color(213, 30, 62));
-	containerOne.translate(50, 200);
-	nodeLayer.addChild(containerOne);
+        final GenericContainerNode containerOne = new GenericContainerNode(new PDimension(50, 50));
+        containerOne.setBackgroundColor(new Color(213, 30, 62));
+        containerOne.translate(50, 200);
+        nodeLayer.addChild(containerOne);
 
-	final JButton button = new JButton("Button");
-	final PSwing swing = new PSwing(getCanvas(), button);
-	// nodeLayer.addChild(swing);
-	containerOne.addChild(swing);
+        final JButton button = new JButton("Button");
+        final PSwing swing = new PSwing(getCanvas(), button);
+        // nodeLayer.addChild(swing);
+        containerOne.addChild(swing);
     }
 
     public static void main(final String[] args) {
-	final PSwingFrame frame = new SwingSpike();
-	frame.setTitle("Spike: Swing rendering using Piccolo");
-	frame.setSize(790, 545);
-	frame.setVisible(true);
+        final PSwingFrame frame = new SwingSpike();
+        frame.setTitle("Spike: Swing rendering using Piccolo");
+        frame.setSize(790, 545);
+        frame.setVisible(true);
     }
 
 }

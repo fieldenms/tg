@@ -17,12 +17,12 @@ public class DefaultEntityProducer<T extends AbstractEntity> implements IEntityP
     private final Class<T> entityType;
 
     public DefaultEntityProducer(final EntityFactory factory, final Class<T> entityType) {
-	this.factory = factory;
-	this.entityType = entityType;
+        this.factory = factory;
+        this.entityType = entityType;
     }
 
     @Override
     public T newEntity() {
-	return factory.newEntity(entityType, null);
+        return factory.newEntity(entityType, null);
     }
 }

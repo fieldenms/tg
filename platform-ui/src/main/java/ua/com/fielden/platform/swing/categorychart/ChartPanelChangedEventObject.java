@@ -24,8 +24,8 @@ public class ChartPanelChangedEventObject extends EventObject {
      *            - new chart that was set to the chart panel.
      */
     public ChartPanelChangedEventObject(final Object source, final JFreeChart newChart) {
-	super(source);
-	this.newChart = newChart;
+        super(source);
+        this.newChart = newChart;
     }
 
     /**
@@ -35,7 +35,7 @@ public class ChartPanelChangedEventObject extends EventObject {
      * @return
      */
     public JFreeChart getNewChart() {
-	return newChart;
+        return newChart;
     }
 
 }

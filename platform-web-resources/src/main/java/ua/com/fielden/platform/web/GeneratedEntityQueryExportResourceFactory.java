@@ -22,9 +22,9 @@ import com.google.inject.Injector;
 /**
  * This is {@link Restlet} implementation that provides logic for correct entity export resource instantiation. Specifically, it should be used to instantiate
  * {@link GeneratedEntityQueryExportResource}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class GeneratedEntityQueryExportResourceFactory extends Restlet {
     private final Injector injector;
@@ -32,34 +32,33 @@ public class GeneratedEntityQueryExportResourceFactory extends Restlet {
     private final Router router;
 
     public GeneratedEntityQueryExportResourceFactory(final Injector injector, final Router router) {
-	this.injector = injector;
-	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
-	this.router = router;
+        this.injector = injector;
+        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.router = router;
     }
 
     @Override
     public void handle(final Request request, final Response response) {
-	super.handle(request, response);
+        super.handle(request, response);
 
+        if (Method.POST.equals(request.getMethod())) {
+            final DynamicEntityDao dao = injector.getInstance(DynamicEntityDao.class);
 
-	if (Method.POST.equals(request.getMethod())) {
-	    final DynamicEntityDao dao = injector.getInstance(DynamicEntityDao.class);
+            final String username = (String) request.getAttributes().get("username");
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	    final String username = (String) request.getAttributes().get("username");
-	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
-	    
-	    try {
-		final String origEntityTypeName = (String) request.getAttributes().get("type");
-		final Class<? extends AbstractEntity<?>> origEntityType = (Class<? extends AbstractEntity<?>>) Class.forName(origEntityTypeName);
-		final IEntityDao companion = injector.getInstance(ICompanionObjectFinder.class).find(origEntityType);
-		new GeneratedEntityQueryExportResource(router, injector, companion, restUtil, getContext(), request, response).handle();
+            try {
+                final String origEntityTypeName = (String) request.getAttributes().get("type");
+                final Class<? extends AbstractEntity<?>> origEntityType = (Class<? extends AbstractEntity<?>>) Class.forName(origEntityTypeName);
+                final IEntityDao companion = injector.getInstance(ICompanionObjectFinder.class).find(origEntityType);
+                new GeneratedEntityQueryExportResource(router, injector, companion, restUtil, getContext(), request, response).handle();
 
-	    } catch (final ClassNotFoundException ex) {
-		ex.printStackTrace();
-		response.setEntity(restUtil.errorRepresentation(ex));
-	    }
+            } catch (final ClassNotFoundException ex) {
+                ex.printStackTrace();
+                response.setEntity(restUtil.errorRepresentation(ex));
+            }
 
-	    //new GeneratedEntityQueryExportResource(router, injector, dao, restUtil, getContext(), request, response).handle();
-	}
+            //new GeneratedEntityQueryExportResource(router, injector, dao, restUtil, getContext(), request, response).handle();
+        }
     }
 }

@@ -10,9 +10,9 @@ import com.google.inject.Inject;
 
 /**
  * RAO for {@link MigrationRun}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(MigrationRun.class)
 public class MigrationRunRao extends CommonEntityRao<MigrationRun> implements IMigrationRunDao {
@@ -20,6 +20,6 @@ public class MigrationRunRao extends CommonEntityRao<MigrationRun> implements IM
 
     @Inject
     public MigrationRunRao(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 }

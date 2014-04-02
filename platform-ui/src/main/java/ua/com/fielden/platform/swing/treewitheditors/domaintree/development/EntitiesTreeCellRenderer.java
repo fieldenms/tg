@@ -20,8 +20,8 @@ public class EntitiesTreeCellRenderer extends FilterableEntitiesTreeCellRenderer
 
     private static final int gapBetweenLabelAndButtonGroup = 10;
     private static final int gapBetweenButtons = 5;
-    private static final int buttonWidth =16;
-    private static final int buttonHeight =16;
+    private static final int buttonWidth = 16;
+    private static final int buttonHeight = 16;
 
     private final ActionImagePanel newPanel;
     private final ActionImagePanel editPanel;
@@ -30,140 +30,141 @@ public class EntitiesTreeCellRenderer extends FilterableEntitiesTreeCellRenderer
     private final List<ActionImagePanel> confPanel;
 
     public EntitiesTreeCellRenderer(//
-	    final EntitiesTreeModel2<ICentreDomainTreeManagerAndEnhancer> model,//
-	    final Action newAction,//
-	    final Action editAction,//
-	    final Action copyAction,//
-	    final Action removeAction) {
-	super(model);
-	//Creating and configuring all action panels
-	newPanel = new ActionImagePanel(newAction);
-	editPanel = new ActionImagePanel(editAction);
-	copyPanel = new ActionImagePanel(copyAction);
-	removePanel = new ActionImagePanel(removeAction);
+    final EntitiesTreeModel2<ICentreDomainTreeManagerAndEnhancer> model,//
+            final Action newAction,//
+            final Action editAction,//
+            final Action copyAction,//
+            final Action removeAction) {
+        super(model);
+        //Creating and configuring all action panels
+        newPanel = new ActionImagePanel(newAction);
+        editPanel = new ActionImagePanel(editAction);
+        copyPanel = new ActionImagePanel(copyAction);
+        removePanel = new ActionImagePanel(removeAction);
 
-	this.confPanel = new ArrayList<ActionImagePanel>();
-	this.confPanel.add(newPanel);
-	this.confPanel.add(editPanel);
-	this.confPanel.add(copyPanel);
-	this.confPanel.add(removePanel);
+        this.confPanel = new ArrayList<ActionImagePanel>();
+        this.confPanel.add(newPanel);
+        this.confPanel.add(editPanel);
+        this.confPanel.add(copyPanel);
+        this.confPanel.add(removePanel);
 
-	setButtonsVisible(false);
-	for(final ActionImagePanel actionPanel : confPanel){
-	    actionPanel.setFocusable(true);
-	}
+        setButtonsVisible(false);
+        for (final ActionImagePanel actionPanel : confPanel) {
+            actionPanel.setFocusable(true);
+        }
     }
 
     @Override
     public Dimension getPreferredSize() {
-	final Dimension superSize = super.getPreferredSize();
-	int d_width = superSize.width;
-	boolean first = true;
-	for(final ActionImagePanel actionPanel : confPanel){
-	    if(actionPanel.isVisible()){
-		if(first){
-		    d_width += gapBetweenLabelAndButtonGroup + buttonWidth;
-		    first = false;
-		} else {
-		    d_width += gapBetweenButtons + buttonWidth;
-		}
-	    }
-	}
-	final int d_height = superSize.height < buttonHeight ? buttonHeight : superSize.height;
-	return new Dimension(d_width, d_height);
+        final Dimension superSize = super.getPreferredSize();
+        int d_width = superSize.width;
+        boolean first = true;
+        for (final ActionImagePanel actionPanel : confPanel) {
+            if (actionPanel.isVisible()) {
+                if (first) {
+                    d_width += gapBetweenLabelAndButtonGroup + buttonWidth;
+                    first = false;
+                } else {
+                    d_width += gapBetweenButtons + buttonWidth;
+                }
+            }
+        }
+        final int d_height = superSize.height < buttonHeight ? buttonHeight : superSize.height;
+        return new Dimension(d_width, d_height);
     }
 
     @Override
     protected void initView() {
-	setLayout(new MigLayout("fill, insets 0", "[]0[]0[fill, grow]"+gapBetweenLabelAndButtonGroup+"[]"+gapBetweenButtons+"[]"+gapBetweenButtons+"[]"+gapBetweenButtons+"[]", "[]"));
+        setLayout(new MigLayout("fill, insets 0", "[]0[]0[fill, grow]" + gapBetweenLabelAndButtonGroup + "[]" + gapBetweenButtons + "[]" + gapBetweenButtons + "[]"
+                + gapBetweenButtons + "[]", "[]"));
 
-	for (int modelIndex = 0; modelIndex < model.getCheckingModelCount(); modelIndex++) {
-	    add(checkingComponents.get(modelIndex).getComponent());
-	}
-	add(label);
+        for (int modelIndex = 0; modelIndex < model.getCheckingModelCount(); modelIndex++) {
+            add(checkingComponents.get(modelIndex).getComponent());
+        }
+        add(label);
     }
 
     /**
      * Set specified visible flag for all configuration buttons : new, edit, copy, delete.
-     *
+     * 
      * @param visible
      */
-    public void setButtonsVisible(final boolean visible){
-	for(final ActionImagePanel actionPanel : confPanel){
-	    actionPanel.setVisible(visible);
-	}
+    public void setButtonsVisible(final boolean visible) {
+        for (final ActionImagePanel actionPanel : confPanel) {
+            actionPanel.setVisible(visible);
+        }
     }
 
     @Override
     public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
 
-	//Adding visible configuration buttons to this cell renderer component.
-	removeButtons();
-	for(final ActionImagePanel button : confPanel){
-	    if(button.isVisible()){
-		add(button ,"width " + buttonWidth + ":" + buttonWidth + ":" + buttonWidth + ", height " + buttonHeight + ":" + buttonHeight + ":" + buttonHeight);
-	    }
-	}
+        //Adding visible configuration buttons to this cell renderer component.
+        removeButtons();
+        for (final ActionImagePanel button : confPanel) {
+            if (button.isVisible()) {
+                add(button, "width " + buttonWidth + ":" + buttonWidth + ":" + buttonWidth + ", height " + buttonHeight + ":" + buttonHeight + ":" + buttonHeight);
+            }
+        }
 
-	return super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+        return super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
     }
 
     /**
      * Removes all configuration buttons from the container.
      */
     private void removeButtons() {
-	for(final ActionImagePanel button : confPanel){
-	    remove(button);
-	}
+        for (final ActionImagePanel button : confPanel) {
+            remove(button);
+        }
     }
 
     /**
      * Returns {@link IDomainTreeManagerAndEnhancer}
-     *
+     * 
      * @return
      */
     protected ICentreDomainTreeManagerAndEnhancer getManager() {
-	return (ICentreDomainTreeManagerAndEnhancer)getModel().getManager();
+        return (ICentreDomainTreeManagerAndEnhancer) getModel().getManager();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected String getLabelToolTipText(final TreePath treePath) {
-	if (treePath != null) {
-	    final EntitiesTreeUserObject<ICentreDomainTreeManagerAndEnhancer> userObject = ((EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer>) treePath.getLastPathComponent()).getUserObject();
-	    return userObject.getLabelTooltip();
-	}
-	return null;
+        if (treePath != null) {
+            final EntitiesTreeUserObject<ICentreDomainTreeManagerAndEnhancer> userObject = ((EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer>) treePath.getLastPathComponent()).getUserObject();
+            return userObject.getLabelTooltip();
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected String getCheckingComponentToolTipText(final int index, final TreePath treePath) {
-	if (treePath != null) {
-	    final EntitiesTreeUserObject<ICentreDomainTreeManagerAndEnhancer> userObject = ((EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer>) treePath.getLastPathComponent()).getUserObject();
-	    if (index == 0) {
-		return userObject.getFirstTickTooltip(); // createCriteriaCheckboxToolTipText(root, property);
-	    } else if (index == 1) {
-		return userObject.getSecondTickTooltip(); // createResultSetCheckboxToolTipText(root, property);
-	    }
-	    return super.getCheckingComponentToolTipText(index, treePath);
-	}
-	return null;
+        if (treePath != null) {
+            final EntitiesTreeUserObject<ICentreDomainTreeManagerAndEnhancer> userObject = ((EntitiesTreeNode2<ICentreDomainTreeManagerAndEnhancer>) treePath.getLastPathComponent()).getUserObject();
+            if (index == 0) {
+                return userObject.getFirstTickTooltip(); // createCriteriaCheckboxToolTipText(root, property);
+            } else if (index == 1) {
+                return userObject.getSecondTickTooltip(); // createResultSetCheckboxToolTipText(root, property);
+            }
+            return super.getCheckingComponentToolTipText(index, treePath);
+        }
+        return null;
     }
 
-    protected void setNewButtonVisible(final boolean visible){
-	newPanel.setVisible(visible);
+    protected void setNewButtonVisible(final boolean visible) {
+        newPanel.setVisible(visible);
     }
 
-    protected void setEditButtonVisible(final boolean visible){
-	editPanel.setVisible(visible);
+    protected void setEditButtonVisible(final boolean visible) {
+        editPanel.setVisible(visible);
     }
 
-    protected void setCopyButtonVisible(final boolean visible){
-	copyPanel.setVisible(visible);
+    protected void setCopyButtonVisible(final boolean visible) {
+        copyPanel.setVisible(visible);
     }
 
-    protected void setRemoveButtonVisible(final boolean visible){
-	removePanel.setVisible(visible);
+    protected void setRemoveButtonVisible(final boolean visible) {
+        removePanel.setVisible(visible);
     }
 }

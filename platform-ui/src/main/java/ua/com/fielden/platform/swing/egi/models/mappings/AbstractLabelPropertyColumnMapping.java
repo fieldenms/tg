@@ -31,19 +31,19 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 public abstract class AbstractLabelPropertyColumnMapping<T extends AbstractEntity> extends ReadonlyPropertyColumnMapping<T> {
 
     public AbstractLabelPropertyColumnMapping(final Class<T> entityClass, final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction) {
-	super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction, true);
+        super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction, true);
     }
 
     @Override
     public EditorComponent<? extends ValidationLayer<? extends JComponent>, ? extends JTextComponent> getCellEditor(final T entity) {
-	final EditorComponent<? extends ValidationLayer<? extends JComponent>, ? extends JTextComponent> editorComponent = (EditorComponent<? extends ValidationLayer<? extends JComponent>, ? extends JTextComponent>) super.getCellEditor(entity);
+        final EditorComponent<? extends ValidationLayer<? extends JComponent>, ? extends JTextComponent> editorComponent = (EditorComponent<? extends ValidationLayer<? extends JComponent>, ? extends JTextComponent>) super.getCellEditor(entity);
 
-	final List<FocusListener> focusListeners = Arrays.asList(editorComponent.getEditorItself().getFocusListeners());
-	if (!focusListeners.contains(selectAllOnFocusGainedAdapter)) {
-	    editorComponent.getEditorItself().addFocusListener(selectAllOnFocusGainedAdapter);
-	}
+        final List<FocusListener> focusListeners = Arrays.asList(editorComponent.getEditorItself().getFocusListeners());
+        if (!focusListeners.contains(selectAllOnFocusGainedAdapter)) {
+            editorComponent.getEditorItself().addFocusListener(selectAllOnFocusGainedAdapter);
+        }
 
-	return editorComponent;
+        return editorComponent;
     }
 
     /**
@@ -51,29 +51,29 @@ public abstract class AbstractLabelPropertyColumnMapping<T extends AbstractEntit
      */
     @Override
     public boolean decorateEditor() {
-	return false;
+        return false;
     }
 
     @Override
     public boolean isPropertyEditable(final T entity) {
-	return true;
+        return true;
     }
 
     @Override
     public boolean isNavigableTo(final T entity) {
-	return true;
+        return true;
     }
 
     private static final FocusAdapter selectAllOnFocusGainedAdapter = new FocusAdapter() {
-	@Override
-	public void focusGained(final FocusEvent e) {
-	    // following Runnable instance should be invoked after other events (such as caret positioning for example)
-	    SwingUtilitiesEx.invokeLater(new Runnable() {
-		public void run() {
-		    ((JTextComponent) e.getComponent()).selectAll();
-		}
-	    });
-	}
+        @Override
+        public void focusGained(final FocusEvent e) {
+            // following Runnable instance should be invoked after other events (such as caret positioning for example)
+            SwingUtilitiesEx.invokeLater(new Runnable() {
+                public void run() {
+                    ((JTextComponent) e.getComponent()).selectAll();
+                }
+            });
+        }
     };
 
 }

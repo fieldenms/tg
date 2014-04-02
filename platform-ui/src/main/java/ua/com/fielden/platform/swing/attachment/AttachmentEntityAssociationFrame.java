@@ -16,9 +16,9 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
  * A convenience frame for holding attachment/entity association master view.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class AttachmentEntityAssociationFrame extends BaseFrame {
     private static final long serialVersionUID = 1L;
@@ -27,33 +27,33 @@ public class AttachmentEntityAssociationFrame extends BaseFrame {
     private final AttachmentEntityAssociationView view;
 
     public AttachmentEntityAssociationFrame(final AbstractEntity<?> entity, //
-	    final IEntityAttachmentAssociationController controller, //
-	    final IValueMatcherFactory valueMatcherFactory,//
-	    final IEntityMasterManager entityMasterFactory,//
-	    //final IDaoFactory daoFactory,//
-	    final IMasterDomainTreeManager masterManager,//
-	    final ICriteriaGenerator criteriaGenerator) {
-	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
+            final IEntityAttachmentAssociationController controller, //
+            final IValueMatcherFactory valueMatcherFactory,//
+            final IEntityMasterManager entityMasterFactory,//
+            //final IDaoFactory daoFactory,//
+            final IMasterDomainTreeManager masterManager,//
+            final ICriteriaGenerator criteriaGenerator) {
+        setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
 
-	model = new AttachmentEntityAssociationModel(entity, controller, valueMatcherFactory, entityMasterFactory,  new FrameTitleUpdater(this), masterManager, criteriaGenerator);
-	add(view = new AttachmentEntityAssociationView(model));
+        model = new AttachmentEntityAssociationModel(entity, controller, valueMatcherFactory, entityMasterFactory, new FrameTitleUpdater(this), masterManager, criteriaGenerator);
+        add(view = new AttachmentEntityAssociationView(model));
 
-	setTitle(model.toString());
+        setTitle(model.toString());
 
-	pack();
-	RefineryUtilities.centerFrameOnScreen(this);
+        pack();
+        RefineryUtilities.centerFrameOnScreen(this);
     }
 
     public AttachmentEntityAssociationModel getModel() {
-	return model;
+        return model;
     }
 
     @Override
     protected void notify(final ICloseGuard guard) {
-	view.notify(guard.whyCannotClose(), MessageType.WARNING);
+        view.notify(guard.whyCannotClose(), MessageType.WARNING);
     }
 
     public void refresh() {
-	model.getRefreshAction().actionPerformed(null);
+        model.getRefreshAction().actionPerformed(null);
     }
 }

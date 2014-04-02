@@ -19,41 +19,41 @@ public class SingleAnalysisEntityCentreConfigurationView<T extends AbstractEntit
     private final Map<Object, DetailsFrame> detailsCache;
 
     public SingleAnalysisEntityCentreConfigurationView(final CentreConfigurationModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, progressLayer);
-	this.detailsCache = new HashMap<>();
+        super(model, progressLayer);
+        this.detailsCache = new HashMap<>();
     }
 
     /**
      * Returns the cache of details.
-     *
+     * 
      * @return
      */
     public Map<Object, DetailsFrame> getDetailsCache() {
-	return detailsCache;
+        return detailsCache;
     }
 
     @Override
     public ICloseGuard canClose() {
-	for (final DetailsFrame frame : detailsCache.values()) {
-	    final ICloseGuard unableToClose = frame.canClose();
-	    if(unableToClose != null){
-		return unableToClose;
-	    }
-	}
-	return super.canClose();
+        for (final DetailsFrame frame : detailsCache.values()) {
+            final ICloseGuard unableToClose = frame.canClose();
+            if (unableToClose != null) {
+                return unableToClose;
+            }
+        }
+        return super.canClose();
     }
 
     @Override
     public void close() {
         super.close();
         for (final DetailsFrame frame : detailsCache.values()) {
-	    frame.close();
-	}
-	detailsCache.clear();
+            frame.close();
+        }
+        detailsCache.clear();
     }
 
     @Override
     protected SingleAnalysisEntityCentre<T> createConfigurableView() {
-	return new SingleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), this);
+        return new SingleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), this);
     }
 }

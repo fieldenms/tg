@@ -21,86 +21,86 @@ public class Abs implements IOperator, Serializable {
 
     @SuppressWarnings("unchecked")
     public Abs() {
-	operandValue = new HybridOperand(getDefaultValue().toString());
-	operandValue.setOperator(this);
+        operandValue = new HybridOperand(getDefaultValue().toString());
+        operandValue.setOperator(this);
     }
 
     public Abs(IOperand<IValue> operand) {
-	this.operandValue = operand;
+        this.operandValue = operand;
     }
 
     public String getExpression() {
-	return "abs";
+        return "abs";
     }
 
     public String getRepresentation() {
-	StringBuffer buff = new StringBuffer();
-	buff.append("|");
-	String operandRep = operandValue.getRepresentation();
-	buff.append(operandRep.substring(1, operandRep.length() - 1)); // this is necessary just to remove unnecessary parenthesis
-	buff.append("|");
+        StringBuffer buff = new StringBuffer();
+        buff.append("|");
+        String operandRep = operandValue.getRepresentation();
+        buff.append(operandRep.substring(1, operandRep.length() - 1)); // this is necessary just to remove unnecessary parenthesis
+        buff.append("|");
 
-	return buff.toString();
+        return buff.toString();
     }
 
     public void append(IOperand operand) { /* do nothing */
     }
 
     public IOperand<IValue> removeLast() {
-	return null;
+        return null;
     }
 
     public List<IOperand<IValue>> getOperands() {
-	List<IOperand<IValue>> list = new ArrayList<IOperand<IValue>>();
-	list.add(operandValue);
-	return Collections.unmodifiableList(list);
+        List<IOperand<IValue>> list = new ArrayList<IOperand<IValue>>();
+        list.add(operandValue);
+        return Collections.unmodifiableList(list);
     }
 
     public boolean isOperand() {
-	return operand != null;
+        return operand != null;
     }
 
     public void setContainingOperand(IOperand<IValue> operand) {
-	this.operand = operand;
+        this.operand = operand;
     }
 
     public IOperand<IValue> getContainingOperand() {
-	return operand;
+        return operand;
     }
 
     public Object getDefaultValue() {
-	return "-1";
+        return "-1";
     }
 
     public void insert(int index, IOperand operand) { /* do nothing */
     }
 
     public boolean remove(IOperand operand) {
-	return false;
+        return false;
     }
 
     public <T extends IOperator> boolean equalsByContent(T operator) {
-	if (operator == this) {
-	    return true;
-	}
-	return getRepresentation().equals(operator.getRepresentation());
+        if (operator == this) {
+            return true;
+        }
+        return getRepresentation().equals(operator.getRepresentation());
     }
 
     @SuppressWarnings("unchecked")
     public Object clone() {
-	Abs clone = null;
-	try {
-	    clone = (Abs) super.clone();
-	    clone.operandValue = (IOperand) operandValue.clone();
-	} catch (CloneNotSupportedException e) {
-	    throw new RuntimeException(e);
-	}
+        Abs clone = null;
+        try {
+            clone = (Abs) super.clone();
+            clone.operandValue = (IOperand) operandValue.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
 
-	return clone;
+        return clone;
     }
 
     public OperatorType type() {
-	return OperatorType.ARITHMETIC;
+        return OperatorType.ARITHMETIC;
     }
 
     public void setType(OperatorType type) {

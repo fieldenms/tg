@@ -14,9 +14,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing associations.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key")
@@ -29,43 +29,45 @@ public class MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPro
     @Title(value = "Property 1", desc = "Desc")
     private Money moneyProp;
 
-    @IsProperty(linkProperty="key1") //
+    @IsProperty(linkProperty = "key1")
+    //
     @MapTo
     @Title(value = "Property 1", desc = "Desc")
     private DetailsEntityForOneToManyAssociation one2manyAssociationSpecialCase;
 
-    @IsProperty(value = DetailsEntityForOneToManyAssociation.class, linkProperty="key1")  @MapTo
+    @IsProperty(value = DetailsEntityForOneToManyAssociation.class, linkProperty = "key1")
+    @MapTo
     @Title(value = "Collectional Property", desc = "Desc")
     private List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional;
 
     @Observable
     public MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue setOne2manyAssociationCollectional(final List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional) {
-	this.one2manyAssociationCollectional = one2manyAssociationCollectional;
-	return this;
+        this.one2manyAssociationCollectional = one2manyAssociationCollectional;
+        return this;
     }
 
     public List<DetailsEntityForOneToManyAssociation> getOne2manyAssociationCollectional() {
-	return one2manyAssociationCollectional;
+        return one2manyAssociationCollectional;
     }
 
     @Observable
     public MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue setOne2manyAssociationSpecialCase(final DetailsEntityForOneToManyAssociation one2oneAssociation) {
-	this.one2manyAssociationSpecialCase = one2oneAssociation;
-	return this;
+        this.one2manyAssociationSpecialCase = one2oneAssociation;
+        return this;
     }
 
     public DetailsEntityForOneToManyAssociation getOne2manyAssociationSpecialCase() {
-	return one2manyAssociationSpecialCase;
+        return one2manyAssociationSpecialCase;
     }
 
     @Observable
     public MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
 
 }

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-
 abstract class AbstractQueryLink {
 
     private Tokens tokens;
@@ -9,16 +8,16 @@ abstract class AbstractQueryLink {
     }
 
     protected <T> T copy(final T parent, final Tokens tokens) {
-	((AbstractQueryLink) parent).setTokens(tokens);
-	return parent;
+        ((AbstractQueryLink) parent).setTokens(tokens);
+        return parent;
     }
 
     protected AbstractQueryLink(final Tokens tokens) {
-	this.tokens = tokens;
+        this.tokens = tokens;
     }
 
     public Tokens getTokens() {
-	return tokens;
+        return tokens;
     }
 
     @Override

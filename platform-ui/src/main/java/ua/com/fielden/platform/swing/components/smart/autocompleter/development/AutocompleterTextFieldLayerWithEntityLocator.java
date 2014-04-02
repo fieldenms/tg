@@ -13,26 +13,25 @@ public class AutocompleterTextFieldLayerWithEntityLocator<T extends AbstractEnti
 
     /**
      * Instantiates case sensitive autocompleter with wild card support. Please note that case sensitivity should be take into account by the valueMatcher.
-     *
+     * 
      * @param entityFactory
      *            TODO
-     *
+     * 
      */
     public AutocompleterTextFieldLayerWithEntityLocator(//
-	    final EntityLocatorDialog<T, ?> entityLocatorDialog,//
-	    final Class<T> lookUpClass,
-	    final JTextField textComponent,//
-	    final IValueMatcher<T> valueMatcher,//
-	    final String expression,//
-	    final MultiplePropertiesListCellRenderer<T> cellRenderer, //
-	    final String caption,//
-	    final String valueSeparator) {//
-	this(entityLocatorDialog, lookUpClass, textComponent, valueMatcher, expression, cellRenderer, caption, valueSeparator, Settings.WILD_CARD_SUPPORT, Settings.CASE_SENSISTIVE);
+    final EntityLocatorDialog<T, ?> entityLocatorDialog,//
+            final Class<T> lookUpClass, final JTextField textComponent,//
+            final IValueMatcher<T> valueMatcher,//
+            final String expression,//
+            final MultiplePropertiesListCellRenderer<T> cellRenderer, //
+            final String caption,//
+            final String valueSeparator) {//
+        this(entityLocatorDialog, lookUpClass, textComponent, valueMatcher, expression, cellRenderer, caption, valueSeparator, Settings.WILD_CARD_SUPPORT, Settings.CASE_SENSISTIVE);
     }
 
     /**
      * The most comprehensive constructor, which accepts the widest range of autocompleter parameters.
-     *
+     * 
      * @param textComponent
      *            -- used as a holder for selected values
      * @param valueMatcher
@@ -49,16 +48,15 @@ public class AutocompleterTextFieldLayerWithEntityLocator<T extends AbstractEnti
      *            -- lookup instances type information
      */
     public AutocompleterTextFieldLayerWithEntityLocator(//
-	    final EntityLocatorDialog<T, ?> entityLocatorDialog,//
-	    final Class<T> lookUpClass,
-	    final JTextField textComponent,//
-	    final IValueMatcher<T> valueMatcher,//
-	    final String expression,//
-	    final MultiplePropertiesListCellRenderer<T> cellRenderer, //
-	    final String caption,//
-	    final String valueSeparator,//
-	    final Settings... settings) { //
-	super(textComponent, valueMatcher, lookUpClass, expression, cellRenderer, caption, valueSeparator, settings);
-	new AutocompleterUiWithEntityLocator<T>(entityLocatorDialog, this, caption);
+    final EntityLocatorDialog<T, ?> entityLocatorDialog,//
+            final Class<T> lookUpClass, final JTextField textComponent,//
+            final IValueMatcher<T> valueMatcher,//
+            final String expression,//
+            final MultiplePropertiesListCellRenderer<T> cellRenderer, //
+            final String caption,//
+            final String valueSeparator,//
+            final Settings... settings) { //
+        super(textComponent, valueMatcher, lookUpClass, expression, cellRenderer, caption, valueSeparator, settings);
+        new AutocompleterUiWithEntityLocator<T>(entityLocatorDialog, this, caption);
     }
 }

@@ -47,23 +47,23 @@ public class AddTabDialog extends JPanel {
      * @param model
      */
     public AddTabDialog(final AddTabDialogModel model) {
-	super(new MigLayout("fill, insets 3", "[grow,fill,:200:]", "[][][]"));
-	this.model = model;
-	add(DummyBuilder.label("Tab sheet title"), "wrap");
-	add(newFileName, "wrap");
-	final JPanel buttonControl = new JPanel(new MigLayout("fill, insets 0", "push[:70:,fill][:70:,fill]", "[c,fill]"));
-	buttonControl.add(jbApprove = new JButton(model.getApproveAction(this)));
-	buttonControl.add(new JButton(model.getCancelAction(this)));
-	add(buttonControl);
+        super(new MigLayout("fill, insets 3", "[grow,fill,:200:]", "[][][]"));
+        this.model = model;
+        add(DummyBuilder.label("Tab sheet title"), "wrap");
+        add(newFileName, "wrap");
+        final JPanel buttonControl = new JPanel(new MigLayout("fill, insets 0", "push[:70:,fill][:70:,fill]", "[c,fill]"));
+        buttonControl.add(jbApprove = new JButton(model.getApproveAction(this)));
+        buttonControl.add(new JButton(model.getCancelAction(this)));
+        add(buttonControl);
     }
 
     /**
      * Closes this dialog.
      */
     public void closeDialog() {
-	if (SwingUtilities.getWindowAncestor(this) != null) {
-	    SwingUtilities.getWindowAncestor(this).setVisible(false);
-	}
+        if (SwingUtilities.getWindowAncestor(this) != null) {
+            SwingUtilities.getWindowAncestor(this).setVisible(false);
+        }
     }
 
     /**
@@ -72,30 +72,30 @@ public class AddTabDialog extends JPanel {
      * @return
      */
     public AddTabOptions showDialog(final Window window) {
-	final JDialog availableDialog = new JDialog(window, "Add analysis report", ModalityType.APPLICATION_MODAL);
-	availableDialog.setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
-	availableDialog.add(this);
+        final JDialog availableDialog = new JDialog(window, "Add analysis report", ModalityType.APPLICATION_MODAL);
+        availableDialog.setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
+        availableDialog.add(this);
 
-	final JRootPane rootPane = availableDialog.getRootPane();
-	final InputMap iMap = rootPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-	iMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
-	final ActionMap aMap = rootPane.getActionMap();
-	aMap.put("escape", new AbstractAction() {
-	    private static final long serialVersionUID = 1L;
+        final JRootPane rootPane = availableDialog.getRootPane();
+        final InputMap iMap = rootPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        iMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
+        final ActionMap aMap = rootPane.getActionMap();
+        aMap.put("escape", new AbstractAction() {
+            private static final long serialVersionUID = 1L;
 
-	    public void actionPerformed(final ActionEvent e) {
-		availableDialog.setVisible(false);
-	    }
-	});
+            public void actionPerformed(final ActionEvent e) {
+                availableDialog.setVisible(false);
+            }
+        });
 
-	rootPane.setDefaultButton(jbApprove);
+        rootPane.setDefaultButton(jbApprove);
 
-	availableDialog.pack();
-	RefineryUtilities.centerFrameOnScreen(availableDialog);
-	availableDialog.setVisible(true);
-	availableDialog.removeAll();
-	availableDialog.dispose();
-	return model.getReturnValue();
+        availableDialog.pack();
+        RefineryUtilities.centerFrameOnScreen(availableDialog);
+        availableDialog.setVisible(true);
+        availableDialog.removeAll();
+        availableDialog.dispose();
+        return model.getReturnValue();
     }
 
     /**
@@ -104,6 +104,6 @@ public class AddTabDialog extends JPanel {
      * @return
      */
     public String getEnteredTabName() {
-	return newFileName.getText();
+        return newFileName.getText();
     }
 }

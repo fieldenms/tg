@@ -8,12 +8,13 @@ import ua.com.fielden.platform.equery.lifecycle.IProperty.IValueProperty;
 
 /**
  * Interface for lifecycle distribution group.
- *
+ * 
  * @author TG Team
- *
- * @param <T> - indicates an entity type.
+ * 
+ * @param <T>
+ *            - indicates an entity type.
  */
-public interface IGroup <T extends AbstractEntity> {
+public interface IGroup<T extends AbstractEntity> {
 
     /**
      * @return a property by which grouping has been performed. It could be {@link ITimeProperty time-distribution property} or {@link IValueProperty value-distribution property}.
@@ -37,8 +38,9 @@ public interface IGroup <T extends AbstractEntity> {
 
     /**
      * Returns durations of categories based on "total" indicator.
-     *
-     * @param total -- if true - total values should be returned, otherwise - average by count of entities.
+     * 
+     * @param total
+     *            -- if true - total values should be returned, otherwise - average by count of entities.
      * @return
      */
     List<ValuedInterval> getCategoryDurations(final boolean total);
@@ -50,7 +52,7 @@ public interface IGroup <T extends AbstractEntity> {
 
     /**
      * Returns true if it is time-distribution group, false otherwise.
-     *
+     * 
      * @return
      */
     boolean isTimeDistributed();
@@ -62,6 +64,7 @@ public interface IGroup <T extends AbstractEntity> {
 
     /**
      * Returns count of entities that accumulate group.
+     * 
      * @return
      */
     int size();

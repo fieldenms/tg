@@ -14,31 +14,31 @@ import ua.com.fielden.platform.utils.Pair;
 public class ExpressionBuilder1 extends AbstractTokensBuilder1 {
 
     protected ExpressionBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder) {
-	super(parent, queryBuilder);
+        super(parent, queryBuilder);
     }
 
     @Override
     public boolean isClosing() {
-	return TokenCategory.END_EXPR.equals(getLastCat());
+        return TokenCategory.END_EXPR.equals(getLastCat());
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-	if (TokenCategory.END_EXPR.equals(getLastCat())) {
-	    getTokens().remove(getSize() - 1);
-	}
-	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-	final Pair<TokenCategory, Object> firstOperandPair = iterator.next();
-	final ISingleOperand1 firstOperand = getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue());
-	final List<CompoundSingleOperand1> items = new ArrayList<CompoundSingleOperand1>();
-	for (; iterator.hasNext();) {
-	    final ArithmeticalOperator operator = (ArithmeticalOperator) iterator.next().getValue();
-	    final Pair<TokenCategory, Object> subsequentOperandPair = iterator.next();
-	    final ISingleOperand1 subsequentOperand = getModelForSingleOperand(subsequentOperandPair.getKey(), subsequentOperandPair.getValue());
+        if (TokenCategory.END_EXPR.equals(getLastCat())) {
+            getTokens().remove(getSize() - 1);
+        }
+        final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
+        final Pair<TokenCategory, Object> firstOperandPair = iterator.next();
+        final ISingleOperand1 firstOperand = getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue());
+        final List<CompoundSingleOperand1> items = new ArrayList<CompoundSingleOperand1>();
+        for (; iterator.hasNext();) {
+            final ArithmeticalOperator operator = (ArithmeticalOperator) iterator.next().getValue();
+            final Pair<TokenCategory, Object> subsequentOperandPair = iterator.next();
+            final ISingleOperand1 subsequentOperand = getModelForSingleOperand(subsequentOperandPair.getKey(), subsequentOperandPair.getValue());
 
-	    items.add(new CompoundSingleOperand1(subsequentOperand, operator));
-	}
+            items.add(new CompoundSingleOperand1(subsequentOperand, operator));
+        }
 
-	return new Pair<TokenCategory, Object>(TokenCategory.EXPR, new Expression1(firstOperand, items));
+        return new Pair<TokenCategory, Object>(TokenCategory.EXPR, new Expression1(firstOperand, items));
     }
 }

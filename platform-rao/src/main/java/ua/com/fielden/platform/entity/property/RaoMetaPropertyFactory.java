@@ -17,9 +17,9 @@ import com.google.inject.Inject;
 
 /**
  * RAO driven {@link IMetaPropertyFactory} implementation.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class RaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
 
@@ -28,29 +28,29 @@ public class RaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
 
     @Inject
     public RaoMetaPropertyFactory(final DomainValidationConfig domainConfig, final DomainMetaPropertyConfig domainMetaConfig, final ICompanionObjectFinder defaultControllerProvider, final RestClientUtil restUtil) {
-	super(domainConfig, domainMetaConfig);
-	this.defaultControllerProvider = defaultControllerProvider;
-	this.restUtil = restUtil;
+        super(domainConfig, domainMetaConfig);
+        this.defaultControllerProvider = defaultControllerProvider;
+        this.restUtil = restUtil;
     }
 
     @Override
     protected synchronized IBeforeChangeEventHandler createEntityExists(final EntityExists anotation) {
-	final Class<? extends AbstractEntity> key = anotation.value();
-	if (!entityExistsValidators.containsKey(key)) {
-	    final IEntityDao dao = defaultControllerProvider.find(key);
-	    if (dao != null) {
-		entityExistsValidators.put(key, new EntityExistsValidator(dao));
-	    } else {
-		final DynamicEntityRao dynDao = new DynamicEntityRao(restUtil);
-		dynDao.setEntityType(key);
-		entityExistsValidators.put(key, new EntityExistsValidator(dynDao));
-	    }
-	}
+        final Class<? extends AbstractEntity> key = anotation.value();
+        if (!entityExistsValidators.containsKey(key)) {
+            final IEntityDao dao = defaultControllerProvider.find(key);
+            if (dao != null) {
+                entityExistsValidators.put(key, new EntityExistsValidator(dao));
+            } else {
+                final DynamicEntityRao dynDao = new DynamicEntityRao(restUtil);
+                dynDao.setEntityType(key);
+                entityExistsValidators.put(key, new EntityExistsValidator(dynDao));
+            }
+        }
 
-	return entityExistsValidators.get(key);
+        return entityExistsValidators.get(key);
     }
 
     public RestClientUtil getRestUtil() {
-	return restUtil;
+        return restUtil;
     }
 }

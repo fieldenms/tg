@@ -1,4 +1,3 @@
-
 package ua.com.fielden.platform.serialisation.impl.serialisers;
 
 import java.nio.ByteBuffer;
@@ -15,11 +14,11 @@ public class DateTimeSerializer extends SimpleSerializer<DateTime> {
 
     @Override
     public DateTime read(final ByteBuffer buffer) {
-	return new DateTime(LongSerializer.get(buffer, true));
+        return new DateTime(LongSerializer.get(buffer, true));
     }
 
     @Override
     public void write(final ByteBuffer buffer, final DateTime object) {
-	LongSerializer.put(buffer, object.getMillis(), true);
+        LongSerializer.put(buffer, object.getMillis(), true);
     }
 }

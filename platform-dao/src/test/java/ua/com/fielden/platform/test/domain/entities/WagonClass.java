@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Represents wagon class entity.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(String.class)
 public class WagonClass extends AbstractEntity<String> {
@@ -30,10 +30,11 @@ public class WagonClass extends AbstractEntity<String> {
     /**
      * Constructor for Hibernate.
      */
-    protected WagonClass() {}
+    protected WagonClass() {
+    }
 
     public WagonClass(final String code, final String desc) {
-	super(null, code, desc);
+        super(null, code, desc);
     }
 
     public Integer getTonnage() {
@@ -64,7 +65,7 @@ public class WagonClass extends AbstractEntity<String> {
     }
 
     public Set<WagonClassCompatibility> getCompatibles() {
-	return this.compatibles;
+        return this.compatibles;
     }
 
     @Observable
@@ -74,15 +75,16 @@ public class WagonClass extends AbstractEntity<String> {
 
     /**
      * Determines whether given bogie class is compatible with given wagon class
+     * 
      * @param bogieClass
      * @return
      */
     public boolean isBogieClassCompatible(final BogieClass bogieClass) {
-	for (final WagonClassCompatibility wagonClassCompatibility : compatibles) {
-	    if (wagonClassCompatibility.getBogieClass().equals(bogieClass)) {
-		return true;
-	    }
-	}
-	return false;
+        for (final WagonClassCompatibility wagonClassCompatibility : compatibles) {
+            if (wagonClassCompatibility.getBogieClass().equals(bogieClass)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

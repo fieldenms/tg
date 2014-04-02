@@ -32,7 +32,7 @@ public class MoneyField extends ValidationLayer<JTextField> {
      * Initialises instance with default {@link IParsingRule} and empty {@link Money} value
      */
     public MoneyField() {
-	this(null, defaultParsingRule);
+        this(null, defaultParsingRule);
     }
 
     /**
@@ -41,7 +41,7 @@ public class MoneyField extends ValidationLayer<JTextField> {
      * @param value
      */
     public MoneyField(final Money value) {
-	this(value, defaultParsingRule);
+        this(value, defaultParsingRule);
     }
 
     /**
@@ -51,26 +51,26 @@ public class MoneyField extends ValidationLayer<JTextField> {
      * @param parsingRule
      */
     public MoneyField(final Money value, final IParsingRule parsingRule) {
-	super(new JTextField(value != null ? value.toString() : ""));
-	getView().getDocument().addDocumentListener(new DocumentListener() {
-	    @Override
-	    public void changedUpdate(final DocumentEvent e) {
-	    }
+        super(new JTextField(value != null ? value.toString() : ""));
+        getView().getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void changedUpdate(final DocumentEvent e) {
+            }
 
-	    @Override
-	    public void insertUpdate(final DocumentEvent e) {
-		validate(e);
-	    }
+            @Override
+            public void insertUpdate(final DocumentEvent e) {
+                validate(e);
+            }
 
-	    @Override
-	    public void removeUpdate(final DocumentEvent e) {
-		validate(e);
-	    }
+            @Override
+            public void removeUpdate(final DocumentEvent e) {
+                validate(e);
+            }
 
-	    private void validate(final DocumentEvent e) {
-		setResult(parsingRule.parseString(getView().getText()));
-	    }
-	});
+            private void validate(final DocumentEvent e) {
+                setResult(parsingRule.parseString(getView().getText()));
+            }
+        });
     }
 
     /**
@@ -78,11 +78,11 @@ public class MoneyField extends ValidationLayer<JTextField> {
      * from {@link Result#getInstance()} method, when it is successful.
      */
     public Money getValue() {
-	if (getResult() != null && getResult().isSuccessful()) {
-	    return (Money) getResult().getInstance();
-	} else {
-	    return null;
-	}
+        if (getResult() != null && getResult().isSuccessful()) {
+            return (Money) getResult().getInstance();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -91,16 +91,16 @@ public class MoneyField extends ValidationLayer<JTextField> {
      * @author Yura
      */
     public static interface IParsingRule {
-	/**
-	 * Should return successful {@link Result} with instance set to converted {@link Money} type, if it is possible to convert passed {@link String} value to {@link Money}
-	 * value.<br>
-	 * Should return unsuccessful {@link Result} with proper message and {@link Exception} set (instance is ignored), if it not possible to convert passed {@link String} value
-	 * to {@link Money} value.<br>
-	 * 
-	 * @param value
-	 * @return
-	 */
-	public Result parseString(String value);
+        /**
+         * Should return successful {@link Result} with instance set to converted {@link Money} type, if it is possible to convert passed {@link String} value to {@link Money}
+         * value.<br>
+         * Should return unsuccessful {@link Result} with proper message and {@link Exception} set (instance is ignored), if it not possible to convert passed {@link String} value
+         * to {@link Money} value.<br>
+         * 
+         * @param value
+         * @return
+         */
+        public Result parseString(String value);
     }
 
     /**
@@ -109,35 +109,35 @@ public class MoneyField extends ValidationLayer<JTextField> {
      * Note : empty {@link String} is considered as legal value and represents null.
      */
     public static final IParsingRule defaultParsingRule = new IParsingRule() {
-	public Result parseString(final String value) {
-	    if ("".equals(value)) {
-		return new Result(null, "");
-	    }
-	    BigDecimal amount = null;
-	    try {
-		// trying to parse directly like a number
-		amount = new BigDecimal(Double.valueOf(value));
-	    } catch (final Exception exc) {
-		try {
-		    // trying to parse using currency formatting
-		    final Number enteredAmount = NumberFormat.getCurrencyInstance().parse(value);
-		    amount = enteredAmount instanceof Double ? new BigDecimal(enteredAmount.doubleValue()) : new BigDecimal(enteredAmount.longValue());
-		    if (amount.doubleValue() <= 0) {
-			// if negative, then could not parse
-			return new Result(null, "Couldn't parse '" + value + "' value", new Exception());
-		    }
-		} catch (final Exception e) {
-		    // the worst case - removing all commas and trying to parse like that
-		    final String newValue = value.replace(",", "");
-		    try {
-			amount = new BigDecimal(Double.valueOf(newValue));
-		    } catch (final Exception exc2) {
-			return new Result(null, "Couldn't parse '" + value + "' value", new Exception());
-		    }
-		}
-	    }
-	    return new Result(new Money(amount), "");
-	}
+        public Result parseString(final String value) {
+            if ("".equals(value)) {
+                return new Result(null, "");
+            }
+            BigDecimal amount = null;
+            try {
+                // trying to parse directly like a number
+                amount = new BigDecimal(Double.valueOf(value));
+            } catch (final Exception exc) {
+                try {
+                    // trying to parse using currency formatting
+                    final Number enteredAmount = NumberFormat.getCurrencyInstance().parse(value);
+                    amount = enteredAmount instanceof Double ? new BigDecimal(enteredAmount.doubleValue()) : new BigDecimal(enteredAmount.longValue());
+                    if (amount.doubleValue() <= 0) {
+                        // if negative, then could not parse
+                        return new Result(null, "Couldn't parse '" + value + "' value", new Exception());
+                    }
+                } catch (final Exception e) {
+                    // the worst case - removing all commas and trying to parse like that
+                    final String newValue = value.replace(",", "");
+                    try {
+                        amount = new BigDecimal(Double.valueOf(newValue));
+                    } catch (final Exception exc2) {
+                        return new Result(null, "Couldn't parse '" + value + "' value", new Exception());
+                    }
+                }
+            }
+            return new Result(new Money(amount), "");
+        }
     };
 
     /**
@@ -146,18 +146,18 @@ public class MoneyField extends ValidationLayer<JTextField> {
      * @param args
      */
     public static void main(final String[] args) {
-	final MoneyField mf = new MoneyField();
-	mf.setPreferredSize(new Dimension(100, 25));
+        final MoneyField mf = new MoneyField();
+        mf.setPreferredSize(new Dimension(100, 25));
 
-	final JButton button = new JButton("Print value to console");
-	button.addActionListener(new ActionListener() {
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		final Money money = mf.getValue();
-		System.out.println(money != null ? money.toString() : "null");
-	    }
-	});
-	SimpleLauncher.show("Test", new FlowLayout(FlowLayout.CENTER), mf, button);
+        final JButton button = new JButton("Print value to console");
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                final Money money = mf.getValue();
+                System.out.println(money != null ? money.toString() : "null");
+            }
+        });
+        SimpleLauncher.show("Test", new FlowLayout(FlowLayout.CENTER), mf, button);
     }
 
 }

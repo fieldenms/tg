@@ -23,9 +23,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "domain tree representation" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key title", desc = "Key desc")
@@ -167,6 +167,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public MasterEntity getMasterEntityProp() {
         return masterEntityProp;
     }
+
     @Observable
     public void setMasterEntityProp(final MasterEntity masterEntityProp) {
         this.masterEntityProp = masterEntityProp;
@@ -175,6 +176,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Integer getIntegerProp() {
         return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
@@ -183,6 +185,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Double getDoubleProp() {
         return doubleProp;
     }
+
     @Observable
     public void setDoubleProp(final Double doubleProp) {
         this.doubleProp = doubleProp;
@@ -191,6 +194,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public BigDecimal getBigDecimalProp() {
         return bigDecimalProp;
     }
+
     @Observable
     public void setBigDecimalProp(final BigDecimal bigDecimalProp) {
         this.bigDecimalProp = bigDecimalProp;
@@ -199,6 +203,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Money getMoneyProp() {
         return moneyProp;
     }
+
     @Observable
     public void setMoneyProp(final Money moneyProp) {
         this.moneyProp = moneyProp;
@@ -207,6 +212,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Date getDateProp() {
         return dateProp;
     }
+
     @Observable
     public void setDateProp(final Date dateProp) {
         this.dateProp = dateProp;
@@ -215,6 +221,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public boolean isBooleanProp() {
         return booleanProp;
     }
+
     @Observable
     public void setBooleanProp(final boolean booleanProp) {
         this.booleanProp = booleanProp;
@@ -223,6 +230,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public String getStringProp() {
         return stringProp;
     }
+
     @Observable
     public void setStringProp(final String stringProp) {
         this.stringProp = stringProp;
@@ -231,6 +239,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public EvenSlaverEntity getEntityProp() {
         return entityProp;
     }
+
     @Observable
     public void setEntityProp(final EvenSlaverEntity entityProp) {
         this.entityProp = entityProp;
@@ -239,6 +248,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public List<EvenSlaverEntity> getCollection() {
         return collection;
     }
+
     @Observable
     public void setCollection(final List<EvenSlaverEntity> collection) {
         this.collection.clear();
@@ -246,80 +256,90 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     public EnumType getEnumProp() {
-	return enumProp;
+        return enumProp;
     }
+
     @Observable
     public void setEnumProp(final EnumType enumProp) {
-	this.enumProp = enumProp;
+        this.enumProp = enumProp;
     }
 
     public EvenSlaverEntity getExcludedManuallyProp() {
-	return excludedManuallyProp;
+        return excludedManuallyProp;
     }
+
     @Observable
     public void setExcludedManuallyProp(final EvenSlaverEntity excludedManuallyProp) {
-	this.excludedManuallyProp = excludedManuallyProp;
+        this.excludedManuallyProp = excludedManuallyProp;
     }
 
     public EntityWithAbstractNature getEntityPropWithAbstractNature() {
-	return entityPropWithAbstractNature;
+        return entityPropWithAbstractNature;
     }
+
     @Observable
     public void setEntityPropWithAbstractNature(final EntityWithAbstractNature entityPropWithAbstractNature) {
-	this.entityPropWithAbstractNature = entityPropWithAbstractNature;
+        this.entityPropWithAbstractNature = entityPropWithAbstractNature;
     }
 
     public EntityWithoutKeyType getEntityPropWithoutKeyType() {
-	return entityPropWithoutKeyType;
+        return entityPropWithoutKeyType;
     }
+
     @Observable
     public void setEntityPropWithoutKeyType(final EntityWithoutKeyType entityPropWithoutKeyType) {
-	this.entityPropWithoutKeyType = entityPropWithoutKeyType;
+        this.entityPropWithoutKeyType = entityPropWithoutKeyType;
     }
 
     public EntityWithoutKeyTitleAndWithKeyType getEntityPropWithoutKeyTitle() {
-	return entityPropWithoutKeyTitle;
+        return entityPropWithoutKeyTitle;
     }
+
     @Observable
     public void setEntityPropWithoutKeyTitle(final EntityWithoutKeyTitleAndWithKeyType entityPropWithoutKeyTitle) {
-	this.entityPropWithoutKeyTitle = entityPropWithoutKeyTitle;
+        this.entityPropWithoutKeyTitle = entityPropWithoutKeyTitle;
     }
 
     public EntityWithKeyTitleAndWithAEKeyType getEntityPropWithAEKeyType() {
-	return entityPropWithAEKeyType;
+        return entityPropWithAEKeyType;
     }
+
     @Observable
     public void setEntityPropWithAEKeyType(final EntityWithKeyTitleAndWithAEKeyType entityPropWithAEKeyType) {
-	this.entityPropWithAEKeyType = entityPropWithAEKeyType;
+        this.entityPropWithAEKeyType = entityPropWithAEKeyType;
     }
 
     public Integer getInvisibleProp() {
-	return invisibleProp;
+        return invisibleProp;
     }
+
     @Observable
     public void setInvisibleProp(final Integer invisibleProp) {
-	this.invisibleProp = invisibleProp;
+        this.invisibleProp = invisibleProp;
     }
 
     public Integer getIgnoreProp() {
-	return ignoreProp;
+        return ignoreProp;
     }
+
     @Observable
     public void setIgnoreProp(final Integer ignoreProp) {
-	this.ignoreProp = ignoreProp;
+        this.ignoreProp = ignoreProp;
     }
 
     public EvenSlaverEntity getCritOnlyAEProp() {
-	return critOnlyAEProp;
+        return critOnlyAEProp;
     }
+
     @Observable
     public void setCritOnlyAEProp(final EvenSlaverEntity critOnlyAEProp) {
-	this.critOnlyAEProp = critOnlyAEProp;
+        this.critOnlyAEProp = critOnlyAEProp;
     }
 
     public List<EvenSlaverEntity> getCritOnlyAECollectionProp() {
-	return critOnlyAECollectionProp;
+        return critOnlyAECollectionProp;
     }
+
     @Observable
     public void setCritOnlyAECollectionProp(final List<EvenSlaverEntity> critOnlyAECollectionProp) {
         this.critOnlyAECollectionProp.clear();
@@ -329,6 +349,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public EntityWithCompositeKey getEntityWithCompositeKeyProp() {
         return entityWithCompositeKeyProp;
     }
+
     @Observable
     public void setEntityWithCompositeKeyProp(final EntityWithCompositeKey entityWithCompositeKeyProp) {
         this.entityWithCompositeKeyProp = entityWithCompositeKeyProp;
@@ -337,6 +358,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Integer getCritOnlyProp() {
         return critOnlyProp;
     }
+
     @Observable
     public void setCritOnlyProp(final Integer critOnlyProp) {
         this.critOnlyProp = critOnlyProp;
@@ -345,6 +367,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Integer getDisabledManuallyProp() {
         return disabledManuallyProp;
     }
+
     @Observable
     public void setDisabledManuallyProp(final Integer disabledManuallyProp) {
         this.disabledManuallyProp = disabledManuallyProp;
@@ -353,6 +376,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public EvenSlaverEntity getResultOnlyProp() {
         return resultOnlyProp;
     }
+
     @Observable
     public void setResultOnlyProp(final EvenSlaverEntity resultOnlyProp) {
         this.resultOnlyProp = resultOnlyProp;
@@ -361,6 +385,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public EntityWithStringKeyType getSimpleEntityProp() {
         return simpleEntityProp;
     }
+
     @Observable
     public void setSimpleEntityProp(final EntityWithStringKeyType simpleEntityProp) {
         this.simpleEntityProp = simpleEntityProp;
@@ -369,6 +394,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Integer getCheckedManuallyProp() {
         return checkedManuallyProp;
     }
+
     @Observable
     public void setCheckedManuallyProp(final Integer checkedManuallyProp) {
         this.checkedManuallyProp = checkedManuallyProp;
@@ -377,6 +403,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Integer getPropWithFunctions() {
         return propWithFunctions;
     }
+
     @Observable
     public void setPropWithFunctions(final Integer propWithFunctions) {
         this.propWithFunctions = propWithFunctions;
@@ -385,6 +412,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public EntityWithStringKeyType getMutablyCheckedProp() {
         return mutablyCheckedProp;
     }
+
     @Observable
     public void setMutablyCheckedProp(final EntityWithStringKeyType mutablyCheckedProp) {
         this.mutablyCheckedProp = mutablyCheckedProp;
@@ -393,6 +421,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public EntityWithStringKeyType getMutablyManuallyCheckedProp() {
         return mutablyManuallyCheckedProp;
     }
+
     @Observable
     public void setMutablyManuallyCheckedProp(final EntityWithStringKeyType mutablyManuallyCheckedProp) {
         this.mutablyManuallyCheckedProp = mutablyManuallyCheckedProp;
@@ -401,6 +430,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public BigDecimal getCheckedUntouchedProp() {
         return checkedUntouchedProp;
     }
+
     @Observable
     public void setCheckedUntouchedProp(final BigDecimal checkedUntouchedProp) {
         this.checkedUntouchedProp = checkedUntouchedProp;
@@ -409,6 +439,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public BigDecimal getImmutablyCheckedUntouchedProp() {
         return immutablyCheckedUntouchedProp;
     }
+
     @Observable
     public void setImmutablyCheckedUntouchedProp(final BigDecimal immutablyCheckedUntouchedProp) {
         this.immutablyCheckedUntouchedProp = immutablyCheckedUntouchedProp;
@@ -417,6 +448,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public BigDecimal getMutatedWithFunctionsProp() {
         return mutatedWithFunctionsProp;
     }
+
     @Observable
     public void setMutatedWithFunctionsProp(final BigDecimal mutatedWithFunctionsProp) {
         this.mutatedWithFunctionsProp = mutatedWithFunctionsProp;
@@ -425,6 +457,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public SlaveEntity getCritOnlySingleAEProp() {
         return critOnlySingleAEProp;
     }
+
     @Observable
     public void setCritOnlySingleAEProp(final SlaveEntity critOnlySingleAEProp) {
         this.critOnlySingleAEProp = critOnlySingleAEProp;
@@ -433,6 +466,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Integer getUncheckedProp() {
         return uncheckedProp;
     }
+
     @Observable
     public void setUncheckedProp(final Integer uncheckedProp) {
         this.uncheckedProp = uncheckedProp;
@@ -441,6 +475,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Integer getCheckedManuallyProp2() {
         return checkedManuallyProp2;
     }
+
     @Observable
     public void setCheckedManuallyProp2(final Integer checkedManuallyProp2) {
         this.checkedManuallyProp2 = checkedManuallyProp2;

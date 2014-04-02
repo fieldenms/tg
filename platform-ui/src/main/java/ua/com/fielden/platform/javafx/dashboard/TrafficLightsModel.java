@@ -4,9 +4,9 @@ import ua.com.fielden.platform.javafx.dashboard.TrafficLights.TrafficLightModel;
 
 /**
  * A traffic lights control model.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class TrafficLightsModel {
     private final TrafficLightModel redLightingModel = new TrafficLightModel();

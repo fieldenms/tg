@@ -10,9 +10,9 @@ import ua.com.fielden.platform.swing.ei.editors.development.ILightweightProperty
  * the same thing.
  * <p>
  * For example, most of so called table codes represent stand alone entities.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  *            -- entity type.
  * @param <C>
@@ -23,26 +23,26 @@ public abstract class UmMaster<T extends AbstractEntity<?>, C> extends UModel<T,
     private final fetch<T> fm;
 
     protected UmMaster(final T entity, final C companion, final ILightweightPropertyBinder<T> propertyBinder, final fetch<T> fm, final boolean lazy) {
-	super(entity, companion, propertyBinder, lazy);
-	this.fm = fm != null ? fm : fetchAll((Class<T>)entity.getType());
-	if (shouldEnforceEntityLoadingDuringInstantiation()) {
-	    setEntity(findById(entity.getId(), true));
-	}
+        super(entity, companion, propertyBinder, lazy);
+        this.fm = fm != null ? fm : fetchAll((Class<T>) entity.getType());
+        if (shouldEnforceEntityLoadingDuringInstantiation()) {
+            setEntity(findById(entity.getId(), true));
+        }
     }
 
     /**
      * A method used inside the constructor to determine whether entity retrieval should be enforced during model instantiation. By default it return true, which is correct in most
      * cases. If the default is not suitable the derived model should override it to return false.
-     *
+     * 
      * @return
      */
     protected boolean shouldEnforceEntityLoadingDuringInstantiation() {
-	return true;
+        return true;
     }
 
     /**
      * Should be implemented to correctly retrieve managed entity according the master model requirement as supposed to whatever was passed into the constructor.
-     *
+     * 
      * @param id
      * @param forceRetrieval
      * @return
@@ -51,11 +51,11 @@ public abstract class UmMaster<T extends AbstractEntity<?>, C> extends UModel<T,
 
     @Override
     protected final T getManagedEntity() {
-	return getEntity();
+        return getEntity();
     }
 
     protected fetch<T> getFetchModel() {
-	return fm;
+        return fm;
     }
 
 }

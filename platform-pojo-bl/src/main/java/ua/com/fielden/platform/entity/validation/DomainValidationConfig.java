@@ -27,16 +27,16 @@ public class DomainValidationConfig {
      * @return
      */
     public IBeforeChangeEventHandler getValidator(final Class<?> entityType, final String propertyName) {
-	final Map<Class<?>, Map<String, IBeforeChangeEventHandler>> allValidators = getAllValidatorsFor(entityType);
-	IBeforeChangeEventHandler validator = null;
-	Class<?> runningEntityType = entityType;
-	while (validator == null && runningEntityType != null) {
-	    final Map<String, IBeforeChangeEventHandler> validators = allValidators.get(runningEntityType);
-	    validator = validators != null ? validators.get(propertyName) : null;
-	    runningEntityType = runningEntityType.getSuperclass();
-	}
-	logger.debug("Request to get validator for " + propertyName + "@" + entityType.getName() + ": " + validator);
-	return validator;
+        final Map<Class<?>, Map<String, IBeforeChangeEventHandler>> allValidators = getAllValidatorsFor(entityType);
+        IBeforeChangeEventHandler validator = null;
+        Class<?> runningEntityType = entityType;
+        while (validator == null && runningEntityType != null) {
+            final Map<String, IBeforeChangeEventHandler> validators = allValidators.get(runningEntityType);
+            validator = validators != null ? validators.get(propertyName) : null;
+            runningEntityType = runningEntityType.getSuperclass();
+        }
+        logger.debug("Request to get validator for " + propertyName + "@" + entityType.getName() + ": " + validator);
+        return validator;
     }
 
     /**
@@ -48,11 +48,12 @@ public class DomainValidationConfig {
      * @return
      */
     public DomainValidationConfig setValidator(final Class<?> entityType, final String propertyName, final IBeforeChangeEventHandler domainValidator) {
-	logger.debug("Validator " + domainValidator + " is being set for " + propertyName + "@" + entityType.getName());
-	final Map<String, IBeforeChangeEventHandler> map = domainValidators.get(entityType) == null ? new HashMap<String, IBeforeChangeEventHandler>() : domainValidators.get(entityType);
-	map.put(propertyName, domainValidator); // this put replaces a validator if there was already one associated with the specified property
-	domainValidators.put(entityType, map);
-	return this;
+        logger.debug("Validator " + domainValidator + " is being set for " + propertyName + "@" + entityType.getName());
+        final Map<String, IBeforeChangeEventHandler> map = domainValidators.get(entityType) == null ? new HashMap<String, IBeforeChangeEventHandler>()
+                : domainValidators.get(entityType);
+        map.put(propertyName, domainValidator); // this put replaces a validator if there was already one associated with the specified property
+        domainValidators.put(entityType, map);
+        return this;
     }
 
     /**
@@ -62,15 +63,15 @@ public class DomainValidationConfig {
      * @return
      */
     private Map<Class<?>, Map<String, IBeforeChangeEventHandler>> getAllValidatorsFor(Class<?> entityType) {
-	final Map<Class<?>, Map<String, IBeforeChangeEventHandler>> allValidators = new HashMap<Class<?>, Map<String, IBeforeChangeEventHandler>>();
-	while (entityType != null) {
-	    final Map<String, IBeforeChangeEventHandler> validators = domainValidators.get(entityType);
-	    if (validators != null) {
-		allValidators.put(entityType, validators);
-	    }
-	    entityType = entityType.getSuperclass();
-	}
-	return allValidators;
+        final Map<Class<?>, Map<String, IBeforeChangeEventHandler>> allValidators = new HashMap<Class<?>, Map<String, IBeforeChangeEventHandler>>();
+        while (entityType != null) {
+            final Map<String, IBeforeChangeEventHandler> validators = domainValidators.get(entityType);
+            if (validators != null) {
+                allValidators.put(entityType, validators);
+            }
+            entityType = entityType.getSuperclass();
+        }
+        return allValidators;
     }
 
 }

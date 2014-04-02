@@ -7,11 +7,11 @@ import ua.com.fielden.platform.entity.query.generation.elements.SecondOf;
 public class SecondOfBuilder extends OneArgumentFunctionBuilder {
 
     protected SecondOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-	super(parent, queryBuilder, paramValues);
+        super(parent, queryBuilder, paramValues);
     }
 
     @Override
     Object getModel() {
-	return new SecondOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
+        return new SecondOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
     }
 }

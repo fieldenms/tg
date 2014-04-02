@@ -10,16 +10,16 @@ import ua.com.fielden.platform.swing.review.report.centre.configuration.ManualCe
 public class GridAnalysisModelForManualEntityCentre<T extends AbstractEntity<?>, M extends AbstractEntity<?>> extends GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     public GridAnalysisModelForManualEntityCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> queryCustomiser) {
-	super(criteria, queryCustomiser);
+        super(criteria, queryCustomiser);
     }
 
     @SuppressWarnings("unchecked")
-    public String getLinkProperty(){
-	return ((ManualCentreWithLinkConfigurationModel<T, M>) getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkProperty();
+    public String getLinkProperty() {
+        return ((ManualCentreWithLinkConfigurationModel<T, M>) getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkProperty();
     }
 
     @SuppressWarnings("unchecked")
-    public M getLinkEntity(){
-	return ((ManualCentreWithLinkConfigurationModel<T, M>) getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkPropertyValue();
+    public M getLinkEntity() {
+        return ((ManualCentreWithLinkConfigurationModel<T, M>) getAnalysisView().getOwner().getOwner().getOwner().getModel()).getLinkPropertyValue();
     }
 }

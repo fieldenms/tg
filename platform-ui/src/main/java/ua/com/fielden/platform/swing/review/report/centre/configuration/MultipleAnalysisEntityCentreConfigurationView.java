@@ -18,29 +18,29 @@ public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEnt
     private final Map<String, Map<Object, DetailsFrame>> detailsCache;
 
     public MultipleAnalysisEntityCentreConfigurationView(final CentreConfigurationModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, progressLayer);
-	this.detailsCache = new HashMap<>();
+        super(model, progressLayer);
+        this.detailsCache = new HashMap<>();
     }
 
     @Override
     public ICloseGuard canClose() {
-	for(final Map<Object, DetailsFrame> detailsFrames : detailsCache.values()){
-            for(final DetailsFrame frame : detailsFrames.values()){
-        	final ICloseGuard closeGuard = frame.canClose();
-        	if(closeGuard != null){
-        	    return closeGuard;
-        	}
+        for (final Map<Object, DetailsFrame> detailsFrames : detailsCache.values()) {
+            for (final DetailsFrame frame : detailsFrames.values()) {
+                final ICloseGuard closeGuard = frame.canClose();
+                if (closeGuard != null) {
+                    return closeGuard;
+                }
             }
         }
-	return super.canClose();
+        return super.canClose();
     }
 
     @Override
     public void close() {
         super.close();
-        for(final Map<Object, DetailsFrame> detailsFrames : detailsCache.values()){
-            for(final DetailsFrame frame : detailsFrames.values()){
-        	frame.close();
+        for (final Map<Object, DetailsFrame> detailsFrames : detailsCache.values()) {
+            for (final DetailsFrame frame : detailsFrames.values()) {
+                frame.close();
             }
             detailsFrames.clear();
         }
@@ -49,37 +49,37 @@ public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEnt
 
     /**
      * Returns the cache for details frames, for specific analysis name
-     *
+     * 
      * @param name
      * @return
      */
-    public Map<Object, DetailsFrame> getDetailsCache(final String name){
-	Map<Object, DetailsFrame> detailsFrames = detailsCache.get(name);
-	if(detailsFrames == null){
-	    detailsFrames = new HashMap<>();
-	    detailsCache.put(name, detailsFrames);
-	}
-	return detailsFrames;
+    public Map<Object, DetailsFrame> getDetailsCache(final String name) {
+        Map<Object, DetailsFrame> detailsFrames = detailsCache.get(name);
+        if (detailsFrames == null) {
+            detailsFrames = new HashMap<>();
+            detailsCache.put(name, detailsFrames);
+        }
+        return detailsFrames;
     }
 
     @Override
     protected MultipleAnalysisEntityCentre<T> createConfigurableView() {
-	if(getPreviousView() != null && isPrincipal()){
-	    selectAnalysis(getPreviousView().getCurrentAnalysisConfigurationView().getModel().getName());
-	}
-	logger.info("Creating MultipleAnalysisEntityCentre...");
-	final MultipleAnalysisEntityCentre<T> maec = new MultipleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), this);
-	logger.info("Creating MultipleAnalysisEntityCentre...done");
-	return maec;
+        if (getPreviousView() != null && isPrincipal()) {
+            selectAnalysis(getPreviousView().getCurrentAnalysisConfigurationView().getModel().getName());
+        }
+        logger.info("Creating MultipleAnalysisEntityCentre...");
+        final MultipleAnalysisEntityCentre<T> maec = new MultipleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), this);
+        logger.info("Creating MultipleAnalysisEntityCentre...done");
+        return maec;
     }
 
     /**
      * Returns value that indicates whether this entity centre configuration view is principal or not.
-     *
+     * 
      * @return
      */
-    private final boolean isPrincipal(){
-	return getModel().getName() == null;
+    private final boolean isPrincipal() {
+        return getModel().getName() == null;
     }
 
 }

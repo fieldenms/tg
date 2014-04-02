@@ -25,17 +25,17 @@ public class WeakEntityMasterCache implements IEntityMasterCache {
      */
     @Override
     public BaseFrame get(final Long entityId) {
-	if (entityId != null) {
-	    for (final Map.Entry<BaseFrame, Long> entry : cache.entrySet()) {
-		if (entityId.equals(entry.getValue())) {
-		    final BaseFrame cachedFrame = entry.getKey();
-		    if (cachedFrame != null && !cachedFrame.isDisposed()) {
-			return entry.getKey();
-		    }
-		}
-	    }
-	}
-	return null;
+        if (entityId != null) {
+            for (final Map.Entry<BaseFrame, Long> entry : cache.entrySet()) {
+                if (entityId.equals(entry.getValue())) {
+                    final BaseFrame cachedFrame = entry.getKey();
+                    if (cachedFrame != null && !cachedFrame.isDisposed()) {
+                        return entry.getKey();
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -49,13 +49,13 @@ public class WeakEntityMasterCache implements IEntityMasterCache {
      */
     @Override
     public void put(final BaseFrame frame, final Long entityId) {
-	final BaseFrame cachedFrame = get(entityId);
-	// let's just in case check if there is already another not disposed frame associated with this entity id
-	if (cachedFrame != null && cachedFrame != frame && !cachedFrame.isDisposed()) {
-	    throw new IllegalStateException("Master frame for entity with ID #" + entityId + " should not be cached more than once.");
-	}
-	// in all other cases associate the frame with entity id eve if this is a re-association with the same one
-	cache.put(frame, entityId);
+        final BaseFrame cachedFrame = get(entityId);
+        // let's just in case check if there is already another not disposed frame associated with this entity id
+        if (cachedFrame != null && cachedFrame != frame && !cachedFrame.isDisposed()) {
+            throw new IllegalStateException("Master frame for entity with ID #" + entityId + " should not be cached more than once.");
+        }
+        // in all other cases associate the frame with entity id eve if this is a re-association with the same one
+        cache.put(frame, entityId);
     }
 
     /**
@@ -63,16 +63,16 @@ public class WeakEntityMasterCache implements IEntityMasterCache {
      */
     @Override
     public void remove(final Long entityId) {
-	cache.remove(get(entityId));
+        cache.remove(get(entityId));
     }
 
     public Set<BaseFrame> all() {
-	final Set<BaseFrame> set = new HashSet<BaseFrame>();
-	for (final BaseFrame frame : cache.keySet()) {
-	    if (frame != null && !frame.isDisposed()) {
-		set.add(frame);
-	    }
-	}
-	return set;
+        final Set<BaseFrame> set = new HashSet<BaseFrame>();
+        for (final BaseFrame frame : cache.keySet()) {
+            if (frame != null && !frame.isDisposed()) {
+                set.add(frame);
+            }
+        }
+        return set;
     }
 }

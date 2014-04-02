@@ -12,17 +12,18 @@ public class UserRetriever extends AbstractRetriever<User> {
 
     @Inject
     public UserRetriever(final IUserDao dao) {
-	super(dao);
+        super(dao);
     }
+
     @Override
     public SortedMap<String, String> resultFields() {
-	return map( //
-		field("key", "USER_ID") //
-		);
+        return map( //
+        field("key", "USER_ID") //
+        );
     }
 
     @Override
     public String fromSql() {
-	return "CRAFT";
+        return "CRAFT";
     }
 }

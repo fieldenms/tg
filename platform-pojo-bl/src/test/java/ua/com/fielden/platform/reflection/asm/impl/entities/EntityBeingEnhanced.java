@@ -19,12 +19,12 @@ public class EntityBeingEnhanced extends AbstractEntity<String> {
     private String prop1;
 
     public String getProp1() {
-	return prop1;
+        return prop1;
     }
 
     @Observable
     public void setProp1(final String prop1) {
-	this.prop1 = prop1;
+        this.prop1 = prop1;
     }
 
 }

@@ -36,35 +36,34 @@ public class TgModelYearCount extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Count", desc = "Count per vehicle")
     private BigInteger count;
 
-
     @Observable
     public TgModelYearCount setModel(final TgVehicleModel model) {
-	this.model = model;
-	return this;
+        this.model = model;
+        return this;
     }
 
     public TgVehicleModel getModel() {
-	return model;
+        return model;
     }
 
     @Observable
     public TgModelYearCount setYear(final Long year) {
-	this.year = year;
-	return this;
+        this.year = year;
+        return this;
     }
 
     public Long getYear() {
-	return year;
+        return year;
     }
 
     @Observable
     public TgModelYearCount setCount(final BigInteger count) {
-	this.count = count;
-	return this;
+        this.count = count;
+        return this;
     }
 
     public BigInteger getCount() {
-	return count;
+        return count;
     }
 
     /**

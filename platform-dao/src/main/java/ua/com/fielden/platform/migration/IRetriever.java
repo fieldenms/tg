@@ -7,9 +7,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * Specifies a contract for implementing SQL statement retrieving an entity items of certain type.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IRetriever<T extends AbstractEntity<?>> {
 
@@ -25,7 +25,7 @@ public interface IRetriever<T extends AbstractEntity<?>> {
 
     /**
      * Returns entity type information.
-     *
+     * 
      * @return
      */
     Class<T> type();

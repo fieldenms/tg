@@ -20,9 +20,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "domain tree representation" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(String.class)
@@ -33,7 +33,7 @@ public class MasterEntity extends AbstractEntity<String> {
     }
 
     public enum EnumType {
-	ONE, TWO
+        ONE, TWO
     }
 
     ////////// Enum types //////////
@@ -45,10 +45,10 @@ public class MasterEntity extends AbstractEntity<String> {
     private Integer integerProp = null;
     @IsProperty
     private Integer propWithFunctions = null;
-//    @IsProperty
-//    @Title(value = "Calc integer prop", desc = "Desc")
-//    @Calculated(contextualExpression = "1 * integerProp", contextPath = "", attribute = CalculatedPropertyAttribute.NO_ATTR, origination = "integerProp", category = CalculatedPropertyCategory.EXPRESSION)
-//    private Integer calcIntegerProp = null;
+    //    @IsProperty
+    //    @Title(value = "Calc integer prop", desc = "Desc")
+    //    @Calculated(contextualExpression = "1 * integerProp", contextPath = "", attribute = CalculatedPropertyAttribute.NO_ATTR, origination = "integerProp", category = CalculatedPropertyCategory.EXPRESSION)
+    //    private Integer calcIntegerProp = null;
     @IsProperty
     private Double doubleProp = 0.0;
     @IsProperty
@@ -169,292 +169,327 @@ public class MasterEntity extends AbstractEntity<String> {
     private Integer placeholderProp;
 
     public Integer getIntegerProp() {
-	return integerProp;
+        return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
-	this.integerProp = integerProp;
+        this.integerProp = integerProp;
     }
 
     public Double getDoubleProp() {
-	return doubleProp;
+        return doubleProp;
     }
+
     @Observable
     public void setDoubleProp(final Double doubleProp) {
-	this.doubleProp = doubleProp;
+        this.doubleProp = doubleProp;
     }
 
     public BigDecimal getBigDecimalProp() {
-	return bigDecimalProp;
+        return bigDecimalProp;
     }
+
     @Observable
     public void setBigDecimalProp(final BigDecimal bigDecimalProp) {
-	this.bigDecimalProp = bigDecimalProp;
+        this.bigDecimalProp = bigDecimalProp;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
+
     @Observable
     public void setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
+        this.moneyProp = moneyProp;
     }
 
     public Date getDateProp() {
-	return dateProp;
+        return dateProp;
     }
+
     @Observable
     public void setDateProp(final Date dateProp) {
-	this.dateProp = dateProp;
+        this.dateProp = dateProp;
     }
 
     public boolean isBooleanProp() {
-	return booleanProp;
+        return booleanProp;
     }
+
     @Observable
     public void setBooleanProp(final boolean booleanProp) {
-	this.booleanProp = booleanProp;
+        this.booleanProp = booleanProp;
     }
 
     public String getStringProp() {
-	return stringProp;
+        return stringProp;
     }
+
     @Observable
     public void setStringProp(final String stringProp) {
-	this.stringProp = stringProp;
+        this.stringProp = stringProp;
     }
 
     public SlaveEntity getEntityProp() {
-	return entityProp;
+        return entityProp;
     }
+
     @Observable
     public void setEntityProp(final SlaveEntity entityProp) {
-	this.entityProp = entityProp;
+        this.entityProp = entityProp;
     }
 
     public List<SlaveEntity> getCollection() {
-	return collection;
+        return collection;
     }
+
     @Observable
     public void setCollection(final List<SlaveEntity> collection) {
-	this.collection.clear();
-	this.collection.addAll(collection);
+        this.collection.clear();
+        this.collection.addAll(collection);
     }
 
     public EnumType getEnumProp() {
-	return enumProp;
+        return enumProp;
     }
+
     @Observable
     public void setEnumProp(final EnumType enumProp) {
-	this.enumProp = enumProp;
+        this.enumProp = enumProp;
     }
 
     public SlaveEntity getExcludedManuallyProp() {
-	return excludedManuallyProp;
+        return excludedManuallyProp;
     }
+
     @Observable
     public void setExcludedManuallyProp(final SlaveEntity excludedManuallyProp) {
-	this.excludedManuallyProp = excludedManuallyProp;
+        this.excludedManuallyProp = excludedManuallyProp;
     }
 
     public EntityWithAbstractNature getEntityPropWithAbstractNature() {
-	return entityPropWithAbstractNature;
+        return entityPropWithAbstractNature;
     }
+
     @Observable
     public void setEntityPropWithAbstractNature(final EntityWithAbstractNature entityPropWithAbstractNature) {
-	this.entityPropWithAbstractNature = entityPropWithAbstractNature;
+        this.entityPropWithAbstractNature = entityPropWithAbstractNature;
     }
 
     public EntityWithoutKeyType getEntityPropWithoutKeyType() {
-	return entityPropWithoutKeyType;
+        return entityPropWithoutKeyType;
     }
+
     @Observable
     public void setEntityPropWithoutKeyType(final EntityWithoutKeyType entityPropWithoutKeyType) {
-	this.entityPropWithoutKeyType = entityPropWithoutKeyType;
+        this.entityPropWithoutKeyType = entityPropWithoutKeyType;
     }
 
     public EntityWithoutKeyTitleAndWithKeyType getEntityPropWithoutKeyTitle() {
-	return entityPropWithoutKeyTitle;
+        return entityPropWithoutKeyTitle;
     }
+
     @Observable
     public void setEntityPropWithoutKeyTitle(final EntityWithoutKeyTitleAndWithKeyType entityPropWithoutKeyTitle) {
-	this.entityPropWithoutKeyTitle = entityPropWithoutKeyTitle;
+        this.entityPropWithoutKeyTitle = entityPropWithoutKeyTitle;
     }
 
     public EntityWithKeyTitleAndWithAEKeyType getEntityPropWithAEKeyType() {
-	return entityPropWithAEKeyType;
+        return entityPropWithAEKeyType;
     }
+
     @Observable
     public void setEntityPropWithAEKeyType(final EntityWithKeyTitleAndWithAEKeyType entityPropWithAEKeyType) {
-	this.entityPropWithAEKeyType = entityPropWithAEKeyType;
+        this.entityPropWithAEKeyType = entityPropWithAEKeyType;
     }
 
     public Integer getInvisibleProp() {
-	return invisibleProp;
+        return invisibleProp;
     }
+
     @Observable
     public void setInvisibleProp(final Integer invisibleProp) {
-	this.invisibleProp = invisibleProp;
+        this.invisibleProp = invisibleProp;
     }
 
     public Integer getIgnoreProp() {
-	return ignoreProp;
+        return ignoreProp;
     }
+
     @Observable
     public void setIgnoreProp(final Integer ignoreProp) {
-	this.ignoreProp = ignoreProp;
+        this.ignoreProp = ignoreProp;
     }
 
     public SlaveEntity getCritOnlyAEProp() {
-	return critOnlyAEProp;
+        return critOnlyAEProp;
     }
+
     @Observable
     public void setCritOnlyAEProp(final SlaveEntity critOnlyAEProp) {
-	this.critOnlyAEProp = critOnlyAEProp;
+        this.critOnlyAEProp = critOnlyAEProp;
     }
 
     public List<SlaveEntity> getCritOnlyAECollectionProp() {
-	return critOnlyAECollectionProp;
+        return critOnlyAECollectionProp;
     }
+
     @Observable
     public void setCritOnlyAECollectionProp(final List<SlaveEntity> critOnlyAECollectionProp) {
-	this.critOnlyAECollectionProp.clear();
-	this.critOnlyAECollectionProp.addAll(critOnlyAECollectionProp);
+        this.critOnlyAECollectionProp.clear();
+        this.critOnlyAECollectionProp.addAll(critOnlyAECollectionProp);
     }
 
     public EntityWithCompositeKey getEntityWithCompositeKeyProp() {
-	return entityWithCompositeKeyProp;
+        return entityWithCompositeKeyProp;
     }
+
     @Observable
     public void setEntityWithCompositeKeyProp(final EntityWithCompositeKey entityWithCompositeKeyProp) {
-	this.entityWithCompositeKeyProp = entityWithCompositeKeyProp;
+        this.entityWithCompositeKeyProp = entityWithCompositeKeyProp;
     }
 
     public Integer getCritOnlyProp() {
-	return critOnlyProp;
+        return critOnlyProp;
     }
+
     @Observable
     public void setCritOnlyProp(final Integer critOnlyProp) {
-	this.critOnlyProp = critOnlyProp;
+        this.critOnlyProp = critOnlyProp;
     }
 
     public Integer getDisabledManuallyProp() {
-	return disabledManuallyProp;
+        return disabledManuallyProp;
     }
+
     @Observable
     public void setDisabledManuallyProp(final Integer disabledManuallyProp) {
-	this.disabledManuallyProp = disabledManuallyProp;
+        this.disabledManuallyProp = disabledManuallyProp;
     }
 
     public SlaveEntity getResultOnlyProp() {
-	return resultOnlyProp;
+        return resultOnlyProp;
     }
+
     @Observable
     public void setResultOnlyProp(final SlaveEntity resultOnlyProp) {
-	this.resultOnlyProp = resultOnlyProp;
+        this.resultOnlyProp = resultOnlyProp;
     }
 
     public EntityWithStringKeyType getSimpleEntityProp() {
-	return simpleEntityProp;
+        return simpleEntityProp;
     }
+
     @Observable
     public void setSimpleEntityProp(final EntityWithStringKeyType simpleEntityProp) {
-	this.simpleEntityProp = simpleEntityProp;
+        this.simpleEntityProp = simpleEntityProp;
     }
 
     public Integer getCheckedManuallyProp() {
-	return checkedManuallyProp;
+        return checkedManuallyProp;
     }
+
     @Observable
     public void setCheckedManuallyProp(final Integer checkedManuallyProp) {
-	this.checkedManuallyProp = checkedManuallyProp;
+        this.checkedManuallyProp = checkedManuallyProp;
     }
 
-//    public Integer getCalcIntegerProp() {
-//	return calcIntegerProp;
-//    }
-//    @Observable
-//    public void setCalcIntegerProp(final Integer calcIntegerProp) {
-//	this.calcIntegerProp = calcIntegerProp;
-//    }
+    //    public Integer getCalcIntegerProp() {
+    //	return calcIntegerProp;
+    //    }
+    //    @Observable
+    //    public void setCalcIntegerProp(final Integer calcIntegerProp) {
+    //	this.calcIntegerProp = calcIntegerProp;
+    //    }
 
     public Integer getPropWithFunctions() {
-	return propWithFunctions;
+        return propWithFunctions;
     }
+
     @Observable
     public void setPropWithFunctions(final Integer propWithFunctions) {
-	this.propWithFunctions = propWithFunctions;
+        this.propWithFunctions = propWithFunctions;
     }
 
     public EntityWithStringKeyType getMutablyCheckedProp() {
-	return mutablyCheckedProp;
+        return mutablyCheckedProp;
     }
+
     @Observable
     public void setMutablyCheckedProp(final EntityWithStringKeyType mutablyCheckedProp) {
-	this.mutablyCheckedProp = mutablyCheckedProp;
+        this.mutablyCheckedProp = mutablyCheckedProp;
     }
 
     public EntityWithStringKeyType getMutablyManuallyCheckedProp() {
-	return mutablyManuallyCheckedProp;
+        return mutablyManuallyCheckedProp;
     }
+
     @Observable
     public void setMutablyManuallyCheckedProp(final EntityWithStringKeyType mutablyManuallyCheckedProp) {
-	this.mutablyManuallyCheckedProp = mutablyManuallyCheckedProp;
+        this.mutablyManuallyCheckedProp = mutablyManuallyCheckedProp;
     }
 
     public BigDecimal getCheckedUntouchedProp() {
-	return checkedUntouchedProp;
+        return checkedUntouchedProp;
     }
+
     @Observable
     public void setCheckedUntouchedProp(final BigDecimal checkedUntouchedProp) {
-	this.checkedUntouchedProp = checkedUntouchedProp;
+        this.checkedUntouchedProp = checkedUntouchedProp;
     }
 
     public BigDecimal getImmutablyCheckedUntouchedProp() {
-	return immutablyCheckedUntouchedProp;
+        return immutablyCheckedUntouchedProp;
     }
+
     @Observable
     public void setImmutablyCheckedUntouchedProp(final BigDecimal immutablyCheckedUntouchedProp) {
-	this.immutablyCheckedUntouchedProp = immutablyCheckedUntouchedProp;
+        this.immutablyCheckedUntouchedProp = immutablyCheckedUntouchedProp;
     }
 
     public BigDecimal getMutatedWithFunctionsProp() {
-	return mutatedWithFunctionsProp;
+        return mutatedWithFunctionsProp;
     }
+
     @Observable
     public void setMutatedWithFunctionsProp(final BigDecimal mutatedWithFunctionsProp) {
-	this.mutatedWithFunctionsProp = mutatedWithFunctionsProp;
+        this.mutatedWithFunctionsProp = mutatedWithFunctionsProp;
     }
 
     public SlaveEntity getCritOnlySingleAEProp() {
-	return critOnlySingleAEProp;
+        return critOnlySingleAEProp;
     }
+
     @Observable
     public void setCritOnlySingleAEProp(final SlaveEntity critOnlySingleAEProp) {
-	this.critOnlySingleAEProp = critOnlySingleAEProp;
+        this.critOnlySingleAEProp = critOnlySingleAEProp;
     }
 
     public Integer getUncheckedProp() {
-	return uncheckedProp;
+        return uncheckedProp;
     }
+
     @Observable
     public void setUncheckedProp(final Integer uncheckedProp) {
-	this.uncheckedProp = uncheckedProp;
+        this.uncheckedProp = uncheckedProp;
     }
 
     public Integer getCheckedManuallyProp2() {
         return checkedManuallyProp2;
     }
+
     @Observable
     public void setCheckedManuallyProp2(final Integer checkedManuallyProp2) {
         this.checkedManuallyProp2 = checkedManuallyProp2;
     }
 
     public Integer getPlaceholderProp() {
-	return placeholderProp;
+        return placeholderProp;
     }
+
     @Observable
     public void setPlaceholderProp(final Integer placeholderProp) {
-	this.placeholderProp = placeholderProp;
+        this.placeholderProp = placeholderProp;
     }
 }

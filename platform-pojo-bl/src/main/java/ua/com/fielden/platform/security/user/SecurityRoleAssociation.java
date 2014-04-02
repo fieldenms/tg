@@ -17,9 +17,9 @@ import ua.com.fielden.platform.utils.ClassComparator;
 
 /**
  * Entity that represents the association between the {@link ISecurityToken} and the {@link UserRole} entities.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("SECURITY_ROLE_ASSOCIATION")
@@ -30,7 +30,8 @@ public class SecurityRoleAssociation extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     @CompositeKeyMember(1)
-    @MapTo("TOKEN") @PersistedType(userType = ISecurityTokenType.class)
+    @MapTo("TOKEN")
+    @PersistedType(userType = ISecurityTokenType.class)
     private Class<? extends ISecurityToken> securityToken;
 
     @IsProperty
@@ -42,28 +43,28 @@ public class SecurityRoleAssociation extends AbstractEntity<DynamicEntityKey> {
      * Default constructor.
      */
     protected SecurityRoleAssociation() {
-	final DynamicEntityKey key = new DynamicEntityKey(this);
-	key.addKeyMemberComparator(1, new ClassComparator());
-	setKey(key);
+        final DynamicEntityKey key = new DynamicEntityKey(this);
+        key.addKeyMemberComparator(1, new ClassComparator());
+        setKey(key);
     }
 
     public Class<? extends ISecurityToken> getSecurityToken() {
-	return securityToken;
+        return securityToken;
     }
 
     @Observable
     public SecurityRoleAssociation setSecurityToken(final Class<? extends ISecurityToken> securityToken) {
-	this.securityToken = securityToken;
-	return this;
+        this.securityToken = securityToken;
+        return this;
     }
 
     public UserRole getRole() {
-	return role;
+        return role;
     }
 
     @Observable
     public SecurityRoleAssociation setRole(final UserRole role) {
-	this.role = role;
-	return this;
+        this.role = role;
+        return this;
     }
 }

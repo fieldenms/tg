@@ -14,9 +14,9 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link IUserAndRoleAssociationBatchAction}.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 @EntityType(UserAndRoleAssociationBatchAction.class)
 public class UserAndRoleAssociationBatchActionDao extends CommonEntityDao<UserAndRoleAssociationBatchAction> implements IUserAndRoleAssociationBatchAction {
@@ -35,22 +35,21 @@ public class UserAndRoleAssociationBatchActionDao extends CommonEntityDao<UserAn
     @Override
     @SessionRequired
     public UserAndRoleAssociationBatchAction save(final UserAndRoleAssociationBatchAction entity) {
-	processSaveAction(entity.getSaveEntities());
-	processSaveAction(entity.getUpdateEntities());
-	associationDao.removeAssociation(entity.getRemoveEntities());
-	return entity;
+        processSaveAction(entity.getSaveEntities());
+        processSaveAction(entity.getUpdateEntities());
+        associationDao.removeAssociation(entity.getRemoveEntities());
+        return entity;
     }
 
     /**
      * Saves the set of given associations.
-     *
+     * 
      * @param associations
      */
     private void processSaveAction(final Set<UserAndRoleAssociation> associations) {
-	for (final UserAndRoleAssociation association : associations) {
-	    associationDao.save(association);
-	}
+        for (final UserAndRoleAssociation association : associations) {
+            associationDao.save(association);
+        }
     }
-
 
 }

@@ -29,9 +29,9 @@ import com.google.inject.Inject;
 
 /**
  * {@link IEntityMasterManager} implementation for TG platform.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class EntityMasterManager implements IEntityMasterManager {
 
@@ -49,19 +49,19 @@ public class EntityMasterManager implements IEntityMasterManager {
 
     @Inject
     public EntityMasterManager(//
-	    final EntityFactory entityFactory, //
-	    final IValueMatcherFactory vmf,//
-	    final IGlobalDomainTreeManager gdtm//
-	    ) {
-	this.entityFactory = entityFactory;
-	this.vmf = vmf;
-	this.gdtm = gdtm;
+    final EntityFactory entityFactory, //
+            final IValueMatcherFactory vmf,//
+            final IGlobalDomainTreeManager gdtm//
+    ) {
+        this.entityFactory = entityFactory;
+        this.vmf = vmf;
+        this.gdtm = gdtm;
     }
 
     /**
      * Associates specified {@code entityClass} with the specified {@link IEntityMasterFactory} instance in this manager. When this manager will need to create new master frame for
      * entity with such {@code entityClass} it will use this factory.
-     *
+     * 
      * @param <T>
      * @param <DAO>
      * @param entityClass
@@ -69,96 +69,97 @@ public class EntityMasterManager implements IEntityMasterManager {
      * @return
      */
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> EntityMasterManager addFactory(final Class<T> entityClass, final IEntityMasterFactory<T, DAO> factory) {
-	factories.put(entityClass, factory);
-	return this;
+        factories.put(entityClass, factory);
+        return this;
     }
 
     /**
      * Associates specified {@code entityClass} with the specified {@link IEntityProducer} instance. When this manager will need to produce entity of the specified
      * {@code entityClass}, it will use specified {@link IEntityProducer} instance.
-     *
+     * 
      * @param <T>
      * @param entityClass
      * @param entityProducer
      * @return
      */
     public <T extends AbstractEntity<?>> EntityMasterManager addEntityProducer(final Class<T> entityClass, final IEntityProducer<T> entityProducer) {
-	entityProducers.put(entityClass, entityProducer);
-	return this;
+        entityProducers.put(entityClass, entityProducer);
+        return this;
     }
 
     private IEntityMasterCache getEntityMasterCache(final Class<? extends AbstractEntity<?>> entityType) {
-	final IEntityMasterCache cache = entityMasterCaches.get(entityType);
-	if (cache == null) {
-	    final IEntityMasterCache newCache = new WeakEntityMasterCache();
-	    entityMasterCaches.put(entityType, newCache);
-	    return newCache;
-	}
-	return cache;
+        final IEntityMasterCache cache = entityMasterCaches.get(entityType);
+        if (cache == null) {
+            final IEntityMasterCache newCache = new WeakEntityMasterCache();
+            entityMasterCaches.put(entityType, newCache);
+            return newCache;
+        }
+        return cache;
     }
 
     @Override
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner, final IPostInitCallback<T, DAO> postInitCallback) {
-	// let's be defensive...
-		if (entity == null) {
-		    throw new IllegalArgumentException("<html>Master cannot be displayed for <b>null</b> domain entity.</html>");
-		}
-		// searching in cache first ...
+        // let's be defensive...
+        if (entity == null) {
+            throw new IllegalArgumentException("<html>Master cannot be displayed for <b>null</b> domain entity.</html>");
+        }
+        // searching in cache first ...
 
-		final Class<T> entityType = AbstractUnionEntity.class.isAssignableFrom(entity.getType()) ? //
-				      (Class<T>) ((AbstractUnionEntity) entity).activeEntity().getType() : //
-				      (Class<T>) entity.getType();
+        final Class<T> entityType = AbstractUnionEntity.class.isAssignableFrom(entity.getType()) ? //
+        (Class<T>) ((AbstractUnionEntity) entity).activeEntity().getType()
+                : //
+                (Class<T>) entity.getType();
 
-		final IEntityMasterCache cache = getEntityMasterCache(entityType);
-		BaseFrame frame = cache.get(entity.getId());
-		if (frame == null) {
-		    // if not found in cache, then creating new master frame and putting it to the cache
-		    final IEntityMasterFactory<T, DAO> factory = factories.get(entityType);
-		    if (factory == null) {
-			throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey() + " domain entity.");
-		    }
-		    IMasterDomainTreeManager masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entityType);
-		    if (masterDomainTreeManager == null) {
-			gdtm.initMasterDomainTreeManager(entityType);
-			masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entityType);
-		    }
-		    frame = factory.createMasterFrame(getEntityProducer(entityType), //
-			    cache, //
-			    entity, //
-			    vmf, //
-			    masterDomainTreeManager, //
-			    owner, postInitCallback);
-		    //TODO should be removed later.
-		    frame.addWindowListener(new WindowAdapter() {
+        final IEntityMasterCache cache = getEntityMasterCache(entityType);
+        BaseFrame frame = cache.get(entity.getId());
+        if (frame == null) {
+            // if not found in cache, then creating new master frame and putting it to the cache
+            final IEntityMasterFactory<T, DAO> factory = factories.get(entityType);
+            if (factory == null) {
+                throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey() + " domain entity.");
+            }
+            IMasterDomainTreeManager masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entityType);
+            if (masterDomainTreeManager == null) {
+                gdtm.initMasterDomainTreeManager(entityType);
+                masterDomainTreeManager = gdtm.getMasterDomainTreeManager(entityType);
+            }
+            frame = factory.createMasterFrame(getEntityProducer(entityType), //
+                    cache, //
+                    entity, //
+                    vmf, //
+                    masterDomainTreeManager, //
+                    owner, postInitCallback);
+            //TODO should be removed later.
+            frame.addWindowListener(new WindowAdapter() {
 
-			@Override
-			public void windowClosed(final WindowEvent e) {
-			    super.windowClosed(e);
-			    new Command<Void>(null) {
+                @Override
+                public void windowClosed(final WindowEvent e) {
+                    super.windowClosed(e);
+                    new Command<Void>(null) {
 
-				private static final long serialVersionUID = 989921640239100437L;
+                        private static final long serialVersionUID = 989921640239100437L;
 
-				@Override
-				protected Void action(final ActionEvent e) throws Exception {
-				    gdtm.saveMasterDomainTreeManager(entityType);
-				    return null;
-				}
-			    }.actionPerformed(null);
+                        @Override
+                        protected Void action(final ActionEvent e) throws Exception {
+                            gdtm.saveMasterDomainTreeManager(entityType);
+                            return null;
+                        }
+                    }.actionPerformed(null);
 
-			}
+                }
 
-		    });
-		    cache.put(frame, entity.getId());
-		}
-		// bringing BaseFrame to front in this manner, because simple call won't do the trick
-		frame.setVisible(false);
-		frame.setVisible(true);
-		return frame;
+            });
+            cache.put(frame, entity.getId());
+        }
+        // bringing BaseFrame to front in this manner, because simple call won't do the trick
+        frame.setVisible(false);
+        frame.setVisible(true);
+        return frame;
     }
 
     @Override
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner) {
-	return showMaster(entity, owner, null);
+        return showMaster(entity, owner, null);
     }
 
     /**
@@ -167,16 +168,16 @@ public class EntityMasterManager implements IEntityMasterManager {
      */
     @Override
     public <T extends AbstractEntity<?>> IEntityProducer<T> getEntityProducer(final Class<T> entityClass) {
-	final IEntityProducer<T> entityProducer = entityProducers.get(entityClass);
-	return entityProducer != null ? entityProducer : new DefaultEntityProducer<T>(entityFactory, entityClass);
+        final IEntityProducer<T> entityProducer = entityProducers.get(entityClass);
+        return entityProducer != null ? entityProducer : new DefaultEntityProducer<T>(entityFactory, entityClass);
     }
 
     /**
      * Returns {@link IEntityMasterCache} used by this manager.
-     *
+     * 
      * @return
      */
     public Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> getEntityMasterCache() {
-	return Collections.unmodifiableMap(entityMasterCaches);
+        return Collections.unmodifiableMap(entityMasterCaches);
     }
 }

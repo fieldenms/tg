@@ -5,9 +5,9 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 
 /**
  * Entity for "domain tree representation" testing (with 'abstract' modifier).
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 public class EntityWithoutKeyType extends AbstractEntity<String> {

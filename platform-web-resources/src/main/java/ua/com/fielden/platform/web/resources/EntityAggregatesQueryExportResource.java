@@ -25,7 +25,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
  * Represents a web resource mapped to URI /export/EntityAggregates. It handles POST requests to entity aggregates.
  * <p>
  * Each request is handled by a new resource instance, thus the only thread-safety requirement is to have provided DAO and entity factory thread-safe.
- *
+ * 
  * @author TG Team
  */
 public class EntityAggregatesQueryExportResource extends ServerResource {
@@ -36,18 +36,18 @@ public class EntityAggregatesQueryExportResource extends ServerResource {
      * The main resource constructor accepting a DAO instance in addition to the standard {@link Resource} parameters.
      * <p>
      * DAO is required for DB interoperability, whereas entity factory is required for enhancement of entities provided in request envelopes.
-     *
+     * 
      * @param dao
      * @param context
      * @param request
      * @param response
      */
     public EntityAggregatesQueryExportResource(final IEntityAggregatesDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	setNegotiated(false);
-	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
-	this.dao = dao;
-	this.restUtil = restUtil;
+        init(context, request, response);
+        setNegotiated(false);
+        getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
+        this.dao = dao;
+        this.restUtil = restUtil;
     }
 
     /**
@@ -57,18 +57,18 @@ public class EntityAggregatesQueryExportResource extends ServerResource {
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-	try {
-	    final List<?> list = restUtil.restoreList(envelope);
-	    final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query = (QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>) list.get(0);
-	    final String[] propertyNames = (String[]) list.get(1);
-	    final String[] propertyTitles = (String[]) list.get(2);
-	    final byte[] export = dao.export(query, propertyNames, propertyTitles);
-	    //getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(export), MediaType.APPLICATION_OCTET_STREAM));
-	    return new InputRepresentation(new ByteArrayInputStream(export), MediaType.APPLICATION_OCTET_STREAM);
-	} catch (final Exception ex) {
-	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-	    //getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
-	    return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
-	}
+        try {
+            final List<?> list = restUtil.restoreList(envelope);
+            final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query = (QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>) list.get(0);
+            final String[] propertyNames = (String[]) list.get(1);
+            final String[] propertyTitles = (String[]) list.get(2);
+            final byte[] export = dao.export(query, propertyNames, propertyTitles);
+            //getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(export), MediaType.APPLICATION_OCTET_STREAM));
+            return new InputRepresentation(new ByteArrayInputStream(export), MediaType.APPLICATION_OCTET_STREAM);
+        } catch (final Exception ex) {
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            //getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
+            return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
+        }
     }
 }

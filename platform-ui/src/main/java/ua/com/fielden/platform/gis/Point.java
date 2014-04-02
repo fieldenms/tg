@@ -8,10 +8,10 @@ public class Point implements Comparable<Point> {
     private final double latitude, longitude;
 
     public Point(final Date gpstime, final int speed, final double latitude, final double longitude) {
-	this.gpstime = gpstime;
-	this.speed = speed;
-	this.latitude = latitude;
-	this.longitude = longitude;
+        this.gpstime = gpstime;
+        this.speed = speed;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public Date getGpstime() {
@@ -32,11 +32,11 @@ public class Point implements Comparable<Point> {
 
     @Override
     public int compareTo(final Point o) {
-	return new Long(getGpstime().getTime()).compareTo(new Long(o.getGpstime().getTime()));
+        return new Long(getGpstime().getTime()).compareTo(new Long(o.getGpstime().getTime()));
     }
 
     @Override
     public String toString() {
-	return "Point [gpstime=" + gpstime + ", speed=" + speed + ", latitude=" + latitude + ", longitude=" + longitude + "]";
+        return "Point [gpstime=" + gpstime + ", speed=" + speed + ", latitude=" + latitude + ", longitude=" + longitude + "]";
     }
 }

@@ -11,9 +11,9 @@ import ua.com.fielden.platform.algorithm.search.ITreeNodePredicate;
 
 /**
  * Breadth-first search algorithm for a graph-like state space (i.e. handles loops gracefully).
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  */
 public final class BreadthFirstSearch<T, N extends ITreeNode<T>> implements ISearchAlgorithm<T, N> {
@@ -23,24 +23,24 @@ public final class BreadthFirstSearch<T, N extends ITreeNode<T>> implements ISea
 
     @Override
     public N search(final N root, final ITreeNodePredicate<T, N> predicate) {
-	frontier.push(root);
+        frontier.push(root);
 
-	while (!frontier.isEmpty()) {
-	    final N node = frontier.pop();
-	    if (predicate.eval(node)) {
-		return node;
-	    }
+        while (!frontier.isEmpty()) {
+            final N node = frontier.pop();
+            if (predicate.eval(node)) {
+                return node;
+            }
 
-	    explored.add(node);
-	    final Iterable<N> children = (Iterable<N>) node.daughters();
-	    for (final N child : children) {
-		if (!explored.contains(child) && !frontier.contains(child)) {
-		    frontier.push(child);
-		}
-	    }
-	}
+            explored.add(node);
+            final Iterable<N> children = (Iterable<N>) node.daughters();
+            for (final N child : children) {
+                if (!explored.contains(child) && !frontier.contains(child)) {
+                    frontier.push(child);
+                }
+            }
+        }
 
-	return null;
+        return null;
     }
 
 }

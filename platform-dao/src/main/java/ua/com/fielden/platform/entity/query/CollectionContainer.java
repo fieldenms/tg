@@ -11,18 +11,18 @@ public final class CollectionContainer<R extends AbstractEntity<?>> {
     private List<EntityContainer<R>> containers;
 
     public CollectionContainer(final Collection<R> data, final List<EntityContainer<R>> containers) {
-	super();
-	this.data = data;
-	this.containers = containers;
+        super();
+        this.data = data;
+        this.containers = containers;
     }
 
     public Collection<R> instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
-	for (final EntityContainer<R> container : containers) {
-	    if (!container.notYetInitialised()) {
-		data.add(container.instantiate(entFactory, userViewOnly));
-	    }
-	}
+        for (final EntityContainer<R> container : containers) {
+            if (!container.notYetInitialised()) {
+                data.add(container.instantiate(entFactory, userViewOnly));
+            }
+        }
 
-	return data;
+        return data;
     }
 }

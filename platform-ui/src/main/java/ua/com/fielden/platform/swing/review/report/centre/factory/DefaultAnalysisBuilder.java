@@ -17,35 +17,35 @@ public class DefaultAnalysisBuilder<T extends AbstractEntity<?>> implements IAna
 
     private final IAnalysisFactory<T, ?> defaultAnalysisFactory;
 
-    public DefaultAnalysisBuilder(){
-	this(null);
+    public DefaultAnalysisBuilder() {
+        this(null);
     }
 
-    public DefaultAnalysisBuilder(final IAnalysisFactory<T, ?> defaultAnalysisFactory){
-	if (defaultAnalysisFactory == null) {
-	    this.defaultAnalysisFactory = new DefaultGridAnalysisFactory<>();
-	} else {
-	    this.defaultAnalysisFactory = defaultAnalysisFactory;
-	}
+    public DefaultAnalysisBuilder(final IAnalysisFactory<T, ?> defaultAnalysisFactory) {
+        if (defaultAnalysisFactory == null) {
+            this.defaultAnalysisFactory = new DefaultGridAnalysisFactory<>();
+        } else {
+            this.defaultAnalysisFactory = defaultAnalysisFactory;
+        }
     }
 
     @Override
     public AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?> createAnalysis(//
-	    final AnalysisType analysisType, //
-	    final String name, //
-	    final Map<Object, DetailsFrame> detailsCache, //
-	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
-	    final BlockingIndefiniteProgressLayer progressLayer) {
-	if(analysisType == null){
-	    return defaultAnalysisFactory.createAnalysis(owner, criteria, name, detailsCache, progressLayer);
-	}
-	return null;
+    final AnalysisType analysisType, //
+            final String name, //
+            final Map<Object, DetailsFrame> detailsCache, //
+            final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+            final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        if (analysisType == null) {
+            return defaultAnalysisFactory.createAnalysis(owner, criteria, name, detailsCache, progressLayer);
+        }
+        return null;
     }
 
     @Override
     public boolean isSupported(final AnalysisType analysisType) {
-	return analysisType == null;
+        return analysisType == null;
     }
 
 }

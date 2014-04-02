@@ -21,53 +21,53 @@ public class CentreConfigurationWithoutCriteriaView<T extends AbstractEntity<?>>
     private final Map<Object, DetailsFrame> detailsCache;
 
     public CentreConfigurationWithoutCriteriaView(final CentreConfigurationWithoutCriteriaModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, progressLayer);
-	detailsCache = new HashMap<>();
+        super(model, progressLayer);
+        detailsCache = new HashMap<>();
     }
 
     /**
      * Returns the cache of details.
-     *
+     * 
      * @return
      */
     public Map<Object, DetailsFrame> getDetailsCache() {
-	return detailsCache;
+        return detailsCache;
     }
 
     @Override
     public ICloseGuard canClose() {
-	for (final DetailsFrame frame : detailsCache.values()) {
-	    final ICloseGuard unableToClose = frame.canClose();
-	    if(unableToClose != null){
-		return unableToClose;
-	    }
-	}
-	return super.canClose();
+        for (final DetailsFrame frame : detailsCache.values()) {
+            final ICloseGuard unableToClose = frame.canClose();
+            if (unableToClose != null) {
+                return unableToClose;
+            }
+        }
+        return super.canClose();
     }
 
     @Override
     public void close() {
-	super.close();
-	for (final DetailsFrame frame : detailsCache.values()) {
-	    frame.close();
-	}
-	detailsCache.clear();
+        super.close();
+        for (final DetailsFrame frame : detailsCache.values()) {
+            frame.close();
+        }
+        detailsCache.clear();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public CentreConfigurationWithoutCriteriaModel<T> getModel() {
-        return (CentreConfigurationWithoutCriteriaModel<T>)super.getModel();
+        return (CentreConfigurationWithoutCriteriaModel<T>) super.getModel();
     }
 
     @Override
     protected EntityCentreWithoutSelectionCriteria<T> createConfigurableView() {
-	return new EntityCentreWithoutSelectionCriteria<>(getModel().createEntityCentreModel(), this);
+        return new EntityCentreWithoutSelectionCriteria<>(getModel().createEntityCentreModel(), this);
     }
 
     @Override
     protected AbstractWizardView<T> createWizardView() {
-	throw new UnsupportedOperationException("The analysis details can not be configured.");
+        throw new UnsupportedOperationException("The analysis details can not be configured.");
     }
 
 }

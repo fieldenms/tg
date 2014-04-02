@@ -27,7 +27,7 @@ public class IconWrapper implements ResizableIcon {
      *            - specified Icon
      */
     public IconWrapper(Icon delegate) {
-	this.delegate = delegate;
+        this.delegate = delegate;
     }
 
     /**
@@ -35,7 +35,7 @@ public class IconWrapper implements ResizableIcon {
      */
     @Override
     public int getIconHeight() {
-	return delegate.getIconHeight();
+        return delegate.getIconHeight();
     }
 
     /**
@@ -43,7 +43,7 @@ public class IconWrapper implements ResizableIcon {
      */
     @Override
     public int getIconWidth() {
-	return delegate.getIconHeight();
+        return delegate.getIconHeight();
     }
 
     /**
@@ -51,7 +51,7 @@ public class IconWrapper implements ResizableIcon {
      */
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
-	delegate.paintIcon(c, g, x, y);
+        delegate.paintIcon(c, g, x, y);
     }
 
     /*

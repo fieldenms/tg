@@ -9,16 +9,15 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 
-
 /** A general interface for dashboard item. */
-public interface IDashboardItem <RESULT extends IDashboardItemResult, UI extends JFXPanel & IDashboardItemUi<RESULT> & IUmViewOwner> {
+public interface IDashboardItem<RESULT extends IDashboardItemResult, UI extends JFXPanel & IDashboardItemUi<RESULT> & IUmViewOwner> {
 
     /** Runs a computation behind the dashboard item and displays result. */
     void runAndDisplay(final List<QueryProperty> customParameters);
 
     /**
      * Acknowledges the potentially changed alert information by the <code>user</code>.
-     *
+     * 
      * @param user
      */
     void acknowledge(final User user);
@@ -26,7 +25,9 @@ public interface IDashboardItem <RESULT extends IDashboardItemResult, UI extends
     void configure();
 
     void invokeErrorDetails();
+
     void invokeWarningDetails();
+
     void invokeRegularDetails();
 
     UI getUi();

@@ -1,31 +1,25 @@
 package ua.com.fielden.platform.snappy;
 
-
 /**
  * A control conveniently incorporating {@link SnappyEntitiesTree} and the search bar.
- *
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- *
+ * 
+ * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy
+ * related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy
+ * integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will
+ * be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been
+ * commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG
+ * platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until
+ * snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy
+ * integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will
+ * be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been
+ * commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG
+ * platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
+ * 
  * @author 01es, Jhou
- *
+ * 
  */
-public class EntitiesTreePanel {}
+public class EntitiesTreePanel {
+}
 //extends JPanel {
 //    private static final long serialVersionUID = 1L;
 //

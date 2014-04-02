@@ -45,59 +45,59 @@ import ua.com.fielden.platform.test.entities.CompositeEntityKey;
 
 /**
  * A class to enlist platform test domain entities. Should be replaced with runtime generation via reflection.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class PlatformTestDomainTypes implements IApplicationDomainProvider {
     public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
 
     static void add(final Class<? extends AbstractEntity<?>> domainType) {
-	entityTypes.add(domainType);
+        entityTypes.add(domainType);
     }
 
     static {
-	entityTypes.addAll(PlatformDomainTypes.types);
-	add(TgPersonName.class);
-	add(TgAuthor.class);
-	add(TgAuthorship.class);
-	add(TgAuthorRoyalty.class);
-	add(TgBogie.class);
-	add(TgBogieClass.class);
-	add(TgWagon.class);
-	add(TgWagonSlot.class);
-	add(TgWagonClass.class);
-	add(TgWagonClassCompatibility.class);
-	add(TgWorkshop.class);
-	add(TgTimesheet.class);
-	add(TgVehicle.class);
-	add(TgVehicleFinDetails.class);
-	add(TgVehicleModel.class);
-	add(TgVehicleMake.class);
-	add(TgOrgUnit1.class);
-	add(TgOrgUnit2.class);
-	add(TgOrgUnit3.class);
-	add(TgOrgUnit4.class);
-	add(TgOrgUnit5.class);
-	add(TgWorkOrder.class);
-	add(TgFuelUsage.class);
-	add(TgFuelType.class);
-	add(TgModelCount.class);
-	add(TgModelYearCount.class);
-	add(CompositeEntity.class);
-	add(CompositeEntityKey.class);
-	add(ComplexKeyEntity.class);
-	add(EntityWithMoney.class);
-	add(EntityWithTaxMoney.class);
-	add(EntityWithExTaxAndTaxMoney.class);
-	add(EntityWithSimpleTaxMoney.class);
-	add(EntityWithSimpleMoney.class);
-	add(EntityWithDynamicCompositeKey.class);
-	add(TgAverageFuelUsage.class);
+        entityTypes.addAll(PlatformDomainTypes.types);
+        add(TgPersonName.class);
+        add(TgAuthor.class);
+        add(TgAuthorship.class);
+        add(TgAuthorRoyalty.class);
+        add(TgBogie.class);
+        add(TgBogieClass.class);
+        add(TgWagon.class);
+        add(TgWagonSlot.class);
+        add(TgWagonClass.class);
+        add(TgWagonClassCompatibility.class);
+        add(TgWorkshop.class);
+        add(TgTimesheet.class);
+        add(TgVehicle.class);
+        add(TgVehicleFinDetails.class);
+        add(TgVehicleModel.class);
+        add(TgVehicleMake.class);
+        add(TgOrgUnit1.class);
+        add(TgOrgUnit2.class);
+        add(TgOrgUnit3.class);
+        add(TgOrgUnit4.class);
+        add(TgOrgUnit5.class);
+        add(TgWorkOrder.class);
+        add(TgFuelUsage.class);
+        add(TgFuelType.class);
+        add(TgModelCount.class);
+        add(TgModelYearCount.class);
+        add(CompositeEntity.class);
+        add(CompositeEntityKey.class);
+        add(ComplexKeyEntity.class);
+        add(EntityWithMoney.class);
+        add(EntityWithTaxMoney.class);
+        add(EntityWithExTaxAndTaxMoney.class);
+        add(EntityWithSimpleTaxMoney.class);
+        add(EntityWithSimpleMoney.class);
+        add(EntityWithDynamicCompositeKey.class);
+        add(TgAverageFuelUsage.class);
     }
 
     @Override
     public List<Class<? extends AbstractEntity<?>>> entityTypes() {
-	return entityTypes;
+        return entityTypes;
     }
 }

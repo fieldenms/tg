@@ -16,9 +16,9 @@ public class ScheduleTask<T extends AbstractEntity<?>> extends Task {
     private final T entity;
 
     public ScheduleTask(final String description, final ScheduleSeries<T> scheduleSeries, final T entity) {
-	super(description, scheduleSeries.getScheduleEntity().getFrom(entity), scheduleSeries.getScheduleEntity().getTo(entity));
-	this.scheduleSeries = scheduleSeries;
-	this.entity = entity;
+        super(description, scheduleSeries.getScheduleEntity().getFrom(entity), scheduleSeries.getScheduleEntity().getTo(entity));
+        this.scheduleSeries = scheduleSeries;
+        this.entity = entity;
     }
 
     @Override
@@ -28,41 +28,41 @@ public class ScheduleTask<T extends AbstractEntity<?>> extends Task {
 
     @Override
     public void setDuration(final TimePeriod duration) {
-	if (duration.getStart().before(duration.getEnd())) {
-	    scheduleSeries.getScheduleEntity().setFrom(entity, duration.getStart());
-	    scheduleSeries.getScheduleEntity().setTo(entity, duration.getEnd());
-	}
+        if (duration.getStart().before(duration.getEnd())) {
+            scheduleSeries.getScheduleEntity().setFrom(entity, duration.getStart());
+            scheduleSeries.getScheduleEntity().setTo(entity, duration.getEnd());
+        }
     }
 
     public Date getFrom() {
-	return scheduleSeries.getScheduleEntity().getFrom(entity);
+        return scheduleSeries.getScheduleEntity().getFrom(entity);
     }
 
     public Date getTo() {
-	return scheduleSeries.getScheduleEntity().getTo(entity);
+        return scheduleSeries.getScheduleEntity().getTo(entity);
     }
 
     public void setFrom(final Date date) {
-	if(getTo().after(date)) {
-	    scheduleSeries.getScheduleEntity().setFrom(entity, date);
-	}
+        if (getTo().after(date)) {
+            scheduleSeries.getScheduleEntity().setFrom(entity, date);
+        }
     }
 
     public void setTo(final Date date) {
-	if (getFrom().before(date)) {
-	    scheduleSeries.getScheduleEntity().setTo(entity, date);
-	}
+        if (getFrom().before(date)) {
+            scheduleSeries.getScheduleEntity().setTo(entity, date);
+        }
     }
 
     public boolean canEdit() {
-	return scheduleSeries.getScheduleEntity().canEditEntity(entity);
+        return scheduleSeries.getScheduleEntity().canEditEntity(entity);
     }
 
     public T getEntity() {
-	return entity;
+        return entity;
     }
 
     public ScheduleSeries<T> getScheduleSeries() {
-	return scheduleSeries;
+        return scheduleSeries;
     }
 }

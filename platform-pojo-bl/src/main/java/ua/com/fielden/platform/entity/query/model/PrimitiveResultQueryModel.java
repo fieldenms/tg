@@ -7,9 +7,10 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class PrimitiveResultQueryModel extends SingleResultQueryModel {
 
-    protected PrimitiveResultQueryModel() {}
+    protected PrimitiveResultQueryModel() {
+    }
 
     public PrimitiveResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
-	super(tokens, null);
+        super(tokens, null);
     }
 }

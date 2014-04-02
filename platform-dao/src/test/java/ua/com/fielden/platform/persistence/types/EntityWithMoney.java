@@ -24,9 +24,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * This is a test entity, which is currently used for testing of classes {@link Money} and {@link HibernateValueMatcher}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @DescTitle("Description")
@@ -36,17 +36,20 @@ public class EntityWithMoney extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @MapTo("MONEY") @PersistedType(userType = IMoneyUserType.class)
+    @MapTo("MONEY")
+    @PersistedType(userType = IMoneyUserType.class)
     private Money money;
     @IsProperty
     @MapTo("DATE_TIME")
     private Date dateTimeProperty;
 
     private static final ExpressionModel calculatedProperty_ = expr().prop("money.amount").add().prop("money.amount").model();
-    @IsProperty @Calculated
+    @IsProperty
+    @Calculated
     private BigDecimal calculatedProperty;
 
-    @IsProperty @TransactionDate
+    @IsProperty
+    @TransactionDate
     @MapTo("TRANS_DATE_TIME")
     private Date transDate;
 
@@ -54,21 +57,21 @@ public class EntityWithMoney extends AbstractEntity<String> {
     }
 
     public EntityWithMoney(final String key, final String desc, final Money money) {
-	super(null, key, desc);
-	setMoney(money);
+        super(null, key, desc);
+        setMoney(money);
     }
 
     @Observable
     public EntityWithMoney setMoney(final Money money) {
-	if (money == null) {
-	    throw new Result(this, new IllegalArgumentException("money should not be null"));
-	}
-	this.money = money;
-	return this;
+        if (money == null) {
+            throw new Result(this, new IllegalArgumentException("money should not be null"));
+        }
+        this.money = money;
+        return this;
     }
 
     public Money getMoney() {
-	return money;
+        return money;
     }
 
     public BigDecimal getCalculatedProperty() {

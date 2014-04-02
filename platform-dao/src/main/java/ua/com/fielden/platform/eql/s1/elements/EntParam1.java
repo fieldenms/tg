@@ -22,7 +22,7 @@ public class EntParam1 implements ISingleOperand1<EntValue2> {
     }
 
     public EntValue2 transform(final TransformatorToS2 resolver) {
-	return resolver.getTransformedParamToValue(this);
+        return resolver.getTransformedParamToValue(this);
     }
 
     public String getName() {
@@ -35,35 +35,35 @@ public class EntParam1 implements ISingleOperand1<EntValue2> {
 
     @Override
     public int hashCode() {
-	final int prime = 31;
-	int result = 1;
-	result = prime * result + (ignoreNull ? 1231 : 1237);
-	result = prime * result + ((name == null) ? 0 : name.hashCode());
-	return result;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (ignoreNull ? 1231 : 1237);
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj == null) {
-	    return false;
-	}
-	if (!(obj instanceof EntParam1)) {
-	    return false;
-	}
-	final EntParam1 other = (EntParam1) obj;
-	if (ignoreNull != other.ignoreNull) {
-	    return false;
-	}
-	if (name == null) {
-	    if (other.name != null) {
-		return false;
-	    }
-	} else if (!name.equals(other.name)) {
-	    return false;
-	}
-	return true;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof EntParam1)) {
+            return false;
+        }
+        final EntParam1 other = (EntParam1) obj;
+        if (ignoreNull != other.ignoreNull) {
+            return false;
+        }
+        if (name == null) {
+            if (other.name != null) {
+                return false;
+            }
+        } else if (!name.equals(other.name)) {
+            return false;
+        }
+        return true;
     }
 }

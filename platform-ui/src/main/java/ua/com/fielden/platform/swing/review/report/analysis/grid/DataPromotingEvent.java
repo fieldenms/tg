@@ -13,17 +13,17 @@ public class DataPromotingEvent<T extends AbstractEntity<?>, CDTME extends ICent
     private final IPage<T> page;
 
     public DataPromotingEvent(final GridAnalysisView<T, CDTME> analysis, final IPage<T> page) {
-	super(analysis);
-	this.page = page;
+        super(analysis);
+        this.page = page;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public GridAnalysisView<T, CDTME> getSource() {
-        return (GridAnalysisView<T, CDTME>)super.getSource();
+        return (GridAnalysisView<T, CDTME>) super.getSource();
     }
 
     public IPage<T> getPage() {
-	return page;
+        return page;
     }
 }

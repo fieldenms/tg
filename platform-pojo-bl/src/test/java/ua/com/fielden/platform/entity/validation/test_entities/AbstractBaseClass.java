@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 
 /**
  * Class for testing of domain validators registration.
- *
+ * 
  * @author TG Team
  */
 @KeyType(String.class)
@@ -23,13 +23,13 @@ public abstract class AbstractBaseClass extends AbstractEntity<String> {
     private Integer intProp;
 
     public Integer getIntProp() {
-	return intProp;
+        return intProp;
     }
 
     @Observable
     @DomainValidation
     public void setIntProp(final Integer intProp) {
-	this.intProp = intProp;
+        this.intProp = intProp;
     }
 
 }

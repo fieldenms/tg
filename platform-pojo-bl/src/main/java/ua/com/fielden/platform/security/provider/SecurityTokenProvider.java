@@ -37,27 +37,27 @@ public class SecurityTokenProvider {
      * @throws Exception
      */
     public SecurityTokenProvider(final String path, final String packageName) throws Exception {
-	final List<Class<?>> allTokens = ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class);
-	topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
+        final List<Class<?>> allTokens = ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class);
+        topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
     }
 
     private SortedSet<SecurityTokenNode> buildTokenNodes(final List<Class<?>> allTokens) {
-	final SortedSet<SecurityTokenNode> topTokenNodes = new TreeSet<SecurityTokenNode>();
-	// iterate over all tokens and determine top level tokens
-	// add them to a separate list and remove from a list over which iteration occurs
-	for (final Iterator<Class<?>> iter = allTokens.iterator(); iter.hasNext();) {
-	    final Class<ISecurityToken> token = (Class<ISecurityToken>) iter.next();
-	    if (isTopLevel(token)) {
-		topTokenNodes.add(new SecurityTokenNode(token));
-		iter.remove();
-	    }
-	}
-	// iterate over the top token nodes and recursively builds all sub token nodes
-	for (final Iterator<SecurityTokenNode> iter = topTokenNodes.iterator(); iter.hasNext() && !allTokens.isEmpty();) {
-	    digg(iter.next(), allTokens); // allTokens is mutated by digg
-	}
+        final SortedSet<SecurityTokenNode> topTokenNodes = new TreeSet<SecurityTokenNode>();
+        // iterate over all tokens and determine top level tokens
+        // add them to a separate list and remove from a list over which iteration occurs
+        for (final Iterator<Class<?>> iter = allTokens.iterator(); iter.hasNext();) {
+            final Class<ISecurityToken> token = (Class<ISecurityToken>) iter.next();
+            if (isTopLevel(token)) {
+                topTokenNodes.add(new SecurityTokenNode(token));
+                iter.remove();
+            }
+        }
+        // iterate over the top token nodes and recursively builds all sub token nodes
+        for (final Iterator<SecurityTokenNode> iter = topTokenNodes.iterator(); iter.hasNext() && !allTokens.isEmpty();) {
+            digg(iter.next(), allTokens); // allTokens is mutated by digg
+        }
 
-	return topTokenNodes;
+        return topTokenNodes;
     }
 
     /**
@@ -70,25 +70,25 @@ public class SecurityTokenProvider {
      */
     @SuppressWarnings("unchecked")
     private void digg(final SecurityTokenNode superTokenNode, final List<Class<?>> remainingTokens) {
-	final List<SecurityTokenNode> toBeRemoved = new ArrayList<SecurityTokenNode>();
-	// find all direct sub tokens of the current super token
-	for (final Iterator<Class<?>> iter = remainingTokens.iterator(); iter.hasNext();) {
-	    final Class<ISecurityToken> token = (Class<ISecurityToken>) iter.next();
-	    if (isSuperTokenOf(superTokenNode.getToken(), token)) {
-		toBeRemoved.add(new SecurityTokenNode(token, superTokenNode));
-	    }
-	}
-	// remove all found sub tokens from the list of remaining tokens -- this reduces the number of items used in the search
-	for (final SecurityTokenNode node : toBeRemoved) {
-	    remainingTokens.remove(node.getToken());
-	}
-	// recursively find all sub tokens of just found sub tokens
-	for (final SecurityTokenNode node : toBeRemoved) {
-	    digg(node, remainingTokens);
-	}
+        final List<SecurityTokenNode> toBeRemoved = new ArrayList<SecurityTokenNode>();
+        // find all direct sub tokens of the current super token
+        for (final Iterator<Class<?>> iter = remainingTokens.iterator(); iter.hasNext();) {
+            final Class<ISecurityToken> token = (Class<ISecurityToken>) iter.next();
+            if (isSuperTokenOf(superTokenNode.getToken(), token)) {
+                toBeRemoved.add(new SecurityTokenNode(token, superTokenNode));
+            }
+        }
+        // remove all found sub tokens from the list of remaining tokens -- this reduces the number of items used in the search
+        for (final SecurityTokenNode node : toBeRemoved) {
+            remainingTokens.remove(node.getToken());
+        }
+        // recursively find all sub tokens of just found sub tokens
+        for (final SecurityTokenNode node : toBeRemoved) {
+            digg(node, remainingTokens);
+        }
     }
 
     public SortedSet<SecurityTokenNode> getTopLevelSecurityTokenNodes() {
-	return Collections.unmodifiableSortedSet(topLevelSecurityTokenNodes);
+        return Collections.unmodifiableSortedSet(topLevelSecurityTokenNodes);
     }
 }

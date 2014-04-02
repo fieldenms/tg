@@ -22,7 +22,7 @@ public class SelectionHolder {
      * @param handler
      */
     public SelectionHolder(final MultipleSelectionHandler handler) {
-	this.selectionHandler = handler;
+        this.selectionHandler = handler;
     }
 
     /**
@@ -31,10 +31,10 @@ public class SelectionHolder {
      */
     @SuppressWarnings("unchecked")
     public Collection getSelection() {
-	return selectionHandler.getSelection();
+        return selectionHandler.getSelection();
     }
 
     public boolean isMarqueeSelection(final PInputEvent pie) {
-	return selectionHandler.isSelecting(pie);
+        return selectionHandler.isSelecting(pie);
     }
 }

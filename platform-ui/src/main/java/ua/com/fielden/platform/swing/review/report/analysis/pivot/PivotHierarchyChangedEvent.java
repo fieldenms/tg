@@ -10,22 +10,22 @@ public class PivotHierarchyChangedEvent extends EventObject {
 
     private final boolean isChecked;
 
-    public PivotHierarchyChangedEvent(final PivotTreeTableModel source,final String property, final boolean isChecked) {
-	super(source);
-	this.property = property;
-	this.isChecked = isChecked;
+    public PivotHierarchyChangedEvent(final PivotTreeTableModel source, final String property, final boolean isChecked) {
+        super(source);
+        this.property = property;
+        this.isChecked = isChecked;
     }
 
     @Override
     public PivotTreeTableModel getSource() {
-        return (PivotTreeTableModel)super.getSource();
+        return (PivotTreeTableModel) super.getSource();
     }
 
     public String getProperty() {
-	return property;
+        return property;
     }
 
     public boolean isChecked() {
-	return isChecked;
+        return isChecked;
     }
 }

@@ -7,16 +7,16 @@ import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 abstract class AbstractRightSideOperand<T, ET extends AbstractEntity<?>> extends AbstractMultipleOperand<T, ET> implements IQuantifiedOperand<T, ET> {
 
     protected AbstractRightSideOperand(final Tokens queryTokens) {
-	super(queryTokens);
+        super(queryTokens);
     }
 
     @Override
     public T any(final SingleResultQueryModel subQuery) {
-	return copy(getParent(), getTokens().any(subQuery));
+        return copy(getParent(), getTokens().any(subQuery));
     }
 
     @Override
     public T all(final SingleResultQueryModel subQuery) {
-	return copy(getParent(), getTokens().all(subQuery));
+        return copy(getParent(), getTokens().all(subQuery));
     }
 }

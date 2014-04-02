@@ -14,32 +14,32 @@ public class StringFilter implements IFilter {
 
     @Override
     public boolean isEnabled() {
-	return enabled;
+        return enabled;
     }
 
     @Override
     public void setEnabled(final boolean enabled) {
-	this.enabled = enabled;
+        this.enabled = enabled;
     }
 
     @Override
     public boolean filter(final Object value, final String valuefilterCrit) {
-	boolean result = false;
-	final String[] criteria = valuefilterCrit.split(",");
-	for (final String crit : criteria) {
-	    final String fullPattern = crit.trim().toUpperCase();
-	    final String fullPatternS1 = fullPattern.startsWith("\\*") ? removeFromStart(fullPattern) : "^" + fullPattern;
-	    final String fullPatternS2 = fullPatternS1.endsWith("\\*") ? removeFromEnd(fullPatternS1) : fullPatternS1;
-	    final String fullPatternS3 = fullPatternS2.replaceAll("\\*", ".*");
-	    final String strPattern = fullPatternS3.indexOf("*") > -1 ? fullPatternS3 + "$" : fullPatternS3 + ".*";
+        boolean result = false;
+        final String[] criteria = valuefilterCrit.split(",");
+        for (final String crit : criteria) {
+            final String fullPattern = crit.trim().toUpperCase();
+            final String fullPatternS1 = fullPattern.startsWith("\\*") ? removeFromStart(fullPattern) : "^" + fullPattern;
+            final String fullPatternS2 = fullPatternS1.endsWith("\\*") ? removeFromEnd(fullPatternS1) : fullPatternS1;
+            final String fullPatternS3 = fullPatternS2.replaceAll("\\*", ".*");
+            final String strPattern = fullPatternS3.indexOf("*") > -1 ? fullPatternS3 + "$" : fullPatternS3 + ".*";
 
-	    final String fullName = value.toString().toUpperCase();
-	    final Pattern pattern = Pattern.compile(strPattern);
-	    final Matcher matcher = pattern.matcher(fullName);
+            final String fullName = value.toString().toUpperCase();
+            final Pattern pattern = Pattern.compile(strPattern);
+            final Matcher matcher = pattern.matcher(fullName);
 
-	    result = result || matcher.find();
-	}
-	return !result;
+            result = result || matcher.find();
+        }
+        return !result;
     }
 
     /**
@@ -49,8 +49,8 @@ public class StringFilter implements IFilter {
      * @return
      */
     private String removeFromStart(final String value) {
-	final String result = value.startsWith("\\*") ? value.substring(1) : value;
-	return value.startsWith("\\*") ? removeFromStart(result) : result;
+        final String result = value.startsWith("\\*") ? value.substring(1) : value;
+        return value.startsWith("\\*") ? removeFromStart(result) : result;
     }
 
     /**
@@ -61,23 +61,23 @@ public class StringFilter implements IFilter {
      * @return
      */
     private String removeFromEnd(final String value) {
-	final String result = value.endsWith("\\*") ? value.substring(0, value.length() - 1) : value;
-	return value.endsWith("\\*") ? removeFromEnd(result) : result;
+        final String result = value.endsWith("\\*") ? value.substring(0, value.length() - 1) : value;
+        return value.endsWith("\\*") ? removeFromEnd(result) : result;
     }
 
     public static void main(final String[] args) {
-	final StringFilter flt = new StringFilter();
+        final StringFilter flt = new StringFilter();
 
-	final String value = "scala rocks";
-	System.out.println(flt.filter(value, "*"));
-	System.out.println(flt.filter(value, "scala rocks"));
-	System.out.println(flt.filter(value, "something else"));
-	System.out.println(flt.filter(value, "scala *"));
-	System.out.println(flt.filter(value, "*rocks"));
-	System.out.println(flt.filter(value, "*sca*ro*"));
-	System.out.println(flt.filter(value, "sca*ro*"));
-	System.out.println(flt.filter(value, "*ca*rocks"));
-	System.out.println(flt.filter(value, ""));
+        final String value = "scala rocks";
+        System.out.println(flt.filter(value, "*"));
+        System.out.println(flt.filter(value, "scala rocks"));
+        System.out.println(flt.filter(value, "something else"));
+        System.out.println(flt.filter(value, "scala *"));
+        System.out.println(flt.filter(value, "*rocks"));
+        System.out.println(flt.filter(value, "*sca*ro*"));
+        System.out.println(flt.filter(value, "sca*ro*"));
+        System.out.println(flt.filter(value, "*ca*rocks"));
+        System.out.println(flt.filter(value, ""));
 
     }
 

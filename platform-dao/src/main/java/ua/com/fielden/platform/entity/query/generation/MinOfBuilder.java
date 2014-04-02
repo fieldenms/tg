@@ -7,11 +7,11 @@ import ua.com.fielden.platform.entity.query.generation.elements.MinOf;
 public class MinOfBuilder extends OneArgumentFunctionBuilder {
 
     protected MinOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-	super(parent, queryBuilder, paramValues);
+        super(parent, queryBuilder, paramValues);
     }
 
     @Override
     Object getModel() {
-	return new MinOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
+        return new MinOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
     }
 }

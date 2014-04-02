@@ -8,5 +8,4 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @KeyTitle(value = "Base Entity No", desc = "Key Property")
 public abstract class BaseEntity extends AbstractEntity<String> {
 
-
 }

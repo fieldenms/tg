@@ -9,12 +9,12 @@ public class AnalysisDataEvent<T> extends EventObject {
     private final T data;
 
     public AnalysisDataEvent(final Object source, final T data) {
-	super(source);
-	this.data = data;
+        super(source);
+        this.data = data;
     }
 
     public T getData() {
-	return data;
+        return data;
     }
 
 }

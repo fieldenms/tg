@@ -5,19 +5,19 @@ import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
 
 /**
  * Final state.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class State9 extends AbstractState {
 
     public State9() {
-	super("S9", true);
+        super("S9", true);
     }
 
     @Override
     protected AbstractState transition(final char symbol) throws NoTransitionAvailable {
-	throw new NoTransitionAvailable("Invalid symbol '" + symbol + "'" , this, symbol);
+        throw new NoTransitionAvailable("Invalid symbol '" + symbol + "'", this, symbol);
     }
 
 }

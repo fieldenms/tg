@@ -6,7 +6,7 @@ import org.kohsuke.asm3.FieldVisitor;
 
 /**
  * A <code>FieldVisitor</code> adapter for type remapping.
- *
+ * 
  * @author Eugene Kuleshov
  */
 public class RemappingFieldAdapter implements FieldVisitor {

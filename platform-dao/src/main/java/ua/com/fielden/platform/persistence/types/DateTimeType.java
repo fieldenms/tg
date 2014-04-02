@@ -21,14 +21,13 @@ import org.joda.time.DateTime;
 /**
  * Custom Hibernate type for persisting {@link Date} instances with time portion excluding nanos.
  * <p>
- * The default Hibernate type <code>date</code> is not suitable as it does not store time,
- * the <code>timestamp</code> stores millisecond fractions (nanos),
- * which does not play well with Date time.
+ * The default Hibernate type <code>date</code> is not suitable as it does not store time, the <code>timestamp</code> stores millisecond fractions (nanos), which does not play well
+ * with Date time.
  * <p>
  * For example, if a property is bound to a date picker component then nanos are lost, which is recognised as change.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 public class DateTimeType extends MutableType implements IdentifierType, LiteralType {
     private static final long serialVersionUID = 1L;
@@ -37,75 +36,75 @@ public class DateTimeType extends MutableType implements IdentifierType, Literal
 
     @Override
     public Object get(final ResultSet rs, final String name) throws SQLException {
-	final Timestamp value = rs.getTimestamp(name);
-	return value != null ? new Date(value.getTime()) : null;
+        final Timestamp value = rs.getTimestamp(name);
+        return value != null ? new Date(value.getTime()) : null;
     }
 
     public Class<?> getReturnedClass() {
-	return Date.class;
+        return Date.class;
     }
 
     @Override
     public void set(final PreparedStatement st, final Object value, final int index) throws SQLException {
-	final DateTime xdate = value instanceof Timestamp ? new DateTime(((Timestamp) value).getTime()) : new DateTime(((java.util.Date) value).getTime());
-	st.setTimestamp(index, new Timestamp(xdate.getMillis()));
+        final DateTime xdate = value instanceof Timestamp ? new DateTime(((Timestamp) value).getTime()) : new DateTime(((java.util.Date) value).getTime());
+        st.setTimestamp(index, new Timestamp(xdate.getMillis()));
     }
 
     @Override
     public int sqlType() {
-	return Types.TIMESTAMP;
+        return Types.TIMESTAMP;
     }
 
     @Override
     public boolean isEqual(final Object x, final Object y) {
 
-	if (x == y) {
-	    return true;
-	}
-	if (x == null || y == null) {
-	    return false;
-	}
+        if (x == y) {
+            return true;
+        }
+        if (x == null || y == null) {
+            return false;
+        }
 
-	final DateTime xdate = new DateTime(x);
-	final DateTime ydate = new DateTime(y);
+        final DateTime xdate = new DateTime(x);
+        final DateTime ydate = new DateTime(y);
 
-	return xdate.equals(ydate);
+        return xdate.equals(ydate);
     }
 
     @Override
     public int getHashCode(final Object x, final EntityMode entityMode) {
-	return new Long(((java.util.Date) x).getTime()).hashCode();
+        return new Long(((java.util.Date) x).getTime()).hashCode();
     }
 
     public String getName() {
-	return "date";
+        return "date";
     }
 
     @Override
     public String toString(final Object val) {
-	return new SimpleDateFormat(DATE_FORMAT).format((java.util.Date) val);
+        return new SimpleDateFormat(DATE_FORMAT).format((java.util.Date) val);
     }
 
     @Override
     public Object deepCopyNotNull(final Object value) {
-	return new Timestamp(((java.util.Date) value).getTime());
+        return new Timestamp(((java.util.Date) value).getTime());
     }
 
     public Object stringToObject(final String xml) throws Exception {
-	return DateFormat.getDateInstance().parse(xml);
+        return DateFormat.getDateInstance().parse(xml);
     }
 
     public String objectToSQLString(final Object value, final Dialect dialect) throws Exception {
-	return '\'' + new Timestamp(((java.util.Date) value).getTime()).toString() + '\'';
+        return '\'' + new Timestamp(((java.util.Date) value).getTime()).toString() + '\'';
     }
 
     @Override
     public Object fromStringValue(final String xml) throws HibernateException {
-	try {
-	    return new SimpleDateFormat(DATE_FORMAT).parse(xml);
-	} catch (final ParseException pe) {
-	    throw new HibernateException("could not parse XML", pe);
-	}
+        try {
+            return new SimpleDateFormat(DATE_FORMAT).parse(xml);
+        } catch (final ParseException pe) {
+            throw new HibernateException("could not parse XML", pe);
+        }
     }
 
 }

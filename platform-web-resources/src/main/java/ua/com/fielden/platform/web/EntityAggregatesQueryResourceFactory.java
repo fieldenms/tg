@@ -16,9 +16,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for instantiation of EntityAggregatesQueryResource.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class EntityAggregatesQueryResourceFactory extends Restlet {
     private final Injector injector;
@@ -28,21 +28,21 @@ public class EntityAggregatesQueryResourceFactory extends Restlet {
      * Instances of DAO and factory should be thread-safe as they are used by multiple instances of resources serving concurrent requests.
      */
     public EntityAggregatesQueryResourceFactory(final Injector injector) {
-	this.injector = injector;
-	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.injector = injector;
+        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
     }
 
     @Override
     public void handle(final Request request, final Response response) {
-	super.handle(request, response);
+        super.handle(request, response);
 
-	if (Method.POST.equals(request.getMethod())) {
-	    final IEntityAggregatesDao dao = injector.getInstance(IEntityAggregatesDao.class);
+        if (Method.POST.equals(request.getMethod())) {
+            final IEntityAggregatesDao dao = injector.getInstance(IEntityAggregatesDao.class);
 
-	    final String username = (String) request.getAttributes().get("username");
-	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+            final String username = (String) request.getAttributes().get("username");
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	    new EntityAggregatesQueryResource(dao, restUtil, getContext(), request, response).handle();
-	}
+            new EntityAggregatesQueryResource(dao, restUtil, getContext(), request, response).handle();
+        }
     }
 }

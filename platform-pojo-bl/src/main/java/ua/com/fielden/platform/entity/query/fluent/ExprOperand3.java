@@ -6,13 +6,14 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 final class ExprOperand3<T, ET extends AbstractEntity<?>> extends AbstractSingleOperand<IExprOperationOrEnd3<T, ET>, ET> implements IExprOperand3<T, ET> {
     T parent;
+
     ExprOperand3(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     IExprOperationOrEnd3<T, ET> getParent() {
-	return new ExprOperationOrEnd3<T, ET>(getTokens(), parent);
+        return new ExprOperationOrEnd3<T, ET>(getTokens(), parent);
     }
 }

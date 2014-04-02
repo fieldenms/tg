@@ -20,13 +20,13 @@ public class SubClass2 extends AbstractBaseClass {
     private Double doubleProp;
 
     public Double getDoubleProp() {
-	return doubleProp;
+        return doubleProp;
     }
 
     @Observable
     @DomainValidation
     public void setDoubleProp(final Double doubleProp) {
-	this.doubleProp = doubleProp;
+        this.doubleProp = doubleProp;
     }
 
 }

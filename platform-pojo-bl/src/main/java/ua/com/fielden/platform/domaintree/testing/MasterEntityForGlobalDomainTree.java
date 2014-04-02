@@ -11,9 +11,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity for "included properties logic" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @DescTitle(value = "Desc title", desc = "Desc desc")
@@ -31,6 +31,7 @@ public class MasterEntityForGlobalDomainTree extends AbstractEntity<String> {
     public Integer getIntegerProp() {
         return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
@@ -40,11 +41,12 @@ public class MasterEntityForGlobalDomainTree extends AbstractEntity<String> {
     private BigDecimal bigDecimalProp = new BigDecimal(0.0);
 
     public BigDecimal getBigDecimalProp() {
-	return bigDecimalProp;
+        return bigDecimalProp;
     }
+
     @Observable
     public void setBigDecimalProp(final BigDecimal bigDecimalProp) {
-	this.bigDecimalProp = bigDecimalProp;
+        this.bigDecimalProp = bigDecimalProp;
     }
 
     @IsProperty
@@ -53,6 +55,7 @@ public class MasterEntityForGlobalDomainTree extends AbstractEntity<String> {
     public EntityWithStringKeyType getSimpleEntityProp() {
         return simpleEntityProp;
     }
+
     @Observable
     public void setSimpleEntityProp(final EntityWithStringKeyType simpleEntityProp) {
         this.simpleEntityProp = simpleEntityProp;

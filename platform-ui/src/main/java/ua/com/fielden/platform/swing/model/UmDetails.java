@@ -7,9 +7,9 @@ import ua.com.fielden.platform.swing.ei.editors.development.ILightweightProperty
 
 /**
  * This is a UI model based on {@link UModel}, which enforces master/details relationship.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  *            -- entity type.
  * @param <C>
@@ -23,7 +23,7 @@ public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractE
 
     /**
      * Primary constructor.
-     *
+     * 
      * @param entity
      *            -- an instance of a master entity.
      * @param companion
@@ -36,12 +36,12 @@ public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractE
      *            -- identifies whether this is a lazy model.
      */
     protected UmDetails(final M entity, final C companion, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm, final boolean lazy) {
-	super(entity, companion, propertyBinder, lazy);
-	this.fm = fm;
+        super(entity, companion, propertyBinder, lazy);
+        this.fm = fm;
     }
 
     protected fetch<D> getFetchModel() {
-	return fm;
+        return fm;
     }
 
     /**
@@ -49,34 +49,34 @@ public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractE
      */
     @Override
     public void setEntity(final M entity) {
-	final boolean shouldRefresh = shouldRefreshWhenSettingEntity(entity);
-	super.setEntity(entity);
-	if (shouldRefresh) {
-	    getRefreshAction().actionPerformed(null);
-	}
-	ignoreRefresh = false;
+        final boolean shouldRefresh = shouldRefreshWhenSettingEntity(entity);
+        super.setEntity(entity);
+        if (shouldRefresh) {
+            getRefreshAction().actionPerformed(null);
+        }
+        ignoreRefresh = false;
     };
 
     /**
      * Is invoked when {@link #setEntity(AbstractEntity)} is called in order to check if the refresh action should be performed.
      * <p>
      * Can be overridden to provide a custom refresh request logic.
-     *
+     * 
      * @param entity
      * @return
      */
     protected boolean shouldRefreshWhenSettingEntity(final M entity) {
-	return !ignoreRefresh && (getEntity().getId() != entity.getId()) && isInitialised();
+        return !ignoreRefresh && (getEntity().getId() != entity.getId()) && isInitialised();
     }
 
     @Override
     public boolean canOpen() {
-	return getEntity().isPersisted();
+        return getEntity().isPersisted();
     }
 
     @Override
     public String whyCannotOpen() {
-	return "No details can be added before the master entity is saved.";
+        return "No details can be added before the master entity is saved.";
     }
 
     public boolean isIgnoreRefresh() {

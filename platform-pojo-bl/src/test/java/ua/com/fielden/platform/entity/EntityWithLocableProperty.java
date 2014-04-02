@@ -13,9 +13,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity with arbitrarily long validation process for the lockable property, which makes its instance locked as long as desired.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
@@ -37,41 +37,40 @@ public class EntityWithLocableProperty extends AbstractEntity<String> {
     @IsProperty
     private Money lockableProperty;
 
-
     public Integer getFirstProperty() {
-	return firstProperty;
+        return firstProperty;
     }
 
     @NotNull
     @Observable
     public EntityWithLocableProperty setFirstProperty(final Integer property) {
-	this.firstProperty = property;
-	return this;
+        this.firstProperty = property;
+        return this;
     }
 
     public Double getObservableProperty() {
-	return observableProperty;
+        return observableProperty;
     }
 
     @Observable
     public EntityWithLocableProperty setObservableProperty(final Double observableProperty) {
-	this.observableProperty = observableProperty;
-	return this;
+        this.observableProperty = observableProperty;
+        return this;
     }
 
     public Money getLockableProperty() {
-	return lockableProperty;
+        return lockableProperty;
     }
 
     @Observable
     public void setLockableProperty(final Money money) {
-	while (lockPropertyValidation) {
+        while (lockPropertyValidation) {
             try {
-		Thread.sleep(10);
-	    } catch (final InterruptedException e) {
-	    }
+                Thread.sleep(10);
+            } catch (final InterruptedException e) {
+            }
         }
-	this.lockableProperty = money;
+        this.lockableProperty = money;
     }
 
     @Override
@@ -79,7 +78,7 @@ public class EntityWithLocableProperty extends AbstractEntity<String> {
         return lockPropertyValidation ? Result.successful(this) : new Result(new IllegalStateException());
     }
 
-     public boolean isLockPropertyValidation() {
+    public boolean isLockPropertyValidation() {
         return lockPropertyValidation;
     }
 

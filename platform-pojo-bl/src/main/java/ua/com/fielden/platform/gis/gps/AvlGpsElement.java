@@ -14,36 +14,36 @@ public class AvlGpsElement {
     private final short speed;
 
     public AvlGpsElement(final int longitude, final int latitude, final short altitude, final short angle, final byte satellites, final short speed) {
-	this.longitude = longitude;
-	this.latitude = latitude;
-	this.altitude = altitude;
-	this.angle = angle;
-	this.satellites = satellites;
-	this.speed = speed;
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.altitude = altitude;
+        this.angle = angle;
+        this.satellites = satellites;
+        this.speed = speed;
     }
 
     public double getLongitude() {
-	return (double) longitude / PRECISION;
+        return (double) longitude / PRECISION;
     }
 
     public double getLatitude() {
-	return (double) latitude / PRECISION;
+        return (double) latitude / PRECISION;
     }
 
     public short getAltitude() {
-	return altitude;
+        return altitude;
     }
 
     public short getAngle() {
-	return angle;
+        return angle;
     }
 
     public byte getSatellites() {
-	return satellites;
+        return satellites;
     }
 
     public short getSpeed() {
-	return speed;
+        return speed;
     }
 
 }

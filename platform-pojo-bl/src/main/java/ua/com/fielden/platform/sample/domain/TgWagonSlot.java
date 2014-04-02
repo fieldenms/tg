@@ -14,9 +14,9 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Represents slot in the wagon for fitting bogie rotable there.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Wagon slots")
@@ -25,15 +25,21 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 public class TgWagonSlot extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo @Title("Wagon")
+    @IsProperty
+    @MapTo
+    @Title("Wagon")
     @CompositeKeyMember(1)
     private TgWagon wagon;
 
-    @IsProperty @MapTo @Title("Position")
+    @IsProperty
+    @MapTo
+    @Title("Position")
     @CompositeKeyMember(2)
     private Integer position;
 
-    @IsProperty @MapTo @Title("Bogie")
+    @IsProperty
+    @MapTo
+    @Title("Bogie")
     private TgBogie bogie;
 
     public TgBogie getBogie() {
@@ -47,38 +53,40 @@ public class TgWagonSlot extends AbstractEntity<DynamicEntityKey> {
     }
 
     public TgWagon getWagon() {
-	return wagon;
+        return wagon;
     }
 
     @Observable
     protected TgWagonSlot setWagon(final TgWagon wagon) {
-	this.wagon = wagon;
-	return this;
+        this.wagon = wagon;
+        return this;
     }
 
     public Integer getPosition() {
-	return position;
+        return position;
     }
 
     @Observable
     protected TgWagonSlot setPosition(final Integer position) {
-	this.position = position;
-	return this;
+        this.position = position;
+        return this;
     }
 
     /**
-     * Retrieves full wagon slot number, which is composed of the wagon serial number, char 'B'  and the slot index.
+     * Retrieves full wagon slot number, which is composed of the wagon serial number, char 'B' and the slot index.
+     * 
      * @return
      */
     public String getSlotNumber() {
-	return wagon.getSerialNo() + "B" + getSlotIndex();
+        return wagon.getSerialNo() + "B" + getSlotIndex();
     }
 
     /**
      * Retrieves wagon slot index.
+     * 
      * @return
      */
     public String getSlotIndex() {
-	return String.format("%02d", getPosition());
+        return String.format("%02d", getPosition());
     }
 }

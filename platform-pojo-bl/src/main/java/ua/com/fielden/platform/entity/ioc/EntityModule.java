@@ -13,7 +13,7 @@ import com.google.inject.Injector;
 
 /**
  * This Guice module ensures that properties for all {@link AbstractEntity} descendants are provided with an intercepter handling validation and observation.
- *
+ * 
  * @author TG Team
  */
 public abstract class EntityModule extends AbstractModule implements IModuleWithInjector {
@@ -25,18 +25,18 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
      */
     @Override
     protected void configure() {
-	// observable interceptor
-	bindInterceptor(subclassesOf(AbstractEntity.class), // match {@link AbstractEntity} descendants only
-		annotatedWith(Observable.class), // having annotated methods
-		new ObservableMutatorInterceptor()); // the intercepter
+        // observable interceptor
+        bindInterceptor(subclassesOf(AbstractEntity.class), // match {@link AbstractEntity} descendants only
+                annotatedWith(Observable.class), // having annotated methods
+                new ObservableMutatorInterceptor()); // the intercepter
 
-	bindInterceptor(any(), // match any class
-		annotatedWith(Authorise.class), // having annotated methods
-		ai); // the intercepter
+        bindInterceptor(any(), // match any class
+                annotatedWith(Authorise.class), // having annotated methods
+                ai); // the intercepter
     }
 
     @Override
     public void setInjector(final Injector injector) {
-	ai.setInjector(injector);
+        ai.setInjector(injector);
     }
 }

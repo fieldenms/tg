@@ -45,29 +45,29 @@ public class StyledLoginScreen extends JFrame {
      * @param loginScreenModel
      */
     public StyledLoginScreen(final StyledLoginScreenModel loginScreenModel) {
-	super(loginScreenModel.getTitle());
-	setUndecorated(true);
+        super(loginScreenModel.getTitle());
+        setUndecorated(true);
 
-	this.loginScreenModel = loginScreenModel;
+        this.loginScreenModel = loginScreenModel;
 
-	// order of following two calls is important
-	blockingPane = new BlockingIndefiniteProgressPane(this);
-	loginScreenModel.initActions(this);
+        // order of following two calls is important
+        blockingPane = new BlockingIndefiniteProgressPane(this);
+        loginScreenModel.initActions(this);
 
-	setLayout(new MigLayout("fill, insets 0"));
-	final JPanel componentsPanel = createComponentsPanel(loginScreenModel.getBackgroundImage());
-	errorLabel = createErrorLabel();
+        setLayout(new MigLayout("fill, insets 0"));
+        final JPanel componentsPanel = createComponentsPanel(loginScreenModel.getBackgroundImage());
+        errorLabel = createErrorLabel();
 
-	componentsPanel.add(createSouthPanel(loginScreenModel), LoginScreenPart.SOUTH.getConstraints());
-	componentsPanel.add(createLoginPanel(loginScreenModel, errorLabel), LoginScreenPart.EAST.getConstraints());
+        componentsPanel.add(createSouthPanel(loginScreenModel), LoginScreenPart.SOUTH.getConstraints());
+        componentsPanel.add(createLoginPanel(loginScreenModel, errorLabel), LoginScreenPart.EAST.getConstraints());
 
-	getContentPane().add(componentsPanel, "grow");
+        getContentPane().add(componentsPanel, "grow");
 
-	setPreferredSize(new Dimension(800, 630));
-	setResizable(false);
-	pack();
+        setPreferredSize(new Dimension(800, 630));
+        setResizable(false);
+        pack();
 
-	RefineryUtilities.centerFrameOnScreen(this);
+        RefineryUtilities.centerFrameOnScreen(this);
     }
 
     /**
@@ -77,34 +77,34 @@ public class StyledLoginScreen extends JFrame {
      * @return
      */
     private JPanel createComponentsPanel(final ImageIcon imageIcon) {
-	final JPanel componentsPanel = new JPanel(new MigLayout("fill")) {
-	    private static final long serialVersionUID = 7424278167018647277L;
+        final JPanel componentsPanel = new JPanel(new MigLayout("fill")) {
+            private static final long serialVersionUID = 7424278167018647277L;
 
-	    @Override
-	    protected void paintComponent(final Graphics g) {
-		final Map<RenderingHints.Key, Object> map = new HashMap<RenderingHints.Key, Object>();
-		map.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-		map.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		map.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		final RenderingHints renderHints = new RenderingHints(map);
-		((Graphics2D) g).setRenderingHints(renderHints);
+            @Override
+            protected void paintComponent(final Graphics g) {
+                final Map<RenderingHints.Key, Object> map = new HashMap<RenderingHints.Key, Object>();
+                map.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                map.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                map.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                final RenderingHints renderHints = new RenderingHints(map);
+                ((Graphics2D) g).setRenderingHints(renderHints);
 
-		// drawing image scaled to panel's size
-		final Dimension size = getSize();
-		g.drawImage(imageIcon.getImage(), 0, 0, (int) size.getWidth(), (int) size.getHeight(), null);
+                // drawing image scaled to panel's size
+                final Dimension size = getSize();
+                g.drawImage(imageIcon.getImage(), 0, 0, (int) size.getWidth(), (int) size.getHeight(), null);
 
-		super.paintComponent(g);
-	    }
-	};
-	componentsPanel.setOpaque(false);
-	componentsPanel.setPreferredSize(new Dimension(800, 600));
-	return componentsPanel;
+                super.paintComponent(g);
+            }
+        };
+        componentsPanel.setOpaque(false);
+        componentsPanel.setPreferredSize(new Dimension(800, 600));
+        return componentsPanel;
     }
 
     private JLabel createErrorLabel() {
-	final JLabel errorLabel = new JLabel();
-	errorLabel.setForeground(new Color(230, 0, 0));
-	return errorLabel;
+        final JLabel errorLabel = new JLabel();
+        errorLabel.setForeground(new Color(230, 0, 0));
+        return errorLabel;
     }
 
     /**
@@ -114,18 +114,18 @@ public class StyledLoginScreen extends JFrame {
      * @return
      */
     private JPanel createSouthPanel(final StyledLoginScreenModel model) {
-	final JPanel southPanel = new JPanel(new MigLayout("fill", "20[:100:]push", "10[:25:]push"));
-	southPanel.setOpaque(false);
+        final JPanel southPanel = new JPanel(new MigLayout("fill", "20[:100:]push", "10[:25:]push"));
+        southPanel.setOpaque(false);
 
-	final JButton exitButton = new JButton(model.getExitAction());
-	southPanel.add(exitButton, "grow");
+        final JButton exitButton = new JButton(model.getExitAction());
+        southPanel.add(exitButton, "grow");
 
-	// assign ESC key stroke to call exit action
-	final String ESC = "ESC";
-	southPanel.getActionMap().put(ESC, model.getExitAction());
-	southPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), ESC);
+        // assign ESC key stroke to call exit action
+        final String ESC = "ESC";
+        southPanel.getActionMap().put(ESC, model.getExitAction());
+        southPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), ESC);
 
-	return southPanel;
+        return southPanel;
     }
 
     /**
@@ -136,24 +136,24 @@ public class StyledLoginScreen extends JFrame {
      * @return
      */
     private JPanel createLoginPanel(final StyledLoginScreenModel loginScreenModel, final JLabel errorLabel) {
-	final JPanel loginPanel = new JPanel(new MigLayout("fill", "50[70::][120::]push", "200[25::][25::][25::][25::]push"));
-	loginPanel.setOpaque(false);
+        final JPanel loginPanel = new JPanel(new MigLayout("fill", "50[70::][120::]push", "200[25::][25::][25::][25::]push"));
+        loginPanel.setOpaque(false);
 
-	loginPanel.add(errorLabel, "skip, grow, wrap");
-	loginPanel.add(loginScreenModel.getUsernameLabel(), "grow");
-	loginPanel.add(loginScreenModel.getUsernameEditor(), "grow, wrap");
-	loginPanel.add(loginScreenModel.getPasswordLabel(), "grow");
-	loginPanel.add(loginScreenModel.getPasswordEditor(), "grow, wrap");
+        loginPanel.add(errorLabel, "skip, grow, wrap");
+        loginPanel.add(loginScreenModel.getUsernameLabel(), "grow");
+        loginPanel.add(loginScreenModel.getUsernameEditor(), "grow, wrap");
+        loginPanel.add(loginScreenModel.getPasswordLabel(), "grow");
+        loginPanel.add(loginScreenModel.getPasswordEditor(), "grow, wrap");
 
-	final JButton loginButton = new JButton(loginScreenModel.getLoginAction());
-	loginPanel.add(loginButton, "skip, grow");
+        final JButton loginButton = new JButton(loginScreenModel.getLoginAction());
+        loginPanel.add(loginButton, "skip, grow");
 
-	getRootPane().setDefaultButton(loginButton);
-	return loginPanel;
+        getRootPane().setDefaultButton(loginButton);
+        return loginPanel;
     }
 
     public BlockingIndefiniteProgressPane getBlockingPane() {
-	return blockingPane;
+        return blockingPane;
     }
 
     /**
@@ -162,13 +162,13 @@ public class StyledLoginScreen extends JFrame {
      * @return
      */
     public JLabel getErrorLabel() {
-	return errorLabel;
+        return errorLabel;
     }
 
     @Override
     public void setVisible(final boolean b) {
-	super.setVisible(b);
-	getLoginScreenModel().getUsernameEditor().requestFocusInWindow();
+        super.setVisible(b);
+        getLoginScreenModel().getUsernameEditor().requestFocusInWindow();
     }
 
     /**
@@ -177,36 +177,36 @@ public class StyledLoginScreen extends JFrame {
      * @author TG Team
      */
     public static enum LoginScreenPart {
-	EAST {
-	    @Override
-	    public String getConstraints() {
-		return "east, w 400!, h 450!";
-	    }
-	},
-	WEST {
-	    @Override
-	    public String getConstraints() {
-		return "west, w 400!, h 450!";
-	    }
-	},
-	SOUTH {
-	    @Override
-	    public String getConstraints() {
-		return "south, w 800!, h 75!";
-	    }
-	},
-	NORTH {
-	    @Override
-	    public String getConstraints() {
-		return "north, w 800!, h 75!";
-	    }
-	};
+        EAST {
+            @Override
+            public String getConstraints() {
+                return "east, w 400!, h 450!";
+            }
+        },
+        WEST {
+            @Override
+            public String getConstraints() {
+                return "west, w 400!, h 450!";
+            }
+        },
+        SOUTH {
+            @Override
+            public String getConstraints() {
+                return "south, w 800!, h 75!";
+            }
+        },
+        NORTH {
+            @Override
+            public String getConstraints() {
+                return "north, w 800!, h 75!";
+            }
+        };
 
-	public abstract String getConstraints();
+        public abstract String getConstraints();
     }
 
     public StyledLoginScreenModel getLoginScreenModel() {
-	return loginScreenModel;
+        return loginScreenModel;
     }
 
 }

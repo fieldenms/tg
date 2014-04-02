@@ -2,9 +2,9 @@ package ua.com.fielden.platform.gis.gps;
 
 /**
  * Raw GPS message data from GPS modules.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class AvlData {
 
@@ -17,35 +17,35 @@ public class AvlData {
     private final AvlIoElement io;
 
     public AvlData(final long timestamp, final byte priority, final AvlGpsElement gps, final AvlIoElement io, final int capacity) {
-	this.gpsTimestamp = timestamp;
-	this.priority = priority;
-	this.gps = gps;
-	this.io = io;
-	this.capacity = capacity > 0 ? capacity : BASE_ELEMENT_LENGTH + //
-		io.byteIo.length * AvlIoElement.ByteIoElement.BASE_ELEMENT_LENGTH + //
-		io.shortIo.length * AvlIoElement.ShortIoElement.BASE_ELEMENT_LENGTH + //
-		io.intIo.length * AvlIoElement.IntIoElement.BASE_ELEMENT_LENGTH + //
-		io.longIo.length * AvlIoElement.LongIoElement.BASE_ELEMENT_LENGTH;
+        this.gpsTimestamp = timestamp;
+        this.priority = priority;
+        this.gps = gps;
+        this.io = io;
+        this.capacity = capacity > 0 ? capacity : BASE_ELEMENT_LENGTH + //
+                io.byteIo.length * AvlIoElement.ByteIoElement.BASE_ELEMENT_LENGTH + //
+                io.shortIo.length * AvlIoElement.ShortIoElement.BASE_ELEMENT_LENGTH + //
+                io.intIo.length * AvlIoElement.IntIoElement.BASE_ELEMENT_LENGTH + //
+                io.longIo.length * AvlIoElement.LongIoElement.BASE_ELEMENT_LENGTH;
     }
 
     public long getGpsTimestamp() {
-	return gpsTimestamp;
+        return gpsTimestamp;
     }
 
     public byte getPriority() {
-	return priority;
+        return priority;
     }
 
     public AvlGpsElement getGps() {
-	return gps;
+        return gps;
     }
 
     public AvlIoElement getIo() {
-	return io;
+        return io;
     }
 
     public int getCapacity() {
-	return capacity;
+        return capacity;
     }
 
 }

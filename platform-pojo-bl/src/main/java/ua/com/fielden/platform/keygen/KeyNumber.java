@@ -11,11 +11,11 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * An entity representing a concept of a sequential number used for generating key for WONO and some other entities.
- *
+ * 
  * In reality, the only time this class should be used is when the underlying DB does not support custom sequences.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(String.class)
 @MapEntityTo(value = "NUMBERS", keyColumn = "NUMBKEY")
@@ -38,22 +38,22 @@ public class KeyNumber extends AbstractEntity<String> {
 
     /**
      * It is safe to instantiate KeyNumber using <code>new</code> since it does not require infrastructure provided by {@link EntityFactory}.
-     *
+     * 
      * @param key
      * @param value
      */
     public KeyNumber(final String key, final String value) {
-	setKey(key);
-	setValue(value);
+        setKey(key);
+        setValue(value);
     }
 
     public String getValue() {
-	return value.trim();
+        return value.trim();
     }
 
     @Observable
     public KeyNumber setValue(final String value) {
-	this.value = value.trim();
-	return this;
+        this.value = value.trim();
+        return this;
     }
 }

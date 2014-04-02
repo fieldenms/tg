@@ -7,19 +7,19 @@ public class Pow extends AbstractOperator {
     }
 
     public String getExpression() {
-	return "^";
+        return "^";
     }
 
     public Object getDefaultValue() {
-	return "1";
+        return "1";
     }
 
     protected int getMinNumberOfOperands() {
-	return 2;
+        return 2;
     }
 
     protected int getMaxNumberOfOperands() {
-	return 2;
+        return 2;
     }
 
 }

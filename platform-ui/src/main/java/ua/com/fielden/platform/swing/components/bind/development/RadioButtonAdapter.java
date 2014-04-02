@@ -58,17 +58,17 @@ import ua.com.fielden.platform.utils.PropertyChangeSupportEx.CheckingStrategy;
 /**
  * Converts ValueModels to the ToggleButtonModel interface. Useful to bind JRadioButtons and JRadioButtonMenuItems to a ValueModel.
  * <p>
- *
+ * 
  * This adapter holds a <em>choice</em> object that is used to determine the selection state if the underlying subject ValueModel changes its value. This model is selected if the
  * subject's value equals the choice object. And if the selection is set, the choice object is set to the subject.
  * <p>
- *
+ * 
  * <strong>Note:</strong> You must not use a ButtonGroup with this adapter. The RadioButtonAdapter ensures that only one choice is selected by sharing a single subject ValueModel -
  * at least if all choice values differ. See also the example below.
  * <p>
- *
+ * 
  * <strong>Example:</strong>
- *
+ * 
  * <pre>
  * // Recommended binding style using a factory
  * PresentationModel presentationModel = new PresentationModel(printerSettings);
@@ -93,10 +93,10 @@ import ua.com.fielden.platform.utils.PropertyChangeSupportEx.CheckingStrategy;
  * JRadioButton portraitButton = new JRadioButton(&quot;Portrait&quot;);
  * portraitButton.setModel(new RadioButtonAdapter(model, &quot;portrait&quot;);
  * </pre>
- *
+ * 
  * @author Karsten Lentzsch
  * @version $Revision: 1.7 $
- *
+ * 
  * @see javax.swing.ButtonModel
  * @see javax.swing.JRadioButton
  * @see javax.swing.JRadioButtonMenuItem
@@ -126,128 +126,128 @@ public final class RadioButtonAdapter extends JToggleButton.ToggleButtonModel im
     // Instance Creation ****************************************************
 
     public IBindingEntity getSubjectBean() {
-	return entity;
+        return entity;
     }
 
     /**
      * Constructs a RadioButtonAdapter on the given subject ValueModel for the specified choice. The created adapter will be selected if and only if the subject's initial value
      * equals the given <code>choice</code>.
-     *
+     * 
      * @param subject
      *            the subject that holds the value
      * @param choice
      *            the choice that indicates that this adapter is selected
-     *
+     * 
      * @throws NullPointerException
      *             if the subject is {@code null}
      */
     RadioButtonAdapter(final IBindingEntity entity, final String propertyName, final Object choice, final BoundedValidationLayer<JRadioButton> boundedValidationLayer, final IOnCommitAction... actions) {
-	if (entity == null) {
-	    throw new NullPointerException("The entity must not be null.");
-	}
-	if (propertyName == null) {
-	    throw new NullPointerException("The propertyName must not be null.");
-	}
-	this.entity = entity;
-	this.propertyName = propertyName;
+        if (entity == null) {
+            throw new NullPointerException("The entity must not be null.");
+        }
+        if (propertyName == null) {
+            throw new NullPointerException("The propertyName must not be null.");
+        }
+        this.entity = entity;
+        this.propertyName = propertyName;
 
-	// initiate boundedValidationLayer
-	if (boundedValidationLayer == null) {
-	    throw new NullPointerException("The validationLayer must not be null.");
-	}
-	this.boundedValidationLayer = boundedValidationLayer;
+        // initiate boundedValidationLayer
+        if (boundedValidationLayer == null) {
+            throw new NullPointerException("The validationLayer must not be null.");
+        }
+        this.boundedValidationLayer = boundedValidationLayer;
 
-	// initiateEditableComponent
-	if (boundedValidationLayer.getView() == null) {
-	    throw new NullPointerException("The formatted field must not be null.");
-	}
+        // initiateEditableComponent
+        if (boundedValidationLayer.getView() == null) {
+            throw new NullPointerException("The formatted field must not be null.");
+        }
 
-	// initiate Entity specific listeners
-	this.subjectValueChangeHandler = new SubjectValueChangeHandler();
-	this.propertyValidationResultsChangeListener = new PropertyValidationResultsChangeListener(this.boundedValidationLayer);
-	this.editableChangeListener = new EditableChangeListener(this.boundedValidationLayer);
-	this.requiredChangeListener = new RequiredChangeListener(this.boundedValidationLayer);
+        // initiate Entity specific listeners
+        this.subjectValueChangeHandler = new SubjectValueChangeHandler();
+        this.propertyValidationResultsChangeListener = new PropertyValidationResultsChangeListener(this.boundedValidationLayer);
+        this.editableChangeListener = new EditableChangeListener(this.boundedValidationLayer);
+        this.requiredChangeListener = new RequiredChangeListener(this.boundedValidationLayer);
 
-	addOwnEntitySpecificListeners();
-	Rebinder.initiateReconnectables(this.entity, this, this.boundedValidationLayer);
+        addOwnEntitySpecificListeners();
+        Rebinder.initiateReconnectables(this.entity, this, this.boundedValidationLayer);
 
-	// initiate and assign component specific listeners
-	this.choice = choice;
-	for (int i = 0; i < actions.length; i++) {
-	    addOnCommitAction(actions[i]);
-	}
+        // initiate and assign component specific listeners
+        this.choice = choice;
+        for (int i = 0; i < actions.length; i++) {
+            addOnCommitAction(actions[i]);
+        }
 
-	// initial updating :
-	this.updateStates();
-	// setting OnCommitActionable
-	this.initiateOnCommitActionable(boundedValidationLayer);
+        // initial updating :
+        this.updateStates();
+        // setting OnCommitActionable
+        this.initiateOnCommitActionable(boundedValidationLayer);
     }
 
     @Override
     public void initiateOnCommitActionable(final BoundedValidationLayer<?> boundedValidationLayer) {
-	Rebinder.initiateIOnCommitActionable(this, boundedValidationLayer, entity);
+        Rebinder.initiateIOnCommitActionable(this, boundedValidationLayer, entity);
     }
 
     RadioButtonAdapter(final BufferedPropertyWrapper bufferedPropertyWrapper, final Object choice, final BoundedValidationLayer<JRadioButton> boundedValidationLayer) {
-	this(bufferedPropertyWrapper, bufferedPropertyWrapper.getPropertyName(), choice, boundedValidationLayer);
+        this(bufferedPropertyWrapper, bufferedPropertyWrapper.getPropertyName(), choice, boundedValidationLayer);
     }
 
     @Override
     public void rebindTo(final IBindingEntity entity) {
-	if (entity == null) {
-	    new IllegalArgumentException("the component cannot be reconnected to the Null entity!!").printStackTrace();
-	} else {
-	    unbound();
-	    setEntity(entity);
-	    addOwnEntitySpecificListeners();
-	    updateStates();
-	}
+        if (entity == null) {
+            new IllegalArgumentException("the component cannot be reconnected to the Null entity!!").printStackTrace();
+        } else {
+            unbound();
+            setEntity(entity);
+            addOwnEntitySpecificListeners();
+            updateStates();
+        }
     }
 
     @Override
     public void unbound() {
-	removeOwnEntitySpecificListeners();
+        removeOwnEntitySpecificListeners();
     }
 
     /**
      * Since rebinding is supported, the entity can be changed
-     *
+     * 
      * @param entity
      */
     protected void setEntity(final IBindingEntity entity) {
-	this.entity = entity;
+        this.entity = entity;
     }
 
     public void updateStates() {
-	updateByActualOrLastIncorrectValue();
-	if (boundedMetaProperty() != null) {
-	    updateEditable();
-	    updateRequired();
-	}
-	updateToolTip();
-	if (boundedMetaProperty() != null) {
-	    updateValidationResult();
-	}
+        updateByActualOrLastIncorrectValue();
+        if (boundedMetaProperty() != null) {
+            updateEditable();
+            updateRequired();
+        }
+        updateToolTip();
+        if (boundedMetaProperty() != null) {
+            updateValidationResult();
+        }
     }
 
     public void addOwnEntitySpecificListeners() {
-	Rebinder.addPropertySpecificListener(this.entity, this.propertyName, this.subjectValueChangeHandler);
-	Rebinder.addMetaPropertySpecificListeners(this.entity, this.propertyName, this.propertyValidationResultsChangeListener, this.editableChangeListener, this.requiredChangeListener);
+        Rebinder.addPropertySpecificListener(this.entity, this.propertyName, this.subjectValueChangeHandler);
+        Rebinder.addMetaPropertySpecificListeners(this.entity, this.propertyName, this.propertyValidationResultsChangeListener, this.editableChangeListener, this.requiredChangeListener);
     }
 
     public void removeOwnEntitySpecificListeners() {
-	Rebinder.removePropertySpecificListener(this.entity, this.propertyName, this.subjectValueChangeHandler);
-	Rebinder.removeMetaPropertySpecificListeners(this.entity, this.propertyName, this.propertyValidationResultsChangeListener, this.editableChangeListener, this.requiredChangeListener);
+        Rebinder.removePropertySpecificListener(this.entity, this.propertyName, this.subjectValueChangeHandler);
+        Rebinder.removeMetaPropertySpecificListeners(this.entity, this.propertyName, this.propertyValidationResultsChangeListener, this.editableChangeListener, this.requiredChangeListener);
     }
 
     @Override
     public final MetaProperty boundedMetaProperty() {
-	return Rebinder.getActualEntity(entity).getProperty(propertyName);
+        return Rebinder.getActualEntity(entity).getProperty(propertyName);
     }
 
     @Override
     public boolean isOnKeyTyped() {
-	return !(entity instanceof BufferedPropertyWrapper) && (!(entity instanceof AutocompleterBufferedPropertyWrapper));
+        return !(entity instanceof BufferedPropertyWrapper) && (!(entity instanceof AutocompleterBufferedPropertyWrapper));
     }
 
     // ToggleButtonModel Implementation ***********************************
@@ -256,68 +256,68 @@ public final class RadioButtonAdapter extends JToggleButton.ToggleButtonModel im
      * First, the subject value is set to this adapter's choice value if the argument is {@code true}. Second, this adapter's state is set to the then current subject value. The
      * latter ensures that the selection state is synchronized with the subject - even if the subject rejects the change.
      * <p>
-     *
+     * 
      * Does nothing if the boolean argument is {@code false}, or if this adapter is already selected.
-     *
+     * 
      * @param b
      *            {@code true} sets the choice value as subject value, and is intended to select this adapter (although it may not happen); {@code false} does nothing
      */
     @Override
     public void setSelected(final boolean b) {
-	if (isOnKeyTyped()) {
-	    // lock if the "entity" is not BPW. if "entity" is BPW - it locks inside BPW's "commit" method
-	    // lock subject bean, even if the setter will not be perfomed (it is more safe)
-	    entity.lock();
-	}
-	new SwingWorkerCatcher<Result, Void>() {
-	    private boolean setterPerformed = false;
+        if (isOnKeyTyped()) {
+            // lock if the "entity" is not BPW. if "entity" is BPW - it locks inside BPW's "commit" method
+            // lock subject bean, even if the setter will not be perfomed (it is more safe)
+            entity.lock();
+        }
+        new SwingWorkerCatcher<Result, Void>() {
+            private boolean setterPerformed = false;
 
-	    @Override
-	    protected Result tryToDoInBackground() {
-		if (!b || isSelected()) {
-		    return null;
-		}
+            @Override
+            protected Result tryToDoInBackground() {
+                if (!b || isSelected()) {
+                    return null;
+                }
 
-		// additional creation ov old value. maybe should be removed
-		final Object oldValue = (entity instanceof BufferedPropertyWrapper) ? entity.get(propertyName) : null;
+                // additional creation ov old value. maybe should be removed
+                final Object oldValue = (entity instanceof BufferedPropertyWrapper) ? entity.get(propertyName) : null;
 
-		entity.set(propertyName, choice);
-		setterPerformed = true;
+                entity.set(propertyName, choice);
+                setterPerformed = true;
 
-		// if (!boundedMetaProperty().isValid()) {
-		// return null;
-		// }
+                // if (!boundedMetaProperty().isValid()) {
+                // return null;
+                // }
 
-		// additional firing. maybe should be removed
-		if (entity instanceof BufferedPropertyWrapper && ((BufferedPropertyWrapper) entity).getSubjectBean().getChangeSupport() != null) {
-		    ((BufferedPropertyWrapper) entity).getSubjectBean().getChangeSupport().firePropertyChange(propertyName, oldValue, choice, CheckingStrategy.CHECK_NOTHING, false);
-		}
-		return null;
-	    }
+                // additional firing. maybe should be removed
+                if (entity instanceof BufferedPropertyWrapper && ((BufferedPropertyWrapper) entity).getSubjectBean().getChangeSupport() != null) {
+                    ((BufferedPropertyWrapper) entity).getSubjectBean().getChangeSupport().firePropertyChange(propertyName, oldValue, choice, CheckingStrategy.CHECK_NOTHING, false);
+                }
+                return null;
+            }
 
-	    @Override
-	    protected void tryToDone() {
-		if (setterPerformed) {
-		    for (int i = 0; i < onCommitActions.size(); i++) {
-			if (onCommitActions.get(i) != null) {
-			    onCommitActions.get(i).postCommitAction();
-			    if (boundedMetaProperty() == null || boundedMetaProperty().isValid()) {
-				onCommitActions.get(i).postSuccessfulCommitAction();
-			    } else {
-				onCommitActions.get(i).postNotSuccessfulCommitAction();
-			    }
-			}
-		    }
-		}
-		if (isOnKeyTyped()) {
-		    // need to unlock subjectBean in all cases:
-		    // 1. setter not performed - exception throwed
-		    // 2. setter not performed - the committing logic didn't invoke setter
-		    // 3. setter performed correctly
-		    entity.unlock();
-		}
-	    }
-	}.execute();
+            @Override
+            protected void tryToDone() {
+                if (setterPerformed) {
+                    for (int i = 0; i < onCommitActions.size(); i++) {
+                        if (onCommitActions.get(i) != null) {
+                            onCommitActions.get(i).postCommitAction();
+                            if (boundedMetaProperty() == null || boundedMetaProperty().isValid()) {
+                                onCommitActions.get(i).postSuccessfulCommitAction();
+                            } else {
+                                onCommitActions.get(i).postNotSuccessfulCommitAction();
+                            }
+                        }
+                    }
+                }
+                if (isOnKeyTyped()) {
+                    // need to unlock subjectBean in all cases:
+                    // 1. setter not performed - exception throwed
+                    // 2. setter not performed - the committing logic didn't invoke setter
+                    // 3. setter performed correctly
+                    entity.unlock();
+                }
+            }
+        }.execute();
 
     }
 
@@ -326,35 +326,35 @@ public final class RadioButtonAdapter extends JToggleButton.ToggleButtonModel im
     /**
      * Throws an UnsupportedOperationException if the group is not {@code null}. You need not and must not use a ButtonGroup with a set of RadioButtonAdapters. RadioButtonAdapters
      * form a group by sharing the same subject ValueModel.
-     *
+     * 
      * @param group
      *            the <code>ButtonGroup</code> that will be rejected
-     *
+     * 
      * @throws UnsupportedOperationException
      *             if the group is not {@code null}.
      */
     @Override
     public void setGroup(final ButtonGroup group) {
-	if (group != null) {
-	    throw new UnsupportedOperationException("You need not and must not use a ButtonGroup " + "with a set of RadioButtonAdapters. These form "
-		    + "a group by sharing the same subject ValueModel.");
-	}
+        if (group != null) {
+            throw new UnsupportedOperationException("You need not and must not use a ButtonGroup " + "with a set of RadioButtonAdapters. These form "
+                    + "a group by sharing the same subject ValueModel.");
+        }
     }
 
     /**
      * Updates this adapter's selected state to reflect whether the subject holds the selected value or not. Does not modify the subject value.
      */
     private void updateSelectedState() {
-	final boolean subjectHoldsChoiceValue = choice.equals(entity.get(propertyName));
-	super.setSelected(subjectHoldsChoiceValue);
+        final boolean subjectHoldsChoiceValue = choice.equals(entity.get(propertyName));
+        super.setSelected(subjectHoldsChoiceValue);
     }
 
     /**
      * Updates this adapter's selected state to reflect whether the subject holds the selected value or not. Does not modify the subject value.
      */
     private void updateSelectedStateBy(final Object newValue) {
-	final boolean newValueHoldsChoiceValue = choice.equals(newValue);
-	super.setSelected(newValueHoldsChoiceValue);
+        final boolean newValueHoldsChoiceValue = choice.equals(newValue);
+        super.setSelected(newValueHoldsChoiceValue);
     }
 
     // Event Handling *********************************************************
@@ -364,28 +364,28 @@ public final class RadioButtonAdapter extends JToggleButton.ToggleButtonModel im
      */
     private final class SubjectValueChangeHandler implements Binder.SubjectValueChangeHandler {
 
-	/**
-	 * The subject value has changed. Updates this adapter's selected state to reflect whether the subject holds the choice value or not.
-	 *
-	 * @param evt
-	 *            the property change event fired by the subject
-	 */
-	@Override
-	public void propertyChange(final PropertyChangeEvent evt) {
-	    if (boundedMetaProperty() == null || boundedMetaProperty().isValid()) {
-		updateSelectedState();
-	    } else {
-		if (isOnKeyTyped()) {
-		    // in this case selected state need to be updated by incorrect attempt value
-		    updateSelectedStateBy(boundedMetaProperty().getLastInvalidValue());
-		} else {
-		    // in this case we should update state not by "actual value" and not by "last incorrect attempt value"
-		    // but by "the new attempted value"
-		    updateSelectedStateBy(evt.getNewValue());
-		}
-	    }
-	    updateToolTip();
-	}
+        /**
+         * The subject value has changed. Updates this adapter's selected state to reflect whether the subject holds the choice value or not.
+         * 
+         * @param evt
+         *            the property change event fired by the subject
+         */
+        @Override
+        public void propertyChange(final PropertyChangeEvent evt) {
+            if (boundedMetaProperty() == null || boundedMetaProperty().isValid()) {
+                updateSelectedState();
+            } else {
+                if (isOnKeyTyped()) {
+                    // in this case selected state need to be updated by incorrect attempt value
+                    updateSelectedStateBy(boundedMetaProperty().getLastInvalidValue());
+                } else {
+                    // in this case we should update state not by "actual value" and not by "last incorrect attempt value"
+                    // but by "the new attempted value"
+                    updateSelectedStateBy(evt.getNewValue());
+                }
+            }
+            updateToolTip();
+        }
 
     }
 
@@ -393,86 +393,86 @@ public final class RadioButtonAdapter extends JToggleButton.ToggleButtonModel im
      * updates the editable state of the component based on the Editable state of the bound Property
      */
     public void updateEditable() {
-	if (boundedMetaProperty() != null) {
-	    SwingUtilities.invokeLater(new Runnable() {
-		@Override
-		public void run() {
-		    boundedValidationLayer.getView().setEnabled(boundedMetaProperty().isEditable());
-		}
-	    });
-	}
+        if (boundedMetaProperty() != null) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    boundedValidationLayer.getView().setEnabled(boundedMetaProperty().isEditable());
+                }
+            });
+        }
     }
 
     /**
      * updates the "required" state of the component based on the "required" state of the bound Property
      */
     public void updateRequired() {
-	final MetaProperty property = boundedMetaProperty();
-	if (property != null) {
-	    SwingUtilitiesEx.invokeLater(new Runnable() {
-		@Override
-		public void run() {
-		    boundedValidationLayer.getUI().setRequired(property.isRequired());
-		}
-	    });
-	}
+        final MetaProperty property = boundedMetaProperty();
+        if (property != null) {
+            SwingUtilitiesEx.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    boundedValidationLayer.getUI().setRequired(property.isRequired());
+                }
+            });
+        }
     }
 
     /**
      * adds OnCommitAction to use it at On Key Typed commit model
-     *
+     * 
      * @param onCommitAction
      * @return
      */
     public synchronized boolean addOnCommitAction(final IOnCommitAction onCommitAction) {
-	return onCommitActions.add(onCommitAction);
+        return onCommitActions.add(onCommitAction);
     }
 
     /**
      * removes OnCommitAction to remove its usage at On Key Typed commit model
-     *
+     * 
      * @param onCommitAction
      * @return
      */
     public synchronized boolean removeOnCommitAction(final IOnCommitAction onCommitAction) {
-	return onCommitActions.remove(onCommitAction);
+        return onCommitActions.remove(onCommitAction);
     }
 
     /**
      * gets all assigned "On Key Typed" OnCommitActions
-     *
+     * 
      * @return
      */
     public List<IOnCommitAction> getOnCommitActions() {
-	return Collections.unmodifiableList(onCommitActions);
+        return Collections.unmodifiableList(onCommitActions);
     }
 
     @Override
     public void updateByActualOrLastIncorrectValue() {
-	if (boundedMetaProperty() == null || boundedMetaProperty().isValid()) {
-	    updateSelectedState();
-	} else {
-	    final boolean subjectIncorrectValueHoldsChoiceValue = choice.equals(boundedMetaProperty().getLastInvalidValue());
-	    super.setSelected(subjectIncorrectValueHoldsChoiceValue);
-	}
+        if (boundedMetaProperty() == null || boundedMetaProperty().isValid()) {
+            updateSelectedState();
+        } else {
+            final boolean subjectIncorrectValueHoldsChoiceValue = choice.equals(boundedMetaProperty().getLastInvalidValue());
+            super.setSelected(subjectIncorrectValueHoldsChoiceValue);
+        }
     }
 
     @Override
     public void updateToolTip() {
-	SwingUtilitiesEx.invokeLater(new Runnable() {
-	    public void run() {
-		boundedValidationLayer.getView().setToolTipText(Binder.createToolTipByValueAndMetaProperty(entity, propertyName, boundedMetaProperty(), boundedValidationLayer.getOriginalToolTipText(), false));
-	    }
-	});
+        SwingUtilitiesEx.invokeLater(new Runnable() {
+            public void run() {
+                boundedValidationLayer.getView().setToolTipText(Binder.createToolTipByValueAndMetaProperty(entity, propertyName, boundedMetaProperty(), boundedValidationLayer.getOriginalToolTipText(), false));
+            }
+        });
     }
 
     @Override
     public void updateValidationResult() {
-	Binder.updateValidationUIbyMetaPropertyValidationState(boundedMetaProperty(), boundedValidationLayer);
+        Binder.updateValidationUIbyMetaPropertyValidationState(boundedMetaProperty(), boundedValidationLayer);
     }
 
     @Override
     public String getPropertyName() {
-	return propertyName;
+        return propertyName;
     }
 }

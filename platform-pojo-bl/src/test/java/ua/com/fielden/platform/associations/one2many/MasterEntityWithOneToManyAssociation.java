@@ -15,9 +15,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing associations.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key")
@@ -40,64 +40,65 @@ public class MasterEntityWithOneToManyAssociation extends AbstractEntity<String>
     @Title(value = "Another Date", desc = "Date")
     private Date anotherDateProp;
 
-    @IsProperty(linkProperty="key1") //
+    @IsProperty(linkProperty = "key1")
+    //
     @MapTo
     @Title(value = "Property 1", desc = "Desc")
     private DetailsEntityForOneToManyAssociation one2manyAssociationSpecialCase;
 
-    @IsProperty(value = DetailsEntityForOneToManyAssociation.class)  @MapTo
+    @IsProperty(value = DetailsEntityForOneToManyAssociation.class)
+    @MapTo
     @Title(value = "Collectional Property", desc = "Desc")
     private List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional;
 
     @Observable
     public MasterEntityWithOneToManyAssociation setOne2manyAssociationCollectional(final List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional) {
-	this.one2manyAssociationCollectional = one2manyAssociationCollectional;
-	return this;
+        this.one2manyAssociationCollectional = one2manyAssociationCollectional;
+        return this;
     }
 
     public List<DetailsEntityForOneToManyAssociation> getOne2manyAssociationCollectional() {
-	return one2manyAssociationCollectional;
+        return one2manyAssociationCollectional;
     }
 
     @Observable
     public MasterEntityWithOneToManyAssociation setOne2manyAssociationSpecialCase(final DetailsEntityForOneToManyAssociation one2oneAssociation) {
-	this.one2manyAssociationSpecialCase = one2oneAssociation;
-	return this;
+        this.one2manyAssociationSpecialCase = one2oneAssociation;
+        return this;
     }
 
     public DetailsEntityForOneToManyAssociation getOne2manyAssociationSpecialCase() {
-	return one2manyAssociationSpecialCase;
+        return one2manyAssociationSpecialCase;
     }
 
     @Observable
     public MasterEntityWithOneToManyAssociation setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
 
     @Observable
     public MasterEntityWithOneToManyAssociation setDateProp(final Date dateProp) {
-	this.dateProp = dateProp;
-	return this;
+        this.dateProp = dateProp;
+        return this;
     }
 
     public Date getDateProp() {
-	return dateProp;
+        return dateProp;
     }
 
     @Observable
     public MasterEntityWithOneToManyAssociation setAnotherDateProp(final Date dateProp) {
-	this.anotherDateProp = dateProp;
-	return this;
+        this.anotherDateProp = dateProp;
+        return this;
     }
 
     public Date getAnotherDateProp() {
-	return anotherDateProp;
+        return anotherDateProp;
     }
-
 
 }

@@ -16,14 +16,14 @@ import ua.com.fielden.platform.utils.Pair;
 /**
  * This class is used for correct determining of property titles and descriptions for different purposes (e.g. EGI headers titles/toolTips, criteria label titles/toolTips). This
  * class collects some set of properties and determines their titles and descs respectively to each other (they are dependent on each other).
- *
+ * 
  * <p>
  * Algorithm : </br>1. description (usually toolTips) : always full description used (see for more details : {@link TitlesDescsGetter#getFullTitleAndDesc(String, Class)}). </br>2.
  * title (usually labels and captions) : commonly short title used (see for more details : {@link TitlesDescsGetter#getTitleAndDesc(String, Class)}) except those ones that
  * duplicate another property titles.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class EntityDescriptor {
     private final Class<?> rootType;
@@ -31,134 +31,134 @@ public class EntityDescriptor {
     private final Map<String, Pair<String, String>> mapByNames = new HashMap<String, Pair<String, String>>(); // [name, (title, desc)]
 
     private String directPropertyName(final String name) {
-	return name.isEmpty() ? AbstractEntity.KEY : name; // "key" property should be used for empty "" properties
+        return name.isEmpty() ? AbstractEntity.KEY : name; // "key" property should be used for empty "" properties
     }
 
     public EntityDescriptor(final Class<?> rootType, final List<String> properties) {
-	this.rootType = rootType;
-	this.properties.addAll(properties);
-	final Map<String, Pair<String, String>> mapByTitles = new HashMap<String, Pair<String, String>>(); // [title, (name, desc)]
+        this.rootType = rootType;
+        this.properties.addAll(properties);
+        final Map<String, Pair<String, String>> mapByTitles = new HashMap<String, Pair<String, String>>(); // [title, (name, desc)]
 
-	// create map in which entry's key should be "property title":
-	for (final String name : properties) {
-	    Pair<String, String> ftad;
-	    try {
-		ftad = TitlesDescsGetter.getFullTitleAndDesc(directPropertyName(name), rootType);
-	    } catch (final Exception e) {
-		ftad = null;
-	    }
+        // create map in which entry's key should be "property title":
+        for (final String name : properties) {
+            Pair<String, String> ftad;
+            try {
+                ftad = TitlesDescsGetter.getFullTitleAndDesc(directPropertyName(name), rootType);
+            } catch (final Exception e) {
+                ftad = null;
+            }
 
-	    if (name.contains("()") || ftad == null) { //
-		mapByNames.put(name, null);
-	    } else {
-		final String shortTitle = TitlesDescsGetter.getTitleAndDesc(directPropertyName(name), rootType).getKey();
-		final Pair<String, String> neww = new Pair<String, String>(name, ftad.getValue());
+            if (name.contains("()") || ftad == null) { //
+                mapByNames.put(name, null);
+            } else {
+                final String shortTitle = TitlesDescsGetter.getTitleAndDesc(directPropertyName(name), rootType).getKey();
+                final Pair<String, String> neww = new Pair<String, String>(name, ftad.getValue());
 
-		if (mapByTitles.containsKey(shortTitle)) { // this short titled property already exists!
-		    final Pair<String, String> old = mapByTitles.get(shortTitle);
-		    final String fullTitleNew = ftad.getKey();
-		    final String fullTitleOld = TitlesDescsGetter.getFullTitleAndDesc(directPropertyName(old.getKey()), rootType).getKey();
-		    if (fullTitleNew.length() > fullTitleOld.length()) {
-			mapByTitles.put(fullTitleNew, neww);
-		    } else if (fullTitleNew.length() < fullTitleOld.length()) {
-			// remove old:
-			mapByTitles.remove(shortTitle);
-			// put new entry with shorter full title:
-			mapByTitles.put(shortTitle, neww);
-			// put old entry with longer full title:
-			mapByTitles.put(fullTitleOld, old);
-		    } else {
-			mapByNames.put(name, new Pair<String, String>(fullTitleNew, ftad.getValue()));
-		    }
-		} else { // simply put new property
-		    mapByTitles.put(shortTitle, neww);
-		}
-	    }
-	}
-	// convert map into [name, (title, desc)]
-	final Set<Entry<String, Pair<String, String>>> entrySet = mapByTitles.entrySet();
-	for (final Entry<String, Pair<String, String>> e : entrySet) {
-	    mapByNames.put(e.getValue().getKey(), new Pair<String, String>(e.getKey(), e.getValue().getValue()));
-	}
+                if (mapByTitles.containsKey(shortTitle)) { // this short titled property already exists!
+                    final Pair<String, String> old = mapByTitles.get(shortTitle);
+                    final String fullTitleNew = ftad.getKey();
+                    final String fullTitleOld = TitlesDescsGetter.getFullTitleAndDesc(directPropertyName(old.getKey()), rootType).getKey();
+                    if (fullTitleNew.length() > fullTitleOld.length()) {
+                        mapByTitles.put(fullTitleNew, neww);
+                    } else if (fullTitleNew.length() < fullTitleOld.length()) {
+                        // remove old:
+                        mapByTitles.remove(shortTitle);
+                        // put new entry with shorter full title:
+                        mapByTitles.put(shortTitle, neww);
+                        // put old entry with longer full title:
+                        mapByTitles.put(fullTitleOld, old);
+                    } else {
+                        mapByNames.put(name, new Pair<String, String>(fullTitleNew, ftad.getValue()));
+                    }
+                } else { // simply put new property
+                    mapByTitles.put(shortTitle, neww);
+                }
+            }
+        }
+        // convert map into [name, (title, desc)]
+        final Set<Entry<String, Pair<String, String>>> entrySet = mapByTitles.entrySet();
+        for (final Entry<String, Pair<String, String>> e : entrySet) {
+            mapByNames.put(e.getValue().getKey(), new Pair<String, String>(e.getKey(), e.getValue().getValue()));
+        }
     }
 
     public Class<?> getRootType() {
-	return rootType;
+        return rootType;
     }
 
     public List<String> getNames() {
-	return properties;
+        return properties;
     }
 
     public Pair<String, String> getTitleAndDesc(final String name) {
-	if (!mapByNames.containsKey(name)) {
-	    throw new RuntimeException("Property " + name + " does not exist in EntityDescriptor.");
-	}
-	return mapByNames.get(name);
+        if (!mapByNames.containsKey(name)) {
+            throw new RuntimeException("Property " + name + " does not exist in EntityDescriptor.");
+        }
+        return mapByNames.get(name);
     }
 
     public String getTitle(final String name) {
-	return getTitleAndDesc(name).getKey();
+        return getTitleAndDesc(name).getKey();
     }
 
     public String getDesc(final String name) {
-	return getTitleAndDesc(name).getValue();
+        return getTitleAndDesc(name).getValue();
     }
 
     public String getDescTop(final String name) {
-	final String descWithoutHtmlTag = TitlesDescsGetter.removeHtmlTag(getDesc(name));
-	return TitlesDescsGetter.addHtmlTag(descWithoutHtmlTag.substring(0, descWithoutHtmlTag.indexOf("<br><i>[")));
+        final String descWithoutHtmlTag = TitlesDescsGetter.removeHtmlTag(getDesc(name));
+        return TitlesDescsGetter.addHtmlTag(descWithoutHtmlTag.substring(0, descWithoutHtmlTag.indexOf("<br><i>[")));
     }
 
     public String getDescBottom(final String name) {
-	final String descWithoutHtmlTag = TitlesDescsGetter.removeHtmlTag(getDesc(name));
-	return TitlesDescsGetter.addHtmlTag(descWithoutHtmlTag.substring(descWithoutHtmlTag.indexOf("<br><i>[") + 4));
+        final String descWithoutHtmlTag = TitlesDescsGetter.removeHtmlTag(getDesc(name));
+        return TitlesDescsGetter.addHtmlTag(descWithoutHtmlTag.substring(descWithoutHtmlTag.indexOf("<br><i>[") + 4));
     }
 
     public Map<String, Pair<String, String>> getTitlesAndDescs() {
-	return mapByNames;
+        return mapByNames;
     }
 
     /**
      * Returns the map between property name and it's title.
-     *
+     * 
      * @return
      */
-    public Map<String, String> getTitles(){
-	return getMapOfTitlesOrDesc(true);
+    public Map<String, String> getTitles() {
+        return getMapOfTitlesOrDesc(true);
     }
 
     /**
      * Returns the map between property name and it's description.
-     *
+     * 
      * @return
      */
-    public Map<String, String> getDescs(){
-	return getMapOfTitlesOrDesc(false);
+    public Map<String, String> getDescs() {
+        return getMapOfTitlesOrDesc(false);
     }
 
     /**
      * Returns the map between property name and title or description depending on titles parameter.
-     *
+     * 
      * @param titles
      * @return
      */
-    private Map<String, String> getMapOfTitlesOrDesc(final boolean titles){
-	final Map<String, String> titlesOrDescs = new HashMap<>();
-	for(final Map.Entry<String, Pair<String, String>> titleDescPair : mapByNames.entrySet()){
-	    titlesOrDescs.put(titleDescPair.getKey(), titles ? titleDescPair.getValue().getKey() : titleDescPair.getValue().getValue());
-	}
-	return titlesOrDescs;
+    private Map<String, String> getMapOfTitlesOrDesc(final boolean titles) {
+        final Map<String, String> titlesOrDescs = new HashMap<>();
+        for (final Map.Entry<String, Pair<String, String>> titleDescPair : mapByNames.entrySet()) {
+            titlesOrDescs.put(titleDescPair.getKey(), titles ? titleDescPair.getValue().getKey() : titleDescPair.getValue().getValue());
+        }
+        return titlesOrDescs;
     }
 
     /**
      * Returns value that indicates whether the passed entity class has description or not.
-     *
+     * 
      * @param klass
      * @return
      */
-    public static boolean hasDesc(final Class<?> klass){
-	return AnnotationReflector.isAnnotationPresentForClass(DescTitle.class, klass);
+    public static boolean hasDesc(final Class<?> klass) {
+        return AnnotationReflector.isAnnotationPresentForClass(DescTitle.class, klass);
     }
 
 }

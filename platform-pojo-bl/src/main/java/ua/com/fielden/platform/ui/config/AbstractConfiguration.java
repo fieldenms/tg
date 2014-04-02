@@ -8,9 +8,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
  * A base type designed for storing an arbitrary configuration in a binary format.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public abstract class AbstractConfiguration<KEY extends Comparable<KEY>> extends AbstractEntity<KEY> {
     private static final long serialVersionUID = 1L;
@@ -18,15 +18,15 @@ public abstract class AbstractConfiguration<KEY extends Comparable<KEY>> extends
     @IsProperty
     @Title(value = "Configuration body", desc = "The binary representation of the configuration.")
     @MapTo(value = "BODY", length = 1073741824)
-    private byte[] configBody = new byte[]{};
+    private byte[] configBody = new byte[] {};
 
     public byte[] getConfigBody() {
-	return configBody;
+        return configBody;
     }
 
     @Observable
     public void setConfigBody(final byte[] configBody) {
-	this.configBody = configBody;
+        this.configBody = configBody;
     }
 
 }

@@ -15,10 +15,10 @@ public abstract class ActionWithPostAction extends AbstractAction {
 
     @Override
     public final void actionPerformed(final ActionEvent e) {
-	action(e);
-	if (postAction != null) {
-	    postAction.actionPerformed(e);
-	}
+        action(e);
+        if (postAction != null) {
+            postAction.actionPerformed(e);
+        }
     }
 
     public Action getPostAction() {

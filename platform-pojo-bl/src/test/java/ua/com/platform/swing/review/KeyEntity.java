@@ -65,83 +65,83 @@ public class KeyEntity extends AbstractEntity<String> {
     private String keyProperty;
 
     public EntityWithEntityKey getAnotherProperty() {
-	return anotherProperty;
+        return anotherProperty;
     }
 
     public EntityWithCompositeKey getCompositeKeyEntity() {
-	return compositeKeyEntity;
+        return compositeKeyEntity;
     }
 
     public KeyEntity getCritEntityProperty() {
-	return critEntityProperty;
+        return critEntityProperty;
     }
 
     public KeyEntity getResultEntityProperty() {
-	return resultEntityProperty;
+        return resultEntityProperty;
     }
 
     public String getEntityString() {
-	return entityString;
+        return entityString;
     }
 
     public String getInvisibleEntityString() {
-	return invisibleEntityString;
+        return invisibleEntityString;
     }
 
     public List<String> getListPropertyString() {
-	return listPropertyString;
+        return listPropertyString;
     }
 
     public PropertyEnum getEnumPropertyString() {
-	return enumPropertyString;
+        return enumPropertyString;
     }
 
     public String getKeyProperty() {
-	return keyProperty;
+        return keyProperty;
     }
 
     @Observable
     public void setAnotherProperty(final EntityWithEntityKey anotherProperty) {
-	this.anotherProperty = anotherProperty;
+        this.anotherProperty = anotherProperty;
     }
 
     @Observable
     public void setCompositeKeyEntity(final EntityWithCompositeKey compositeKeyEntity) {
-	this.compositeKeyEntity = compositeKeyEntity;
+        this.compositeKeyEntity = compositeKeyEntity;
     }
 
     @Observable
     public void setCritEntityProperty(final KeyEntity critEnttiyProperty) {
-	this.critEntityProperty = critEnttiyProperty;
+        this.critEntityProperty = critEnttiyProperty;
     }
 
     @Observable
     public void setResultEntityProperty(final KeyEntity resultEntityProperty) {
-	this.resultEntityProperty = resultEntityProperty;
+        this.resultEntityProperty = resultEntityProperty;
     }
 
     @Observable
     public void setEntityString(final String entityString) {
-	this.entityString = entityString;
+        this.entityString = entityString;
     }
 
     @Observable
     public void setInvisibleEntityString(final String invisibleEntityString) {
-	this.invisibleEntityString = invisibleEntityString;
+        this.invisibleEntityString = invisibleEntityString;
     }
 
     @Observable
     public void setListPropertyString(final List<String> listPropertyString) {
-	this.listPropertyString = listPropertyString;
+        this.listPropertyString = listPropertyString;
     }
 
     @Observable
     public void setEnumPropertyString(final PropertyEnum enumPropertyString) {
-	this.enumPropertyString = enumPropertyString;
+        this.enumPropertyString = enumPropertyString;
     }
 
     @Observable
     public void setKeyProperty(final String keyProperty) {
-	this.keyProperty = keyProperty;
+        this.keyProperty = keyProperty;
     }
 }

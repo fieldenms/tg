@@ -1,17 +1,18 @@
 package ua.com.fielden.platform.swing.review.report.interfaces;
 
 import java.util.List;
+
 /**
  * Represents the object in the hierarchy that can be loaded.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface ILoadingNode {
 
     /**
      * Returns the parent of this node in the hierarchy of loading nodes.
-     *
+     * 
      * @return
      */
     ILoadingNode getLoadingParent();
@@ -23,7 +24,7 @@ public interface ILoadingNode {
 
     /**
      * Returns loading node children.
-     *
+     * 
      * @return
      */
     List<? extends ILoadingNode> loadingChildren();
@@ -35,7 +36,7 @@ public interface ILoadingNode {
 
     /**
      * Determines whether this node is loaded or not.
-     *
+     * 
      * @return
      */
     boolean isLoaded();

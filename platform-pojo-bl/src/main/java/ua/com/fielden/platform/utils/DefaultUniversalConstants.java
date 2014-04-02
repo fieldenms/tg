@@ -6,13 +6,12 @@ import org.joda.time.DateTime;
 
 public class DefaultUniversalConstants implements IUniversalConstants {
 
-
     /**
      * {@inheritDoc}
      */
     @Override
     public DateTime now() {
-	return new DateTime();
+        return new DateTime();
     }
 
     /**
@@ -20,7 +19,7 @@ public class DefaultUniversalConstants implements IUniversalConstants {
      */
     @Override
     public Locale locale() {
-	return Locale.getDefault();
+        return Locale.getDefault();
     }
 
 }

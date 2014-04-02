@@ -6,8 +6,8 @@ abstract class PivotTreeTableNode extends AbstractMutableTreeTableNode {
 
     final static String NULL_USER_OBJECT = "UNKNOWN";
 
-    public PivotTreeTableNode(final Object userObject){
-	super(userObject);
+    public PivotTreeTableNode(final Object userObject) {
+        super(userObject);
     }
 
     public abstract String getTooltipAt(int column);

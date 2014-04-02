@@ -22,48 +22,48 @@ public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends
     private static final long serialVersionUID = -44217633254876740L;
 
     public ChartAnalysisConfigurationView(//
-	    final ChartAnalysisConfigurationModel<T> model, //
-	    final Map<Object, DetailsFrame> detailsCache, //
-	    final IDetailsCustomiser detailsCustomiser, //
-	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, detailsCache, detailsCustomiser, owner, progressLayer);
-	addConfigurationEventListener(createOpenAnalysisEventListener());
+    final ChartAnalysisConfigurationModel<T> model, //
+            final Map<Object, DetailsFrame> detailsCache, //
+            final IDetailsCustomiser detailsCustomiser, //
+            final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        super(model, detailsCache, detailsCustomiser, owner, progressLayer);
+        addConfigurationEventListener(createOpenAnalysisEventListener());
     }
 
     @Override
     public ChartAnalysisConfigurationModel<T> getModel() {
-	return (ChartAnalysisConfigurationModel<T>)super.getModel();
+        return (ChartAnalysisConfigurationModel<T>) super.getModel();
     }
 
     @Override
     protected ChartAnalysisView<T> createConfigurableView() {
-	return new ChartAnalysisView<T>(getModel().createChartAnalysisModel(), this);
+        return new ChartAnalysisView<T>(getModel().createChartAnalysisModel(), this);
     }
 
     private IAbstractConfigurationViewEventListener createOpenAnalysisEventListener() {
-	return new IAbstractConfigurationViewEventListener() {
+        return new IAbstractConfigurationViewEventListener() {
 
-	    @Override
-	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
-		switch (event.getEventAction()) {
-		case OPEN:
-		    IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager)getModel().getAnalysisManager();
-		    if(adtme == null){
-			getModel().initAnalysisManager(getModel().isSentinel() ? AnalysisType.SENTINEL : AnalysisType.SIMPLE);
-			getModel().save();
-			adtme = (IAnalysisDomainTreeManager)getModel().getAnalysisManager();
-		    }
-		    if(adtme == null){
-			return new Result(ChartAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));
-		    }
-		    getModel().setAnalysisVisible(true);
-		    return getModel().canSetMode(ReportMode.REPORT);
+            @Override
+            public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
+                switch (event.getEventAction()) {
+                case OPEN:
+                    IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager) getModel().getAnalysisManager();
+                    if (adtme == null) {
+                        getModel().initAnalysisManager(getModel().isSentinel() ? AnalysisType.SENTINEL : AnalysisType.SIMPLE);
+                        getModel().save();
+                        adtme = (IAnalysisDomainTreeManager) getModel().getAnalysisManager();
+                    }
+                    if (adtme == null) {
+                        return new Result(ChartAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));
+                    }
+                    getModel().setAnalysisVisible(true);
+                    return getModel().canSetMode(ReportMode.REPORT);
 
-		default:
-		    return Result.successful(ChartAnalysisConfigurationView.this);
-		}
-	    }
-	};
+                default:
+                    return Result.successful(ChartAnalysisConfigurationView.this);
+                }
+            }
+        };
     }
 }

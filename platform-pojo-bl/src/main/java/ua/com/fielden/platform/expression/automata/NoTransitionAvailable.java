@@ -5,8 +5,8 @@ public class NoTransitionAvailable extends Exception {
     public final char symbol;
 
     public NoTransitionAvailable(final String message, final AbstractState fromState, final char symbol) {
-	super(message);
-	this.fromState = fromState;
-	this.symbol = symbol;
+        super(message);
+        this.fromState = fromState;
+        this.symbol = symbol;
     }
 }

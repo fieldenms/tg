@@ -18,27 +18,27 @@ public class ScheduleChangedEvent<T extends AbstractEntity<?>> extends EventObje
     private final Date to;
 
     public ScheduleChangedEvent(final ScheduleChartPanel<T> source, final T entity, final ScheduleSeries<T> series, final Date from, final Date to) {
-	this(source, ScheduleChangedEventType.MOVE, null, entity, series, from, to);
+        this(source, ScheduleChangedEventType.MOVE, null, entity, series, from, to);
     }
 
     public ScheduleChangedEvent(final ScheduleChartPanel<T> source, final ScheduleStretchSide side, final T entity, final ScheduleSeries<T> series, final Date newValue) {
-	this(source, ScheduleChangedEventType.STRETCH, side, entity, series, newValue, null);
+        this(source, ScheduleChangedEventType.STRETCH, side, entity, series, newValue, null);
     }
 
     private ScheduleChangedEvent(final ScheduleChartPanel<T> source, //
-	    final ScheduleChangedEventType eventType, //
-	    final ScheduleStretchSide stretchSide, //
-	    final T entity, //
-	    final ScheduleSeries<T> series, //
-	    final Date from, //
-	    final Date to) {
-	super(source);
-	this.eventType = eventType;
-	this.stretchSide = stretchSide;
-	this.entity = entity;
-	this.series = series;
-	this.from = from;
-	this.to = to;
+            final ScheduleChangedEventType eventType, //
+            final ScheduleStretchSide stretchSide, //
+            final T entity, //
+            final ScheduleSeries<T> series, //
+            final Date from, //
+            final Date to) {
+        super(source);
+        this.eventType = eventType;
+        this.stretchSide = stretchSide;
+        this.entity = entity;
+        this.series = series;
+        this.from = from;
+        this.to = to;
     }
 
     @SuppressWarnings("unchecked")
@@ -48,41 +48,41 @@ public class ScheduleChangedEvent<T extends AbstractEntity<?>> extends EventObje
     }
 
     public ScheduleChangedEventType getEventType() {
-	return eventType;
+        return eventType;
     }
 
     public ScheduleStretchSide getStretchSide() {
-	return stretchSide;
+        return stretchSide;
     }
 
     public T getEntity() {
-	return entity;
+        return entity;
     }
 
     public ScheduleSeries<T> getSeries() {
-	return series;
+        return series;
     }
 
     public Date getFrom() {
-	return from;
+        return from;
     }
 
     public Date getTo() {
-	return to;
+        return to;
     }
 
     public Date getNewValue() {
-	if(getStretchSide() != null) {
-	    return from;
-	}
-	return null;
+        if (getStretchSide() != null) {
+            return from;
+        }
+        return null;
     }
 
     public static enum ScheduleChangedEventType {
-	MOVE, STRETCH;
+        MOVE, STRETCH;
     }
 
     public static enum ScheduleStretchSide {
-	LEFT, RIGHT;
+        LEFT, RIGHT;
     }
 }

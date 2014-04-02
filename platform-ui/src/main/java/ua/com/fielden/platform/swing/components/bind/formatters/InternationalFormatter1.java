@@ -113,7 +113,7 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * Creates an <code>InternationalFormatter</code> with no <code>Format</code> specified.
      */
     public InternationalFormatter1() {
-	setOverwriteMode(false);
+        setOverwriteMode(false);
     }
 
     /**
@@ -123,8 +123,8 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      *            Format instance used for converting from/to Strings
      */
     public InternationalFormatter1(final Format format) {
-	this();
-	setFormat(format);
+        this();
+        setFormat(format);
     }
 
     /**
@@ -134,7 +134,7 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      *            <code>Format</code> instance used for converting from/to Strings
      */
     public void setFormat(final Format format) {
-	this.format = format;
+        this.format = format;
     }
 
     /**
@@ -143,7 +143,7 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * @return Format instance used for converting from/to Strings
      */
     public Format getFormat() {
-	return format;
+        return format;
     }
 
     /**
@@ -155,10 +155,10 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * @see #setValueClass
      */
     public void setMinimum(final Comparable minimum) {
-	if (getValueClass() == null && minimum != null) {
-	    setValueClass(minimum.getClass());
-	}
-	min = minimum;
+        if (getValueClass() == null && minimum != null) {
+            setValueClass(minimum.getClass());
+        }
+        min = minimum;
     }
 
     /**
@@ -167,7 +167,7 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * @return Minimum legal value that can be input
      */
     public Comparable getMinimum() {
-	return min;
+        return min;
     }
 
     /**
@@ -179,10 +179,10 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * @see #setValueClass
      */
     public void setMaximum(final Comparable max) {
-	if (getValueClass() == null && max != null) {
-	    setValueClass(max.getClass());
-	}
-	this.max = max;
+        if (getValueClass() == null && max != null) {
+            setValueClass(max.getClass());
+        }
+        this.max = max;
     }
 
     /**
@@ -191,7 +191,7 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * @return Maximum legal value that can be input
      */
     public Comparable getMaximum() {
-	return max;
+        return max;
     }
 
     /**
@@ -212,10 +212,10 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     public void install(final JFormattedTextField ftf) {
-	super.install(ftf);
-	updateMaskIfNecessary();
-	// invoked again as the mask should now be valid.
-	positionCursorAtInitialLocation();
+        super.install(ftf);
+        updateMaskIfNecessary();
+        // invoked again as the mask should now be valid.
+        positionCursorAtInitialLocation();
     }
 
     /**
@@ -229,15 +229,15 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     public String valueToString(final Object value) throws ParseException {
-	if (value == null) {
-	    return "";
-	}
-	final Format f = getFormat();
+        if (value == null) {
+            return "";
+        }
+        final Format f = getFormat();
 
-	if (f == null) {
-	    return value.toString();
-	}
-	return f.format(value);
+        if (f == null) {
+            return value.toString();
+        }
+        return f.format(value);
     }
 
     /**
@@ -251,21 +251,21 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     public Object stringToValue(final String text) throws ParseException {
-	Object value = stringToValue(text, getFormat());
+        Object value = stringToValue(text, getFormat());
 
-	// Convert to the value class if the Value returned from the
-	// Format does not match.
-	if (value != null && getValueClass() != null && !getValueClass().isInstance(value)) {
-	    value = super.stringToValue(value.toString());
-	}
-	try {
-	    if (!isValidValue(value, true)) {
-		throw new ParseException("Value not within min/max range", 0);
-	    }
-	} catch (final ClassCastException cce) {
-	    throw new ParseException("Class cast exception comparing values: " + cce, 0);
-	}
-	return value;
+        // Convert to the value class if the Value returned from the
+        // Format does not match.
+        if (value != null && getValueClass() != null && !getValueClass().isInstance(value)) {
+            value = super.stringToValue(value.toString());
+        }
+        try {
+            if (!isValidValue(value, true)) {
+                throw new ParseException("Value not within min/max range", 0);
+            }
+        } catch (final ClassCastException cce) {
+            throw new ParseException("Class cast exception comparing values: " + cce, 0);
+        }
+        return value;
     }
 
     /**
@@ -277,20 +277,20 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * @return Format.Field constants associated with the text at the given position.
      */
     public Format.Field[] getFields(final int offset) {
-	if (getAllowsInvalid()) {
-	    // This will work if the currently edited value is valid.
-	    updateMask();
-	}
+        if (getAllowsInvalid()) {
+            // This will work if the currently edited value is valid.
+            updateMask();
+        }
 
-	final Map attrs = getAttributes(offset);
+        final Map attrs = getAttributes(offset);
 
-	if (attrs != null && attrs.size() > 0) {
-	    final ArrayList al = new ArrayList();
+        if (attrs != null && attrs.size() > 0) {
+            final ArrayList al = new ArrayList();
 
-	    al.addAll(attrs.keySet());
-	    return (Format.Field[]) al.toArray(EMPTY_FIELD_ARRAY);
-	}
-	return EMPTY_FIELD_ARRAY;
+            al.addAll(attrs.keySet());
+            return (Format.Field[]) al.toArray(EMPTY_FIELD_ARRAY);
+        }
+        return EMPTY_FIELD_ARRAY;
     }
 
     /**
@@ -300,13 +300,13 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     public Object clone() throws CloneNotSupportedException {
-	final InternationalFormatter1 formatter = (InternationalFormatter1) super.clone();
+        final InternationalFormatter1 formatter = (InternationalFormatter1) super.clone();
 
-	formatter.literalMask = null;
-	formatter.iterator = null;
-	formatter.validMask = false;
-	formatter.string = null;
-	return formatter;
+        formatter.literalMask = null;
+        formatter.iterator = null;
+        formatter.validMask = false;
+        formatter.string = null;
+        return formatter;
     }
 
     /**
@@ -314,20 +314,20 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     protected Action[] getActions() {
-	if (getSupportsIncrement()) {
-	    return new Action[] { new IncrementAction("increment", 1), new IncrementAction("decrement", -1) };
-	}
-	return null;
+        if (getSupportsIncrement()) {
+            return new Action[] { new IncrementAction("increment", 1), new IncrementAction("decrement", -1) };
+        }
+        return null;
     }
 
     /**
      * Invokes <code>parseObject</code> on <code>f</code>, returning its value.
      */
     Object stringToValue(final String text, final Format f) throws ParseException {
-	if (f == null) {
-	    return text;
-	}
-	return f.parseObject(text);
+        if (f == null) {
+            return text;
+        }
+        return f.parseObject(text);
     }
 
     /**
@@ -337,88 +337,88 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      *            If false, and a ClassCastException is thrown in comparing the values, the exception is consumed and false is returned.
      */
     boolean isValidValue(final Object value, final boolean wantsCCE) {
-	final Comparable min = getMinimum();
+        final Comparable min = getMinimum();
 
-	try {
-	    if (min != null && min.compareTo(value) > 0) {
-		return false;
-	    }
-	} catch (final ClassCastException cce) {
-	    if (wantsCCE) {
-		throw cce;
-	    }
-	    return false;
-	}
+        try {
+            if (min != null && min.compareTo(value) > 0) {
+                return false;
+            }
+        } catch (final ClassCastException cce) {
+            if (wantsCCE) {
+                throw cce;
+            }
+            return false;
+        }
 
-	final Comparable max = getMaximum();
-	try {
-	    if (max != null && max.compareTo(value) < 0) {
-		return false;
-	    }
-	} catch (final ClassCastException cce) {
-	    if (wantsCCE) {
-		throw cce;
-	    }
-	    return false;
-	}
-	return true;
+        final Comparable max = getMaximum();
+        try {
+            if (max != null && max.compareTo(value) < 0) {
+                return false;
+            }
+        } catch (final ClassCastException cce) {
+            if (wantsCCE) {
+                throw cce;
+            }
+            return false;
+        }
+        return true;
     }
 
     /**
      * Returns a Set of the attribute identifiers at <code>index</code>.
      */
     Map getAttributes(final int index) {
-	if (isValidMask()) {
-	    final AttributedCharacterIterator iterator = getIterator();
+        if (isValidMask()) {
+            final AttributedCharacterIterator iterator = getIterator();
 
-	    if (index >= 0 && index <= iterator.getEndIndex()) {
-		iterator.setIndex(index);
-		return iterator.getAttributes();
-	    }
-	}
-	return null;
+            if (index >= 0 && index <= iterator.getEndIndex()) {
+                iterator.setIndex(index);
+                return iterator.getAttributes();
+            }
+        }
+        return null;
     }
 
     /**
      * Returns the start of the first run that contains the attribute <code>id</code>. This will return <code>-1</code> if the attribute can not be found.
      */
     int getAttributeStart(final AttributedCharacterIterator.Attribute id) {
-	if (isValidMask()) {
-	    final AttributedCharacterIterator iterator = getIterator();
+        if (isValidMask()) {
+            final AttributedCharacterIterator iterator = getIterator();
 
-	    iterator.first();
-	    while (iterator.current() != CharacterIterator.DONE) {
-		if (iterator.getAttribute(id) != null) {
-		    return iterator.getIndex();
-		}
-		iterator.next();
-	    }
-	}
-	return -1;
+            iterator.first();
+            while (iterator.current() != CharacterIterator.DONE) {
+                if (iterator.getAttribute(id) != null) {
+                    return iterator.getIndex();
+                }
+                iterator.next();
+            }
+        }
+        return -1;
     }
 
     /**
      * Returns the <code>AttributedCharacterIterator</code> used to format the last value.
      */
     AttributedCharacterIterator getIterator() {
-	return iterator;
+        return iterator;
     }
 
     /**
      * Updates the AttributedCharacterIterator and bitset, if necessary.
      */
     void updateMaskIfNecessary() {
-	if (!getAllowsInvalid() && (getFormat() != null)) {
-	    if (!isValidMask()) {
-		updateMask();
-	    } else {
-		final String newString = getFormattedTextField().getText();
+        if (!getAllowsInvalid() && (getFormat() != null)) {
+            if (!isValidMask()) {
+                updateMask();
+            } else {
+                final String newString = getFormattedTextField().getText();
 
-		if (!newString.equals(string)) {
-		    updateMask();
-		}
-	    }
-	}
+                if (!newString.equals(string)) {
+                    updateMask();
+                }
+            }
+        }
     }
 
     /**
@@ -426,63 +426,63 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * <code>updateMask(AttributedCharacterIterator)</code> is then invoked to update the internal bitmask.
      */
     void updateMask() {
-	if (getFormat() != null) {
-	    final Document doc = getFormattedTextField().getDocument();
+        if (getFormat() != null) {
+            final Document doc = getFormattedTextField().getDocument();
 
-	    validMask = false;
-	    if (doc != null) {
-		try {
-		    string = doc.getText(0, doc.getLength());
-		} catch (final BadLocationException ble) {
-		    string = null;
-		}
-		if (string != null) {
-		    try {
-			final Object value = stringToValue(string);
-			final AttributedCharacterIterator iterator = getFormat().formatToCharacterIterator(value);
+            validMask = false;
+            if (doc != null) {
+                try {
+                    string = doc.getText(0, doc.getLength());
+                } catch (final BadLocationException ble) {
+                    string = null;
+                }
+                if (string != null) {
+                    try {
+                        final Object value = stringToValue(string);
+                        final AttributedCharacterIterator iterator = getFormat().formatToCharacterIterator(value);
 
-			updateMask(iterator);
-		    } catch (final ParseException pe) {
-		    } catch (final IllegalArgumentException iae) {
-		    } catch (final NullPointerException npe) {
-		    }
-		}
-	    }
-	}
+                        updateMask(iterator);
+                    } catch (final ParseException pe) {
+                    } catch (final IllegalArgumentException iae) {
+                    } catch (final NullPointerException npe) {
+                    }
+                }
+            }
+        }
     }
 
     /**
      * Returns the number of literal characters before <code>index</code>.
      */
     int getLiteralCountTo(final int index) {
-	int lCount = 0;
+        int lCount = 0;
 
-	for (int counter = 0; counter < index; counter++) {
-	    if (isLiteral(counter)) {
-		lCount++;
-	    }
-	}
-	return lCount;
+        for (int counter = 0; counter < index; counter++) {
+            if (isLiteral(counter)) {
+                lCount++;
+            }
+        }
+        return lCount;
     }
 
     /**
      * Returns true if the character at index is a literal, that is not editable.
      */
     boolean isLiteral(final int index) {
-	if (isValidMask() && index < string.length()) {
-	    return literalMask.get(index);
-	}
-	return false;
+        if (isValidMask() && index < string.length()) {
+            return literalMask.get(index);
+        }
+        return false;
     }
 
     /**
      * Returns the literal character at index.
      */
     char getLiteral(final int index) {
-	if (isValidMask() && string != null && index < string.length()) {
-	    return string.charAt(index);
-	}
-	return (char) 0;
+        if (isValidMask() && string != null && index < string.length()) {
+            return string.charAt(index);
+        }
+        return (char) 0;
     }
 
     /**
@@ -490,7 +490,7 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     boolean isNavigatable(final int offset) {
-	return !isLiteral(offset);
+        return !isLiteral(offset);
     }
 
     /**
@@ -498,8 +498,8 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     void updateValue(final Object value) {
-	super.updateValue(value);
-	updateMaskIfNecessary();
+        super.updateValue(value);
+        updateMaskIfNecessary();
     }
 
     /**
@@ -507,11 +507,11 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     void replace(final DocumentFilter.FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attrs) throws BadLocationException {
-	if (ignoreDocumentMutate) {
-	    fb.replace(offset, length, text, attrs);
-	    return;
-	}
-	super.replace(fb, offset, length, text, attrs);
+        if (ignoreDocumentMutate) {
+            fb.replace(offset, length, text, attrs);
+            return;
+        }
+        super.replace(fb, offset, length, text, attrs);
     }
 
     /**
@@ -521,16 +521,16 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      *            Amount to increment looking for non-literal
      */
     private int getNextNonliteralIndex(int index, final int direction) {
-	final int max = getFormattedTextField().getDocument().getLength();
+        final int max = getFormattedTextField().getDocument().getLength();
 
-	while (index >= 0 && index < max) {
-	    if (isLiteral(index)) {
-		index += direction;
-	    } else {
-		return index;
-	    }
-	}
-	return (direction == -1) ? 0 : max;
+        while (index >= 0 && index < max) {
+            if (isLiteral(index)) {
+                index += direction;
+            } else {
+                return index;
+            }
+        }
+        return (direction == -1) ? 0 : max;
     }
 
     /**
@@ -547,73 +547,73 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     boolean canReplace(final ReplaceHolder rh) {
-	if (!getAllowsInvalid()) {
-	    final String text = rh.text;
-	    final int tl = (text != null) ? text.length() : 0;
+        if (!getAllowsInvalid()) {
+            final String text = rh.text;
+            final int tl = (text != null) ? text.length() : 0;
 
-	    if (tl == 0 && rh.length == 1 && getFormattedTextField().getSelectionStart() != rh.offset) {
-		// Backspace, adjust to actually delete next non-literal.
-		rh.offset = getNextNonliteralIndex(rh.offset, -1);
-	    }
-	    if (getOverwriteMode()) {
-		StringBuffer replace = null;
+            if (tl == 0 && rh.length == 1 && getFormattedTextField().getSelectionStart() != rh.offset) {
+                // Backspace, adjust to actually delete next non-literal.
+                rh.offset = getNextNonliteralIndex(rh.offset, -1);
+            }
+            if (getOverwriteMode()) {
+                StringBuffer replace = null;
 
-		for (int counter = 0, textIndex = 0, max = Math.max(tl, rh.length); counter < max; counter++) {
-		    if (isLiteral(rh.offset + counter)) {
-			if (replace != null) {
-			    replace.append(getLiteral(rh.offset + counter));
-			}
-			if (textIndex < tl && text.charAt(textIndex) == getLiteral(rh.offset + counter)) {
-			    textIndex++;
-			} else if (textIndex == 0) {
-			    rh.offset++;
-			    rh.length--;
-			    counter--;
-			    max--;
-			} else if (replace == null) {
-			    replace = new StringBuffer(max);
-			    replace.append(text.substring(0, textIndex));
-			    replace.append(getLiteral(rh.offset + counter));
-			}
-		    } else if (textIndex < tl) {
-			if (replace != null) {
-			    replace.append(text.charAt(textIndex));
-			}
-			textIndex++;
-		    } else {
-			// Nothing to replace it with, assume ' '
-			if (replace == null) {
-			    replace = new StringBuffer(max);
-			    if (textIndex > 0) {
-				replace.append(text.substring(0, textIndex));
-			    }
-			}
-			if (replace != null) {
-			    replace.append(' ');
-			}
-		    }
-		}
-		if (replace != null) {
-		    rh.text = replace.toString();
-		}
-	    } else if (tl > 0) {
-		// insert (or insert and remove)
-		rh.offset = getNextNonliteralIndex(rh.offset, 1);
-	    } else {
-		// remove only
-		rh.offset = getNextNonliteralIndex(rh.offset, -1);
-	    }
-	    ((ExtendedReplaceHolder1) rh).endOffset = rh.offset;
-	    ((ExtendedReplaceHolder1) rh).endTextLength = (rh.text != null) ? rh.text.length() : 0;
-	} else {
-	    ((ExtendedReplaceHolder1) rh).endOffset = rh.offset;
-	    ((ExtendedReplaceHolder1) rh).endTextLength = (rh.text != null) ? rh.text.length() : 0;
-	}
-	final boolean can = super.canReplace(rh);
-	if (can && !getAllowsInvalid()) {
-	    ((ExtendedReplaceHolder1) rh).resetFromValue(this);
-	}
-	return can;
+                for (int counter = 0, textIndex = 0, max = Math.max(tl, rh.length); counter < max; counter++) {
+                    if (isLiteral(rh.offset + counter)) {
+                        if (replace != null) {
+                            replace.append(getLiteral(rh.offset + counter));
+                        }
+                        if (textIndex < tl && text.charAt(textIndex) == getLiteral(rh.offset + counter)) {
+                            textIndex++;
+                        } else if (textIndex == 0) {
+                            rh.offset++;
+                            rh.length--;
+                            counter--;
+                            max--;
+                        } else if (replace == null) {
+                            replace = new StringBuffer(max);
+                            replace.append(text.substring(0, textIndex));
+                            replace.append(getLiteral(rh.offset + counter));
+                        }
+                    } else if (textIndex < tl) {
+                        if (replace != null) {
+                            replace.append(text.charAt(textIndex));
+                        }
+                        textIndex++;
+                    } else {
+                        // Nothing to replace it with, assume ' '
+                        if (replace == null) {
+                            replace = new StringBuffer(max);
+                            if (textIndex > 0) {
+                                replace.append(text.substring(0, textIndex));
+                            }
+                        }
+                        if (replace != null) {
+                            replace.append(' ');
+                        }
+                    }
+                }
+                if (replace != null) {
+                    rh.text = replace.toString();
+                }
+            } else if (tl > 0) {
+                // insert (or insert and remove)
+                rh.offset = getNextNonliteralIndex(rh.offset, 1);
+            } else {
+                // remove only
+                rh.offset = getNextNonliteralIndex(rh.offset, -1);
+            }
+            ((ExtendedReplaceHolder1) rh).endOffset = rh.offset;
+            ((ExtendedReplaceHolder1) rh).endTextLength = (rh.text != null) ? rh.text.length() : 0;
+        } else {
+            ((ExtendedReplaceHolder1) rh).endOffset = rh.offset;
+            ((ExtendedReplaceHolder1) rh).endTextLength = (rh.text != null) ? rh.text.length() : 0;
+        }
+        final boolean can = super.canReplace(rh);
+        if (can && !getAllowsInvalid()) {
+            ((ExtendedReplaceHolder1) rh).resetFromValue(this);
+        }
+        return can;
     }
 
     /**
@@ -622,38 +622,38 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     boolean replace(final ReplaceHolder rh) throws BadLocationException {
-	int start = -1;
-	int direction = 1;
-	int literalCount = -1;
+        int start = -1;
+        int direction = 1;
+        int literalCount = -1;
 
-	if (rh.length > 0 && (rh.text == null || rh.text.length() == 0) && (getFormattedTextField().getSelectionStart() != rh.offset || rh.length > 1)) {
-	    direction = -1;
-	}
-	if (!getAllowsInvalid()) {
-	    if ((rh.text == null || rh.text.length() == 0) && rh.length > 0) {
-		// remove
-		start = getFormattedTextField().getSelectionStart();
-	    } else {
-		start = rh.offset;
-	    }
-	    literalCount = getLiteralCountTo(start);
-	}
-	if (super.replace(rh)) {
-	    if (start != -1) {
-		int end = ((ExtendedReplaceHolder1) rh).endOffset;
+        if (rh.length > 0 && (rh.text == null || rh.text.length() == 0) && (getFormattedTextField().getSelectionStart() != rh.offset || rh.length > 1)) {
+            direction = -1;
+        }
+        if (!getAllowsInvalid()) {
+            if ((rh.text == null || rh.text.length() == 0) && rh.length > 0) {
+                // remove
+                start = getFormattedTextField().getSelectionStart();
+            } else {
+                start = rh.offset;
+            }
+            literalCount = getLiteralCountTo(start);
+        }
+        if (super.replace(rh)) {
+            if (start != -1) {
+                int end = ((ExtendedReplaceHolder1) rh).endOffset;
 
-		end += ((ExtendedReplaceHolder1) rh).endTextLength;
-		repositionCursor(literalCount, end, direction);
-	    } else {
-		start = ((ExtendedReplaceHolder1) rh).endOffset;
-		if (direction == 1) {
-		    start += ((ExtendedReplaceHolder1) rh).endTextLength;
-		}
-		repositionCursor(start, direction);
-	    }
-	    return true;
-	}
-	return false;
+                end += ((ExtendedReplaceHolder1) rh).endTextLength;
+                repositionCursor(literalCount, end, direction);
+            } else {
+                start = ((ExtendedReplaceHolder1) rh).endOffset;
+                if (direction == 1) {
+                    start += ((ExtendedReplaceHolder1) rh).endTextLength;
+                }
+                repositionCursor(start, direction);
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -661,148 +661,148 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * direction gives the direction relative to <code>end</code> to position the cursor from.
      */
     private void repositionCursor(final int startLiteralCount, int end, final int direction) {
-	final int endLiteralCount = getLiteralCountTo(end);
+        final int endLiteralCount = getLiteralCountTo(end);
 
-	if (endLiteralCount != end) {
-	    end -= startLiteralCount;
-	    for (int counter = 0; counter < end; counter++) {
-		if (isLiteral(counter)) {
-		    end++;
-		}
-	    }
-	}
-	repositionCursor(end, 1 /*direction*/);
+        if (endLiteralCount != end) {
+            end -= startLiteralCount;
+            for (int counter = 0; counter < end; counter++) {
+                if (isLiteral(counter)) {
+                    end++;
+                }
+            }
+        }
+        repositionCursor(end, 1 /*direction*/);
     }
 
     /**
      * Returns the character from the mask that has been buffered at <code>index</code>.
      */
     char getBufferedChar(final int index) {
-	if (isValidMask()) {
-	    if (string != null && index < string.length()) {
-		return string.charAt(index);
-	    }
-	}
-	return (char) 0;
+        if (isValidMask()) {
+            if (string != null && index < string.length()) {
+                return string.charAt(index);
+            }
+        }
+        return (char) 0;
     }
 
     /**
      * Returns true if the current mask is valid.
      */
     boolean isValidMask() {
-	return validMask;
+        return validMask;
     }
 
     /**
      * Returns true if <code>attributes</code> is null or empty.
      */
     boolean isLiteral(final Map attributes) {
-	return ((attributes == null) || attributes.size() == 0);
+        return ((attributes == null) || attributes.size() == 0);
     }
 
     /**
      * Updates the interal bitset from <code>iterator</code>. This will set <code>validMask</code> to true if <code>iterator</code> is non-null.
      */
     private void updateMask(final AttributedCharacterIterator iterator) {
-	if (iterator != null) {
-	    validMask = true;
-	    this.iterator = iterator;
+        if (iterator != null) {
+            validMask = true;
+            this.iterator = iterator;
 
-	    // Update the literal mask
-	    if (literalMask == null) {
-		literalMask = new BitSet();
-	    } else {
-		for (int counter = literalMask.length() - 1; counter >= 0; counter--) {
-		    literalMask.clear(counter);
-		}
-	    }
+            // Update the literal mask
+            if (literalMask == null) {
+                literalMask = new BitSet();
+            } else {
+                for (int counter = literalMask.length() - 1; counter >= 0; counter--) {
+                    literalMask.clear(counter);
+                }
+            }
 
-	    iterator.first();
-	    while (iterator.current() != CharacterIterator.DONE) {
-		final Map attributes = iterator.getAttributes();
-		final boolean set = isLiteral(attributes);
-		int start = iterator.getIndex();
-		final int end = iterator.getRunLimit();
+            iterator.first();
+            while (iterator.current() != CharacterIterator.DONE) {
+                final Map attributes = iterator.getAttributes();
+                final boolean set = isLiteral(attributes);
+                int start = iterator.getIndex();
+                final int end = iterator.getRunLimit();
 
-		while (start < end) {
-		    if (set) {
-			literalMask.set(start);
-		    } else {
-			literalMask.clear(start);
-		    }
-		    start++;
-		}
-		iterator.setIndex(start);
-	    }
-	}
+                while (start < end) {
+                    if (set) {
+                        literalMask.set(start);
+                    } else {
+                        literalMask.clear(start);
+                    }
+                    start++;
+                }
+                iterator.setIndex(start);
+            }
+        }
     }
 
     /**
      * Returns true if <code>field</code> is non-null. Subclasses that wish to allow incrementing to happen outside of the known fields will need to override this.
      */
     boolean canIncrement(final Object field, final int cursorPosition) {
-	return (field != null);
+        return (field != null);
     }
 
     /**
      * Selects the fields identified by <code>attributes</code>.
      */
     void selectField(final Object f, int count) {
-	final AttributedCharacterIterator iterator = getIterator();
+        final AttributedCharacterIterator iterator = getIterator();
 
-	if (iterator != null && (f instanceof AttributedCharacterIterator.Attribute)) {
-	    final AttributedCharacterIterator.Attribute field = (AttributedCharacterIterator.Attribute) f;
+        if (iterator != null && (f instanceof AttributedCharacterIterator.Attribute)) {
+            final AttributedCharacterIterator.Attribute field = (AttributedCharacterIterator.Attribute) f;
 
-	    iterator.first();
-	    while (iterator.current() != CharacterIterator.DONE) {
-		while (iterator.getAttribute(field) == null && iterator.next() != CharacterIterator.DONE)
-		    ;
-		if (iterator.current() != CharacterIterator.DONE) {
-		    final int limit = iterator.getRunLimit(field);
+            iterator.first();
+            while (iterator.current() != CharacterIterator.DONE) {
+                while (iterator.getAttribute(field) == null && iterator.next() != CharacterIterator.DONE)
+                    ;
+                if (iterator.current() != CharacterIterator.DONE) {
+                    final int limit = iterator.getRunLimit(field);
 
-		    if (--count <= 0) {
-			getFormattedTextField().select(iterator.getIndex(), limit);
-			break;
-		    }
-		    iterator.setIndex(limit);
-		    iterator.next();
-		}
-	    }
-	}
+                    if (--count <= 0) {
+                        getFormattedTextField().select(iterator.getIndex(), limit);
+                        break;
+                    }
+                    iterator.setIndex(limit);
+                    iterator.next();
+                }
+            }
+        }
     }
 
     /**
      * Returns the field that will be adjusted by adjustValue.
      */
     Object getAdjustField(final int start, final Map attributes) {
-	return null;
+        return null;
     }
 
     /**
      * Returns the number of occurences of <code>f</code> before the location <code>start</code> in the current <code>AttributedCharacterIterator</code>.
      */
     private int getFieldTypeCountTo(final Object f, final int start) {
-	final AttributedCharacterIterator iterator = getIterator();
-	int count = 0;
+        final AttributedCharacterIterator iterator = getIterator();
+        int count = 0;
 
-	if (iterator != null && (f instanceof AttributedCharacterIterator.Attribute)) {
-	    final AttributedCharacterIterator.Attribute field = (AttributedCharacterIterator.Attribute) f;
-	    final int index = 0;
+        if (iterator != null && (f instanceof AttributedCharacterIterator.Attribute)) {
+            final AttributedCharacterIterator.Attribute field = (AttributedCharacterIterator.Attribute) f;
+            final int index = 0;
 
-	    iterator.first();
-	    while (iterator.getIndex() < start) {
-		while (iterator.getAttribute(field) == null && iterator.next() != CharacterIterator.DONE)
-		    ;
-		if (iterator.current() != CharacterIterator.DONE) {
-		    iterator.setIndex(iterator.getRunLimit(field));
-		    iterator.next();
-		    count++;
-		} else {
-		    break;
-		}
-	    }
-	}
-	return count;
+            iterator.first();
+            while (iterator.getIndex() < start) {
+                while (iterator.getAttribute(field) == null && iterator.next() != CharacterIterator.DONE)
+                    ;
+                if (iterator.current() != CharacterIterator.DONE) {
+                    iterator.setIndex(iterator.getRunLimit(field));
+                    iterator.next();
+                    count++;
+                } else {
+                    break;
+                }
+            }
+        }
+        return count;
     }
 
     /**
@@ -810,7 +810,7 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * cursor is in (may be null depending upon <code>canIncrement</code>) and <code>direction</code> is the amount to increment by.
      */
     Object adjustValue(final Object value, final Map attributes, final Object field, final int direction) throws BadLocationException, ParseException {
-	return null;
+        return null;
     }
 
     /**
@@ -818,32 +818,32 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      * override this and return true. Subclasses should also override <code>adjustValue</code>.
      */
     boolean getSupportsIncrement() {
-	return false;
+        return false;
     }
 
     /**
      * Resets the value of the JFormattedTextField to be <code>value</code>.
      */
     void resetValue(final Object value) throws BadLocationException, ParseException {
-	final Document doc = getFormattedTextField().getDocument();
-	final String string = valueToString(value);
+        final Document doc = getFormattedTextField().getDocument();
+        final String string = valueToString(value);
 
-	try {
-	    ignoreDocumentMutate = true;
-	    doc.remove(0, doc.getLength());
-	    doc.insertString(0, string, null);
-	} finally {
-	    ignoreDocumentMutate = false;
-	}
-	updateValue(value);
+        try {
+            ignoreDocumentMutate = true;
+            doc.remove(0, doc.getLength());
+            doc.insertString(0, string, null);
+        } finally {
+            ignoreDocumentMutate = false;
+        }
+        updateValue(value);
     }
 
     /**
      * Subclassed to update the internal representation of the mask after the default read operation has completed.
      */
     private void readObject(final ObjectInputStream s) throws IOException, ClassNotFoundException {
-	s.defaultReadObject();
-	updateMaskIfNecessary();
+        s.defaultReadObject();
+        updateMaskIfNecessary();
     }
 
     /**
@@ -851,100 +851,100 @@ public class InternationalFormatter1 extends DefaultFormatter1 {
      */
     @Override
     ReplaceHolder getReplaceHolder(final DocumentFilter.FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attrs) {
-	if (replaceHolder == null) {
-	    replaceHolder = new ExtendedReplaceHolder1();
-	}
-	return super.getReplaceHolder(fb, offset, length, text, attrs);
+        if (replaceHolder == null) {
+            replaceHolder = new ExtendedReplaceHolder1();
+        }
+        return super.getReplaceHolder(fb, offset, length, text, attrs);
     }
 
     /**
      * As InternationalFormatter replaces the complete text on every edit, ExtendedReplaceHolder keeps track of the offset and length passed into canReplace.
      */
     static class ExtendedReplaceHolder1 extends ReplaceHolder {
-	/**
-	 * Offset of the insert/remove. This may differ from offset in that if !allowsInvalid the text is replaced on every edit.
-	 */
-	int endOffset;
-	/**
-	 * Length of the text. This may differ from text.length in that if !allowsInvalid the text is replaced on every edit.
-	 */
-	int endTextLength;
+        /**
+         * Offset of the insert/remove. This may differ from offset in that if !allowsInvalid the text is replaced on every edit.
+         */
+        int endOffset;
+        /**
+         * Length of the text. This may differ from text.length in that if !allowsInvalid the text is replaced on every edit.
+         */
+        int endTextLength;
 
-	/**
-	 * Resets the region to delete to be the complete document and the text from invoking valueToString on the current value.
-	 */
-	void resetFromValue(final InternationalFormatter1 formatter) {
-	    // Need to reset the complete string as Format's result can
-	    // be completely different.
-	    offset = 0;
-	    try {
-		text = formatter.valueToString(value);
-	    } catch (final ParseException pe) {
-		// Should never happen, otherwise canReplace would have
-		// returned value.
-		text = "";
-	    }
-	    length = fb.getDocument().getLength();
-	}
+        /**
+         * Resets the region to delete to be the complete document and the text from invoking valueToString on the current value.
+         */
+        void resetFromValue(final InternationalFormatter1 formatter) {
+            // Need to reset the complete string as Format's result can
+            // be completely different.
+            offset = 0;
+            try {
+                text = formatter.valueToString(value);
+            } catch (final ParseException pe) {
+                // Should never happen, otherwise canReplace would have
+                // returned value.
+                text = "";
+            }
+            length = fb.getDocument().getLength();
+        }
     }
 
     /**
      * IncrementAction is used to increment the value by a certain amount. It calls into <code>adjustValue</code> to handle the actual incrementing of the value.
      */
     private class IncrementAction extends AbstractAction {
-	private int direction;
+        private int direction;
 
-	IncrementAction(final String name, final int direction) {
-	    super(name);
-	    this.direction = direction;
-	}
+        IncrementAction(final String name, final int direction) {
+            super(name);
+            this.direction = direction;
+        }
 
-	public void actionPerformed(final ActionEvent ae) {
+        public void actionPerformed(final ActionEvent ae) {
 
-	    if (getFormattedTextField().isEditable()) {
-		if (getAllowsInvalid()) {
-		    // This will work if the currently edited value is valid.
-		    updateMask();
-		}
+            if (getFormattedTextField().isEditable()) {
+                if (getAllowsInvalid()) {
+                    // This will work if the currently edited value is valid.
+                    updateMask();
+                }
 
-		boolean validEdit = false;
+                boolean validEdit = false;
 
-		if (isValidMask()) {
-		    final int start = getFormattedTextField().getSelectionStart();
+                if (isValidMask()) {
+                    final int start = getFormattedTextField().getSelectionStart();
 
-		    if (start != -1) {
-			final AttributedCharacterIterator iterator = getIterator();
+                    if (start != -1) {
+                        final AttributedCharacterIterator iterator = getIterator();
 
-			iterator.setIndex(start);
+                        iterator.setIndex(start);
 
-			final Map attributes = iterator.getAttributes();
-			final Object field = getAdjustField(start, attributes);
+                        final Map attributes = iterator.getAttributes();
+                        final Object field = getAdjustField(start, attributes);
 
-			if (canIncrement(field, start)) {
-			    try {
-				Object value = stringToValue(getFormattedTextField().getText());
-				final int fieldTypeCount = getFieldTypeCountTo(field, start);
+                        if (canIncrement(field, start)) {
+                            try {
+                                Object value = stringToValue(getFormattedTextField().getText());
+                                final int fieldTypeCount = getFieldTypeCountTo(field, start);
 
-				value = adjustValue(value, attributes, field, direction);
-				if (value != null && isValidValue(value, false)) {
-				    resetValue(value);
-				    updateMask();
+                                value = adjustValue(value, attributes, field, direction);
+                                if (value != null && isValidValue(value, false)) {
+                                    resetValue(value);
+                                    updateMask();
 
-				    if (isValidMask()) {
-					selectField(field, fieldTypeCount);
-				    }
-				    validEdit = true;
-				}
-			    } catch (final ParseException pe) {
-			    } catch (final BadLocationException ble) {
-			    }
-			}
-		    }
-		}
-		if (!validEdit) {
-		    invalidEdit();
-		}
-	    }
-	}
+                                    if (isValidMask()) {
+                                        selectField(field, fieldTypeCount);
+                                    }
+                                    validEdit = true;
+                                }
+                            } catch (final ParseException pe) {
+                            } catch (final BadLocationException ble) {
+                            }
+                        }
+                    }
+                }
+                if (!validEdit) {
+                    invalidEdit();
+                }
+            }
+        }
     }
 }

@@ -20,9 +20,9 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
 /**
  * Editor for ranges or boolean properties that consists of range-specific label and double-editor ("from" -> "to" or "is" -> "is not").
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class RangePropertyEditor implements IPropertyEditor {
 
@@ -39,135 +39,135 @@ public class RangePropertyEditor implements IPropertyEditor {
 
     @SuppressWarnings("unchecked")
     public RangePropertyEditor(final IPropertyEditor fromEditor, final IPropertyEditor toEditor) {
-	final AbstractEntity<?> fe = fromEditor.getEntity(), te = toEditor.getEntity();
-	if (!fe.equals(te) || !fe.getPropertyType(fromEditor.getPropertyName()).equals(te.getPropertyType(toEditor.getPropertyName()))) {
-	    throw new RuntimeException("Entity or propertyType is not exactly the same for two editors that form Range/Boolean editor.");
-	}
-	this.entity = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>)fromEditor.getEntity();
-	final String criteriaParameters = CriteriaReflector.getCriteriaProperty(entity.getType(), fromEditor.getPropertyName());
+        final AbstractEntity<?> fe = fromEditor.getEntity(), te = toEditor.getEntity();
+        if (!fe.equals(te) || !fe.getPropertyType(fromEditor.getPropertyName()).equals(te.getPropertyType(toEditor.getPropertyName()))) {
+            throw new RuntimeException("Entity or propertyType is not exactly the same for two editors that form Range/Boolean editor.");
+        }
+        this.entity = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>) fromEditor.getEntity();
+        final String criteriaParameters = CriteriaReflector.getCriteriaProperty(entity.getType(), fromEditor.getPropertyName());
 
-	this.propertyName = CriteriaReflector.generateCriteriaPropertyName(entity.getEntityClass(), criteriaParameters);
+        this.propertyName = CriteriaReflector.generateCriteriaPropertyName(entity.getEntityClass(), criteriaParameters);
 
-	this.fromEditor = fromEditor;
-	this.toEditor = toEditor;
+        this.fromEditor = fromEditor;
+        this.toEditor = toEditor;
 
-	label = fromEditor.getLabel();
-	label.setToolTipText(fromEditor.getLabel().getToolTipText());
+        label = fromEditor.getLabel();
+        label.setToolTipText(fromEditor.getLabel().getToolTipText());
 
-	final Class<?> propertyType = fromEditor.getEntity().getPropertyType(fromEditor.getPropertyName());
-	bool = (Boolean.class == propertyType) || (boolean.class == propertyType);
-	date = (Date.class.isAssignableFrom(propertyType));
-	editor = createEditor(bool, entity.getManagedType(), criteriaParameters);
+        final Class<?> propertyType = fromEditor.getEntity().getPropertyType(fromEditor.getPropertyName());
+        bool = (Boolean.class == propertyType) || (boolean.class == propertyType);
+        date = (Date.class.isAssignableFrom(propertyType));
+        editor = createEditor(bool, entity.getManagedType(), criteriaParameters);
     }
 
     @SuppressWarnings("unchecked")
     private JComponent createEditor(final boolean bool, final Class<?> root, final String propertyName) {
-	if (bool) {
-	    final JCheckBox yes = ((BoundedValidationLayer<JCheckBox>) fromEditor.getEditor()).getView(), no = ((BoundedValidationLayer<JCheckBox>) toEditor.getEditor()).getView();
-	    yes.setText("yes");
-	    no.setText("no");
-	    no.setMinimumSize(yes.getMinimumSize());
-	}
+        if (bool) {
+            final JCheckBox yes = ((BoundedValidationLayer<JCheckBox>) fromEditor.getEditor()).getView(), no = ((BoundedValidationLayer<JCheckBox>) toEditor.getEditor()).getView();
+            yes.setText("yes");
+            no.setText("no");
+            no.setMinimumSize(yes.getMinimumSize());
+        }
 
-	final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
-	final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName);
-	this.singleSelection = !bool && critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
+        final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
+        final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName);
+        this.singleSelection = !bool && critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
 
-	final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[grow]" + (!singleSelection ? "5[]5[grow]" : ""), "[]"));
-	panel.add(fromEditor.getEditor(), "growx");
-	if (!singleSelection) {
-	    panel.add(createSeparationLabel(bool));
-	    panel.add(toEditor.getEditor(), "growx");
-	}
-	return panel;
+        final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[grow]" + (!singleSelection ? "5[]5[grow]" : ""), "[]"));
+        panel.add(fromEditor.getEditor(), "growx");
+        if (!singleSelection) {
+            panel.add(createSeparationLabel(bool));
+            panel.add(toEditor.getEditor(), "growx");
+        }
+        return panel;
     }
 
     /**
      * Indicates whether "double" property editor has "boolean" nature.
-     *
+     * 
      * @return
      */
-    public boolean isBool(){
-	return bool;
+    public boolean isBool() {
+        return bool;
     }
 
     /**
      * Indicates whether "double" property editor has "date" nature.
-     *
+     * 
      * @return
      */
-    public boolean isDate(){
-	return date;
+    public boolean isDate() {
+        return date;
     }
 
     /**
      * Indicates whether "range" property editor has "single" nature.
-     *
+     * 
      * @return
      */
-    public boolean isSingle(){
-	return singleSelection;
+    public boolean isSingle() {
+        return singleSelection;
     }
 
     /**
      * Creates label to separate double-editor "from <-> to" or "is <-> is not".
-     *
+     * 
      * @param bool
      * @return
      */
     private JLabel createSeparationLabel(final boolean bool) {
-	final JLabel toLabel = new JLabel("to");
-	final JLabel emptyLabel = new JLabel("");
-	emptyLabel.setPreferredSize(toLabel.getPreferredSize());
-	emptyLabel.setMinimumSize(toLabel.getMinimumSize());
-	final JLabel label = bool ? emptyLabel : toLabel;
-	return label;
+        final JLabel toLabel = new JLabel("to");
+        final JLabel emptyLabel = new JLabel("");
+        emptyLabel.setPreferredSize(toLabel.getPreferredSize());
+        emptyLabel.setMinimumSize(toLabel.getMinimumSize());
+        final JLabel label = bool ? emptyLabel : toLabel;
+        return label;
     }
 
     @Override
     public void bind(final AbstractEntity<?> entity) {
-	this.entity = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>)entity;
-	fromEditor.bind(entity);
-	toEditor.bind(entity);
+        this.entity = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>) entity;
+        fromEditor.bind(entity);
+        toEditor.bind(entity);
     }
 
     @Override
     public AbstractEntity<?> getEntity() {
-	return entity;
+        return entity;
     }
 
     @Override
     public String getPropertyName() {
-	return propertyName;
+        return propertyName;
     }
 
     public JLabel getLabel() {
-	return label;
+        return label;
     }
 
     public JComponent getEditor() {
-	return editor;
+        return editor;
     }
 
     @Override
     public JPanel getDefaultLayout() {
-	final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
-	panel.add(label);
-	panel.add(editor, "growx");
-	return panel;
+        final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
+        panel.add(label);
+        panel.add(editor, "growx");
+        return panel;
     }
 
     @Override
     public IValueMatcher<?> getValueMatcher() {
-	throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
+        throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
     }
 
     public IPropertyEditor getFromEditor() {
-	return fromEditor;
+        return fromEditor;
     }
 
     public IPropertyEditor getToEditor() {
-	return toEditor;
+        return toEditor;
     }
 
 }

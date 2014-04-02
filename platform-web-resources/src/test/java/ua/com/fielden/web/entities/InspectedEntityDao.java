@@ -12,22 +12,22 @@ import com.google.inject.Inject;
 
 /**
  * Test DAO for {@link InspectedEntity} class
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(InspectedEntity.class)
 public class InspectedEntityDao extends CommonEntityDao<InspectedEntity> implements IInspectedEntityDao {
 
     @Inject
     protected InspectedEntityDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
     @Override
     @SessionRequired
     public void delete(final InspectedEntity entity) {
-	defaultDelete(entity);
+        defaultDelete(entity);
     }
 
     @Override

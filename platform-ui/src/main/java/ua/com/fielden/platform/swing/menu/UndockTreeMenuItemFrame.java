@@ -21,21 +21,21 @@ public class UndockTreeMenuItemFrame extends BaseFrame {
     private final BasePanel view;
 
     public UndockTreeMenuItemFrame(final String title, final ICloseHook<UndockTreeMenuItemFrame> hook, final BasePanel view, final Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> cache) {
-	this(title, new MigLayout("fill, insets 0", "[fill,grow]", "[fill, grow]"), hook, view, cache);
+        this(title, new MigLayout("fill, insets 0", "[fill,grow]", "[fill, grow]"), hook, view, cache);
     }
 
     public UndockTreeMenuItemFrame(final String title, final LayoutManager layoutManager, final ICloseHook<UndockTreeMenuItemFrame> hook, final BasePanel view, final Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> cache) {
-	super(title, layoutManager, hook, cache);
-	blockingPane = new BlockingIndefiniteProgressPane(this);
-	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
-	this.view = view;
+        super(title, layoutManager, hook, cache);
+        blockingPane = new BlockingIndefiniteProgressPane(this);
+        setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
+        this.view = view;
     }
 
     public BlockingIndefiniteProgressPane getBlockingPane() {
-	return blockingPane;
+        return blockingPane;
     }
 
     public BasePanel getView() {
-	return view;
+        return view;
     }
 }

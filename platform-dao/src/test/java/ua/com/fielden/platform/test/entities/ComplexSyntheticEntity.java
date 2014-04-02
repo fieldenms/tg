@@ -21,20 +21,20 @@ public class ComplexSyntheticEntity extends SyntheticEntity {
     private ComplexKeyEntity secondComponent;
 
     public CompositeEntity getFirstComponent() {
-	return firstComponent;
+        return firstComponent;
     }
 
     public ComplexKeyEntity getSecondComponent() {
-	return secondComponent;
+        return secondComponent;
     }
 
     @Observable
     public void setFirstComponent(final CompositeEntity firstComponent) {
-	this.firstComponent = firstComponent;
+        this.firstComponent = firstComponent;
     }
 
     @Observable
     public void setSecondComponent(final ComplexKeyEntity secondComponent) {
-	this.secondComponent = secondComponent;
+        this.secondComponent = secondComponent;
     }
 }

@@ -38,38 +38,38 @@ public abstract class AbstractCentreConfigurationModel<T extends AbstractEntity<
 
     /**
      * Initiates this {@link AbstractCentreConfigurationModel} with appropriate entity type, name/propertyName, entity factory and criteria generator.
-     *
+     * 
      * @param entityType
      * @param name
      * @param entityFactory
      * @param criteriaGenerator
      */
-    public AbstractCentreConfigurationModel(final Class<T> entityType, final String name, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
-	this.entityType = entityType;
-	this.name = name;
-	this.entityFactory = entityFactory;
-	this.criteriaGenerator = criteriaGenerator;
-	this.masterManager = masterManager;
+    public AbstractCentreConfigurationModel(final Class<T> entityType, final String name, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator) {
+        this.entityType = entityType;
+        this.name = name;
+        this.entityFactory = entityFactory;
+        this.criteriaGenerator = criteriaGenerator;
+        this.masterManager = masterManager;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public Class<T> getEntityType() {
-	return entityType;
+        return entityType;
     }
 
     public ICriteriaGenerator getCriteriaGenerator() {
-	return criteriaGenerator;
+        return criteriaGenerator;
     }
 
     protected EntityFactory getEntityFactory() {
-	return entityFactory;
+        return entityFactory;
     }
 
     protected IEntityMasterManager getMasterManager() {
-	return masterManager;
+        return masterManager;
     }
 
     abstract protected AbstractEntityCentreModel<T, CDTME> createEntityCentreModel();

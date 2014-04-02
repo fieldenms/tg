@@ -17,58 +17,52 @@ public class CollectingQueryModelPropertiesTest extends BaseEntQueryTCase {
 
     @Test
     public void test_prop_collector() {
-	final AggregatedResultQueryModel qry = select(VEHICLE).where().prop("model.desc").like().val("MERC%").
-	groupBy().prop("model.desc").
-	yield().beginExpr().yearOf().prop("initDate").add().monthOf().prop("initDate").endExpr().as("calc").modelAsAggregate();
-	final List<EntProp> exp = new ArrayList<EntProp>();
-	// TODO needed to add these as generated properties are currently taken into account in getImmediateProps method
-	exp.add(prop("model"));
-	exp.add(prop("model.id"));
+        final AggregatedResultQueryModel qry = select(VEHICLE).where().prop("model.desc").like().val("MERC%").groupBy().prop("model.desc").yield().beginExpr().yearOf().prop("initDate").add().monthOf().prop("initDate").endExpr().as("calc").modelAsAggregate();
+        final List<EntProp> exp = new ArrayList<EntProp>();
+        // TODO needed to add these as generated properties are currently taken into account in getImmediateProps method
+        exp.add(prop("model"));
+        exp.add(prop("model.id"));
 
-	exp.add(prop("model.desc"));
-	exp.add(prop("model.desc"));
-	exp.add(prop("initDate"));
-	exp.add(prop("initDate"));
+        exp.add(prop("model.desc"));
+        exp.add(prop("model.desc"));
+        exp.add(prop("initDate"));
+        exp.add(prop("initDate"));
 
-	assertEquals("models are different", exp, entResultQry(qry).getImmediateProps());
+        assertEquals("models are different", exp, entResultQry(qry).getImmediateProps());
     }
 
     @Test
     public void test_prop_collector_with_subquery() {
-	final EntityResultQueryModel<TgVehicleModel> vehModelSubQry = select(MODEL).where().prop("make").isNotNull().model();
-	final AggregatedResultQueryModel qry = select(VEHICLE).where().prop("model").in().model(vehModelSubQry).
-	groupBy().prop("model.desc").
-	yield().beginExpr().yearOf().prop("initDate").add().monthOf().prop("initDate").endExpr().as("calc").modelAsAggregate();
-	final List<EntProp> exp = new ArrayList<EntProp>();
+        final EntityResultQueryModel<TgVehicleModel> vehModelSubQry = select(MODEL).where().prop("make").isNotNull().model();
+        final AggregatedResultQueryModel qry = select(VEHICLE).where().prop("model").in().model(vehModelSubQry).groupBy().prop("model.desc").yield().beginExpr().yearOf().prop("initDate").add().monthOf().prop("initDate").endExpr().as("calc").modelAsAggregate();
+        final List<EntProp> exp = new ArrayList<EntProp>();
 
-	// TODO needed to add these as generated properties are currently taken into account in getImmediateProps method
-	exp.add(prop("model"));
-	exp.add(prop("model.id"));
+        // TODO needed to add these as generated properties are currently taken into account in getImmediateProps method
+        exp.add(prop("model"));
+        exp.add(prop("model.id"));
 
-	exp.add(prop("model"));
-	exp.add(prop("model.desc"));
-	exp.add(prop("initDate"));
-	exp.add(prop("initDate"));
-	assertEquals("models are different", exp, entResultQry(qry).getImmediateProps());
+        exp.add(prop("model"));
+        exp.add(prop("model.desc"));
+        exp.add(prop("initDate"));
+        exp.add(prop("initDate"));
+        assertEquals("models are different", exp, entResultQry(qry).getImmediateProps());
     }
 
     @Test
     public void test_prop_collector_with_correlates_subquery() {
-	final EntityResultQueryModel<TgVehicleModel> vehModelSubQry = EntityQueryUtils.select(MODEL).where().prop("make").isNotNull().and().prop("id").eq().prop("model").model();
-	final AggregatedResultQueryModel qry = select(VEHICLE).where().exists(vehModelSubQry).
-	groupBy().prop("model.desc").
-	yield().beginExpr().yearOf().prop("initDate").add().monthOf().prop("initDate").endExpr().as("calc").modelAsAggregate();
-	final List<EntProp> exp = new ArrayList<EntProp>();
+        final EntityResultQueryModel<TgVehicleModel> vehModelSubQry = EntityQueryUtils.select(MODEL).where().prop("make").isNotNull().and().prop("id").eq().prop("model").model();
+        final AggregatedResultQueryModel qry = select(VEHICLE).where().exists(vehModelSubQry).groupBy().prop("model.desc").yield().beginExpr().yearOf().prop("initDate").add().monthOf().prop("initDate").endExpr().as("calc").modelAsAggregate();
+        final List<EntProp> exp = new ArrayList<EntProp>();
 
-	// TODO needed to add these as generated properties are currently taken into account in getImmediateProps method
-	exp.add(prop("model"));
-	exp.add(prop("model.id"));
+        // TODO needed to add these as generated properties are currently taken into account in getImmediateProps method
+        exp.add(prop("model"));
+        exp.add(prop("model.id"));
 
-	exp.add(prop("model.desc"));
-	exp.add(prop("initDate"));
-	exp.add(prop("initDate"));
+        exp.add(prop("model.desc"));
+        exp.add(prop("initDate"));
+        exp.add(prop("initDate"));
 
-	assertEquals("models are different", exp, entResultQry(qry).getImmediateProps());
+        assertEquals("models are different", exp, entResultQry(qry).getImmediateProps());
     }
 
 }

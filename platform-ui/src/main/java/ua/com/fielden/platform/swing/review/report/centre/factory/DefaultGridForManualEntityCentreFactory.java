@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.G
 public class DefaultGridForManualEntityCentreFactory<T extends AbstractEntity<?>> extends DefaultGridAnalysisFactory<T> {
 
     @Override
-    protected GridConfigurationModelForManualEntityCentre<T> createAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria){
-	return GridConfigurationModelForManualEntityCentre.createWithCustomManualQueryCustomiser(criteria, getQueryCustomiser());
+    protected GridConfigurationModelForManualEntityCentre<T> createAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria) {
+        return GridConfigurationModelForManualEntityCentre.createWithCustomManualQueryCustomiser(criteria, getQueryCustomiser());
     }
 }

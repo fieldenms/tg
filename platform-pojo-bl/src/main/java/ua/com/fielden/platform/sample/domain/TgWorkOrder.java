@@ -23,7 +23,8 @@ import ua.com.fielden.platform.types.Money;
 public class TgWorkOrder extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @Title(value = "Vehicle", desc = "Vehicle under repair")
+    @IsProperty
+    @Title(value = "Vehicle", desc = "Vehicle under repair")
     @MapTo
     private TgVehicle vehicle;
 
@@ -37,7 +38,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @Title(value = "Est.Cost", desc = "Estimated Cost")
     private Money estCost;
 
-
     @IsProperty
     @MapTo
     @Title(value = "Yearly Cost", desc = "Yearly Cost")
@@ -48,35 +48,34 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @Title(value = "Important Property", desc = "Property that has a special meaning")
     private PropertyDescriptor<TgWorkOrder> importantProperty;
 
-
     @Observable
     public TgWorkOrder setYearlyCost(final Money yearlyCost) {
-	this.yearlyCost = yearlyCost;
-	return this;
+        this.yearlyCost = yearlyCost;
+        return this;
     }
 
     public Money getYearlyCost() {
-	return yearlyCost;
+        return yearlyCost;
     }
 
     @Observable
     public TgWorkOrder setEstCost(final Money estCost) {
-	this.estCost = estCost;
-	return this;
+        this.estCost = estCost;
+        return this;
     }
 
     public Money getEstCost() {
-	return estCost;
+        return estCost;
     }
 
     @Observable
     public TgWorkOrder setActCost(final Money actCost) {
-	this.actCost = actCost;
-	return this;
+        this.actCost = actCost;
+        return this;
     }
 
     public Money getActCost() {
-	return actCost;
+        return actCost;
     }
 
     public PropertyDescriptor<TgWorkOrder> getImportantProperty() {

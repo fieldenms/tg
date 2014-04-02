@@ -26,11 +26,11 @@ public class UncaughtExceptionHandler {
      * @param application
      */
     static void setCurrentApplication(final AbstractApplication application) {
-	currentApplication = application;
+        currentApplication = application;
     }
 
     private static AbstractApplication getCurrentApplication() {
-	return currentApplication;
+        return currentApplication;
     }
 
 /**
@@ -38,7 +38,7 @@ public class UncaughtExceptionHandler {
      * @param throwable
      */
     public void handle(final Throwable throwable) {
-	getCurrentApplication().throwException(throwable);
+        getCurrentApplication().throwException(throwable);
     }
 
 }

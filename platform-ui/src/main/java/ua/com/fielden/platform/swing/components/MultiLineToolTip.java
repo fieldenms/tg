@@ -27,30 +27,30 @@ public class MultiLineToolTip extends JToolTip {
     protected int fixedwidth = 0;
 
     public MultiLineToolTip() {
-	updateUI();
+        updateUI();
     }
 
     @Override
     public void updateUI() {
-	setUI(MultiLineToolTipUI.createUI(this));
+        setUI(MultiLineToolTipUI.createUI(this));
     }
 
     public void setColumns(final int columns) {
-	this.columns = columns;
-	this.fixedwidth = 0;
+        this.columns = columns;
+        this.fixedwidth = 0;
     }
 
     public int getColumns() {
-	return columns;
+        return columns;
     }
 
     public void setFixedWidth(final int width) {
-	this.fixedwidth = width;
-	this.columns = 0;
+        this.fixedwidth = width;
+        this.columns = 0;
     }
 
     public int getFixedWidth() {
-	return fixedwidth;
+        return fixedwidth;
     }
 }
 
@@ -63,76 +63,76 @@ class MultiLineToolTipUI extends BasicToolTipUI {
     private static JTextArea textArea;
 
     public static ComponentUI createUI(final JComponent c) {
-	return sharedInstance;
+        return sharedInstance;
     }
 
     public MultiLineToolTipUI() {
-	super();
+        super();
     }
 
     @Override
     public void installUI(final JComponent c) {
-	super.installUI(c);
-	tip = (JToolTip) c;
-	rendererPane = new CellRendererPane();
-	c.add(rendererPane);
+        super.installUI(c);
+        tip = (JToolTip) c;
+        rendererPane = new CellRendererPane();
+        c.add(rendererPane);
     }
 
     @Override
     public void uninstallUI(final JComponent c) {
-	super.uninstallUI(c);
+        super.uninstallUI(c);
 
-	c.remove(rendererPane);
-	rendererPane = null;
+        c.remove(rendererPane);
+        rendererPane = null;
     }
 
     @Override
     public void paint(final Graphics g, final JComponent c) {
-	final Dimension size = c.getSize();
-	textArea.setBackground(c.getBackground());
-	rendererPane.paintComponent(g, textArea, c, 1, 1, size.width - 1, size.height - 1, true);
+        final Dimension size = c.getSize();
+        textArea.setBackground(c.getBackground());
+        rendererPane.paintComponent(g, textArea, c, 1, 1, size.width - 1, size.height - 1, true);
     }
 
     @Override
     public Dimension getPreferredSize(final JComponent c) {
-	final String tipText = ((JToolTip) c).getTipText();
-	if (tipText == null)
-	    return new Dimension(0, 0);
-	textArea = new JTextArea(tipText);
-	rendererPane.removeAll();
-	rendererPane.add(textArea);
-	textArea.setWrapStyleWord(true);
-	final int width = ((MultiLineToolTip) c).getFixedWidth();
-	final int columns = ((MultiLineToolTip) c).getColumns();
+        final String tipText = ((JToolTip) c).getTipText();
+        if (tipText == null)
+            return new Dimension(0, 0);
+        textArea = new JTextArea(tipText);
+        rendererPane.removeAll();
+        rendererPane.add(textArea);
+        textArea.setWrapStyleWord(true);
+        final int width = ((MultiLineToolTip) c).getFixedWidth();
+        final int columns = ((MultiLineToolTip) c).getColumns();
 
-	if (columns > 0) {
-	    textArea.setColumns(columns);
-	    textArea.setSize(0, 0);
-	    textArea.setLineWrap(true);
-	    textArea.setSize(textArea.getPreferredSize());
-	} else if (width > 0) {
-	    textArea.setLineWrap(true);
-	    final Dimension d = textArea.getPreferredSize();
-	    d.width = width;
-	    d.height++;
-	    textArea.setSize(d);
-	} else
-	    textArea.setLineWrap(false);
+        if (columns > 0) {
+            textArea.setColumns(columns);
+            textArea.setSize(0, 0);
+            textArea.setLineWrap(true);
+            textArea.setSize(textArea.getPreferredSize());
+        } else if (width > 0) {
+            textArea.setLineWrap(true);
+            final Dimension d = textArea.getPreferredSize();
+            d.width = width;
+            d.height++;
+            textArea.setSize(d);
+        } else
+            textArea.setLineWrap(false);
 
-	final Dimension dim = textArea.getPreferredSize();
+        final Dimension dim = textArea.getPreferredSize();
 
-	dim.height += 1;
-	dim.width += 1;
-	return dim;
+        dim.height += 1;
+        dim.width += 1;
+        return dim;
     }
 
     @Override
     public Dimension getMinimumSize(final JComponent c) {
-	return getPreferredSize(c);
+        return getPreferredSize(c);
     }
 
     @Override
     public Dimension getMaximumSize(final JComponent c) {
-	return getPreferredSize(c);
+        return getPreferredSize(c);
     }
 }

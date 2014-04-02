@@ -18,35 +18,35 @@ public class GridConfigurationModel<T extends AbstractEntity<?>, CDTME extends I
     private final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser;
 
     public static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationModel<T, CDTME> createWithCustomQueryCustomiser(//
-	    final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, //
-	    final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser){
-	return new GridConfigurationModel<>(criteria, queryCustomiser);
+    final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, //
+            final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser) {
+        return new GridConfigurationModel<>(criteria, queryCustomiser);
     }
 
     public static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> GridConfigurationModel<T, CDTME> createWithDefaultQueryCustomiser(//
-	    final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria){
-	return new GridConfigurationModel<>(criteria, null);
+    final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria) {
+        return new GridConfigurationModel<>(criteria, null);
     }
 
-    protected GridConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser){
-	super(criteria, gridAnalysisName);
-	this.queryCustomiser = queryCustomiser == null ? new DefaultGridAnalysisQueryCustomiser<T, CDTME>() : queryCustomiser;
+    protected GridConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> queryCustomiser) {
+        super(criteria, gridAnalysisName);
+        this.queryCustomiser = queryCustomiser == null ? new DefaultGridAnalysisQueryCustomiser<T, CDTME>() : queryCustomiser;
     }
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
-	if(ReportMode.WIZARD.equals(mode)){
-	    return new Result(new UnsupportedOperationException("The WIZARD mode is not supported for this type of analysis"));
-	}
-	return Result.successful(this);
+        if (ReportMode.WIZARD.equals(mode)) {
+            return new Result(new UnsupportedOperationException("The WIZARD mode is not supported for this type of analysis"));
+        }
+        return Result.successful(this);
     }
 
     public GridAnalysisModel<T, CDTME> createGridAnalysisModel() {
-	return new GridAnalysisModel<T, CDTME>(getCriteria(), queryCustomiser);
+        return new GridAnalysisModel<T, CDTME>(getCriteria(), queryCustomiser);
     }
 
     public final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, CDTME>> getQueryCustomiser() {
-	return queryCustomiser;
+        return queryCustomiser;
     }
 
 }

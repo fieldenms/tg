@@ -25,102 +25,101 @@ public class TypeEnforcementForLiteralsAndPropertyTest {
 
     @Test
     public void test_integer_literal_type_and_value_identification() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("1").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Integer.class, ast.getType());
-	assertEquals("Incorrect value.", Integer.valueOf(1), ast.getValue());
+        final Token[] tokens = new ExpressionLexer("1").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Integer.class, ast.getType());
+        assertEquals("Incorrect value.", Integer.valueOf(1), ast.getValue());
     }
 
     @Test
     public void test_decimal_literal_type_and_value_identification() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("1.5").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", BigDecimal.class, ast.getType());
-	assertEquals("Incorrect value.", new BigDecimal("1.5"), ast.getValue());
+        final Token[] tokens = new ExpressionLexer("1.5").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", BigDecimal.class, ast.getType());
+        assertEquals("Incorrect value.", new BigDecimal("1.5"), ast.getValue());
     }
 
     @Test
     public void test_string_literal_type_and_value_identification() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("\"word\"").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", String.class, ast.getType());
-	assertEquals("Incorrect value.", "word", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("\"word\"").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", String.class, ast.getType());
+        assertEquals("Incorrect value.", "word", ast.getValue());
     }
 
     @Test
     public void test_day_literal_type_and_value_identification() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("23d").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Day.class, ast.getType());
-	assertEquals("Incorrect value.", Integer.valueOf(23), ast.getValue());
+        final Token[] tokens = new ExpressionLexer("23d").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Day.class, ast.getType());
+        assertEquals("Incorrect value.", Integer.valueOf(23), ast.getValue());
     }
 
     @Test
     public void test_month_literal_type_and_value_identification() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("3m").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Month.class, ast.getType());
-	assertEquals("Incorrect value.", Integer.valueOf(3), ast.getValue());
+        final Token[] tokens = new ExpressionLexer("3m").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Month.class, ast.getType());
+        assertEquals("Incorrect value.", Integer.valueOf(3), ast.getValue());
     }
 
     @Test
     public void test_year_literal_type_and_value_identification() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("30y").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Year.class, ast.getType());
-	assertEquals("Incorrect value.", Integer.valueOf(30), ast.getValue());
+        final Token[] tokens = new ExpressionLexer("30y").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Year.class, ast.getType());
+        assertEquals("Incorrect value.", Integer.valueOf(30), ast.getValue());
     }
 
     @Test
     public void test_money_property_type_and_value_identification() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("moneyProperty").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Money.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("moneyProperty").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Money.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
     @Test
     public void test_string_property_type_and_value_identification() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("strProperty").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", String.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("strProperty").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", String.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
     @Test
     public void test_integer_property_type_and_value_identification() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("entityProperty.intProperty").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Integer.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("entityProperty.intProperty").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Integer.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
-
 
 }

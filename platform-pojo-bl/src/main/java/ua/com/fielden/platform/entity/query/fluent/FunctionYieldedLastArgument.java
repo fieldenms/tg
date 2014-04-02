@@ -8,17 +8,17 @@ public class FunctionYieldedLastArgument<T, ET extends AbstractEntity<?>> extend
     T parent;
 
     protected FunctionYieldedLastArgument(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     IYieldExprItem0<T, ET> getParent2() {
-	return new YieldExprItem0<T, ET>(getTokens(), parent);
+        return new YieldExprItem0<T, ET>(getTokens(), parent);
     }
 
     @Override
     T getParent() {
-	return parent;
+        return parent;
     }
 }

@@ -7,29 +7,24 @@ package ua.com.fielden.platform.snappy;
 
 /**
  * Main menu item representing Snappy rule designer.
- *
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- *
+ * 
+ * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy
+ * related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy
+ * integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will
+ * be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been
+ * commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG
+ * platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until
+ * snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy
+ * integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will
+ * be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been
+ * commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG
+ * platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
+ * 
  * @author TG Team
- *
+ * 
  */
-public class MiSnappy {}
+public class MiSnappy {
+}
 //extends TreeMenuItem<MiSnappy.SnappyManagerWrapper> {
 //    private static final long serialVersionUID = 1L;
 //

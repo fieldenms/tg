@@ -21,12 +21,12 @@ import com.google.inject.Inject;
 
 /**
  * A general implementation for dashboard item with a capability of refreshing item result on background and other functionality.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <RESULT>
  */
-public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult, UI extends JFXPanel & IDashboardItemUi<RESULT> & IUmViewOwner> implements IDashboardItem<RESULT, UI> {
+public abstract class AbstractDashboardItem<RESULT extends IDashboardItemResult, UI extends JFXPanel & IDashboardItemUi<RESULT> & IUmViewOwner> implements IDashboardItem<RESULT, UI> {
     private final BlockingIndefiniteProgressLayer mainLayer;
     private final UI ui;
     private final IDashboardParamsGetter paramsGetter;
@@ -36,42 +36,41 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
 
     @Inject
     public AbstractDashboardItem(final IDashboardParamsGetter paramsGetter, final IComputationMonitor computationMonitor, final Class<? extends AbstractEntity<?>> mainType) {
-	this.paramsGetter = paramsGetter;
-	this.mainType = mainType;
-	ui = createUi(runAndDisplayAction = new Runnable() {
-	    @Override
-	    public void run() {
-		runAndDisplay(AbstractDashboardItem.this.paramsGetter.getCustomParams(AbstractDashboardItem.this.mainType));
-	    }
-	}, new Runnable() {
-	    @Override
-	    public void run() {
-		configure();
-	    }
-	},
-	new Runnable() {
-	    @Override
-	    public void run() {
-		invokeErrorDetails();
-	    }
-	}, new Runnable() {
-	    @Override
-	    public void run() {
-		invokeWarningDetails();
-	    }
-	}, new Runnable() {
-	    @Override
-	    public void run() {
-		invokeRegularDetails();
-	    }
-	});
-	mainLayer = new BlockingIndefiniteProgressLayer(ui, "Loading...", computationMonitor);
-	ui.setUpperComponent(mainLayer);
+        this.paramsGetter = paramsGetter;
+        this.mainType = mainType;
+        ui = createUi(runAndDisplayAction = new Runnable() {
+            @Override
+            public void run() {
+                runAndDisplay(AbstractDashboardItem.this.paramsGetter.getCustomParams(AbstractDashboardItem.this.mainType));
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                configure();
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                invokeErrorDetails();
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                invokeWarningDetails();
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                invokeRegularDetails();
+            }
+        });
+        mainLayer = new BlockingIndefiniteProgressLayer(ui, "Loading...", computationMonitor);
+        ui.setUpperComponent(mainLayer);
     }
 
     /**
      * Creates specific dashboard UI instance.
-     *
+     * 
      * @param errorAction
      * @param warningAction
      * @param regularAction
@@ -81,7 +80,7 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
 
     /**
      * Refreshes item information using custom parameters.
-     *
+     * 
      * @param customParameters
      * @return
      */
@@ -91,13 +90,13 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
     @Override
     public final void runAndDisplay(final List<QueryProperty> customParameters) {
         final Command<RESULT> command = new BlockingLayerCommand<RESULT>("Run and display alert", getMainLayer()) {
-	    private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = 1L;
 
-//	    @Override
-//            protected boolean preAction() {
-//                Dialogs.showMessageDialog(getMainLayer(), "Pre-action of the custom command.", "Custom command", Dialogs.INFORMATION_MESSAGE);
-//                return super.preAction();
-//            }
+            //	    @Override
+            //            protected boolean preAction() {
+            //                Dialogs.showMessageDialog(getMainLayer(), "Pre-action of the custom command.", "Custom command", Dialogs.INFORMATION_MESSAGE);
+            //                return super.preAction();
+            //            }
 
             @Override
             protected RESULT action(final ActionEvent e) {
@@ -109,14 +108,15 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
 
             @Override
             protected void postAction(final RESULT result) {
-        	Platform.runLater(new Runnable() {
-        	    @Override public void run() {
-        		ui.update(result);
-        	    }
-        	});
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        ui.update(result);
+                    }
+                });
 
-            	reScheduleRefreshAction();
-		super.postAction(result);
+                reScheduleRefreshAction();
+                super.postAction(result);
             }
         };
         command.setEnabled(true);
@@ -129,11 +129,11 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
     }
 
     public BlockingIndefiniteProgressLayer getMainLayer() {
-	return mainLayer;
+        return mainLayer;
     }
 
     protected IDashboardParamsGetter getParamsGetter() {
-	return paramsGetter;
+        return paramsGetter;
     }
 
     @Override
@@ -142,24 +142,24 @@ public abstract class AbstractDashboardItem <RESULT extends IDashboardItemResult
     }
 
     protected Runnable getRunAndDisplayAction() {
-	return runAndDisplayAction;
+        return runAndDisplayAction;
     }
 
     /**
      * Discards all existing tasks (if any) and schedules new Refresh task.
      */
     public void reScheduleRefreshAction() {
-	if (refreshTimer != null) {
-	    refreshTimer.cancel();
-	    refreshTimer = null;
-	}
-	refreshTimer = new Timer();
-	refreshTimer.schedule(new TimerTask() {
-	    @Override
-	    public void run() {
-		refreshTimer = null;
-		SwingUtilitiesEx.invokeLater(runAndDisplayAction);
-	    }
-	}, 600000); // 10 min
+        if (refreshTimer != null) {
+            refreshTimer.cancel();
+            refreshTimer = null;
+        }
+        refreshTimer = new Timer();
+        refreshTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                refreshTimer = null;
+                SwingUtilitiesEx.invokeLater(runAndDisplayAction);
+            }
+        }, 600000); // 10 min
     }
 }

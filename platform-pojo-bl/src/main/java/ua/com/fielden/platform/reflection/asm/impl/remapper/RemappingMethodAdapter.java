@@ -4,50 +4,28 @@ import org.kohsuke.asm3.AnnotationVisitor;
 import org.kohsuke.asm3.Label;
 import org.kohsuke.asm3.MethodVisitor;
 
-
 /**
  * A <code>MethodAdapter</code> for type mapping.
- *
+ * 
  * @author Eugene Kuleshov
  */
 public class RemappingMethodAdapter extends LocalVariablesSorter {
 
     protected final Remapper remapper;
 
-    public RemappingMethodAdapter(
-        final int access,
-        final String desc,
-        final MethodVisitor mv,
-        final Remapper renamer)
-    {
+    public RemappingMethodAdapter(final int access, final String desc, final MethodVisitor mv, final Remapper renamer) {
         super(access, desc, mv);
         this.remapper = renamer;
     }
 
     @Override
-    public void visitFieldInsn(
-        final int opcode,
-        final String owner,
-        final String name,
-        final String desc)
-    {
-        super.visitFieldInsn(opcode,
-                remapper.mapType(owner),
-                remapper.mapFieldName(owner, name, desc),
-                remapper.mapDesc(desc));
+    public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
+        super.visitFieldInsn(opcode, remapper.mapType(owner), remapper.mapFieldName(owner, name, desc), remapper.mapDesc(desc));
     }
 
     @Override
-    public void visitMethodInsn(
-        final int opcode,
-        final String owner,
-        final String name,
-        final String desc)
-    {
-        super.visitMethodInsn(opcode,
-                remapper.mapType(owner),
-                remapper.mapMethodName(owner, name, desc),
-                remapper.mapMethodDesc(desc));
+    public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc) {
+        super.visitMethodInsn(opcode, remapper.mapType(owner), remapper.mapMethodName(owner, name, desc), remapper.mapMethodDesc(desc));
     }
 
     @Override
@@ -66,31 +44,14 @@ public class RemappingMethodAdapter extends LocalVariablesSorter {
     }
 
     @Override
-    public void visitTryCatchBlock(
-        final Label start,
-        final Label end,
-        final Label handler,
-        final String type)
-    {
+    public void visitTryCatchBlock(final Label start, final Label end, final Label handler, final String type) {
         super.visitTryCatchBlock(start, end, handler, //
                 type == null ? null : remapper.mapType(type));
     }
 
     @Override
-    public void visitLocalVariable(
-        final String name,
-        final String desc,
-        final String signature,
-        final Label start,
-        final Label end,
-        final int index)
-    {
-        super.visitLocalVariable(name,
-                remapper.mapDesc(desc),
-                remapper.mapSignature(signature, true),
-                start,
-                end,
-                index);
+    public void visitLocalVariable(final String name, final String desc, final String signature, final Label start, final Label end, final int index) {
+        super.visitLocalVariable(name, remapper.mapDesc(desc), remapper.mapSignature(signature, true), start, end, index);
     }
 
     @Override
@@ -106,25 +67,13 @@ public class RemappingMethodAdapter extends LocalVariablesSorter {
     }
 
     @Override
-    public AnnotationVisitor visitParameterAnnotation(
-        final int parameter,
-        final String desc,
-        final boolean visible)
-    {
-        final AnnotationVisitor av = mv.visitParameterAnnotation(parameter,
-                remapper.mapDesc(desc),
-                visible);
+    public AnnotationVisitor visitParameterAnnotation(final int parameter, final String desc, final boolean visible) {
+        final AnnotationVisitor av = mv.visitParameterAnnotation(parameter, remapper.mapDesc(desc), visible);
         return av == null ? av : new RemappingAnnotationAdapter(av, remapper);
     }
 
     @Override
-    public void visitFrame(
-        final int type,
-        final int nLocal,
-        final Object[] local,
-        final int nStack,
-        final Object[] stack)
-    {
+    public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
         super.visitFrame(type, nLocal, remapEntries(nLocal, local), nStack, remapEntries(nStack, stack));
     }
 
@@ -137,9 +86,7 @@ public class RemappingMethodAdapter extends LocalVariablesSorter {
                 }
                 do {
                     final Object t = entries[i];
-                    newEntries[i++] = t instanceof String
-                            ? remapper.mapType((String) t)
-                            : t;
+                    newEntries[i++] = t instanceof String ? remapper.mapType((String) t) : t;
                 } while (i < n);
                 return newEntries;
             }

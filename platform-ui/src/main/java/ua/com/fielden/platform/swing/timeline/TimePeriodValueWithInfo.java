@@ -15,12 +15,12 @@ public class TimePeriodValueWithInfo extends TimePeriodValue {
     private final String info;
 
     public TimePeriodValueWithInfo(final TimePeriod period, final Number value, final String info) {
-	super(period, value);
-	this.info = info;
+        super(period, value);
+        this.info = info;
     }
 
     public String getInfo() {
-	return info;
+        return info;
     }
 
 }

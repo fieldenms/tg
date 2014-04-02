@@ -10,21 +10,21 @@ import com.google.inject.Inject;
 
 /**
  * RAO implementation of {@link IMainMenuItemController}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(MainMenuItem.class)
 public class MainMenuItemControllerRao extends CommonEntityRao<MainMenuItem> implements IMainMenuItemController {
 
     @Inject
     public MainMenuItemControllerRao(final RestClientUtil restUtil, final IEntityCentreConfigController eccController) {
-	super(restUtil);
+        super(restUtil);
     }
 
     @Override
     protected WebResourceType getDefaultWebResourceType() {
-	return WebResourceType.SYSTEM;
+        return WebResourceType.SYSTEM;
     }
 
 }

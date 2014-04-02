@@ -8,12 +8,11 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
-
 @EntityType(TgFuelType.class)
 public class TgFuelTypeDao extends CommonEntityDao<TgFuelType> implements ITgFuelType {
 
     @Inject
     protected TgFuelTypeDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

@@ -7,13 +7,14 @@ import java.lang.annotation.Target;
 
 /**
  * Represents a BCE handler parameter of type integer.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.ANNOTATION_TYPE })
 public @interface IntParam {
     String name();
+
     int value();
 }

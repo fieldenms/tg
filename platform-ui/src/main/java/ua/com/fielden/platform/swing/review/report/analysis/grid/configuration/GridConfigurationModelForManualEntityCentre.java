@@ -11,18 +11,18 @@ import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.Man
 
 public class GridConfigurationModelForManualEntityCentre<T extends AbstractEntity<?>> extends GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
-    public static <T extends AbstractEntity<?>> GridConfigurationModelForManualEntityCentre<T> createWithDefaultManualQueryCustomiser(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria){
-	return new GridConfigurationModelForManualEntityCentre<>(criteria, null);
+    public static <T extends AbstractEntity<?>> GridConfigurationModelForManualEntityCentre<T> createWithDefaultManualQueryCustomiser(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria) {
+        return new GridConfigurationModelForManualEntityCentre<>(criteria, null);
     }
 
     public static <T extends AbstractEntity<?>> GridConfigurationModelForManualEntityCentre<T> createWithCustomManualQueryCustomiser(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria,//
-	    final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> queryCustomiser){
-	return new GridConfigurationModelForManualEntityCentre<>(criteria, queryCustomiser);
+            final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> queryCustomiser) {
+        return new GridConfigurationModelForManualEntityCentre<>(criteria, queryCustomiser);
     }
 
     protected GridConfigurationModelForManualEntityCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria,//
-	    final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> queryCustomiser) {
-	super(criteria, queryCustomiser == null ? new ManualGridAnalysisQueryCustomiser<T>() : queryCustomiser);
+            final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> queryCustomiser) {
+        super(criteria, queryCustomiser == null ? new ManualGridAnalysisQueryCustomiser<T>() : queryCustomiser);
     }
 
     @Override

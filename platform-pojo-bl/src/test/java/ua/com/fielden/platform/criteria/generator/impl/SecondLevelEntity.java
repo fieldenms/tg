@@ -11,9 +11,9 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Entity for testing purposes.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle("key")
@@ -28,11 +28,11 @@ public class SecondLevelEntity extends AbstractEntity<String> {
     private ThirdLevelEntity entityProp;
 
     public ThirdLevelEntity getEntityProp() {
-	return entityProp;
+        return entityProp;
     }
 
     @Observable
     public void setEntityProp(final ThirdLevelEntity entityProp) {
-	this.entityProp = entityProp;
+        this.entityProp = entityProp;
     }
 }

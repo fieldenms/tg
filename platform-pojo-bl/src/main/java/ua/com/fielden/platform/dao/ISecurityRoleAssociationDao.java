@@ -10,15 +10,15 @@ import ua.com.fielden.platform.security.user.UserRole;
 
 /**
  * Interface that defines the API for retrieving saving and removing the {@link SecurityRoleAssociation} instances.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface ISecurityRoleAssociationDao extends IEntityDao<SecurityRoleAssociation> {
 
     /**
      * Returns the list of {@link SecurityRoleAssociation} those are associated with given security token
-     *
+     * 
      * @param securityToken
      * @return
      */
@@ -26,7 +26,7 @@ public interface ISecurityRoleAssociationDao extends IEntityDao<SecurityRoleAsso
 
     /**
      * Returns the map between security tokens and set of associated user roles.
-     *
+     * 
      * @param securityToken
      * @return
      */
@@ -34,7 +34,7 @@ public interface ISecurityRoleAssociationDao extends IEntityDao<SecurityRoleAsso
 
     /**
      * Removes all role association with the specified token.
-     *
+     * 
      * @param association
      */
     void removeAssociationsFor(final Class<? extends ISecurityToken> securityToken);

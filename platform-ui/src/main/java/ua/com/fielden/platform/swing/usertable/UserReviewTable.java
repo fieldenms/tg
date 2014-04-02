@@ -33,54 +33,54 @@ public class UserReviewTable extends JTable {
      * @param userTableModel
      */
     public UserReviewTable(final UserTableModel userTableModel) {
-	super(userTableModel);
+        super(userTableModel);
 
-	setDefaultRenderer(Boolean.class, new TableCellRenderer() {
+        setDefaultRenderer(Boolean.class, new TableCellRenderer() {
 
-	    private final TableCellRenderer stringCellRenderer = new DefaultTableCellRenderer(),//
-		    booleanCellRenderer = getDefaultRenderer(Boolean.class);
+            private final TableCellRenderer stringCellRenderer = new DefaultTableCellRenderer(),//
+                    booleanCellRenderer = getDefaultRenderer(Boolean.class);
 
-	    @Override
-	    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, final int column) {
-		final Component stringComponent = stringCellRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-		final JCheckBox boolComponent = (JCheckBox) booleanCellRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-		final Color backgroundColor = stringComponent.getBackground();
-		boolComponent.setBackground(new Color(backgroundColor.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue()));
-		boolComponent.setOpaque(true);
-		return boolComponent;
-	    }
+            @Override
+            public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, final int column) {
+                final Component stringComponent = stringCellRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                final JCheckBox boolComponent = (JCheckBox) booleanCellRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                final Color backgroundColor = stringComponent.getBackground();
+                boolComponent.setBackground(new Color(backgroundColor.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue()));
+                boolComponent.setOpaque(true);
+                return boolComponent;
+            }
 
-	});
+        });
 
-	for (int columnIndex = 0; columnIndex < getColumnCount(); columnIndex++) {
+        for (int columnIndex = 0; columnIndex < getColumnCount(); columnIndex++) {
 
-	    if (!isUserColumn(columnIndex)) {
-		setVerticalHeaderFor(getColumnModel().getColumn(columnIndex));
-		getColumnModel().getColumn(columnIndex).setPreferredWidth(0);
-	    }
-	}
+            if (!isUserColumn(columnIndex)) {
+                setVerticalHeaderFor(getColumnModel().getColumn(columnIndex));
+                getColumnModel().getColumn(columnIndex).setPreferredWidth(0);
+            }
+        }
 
-	final MouseDefaultHeaderHandler mouseHandler = new MouseDefaultHeaderHandler();
-	getTableHeader().addMouseMotionListener(mouseHandler);
-	getTableHeader().addMouseListener(mouseHandler);
-	getTableHeader().setReorderingAllowed(false);
-	addToolTipSuportForTableHeader();
+        final MouseDefaultHeaderHandler mouseHandler = new MouseDefaultHeaderHandler();
+        getTableHeader().addMouseMotionListener(mouseHandler);
+        getTableHeader().addMouseListener(mouseHandler);
+        getTableHeader().setReorderingAllowed(false);
+        addToolTipSuportForTableHeader();
 
-	setShowGrid(true);
-	setGridColor(new Color(214, 217, 223));
+        setShowGrid(true);
+        setGridColor(new Color(214, 217, 223));
     }
 
     // adds the tool tips to the table headers
     private void addToolTipSuportForTableHeader() {
-	getTableHeader().addMouseMotionListener(new MouseMotionAdapter() {
-	    @Override
-	    public void mouseMoved(final MouseEvent e) {
-		final int vColIndex = columnAtPoint(e.getPoint());
-		final JTableHeader header = getTableHeader();
+        getTableHeader().addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(final MouseEvent e) {
+                final int vColIndex = columnAtPoint(e.getPoint());
+                final JTableHeader header = getTableHeader();
 
-		header.setToolTipText(((UserTableModel) getModel()).getColumnHeaderToolTip(convertColumnIndexToModel(vColIndex)));
-	    }
-	});
+                header.setToolTipText(((UserTableModel) getModel()).getColumnHeaderToolTip(convertColumnIndexToModel(vColIndex)));
+            }
+        });
     }
 
     /**
@@ -90,7 +90,7 @@ public class UserReviewTable extends JTable {
      * @return
      */
     public boolean isUserColumn(final int viewColumnIndex) {
-	return ((UserTableModel) getModel()).isUserColumn(convertColumnIndexToModel(viewColumnIndex));
+        return ((UserTableModel) getModel()).isUserColumn(convertColumnIndexToModel(viewColumnIndex));
     }
 
     /**
@@ -99,26 +99,26 @@ public class UserReviewTable extends JTable {
      * @param column
      */
     public void setVerticalHeaderFor(final TableColumn column) {
-	column.setHeaderRenderer(new VerticalTableHeaderCellRenderer());
+        column.setHeaderRenderer(new VerticalTableHeaderCellRenderer());
     }
 
     @Override
     public String getToolTipText(final MouseEvent event) {
-	final int row = rowAtPoint(event.getPoint());
-	final int col = columnAtPoint(event.getPoint());
-	if (row >= 0 && col >= 0) {
-	    return ((UserTableModel) getModel()).getCellToolTip(convertRowIndexToModel(row), convertColumnIndexToModel(col));
-	}
-	return super.getToolTipText(event);
+        final int row = rowAtPoint(event.getPoint());
+        final int col = columnAtPoint(event.getPoint());
+        if (row >= 0 && col >= 0) {
+            return ((UserTableModel) getModel()).getCellToolTip(convertRowIndexToModel(row), convertColumnIndexToModel(col));
+        }
+        return super.getToolTipText(event);
     }
 
     @Override
     public void addColumn(final TableColumn column) {
-	super.addColumn(column);
-	if (!(column.getHeaderRenderer() instanceof VerticalTableHeaderCellRenderer)) {
-	    if (!isUserColumn(column.getModelIndex())) {
-		setVerticalHeaderFor(column);
-	    }
-	}
+        super.addColumn(column);
+        if (!(column.getHeaderRenderer() instanceof VerticalTableHeaderCellRenderer)) {
+            if (!isUserColumn(column.getModelIndex())) {
+                setVerticalHeaderFor(column);
+            }
+        }
     }
 }

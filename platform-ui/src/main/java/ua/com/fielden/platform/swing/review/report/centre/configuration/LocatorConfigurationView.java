@@ -33,7 +33,8 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
     private static final long serialVersionUID = 7422543091832971730L;
 
     /**
-     * Actions those allows to save, save as default and load default locator's configuration. There are also actions those are use to save or save as default locator's configuration when it is closing.
+     * Actions those allows to save, save as default and load default locator's configuration. There are also actions those are use to save or save as default locator's
+     * configuration when it is closing.
      */
     private final Action save, saveAsDefault, loadDefault;
 
@@ -48,111 +49,110 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
     private final Map<Object, DetailsFrame> detailsCache;
 
     public LocatorConfigurationView(final LocatorConfigurationModel<T, R> model, final BlockingIndefiniteProgressLayer progressLayer, final boolean isMultipleSelection) {
-	super(model, progressLayer);
-	addConfigurationEventListener(createOpenEventListener());
-	this.isMultipleSelection = isMultipleSelection;
-	this.save = createSaveAction();
-	this.saveAsDefault = createSaveAsDefaultAction();
-	this.loadDefault = createLoadDefaultAction();
-	this.detailsCache = new HashMap<>();
+        super(model, progressLayer);
+        addConfigurationEventListener(createOpenEventListener());
+        this.isMultipleSelection = isMultipleSelection;
+        this.save = createSaveAction();
+        this.saveAsDefault = createSaveAsDefaultAction();
+        this.loadDefault = createLoadDefaultAction();
+        this.detailsCache = new HashMap<>();
     }
 
     /**
      * Returns the cache of details associated with this locator.
-     *
+     * 
      * @return
      */
     public Map<Object, DetailsFrame> getDetailsCache() {
-	return detailsCache;
+        return detailsCache;
     }
 
     @Override
     public ICloseGuard canClose() {
-	for (final DetailsFrame frame : detailsCache.values()) {
-	    final ICloseGuard unableToClose = frame.canClose();
-	    if(unableToClose != null){
-		return unableToClose;
-	    }
-	}
-	return super.canClose();
+        for (final DetailsFrame frame : detailsCache.values()) {
+            final ICloseGuard unableToClose = frame.canClose();
+            if (unableToClose != null) {
+                return unableToClose;
+            }
+        }
+        return super.canClose();
     }
 
     @Override
     public void close() {
-	super.close();
-	for (final DetailsFrame frame : detailsCache.values()) {
-	    frame.close();
-	}
-	detailsCache.clear();
+        super.close();
+        for (final DetailsFrame frame : detailsCache.values()) {
+            frame.close();
+        }
+        detailsCache.clear();
     }
-
 
     @Override
     public String getInfo() {
-	return "Locator configuration panel.";
+        return "Locator configuration panel.";
     }
 
-    public void addLocatorEventListener(final ILocatorEventListener l){
-	listenerList.add(ILocatorEventListener.class, l);
+    public void addLocatorEventListener(final ILocatorEventListener l) {
+        listenerList.add(ILocatorEventListener.class, l);
     }
 
-    public void removeLocatorEventListener(final ILocatorEventListener l){
-	listenerList.remove(ILocatorEventListener.class, l);
+    public void removeLocatorEventListener(final ILocatorEventListener l) {
+        listenerList.remove(ILocatorEventListener.class, l);
     }
 
     public boolean isMultipleSelection() {
-	return isMultipleSelection;
+        return isMultipleSelection;
     }
 
     /**
      * Returns the "save" action.
-     *
+     * 
      * @return
      */
     public Action getSave() {
-	return save;
+        return save;
     }
 
     /**
      * Returns the "save as default" action.
-     *
+     * 
      * @return
      */
     public Action getSaveAsDefault() {
-	return saveAsDefault;
+        return saveAsDefault;
     }
 
     /**
      * Returns the "load default" action.
-     *
+     * 
      * @return
      */
     public Action getLoadDefault() {
-	return loadDefault;
+        return loadDefault;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public final LocatorConfigurationModel<T, R> getModel() {
-	return (LocatorConfigurationModel<T, R>)super.getModel();
+        return (LocatorConfigurationModel<T, R>) super.getModel();
     }
 
     /**
      * Registers the {@link ILocatorConfigurationEventListener} to listen the locator configuration event.
-     *
+     * 
      * @param l
      */
-    public void addLocatorConfigurationEventListener(final ILocatorConfigurationEventListener l){
-	listenerList.add(ILocatorConfigurationEventListener.class, l);
+    public void addLocatorConfigurationEventListener(final ILocatorConfigurationEventListener l) {
+        listenerList.add(ILocatorConfigurationEventListener.class, l);
     }
 
     /**
      * Removes the specified {@link ILocatorConfigurationEventListener} from the list of registered listeners.
-     *
+     * 
      * @param l
      */
-    public void removeLocatorConfigurationEventListener(final ILocatorConfigurationEventListener l){
-	listenerList.remove(ILocatorConfigurationEventListener.class, l);
+    public void removeLocatorConfigurationEventListener(final ILocatorConfigurationEventListener l) {
+        listenerList.remove(ILocatorConfigurationEventListener.class, l);
     }
 
     public List<T> getSelectedEntities() {
@@ -165,178 +165,178 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 
     @Override
     protected final EntityLocatorWizard<T, R> createWizardView() {
-	final EntityLocatorWizard<T, R> newWizardView = new EntityLocatorWizard<T, R>(this, getModel().createDomainTreeEditorModel());
-	return newWizardView;
+        final EntityLocatorWizard<T, R> newWizardView = new EntityLocatorWizard<T, R>(this, getModel().createDomainTreeEditorModel());
+        return newWizardView;
     }
 
     @Override
     protected final SingleAnalysisEntityLocator<T> createConfigurableView() {
-	final SingleAnalysisEntityLocator<T> entityLocator = new SingleAnalysisEntityLocator<T>(getModel().createEntityCentreModel(), this);
-	entityLocator.addLocatorEventListener(new ILocatorEventListener() {
+        final SingleAnalysisEntityLocator<T> entityLocator = new SingleAnalysisEntityLocator<T>(getModel().createEntityCentreModel(), this);
+        entityLocator.addLocatorEventListener(new ILocatorEventListener() {
 
-	    @Override
-	    public void locatorActionPerformed(final LocatorEvent event) {
-		fireLocatorEvent(event);
-	    }
-	});
-	return entityLocator;
+            @Override
+            public void locatorActionPerformed(final LocatorEvent event) {
+                fireLocatorEvent(event);
+            }
+        });
+        return entityLocator;
     }
 
-    private void fireLocatorEvent(final LocatorEvent event){
-	for(final ILocatorEventListener listener : listenerList.getListeners(ILocatorEventListener.class)){
-	    listener.locatorActionPerformed(event);
-	}
+    private void fireLocatorEvent(final LocatorEvent event) {
+        for (final ILocatorEventListener listener : listenerList.getListeners(ILocatorEventListener.class)) {
+            listener.locatorActionPerformed(event);
+        }
     }
 
     private IAbstractConfigurationViewEventListener createOpenEventListener() {
-	return new IAbstractConfigurationViewEventListener() {
+        return new IAbstractConfigurationViewEventListener() {
 
-	    @Override
-	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
-		switch (event.getEventAction()) {
-		case OPEN:
-		    getModel().refresh();
-		    if(getModel().getLocator() == null){
-			return new Result(LocatorConfigurationView.this, new IllegalStateException("The locator can not be initialized!"));
-		    }
-		    return getModel().canSetMode(ReportMode.REPORT);
+            @Override
+            public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
+                switch (event.getEventAction()) {
+                case OPEN:
+                    getModel().refresh();
+                    if (getModel().getLocator() == null) {
+                        return new Result(LocatorConfigurationView.this, new IllegalStateException("The locator can not be initialized!"));
+                    }
+                    return getModel().canSetMode(ReportMode.REPORT);
 
-		default:
-		    return Result.successful(LocatorConfigurationView.this);
-		}
-	    }
-	};
+                default:
+                    return Result.successful(LocatorConfigurationView.this);
+                }
+            }
+        };
     }
 
     private Action createSaveAction() {
-	return new BlockingLayerCommand<Void>("Save", getProgressLayer()) {
+        return new BlockingLayerCommand<Void>("Save", getProgressLayer()) {
 
-	    private static final long serialVersionUID = 7912294028797678105L;
+            private static final long serialVersionUID = 7912294028797678105L;
 
-	    @Override
-	    protected boolean preAction() {
-		setMessage("Saving locator...");
-		final boolean result= super.preAction();
-		if(!result){
-		    return false;
-		}
-		return fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.PRE_SAVE));
-	    }
+            @Override
+            protected boolean preAction() {
+                setMessage("Saving locator...");
+                final boolean result = super.preAction();
+                if (!result) {
+                    return false;
+                }
+                return fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.PRE_SAVE));
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		getModel().save();
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.SAVE));
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                getModel().save();
+                fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.SAVE));
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		open();
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.POST_SAVE));
-	    }
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                open();
+                fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.POST_SAVE));
+            }
 
-	    @Override
-	    protected void handlePreAndPostActionException(final Throwable ex) {
-		super.handlePreAndPostActionException(ex);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.SAVE_FAILED));
-	    }
-	};
+            @Override
+            protected void handlePreAndPostActionException(final Throwable ex) {
+                super.handlePreAndPostActionException(ex);
+                fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.SAVE_FAILED));
+            }
+        };
     }
 
     private Action createSaveAsDefaultAction() {
-	return new BlockingLayerCommand<Void>("Save As Default", getProgressLayer()) {
+        return new BlockingLayerCommand<Void>("Save As Default", getProgressLayer()) {
 
-	    private static final long serialVersionUID = 7462084429292050025L;
+            private static final long serialVersionUID = 7462084429292050025L;
 
-	    @Override
-	    protected boolean preAction() {
-		setMessage("Saving locator globally...");
-		final boolean result= super.preAction();
-		if(!result){
-		    return false;
-		}
-		return fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.PRE_SAVE_AS_DEFAULT));
-	    }
+            @Override
+            protected boolean preAction() {
+                setMessage("Saving locator globally...");
+                final boolean result = super.preAction();
+                if (!result) {
+                    return false;
+                }
+                return fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.PRE_SAVE_AS_DEFAULT));
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		getModel().saveGlobally();
-		getModel().save();
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.SAVE_AS_DEFAULT));
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                getModel().saveGlobally();
+                getModel().save();
+                fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.SAVE_AS_DEFAULT));
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		open();
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.POST_SAVE_AS_DEFAULT));
-	    }
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                open();
+                fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.POST_SAVE_AS_DEFAULT));
+            }
 
-	    @Override
-	    protected void handlePreAndPostActionException(final Throwable ex) {
-		super.handlePreAndPostActionException(ex);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.SAVE_AS_DEFAULT_FAILED));
-	    }
-	};
+            @Override
+            protected void handlePreAndPostActionException(final Throwable ex) {
+                super.handlePreAndPostActionException(ex);
+                fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.SAVE_AS_DEFAULT_FAILED));
+            }
+        };
     }
 
     private Action createLoadDefaultAction() {
-	return new BlockingLayerCommand<Void>("Load Default", getProgressLayer()) {
+        return new BlockingLayerCommand<Void>("Load Default", getProgressLayer()) {
 
-	    private static final long serialVersionUID = -1337109555032877767L;
+            private static final long serialVersionUID = -1337109555032877767L;
 
-	    @Override
-	    protected boolean preAction() {
-		setMessage("Loading global locator configuration...");
-		final boolean result= super.preAction();
-		if(!result){
-		    return false;
-		}
-		final int option = JOptionPane.showConfirmDialog(null, "All changes will be lost. Would you like to continue?", "Load default entity locator configuration", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, ResourceLoader.getIcon("images/tg-icon.png"));
-		if(option == JOptionPane.NO_OPTION){
-		    return false;
-		}
-		return fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.PRE_LOAD_DEFAULT));
-	    }
+            @Override
+            protected boolean preAction() {
+                setMessage("Loading global locator configuration...");
+                final boolean result = super.preAction();
+                if (!result) {
+                    return false;
+                }
+                final int option = JOptionPane.showConfirmDialog(null, "All changes will be lost. Would you like to continue?", "Load default entity locator configuration", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, ResourceLoader.getIcon("images/tg-icon.png"));
+                if (option == JOptionPane.NO_OPTION) {
+                    return false;
+                }
+                return fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.PRE_LOAD_DEFAULT));
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		getModel().discard();
-		getModel().reset();
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.LOAD_DEFAULT));
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                getModel().discard();
+                getModel().reset();
+                fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.LOAD_DEFAULT));
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		open();
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.POST_LOAD_DEFAULT));
-	    }
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                open();
+                fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.POST_LOAD_DEFAULT));
+            }
 
-	    @Override
-	    protected void handlePreAndPostActionException(final Throwable ex) {
-		super.handlePreAndPostActionException(ex);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.LOAD_DEFAULT_FAILED));
-	    }
-	};
+            @Override
+            protected void handlePreAndPostActionException(final Throwable ex) {
+                super.handlePreAndPostActionException(ex);
+                fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationView.this, LocatorConfigurationAction.LOAD_DEFAULT_FAILED));
+            }
+        };
     }
 
     /**
      * Iterates through the list of {@link ILocatorConfigurationEventListener} listeners and delegates the event to every listener.
-     *
+     * 
      * @param event
-     *
+     * 
      * @return
      */
-    private boolean fireLocatorConfigurationEvent(final LocatorConfigurationEvent event){
-	boolean result = true;
-	for(final ILocatorConfigurationEventListener listener : listenerList.getListeners(ILocatorConfigurationEventListener.class)){
-	    result &= listener.locatorConfigurationEventPerformed(event);
-	}
-	return result;
+    private boolean fireLocatorConfigurationEvent(final LocatorConfigurationEvent event) {
+        boolean result = true;
+        for (final ILocatorConfigurationEventListener listener : listenerList.getListeners(ILocatorConfigurationEventListener.class)) {
+            result &= listener.locatorConfigurationEventPerformed(event);
+        }
+        return result;
     }
 }

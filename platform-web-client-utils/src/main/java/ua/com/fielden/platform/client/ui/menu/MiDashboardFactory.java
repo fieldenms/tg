@@ -14,16 +14,16 @@ import com.google.inject.Injector;
 
 /**
  * A factory for {@link MiDashboard} tree menu item.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class MiDashboardFactory implements ITreeMenuItemFactory {
 
     @Override
     public MiWithVisibilityProvider<?> create(final Class<?> clazz, final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ITreeMenuItemVisibilityProvider visibilityProvider) {
-	final DashboardView dashboardView = new DashboardView(treeMenu, injector.getInstance(IGlobalDomainTreeManager.class), injector.getInstance(ICriteriaGenerator.class), injector.getInstance(IEntityMasterManager.class));
-	return new MiDashboard(dashboardView, visibilityProvider);
+        final DashboardView dashboardView = new DashboardView(treeMenu, injector.getInstance(IGlobalDomainTreeManager.class), injector.getInstance(ICriteriaGenerator.class), injector.getInstance(IEntityMasterManager.class));
+        return new MiDashboard(dashboardView, visibilityProvider);
     }
 
 }

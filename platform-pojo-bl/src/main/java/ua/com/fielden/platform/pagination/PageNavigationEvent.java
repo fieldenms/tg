@@ -6,9 +6,9 @@ import ua.com.fielden.platform.pagination.IPaginatorModel.PageNavigationPhases;
 
 /**
  * Encapsulates the page navigation event.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class PageNavigationEvent extends EventObject {
 
@@ -18,26 +18,26 @@ public class PageNavigationEvent extends EventObject {
 
     /**
      * Initiates {@link PageNavigationEvent} with page holder which has thrown that event and {@link PageNavigationPhases} instance.
-     *
+     * 
      * @param source
      * @param pageNavigationPhases
      */
     public PageNavigationEvent(final PageHolder source, final PageNavigationPhases pageNavigationPhases) {
-	super(source);
-	this.pageNavigationPhases = pageNavigationPhases;
+        super(source);
+        this.pageNavigationPhases = pageNavigationPhases;
     }
 
     /**
      * Returns the page navigation phase. (See {@link PageNavigationPhases} for more information).
-     *
+     * 
      * @return
      */
     public PageNavigationPhases getPageNavigationPhases() {
-	return pageNavigationPhases;
+        return pageNavigationPhases;
     }
 
     @Override
     public PageHolder getSource() {
-	return (PageHolder)super.getSource();
+        return (PageHolder) super.getSource();
     }
 }

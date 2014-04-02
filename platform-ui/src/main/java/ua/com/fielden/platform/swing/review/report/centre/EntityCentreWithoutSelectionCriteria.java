@@ -8,9 +8,9 @@ import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigu
 
 /**
  * Represents the entity centre without selection criteria panel.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  */
 public class EntityCentreWithoutSelectionCriteria<T extends AbstractEntity<?>> extends AbstractSingleAnalysisEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> {
@@ -18,24 +18,24 @@ public class EntityCentreWithoutSelectionCriteria<T extends AbstractEntity<?>> e
     private static final long serialVersionUID = -3759246269921116426L;
 
     public EntityCentreWithoutSelectionCriteria(final EntityCentreModel<T> model, final CentreConfigurationWithoutCriteriaView<T> owner) {
-	super(model, owner);
-	layoutComponents();
+        super(model, owner);
+        layoutComponents();
     }
 
     @Override
     public EntityCentreModel<T> getModel() {
-	return (EntityCentreModel<T>)super.getModel();
+        return (EntityCentreModel<T>) super.getModel();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public CentreConfigurationWithoutCriteriaView<T> getOwner() {
-        return (CentreConfigurationWithoutCriteriaView<T>)super.getOwner();
+        return (CentreConfigurationWithoutCriteriaView<T>) super.getOwner();
     }
 
     @Override
     protected ConfigureAction createConfigureAction() {
-	return null;
+        return null;
     }
 
     /**
@@ -48,6 +48,6 @@ public class EntityCentreWithoutSelectionCriteria<T extends AbstractEntity<?>> e
 
     @Override
     protected AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> createDefaultAnalysis() {
-	return getModel().getAnalysisBuilder().createAnalysis(null, null, getOwner().getDetailsCache(), this, getModel().getCriteria(), getReviewProgressLayer());
+        return getModel().getAnalysisBuilder().createAnalysis(null, null, getOwner().getDetailsCache(), this, getModel().getCriteria(), getReviewProgressLayer());
     }
 }

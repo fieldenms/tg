@@ -8,7 +8,7 @@ import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
  * The {@link EventListener} that listens the load notifications.
  * 
  * @author TG Team
- *
+ * 
  */
 public interface ILoadListener extends EventListener {
 

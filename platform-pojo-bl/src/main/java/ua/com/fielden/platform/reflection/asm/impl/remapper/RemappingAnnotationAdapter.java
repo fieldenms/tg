@@ -4,7 +4,7 @@ import org.kohsuke.asm3.AnnotationVisitor;
 
 /**
  * An <code>AnnotationVisitor</code> adapter for type remapping.
- *
+ * 
  * @author Eugene Kuleshov
  */
 public class RemappingAnnotationAdapter implements AnnotationVisitor {
@@ -31,17 +31,13 @@ public class RemappingAnnotationAdapter implements AnnotationVisitor {
     @Override
     public AnnotationVisitor visitAnnotation(final String name, final String desc) {
         final AnnotationVisitor v = av.visitAnnotation(name, renamer.mapDesc(desc));
-        return v == null ? null : (v == av
-                ? this
-                : new RemappingAnnotationAdapter(v, renamer));
+        return v == null ? null : (v == av ? this : new RemappingAnnotationAdapter(v, renamer));
     }
 
     @Override
     public AnnotationVisitor visitArray(final String name) {
         final AnnotationVisitor v = av.visitArray(name);
-        return v == null ? null : (v == av
-                ? this
-                : new RemappingAnnotationAdapter(v, renamer));
+        return v == null ? null : (v == av ? this : new RemappingAnnotationAdapter(v, renamer));
     }
 
     @Override

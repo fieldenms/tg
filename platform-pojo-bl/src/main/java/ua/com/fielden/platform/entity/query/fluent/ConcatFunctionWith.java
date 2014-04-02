@@ -8,17 +8,17 @@ final class ConcatFunctionWith<T, ET extends AbstractEntity<?>> extends Abstract
     T parent;
 
     ConcatFunctionWith(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     public T end() {
-	return copy(parent, getTokens().endOfFunction());
+        return copy(parent, getTokens().endOfFunction());
     }
 
     @Override
     public IConcatFunctionArgument<T, ET> with() {
-	return new ConcatFunctionArgument<T, ET>(getTokens(), parent);
+        return new ConcatFunctionArgument<T, ET>(getTokens(), parent);
     }
 }

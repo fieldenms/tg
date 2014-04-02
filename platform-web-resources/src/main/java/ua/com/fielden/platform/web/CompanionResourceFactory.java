@@ -20,21 +20,21 @@ public class CompanionResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
 
     public CompanionResourceFactory(final IComputationMonitor resource, final Injector injector) {
-	this.resource = resource;
-	this.injector = injector;
-	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.resource = resource;
+        this.injector = injector;
+        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
     }
 
     @Override
     public void handle(final Request request, final Response response) {
-	super.handle(request, response);
+        super.handle(request, response);
 
-	final String username = (String) request.getAttributes().get("username");
-	injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+        final String username = (String) request.getAttributes().get("username");
+        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	if (Method.GET == request.getMethod() || Method.HEAD == request.getMethod() || Method.POST == request.getMethod() || Method.DELETE == request.getMethod()) {
-	    final CompanionResource coResource = new CompanionResource(resource, restUtil, getContext(), request, response);
-	    coResource.handle();
-	}
+        if (Method.GET == request.getMethod() || Method.HEAD == request.getMethod() || Method.POST == request.getMethod() || Method.DELETE == request.getMethod()) {
+            final CompanionResource coResource = new CompanionResource(resource, restUtil, getContext(), request, response);
+            coResource.handle();
+        }
     }
 }

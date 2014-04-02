@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.javafx.dashboard2;
 
-
 /**
  * A traffic lights control model.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class SentinelModel {
     private final SentinelSectionModel redLightingModel;
@@ -13,9 +12,9 @@ public class SentinelModel {
     private final SentinelSectionModel greenLightingModel;
 
     public SentinelModel(final IDescGetter redDescGetter, final IDescGetter yellowDescGetter, final IDescGetter greenDescGetter) {
-	redLightingModel = new SentinelSectionModel(redDescGetter);
-	yellowLightingModel = new SentinelSectionModel(yellowDescGetter);
-	greenLightingModel = new SentinelSectionModel(greenDescGetter);
+        redLightingModel = new SentinelSectionModel(redDescGetter);
+        yellowLightingModel = new SentinelSectionModel(yellowDescGetter);
+        greenLightingModel = new SentinelSectionModel(greenDescGetter);
     }
 
     public SentinelSectionModel getRedLightingModel() {

@@ -22,30 +22,30 @@ public class UnionEntityForReflector extends AbstractUnionEntity {
     private DynamicKeyPartEntity dynamicKeyPartEntity;
 
     public SimplePartEntity getSimplePartEntity() {
-	return simplePartEntity;
+        return simplePartEntity;
     }
 
     @Observable
     public void setSimplePartEntity(final SimplePartEntity simplePartEntity) {
-	this.simplePartEntity = simplePartEntity;
+        this.simplePartEntity = simplePartEntity;
     }
 
     public ComplexPartEntity1 getComplexPartEntity() {
-	return complexPartEntity;
+        return complexPartEntity;
     }
 
     @Observable
     public void setComplexPartEntity(final ComplexPartEntity1 complexPartEntity) {
-	this.complexPartEntity = complexPartEntity;
+        this.complexPartEntity = complexPartEntity;
     }
 
     public DynamicKeyPartEntity getDynamicKeyPartEntity() {
-	return dynamicKeyPartEntity;
+        return dynamicKeyPartEntity;
     }
 
     @Observable
     public void setDynamicKeyPartEntity(final DynamicKeyPartEntity dynamicKeyPartEntity) {
-	this.dynamicKeyPartEntity = dynamicKeyPartEntity;
+        this.dynamicKeyPartEntity = dynamicKeyPartEntity;
     }
 
 }

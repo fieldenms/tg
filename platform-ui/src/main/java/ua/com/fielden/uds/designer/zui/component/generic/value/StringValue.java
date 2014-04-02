@@ -25,68 +25,68 @@ public class StringValue implements IValue<String>, Serializable, Cloneable {
     }
 
     public StringValue(String value) {
-	setValue(value);
+        setValue(value);
     }
 
     public String getValue() {
-	return value;
+        return value;
     }
 
     public void setValue(String value) {
-	// handle empty value if necessary
-	this.value = value;
-	if ("".equals(value) && !isEmptyPermitted()) {
-	    this.value = getDefaultValue();
-	} else {
-	    setDefaultValue(this.value);
-	}
-	for (IUpdater<String> updater : updaters) {
-	    updater.update(this.value);
-	}
+        // handle empty value if necessary
+        this.value = value;
+        if ("".equals(value) && !isEmptyPermitted()) {
+            this.value = getDefaultValue();
+        } else {
+            setDefaultValue(this.value);
+        }
+        for (IUpdater<String> updater : updaters) {
+            updater.update(this.value);
+        }
     }
 
     public void registerUpdater(IUpdater<String> updater) {
-	if (updater != null) {
-	    // System.out.println("updater is registered");
-	    updaters.add(updater);
-	}
+        if (updater != null) {
+            // System.out.println("updater is registered");
+            updaters.add(updater);
+        }
     }
 
     public void removeUpdater(IUpdater<String> updater) {
-	if (updaters.remove(updater)) {
-	    // System.out.println("updater is removed");
-	}
+        if (updaters.remove(updater)) {
+            // System.out.println("updater is removed");
+        }
     }
 
     @Override
     public boolean equals(Object obj) {
-	if (!(obj instanceof IValue)) {
-	    return false;
-	}
-	if (this == obj) {
-	    return true;
-	}
+        if (!(obj instanceof IValue)) {
+            return false;
+        }
+        if (this == obj) {
+            return true;
+        }
 
-	return getValue().equals(((IValue) obj).getValue());
+        return getValue().equals(((IValue) obj).getValue());
     }
 
     public Object clone() {
-	return new StringValue(getValue());
+        return new StringValue(getValue());
     }
 
     public String getDefaultValue() {
-	return defaultValue;
+        return defaultValue;
     }
 
     public void setDefaultValue(String defaultValue) {
-	this.defaultValue = defaultValue;
+        this.defaultValue = defaultValue;
     }
 
     public boolean isEmptyPermitted() {
-	return emptyPermitted;
+        return emptyPermitted;
     }
 
     public void setEmptyPermitted(boolean emptyPermitted) {
-	this.emptyPermitted = emptyPermitted;
+        this.emptyPermitted = emptyPermitted;
     }
 }

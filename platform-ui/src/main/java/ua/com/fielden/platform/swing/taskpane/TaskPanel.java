@@ -24,89 +24,89 @@ public class TaskPanel extends JPanel {
     private final Border taskPaneBorder;
 
     public TaskPanel() {
-	super.setLayout(new MigLayout("fill, insets 0", "[]", "[c]0[c]"));
-	collapsiblePanel = new JXCollapsiblePane();
-	taskPaneCaption = new TaskPaneCaption(collapsiblePanel);
-	// taskPaneCaption.setBorder(BorderFactory.createLineBorder(Color.gray));
-	setBorder(BorderFactory.createLineBorder(new Color(146, 151, 161)));
-	super.addImpl(taskPaneCaption, "growx, wrap", -1);
-	super.addImpl(collapsiblePanel, "grow", -1);
-	final JScrollPane scroll = new JScrollPane();
-	taskPaneBorder = scroll.getBorder();
-	//	collapsiblePanel.addPropertyChangeListener("collapsed", new PropertyChangeListener() {
-	//
-	//	    @Override
-	//	    public void propertyChange(final PropertyChangeEvent evt) {
-	//		if (getParent() != null) {
-	//		    getParent().invalidate();
-	//		    getParent().validate();
-	//		    getParent().repaint();
-	//		}
-	//	    }
-	//	});
+        super.setLayout(new MigLayout("fill, insets 0", "[]", "[c]0[c]"));
+        collapsiblePanel = new JXCollapsiblePane();
+        taskPaneCaption = new TaskPaneCaption(collapsiblePanel);
+        // taskPaneCaption.setBorder(BorderFactory.createLineBorder(Color.gray));
+        setBorder(BorderFactory.createLineBorder(new Color(146, 151, 161)));
+        super.addImpl(taskPaneCaption, "growx, wrap", -1);
+        super.addImpl(collapsiblePanel, "grow", -1);
+        final JScrollPane scroll = new JScrollPane();
+        taskPaneBorder = scroll.getBorder();
+        //	collapsiblePanel.addPropertyChangeListener("collapsed", new PropertyChangeListener() {
+        //
+        //	    @Override
+        //	    public void propertyChange(final PropertyChangeEvent evt) {
+        //		if (getParent() != null) {
+        //		    getParent().invalidate();
+        //		    getParent().validate();
+        //		    getParent().repaint();
+        //		}
+        //	    }
+        //	});
     }
 
     public TaskPanel(final LayoutManager manager) {
-	this();
-	setLayout(manager);
+        this();
+        setLayout(manager);
     }
 
     @Override
     protected void addImpl(final Component comp, final Object constraints, final int index) {
-	getCollapsiblePanel().add(comp, constraints, index);
-	revalidate();
+        getCollapsiblePanel().add(comp, constraints, index);
+        revalidate();
     }
 
     @Override
     public void setLayout(final LayoutManager mgr) {
-	if (getCollapsiblePanel() != null) {
-	    getCollapsiblePanel().setLayout(mgr);
-	}
+        if (getCollapsiblePanel() != null) {
+            getCollapsiblePanel().setLayout(mgr);
+        }
     }
 
     @Override
     public void remove(final Component comp) {
-	getCollapsiblePanel().remove(comp);
+        getCollapsiblePanel().remove(comp);
     }
 
     @Override
     public void remove(final int index) {
-	getCollapsiblePanel().remove(index);
+        getCollapsiblePanel().remove(index);
     }
 
     @Override
     public void removeAll() {
-	getCollapsiblePanel().removeAll();
+        getCollapsiblePanel().removeAll();
     }
 
     public JXCollapsiblePane getCollapsiblePanel() {
-	return collapsiblePanel;
+        return collapsiblePanel;
     }
 
     public void setTitle(final String title) {
-	taskPaneCaption.setTitle(title);
+        taskPaneCaption.setTitle(title);
     }
 
     public String getTitle() {
-	return taskPaneCaption.getTitle();
+        return taskPaneCaption.getTitle();
     }
 
     public boolean isExpanded() {
-	return !getCollapsiblePanel().isCollapsed();
+        return !getCollapsiblePanel().isCollapsed();
     }
 
     @Override
     protected void paintComponent(final Graphics g) {
-	taskPaneBorder.paintBorder(new JScrollPane(), g, 0, 0, getWidth(), getHeight());
-	super.paintComponent(g);
+        taskPaneBorder.paintBorder(new JScrollPane(), g, 0, 0, getWidth(), getHeight());
+        super.paintComponent(g);
     }
 
     public void setAnimated(final boolean animated) {
-	collapsiblePanel.setAnimated(animated);
+        collapsiblePanel.setAnimated(animated);
     }
 
     public boolean isAnimated() {
-	return collapsiblePanel.isAnimated();
+        return collapsiblePanel.isAnimated();
     }
 
 }

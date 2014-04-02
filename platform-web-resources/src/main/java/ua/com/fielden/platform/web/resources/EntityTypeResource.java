@@ -26,7 +26,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  * <li>save -- PUT request with an envelope containing a new instance of an entity to be persisted for the first time.
  * </ul>
  * Each request is handled by a new resource instance, thus the only thread-safety requirement is to have provided DAO and entity factory thread-safe.
- *
+ * 
  * @author TG Team
  */
 public class EntityTypeResource<T extends AbstractEntity<?>> extends ServerResource {
@@ -54,7 +54,7 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends ServerResou
      * The main resource constructor accepting a DAO instance in addition to the standard {@link Resource} parameters.
      * <p>
      * DAO is required for DB interoperability, whereas entity factory is required for enhancement of entities provided in request envelopes.
-     *
+     * 
      * @param dao
      * @param factory
      * @param context
@@ -62,45 +62,45 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends ServerResou
      * @param response
      */
     public EntityTypeResource(final IEntityDao<T> dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	setNegotiated(false);
-	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
-	this.dao = dao;
-	this.factory = factory;
-	this.restUtil = restUtil;
-	// Method request.getResourceRef() points to the URI and thus provides facilities to access its parts
-	pageCapacity = initPageCapacity(request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity"));
-	pageNo = initPageNo(request.getResourceRef().getQueryAsForm().getFirstValue("page-no"));
+        init(context, request, response);
+        setNegotiated(false);
+        getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
+        this.dao = dao;
+        this.factory = factory;
+        this.restUtil = restUtil;
+        // Method request.getResourceRef() points to the URI and thus provides facilities to access its parts
+        pageCapacity = initPageCapacity(request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity"));
+        pageNo = initPageNo(request.getResourceRef().getQueryAsForm().getFirstValue("page-no"));
     }
 
     /**
      * Initialisation of property <code>pageCapacity</code>.
-     *
+     * 
      * @param pageCapacityParamName
      * @return
      */
     private int initPageCapacity(final String pageCapacityParamName) {
-	try {
-	    return pageCapacityParamName != null ? Integer.parseInt(pageCapacityParamName) : 25;
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    return 25;
-	}
+        try {
+            return pageCapacityParamName != null ? Integer.parseInt(pageCapacityParamName) : 25;
+        } catch (final Exception e) {
+            e.printStackTrace();
+            return 25;
+        }
     }
 
     /**
      * Initialisation of property <code>pageNo</code>.
-     *
+     * 
      * @param pageNoParamName
      * @return
      */
     private int initPageNo(final String pageNoParamName) {
-	try {
-	    return pageNoParamName != null ? Integer.parseInt(pageNoParamName) : 0;
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    return 0;
-	}
+        try {
+            return pageNoParamName != null ? Integer.parseInt(pageNoParamName) : 0;
+        } catch (final Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////
@@ -114,15 +114,15 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends ServerResou
     @Override
     public Representation get() {
 
-	try {
-	    final IPage<T> page = dao.getPage(pageNo, pageCapacity);
-	    restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
-	    restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
-	    return restUtil.listRepresentation(page.data());
-	} catch (final Exception ex) {
-	    ex.printStackTrace();
-	    return restUtil.errorRepresentation(ex);
-	}
+        try {
+            final IPage<T> page = dao.getPage(pageNo, pageCapacity);
+            restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
+            restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
+            return restUtil.listRepresentation(page.data());
+        } catch (final Exception ex) {
+            ex.printStackTrace();
+            return restUtil.errorRepresentation(ex);
+        }
     }
 
     /**
@@ -131,12 +131,12 @@ public class EntityTypeResource<T extends AbstractEntity<?>> extends ServerResou
     @Put
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
-	try {
-	    final T entity =  restUtil.restoreEntity(envelope, dao.getEntityType());
-	    return restUtil.singleRepresentation(dao.save(entity));
-	} catch (final Exception ex) {
-	    ex.printStackTrace();
-	    return restUtil.errorRepresentation(ex);
-	}
+        try {
+            final T entity = restUtil.restoreEntity(envelope, dao.getEntityType());
+            return restUtil.singleRepresentation(dao.save(entity));
+        } catch (final Exception ex) {
+            ex.printStackTrace();
+            return restUtil.errorRepresentation(ex);
+        }
     }
 }

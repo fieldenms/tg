@@ -17,52 +17,52 @@ import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
 /**
  * <code>IntegerTextField</code> is a JTextField that accepts only digits.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class IntegerTextField extends AbstractTextField {
     private static final long serialVersionUID = 4954244858909749947L;
 
     public IntegerTextField(final Long value, final Options... options) {
-	super(value != null ? value.toString() : "", options);
+        super(value != null ? value.toString() : "", options);
     }
 
     public IntegerTextField(final Options... options) {
-	super(options);
+        super(options);
     }
 
     @Override
     protected Document createDefaultModel() {
-	return new IntegerDocument();
+        return new IntegerDocument();
     }
 
     /**
      * Document model that accepts only digits.
-     *
+     * 
      * @author TG Team
-     *
+     * 
      */
     private static class IntegerDocument extends PlainDocument {
-	private static final long serialVersionUID = 0;
+        private static final long serialVersionUID = 0;
 
-	@Override
-	public void insertString(final int offs, final String str, final AttributeSet a) throws BadLocationException {
-	    if (str == null) {
-		return;
-	    }
-	    if (StringUtils.isNumeric(str)) {
-		super.insertString(offs, str, a);
-	    }
-	}
+        @Override
+        public void insertString(final int offs, final String str, final AttributeSet a) throws BadLocationException {
+            if (str == null) {
+                return;
+            }
+            if (StringUtils.isNumeric(str)) {
+                super.insertString(offs, str, a);
+            }
+        }
     }
 
     public static void main(final String[] args) {
-	final JPanel panel = new JPanel(new MigLayout("fill", "[:250:]"));
-	final IntegerTextField field = new IntegerTextField();
+        final JPanel panel = new JPanel(new MigLayout("fill", "[:250:]"));
+        final IntegerTextField field = new IntegerTextField();
 
-	panel.add(new CaptionTextFieldLayer<JTextField>(field, "some caption"), "growx, wrap");
-	panel.add(new JButton("Dummy"), "align right");
-	SimpleLauncher.show("Show off the caption", panel);
+        panel.add(new CaptionTextFieldLayer<JTextField>(field, "some caption"), "growx, wrap");
+        panel.add(new JButton("Dummy"), "align right");
+        SimpleLauncher.show("Show off the caption", panel);
     }
 }

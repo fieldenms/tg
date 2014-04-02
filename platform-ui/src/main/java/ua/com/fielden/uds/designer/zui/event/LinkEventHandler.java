@@ -16,39 +16,39 @@ import edu.umd.cs.piccolo.event.PInputEvent;
  */
 public class LinkEventHandler extends PDragEventHandler {
     public LinkEventHandler() {
-	getEventFilter().setMarksAcceptedEventsAsHandled(true);
+        getEventFilter().setMarksAcceptedEventsAsHandled(true);
     }
 
     protected void startDrag(PInputEvent event) {
-	super.startDrag(event);
+        super.startDrag(event);
     }
 
     @SuppressWarnings("unchecked")
     protected void drag(PInputEvent event) {
-	super.drag(event);
-	PNode node = event.getPickedNode();
-	if (node.getAttribute("links") != null) {
-	    List<ILink> links = (List<ILink>) node.getAttribute("links");
-	    for (ILink link : links) {
-		link.reset();
-	    }
-	}
+        super.drag(event);
+        PNode node = event.getPickedNode();
+        if (node.getAttribute("links") != null) {
+            List<ILink> links = (List<ILink>) node.getAttribute("links");
+            for (ILink link : links) {
+                link.reset();
+            }
+        }
     }
 
     protected void endDrag(PInputEvent event) {
-	super.endDrag(event);
+        super.endDrag(event);
     }
 
     public void mouseEntered(PInputEvent e) {
-	if (e.getButton() == 0) {
-	    e.getPickedNode().setPaint(Color.red);
-	}
+        if (e.getButton() == 0) {
+            e.getPickedNode().setPaint(Color.red);
+        }
     }
 
     public void mouseExited(PInputEvent e) {
-	if (e.getButton() == 0) {
-	    e.getPickedNode().setPaint(Color.white);
-	}
+        if (e.getButton() == 0) {
+            e.getPickedNode().setPaint(Color.white);
+        }
     }
 
 }

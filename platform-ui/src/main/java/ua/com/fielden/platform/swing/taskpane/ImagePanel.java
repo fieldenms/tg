@@ -14,27 +14,27 @@ public class ImagePanel extends JPanel {
     private Image icon;
 
     public ImagePanel() {
-	icon = null;
+        icon = null;
     }
 
-    public ImagePanel(final ImageIcon icon){
-	setIcon(icon.getImage());
+    public ImagePanel(final ImageIcon icon) {
+        setIcon(icon.getImage());
     }
 
     @Override
     protected void paintComponent(final Graphics g) {
-	// super.paintComponent(g);
-	final Graphics2D g2D = (Graphics2D) g;
-	g2D.drawImage(icon, 0, 0, null);
+        // super.paintComponent(g);
+        final Graphics2D g2D = (Graphics2D) g;
+        g2D.drawImage(icon, 0, 0, null);
     }
 
     public void setIcon(final Image icon) {
-	this.icon = icon;
-	revalidate();
+        this.icon = icon;
+        revalidate();
     }
 
     public Image getIcon() {
-	return icon;
+        return icon;
     }
 
 }

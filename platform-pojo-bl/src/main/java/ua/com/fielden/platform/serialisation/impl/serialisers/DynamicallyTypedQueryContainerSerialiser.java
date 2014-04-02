@@ -10,37 +10,37 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import com.esotericsoftware.kryo.Kryo;
 
 /**
- * Serialises {@link DynamicallyTypedQueryContainer} instances with dynamic loading of associated types upon deserialisation
- * using a local instance of {@link DynamicEntityClassLoader}.
- *
+ * Serialises {@link DynamicallyTypedQueryContainer} instances with dynamic loading of associated types upon deserialisation using a local instance of
+ * {@link DynamicEntityClassLoader}.
+ * 
  * @author TG Team
- *
+ * 
  */
 public class DynamicallyTypedQueryContainerSerialiser extends TgSimpleSerializer<DynamicallyTypedQueryContainer> {
 
     public DynamicallyTypedQueryContainerSerialiser(final Kryo kryo) {
-	super(kryo);
+        super(kryo);
     }
 
     @Override
     public void write(final ByteBuffer buffer, final DynamicallyTypedQueryContainer data) {
-	writeValue(buffer, data.getDynamicallyGeneratedTypes());
-	writeValue(buffer, data.getQem());
+        writeValue(buffer, data.getDynamicallyGeneratedTypes());
+        writeValue(buffer, data.getQem());
     }
 
     @Override
     public DynamicallyTypedQueryContainer read(final ByteBuffer buffer) {
-	// deserialise a list of binary representation of dynamically generated types
-	final List<byte[]> binaryTypes = readValue(buffer, List.class);
-	// load dynamically generated types from their binary representation before restoring query model
-	final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
-	for (final byte[] binaryType : binaryTypes) {
-	    classLoader.defineClass(binaryType);
-	}
+        // deserialise a list of binary representation of dynamically generated types
+        final List<byte[]> binaryTypes = readValue(buffer, List.class);
+        // load dynamically generated types from their binary representation before restoring query model
+        final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        for (final byte[] binaryType : binaryTypes) {
+            classLoader.defineClass(binaryType);
+        }
 
-	// now we should be able to restore the query model
-	final QueryExecutionModel<?, ?> qem = readValue(buffer, QueryExecutionModel.class);
+        // now we should be able to restore the query model
+        final QueryExecutionModel<?, ?> qem = readValue(buffer, QueryExecutionModel.class);
 
-	return new DynamicallyTypedQueryContainer(binaryTypes, qem);
+        return new DynamicallyTypedQueryContainer(binaryTypes, qem);
     }
 }

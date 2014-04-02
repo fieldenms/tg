@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 /**
  * Should be used to indicate if an entity property is required by default (i.e. cannot can null value). There is also annotation {@link NotNull} used on setters, however it is
  * more restrictive. The <code>Required</code> annotation can be overwritten by changing property <code>required</code> of a corresponding meta-property instance.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })

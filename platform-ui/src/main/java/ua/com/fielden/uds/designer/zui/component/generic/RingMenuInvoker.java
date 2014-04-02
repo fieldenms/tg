@@ -26,28 +26,28 @@ public class RingMenuInvoker extends PBasicInputEventHandler implements Serializ
     private AbstractNode node;
 
     public RingMenuInvoker(AbstractNode node) {
-	this.node = node;
+        this.node = node;
     }
 
     private class Action implements ActionListener, Serializable {
-	private static final long serialVersionUID = 845725509648065834L;
+        private static final long serialVersionUID = 845725509648065834L;
 
-	public void actionPerformed(ActionEvent evt) {
-	    int centreX = (int) (node.getGlobalBounds().getX() + node.getWidth());
-	    int centreY = (int) node.getGlobalBounds().getY();
-	    if (node.getRingMenu() != null) { // just in case
-		node.getRingMenu().show(centreX, centreY);
-	    }
-	}
+        public void actionPerformed(ActionEvent evt) {
+            int centreX = (int) (node.getGlobalBounds().getX() + node.getWidth());
+            int centreY = (int) node.getGlobalBounds().getY();
+            if (node.getRingMenu() != null) { // just in case
+                node.getRingMenu().show(centreX, centreY);
+            }
+        }
     };
 
     private Timer timer = new Timer(300, taskPerformer);
 
     public void mouseExited(PInputEvent event) {
-	timer.stop();
+        timer.stop();
     }
 
     public void mouseMoved(PInputEvent event) {
-	timer.restart();
+        timer.restart();
     }
 }

@@ -16,9 +16,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Type representing the details side of One-to-Many association.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key")
@@ -38,7 +38,6 @@ public class DetailsEntityForNonKeyOneToManyAssociation extends AbstractEntity<D
     @CompositeKeyMember(2)
     private Integer key2;
 
-
     @IsProperty
     @MapTo
     @Title(value = "Master property", desc = "Desc")
@@ -46,33 +45,32 @@ public class DetailsEntityForNonKeyOneToManyAssociation extends AbstractEntity<D
 
     @Observable
     public DetailsEntityForNonKeyOneToManyAssociation setMany2oneProp(final MasterEntityWithNonKeyOneToManyAssociation many2oneProp) {
-	this.many2oneProp = many2oneProp;
-	return this;
+        this.many2oneProp = many2oneProp;
+        return this;
     }
 
     public MasterEntityWithNonKeyOneToManyAssociation getMany2oneProp() {
-	return many2oneProp;
+        return many2oneProp;
     }
-
 
     @Observable
     public DetailsEntityForNonKeyOneToManyAssociation setKey2(final Integer key2) {
-	this.key2 = key2;
-	return this;
+        this.key2 = key2;
+        return this;
     }
 
     public Integer getKey2() {
-	return key2;
+        return key2;
     }
 
     @Observable
     public DetailsEntityForNonKeyOneToManyAssociation setKey1(final Date key1) {
-	this.key1 = key1;
-	return this;
+        this.key1 = key1;
+        return this;
     }
 
     public Date getKey1() {
-	return key1;
+        return key1;
     }
 
     @IsProperty
@@ -92,34 +90,32 @@ public class DetailsEntityForNonKeyOneToManyAssociation extends AbstractEntity<D
 
     @Observable
     public DetailsEntityForNonKeyOneToManyAssociation setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
-
 
     @Observable
     public DetailsEntityForNonKeyOneToManyAssociation setIntProp(final Integer intProp) {
-	this.intProp = intProp;
-	return this;
+        this.intProp = intProp;
+        return this;
     }
 
     public Integer getIntProp() {
-	return intProp;
+        return intProp;
     }
-
 
     @Observable
     public DetailsEntityForNonKeyOneToManyAssociation setStrProp(final String strProp) {
-	this.strProp = strProp;
-	return this;
+        this.strProp = strProp;
+        return this;
     }
 
     public String getStrProp() {
-	return strProp;
+        return strProp;
     }
 
 }

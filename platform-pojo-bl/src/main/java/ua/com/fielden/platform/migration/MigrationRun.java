@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(String.class)
-@KeyTitle(value="Migration run", desc="Migration run")
+@KeyTitle(value = "Migration run", desc = "Migration run")
 @MapEntityTo("MIGRATION_RUN")
 public class MigrationRun extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
@@ -34,12 +34,12 @@ public class MigrationRun extends AbstractEntity<String> {
 
     /**
      * Convenience constructor.
-     *
+     * 
      * @param key
      * @param desc
      */
     public MigrationRun(final String key, final String desc) {
-	super(null, key, desc);
+        super(null, key, desc);
     }
 
     public Date getStarted() {
@@ -54,6 +54,7 @@ public class MigrationRun extends AbstractEntity<String> {
     public void setStarted(final Date started) {
         this.started = started;
     }
+
     @Observable
     public void setFinished(final Date finished) {
         this.finished = finished;

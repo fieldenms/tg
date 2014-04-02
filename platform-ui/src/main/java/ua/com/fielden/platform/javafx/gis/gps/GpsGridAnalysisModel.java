@@ -10,7 +10,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAn
 
 /**
  * A model for Message's {@link GridAnalysisView}.
- *
+ * 
  * @author Developers
  */
 public abstract class GpsGridAnalysisModel<T extends AbstractEntity<?>> extends GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer> {
@@ -18,19 +18,19 @@ public abstract class GpsGridAnalysisModel<T extends AbstractEntity<?>> extends 
     private final Class<T> entityType;
 
     public GpsGridAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> queryCustomiser, final Class<T> entityType) {
-	super(criteria, queryCustomiser);
-	this.entityType = entityType;
+        super(criteria, queryCustomiser);
+        this.entityType = entityType;
     }
 
     public boolean getFitToBounds() {
-	return fitToBounds;
+        return fitToBounds;
     }
 
     protected void setFitToBounds(final boolean fitToBounds) {
-	this.fitToBounds = fitToBounds;
+        this.fitToBounds = fitToBounds;
     }
 
     public Class<T> getEntityType() {
-	return entityType;
+        return entityType;
     }
 }

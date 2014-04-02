@@ -13,6 +13,6 @@ public class TgOrgUnit5Dao extends CommonEntityDao<TgOrgUnit5> implements ITgOrg
 
     @Inject
     protected TgOrgUnit5Dao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

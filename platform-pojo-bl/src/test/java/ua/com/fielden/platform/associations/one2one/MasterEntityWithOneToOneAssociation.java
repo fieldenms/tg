@@ -12,9 +12,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * The master type in One-to-One association.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key")
@@ -39,33 +39,32 @@ public class MasterEntityWithOneToOneAssociation extends AbstractEntity<String> 
 
     @Observable
     public MasterEntityWithOneToOneAssociation setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
-
 
     @Observable
     public MasterEntityWithOneToOneAssociation setIntProp(final Integer intProp) {
-	this.intProp = intProp;
-	return this;
+        this.intProp = intProp;
+        return this;
     }
 
     public Integer getIntProp() {
-	return intProp;
+        return intProp;
     }
 
     @Observable
     public MasterEntityWithOneToOneAssociation setOne2oneAssociation(final DetailEntityForOneToOneAssociationWithOneToManyAssociation one2oneAssociation) {
-	this.one2oneAssociation = one2oneAssociation;
-	return this;
+        this.one2oneAssociation = one2oneAssociation;
+        return this;
     }
 
     public DetailEntityForOneToOneAssociationWithOneToManyAssociation getOne2oneAssociation() {
-	return one2oneAssociation;
+        return one2oneAssociation;
     }
 
 }

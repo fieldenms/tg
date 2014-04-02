@@ -17,15 +17,15 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisVie
 
 /**
  * {@link GridAnalysisView} for Vehicle main details with EGI and GIS views.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public abstract class MessageGpsGridAnalysisView<T extends AbstractEntity<?>> extends GpsGridAnalysisView<T, MessageGpsGisViewPanel<T>> {
     private static final long serialVersionUID = 553731585658593055L;
 
     public MessageGpsGridAnalysisView(final GpsGridAnalysisModel<T> model, final GpsGridConfigurationView<T> owner) {
-	super(model, owner);
+        super(model, owner);
     }
 
     @Override
@@ -35,17 +35,17 @@ public abstract class MessageGpsGridAnalysisView<T extends AbstractEntity<?>> ex
 
     @Override
     protected IColouringScheme<AbstractEntity> createRowColoringScheme() {
-	return new IColouringScheme<AbstractEntity>() {
-	    @Override
-	    public Color getColor(final AbstractEntity entity) {
-		final MessagePoint p = getGisViewPanel().getCorrespondingPoint(entity);
-		if (p == null) {
-		    return Color.WHITE;
-		} else {
-		    final javafx.scene.paint.Color messageColor = getGisViewPanel().getColor(p);
-		    return CategoryChartFactory.getAwtColor(messageColor.equals(javafx.scene.paint.Color.BLUE) ? javafx.scene.paint.Color.GREEN : messageColor);
-		}
-	    }
-	};
+        return new IColouringScheme<AbstractEntity>() {
+            @Override
+            public Color getColor(final AbstractEntity entity) {
+                final MessagePoint p = getGisViewPanel().getCorrespondingPoint(entity);
+                if (p == null) {
+                    return Color.WHITE;
+                } else {
+                    final javafx.scene.paint.Color messageColor = getGisViewPanel().getColor(p);
+                    return CategoryChartFactory.getAwtColor(messageColor.equals(javafx.scene.paint.Color.BLUE) ? javafx.scene.paint.Color.GREEN : messageColor);
+                }
+            }
+        };
     }
 }

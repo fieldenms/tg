@@ -23,62 +23,62 @@ public class FilteredComboBoxDecoratorExample extends JFrame {
     private static final long serialVersionUID = 1L;
 
     public FilteredComboBoxDecoratorExample() {
-	initComponents();
-	initComboBox();
+        initComponents();
+        initComboBox();
     }
 
     private static String[] stringList = new String[] { "abcdef", "abcefd", "abcged", "adef", "ad", "bcgeh", "bcaeg", "ba", "1234", "123" };
 
     private void initComboBox() {
-	FilteredComboBoxDecorator.decorate(comboBox, new FilteredComboBoxDecorator.StringAutocompleter() {
+        FilteredComboBoxDecorator.decorate(comboBox, new FilteredComboBoxDecorator.StringAutocompleter() {
 
-	    public String[] getStringsCorrespondingTo(final String value) {
-		if ("".equals(value)) {
-		    return new String[] {};
-		}
-		int count = 0;
-		for (int index = 0; index < stringList.length; index++) {
-		    if (stringList[index].startsWith(value)) {
-			count++;
-		    }
-		}
-		final String[] result = new String[count];
-		int j = 0;
-		for (int index = 0; index < stringList.length; index++) {
-		    if (stringList[index].startsWith(value)) {
-			result[j++] = stringList[index];
-		    }
-		}
-		return result;
-	    }
+            public String[] getStringsCorrespondingTo(final String value) {
+                if ("".equals(value)) {
+                    return new String[] {};
+                }
+                int count = 0;
+                for (int index = 0; index < stringList.length; index++) {
+                    if (stringList[index].startsWith(value)) {
+                        count++;
+                    }
+                }
+                final String[] result = new String[count];
+                int j = 0;
+                for (int index = 0; index < stringList.length; index++) {
+                    if (stringList[index].startsWith(value)) {
+                        result[j++] = stringList[index];
+                    }
+                }
+                return result;
+            }
 
-	});
+        });
     }
 
     private void initComponents() {
-	// JFormDesigner - Component initialization - DO NOT MODIFY //GEN-BEGIN:initComponents
-	comboBox = new JComboBox();
+        // JFormDesigner - Component initialization - DO NOT MODIFY //GEN-BEGIN:initComponents
+        comboBox = new JComboBox();
 
-	// ======== this ========
-	setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-	final Container contentPane = getContentPane();
-	contentPane.setLayout(new BorderLayout());
+        // ======== this ========
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        final Container contentPane = getContentPane();
+        contentPane.setLayout(new BorderLayout());
 
-	// ---- comboBox ----
-	comboBox.setEditable(true);
-	contentPane.add(comboBox, BorderLayout.CENTER);
-	pack();
-	setLocationRelativeTo(getOwner());
-	// JFormDesigner - End of component initialization //GEN-END:initComponents
+        // ---- comboBox ----
+        comboBox.setEditable(true);
+        contentPane.add(comboBox, BorderLayout.CENTER);
+        pack();
+        setLocationRelativeTo(getOwner());
+        // JFormDesigner - End of component initialization //GEN-END:initComponents
     }
 
     public static void main(final String[] args) {
-	SwingUtilities.invokeLater(new Runnable() {
-	    public void run() {
-		final FilteredComboBoxDecoratorExample frame = new FilteredComboBoxDecoratorExample();
-		frame.setVisible(true);
-	    }
-	});
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                final FilteredComboBoxDecoratorExample frame = new FilteredComboBoxDecoratorExample();
+                frame.setVisible(true);
+            }
+        });
     }
 
     // JFormDesigner - Variables declaration - DO NOT MODIFY //GEN-BEGIN:variables

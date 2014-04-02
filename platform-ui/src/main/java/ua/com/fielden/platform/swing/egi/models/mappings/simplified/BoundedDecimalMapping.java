@@ -22,9 +22,9 @@ import ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals;
 
 /**
  * Mapping for properties of type BigDecimal and Money.
- *
+ * 
  * @author 01es, Yura
- *
+ * 
  * @param <T>
  */
 @SuppressWarnings("unchecked")
@@ -33,36 +33,36 @@ public class BoundedDecimalMapping<T extends AbstractEntity> extends AbstractLab
     private final IOnCommitAction<T>[] onCommitActions;
 
     public BoundedDecimalMapping(final Class<T> entityClass, final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final IOnCommitAction<T>... onCommitActions) {
-	super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction);
+        super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction);
 
-	this.onCommitActions = onCommitActions;
+        this.onCommitActions = onCommitActions;
     }
 
     @Override
     public JComponent getCellRendererComponent(final T entity, final Object value, final boolean isSelected, final boolean hasFocus, final JTable table, final int row, final int column) {
-	final JComponent renderer = super.getCellRendererComponent(entity, value, isSelected, hasFocus, table, row, column);
-	if (renderer instanceof ValidationLayer) {
-	    ((ValidationLayer<JLabel>) renderer).getView().setHorizontalAlignment(SwingConstants.RIGHT);
-	} else {
-	    ((JLabel) renderer).setHorizontalAlignment(SwingConstants.RIGHT);
-	}
-	return renderer;
+        final JComponent renderer = super.getCellRendererComponent(entity, value, isSelected, hasFocus, table, row, column);
+        if (renderer instanceof ValidationLayer) {
+            ((ValidationLayer<JLabel>) renderer).getView().setHorizontalAlignment(SwingConstants.RIGHT);
+        } else {
+            ((JLabel) renderer).setHorizontalAlignment(SwingConstants.RIGHT);
+        }
+        return renderer;
     }
 
     @Override
     public EditorComponent<BoundedValidationLayer<JFormattedTextField>, JFormattedTextField> createBoundedEditorFor(final T entity) {
-	final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
-	final BoundedValidationLayer<JFormattedTextField> decimalTextFieldLayer = ComponentFactory.createBigDecimalOrMoneyOrDoubleField(entity, getPropertyName(), true, "money originalToolTip text : is this text ignored?", onCommitActionWrappers);
-	decimalTextFieldLayer.getView().addKeyListener(new KeyAdapter() {
-	    @Override
-	    public void keyReleased(final KeyEvent e) {
-		if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-		    getEntityGridInspector().removeEditor();
-		}
-	    }
-	});
-	decimalTextFieldLayer.getView().setHorizontalAlignment(JTextField.RIGHT);
-	return new EditorComponent<BoundedValidationLayer<JFormattedTextField>, JFormattedTextField>(decimalTextFieldLayer, decimalTextFieldLayer.getView());
+        final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
+        final BoundedValidationLayer<JFormattedTextField> decimalTextFieldLayer = ComponentFactory.createBigDecimalOrMoneyOrDoubleField(entity, getPropertyName(), true, "money originalToolTip text : is this text ignored?", onCommitActionWrappers);
+        decimalTextFieldLayer.getView().addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(final KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    getEntityGridInspector().removeEditor();
+                }
+            }
+        });
+        decimalTextFieldLayer.getView().setHorizontalAlignment(JTextField.RIGHT);
+        return new EditorComponent<BoundedValidationLayer<JFormattedTextField>, JFormattedTextField>(decimalTextFieldLayer, decimalTextFieldLayer.getView());
     }
 
 }

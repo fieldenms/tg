@@ -39,86 +39,85 @@ public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
 
     @Test
     public void test_whether_user_and_role_batch_action_works() {
-	final Map<Long, User> users = (Map<Long, User>)mapById(userControllerRao.findAllUsers());
-	final Map<Long, UserRole> roles = (Map<Long, UserRole>)mapById(userRoleRao.findAll());
+        final Map<Long, User> users = (Map<Long, User>) mapById(userControllerRao.findAllUsers());
+        final Map<Long, UserRole> roles = (Map<Long, UserRole>) mapById(userRoleRao.findAll());
 
-	final Set<UserAndRoleAssociation> saveAssociations = new HashSet<>();
-	saveAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
+        final Set<UserAndRoleAssociation> saveAssociations = new HashSet<>();
+        saveAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
 
-	final Set<UserAndRoleAssociation> removeAssociations = new HashSet<>();
-	removeAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(1))));
+        final Set<UserAndRoleAssociation> removeAssociations = new HashSet<>();
+        removeAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(1))));
 
-	final UserAndRoleAssociationBatchAction action = new UserAndRoleAssociationBatchAction();
-	action.setSaveEntities(saveAssociations);
-	action.setRemoveEntities(removeAssociations);
+        final UserAndRoleAssociationBatchAction action = new UserAndRoleAssociationBatchAction();
+        action.setSaveEntities(saveAssociations);
+        action.setRemoveEntities(removeAssociations);
 
-	associationRao.save(action);
+        associationRao.save(action);
 
-	final User user = userControllerRao.findUserByIdWithRoles(Long.valueOf(1));
-	final Map<Long, UserRole> associatedRoles = (Map<Long, UserRole>)mapById(user.roles());
-	assertTrue("Incorrect number of edited roles of the USER-1", associatedRoles.size() == 2);
-	assertNotNull("USER-1 must be associated with role2", associatedRoles.get(Long.valueOf(2)));
-	assertNotNull("USER-1 must be associated with role3", associatedRoles.get(Long.valueOf(3)));
+        final User user = userControllerRao.findUserByIdWithRoles(Long.valueOf(1));
+        final Map<Long, UserRole> associatedRoles = (Map<Long, UserRole>) mapById(user.roles());
+        assertTrue("Incorrect number of edited roles of the USER-1", associatedRoles.size() == 2);
+        assertNotNull("USER-1 must be associated with role2", associatedRoles.get(Long.valueOf(2)));
+        assertNotNull("USER-1 must be associated with role3", associatedRoles.get(Long.valueOf(3)));
     }
 
     @Test
     public void test_whether_batch_save_is_transactional() {
-	final Map<Long, User> users = (Map<Long, User>)mapById(userControllerRao.findAllUsers());
-	final Map<Long, UserRole> roles = (Map<Long, UserRole>)mapById(userRoleRao.findAll());
+        final Map<Long, User> users = (Map<Long, User>) mapById(userControllerRao.findAllUsers());
+        final Map<Long, UserRole> roles = (Map<Long, UserRole>) mapById(userRoleRao.findAll());
 
-	final Set<UserAndRoleAssociation> saveAssociations = new LinkedHashSet<>();
-	saveAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
+        final Set<UserAndRoleAssociation> saveAssociations = new LinkedHashSet<>();
+        saveAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
 
-	final Set<UserAndRoleAssociation> removeAssociations = new HashSet<>();
-	removeAssociations.add(new UserAndRoleAssociation(null, roles.get(Long.valueOf(1))));
+        final Set<UserAndRoleAssociation> removeAssociations = new HashSet<>();
+        removeAssociations.add(new UserAndRoleAssociation(null, roles.get(Long.valueOf(1))));
 
-	final UserAndRoleAssociationBatchAction action = new UserAndRoleAssociationBatchAction();
-	action.setSaveEntities(saveAssociations);
-	action.setRemoveEntities(removeAssociations);
+        final UserAndRoleAssociationBatchAction action = new UserAndRoleAssociationBatchAction();
+        action.setSaveEntities(saveAssociations);
+        action.setRemoveEntities(removeAssociations);
 
-	try {
-	    associationRao.save(action);
-	    fail("It must have failed");
-	} catch (final Exception ex) {
+        try {
+            associationRao.save(action);
+            fail("It must have failed");
+        } catch (final Exception ex) {
 
-	}
+        }
 
-	final User user = userControllerRao.findUserByIdWithRoles(Long.valueOf(1));
-	final Map<Long, UserRole> associatedRoles = (Map<Long, UserRole>)mapById(user.roles());
-	assertTrue("Incorrect number of edited roles of the USER-1", associatedRoles.size() == 2);
-	assertNotNull("USER-1 must be associated with role1", associatedRoles.get(Long.valueOf(1)));
-	assertNotNull("USER-1 must be associated with role2", associatedRoles.get(Long.valueOf(2)));
+        final User user = userControllerRao.findUserByIdWithRoles(Long.valueOf(1));
+        final Map<Long, UserRole> associatedRoles = (Map<Long, UserRole>) mapById(user.roles());
+        assertTrue("Incorrect number of edited roles of the USER-1", associatedRoles.size() == 2);
+        assertNotNull("USER-1 must be associated with role1", associatedRoles.get(Long.valueOf(1)));
+        assertNotNull("USER-1 must be associated with role2", associatedRoles.get(Long.valueOf(2)));
     }
 
     /**
      * Returns the map between id and the entity with that id.
-     *
+     * 
      * @param entities
      * @return
      */
     private Map<Long, ? extends AbstractEntity<?>> mapById(final Collection<? extends AbstractEntity<?>> entities) {
-	final Map<Long, AbstractEntity<?>> map = new HashMap<>();
-	for(final AbstractEntity<?> entity : entities) {
-	    map.put(entity.getId(), entity);
-	}
-	return map;
+        final Map<Long, AbstractEntity<?>> map = new HashMap<>();
+        for (final AbstractEntity<?> entity : entities) {
+            map.put(entity.getId(), entity);
+        }
+        return map;
     }
 
     @Override
     public synchronized Restlet getInboundRoot() {
-	final Router router = new Router(getContext());
+        final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
-	helper.register(router, IUserRoleDao.class);
-	helper.register(router, IUserDao.class);
-	helper.register(router, IUserAndRoleAssociationBatchAction.class);
+        final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
+        helper.register(router, IUserRoleDao.class);
+        helper.register(router, IUserDao.class);
+        helper.register(router, IUserAndRoleAssociationBatchAction.class);
 
-	return router;
+        return router;
     }
-
 
     @Override
     protected String[] getDataSetPaths() {
-	return new String[] { "src/test/resources/data-files/user-role-test-case.flat.xml" };
+        return new String[] { "src/test/resources/data-files/user-role-test-case.flat.xml" };
     }
 }

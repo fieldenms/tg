@@ -12,15 +12,15 @@ public class ManualGridAnalysisQueryCustomiser<T extends AbstractEntity<?>> impl
     @SuppressWarnings("unchecked")
     @Override
     public IReportQueryGenerator<T> getQueryGenerator(final GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer> analysisModel) {
-	if(!(analysisModel instanceof GridAnalysisModelForManualEntityCentre)){
-	    throw new IllegalArgumentException("The analysis model must be of GridAnalysisModelForManualEntityCentre type");
-	}
-	final GridAnalysisModelForManualEntityCentre<T, ?> manualAnalysisModel = (GridAnalysisModelForManualEntityCentre<T, ?>)analysisModel;
-	return new ManualGridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(//
-		manualAnalysisModel.getCriteria().getEntityClass(),//
-		manualAnalysisModel.getCriteria().getCentreDomainTreeMangerAndEnhancer(),//
-		manualAnalysisModel.getLinkProperty(),//
-		manualAnalysisModel.getLinkEntity());
+        if (!(analysisModel instanceof GridAnalysisModelForManualEntityCentre)) {
+            throw new IllegalArgumentException("The analysis model must be of GridAnalysisModelForManualEntityCentre type");
+        }
+        final GridAnalysisModelForManualEntityCentre<T, ?> manualAnalysisModel = (GridAnalysisModelForManualEntityCentre<T, ?>) analysisModel;
+        return new ManualGridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(//
+        manualAnalysisModel.getCriteria().getEntityClass(),//
+        manualAnalysisModel.getCriteria().getCentreDomainTreeMangerAndEnhancer(),//
+        manualAnalysisModel.getLinkProperty(),//
+        manualAnalysisModel.getLinkEntity());
     }
 
 }

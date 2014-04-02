@@ -24,32 +24,42 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo @Title("Vehicle")
+    @IsProperty
+    @MapTo
+    @Title("Vehicle")
     @CompositeKeyMember(1)
     private TgVehicle vehicle;
 
-    @IsProperty @MapTo @Title("Purchase Date")
+    @IsProperty
+    @MapTo
+    @Title("Purchase Date")
     @CompositeKeyMember(2)
     private Date date;
 
-    @IsProperty @Required @MapTo @Title(value = "Fuel Qty", desc = "Fuel Qty")
+    @IsProperty
+    @Required
+    @MapTo
+    @Title(value = "Fuel Qty", desc = "Fuel Qty")
     private BigDecimal qty;
 
-    @IsProperty @Required @MapTo @Title(value = "Fuel type", desc = "Fuel type")
+    @IsProperty
+    @Required
+    @MapTo
+    @Title(value = "Fuel type", desc = "Fuel type")
     private TgFuelType fuelType;
 
     @Observable
     public TgFuelUsage setFuelType(final TgFuelType fuelType) {
-	this.fuelType = fuelType;
-	return this;
+        this.fuelType = fuelType;
+        return this;
     }
 
     public TgFuelType getFuelType() {
-	return fuelType;
+        return fuelType;
     }
 
     public BigDecimal getQty() {
-	return qty;
+        return qty;
     }
 
     public TgVehicle getVehicle() {
@@ -73,7 +83,7 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
 
     @Observable
     public TgFuelUsage setQty(final BigDecimal qty) {
-	this.qty = qty;
-	return this;
+        this.qty = qty;
+        return this;
     }
 }

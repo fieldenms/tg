@@ -6,7 +6,7 @@ import java.util.EventObject;
  * An {@link EventObject} that encapsulates the {@link IPaginatorModel}'s page holder changed event.
  * 
  * @author TG Team
- *
+ * 
  */
 public class PageHolderChangedEvent extends EventObject {
 
@@ -17,12 +17,14 @@ public class PageHolderChangedEvent extends EventObject {
     /**
      * Initiates this {@link PageHolderChangedEvent} with specified {@link IPaginatorModel} which page holder has changed.
      * 
-     * @param source - the specified {@link IPaginatorModel} which page holder has changed.
-     * @param pageSupport - new {@link PageHolder} instance.
+     * @param source
+     *            - the specified {@link IPaginatorModel} which page holder has changed.
+     * @param pageSupport
+     *            - new {@link PageHolder} instance.
      */
     public PageHolderChangedEvent(final IPaginatorModel source, final PageHolder pageSupport) {
-	super(source);
-	this.pageHolder = pageSupport;
+        super(source);
+        this.pageHolder = pageSupport;
     }
 
     /**
@@ -31,7 +33,7 @@ public class PageHolderChangedEvent extends EventObject {
      * @return
      */
     public PageHolder getPageHolder() {
-	return pageHolder;
+        return pageHolder;
     }
 
     /**
@@ -39,6 +41,6 @@ public class PageHolderChangedEvent extends EventObject {
      */
     @Override
     public IPaginatorModel getSource() {
-	return (IPaginatorModel)super.getSource();
+        return (IPaginatorModel) super.getSource();
     }
 }

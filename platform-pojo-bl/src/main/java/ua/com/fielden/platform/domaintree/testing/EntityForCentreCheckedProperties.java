@@ -12,9 +12,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "domain tree representation" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @DescTitle(value = "Desc title", desc = "Desc desc")
@@ -31,6 +31,7 @@ public class EntityForCentreCheckedProperties extends AbstractEntity<String> {
     public Integer getIntegerProp() {
         return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
@@ -42,6 +43,7 @@ public class EntityForCentreCheckedProperties extends AbstractEntity<String> {
     public BigDecimal getBigDecimalProp() {
         return bigDecimalProp;
     }
+
     @Observable
     public void setBigDecimalProp(final BigDecimal bigDecimalProp) {
         this.bigDecimalProp = bigDecimalProp;
@@ -52,12 +54,12 @@ public class EntityForCentreCheckedProperties extends AbstractEntity<String> {
 
     @Observable
     public EntityForCentreCheckedProperties setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
 
     @IsProperty
@@ -65,11 +67,11 @@ public class EntityForCentreCheckedProperties extends AbstractEntity<String> {
 
     @Observable
     public EntityForCentreCheckedProperties setBooleanProp(final boolean booleanProp) {
-	this.booleanProp = booleanProp;
-	return this;
+        this.booleanProp = booleanProp;
+        return this;
     }
 
     public boolean getBooleanProp() {
-	return booleanProp;
+        return booleanProp;
     }
 }

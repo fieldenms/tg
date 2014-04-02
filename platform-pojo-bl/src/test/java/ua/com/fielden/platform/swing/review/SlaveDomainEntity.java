@@ -11,9 +11,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity for "domain tree representation" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key title", desc = "Key desc")
@@ -43,6 +43,7 @@ public class SlaveDomainEntity extends AbstractEntity<DynamicEntityKey> {
     public MasterDomainEntity getMasterEntityProp() {
         return masterEntityProp;
     }
+
     @Observable
     public void setMasterEntityProp(final MasterDomainEntity masterEntityProp) {
         this.masterEntityProp = masterEntityProp;
@@ -51,6 +52,7 @@ public class SlaveDomainEntity extends AbstractEntity<DynamicEntityKey> {
     public Integer getIntegerProp() {
         return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
@@ -59,6 +61,7 @@ public class SlaveDomainEntity extends AbstractEntity<DynamicEntityKey> {
     public EvenSlaverDomainEntity getEntityProp() {
         return entityProp;
     }
+
     @Observable
     public void setEntityProp(final EvenSlaverDomainEntity entityProp) {
         this.entityProp = entityProp;
@@ -67,6 +70,7 @@ public class SlaveDomainEntity extends AbstractEntity<DynamicEntityKey> {
     public DomainEntityWithStringKeyType getAnotherSimpleEntityProp() {
         return anotherSimpleEntityProp;
     }
+
     @Observable
     public void setAnotherSimpleEntityProp(final DomainEntityWithStringKeyType anotherSimpleEntityProp) {
         this.anotherSimpleEntityProp = anotherSimpleEntityProp;

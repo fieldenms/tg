@@ -55,265 +55,263 @@ public class Wizard<T extends AbstractEntity<?>> extends BasePanel {
     public Wizard(//
     final String title,
     /*	  */final String info,//
-	    final T model, //
-	    final IValueMatcherFactory valueMatcherFactory, //
-	    final List<IWizState<T>> states) {
-	super.setLayout(new MigLayout("fill, insets 0", "[c,fill,grow]", "[c,grow,fill]"));
-	super.add(blockingLayer);
+            final T model, //
+            final IValueMatcherFactory valueMatcherFactory, //
+            final List<IWizState<T>> states) {
+        super.setLayout(new MigLayout("fill, insets 0", "[c,fill,grow]", "[c,grow,fill]"));
+        super.add(blockingLayer);
 
-	this.states.addAll(states);
+        this.states.addAll(states);
 
-	holdingPanel.add(pagePanel, "wrap");
-	holdingPanel.add(navPanel);
+        holdingPanel.add(pagePanel, "wrap");
+        holdingPanel.add(navPanel);
 
-	this.title = title;
-	this.info = info;
-	this.model = model;
-	this.propBinder = MasterPropertyBinder.<T> createPropertyBinderWithoutLocatorSupport(valueMatcherFactory);
-	this.editors = buildEditors(model, propBinder);
+        this.title = title;
+        this.info = info;
+        this.model = model;
+        this.propBinder = MasterPropertyBinder.<T> createPropertyBinderWithoutLocatorSupport(valueMatcherFactory);
+        this.editors = buildEditors(model, propBinder);
 
-	next = createNextCommand();
-	prev = createPrevCommand();
-	cancel = createCancelCommand();
+        next = createNextCommand();
+        prev = createPrevCommand();
+        cancel = createCancelCommand();
 
-	navPanel.add(new JButton(cancel));
-	navPanel.add(new JButton(prev));
-	navPanel.add(nextButton = new JButton(next));
+        navPanel.add(new JButton(cancel));
+        navPanel.add(new JButton(prev));
+        navPanel.add(nextButton = new JButton(next));
 
-	startState = states.get(0);
-	setCurrState(startState);
+        startState = states.get(0);
+        setCurrState(startState);
     }
 
     public void buildUi() {
-	// initialise all pages by building their UI
-	for (final IWizState<T> state : states) {
-	    final AbstractWizPage<T> page = state.view();
-	    page.buildUi(this);
-	    pagePanel.add(page, state.name());
-	}
+        // initialise all pages by building their UI
+        for (final IWizState<T> state : states) {
+            final AbstractWizPage<T> page = state.view();
+            page.buildUi(this);
+            pagePanel.add(page, state.name());
+        }
     }
 
     protected Command<IWizState<T>> createNextCommand() {
-	final Command<IWizState<T>> command = new BlockingLayerCommand<IWizState<T>>("Next", blockingLayer) {
+        final Command<IWizState<T>> command = new BlockingLayerCommand<IWizState<T>>("Next", blockingLayer) {
 
-	    private Result result = Result.successful(currState);
+            private Result result = Result.successful(currState);
 
-	    @Override
-	    protected boolean preAction() {
-		result = Result.successful(currState);
-		setMessage("Validating...");
-		commitEditors();
+            @Override
+            protected boolean preAction() {
+                result = Result.successful(currState);
+                setMessage("Validating...");
+                commitEditors();
 
-		return super.preAction();
-	    }
+                return super.preAction();
+            }
 
-	    @Override
-	    protected IWizState<T> action(final ActionEvent e) throws Exception {
-		result = currState.isValid();
-		if (!result.isSuccessful()) {
-		    return currState;
-		}
+            @Override
+            protected IWizState<T> action(final ActionEvent e) throws Exception {
+                result = currState.isValid();
+                if (!result.isSuccessful()) {
+                    return currState;
+                }
 
-		final IWizState<T> prevState = currState;
-		final IWizState<T> nextState;
-		if (currState instanceof IWizStartState) {
-		    setMessage("Next...");
-		    nextState = ((IWizStartState<T>) currState).next();
-		} else if (currState instanceof IWizTransState) {
-		    setMessage("Next...");
-		    nextState = ((IWizTransState<T>) currState).next();
-		} else if (currState instanceof IWizFinalState) {
-		    setMessage("Finishing...");
-		    nextState = ((IWizFinalState<T>) currState).finish();
-		} else {
-		    nextState = null;
-		}
+                final IWizState<T> prevState = currState;
+                final IWizState<T> nextState;
+                if (currState instanceof IWizStartState) {
+                    setMessage("Next...");
+                    nextState = ((IWizStartState<T>) currState).next();
+                } else if (currState instanceof IWizTransState) {
+                    setMessage("Next...");
+                    nextState = ((IWizTransState<T>) currState).next();
+                } else if (currState instanceof IWizFinalState) {
+                    setMessage("Finishing...");
+                    nextState = ((IWizFinalState<T>) currState).finish();
+                } else {
+                    nextState = null;
+                }
 
-		if (nextState != null && nextState != prevState) {
-		    nextState.setTransitionedFrom(prevState);
-		}
-		return nextState;
-	    }
+                if (nextState != null && nextState != prevState) {
+                    nextState.setTransitionedFrom(prevState);
+                }
+                return nextState;
+            }
 
-	    @Override
-	    protected void postAction(final IWizState<T> nextState) {
-		if (!result.isSuccessful()) {
-		    Dialogs.showMessageDialog(Wizard.this, //
-			    "<html>There are validation errors. Please correct them and try again."
-			    + "<br><br>" + result.getMessage() + "</html>", "Wizard Validaton Errors", Dialogs.ERROR_MESSAGE);
-		    super.postAction(nextState);
-		} else if (nextState != currState && nextState != null) {
-		    setCurrState(nextState);
-		    cardLayout.show(pagePanel, nextState.name());
-		    super.postAction(nextState);
+            @Override
+            protected void postAction(final IWizState<T> nextState) {
+                if (!result.isSuccessful()) {
+                    Dialogs.showMessageDialog(Wizard.this, //
+                            "<html>There are validation errors. Please correct them and try again." + "<br><br>" + result.getMessage() + "</html>", "Wizard Validaton Errors", Dialogs.ERROR_MESSAGE);
+                    super.postAction(nextState);
+                } else if (nextState != currState && nextState != null) {
+                    setCurrState(nextState);
+                    cardLayout.show(pagePanel, nextState.name());
+                    super.postAction(nextState);
 
-		    // focus the preferred property editor if it was specified
-		    final IPropertyEditor editor = editors.get(model.getPreferredProperty());
-		    if (editor != null) {
-			editor.getEditor().requestFocusInWindow();
-		    }
-		} else {
-		    model.restoreToOriginal();
-		    rebindEditors();
-		    setCurrState(startState);
-		    cardLayout.show(pagePanel, currState.name());
-		    super.postAction(nextState);
-		}
-	    }
-	};
-	return command;
+                    // focus the preferred property editor if it was specified
+                    final IPropertyEditor editor = editors.get(model.getPreferredProperty());
+                    if (editor != null) {
+                        editor.getEditor().requestFocusInWindow();
+                    }
+                } else {
+                    model.restoreToOriginal();
+                    rebindEditors();
+                    setCurrState(startState);
+                    cardLayout.show(pagePanel, currState.name());
+                    super.postAction(nextState);
+                }
+            }
+        };
+        return command;
     }
 
     protected Command<IWizState<T>> createPrevCommand() {
-	final Command<IWizState<T>> command = new BlockingLayerCommand<IWizState<T>>("Prev", blockingLayer) {
+        final Command<IWizState<T>> command = new BlockingLayerCommand<IWizState<T>>("Prev", blockingLayer) {
 
-	    @Override
-	    protected IWizState<T> action(final ActionEvent e) throws Exception {
-		commitEditors();
+            @Override
+            protected IWizState<T> action(final ActionEvent e) throws Exception {
+                commitEditors();
 
-		if (currState instanceof IWizTransState) {
-		    setMessage("Previous...");
-		    setCurrState(((IWizTransState<T>) currState).prev());
-		} else if (currState instanceof IWizFinalState) {
-		    setMessage("Previous...");
-		    setCurrState(((IWizFinalState<T>) currState).prev());
-		}
-		return currState;
-	    }
+                if (currState instanceof IWizTransState) {
+                    setMessage("Previous...");
+                    setCurrState(((IWizTransState<T>) currState).prev());
+                } else if (currState instanceof IWizFinalState) {
+                    setMessage("Previous...");
+                    setCurrState(((IWizFinalState<T>) currState).prev());
+                }
+                return currState;
+            }
 
-	    @Override
-	    protected void postAction(final IWizState<T> state) {
-		if (state != null) {
-		    cardLayout.show(pagePanel, state.name());
-		}
-		super.postAction(state);
-		setCurrState(state);
-		nextButton.requestFocusInWindow();
-	    }
-	};
-	return command;
+            @Override
+            protected void postAction(final IWizState<T> state) {
+                if (state != null) {
+                    cardLayout.show(pagePanel, state.name());
+                }
+                super.postAction(state);
+                setCurrState(state);
+                nextButton.requestFocusInWindow();
+            }
+        };
+        return command;
     }
 
     protected Command<IWizState<T>> createCancelCommand() {
-	final Command<IWizState<T>> command = new BlockingLayerCommand<IWizState<T>>("Cancel", blockingLayer) {
+        final Command<IWizState<T>> command = new BlockingLayerCommand<IWizState<T>>("Cancel", blockingLayer) {
 
-	    @Override
-	    protected IWizState<T> action(final ActionEvent e) throws Exception {
-		setMessage("Cancelling...");
+            @Override
+            protected IWizState<T> action(final ActionEvent e) throws Exception {
+                setMessage("Cancelling...");
 
-		commitEditors();
+                commitEditors();
 
-		if (currState instanceof IWizTransState) {
-		    setCurrState(((IWizTransState<T>) currState).cancel());
-		} else if (currState instanceof IWizFinalState) {
-		    setCurrState(((IWizFinalState<T>) currState).cancel());
-		}
-		return currState;
-	    }
+                if (currState instanceof IWizTransState) {
+                    setCurrState(((IWizTransState<T>) currState).cancel());
+                } else if (currState instanceof IWizFinalState) {
+                    setCurrState(((IWizFinalState<T>) currState).cancel());
+                }
+                return currState;
+            }
 
-	    @Override
-	    protected void postAction(final IWizState<T> state) {
-		if (state != null) {
-		    model.restoreToOriginal();
-		    rebindEditors();
-		    cardLayout.show(pagePanel, state.name());
-		}
-		super.postAction(state);
-		setCurrState(state);
-		nextButton.requestFocusInWindow();
-	    }
-	};
-	return command;
+            @Override
+            protected void postAction(final IWizState<T> state) {
+                if (state != null) {
+                    model.restoreToOriginal();
+                    rebindEditors();
+                    cardLayout.show(pagePanel, state.name());
+                }
+                super.postAction(state);
+                setCurrState(state);
+                nextButton.requestFocusInWindow();
+            }
+        };
+        return command;
     }
 
     protected void rebindEditors() {
-	propBinder.rebind(editors, model);
-	for (final IPropertyEditor editor : aliasedEditors.values()) {
-	    editor.bind(model);
-	}
+        propBinder.rebind(editors, model);
+        for (final IPropertyEditor editor : aliasedEditors.values()) {
+            editor.bind(model);
+        }
     }
 
     protected void commitEditors() {
-	for (final IPropertyEditor component : editors.values()) {
-	    if (component.getEditor() instanceof BoundedValidationLayer) {
-		final BoundedValidationLayer bvl = (BoundedValidationLayer) component.getEditor();
-		if (bvl.canCommit()) {
-		    bvl.commit();
-		}
-	    }
-	}
+        for (final IPropertyEditor component : editors.values()) {
+            if (component.getEditor() instanceof BoundedValidationLayer) {
+                final BoundedValidationLayer bvl = (BoundedValidationLayer) component.getEditor();
+                if (bvl.canCommit()) {
+                    bvl.commit();
+                }
+            }
+        }
     }
 
-
     protected void setCurrState(final IWizState<T> state) {
-	this.currState = state;
+        this.currState = state;
 
-	SwingUtilitiesEx.invokeLater(new Runnable() {
-	    @Override
-	    public void run() {
-		if (currState instanceof IWizStartState) {
-		    cancel.setEnabled(false);
-		    next.setEnabled(true);
-		    prev.setEnabled(false);
-		} else if (currState instanceof IWizTransState) {
-		    cancel.setEnabled(true);
-		    next.setEnabled(true);
-		    prev.setEnabled(true);
-		} else if (currState instanceof IWizFinalState) {
-		    cancel.setEnabled(true);
-		    next.setEnabled(true);
-		    prev.setEnabled(true);
-		}
-	    }
-	});
+        SwingUtilitiesEx.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if (currState instanceof IWizStartState) {
+                    cancel.setEnabled(false);
+                    next.setEnabled(true);
+                    prev.setEnabled(false);
+                } else if (currState instanceof IWizTransState) {
+                    cancel.setEnabled(true);
+                    next.setEnabled(true);
+                    prev.setEnabled(true);
+                } else if (currState instanceof IWizFinalState) {
+                    cancel.setEnabled(true);
+                    next.setEnabled(true);
+                    prev.setEnabled(true);
+                }
+            }
+        });
     }
 
     public void lock() {
-	blockingLayer.setLocked(true);
+        blockingLayer.setLocked(true);
     }
 
     /**
      * Unlocks the panel. Must be invoked on EDT.
      */
     public void unlock() {
-	blockingLayer.setLocked(false);
+        blockingLayer.setLocked(false);
     }
 
     /**
      * Sets message on the blocking layer, which is displayed while panel is locked.
-     *
+     * 
      * @param msg
      */
     public void setBlockingMessage(final String msg) {
-	blockingLayer.setText(msg);
+        blockingLayer.setText(msg);
     }
 
     public Map<String, IPropertyEditor> getEditors() {
-	final Map<String, IPropertyEditor> allEditors = new HashMap<>(editors);
-	allEditors.putAll(aliasedEditors);
-	return allEditors;
+        final Map<String, IPropertyEditor> allEditors = new HashMap<>(editors);
+        allEditors.putAll(aliasedEditors);
+        return allEditors;
     }
 
     public final void addPropertyViewer(final String dotNotatatedPropertyName, final String alias) {
-	aliasedEditors.put(alias, new ReadonlyEntityPropertyViewer(model, dotNotatatedPropertyName));
+        aliasedEditors.put(alias, new ReadonlyEntityPropertyViewer(model, dotNotatatedPropertyName));
     }
 
     public final void addPropertyViewer(final String dotNotatatedPropertyName) {
-	editors.put(dotNotatatedPropertyName, new ReadonlyEntityPropertyViewer(model, dotNotatatedPropertyName));
+        editors.put(dotNotatatedPropertyName, new ReadonlyEntityPropertyViewer(model, dotNotatatedPropertyName));
     }
 
     protected Map<String, IPropertyEditor> buildEditors(final T entity, final ILightweightPropertyBinder<T> propertyBinder) {
-	return propertyBinder.bind(entity);
+        return propertyBinder.bind(entity);
     }
 
     @Override
     public String getInfo() {
-	return info;
+        return info;
     }
 
     @Override
     public String toString() {
-	return title;
+        return title;
     }
 
 }

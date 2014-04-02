@@ -14,7 +14,7 @@ public abstract class AnimationDelegate implements PActivity.PActivityDelegate {
     private PInputEvent event;
 
     public AnimationDelegate(PInputEvent event) {
-	setEvent(event);
+        setEvent(event);
     }
 
     public void activityFinished(PActivity arg0) {
@@ -27,11 +27,11 @@ public abstract class AnimationDelegate implements PActivity.PActivityDelegate {
     }
 
     protected PInputEvent getEvent() {
-	return event;
+        return event;
     }
 
     private void setEvent(PInputEvent event) {
-	this.event = event;
+        this.event = event;
     }
 
 }

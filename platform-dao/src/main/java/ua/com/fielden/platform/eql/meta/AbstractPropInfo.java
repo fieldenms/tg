@@ -14,11 +14,11 @@ public abstract class AbstractPropInfo implements IResolvable {
     }
 
     public AbstractPropInfo(final String name, final EntityInfo parent, final Expression1 expression, final boolean leaf) {
-	this.name = name;
-	this.parent = parent;
-	this.expression = expression;
-	this.leaf = leaf;
-	parent.getProps().put(name, this);
+        this.name = name;
+        this.parent = parent;
+        this.expression = expression;
+        this.leaf = leaf;
+        parent.getProps().put(name, this);
     }
 
     protected String getName() {

@@ -26,7 +26,7 @@ import com.jidesoft.grid.JideTable;
 
 /**
  * This is a cell editor, which provides Autocompleter support.
- *
+ * 
  * @author 01es
  */
 
@@ -48,70 +48,70 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Constructs a <code>DefaultCellEditor</code> that uses an Autocompleter.
-     *
+     * 
      * @param autocompleter
      *            -- a <code>Autocompleter</code> instance
      * @param tble
      *            -- table to be associated with
      */
     public AutocompleterCellEditor(final AutocompleterTextFieldLayer<?> autocompleter, final JideTable table) {
-	// final JTextField textField = autocompleter.getAutocompleter().getTextComponent();
-	editorComponent = autocompleter;
-	this.clickCountToStart = 2;
-	delegate = new EditorDelegate() {
-	    private static final long serialVersionUID = 1L;
+        // final JTextField textField = autocompleter.getAutocompleter().getTextComponent();
+        editorComponent = autocompleter;
+        this.clickCountToStart = 2;
+        delegate = new EditorDelegate() {
+            private static final long serialVersionUID = 1L;
 
-	    @Override
-	    public void setValue(final Object value) {
-		autocompleter.getView().setText((value != null) ? value.toString() : "");
-	    }
+            @Override
+            public void setValue(final Object value) {
+                autocompleter.getView().setText((value != null) ? value.toString() : "");
+            }
 
-	    @Override
-	    public Object getCellEditorValue() {
-		return autocompleter.getView().getText();
-	    }
-	};
-	autocompleter.getView().addActionListener(delegate);
+            @Override
+            public Object getCellEditorValue() {
+                return autocompleter.getView().getText();
+            }
+        };
+        autocompleter.getView().addActionListener(delegate);
 
-	autocompleter.addFocusListener(new FocusAdapter() {
-	    @Override
-	    public void focusGained(final FocusEvent e) {
-		autocompleter.getView().requestFocus();
-	    }
-	});
+        autocompleter.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(final FocusEvent e) {
+                autocompleter.getView().requestFocus();
+            }
+        });
 
-	// JTable keeps the focus at all times therefore it is necessary to programmatically change autocompleter state
-	table.addCellEditorListener(new JideCellEditorAdapter() {
-	    @Override
-	    public void editingStarted(final ChangeEvent e) {
-		if (e.getSource() instanceof AutocompleterCellEditor) {
-		    autocompleter.getAutocompleter().focusGained(null);
-		}
-	    }
+        // JTable keeps the focus at all times therefore it is necessary to programmatically change autocompleter state
+        table.addCellEditorListener(new JideCellEditorAdapter() {
+            @Override
+            public void editingStarted(final ChangeEvent e) {
+                if (e.getSource() instanceof AutocompleterCellEditor) {
+                    autocompleter.getAutocompleter().focusGained(null);
+                }
+            }
 
-	    @Override
-	    public void editingStopped(final ChangeEvent e) {
-		if (e.getSource() instanceof AutocompleterCellEditor) {
-		    autocompleter.getAutocompleter().focusLost(null);
-		}
-	    }
+            @Override
+            public void editingStopped(final ChangeEvent e) {
+                if (e.getSource() instanceof AutocompleterCellEditor) {
+                    autocompleter.getAutocompleter().focusLost(null);
+                }
+            }
 
-	    @Override
-	    public void editingCanceled(final ChangeEvent e) {
-		if (e.getSource() instanceof AutocompleterCellEditor) {
-		    autocompleter.getAutocompleter().focusLost(null);
-		}
-	    }
-	});
+            @Override
+            public void editingCanceled(final ChangeEvent e) {
+                if (e.getSource() instanceof AutocompleterCellEditor) {
+                    autocompleter.getAutocompleter().focusLost(null);
+                }
+            }
+        });
     }
 
     /**
      * Returns a reference to the editor component.
-     *
+     * 
      * @return the editor <code>Component</code>
      */
     public Component getComponent() {
-	return editorComponent;
+        return editorComponent;
     }
 
     //
@@ -120,22 +120,22 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Specifies the number of clicks needed to start editing.
-     *
+     * 
      * @param count
      *            an int specifying the number of clicks needed to start editing
      * @see #getClickCountToStart
      */
     public void setClickCountToStart(final int count) {
-	clickCountToStart = count;
+        clickCountToStart = count;
     }
 
     /**
      * Returns the number of clicks needed to start editing.
-     *
+     * 
      * @return the number of clicks needed to start editing
      */
     public int getClickCountToStart() {
-	return clickCountToStart;
+        return clickCountToStart;
     }
 
     //
@@ -145,51 +145,51 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Forwards the message from the <code>CellEditor</code> to the <code>delegate</code>.
-     *
+     * 
      * @see EditorDelegate#getCellEditorValue
      */
     public Object getCellEditorValue() {
-	return delegate.getCellEditorValue();
+        return delegate.getCellEditorValue();
     }
 
     /**
      * Forwards the message from the <code>CellEditor</code> to the <code>delegate</code>.
-     *
+     * 
      * @see EditorDelegate#isCellEditable(EventObject)
      */
     @Override
     public boolean isCellEditable(final EventObject anEvent) {
-	return delegate.isCellEditable(anEvent);
+        return delegate.isCellEditable(anEvent);
     }
 
     /**
      * Forwards the message from the <code>CellEditor</code> to the <code>delegate</code>.
-     *
+     * 
      * @see EditorDelegate#shouldSelectCell(EventObject)
      */
     @Override
     public boolean shouldSelectCell(final EventObject anEvent) {
-	return delegate.shouldSelectCell(anEvent);
+        return delegate.shouldSelectCell(anEvent);
     }
 
     /**
      * Forwards the message from the <code>CellEditor</code> to the <code>delegate</code>.
-     *
+     * 
      * @see EditorDelegate#stopCellEditing
      */
     @Override
     public boolean stopCellEditing() {
-	return delegate.stopCellEditing();
+        return delegate.stopCellEditing();
     }
 
     /**
      * Forwards the message from the <code>CellEditor</code> to the <code>delegate</code>.
-     *
+     * 
      * @see EditorDelegate#cancelCellEditing
      */
     @Override
     public void cancelCellEditing() {
-	delegate.cancelCellEditing();
+        delegate.cancelCellEditing();
     }
 
     //
@@ -198,10 +198,10 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /** Implements the <code>TreeCellEditor</code> interface. */
     public Component getTreeCellEditorComponent(final JTree tree, final Object value, final boolean isSelected, final boolean expanded, final boolean leaf, final int row) {
-	final String stringValue = tree.convertValueToText(value, isSelected, expanded, leaf, row, false);
+        final String stringValue = tree.convertValueToText(value, isSelected, expanded, leaf, row, false);
 
-	delegate.setValue(stringValue);
-	return editorComponent;
+        delegate.setValue(stringValue);
+        return editorComponent;
     }
 
     //
@@ -209,8 +209,8 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
     //
     /** Implements the <code>TableCellEditor</code> interface. */
     public Component getTableCellEditorComponent(final JTable table, final Object value, final boolean isSelected, final int row, final int column) {
-	delegate.setValue(value);
-	return editorComponent;
+        delegate.setValue(value);
+        return editorComponent;
     }
 
     //
@@ -222,106 +222,106 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
      */
     protected class EditorDelegate implements ActionListener, ItemListener, Serializable {
 
-	private static final long serialVersionUID = 1L;
-	/** The value of this cell. */
-	protected Object value;
+        private static final long serialVersionUID = 1L;
+        /** The value of this cell. */
+        protected Object value;
 
-	/**
-	 * Returns the value of this cell.
-	 *
-	 * @return the value of this cell
-	 */
-	public Object getCellEditorValue() {
-	    return value;
-	}
+        /**
+         * Returns the value of this cell.
+         * 
+         * @return the value of this cell
+         */
+        public Object getCellEditorValue() {
+            return value;
+        }
 
-	/**
-	 * Sets the value of this cell.
-	 *
-	 * @param value
-	 *            the new value of this cell
-	 */
-	public void setValue(final Object value) {
-	    this.value = value;
-	}
+        /**
+         * Sets the value of this cell.
+         * 
+         * @param value
+         *            the new value of this cell
+         */
+        public void setValue(final Object value) {
+            this.value = value;
+        }
 
-	/**
-	 * Returns true if <code>anEvent</code> is <b>not</b> a <code>MouseEvent</code>. Otherwise, it returns true if the necessary number of clicks have occurred, and returns
-	 * false otherwise.
-	 *
-	 * @param anEvent
-	 *            the event
-	 * @return true if cell is ready for editing, false otherwise
-	 * @see #setClickCountToStart
-	 * @see #shouldSelectCell
-	 */
-	public boolean isCellEditable(final EventObject anEvent) {
-	    if (anEvent instanceof MouseEvent) {
-		return ((MouseEvent) anEvent).getClickCount() >= clickCountToStart;
-	    }
-	    return true;
-	}
+        /**
+         * Returns true if <code>anEvent</code> is <b>not</b> a <code>MouseEvent</code>. Otherwise, it returns true if the necessary number of clicks have occurred, and returns
+         * false otherwise.
+         * 
+         * @param anEvent
+         *            the event
+         * @return true if cell is ready for editing, false otherwise
+         * @see #setClickCountToStart
+         * @see #shouldSelectCell
+         */
+        public boolean isCellEditable(final EventObject anEvent) {
+            if (anEvent instanceof MouseEvent) {
+                return ((MouseEvent) anEvent).getClickCount() >= clickCountToStart;
+            }
+            return true;
+        }
 
-	/**
-	 * Returns true to indicate that the editing cell may be selected.
-	 *
-	 * @param anEvent
-	 *            the event
-	 * @return true
-	 * @see #isCellEditable
-	 */
-	public boolean shouldSelectCell(final EventObject anEvent) {
-	    return true;
-	}
+        /**
+         * Returns true to indicate that the editing cell may be selected.
+         * 
+         * @param anEvent
+         *            the event
+         * @return true
+         * @see #isCellEditable
+         */
+        public boolean shouldSelectCell(final EventObject anEvent) {
+            return true;
+        }
 
-	/**
-	 * Returns true to indicate that editing has begun.
-	 *
-	 * @param anEvent
-	 *            the event
-	 */
-	public boolean startCellEditing(final EventObject anEvent) {
-	    return true;
-	}
+        /**
+         * Returns true to indicate that editing has begun.
+         * 
+         * @param anEvent
+         *            the event
+         */
+        public boolean startCellEditing(final EventObject anEvent) {
+            return true;
+        }
 
-	/**
-	 * Stops editing and returns true to indicate that editing has stopped. This method calls <code>fireEditingStopped</code>.
-	 *
-	 * @return true
-	 */
-	public boolean stopCellEditing() {
-	    fireEditingStopped();
-	    return true;
-	}
+        /**
+         * Stops editing and returns true to indicate that editing has stopped. This method calls <code>fireEditingStopped</code>.
+         * 
+         * @return true
+         */
+        public boolean stopCellEditing() {
+            fireEditingStopped();
+            return true;
+        }
 
-	/**
-	 * Cancels editing. This method calls <code>fireEditingCanceled</code>.
-	 */
-	public void cancelCellEditing() {
-	    fireEditingCanceled();
-	}
+        /**
+         * Cancels editing. This method calls <code>fireEditingCanceled</code>.
+         */
+        public void cancelCellEditing() {
+            fireEditingCanceled();
+        }
 
-	/**
-	 * When an action is performed, editing is ended.
-	 *
-	 * @param e
-	 *            the action event
-	 * @see #stopCellEditing
-	 */
-	public void actionPerformed(final ActionEvent e) {
-	    AutocompleterCellEditor.this.stopCellEditing();
-	}
+        /**
+         * When an action is performed, editing is ended.
+         * 
+         * @param e
+         *            the action event
+         * @see #stopCellEditing
+         */
+        public void actionPerformed(final ActionEvent e) {
+            AutocompleterCellEditor.this.stopCellEditing();
+        }
 
-	/**
-	 * When an item's state changes, editing is ended.
-	 *
-	 * @param e
-	 *            the action event
-	 * @see #stopCellEditing
-	 */
-	public void itemStateChanged(final ItemEvent e) {
-	    AutocompleterCellEditor.this.stopCellEditing();
-	}
+        /**
+         * When an item's state changes, editing is ended.
+         * 
+         * @param e
+         *            the action event
+         * @see #stopCellEditing
+         */
+        public void itemStateChanged(final ItemEvent e) {
+            AutocompleterCellEditor.this.stopCellEditing();
+        }
     }
 
 } // End of class

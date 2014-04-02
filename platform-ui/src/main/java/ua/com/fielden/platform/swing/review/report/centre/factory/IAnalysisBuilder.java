@@ -15,16 +15,16 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 /**
  * A contract that allows one to build different analysis.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  */
 public interface IAnalysisBuilder<T extends AbstractEntity<?>> {
 
     /**
      * Creates an analysis configuration view.
-     *
+     * 
      * @param owner
      * @param criteria
      * @param name
@@ -32,16 +32,16 @@ public interface IAnalysisBuilder<T extends AbstractEntity<?>> {
      * @return
      */
     AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?> createAnalysis(//
-	    final AnalysisType analysisType, //
-	    final String name, //
-	    final Map<Object, DetailsFrame> detailsCache,//
-	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
-	    final BlockingIndefiniteProgressLayer progressLayer);
+    final AnalysisType analysisType, //
+            final String name, //
+            final Map<Object, DetailsFrame> detailsCache,//
+            final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+            final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
+            final BlockingIndefiniteProgressLayer progressLayer);
 
     /**
      * Returns value that indicates whether specified analysis type is supported or not.
-     *
+     * 
      * @param analysisType
      * @return
      */

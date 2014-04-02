@@ -48,6 +48,7 @@ public class EntityLevel1 extends AbstractEntity<String> {
     public String getStrProperty() {
         return strProperty;
     }
+
     @Observable
     public void setStrProperty(final String strProperty) {
         this.strProperty = strProperty;
@@ -56,6 +57,7 @@ public class EntityLevel1 extends AbstractEntity<String> {
     public EntityLevel2 getEntityProperty() {
         return entityProperty;
     }
+
     @Observable
     public void setEntityProperty(final EntityLevel2 entityProperty) {
         this.entityProperty = entityProperty;
@@ -64,6 +66,7 @@ public class EntityLevel1 extends AbstractEntity<String> {
     public EntityLevel1 getSelfProperty() {
         return selfProperty;
     }
+
     @Observable
     public void setSelfProperty(final EntityLevel1 selfProperty) {
         this.selfProperty = selfProperty;
@@ -72,6 +75,7 @@ public class EntityLevel1 extends AbstractEntity<String> {
     public List<EntityLevel2> getCollectional() {
         return collectional;
     }
+
     @Observable
     public void setCollectional(final List<EntityLevel2> collectional) {
         this.collectional = collectional;
@@ -80,6 +84,7 @@ public class EntityLevel1 extends AbstractEntity<String> {
     public Money getMoneyProperty() {
         return moneyProperty;
     }
+
     @Observable
     public void setMoneyProperty(final Money moneyProperty) {
         this.moneyProperty = moneyProperty;
@@ -88,6 +93,7 @@ public class EntityLevel1 extends AbstractEntity<String> {
     public Integer getIntProperty() {
         return intProperty;
     }
+
     @Observable
     public void setIntProperty(final Integer intProperty) {
         this.intProperty = intProperty;
@@ -96,6 +102,7 @@ public class EntityLevel1 extends AbstractEntity<String> {
     public BigDecimal getDecimalProperty() {
         return decimalProperty;
     }
+
     @Observable
     public void setDecimalProperty(final BigDecimal decimalProperty) {
         this.decimalProperty = decimalProperty;
@@ -104,6 +111,7 @@ public class EntityLevel1 extends AbstractEntity<String> {
     public Date getDateProperty() {
         return dateProperty;
     }
+
     @Observable
     public void setDateProperty(final Date date) {
         this.dateProperty = date;
@@ -112,15 +120,16 @@ public class EntityLevel1 extends AbstractEntity<String> {
     public Date getAnotherDateProperty() {
         return anotherDateProperty;
     }
+
     @Observable
     public void setAnotherDateProperty(final Date date) {
         this.anotherDateProperty = date;
     }
 
-
     public Money getCalcuatedProperty() {
         return calcuatedProperty;
     }
+
     @Observable
     public void setCalcuatedProperty(final Money calcuatedProperty) {
         this.calcuatedProperty = calcuatedProperty;

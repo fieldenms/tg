@@ -36,9 +36,9 @@ import ua.com.fielden.platform.utils.Pair;
  * {@link ComponentFactory#createOnFocusLostAutocompleter(AbstractEntity, String, String, Class, String, String, String, ua.com.fielden.platform.basic.IValueMatcher, String, boolean, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)}
  * method to bound editors to properties. Extends and reuses functionality from {@link AbstractLabelPropertyColumnMapping}, so in order to provide custom logic, one may override
  * particular methods.
- *
+ * 
  * @author Yura
- *
+ * 
  * @param <T>
  * @param <K>
  * @param <PropertyClass>
@@ -69,7 +69,7 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
      * <br>
      * Note : much more preferred is usage of {@link PropertyTableModelBuilder} class as it requires less parameters and resolves a lot of them by itself avoiding inconsistency
      * between parameters
-     *
+     * 
      * @param columnName
      * @param prefSize
      * @param headerTooltip
@@ -83,55 +83,55 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
      * @param onCommitActions
      */
     public BoundedStringMapping(final Class<T> entityClass, final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final Class valueClass, final IValueMatcher valueMatcher, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final boolean stringBinding, final IOnCommitAction<T>... onCommitActions) {
-	super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction);
+        super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction);
 
-	originalPropertyName = propertyName;
-	this.valueClass = valueClass;
-	this.valueMatcher = valueMatcher;
-	this.stringBinding = stringBinding;
-	this.onCommitActions = onCommitActions;
+        originalPropertyName = propertyName;
+        this.valueClass = valueClass;
+        this.valueMatcher = valueMatcher;
+        this.stringBinding = stringBinding;
+        this.onCommitActions = onCommitActions;
     }
 
     @Override
     public EditorComponent<BoundedValidationLayer<AutocompleterTextFieldLayer>, JTextField> createBoundedEditorFor(final T entity) {
-	final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
+        final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
 
-	final BoundedValidationLayer<AutocompleterTextFieldLayer> boundedLayer = ComponentFactory.createOnFocusLostAutocompleter(entity, originalPropertyName, "", valueClass, "key", secondaryExpressions(valueClass), highlightProperties(valueClass), (String) null, valueMatcher, (String) null, stringBinding, EditorCase.MIXED_CASE, onCommitActionWrappers); //
-	boundedLayer.getView().getView().addKeyListener(new KeyAdapter() {
-	    @Override
-	    public void keyReleased(final KeyEvent e) {
-		if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-		    getEntityGridInspector().removeEditor();
-		}
-	    }
-	});
+        final BoundedValidationLayer<AutocompleterTextFieldLayer> boundedLayer = ComponentFactory.createOnFocusLostAutocompleter(entity, originalPropertyName, "", valueClass, "key", secondaryExpressions(valueClass), highlightProperties(valueClass), (String) null, valueMatcher, (String) null, stringBinding, EditorCase.MIXED_CASE, onCommitActionWrappers); //
+        boundedLayer.getView().getView().addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(final KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    getEntityGridInspector().removeEditor();
+                }
+            }
+        });
 
-	return new EditorComponent<BoundedValidationLayer<AutocompleterTextFieldLayer>, JTextField>(boundedLayer, (JTextField) boundedLayer.getView().getView());
+        return new EditorComponent<BoundedValidationLayer<AutocompleterTextFieldLayer>, JTextField>(boundedLayer, (JTextField) boundedLayer.getView().getView());
     }
 
     private Set<String> highlightProperties(final Class entityType) {
-	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
-	final Set<String> highlightProps = new HashSet<>();
-	highlightProps.add("key");
-	for(final Field keyMember : keyMembers) {
-	    highlightProps.add(keyMember.getName());
-	}
-	return highlightProps;
+        final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+        final Set<String> highlightProps = new HashSet<>();
+        highlightProps.add("key");
+        for (final Field keyMember : keyMembers) {
+            highlightProps.add(keyMember.getName());
+        }
+        return highlightProps;
     }
 
     @SuppressWarnings("unchecked")
     private Pair<String, String>[] secondaryExpressions(final Class entityType) {
-	final List<Pair<String, String>> props = new ArrayList<>();
-	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
-	if(keyMembers.size() > 1) {
-	    for (final Field keyMember : keyMembers) {
-		props.add(new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc(keyMember.getName(), entityType).getKey(), keyMember.getName()));
-	    }
-	}
-	if (EntityUtils.hasDescProperty(entityType)) {
-	    props.add(new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc("desc", entityType).getKey(), "desc"));
-	}
-	return props.toArray(new Pair[0]);
+        final List<Pair<String, String>> props = new ArrayList<>();
+        final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+        if (keyMembers.size() > 1) {
+            for (final Field keyMember : keyMembers) {
+                props.add(new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc(keyMember.getName(), entityType).getKey(), keyMember.getName()));
+            }
+        }
+        if (EntityUtils.hasDescProperty(entityType)) {
+            props.add(new Pair<String, String>(TitlesDescsGetter.getTitleAndDesc("desc", entityType).getKey(), "desc"));
+        }
+        return props.toArray(new Pair[0]);
     }
 
 }

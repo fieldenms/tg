@@ -15,23 +15,23 @@ public class EntitiesTreeNode2<DTM extends IDomainTreeManager> extends DefaultMu
     private static final long serialVersionUID = -1846717362518717357L;
 
     public EntitiesTreeNode2(final EntitiesTreeUserObject<DTM> userObject) {
-	super(userObject);
+        super(userObject);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public List<ITreeNode<Pair<Class<?>, String>>> daughters() {
-	return Collections.list(children());
+        return Collections.list(children());
     }
 
     @Override
     public Pair<Class<?>, String> state() {
-	return getUserObject();
+        return getUserObject();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public EntitiesTreeUserObject<DTM> getUserObject() {
-	return (EntitiesTreeUserObject<DTM>)super.getUserObject();
+        return (EntitiesTreeUserObject<DTM>) super.getUserObject();
     }
 }

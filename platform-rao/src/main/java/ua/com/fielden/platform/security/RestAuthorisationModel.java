@@ -9,11 +9,11 @@ import com.google.inject.Inject;
 
 /**
  * REST oriented authorisation model.
- *
+ * 
  * TODO If required from the performance perspective this implementation can be enhanced to cache authorisation results in a form of map between tokens and results.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class RestAuthorisationModel extends AbstractAuthorisationModel {
 
@@ -22,16 +22,16 @@ public class RestAuthorisationModel extends AbstractAuthorisationModel {
 
     @Inject
     public RestAuthorisationModel(final ISecurityTokenController controller, final RestClientUtil restUtil) {
-	this.controller = controller;
-	this.restUtil = restUtil;
+        this.controller = controller;
+        this.restUtil = restUtil;
     }
 
     @Override
     public Result authorise(final Class<? extends ISecurityToken> token) {
-	return controller.canAccess(restUtil.getUsername(), token) ? //
-	new Result("Authorised")
-		: //
-		new Result(new IllegalStateException("Permission denied: " + token.getAnnotation(KeyTitle.class).value()));
+        return controller.canAccess(restUtil.getUsername(), token) ? //
+        new Result("Authorised")
+                : //
+                new Result(new IllegalStateException("Permission denied: " + token.getAnnotation(KeyTitle.class).value()));
     }
 
 }

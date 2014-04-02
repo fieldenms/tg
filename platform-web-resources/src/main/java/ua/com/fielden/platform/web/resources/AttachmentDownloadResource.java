@@ -19,7 +19,7 @@ import ua.com.fielden.platform.attachment.IAttachment;
 
 /**
  * Represents a web resource for downloading a file associated with an instance of {@link Attachment}.
- *
+ * 
  * @author TG Team
  */
 public class AttachmentDownloadResource extends ServerResource {
@@ -31,15 +31,15 @@ public class AttachmentDownloadResource extends ServerResource {
     private final String location;
 
     public AttachmentDownloadResource(final String location, final IAttachment controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	setNegotiated(false);
-	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
+        init(context, request, response);
+        setNegotiated(false);
+        getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 
-	this.location = location;
-	this.controller = controller;
-	this.restUtil = restUtil;
+        this.location = location;
+        this.controller = controller;
+        this.restUtil = restUtil;
 
-	attachmentId = Long.parseLong(request.getAttributes().get("entity-id").toString());
+        attachmentId = Long.parseLong(request.getAttributes().get("entity-id").toString());
     }
 
     /**
@@ -48,20 +48,20 @@ public class AttachmentDownloadResource extends ServerResource {
     @Get
     @Override
     public Representation get() {
-	// process GET request
-	try {
-	    //return restUtil.singleRepresentation(dao.findById(entityId));
-	    final Attachment attachment = controller.findById(attachmentId);
-	    final File file = new File(location + "/" + attachment.getKey());
-	    if (file.canRead()) {
-		return new InputRepresentation(new FileInputStream(file), MediaType.APPLICATION_OCTET_STREAM);
-	    } else {
-		getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
-		return restUtil.errorRepresentation("Could not read file " + attachment.getKey());
-	    }
-	} catch (final Exception ex) {
-	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-	    return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
-	}
+        // process GET request
+        try {
+            //return restUtil.singleRepresentation(dao.findById(entityId));
+            final Attachment attachment = controller.findById(attachmentId);
+            final File file = new File(location + "/" + attachment.getKey());
+            if (file.canRead()) {
+                return new InputRepresentation(new FileInputStream(file), MediaType.APPLICATION_OCTET_STREAM);
+            } else {
+                getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+                return restUtil.errorRepresentation("Could not read file " + attachment.getKey());
+            }
+        } catch (final Exception ex) {
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
+        }
     }
 }

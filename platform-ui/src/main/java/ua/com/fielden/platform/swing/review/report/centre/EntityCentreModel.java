@@ -16,19 +16,18 @@ public class EntityCentreModel<T extends AbstractEntity<?>> extends AbstractEnti
 
     private final IAnalysisBuilder<T> analysisBuilder;
 
-    public EntityCentreModel(final EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> entityInspectorModel, final IAnalysisBuilder<T> analysisBuilder, final IEntityMasterManager masterManager, final String name){
-	super(entityInspectorModel, masterManager, name);
-	this.analysisBuilder = analysisBuilder;
+    public EntityCentreModel(final EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> entityInspectorModel, final IAnalysisBuilder<T> analysisBuilder, final IEntityMasterManager masterManager, final String name) {
+        super(entityInspectorModel, masterManager, name);
+        this.analysisBuilder = analysisBuilder;
     }
 
     public IAnalysisBuilder<T> getAnalysisBuilder() {
-	return analysisBuilder;
+        return analysisBuilder;
     }
 
     //    private final AbstractConfigurationModel getResultViewModel(){
     //	return resultViewModel;
     //    }
-
 
     //    protected final GridConfigurationModel<T> createMainDetailsModel(){
     //	final GridConfigurationModel<T> gridConfigModel = new GridConfigurationModel<T>(getCriteria());
@@ -52,4 +51,3 @@ public class EntityCentreModel<T extends AbstractEntity<?>> extends AbstractEnti
     //    }
 
 }
-

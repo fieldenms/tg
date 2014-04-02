@@ -17,33 +17,33 @@ public class ChartAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
     private final boolean isSentinel;
 
     public ChartAnalysisConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final String name, final boolean isSentinel) {
-	super(criteria, name);
-	this.isSentinel = isSentinel;
+        super(criteria, name);
+        this.isSentinel = isSentinel;
     }
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
-	if(ReportMode.REPORT.equals(mode)){
-	    final IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager)getAnalysisManager();
-	    if(adtme==null){
-		return new Result(this, new IllegalStateException("Simple analysis with " + getName() + " name can not be created!"));
-	    }
-	    if(adtme.getFirstTick().checkedProperties(getCriteria().getEntityClass()).size() == 0){
-		return new Result(this, new CanNotSetModeException("Please choose distribution properties!"));
-	    }
-	}
-	return Result.successful(this);
+        if (ReportMode.REPORT.equals(mode)) {
+            final IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager) getAnalysisManager();
+            if (adtme == null) {
+                return new Result(this, new IllegalStateException("Simple analysis with " + getName() + " name can not be created!"));
+            }
+            if (adtme.getFirstTick().checkedProperties(getCriteria().getEntityClass()).size() == 0) {
+                return new Result(this, new CanNotSetModeException("Please choose distribution properties!"));
+            }
+        }
+        return Result.successful(this);
     }
 
     final ChartAnalysisModel<T> createChartAnalysisModel() {
-	final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
-	final IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager)cdtme.getAnalysisManager(getName());
-	return new ChartAnalysisModel<T>(getCriteria(), adtme);
+        final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
+        final IAnalysisDomainTreeManager adtme = (IAnalysisDomainTreeManager) cdtme.getAnalysisManager(getName());
+        return new ChartAnalysisModel<T>(getCriteria(), adtme);
     }
 
     /**
      * Indicates whether analysis represents special "sentinel" analysis.
-     *
+     * 
      * @return
      */
     public boolean isSentinel() {

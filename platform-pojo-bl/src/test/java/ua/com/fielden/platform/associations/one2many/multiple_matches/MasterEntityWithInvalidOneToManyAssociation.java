@@ -14,9 +14,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing assocaitons.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key")
@@ -29,44 +29,46 @@ public class MasterEntityWithInvalidOneToManyAssociation extends AbstractEntity<
     @Title(value = "Property 1", desc = "Desc")
     private Money moneyProp;
 
-    @IsProperty // linkProperty="key1" is missing on purpose
+    @IsProperty
+    // linkProperty="key1" is missing on purpose
     @MapTo
     @Title(value = "Property 1", desc = "Desc")
     private DetailsEntityForInvalidOneToManyAssociation one2manyAssociationSpecialCase;
 
-    @IsProperty(value = DetailsEntityForInvalidOneToManyAssociation.class) // linkProperty is omitted on purpose
+    @IsProperty(value = DetailsEntityForInvalidOneToManyAssociation.class)
+    // linkProperty is omitted on purpose
     @MapTo
     @Title(value = "Collectional Property", desc = "Desc")
     private List<DetailsEntityForInvalidOneToManyAssociation> one2manyAssociationCollectional;
 
     @Observable
     public MasterEntityWithInvalidOneToManyAssociation setOne2manyAssociationCollectional(final List<DetailsEntityForInvalidOneToManyAssociation> one2manyAssociationCollectional) {
-	this.one2manyAssociationCollectional = one2manyAssociationCollectional;
-	return this;
+        this.one2manyAssociationCollectional = one2manyAssociationCollectional;
+        return this;
     }
 
     public List<DetailsEntityForInvalidOneToManyAssociation> getOne2manyAssociationCollectional() {
-	return one2manyAssociationCollectional;
+        return one2manyAssociationCollectional;
     }
 
     @Observable
     public MasterEntityWithInvalidOneToManyAssociation setOne2manyAssociationSpecialCase(final DetailsEntityForInvalidOneToManyAssociation one2oneAssociation) {
-	this.one2manyAssociationSpecialCase = one2oneAssociation;
-	return this;
+        this.one2manyAssociationSpecialCase = one2oneAssociation;
+        return this;
     }
 
     public DetailsEntityForInvalidOneToManyAssociation getOne2manyAssociationSpecialCase() {
-	return one2manyAssociationSpecialCase;
+        return one2manyAssociationSpecialCase;
     }
 
     @Observable
     public MasterEntityWithInvalidOneToManyAssociation setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
 
 }

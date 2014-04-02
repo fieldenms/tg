@@ -19,11 +19,11 @@ public class CommonAncestorEntity extends AbstractEntity<DynamicEntityKey> {
     protected Long property2;
 
     public Long getProperty2() {
-	return property2;
+        return property2;
     }
 
     @Observable
     public void setProperty2(final Long property2) {
-	this.property2 = property2;
+        this.property2 = property2;
     }
 }

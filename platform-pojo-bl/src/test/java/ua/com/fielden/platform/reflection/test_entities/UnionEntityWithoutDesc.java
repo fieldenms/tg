@@ -22,30 +22,30 @@ public class UnionEntityWithoutDesc extends AbstractUnionEntity {
     private SimpleWithoutDescEntity simpleEntityWithoutDesc;
 
     public SimplePartEntity getSimplePartEntity() {
-	return simplePartEntity;
+        return simplePartEntity;
     }
 
     @Observable
     public void setSimplePartEntity(final SimplePartEntity simplePartEntity) {
-	this.simplePartEntity = simplePartEntity;
+        this.simplePartEntity = simplePartEntity;
     }
 
     public ComplexPartEntity getComplexPartEntity() {
-	return complexPartEntity;
+        return complexPartEntity;
     }
 
     @Observable
     public void setComplexPartEntity(final ComplexPartEntity complexPartEntity) {
-	this.complexPartEntity = complexPartEntity;
+        this.complexPartEntity = complexPartEntity;
     }
 
     public SimpleWithoutDescEntity getSimpleEntityWithoutDesc() {
-	return simpleEntityWithoutDesc;
+        return simpleEntityWithoutDesc;
     }
 
     @Observable
     public void setSimpleEntityWithoutDesc(final SimpleWithoutDescEntity simpleEntityWithoutDesc) {
-	this.simpleEntityWithoutDesc = simpleEntityWithoutDesc;
+        this.simpleEntityWithoutDesc = simpleEntityWithoutDesc;
     }
 
 }

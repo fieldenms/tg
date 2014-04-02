@@ -8,9 +8,9 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Entity for testing purposes.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle("key")

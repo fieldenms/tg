@@ -4,5 +4,4 @@ import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 
 public interface ISecurityTokenType extends IUserTypeInstantiate {
 
-
 }

@@ -10,9 +10,9 @@ import com.jidesoft.grid.HierarchicalTableComponentFactory;
 
 /**
  * Builder for {@link HierarchicalPropertyTableModel}.
- *
+ * 
  * @author Yura
- *
+ * 
  * @param <EntityType>
  * @param <ChildType>
  */
@@ -25,24 +25,24 @@ public class HierarchicalPropertyTableModelBuilder<EntityType extends AbstractEn
 
     /**
      * Constructs instance of this class by setting references to passed parameters, which will be used during creation of {@link HierarchicalPropertyTableModel} instance
-     *
+     * 
      * @param entityClass
      * @param hierarchyProvider
      * @param componentFactory
      */
     public HierarchicalPropertyTableModelBuilder(final Class<EntityType> entityClass, final IHierarchyProvider<EntityType> hierarchyProvider, final HierarchicalTableComponentFactory componentFactory) {
-	super(entityClass);
+        super(entityClass);
 
-	this.hierarchyProvider = hierarchyProvider;
-	this.componentFactory = componentFactory;
+        this.hierarchyProvider = hierarchyProvider;
+        this.componentFactory = componentFactory;
     }
 
     public IHierarchyProvider<EntityType> getHierarchyProvider() {
-	return hierarchyProvider;
+        return hierarchyProvider;
     }
 
     public HierarchicalTableComponentFactory getComponentFactory() {
-	return componentFactory;
+        return componentFactory;
     }
 
     /**
@@ -50,8 +50,8 @@ public class HierarchicalPropertyTableModelBuilder<EntityType extends AbstractEn
      */
     @Override
     public HierarchicalPropertyTableModel<EntityType> build(final List<EntityType> instances) {
-	enhanceColumnTitlesAndTooltips();
-	return new HierarchicalPropertyTableModel<EntityType>(this, instances);
+        enhanceColumnTitlesAndTooltips();
+        return new HierarchicalPropertyTableModel<EntityType>(this, instances);
     }
 
 }

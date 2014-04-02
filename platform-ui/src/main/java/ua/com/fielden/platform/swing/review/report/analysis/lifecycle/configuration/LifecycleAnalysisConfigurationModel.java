@@ -13,32 +13,30 @@ import ua.com.fielden.platform.swing.review.report.analysis.lifecycle.LifecycleA
 public class LifecycleAnalysisConfigurationModel<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     public LifecycleAnalysisConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final String name) {
-	super(criteria, name);
+        super(criteria, name);
     }
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
-	if(ReportMode.REPORT.equals(mode)){
-	    final ILifecycleDomainTreeManager adtme = (ILifecycleDomainTreeManager)getAnalysisManager();
-	    if(adtme==null){
-		return new Result(this, new IllegalStateException("Simple analysis with " + getName() + " name can not be created!"));
-	    }
-	    final boolean hasDistributions = adtme.getFirstTick().checkedProperties(getCriteria().getEntityClass()).size() != 0;
-	    final boolean hasCategories = adtme.getSecondTick().checkedProperties(getCriteria().getEntityClass()).size() != 0;
-	    if(!hasDistributions || !hasCategories){
-		return new Result(this, new CanNotSetModeException("Please choose " +
-						(!hasDistributions ? "distribution" : "") +
-						(!hasDistributions && !hasCategories ? " and " : "") +
-						(!hasCategories ? "category" : "") + " properties!"));
-	    }
-	    return Result.successful(this);
-	}
-	return Result.successful(this);
+        if (ReportMode.REPORT.equals(mode)) {
+            final ILifecycleDomainTreeManager adtme = (ILifecycleDomainTreeManager) getAnalysisManager();
+            if (adtme == null) {
+                return new Result(this, new IllegalStateException("Simple analysis with " + getName() + " name can not be created!"));
+            }
+            final boolean hasDistributions = adtme.getFirstTick().checkedProperties(getCriteria().getEntityClass()).size() != 0;
+            final boolean hasCategories = adtme.getSecondTick().checkedProperties(getCriteria().getEntityClass()).size() != 0;
+            if (!hasDistributions || !hasCategories) {
+                return new Result(this, new CanNotSetModeException("Please choose " + (!hasDistributions ? "distribution" : "")
+                        + (!hasDistributions && !hasCategories ? " and " : "") + (!hasCategories ? "category" : "") + " properties!"));
+            }
+            return Result.successful(this);
+        }
+        return Result.successful(this);
     }
 
     public LifecycleAnalysisModel<T> createChartAnalysisModel() {
-	final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
-	final ILifecycleDomainTreeManager ldtme = (ILifecycleDomainTreeManager)cdtme.getAnalysisManager(getName());
-	return new LifecycleAnalysisModel<T>(getCriteria(), ldtme);
+        final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
+        final ILifecycleDomainTreeManager ldtme = (ILifecycleDomainTreeManager) cdtme.getAnalysisManager(getName());
+        return new LifecycleAnalysisModel<T>(getCriteria(), ldtme);
     }
 }

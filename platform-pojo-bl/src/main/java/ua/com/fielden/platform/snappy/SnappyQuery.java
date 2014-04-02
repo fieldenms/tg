@@ -10,25 +10,25 @@ public class SnappyQuery {
     private final List<String> aggrAccessors = new ArrayList<String>();
 
     public SnappyQuery(final String mainQueryString, final String secondaryQueryString, final List<String> aggrAccessors) {
-	this.mainQueryString = mainQueryString;
-	this.secondaryQueryString = secondaryQueryString;
-	this.aggrAccessors.addAll(aggrAccessors);
+        this.mainQueryString = mainQueryString;
+        this.secondaryQueryString = secondaryQueryString;
+        this.aggrAccessors.addAll(aggrAccessors);
     }
 
     public String getMainQueryString() {
-	return mainQueryString;
+        return mainQueryString;
     }
 
     public String getSecondaryQueryString() {
-	return secondaryQueryString;
+        return secondaryQueryString;
     }
 
     public boolean isFilteringQuery() {
-	return secondaryQueryString == null;
+        return secondaryQueryString == null;
     }
 
     public List<String> getAggrAccessors() {
-	return Collections.unmodifiableList(aggrAccessors);
+        return Collections.unmodifiableList(aggrAccessors);
     }
 
 }

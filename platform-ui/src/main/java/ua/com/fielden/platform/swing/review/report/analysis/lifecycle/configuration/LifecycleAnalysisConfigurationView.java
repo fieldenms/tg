@@ -25,74 +25,74 @@ public class LifecycleAnalysisConfigurationView<T extends AbstractEntity<?>> ext
 
     private final IToolbarCustomiser<LifecycleAnalysisView<T>> toolbarCustomiser;
 
-    public static <T extends AbstractEntity<?>>  LifecycleAnalysisConfigurationView<T> createLifecycleAnalysisWithDefaultToolbar(//
-	    final LifecycleAnalysisConfigurationModel<T> model, //
-	    final Map<Object, DetailsFrame> detailsCache, //
-	    final IDetailsCustomiser detailsCustomiser, //
-	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final BlockingIndefiniteProgressLayer progressLayer){
-	return new LifecycleAnalysisConfigurationView<>(model, detailsCache, detailsCustomiser, owner, null, progressLayer);
+    public static <T extends AbstractEntity<?>> LifecycleAnalysisConfigurationView<T> createLifecycleAnalysisWithDefaultToolbar(//
+    final LifecycleAnalysisConfigurationModel<T> model, //
+            final Map<Object, DetailsFrame> detailsCache, //
+            final IDetailsCustomiser detailsCustomiser, //
+            final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        return new LifecycleAnalysisConfigurationView<>(model, detailsCache, detailsCustomiser, owner, null, progressLayer);
     }
 
-    public static <T extends AbstractEntity<?>>  LifecycleAnalysisConfigurationView<T> createLifecycleAnalysisWithSpecificToolbar(//
-	    final LifecycleAnalysisConfigurationModel<T> model, //
-	    final Map<Object, DetailsFrame> detailsCache, //
-	    final IDetailsCustomiser detailsCustomiser, //
-	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final IToolbarCustomiser<LifecycleAnalysisView<T>> toolbarCustomiser, //
-	    final BlockingIndefiniteProgressLayer progressLayer){
-	return new LifecycleAnalysisConfigurationView<>(model, detailsCache, detailsCustomiser, owner, toolbarCustomiser, progressLayer);
+    public static <T extends AbstractEntity<?>> LifecycleAnalysisConfigurationView<T> createLifecycleAnalysisWithSpecificToolbar(//
+    final LifecycleAnalysisConfigurationModel<T> model, //
+            final Map<Object, DetailsFrame> detailsCache, //
+            final IDetailsCustomiser detailsCustomiser, //
+            final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+            final IToolbarCustomiser<LifecycleAnalysisView<T>> toolbarCustomiser, //
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        return new LifecycleAnalysisConfigurationView<>(model, detailsCache, detailsCustomiser, owner, toolbarCustomiser, progressLayer);
     }
 
     protected LifecycleAnalysisConfigurationView(//
-	    final LifecycleAnalysisConfigurationModel<T> model, //
-	    final Map<Object, DetailsFrame> detailsCache, //
-	    final IDetailsCustomiser detailsCustomiser, //
-	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final IToolbarCustomiser<LifecycleAnalysisView<T>> toolbarCustomiser, //
-	    final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, detailsCache, detailsCustomiser, owner, progressLayer);
-	this.toolbarCustomiser = toolbarCustomiser == null ? new DefaultLifecycleAnalysisToolbarCustomiser<T>() : toolbarCustomiser;
-	addConfigurationEventListener(createOpenAnalysisEventListener());
+    final LifecycleAnalysisConfigurationModel<T> model, //
+            final Map<Object, DetailsFrame> detailsCache, //
+            final IDetailsCustomiser detailsCustomiser, //
+            final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+            final IToolbarCustomiser<LifecycleAnalysisView<T>> toolbarCustomiser, //
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        super(model, detailsCache, detailsCustomiser, owner, progressLayer);
+        this.toolbarCustomiser = toolbarCustomiser == null ? new DefaultLifecycleAnalysisToolbarCustomiser<T>() : toolbarCustomiser;
+        addConfigurationEventListener(createOpenAnalysisEventListener());
     }
 
     public IToolbarCustomiser<LifecycleAnalysisView<T>> getToolbarCustomiser() {
-	return toolbarCustomiser;
+        return toolbarCustomiser;
     }
 
     @Override
     public LifecycleAnalysisConfigurationModel<T> getModel() {
-	return (LifecycleAnalysisConfigurationModel<T>)super.getModel();
+        return (LifecycleAnalysisConfigurationModel<T>) super.getModel();
     }
 
     @Override
     protected LifecycleAnalysisView<T> createConfigurableView() {
-	return new LifecycleAnalysisView<T>(getModel().createChartAnalysisModel(), this);
+        return new LifecycleAnalysisView<T>(getModel().createChartAnalysisModel(), this);
     }
 
     private IAbstractConfigurationViewEventListener createOpenAnalysisEventListener() {
-	return new IAbstractConfigurationViewEventListener() {
+        return new IAbstractConfigurationViewEventListener() {
 
-	    @Override
-	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
-		switch (event.getEventAction()) {
-		case OPEN:
-		    ILifecycleDomainTreeManager adtme = (ILifecycleDomainTreeManager)getModel().getAnalysisManager();
-		    if(adtme == null){
-			getModel().initAnalysisManager(AnalysisType.LIFECYCLE);
-			getModel().save();
-			adtme = (ILifecycleDomainTreeManager)getModel().getAnalysisManager();
-		    }
-		    if(adtme == null){
-			return new Result(LifecycleAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));
-		    }
-		    getModel().setAnalysisVisible(true);
-		    return getModel().canSetMode(ReportMode.REPORT);
+            @Override
+            public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
+                switch (event.getEventAction()) {
+                case OPEN:
+                    ILifecycleDomainTreeManager adtme = (ILifecycleDomainTreeManager) getModel().getAnalysisManager();
+                    if (adtme == null) {
+                        getModel().initAnalysisManager(AnalysisType.LIFECYCLE);
+                        getModel().save();
+                        adtme = (ILifecycleDomainTreeManager) getModel().getAnalysisManager();
+                    }
+                    if (adtme == null) {
+                        return new Result(LifecycleAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));
+                    }
+                    getModel().setAnalysisVisible(true);
+                    return getModel().canSetMode(ReportMode.REPORT);
 
-		default:
-		    return Result.successful(LifecycleAnalysisConfigurationView.this);
-		}
-	    }
-	};
+                default:
+                    return Result.successful(LifecycleAnalysisConfigurationView.this);
+                }
+            }
+        };
     }
 }

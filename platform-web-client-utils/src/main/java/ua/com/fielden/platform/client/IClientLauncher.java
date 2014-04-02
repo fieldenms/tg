@@ -11,16 +11,16 @@ import com.google.inject.Injector;
 
 /**
  * A contract for implementing application specific launching logic.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IClientLauncher {
     void launch(final SplashController splash,//
-	    final StyledLoginScreen loginScreen,//
-	    final RestClientUtil restUtil,//
-	    final Injector injector, //
-	    final boolean autoudate, //
-	    final AppSessionController sessionController,//
-	    final Logger logger);
+            final StyledLoginScreen loginScreen,//
+            final RestClientUtil restUtil,//
+            final Injector injector, //
+            final boolean autoudate, //
+            final AppSessionController sessionController,//
+            final Logger logger);
 }

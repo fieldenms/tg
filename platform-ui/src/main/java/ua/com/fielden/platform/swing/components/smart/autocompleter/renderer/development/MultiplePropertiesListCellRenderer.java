@@ -43,7 +43,7 @@ import com.jidesoft.swing.StyledLabelBuilder;
 /**
  * This list cell renderer is designed to represent instances with two specified in the constructor properties: First property is in bold and located above the second property; the
  * second property has a smaller font size.
- *
+ * 
  * @author 01es
  */
 public class MultiplePropertiesListCellRenderer<T> extends JPanel implements ListCellRenderer<T> {
@@ -71,151 +71,151 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
     private int firstColumnPrefWidth = 0;
 
     public MultiplePropertiesListCellRenderer(final String mainExpression, final Pair<String, String>[] secondaryExpressions,//
-	    final Set<String> expressionsToHighlight) {
-	// create expression for mainExpression
-	titleExprToDisplay = new ArrayList<>();
-	titleExprToDisplay.add(new Pair<>("dummy", mainExpression));
-	if (secondaryExpressions != null) {
-	    titleExprToDisplay.addAll(Arrays.asList(secondaryExpressions));
-	}
-	propertyExpressions = new Expression[titleExprToDisplay.size()];
-	exprProperties = new String[titleExprToDisplay.size()];
-	jlProperties = new JLabel[titleExprToDisplay.size()];
-	try {
-	    propertyExpressions[0] = ExpressionFactory.createExpression(("entity." + mainExpression.trim()));
-	    jlProperties[0] = createMainLabel();
-	    exprProperties[0] = mainExpression;
-	    exprHighlights.add(expressionsToHighlight.contains(mainExpression) ? true : false);
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    throw new IllegalArgumentException("Failed to create expression " + mainExpression + ": " + e.getMessage());
-	}
-	// create expressions for secondaryExpressions
-	String rowConstraint = "";
-	final List<JLabel> titleLabels = new ArrayList<>();
-	for (int exprIndex = 1; exprIndex < titleExprToDisplay.size(); exprIndex++) {
-	    try {
-		// create label for the current property title and calculate its preferred width
-		final String title = titleExprToDisplay.get(exprIndex).getKey();
-		final JLabel titleLabel = crateTitleLabel(title);
-		final FontMetrics fm = SwingUtilities2.getFontMetrics(titleLabel, titleLabel.getFont());
-		final int titleWidth = SwingUtilities2.stringWidth(titleLabel, fm, title);
-		firstColumnPrefWidth = firstColumnPrefWidth < titleWidth ? titleWidth : firstColumnPrefWidth;
-		titleLabels.add(titleLabel);
+            final Set<String> expressionsToHighlight) {
+        // create expression for mainExpression
+        titleExprToDisplay = new ArrayList<>();
+        titleExprToDisplay.add(new Pair<>("dummy", mainExpression));
+        if (secondaryExpressions != null) {
+            titleExprToDisplay.addAll(Arrays.asList(secondaryExpressions));
+        }
+        propertyExpressions = new Expression[titleExprToDisplay.size()];
+        exprProperties = new String[titleExprToDisplay.size()];
+        jlProperties = new JLabel[titleExprToDisplay.size()];
+        try {
+            propertyExpressions[0] = ExpressionFactory.createExpression(("entity." + mainExpression.trim()));
+            jlProperties[0] = createMainLabel();
+            exprProperties[0] = mainExpression;
+            exprHighlights.add(expressionsToHighlight.contains(mainExpression) ? true : false);
+        } catch (final Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("Failed to create expression " + mainExpression + ": " + e.getMessage());
+        }
+        // create expressions for secondaryExpressions
+        String rowConstraint = "";
+        final List<JLabel> titleLabels = new ArrayList<>();
+        for (int exprIndex = 1; exprIndex < titleExprToDisplay.size(); exprIndex++) {
+            try {
+                // create label for the current property title and calculate its preferred width
+                final String title = titleExprToDisplay.get(exprIndex).getKey();
+                final JLabel titleLabel = crateTitleLabel(title);
+                final FontMetrics fm = SwingUtilities2.getFontMetrics(titleLabel, titleLabel.getFont());
+                final int titleWidth = SwingUtilities2.stringWidth(titleLabel, fm, title);
+                firstColumnPrefWidth = firstColumnPrefWidth < titleWidth ? titleWidth : firstColumnPrefWidth;
+                titleLabels.add(titleLabel);
 
-		// calculate label for the current expression
-		final String expressionValue = secondaryExpressions[exprIndex - 1].getValue();
-		propertyExpressions[exprIndex] = ExpressionFactory.createExpression(("entity." + expressionValue));
-		rowConstraint += "[c]";
-		jlProperties[exprIndex] = createSecondartLabel();
-		exprProperties[exprIndex] = expressionValue;
-		exprHighlights.add(expressionsToHighlight.contains(expressionValue) ? true : false);
-	    } catch (final Exception e) {
-		e.printStackTrace();
-		throw new IllegalArgumentException("Failed to create expression " + secondaryExpressions[exprIndex - 1] + ": " + e.getMessage());
-	    }
-	}
+                // calculate label for the current expression
+                final String expressionValue = secondaryExpressions[exprIndex - 1].getValue();
+                propertyExpressions[exprIndex] = ExpressionFactory.createExpression(("entity." + expressionValue));
+                rowConstraint += "[c]";
+                jlProperties[exprIndex] = createSecondartLabel();
+                exprProperties[exprIndex] = expressionValue;
+                exprHighlights.add(expressionsToHighlight.contains(expressionValue) ? true : false);
+            } catch (final Exception e) {
+                e.printStackTrace();
+                throw new IllegalArgumentException("Failed to create expression " + secondaryExpressions[exprIndex - 1] + ": " + e.getMessage());
+            }
+        }
 
-	// Make two column layout and add all labels to it. :" + firstColumnPrefWidth + ":
-	final boolean skipTitles = titleExprToDisplay.size() <= 2;
-	if (skipTitles) {
-	    firstColumnPrefWidth = 0;
-	    setLayout(new MigLayout("fill, insets " + insets, "[grow]", "[c]" + rowConstraint + insets)); // there will be a gap after each entry in the list
-	    add(jlProperties[0], "wrap");
-	} else {
-	    setLayout(new MigLayout("fill, insets " + insets, "[right]rel[grow]", "[c]" + rowConstraint + insets)); // there will be a gap after each entry in the list
-	    add(jlProperties[0], "skip 1, wrap");
-	}
+        // Make two column layout and add all labels to it. :" + firstColumnPrefWidth + ":
+        final boolean skipTitles = titleExprToDisplay.size() <= 2;
+        if (skipTitles) {
+            firstColumnPrefWidth = 0;
+            setLayout(new MigLayout("fill, insets " + insets, "[grow]", "[c]" + rowConstraint + insets)); // there will be a gap after each entry in the list
+            add(jlProperties[0], "wrap");
+        } else {
+            setLayout(new MigLayout("fill, insets " + insets, "[right]rel[grow]", "[c]" + rowConstraint + insets)); // there will be a gap after each entry in the list
+            add(jlProperties[0], "skip 1, wrap");
+        }
 
-	for (int compIndex = 1; compIndex < jlProperties.length - 1; compIndex++) {
-	    if (!skipTitles) {
-		add(titleLabels.get(compIndex - 1));
-	    }
-	    add(jlProperties[compIndex], "grow, wrap");
-	}
-	if (!skipTitles) {
-	    add(titleLabels.get(titleLabels.size() - 1));
-	}
-	add(jlProperties[jlProperties.length - 1], "grow");
+        for (int compIndex = 1; compIndex < jlProperties.length - 1; compIndex++) {
+            if (!skipTitles) {
+                add(titleLabels.get(compIndex - 1));
+            }
+            add(jlProperties[compIndex], "grow, wrap");
+        }
+        if (!skipTitles) {
+            add(titleLabels.get(titleLabels.size() - 1));
+        }
+        add(jlProperties[jlProperties.length - 1], "grow");
 
     }
 
     private JLabel createMainLabel() {
-	final JLabel jlName = new JLabel();
-	jlName.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-	jlName.setText("text");
-	jlName.setFont(jlName.getFont().deriveFont(jlName.getFont().getStyle() | Font.BOLD));
-	jlName.setBorder(new EmptyBorder(0, insets, 0, 0));
-	jlName.setPreferredSize(new Dimension(preferredWidth, 17));
-	return jlName;
+        final JLabel jlName = new JLabel();
+        jlName.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        jlName.setText("text");
+        jlName.setFont(jlName.getFont().deriveFont(jlName.getFont().getStyle() | Font.BOLD));
+        jlName.setBorder(new EmptyBorder(0, insets, 0, 0));
+        jlName.setPreferredSize(new Dimension(preferredWidth, 17));
+        return jlName;
     }
 
     private JLabel createSecondartLabel() {
-	final JLabel jlDesc = new JLabel();
-	jlDesc.setText("text");
-	jlDesc.setBorder(new EmptyBorder(0, insets, 0, 0));
-	jlDesc.setFont(new Font("SansSerif", Font.PLAIN, 10));
-	jlDesc.setPreferredSize(new Dimension(preferredWidth, 13));
-	return jlDesc;
+        final JLabel jlDesc = new JLabel();
+        jlDesc.setText("text");
+        jlDesc.setBorder(new EmptyBorder(0, insets, 0, 0));
+        jlDesc.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        jlDesc.setPreferredSize(new Dimension(preferredWidth, 13));
+        return jlDesc;
     }
 
     private JLabel crateTitleLabel(final String caption) {
-	final StyledLabel styledLabel = StyledLabelBuilder.createStyledLabel(caption + ":");//  add().createLabel();
-	styledLabel.setFont(new Font("SansSerif", Font.BOLD, 10));
-	styledLabel.setForeground(new Color(0x646464));
-	return styledLabel;
+        final StyledLabel styledLabel = StyledLabelBuilder.createStyledLabel(caption + ":");//  add().createLabel();
+        styledLabel.setFont(new Font("SansSerif", Font.BOLD, 10));
+        styledLabel.setForeground(new Color(0x646464));
+        return styledLabel;
     }
 
     @SuppressWarnings("unchecked")
     private String value(final Object entity, final int index) {
-	final JexlContext jc = JexlHelper.createContext();
-	jc.getVars().put("entity", entity);
-	try {
-	    return propertyExpressions[index].evaluate(jc) + "";
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    throw new RuntimeException("Failed to evaluate expression " + propertyExpressions[index] + ": " + e.getMessage());
-	}
+        final JexlContext jc = JexlHelper.createContext();
+        jc.getVars().put("entity", entity);
+        try {
+            return propertyExpressions[index].evaluate(jc) + "";
+        } catch (final Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to evaluate expression " + propertyExpressions[index] + ": " + e.getMessage());
+        }
     }
 
     @Override
     public Component getListCellRendererComponent(final JList<? extends T> list, final T value, final int index, final boolean isSelected, final boolean cellHasFocus) {
-	if (isSelected) {
-	    if (Hover.index(list) == index) {
-		setBackground(hoverSelectedColour);
-	    } else {
-		setBackground(list.getSelectionBackground());
-	    }
-	    setForeground(list.getSelectionForeground());
-	} else {
-	    if (Hover.index(list) == index) {
-		setBackground(hoverColour);
-	    } else {
-		setBackground(list.getBackground());
-	    }
-	    setForeground(list.getForeground());
-	}
-	//////////////////////////////////////////////////////////////////////////////
-	//// set values to be rendered with highlighting of the matched portion //////
-	//////////////////////////////////////////////////////////////////////////////
-	// * if string starts with % then remove it
-	// * if string ends with % then also remove it
-	// * if string does not end with % then append $
-	// * substitute all occurrences of % with .*
-	final String fullPattern = auto.getPrevValue().toUpperCase();
-	final String fullPatternS1 = removeFromStart(fullPattern, "%");
-	final String fullPatternS2 = fullPatternS1.endsWith("%") ? removeFromEnd(fullPatternS1, "%") : fullPatternS1 + "$";
-	final String strPattern = fullPatternS2.replaceAll("\\%", ".*");
-	final Pattern pattern = Pattern.compile(strPattern);
+        if (isSelected) {
+            if (Hover.index(list) == index) {
+                setBackground(hoverSelectedColour);
+            } else {
+                setBackground(list.getSelectionBackground());
+            }
+            setForeground(list.getSelectionForeground());
+        } else {
+            if (Hover.index(list) == index) {
+                setBackground(hoverColour);
+            } else {
+                setBackground(list.getBackground());
+            }
+            setForeground(list.getForeground());
+        }
+        //////////////////////////////////////////////////////////////////////////////
+        //// set values to be rendered with highlighting of the matched portion //////
+        //////////////////////////////////////////////////////////////////////////////
+        // * if string starts with % then remove it
+        // * if string ends with % then also remove it
+        // * if string does not end with % then append $
+        // * substitute all occurrences of % with .*
+        final String fullPattern = auto.getPrevValue().toUpperCase();
+        final String fullPatternS1 = removeFromStart(fullPattern, "%");
+        final String fullPatternS2 = fullPatternS1.endsWith("%") ? removeFromEnd(fullPatternS1, "%") : fullPatternS1 + "$";
+        final String strPattern = fullPatternS2.replaceAll("\\%", ".*");
+        final Pattern pattern = Pattern.compile(strPattern);
 
-	for (int exprIndex = 0; exprIndex < exprProperties.length; exprIndex++) {
-	    final String exprValue = value(value, exprIndex);
-	    final JLabel label = jlProperties[exprIndex];
-	    final FontMetrics fm = SwingUtilities2.getFontMetrics(label, label.getFont());
-	    final String clippedString = SwingUtilities2.clipStringIfNecessary(label, fm, exprValue, preferredWidth);
-	    label.setText(isPropertyHighlighted(exprProperties[exprIndex]) ? matchValue(exprValue, clippedString, pattern) : TitlesDescsGetter.addHtmlTag(clippedString));
-	}
-	return this;
+        for (int exprIndex = 0; exprIndex < exprProperties.length; exprIndex++) {
+            final String exprValue = value(value, exprIndex);
+            final JLabel label = jlProperties[exprIndex];
+            final FontMetrics fm = SwingUtilities2.getFontMetrics(label, label.getFont());
+            final String clippedString = SwingUtilities2.clipStringIfNecessary(label, fm, exprValue, preferredWidth);
+            label.setText(isPropertyHighlighted(exprProperties[exprIndex]) ? matchValue(exprValue, clippedString, pattern) : TitlesDescsGetter.addHtmlTag(clippedString));
+        }
+        return this;
     }
 
     //    @Override
@@ -245,47 +245,47 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
 
     /**
      * Determines whether expression property must be selected or not.
-     *
+     * 
      * @param exprProperty
      * @return
      */
     public boolean isPropertyHighlighted(final String exprProperty) {
-	if (containsExpression(exprProperty)) {
-	    return exprHighlights.get(indexOfExpression(exprProperty));
-	}
-	throw new IllegalArgumentException("The expression " + exprProperty + " is not included in to this cell renderer");
+        if (containsExpression(exprProperty)) {
+            return exprHighlights.get(indexOfExpression(exprProperty));
+        }
+        throw new IllegalArgumentException("The expression " + exprProperty + " is not included in to this cell renderer");
     }
 
     /**
      * Set the expression property value that determines whether it must be selected or not.
-     *
+     * 
      * @param exprProperty
      * @param highlight
      */
     public void setPropertyToHighlight(final String exprProperty, final boolean highlight) {
-	if (containsExpression(exprProperty)) {
-	    exprHighlights.set(indexOfExpression(exprProperty), highlight);
-	    return;
-	}
-	throw new IllegalArgumentException("The expression " + exprProperty + " is not included in to this cell renderer");
+        if (containsExpression(exprProperty)) {
+            exprHighlights.set(indexOfExpression(exprProperty), highlight);
+            return;
+        }
+        throw new IllegalArgumentException("The expression " + exprProperty + " is not included in to this cell renderer");
     }
 
     private boolean containsExpression(final String expression) {
-	return indexOfExpression(expression) >= 0;
+        return indexOfExpression(expression) >= 0;
     }
 
     private int indexOfExpression(final String expression) {
-	for (int index = 0; index < titleExprToDisplay.size(); index++) {
-	    if (EntityUtils.equalsEx(expression, titleExprToDisplay.get(index).getValue())) {
-		return index;
-	    }
-	}
-	return -1;
+        for (int index = 0; index < titleExprToDisplay.size(); index++) {
+            if (EntityUtils.equalsEx(expression, titleExprToDisplay.get(index).getValue())) {
+                return index;
+            }
+        }
+        return -1;
     }
 
     /**
      * Returns highlighted matched value.
-     *
+     * 
      * @param value
      *            - value to highlight.
      * @param clippedString
@@ -294,70 +294,70 @@ public class MultiplePropertiesListCellRenderer<T> extends JPanel implements Lis
      * @return
      */
     private String matchValue(final String value, final String clippedString, final Pattern pattern) {
-	String suffix = "";
-	String body = clippedString;
-	if (clippedString.endsWith("...")) {
-	    suffix = "...";
-	    body = clippedString.substring(0, clippedString.length() - 3);
-	}
-	final String fullNameUpper = value.toUpperCase();
-	final Matcher matcher = pattern.matcher(fullNameUpper);
-	final StringBuffer buffer = new StringBuffer();
-	buffer.append("<html>");
-	if (matcher.find() && matcher.start() < body.length()) {
-	    buffer.append(body.substring(0, matcher.start()));
-	    buffer.append("<font bgcolor=#fffec7>");
-	    final int endIndex = matcher.end() <= body.length() ? matcher.end() : body.length();
-	    buffer.append(body.substring(matcher.start(), endIndex));
-	    buffer.append("</font>");
-	    buffer.append(body.substring(endIndex));
-	    buffer.append(suffix);
-	} else {
-	    buffer.append(clippedString);
-	}
-	buffer.append("</html>");
-	return buffer.toString();
+        String suffix = "";
+        String body = clippedString;
+        if (clippedString.endsWith("...")) {
+            suffix = "...";
+            body = clippedString.substring(0, clippedString.length() - 3);
+        }
+        final String fullNameUpper = value.toUpperCase();
+        final Matcher matcher = pattern.matcher(fullNameUpper);
+        final StringBuffer buffer = new StringBuffer();
+        buffer.append("<html>");
+        if (matcher.find() && matcher.start() < body.length()) {
+            buffer.append(body.substring(0, matcher.start()));
+            buffer.append("<font bgcolor=#fffec7>");
+            final int endIndex = matcher.end() <= body.length() ? matcher.end() : body.length();
+            buffer.append(body.substring(matcher.start(), endIndex));
+            buffer.append("</font>");
+            buffer.append(body.substring(endIndex));
+            buffer.append(suffix);
+        } else {
+            buffer.append(clippedString);
+        }
+        buffer.append("</html>");
+        return buffer.toString();
     }
 
     /**
      * A convenient method to remove leading wild cards.
-     *
+     * 
      * @param value
      * @param whatToRemove
      * @return
      */
     private String removeFromStart(final String value, final String whatToRemove) {
-	final String result = value.startsWith("%") ? value.substring(1) : value;
-	return value.startsWith("%") ? removeFromStart(result, whatToRemove) : result;
+        final String result = value.startsWith("%") ? value.substring(1) : value;
+        return value.startsWith("%") ? removeFromStart(result, whatToRemove) : result;
     }
 
     /**
      * A convenient method to remove trailing wild cards.
-     *
+     * 
      * @param value
      * @param whatToRemove
      * @return
      */
     private String removeFromEnd(final String value, final String whatToRemove) {
-	final String result = value.endsWith("%") ? value.substring(0, value.length() - 1) : value;
-	return value.endsWith("%") ? removeFromEnd(result, whatToRemove) : result;
+        final String result = value.endsWith("%") ? value.substring(0, value.length() - 1) : value;
+        return value.endsWith("%") ? removeFromEnd(result, whatToRemove) : result;
     }
 
     public AutocompleterLogic<T> getAuto() {
-	return auto;
+        return auto;
     }
 
     public void setAuto(final AutocompleterLogic<T> auto) {
-	this.auto = auto;
+        this.auto = auto;
     }
 
     /**
      * Set the preferred width for cell renderer.
-     *
+     * 
      * @param preferredWidth
      */
     public void setPreferredWidth(final int preferredWidth) {
-	this.preferredWidth = preferredWidth - firstColumnPrefWidth - insets * 5;
+        this.preferredWidth = preferredWidth - firstColumnPrefWidth - insets * 5;
     }
 
     //    /**

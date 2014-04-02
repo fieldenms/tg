@@ -14,7 +14,7 @@ public class AuthBindingModule extends AbstractModule {
 
     @Override
     protected void configure() {
-	bind(IAuthorisationModel.class).toInstance(new AuthorisationModel());
+        bind(IAuthorisationModel.class).toInstance(new AuthorisationModel());
     }
 
 }

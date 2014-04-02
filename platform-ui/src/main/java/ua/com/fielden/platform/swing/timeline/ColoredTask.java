@@ -19,10 +19,10 @@ public class ColoredTask extends Task {
     private final String info;
 
     public ColoredTask(final String description, final Date start, final Date end, final Color color, final String info) {
-	super(description, start, end);
+        super(description, start, end);
 
-	this.color = color;
-	this.info = info;
+        this.color = color;
+        this.info = info;
     }
 
     /**
@@ -34,18 +34,18 @@ public class ColoredTask extends Task {
      *            the task duration (<code>null</code> permitted).
      */
     public ColoredTask(final String description, final TimePeriod duration, final Color color, final String info) {
-	super(description, duration);
+        super(description, duration);
 
-	this.color = color;
-	this.info = info;
+        this.color = color;
+        this.info = info;
     }
 
     public Color getColor() {
-	return color;
+        return color;
     }
 
     public String getInfo() {
-	return info;
+        return info;
     }
 
 }

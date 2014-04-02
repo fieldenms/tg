@@ -13,9 +13,9 @@ import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
 /**
  * This is a test entity, which is currently used for testing of class {@link Money} in simple (without currency) mapping configuration.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(String.class)
 @DescTitle("Description")
@@ -24,26 +24,27 @@ public class EntityWithSimpleMoney extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @MapTo("MONEY") @PersistedType(userType = ISimpleMoneyType.class)
+    @MapTo("MONEY")
+    @PersistedType(userType = ISimpleMoneyType.class)
     private Money money;
 
     protected EntityWithSimpleMoney() {
     }
 
     public EntityWithSimpleMoney(final String key, final String desc, final Money money) {
-	super(null, key, desc);
-	setMoney(money);
+        super(null, key, desc);
+        setMoney(money);
     }
 
     @Observable
     public void setMoney(final Money money) {
-	if (money == null) {
-	    throw new IllegalArgumentException("money should not be null");
-	}
-	this.money = money;
+        if (money == null) {
+            throw new IllegalArgumentException("money should not be null");
+        }
+        this.money = money;
     }
 
     public Money getMoney() {
-	return money;
+        return money;
     }
 }

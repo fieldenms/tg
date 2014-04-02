@@ -9,17 +9,17 @@ final class ExprOperand1<T, ET extends AbstractEntity<?>> extends AbstractExprOp
     T parent;
 
     ExprOperand1(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     IExprOperand2<T, ET> getParent2() {
-	return new ExprOperand2<T, ET>(getTokens(), parent);
+        return new ExprOperand2<T, ET>(getTokens(), parent);
     }
 
     @Override
     IExprOperationOrEnd1<T, ET> getParent() {
-	return new ExprOperationOrEnd1<T, ET>(getTokens(), parent);
+        return new ExprOperationOrEnd1<T, ET>(getTokens(), parent);
     }
 }

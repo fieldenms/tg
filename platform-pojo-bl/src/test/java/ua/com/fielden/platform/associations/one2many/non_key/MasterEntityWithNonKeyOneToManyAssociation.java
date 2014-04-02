@@ -14,9 +14,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing assocaitons.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key")
@@ -29,29 +29,29 @@ public class MasterEntityWithNonKeyOneToManyAssociation extends AbstractEntity<S
     @Title(value = "Property 1", desc = "Desc")
     private Money moneyProp;
 
-    @IsProperty(value = DetailsEntityForNonKeyOneToManyAssociation.class, linkProperty="many2oneProp")
+    @IsProperty(value = DetailsEntityForNonKeyOneToManyAssociation.class, linkProperty = "many2oneProp")
     @MapTo
     @Title(value = "Collectional Property", desc = "Desc")
     private List<DetailsEntityForNonKeyOneToManyAssociation> one2manyAssociationCollectional;
 
     @Observable
     public MasterEntityWithNonKeyOneToManyAssociation setOne2manyAssociationCollectional(final List<DetailsEntityForNonKeyOneToManyAssociation> one2manyAssociationCollectional) {
-	this.one2manyAssociationCollectional = one2manyAssociationCollectional;
-	return this;
+        this.one2manyAssociationCollectional = one2manyAssociationCollectional;
+        return this;
     }
 
     public List<DetailsEntityForNonKeyOneToManyAssociation> getOne2manyAssociationCollectional() {
-	return one2manyAssociationCollectional;
+        return one2manyAssociationCollectional;
     }
 
     @Observable
     public MasterEntityWithNonKeyOneToManyAssociation setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
 
 }

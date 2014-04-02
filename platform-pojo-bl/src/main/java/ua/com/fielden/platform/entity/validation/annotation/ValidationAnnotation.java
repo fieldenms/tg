@@ -8,11 +8,11 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 
 /**
  * Defines all annotation types, which represent validation annotations.
- *
+ * 
  * The order of enumeration values defines validation priority,
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public enum ValidationAnnotation {
     REQUIRED(Required.class), // required and not null are similar in nature, but required represents a dynamic validation
@@ -31,25 +31,25 @@ public enum ValidationAnnotation {
     private final Class<? extends Annotation> type;
 
     public Class<? extends Annotation> getType() {
-	return type;
+        return type;
     }
 
     /**
      * Looks for enumeration value associated with the specified validation annotation type.
-     *
+     * 
      * @param annotation
      * @return
      */
     public static ValidationAnnotation getValueByType(final Annotation annotation) {
-	for (final ValidationAnnotation value : values()) {
-	    if (value.getType() == annotation.annotationType()) {
-		return value;
-	    }
-	}
-	return null;
+        for (final ValidationAnnotation value : values()) {
+            if (value.getType() == annotation.annotationType()) {
+                return value;
+            }
+        }
+        return null;
     }
 
     ValidationAnnotation(final Class<? extends Annotation> type) {
-	this.type = type;
+        this.type = type;
     }
 }

@@ -49,7 +49,6 @@ public class EntQuery implements ISingleOperand {
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final Map<String, Object> paramValues;
 
-
     private EntQuery master;
 
     transient private final Logger logger = Logger.getLogger(this.getClass());
@@ -119,7 +118,7 @@ public class EntQuery implements ISingleOperand {
 
     private boolean allPropsYieldEnhancementRequired() {
         return yields.size() == 0 && !isSubQuery() && //
-        ((mainSourceIsTypeBased() && persistedType) || mainSourceIsQueryBased());
+                ((mainSourceIsTypeBased() && persistedType) || mainSourceIsQueryBased());
     }
 
     private boolean idPropYieldEnhancementRequired() {
@@ -127,178 +126,177 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean mainSourceIsTypeBased() {
-	return getSources().getMain() instanceof TypeBasedSource;
+        return getSources().getMain() instanceof TypeBasedSource;
     }
 
     private boolean mainSourceIsQueryBased() {
-	return getSources().getMain() instanceof QueryBasedSource;
+        return getSources().getMain() instanceof QueryBasedSource;
     }
 
     private void enhanceYieldsModel(final FetchModel fetchModel) {
-	// enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
-	if (idAliasEnhancementRequired()) {
-	    final Yield idModel = new Yield(yields.getFirstYield().getOperand(), AbstractEntity.ID);
-	    yields.clear();
-	    yields.addYield(idModel);
-	} else if (idPropYieldEnhancementRequired()) {
-	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-	    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
-	} else if (allPropsYieldEnhancementRequired()) {
-	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-	    if (mainSourceIsTypeBased()) {
-		for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
-		    final boolean skipProperty = ppi.isSynthetic() || //
-			    ppi.isVirtual() || //
-			    ppi.isCollection() || //
-			    (ppi.isAggregatedExpression() && !isResultQuery()) //
-			     || (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
-			    ;
-		    if (!skipProperty) {
-			yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
-		    }
-		}
-	    } else {
-		final QueryBasedSource sourceModel = (QueryBasedSource) getSources().getMain();
-		for (final ResultQueryYieldDetails ppi : sourceModel.sourceItems.values()) {
-		    final boolean skipProperty = (ppi.getYieldDetailsType() == YieldDetailsType.AGGREGATED_EXPRESSION && !isResultQuery());
-		    if (!skipProperty) {
-			yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
-		    }
-		}
-		if (resultType != EntityAggregates.class) {
-		    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
-			final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
-			if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null && !skipProperty) {
-			    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
-			}
-		    }
-		}
-	    }
-	}
+        // enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
+        if (idAliasEnhancementRequired()) {
+            final Yield idModel = new Yield(yields.getFirstYield().getOperand(), AbstractEntity.ID);
+            yields.clear();
+            yields.addYield(idModel);
+        } else if (idPropYieldEnhancementRequired()) {
+            final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+            yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
+        } else if (allPropsYieldEnhancementRequired()) {
+            final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+            if (mainSourceIsTypeBased()) {
+                for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
+                    final boolean skipProperty = ppi.isSynthetic() || //
+                            ppi.isVirtual() || //
+                            ppi.isCollection() || //
+                            (ppi.isAggregatedExpression() && !isResultQuery()) //
+                            || (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())));
+                    if (!skipProperty) {
+                        yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
+                    }
+                }
+            } else {
+                final QueryBasedSource sourceModel = (QueryBasedSource) getSources().getMain();
+                for (final ResultQueryYieldDetails ppi : sourceModel.sourceItems.values()) {
+                    final boolean skipProperty = (ppi.getYieldDetailsType() == YieldDetailsType.AGGREGATED_EXPRESSION && !isResultQuery());
+                    if (!skipProperty) {
+                        yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
+                    }
+                }
+                if (resultType != EntityAggregates.class) {
+                    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
+                        final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
+                        if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null && !skipProperty) {
+                            yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void enhanceGroupBysModelFromYields() {
-	final Set<EntProp> toBeAdded = new HashSet<>();
-	for (final Yield yield : yields.getYields()) {
-	    if (yield.getOperand() instanceof EntProp) {
-		final String propName = ((EntProp) yield.getOperand()).getName();
-		for (final GroupBy groupBy : groups.getGroups()) {
-		    if (groupBy.getOperand() instanceof EntProp) {
-			final String groupPropName = ((EntProp) groupBy.getOperand()).getName();
-			if (propName.startsWith(groupPropName + ".")) {
-			    toBeAdded.add((EntProp) yield.getOperand());
-			}
-		    }
-		}
-	    }
-	}
+        final Set<EntProp> toBeAdded = new HashSet<>();
+        for (final Yield yield : yields.getYields()) {
+            if (yield.getOperand() instanceof EntProp) {
+                final String propName = ((EntProp) yield.getOperand()).getName();
+                for (final GroupBy groupBy : groups.getGroups()) {
+                    if (groupBy.getOperand() instanceof EntProp) {
+                        final String groupPropName = ((EntProp) groupBy.getOperand()).getName();
+                        if (propName.startsWith(groupPropName + ".")) {
+                            toBeAdded.add((EntProp) yield.getOperand());
+                        }
+                    }
+                }
+            }
+        }
 
-	for (final EntProp entProp : toBeAdded) {
-	    groups.getGroups().add(new GroupBy(entProp));
-	}
+        for (final EntProp entProp : toBeAdded) {
+            groups.getGroups().add(new GroupBy(entProp));
+        }
     }
 
     private void enhanceGroupBysModelFromOrderBys() {
-	final Set<EntProp> toBeAdded = new HashSet<>();
-	for (final OrderBy orderBy : orderings.getModels()) {
-	    if (orderBy.getOperand() instanceof EntProp) {
-		final String propName = ((EntProp) orderBy.getOperand()).getName();
-		for (final GroupBy groupBy : groups.getGroups()) {
-		    if (groupBy.getOperand() instanceof EntProp) {
-			final String groupPropName = ((EntProp) groupBy.getOperand()).getName();
-			if (propName.startsWith(groupPropName + ".")) {
-			    toBeAdded.add((EntProp) orderBy.getOperand());
-			}
-		    }
-		}
-	    }
-	}
+        final Set<EntProp> toBeAdded = new HashSet<>();
+        for (final OrderBy orderBy : orderings.getModels()) {
+            if (orderBy.getOperand() instanceof EntProp) {
+                final String propName = ((EntProp) orderBy.getOperand()).getName();
+                for (final GroupBy groupBy : groups.getGroups()) {
+                    if (groupBy.getOperand() instanceof EntProp) {
+                        final String groupPropName = ((EntProp) groupBy.getOperand()).getName();
+                        if (propName.startsWith(groupPropName + ".")) {
+                            toBeAdded.add((EntProp) orderBy.getOperand());
+                        }
+                    }
+                }
+            }
+        }
 
-	for (final EntProp entProp : toBeAdded) {
-	    groups.getGroups().add(new GroupBy(entProp));
-	}
+        for (final EntProp entProp : toBeAdded) {
+            groups.getGroups().add(new GroupBy(entProp));
+        }
     }
 
     private void adjustYieldsModelAccordingToFetchModel(final FetchModel fetchModel) {
-	if (fetchModel != null) {
-	    final Set<Yield> toBeRemoved = new HashSet<Yield>();
-	    for (final Yield yield : yields.getYields()) {
-		if (!fetchModel.containsProp(yield.getAlias())) {
-//		    System.out.println("--------------------- removing according to fetch: " + yield.getAlias());
-		    toBeRemoved.add(yield);
-		}
-	    }
-	    yields.removeYields(toBeRemoved);
-	}
+        if (fetchModel != null) {
+            final Set<Yield> toBeRemoved = new HashSet<Yield>();
+            for (final Yield yield : yields.getYields()) {
+                if (!fetchModel.containsProp(yield.getAlias())) {
+                    //		    System.out.println("--------------------- removing according to fetch: " + yield.getAlias());
+                    toBeRemoved.add(yield);
+                }
+            }
+            yields.removeYields(toBeRemoved);
+        }
     }
 
     private void adjustOrderBys() {
-	final List<OrderBy> toBeAdded = new ArrayList<>();
-	for (final OrderBy orderBy : orderings.getModels()) {
-	    if (orderBy.getYieldName() != null) {
-		if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(resultType))) {
-		    final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(resultType, sources.getMain().getAlias());
-		    for (final String keyMemberProp : keyOrderProps) {
-			toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
-		    }
-		} else {
-		    final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
-		    final Yield correspondingYieldWithAmount = yields.getYieldByAlias(orderBy.getYieldName() + ".amount");
-		    if (correspondingYieldWithAmount != null) {
-			orderBy.setYield(correspondingYieldWithAmount);
-			toBeAdded.add(orderBy);
-		    } else if (correspondingYield != null) {
-			orderBy.setYield(correspondingYield);
-			toBeAdded.add(orderBy);
-		    } else {
-			toBeAdded.addAll(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
-		    }
-		}
-	    } else {
-		toBeAdded.add(orderBy);
-	    }
+        final List<OrderBy> toBeAdded = new ArrayList<>();
+        for (final OrderBy orderBy : orderings.getModels()) {
+            if (orderBy.getYieldName() != null) {
+                if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(resultType))) {
+                    final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(resultType, sources.getMain().getAlias());
+                    for (final String keyMemberProp : keyOrderProps) {
+                        toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
+                    }
+                } else {
+                    final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
+                    final Yield correspondingYieldWithAmount = yields.getYieldByAlias(orderBy.getYieldName() + ".amount");
+                    if (correspondingYieldWithAmount != null) {
+                        orderBy.setYield(correspondingYieldWithAmount);
+                        toBeAdded.add(orderBy);
+                    } else if (correspondingYield != null) {
+                        orderBy.setYield(correspondingYield);
+                        toBeAdded.add(orderBy);
+                    } else {
+                        toBeAdded.addAll(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
+                    }
+                }
+            } else {
+                toBeAdded.add(orderBy);
+            }
 
-	}
-	orderings.getModels().clear();
-	orderings.getModels().addAll(toBeAdded);
+        }
+        orderings.getModels().clear();
+        orderings.getModels().addAll(toBeAdded);
     }
 
     private List<OrderBy> transformOrderByFromYieldIntoOrderByFromProp(final Yield bestYield, final OrderBy original) {
-	if (bestYield == null) {
-	    throw new IllegalStateException("Could not find best yield match for order by yield [" + original.getYieldName() + "]");
-	}
+        if (bestYield == null) {
+            throw new IllegalStateException("Could not find best yield match for order by yield [" + original.getYieldName() + "]");
+        }
 
-	final List<OrderBy> result = new ArrayList<OrderBy>();
-	final String propName = ((EntProp) bestYield.getOperand()).getName() + original.getYieldName().substring(bestYield.getAlias().length());
+        final List<OrderBy> result = new ArrayList<OrderBy>();
+        final String propName = ((EntProp) bestYield.getOperand()).getName() + original.getYieldName().substring(bestYield.getAlias().length());
 
-	if (original.getYieldName().endsWith(".key")) {
-	    final String prop = original.getYieldName().substring(0, original.getYieldName().length() - 4);
-	    final PropertyMetadata info = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, prop);
-	    if (DynamicEntityKey.class.equals(getKeyType(info.getJavaType()))) {
-		final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(info.getJavaType(), propName.substring(0, propName.length() - 4));
-		for (final String keyMemberProp : keyOrderProps) {
-		    result.add(new OrderBy(new EntProp(keyMemberProp), original.isDesc()));
-		}
-		return result;
-	    }
-	}
+        if (original.getYieldName().endsWith(".key")) {
+            final String prop = original.getYieldName().substring(0, original.getYieldName().length() - 4);
+            final PropertyMetadata info = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, prop);
+            if (DynamicEntityKey.class.equals(getKeyType(info.getJavaType()))) {
+                final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(info.getJavaType(), propName.substring(0, propName.length() - 4));
+                for (final String keyMemberProp : keyOrderProps) {
+                    result.add(new OrderBy(new EntProp(keyMemberProp), original.isDesc()));
+                }
+                return result;
+            }
+        }
 
-	result.add(new OrderBy(new EntProp(propName), original.isDesc()));
+        result.add(new OrderBy(new EntProp(propName), original.isDesc()));
 
-	return result;
+        return result;
     }
 
     private void assignPropertyPersistenceInfoToYields() {
-	int yieldIndex = 0;
+        int yieldIndex = 0;
         for (final Yield yield : yields.getYields()) {
             yieldIndex = yieldIndex + 1;
             yield.setInfo(new ResultQueryYieldDetails( //
-        	    yield.getAlias(), //
-        	    determineYieldJavaType(yield), //
-        	    determineYieldHibType(yield), //
-        	    "C" + yieldIndex, //
-        	    determineYieldNullability(yield), //
-        	    determineYieldDetailsType(yield)) //
+            yield.getAlias(), //
+            determineYieldJavaType(yield), //
+            determineYieldHibType(yield), //
+            "C" + yieldIndex, //
+            determineYieldNullability(yield), //
+            determineYieldDetailsType(yield)) //
             );
         }
     }
@@ -322,30 +320,29 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean determineYieldNullability(final Yield yield) {
-	if (yield.isRequiredHint()) {
-	    return false;
-	}
+        if (yield.isRequiredHint()) {
+            return false;
+        }
 
-	return yield.getOperand().isNullable();
+        return yield.getOperand().isNullable();
     }
 
     private Class determineYieldJavaType(final Yield yield) {
 
-	if (!persistedType && !isUnionEntityType(resultType) ) {
-	    return yield.getOperand().type();
-	}
+        if (!persistedType && !isUnionEntityType(resultType)) {
+            return yield.getOperand().type();
+        }
 
-	final Class qsYt = yield.getOperand().type();
+        final Class qsYt = yield.getOperand().type();
         final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, yield.getAlias());
         final Class rtYt = finalPropInfo.getJavaType();
 
-	if (persistedType) {
+        if (persistedType) {
             if (qsYt != null && !qsYt.equals(rtYt)) {
                 if (!(isPersistedEntityType(qsYt) && Long.class.equals(rtYt)) && //
                         !(isPersistedEntityType(rtYt) && Long.class.equals(qsYt)) && //
                         !(rtYt.equals(DynamicEntityKey.class) && qsYt.equals(String.class)) && !rtYt.equals(Money.class)) {
-                    throw new IllegalStateException("Different types: from source = " + qsYt.getSimpleName() + " from result type = "
-                            + rtYt.getSimpleName());
+                    throw new IllegalStateException("Different types: from source = " + qsYt.getSimpleName() + " from result type = " + rtYt.getSimpleName());
                 }
                 return rtYt;
             } else {
@@ -353,11 +350,11 @@ public class EntQuery implements ISingleOperand {
             }
         }
 
-	if (isUnionEntityType(resultType)) {
+        if (isUnionEntityType(resultType)) {
             return rtYt;
-	}
+        }
 
-	throw new IllegalStateException("This is impossible situation");
+        throw new IllegalStateException("This is impossible situation");
     }
 
     private void assignSqlParamNames() {
@@ -377,22 +374,23 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Conditions enhanceConditions(final Conditions originalConditions, final IFilter filter, final String username, final ISource mainSource, final EntQueryGenerator generator, final Map<String, Object> paramValues) {
-	if (mainSource instanceof TypeBasedSource && filter != null) {
-	final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
-	if (filteringCondition == null) {
-	    return originalConditions;
-	}
-	logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
-	final List<CompoundCondition> others = new ArrayList();
-	others.add(new CompoundCondition(LogicalOperator.AND, originalConditions));
-	return originalConditions.ignore() ? new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel()) : new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel(), others);
-	} else {
-	    return originalConditions;
-	}
+        if (mainSource instanceof TypeBasedSource && filter != null) {
+            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
+            if (filteringCondition == null) {
+                return originalConditions;
+            }
+            logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
+            final List<CompoundCondition> others = new ArrayList();
+            others.add(new CompoundCondition(LogicalOperator.AND, originalConditions));
+            return originalConditions.ignore() ? new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel())
+                    : new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel(), others);
+        } else {
+            return originalConditions;
+        }
     }
 
     public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
-	    final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, //
+            final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, //
             final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
         super();
         this.category = category;
@@ -418,99 +416,98 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Map<EntPropStage, List<EntProp>> groupPropsByStage(final List<EntProp> props) {
-	final Map<EntPropStage, List<EntProp>> result = new HashMap<EntPropStage, List<EntProp>>();
-	for (final EntProp entProp : props) {
-	    final EntPropStage propStage = entProp.getStage();
-	    final List<EntProp> stageProps = result.get(propStage);
-	    if (stageProps != null) {
-		stageProps.add(entProp);
-	    } else {
-		final List<EntProp> newStageProps = new ArrayList<EntProp>();
-		newStageProps.add(entProp);
-		result.put(propStage, newStageProps);
-	    }
-	}
+        final Map<EntPropStage, List<EntProp>> result = new HashMap<EntPropStage, List<EntProp>>();
+        for (final EntProp entProp : props) {
+            final EntPropStage propStage = entProp.getStage();
+            final List<EntProp> stageProps = result.get(propStage);
+            if (stageProps != null) {
+                stageProps.add(entProp);
+            } else {
+                final List<EntProp> newStageProps = new ArrayList<EntProp>();
+                newStageProps.add(entProp);
+                result.put(propStage, newStageProps);
+            }
+        }
 
-//	for (final Entry<EntPropStage, List<EntProp>> entProp : result.entrySet()) {
-//	    System.out.println("           " + entProp.getKey());
-//	    for (final EntProp prop : entProp.getValue()) {
-//		System.out.println("                          " + prop);
-//	    }
-//
-//	}
+        //	for (final Entry<EntPropStage, List<EntProp>> entProp : result.entrySet()) {
+        //	    System.out.println("           " + entProp.getKey());
+        //	    for (final EntProp prop : entProp.getValue()) {
+        //		System.out.println("                          " + prop);
+        //	    }
+        //
+        //	}
 
-	return result;
+        return result;
     }
 
     private List<EntProp> getPropsByStage(final List<EntProp> props, final EntPropStage stage) {
-	final Map<EntPropStage, List<EntProp>> propsGroupedByStage = groupPropsByStage(props);
-	final List<EntProp> foundProps = propsGroupedByStage.get(stage);
-	return foundProps != null ? foundProps : Collections.<EntProp> emptyList();
+        final Map<EntPropStage, List<EntProp>> propsGroupedByStage = groupPropsByStage(props);
+        final List<EntProp> foundProps = propsGroupedByStage.get(stage);
+        return foundProps != null ? foundProps : Collections.<EntProp> emptyList();
     }
 
     private void enhanceToFinalState(final EntQueryGenerator generator, final FetchModel fetchModel) {
-	for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
-	    final ISource source = sourceAndItsJoinType.getKey();
-	    source.assignNullability(sourceAndItsJoinType.getValue());
-	    source.populateSourceItems(sourceAndItsJoinType.getValue());
-	}
+        for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
+            final ISource source = sourceAndItsJoinType.getKey();
+            source.assignNullability(sourceAndItsJoinType.getValue());
+            source.populateSourceItems(sourceAndItsJoinType.getValue());
+        }
 
-	enhanceYieldsModel(fetchModel); //!! adds new properties in yield section
-	//System.out.println("                         1------------------ " + yields.getYields());
-	adjustYieldsModelAccordingToFetchModel(fetchModel);
-	//System.out.println("                         2------------------ " + yields.getYields());
-	adjustOrderBys(); 	// enahnce order by model with yields and transforming unrecognised yieldedName into prop(..) calls
-	enhanceGroupBysModelFromYields();
-	enhanceGroupBysModelFromOrderBys();
+        enhanceYieldsModel(fetchModel); //!! adds new properties in yield section
+        //System.out.println("                         1------------------ " + yields.getYields());
+        adjustYieldsModelAccordingToFetchModel(fetchModel);
+        //System.out.println("                         2------------------ " + yields.getYields());
+        adjustOrderBys(); // enahnce order by model with yields and transforming unrecognised yieldedName into prop(..) calls
+        enhanceGroupBysModelFromYields();
+        enhanceGroupBysModelFromOrderBys();
 
+        int countOfUnprocessed = 1;
 
-	int countOfUnprocessed = 1;
+        while (countOfUnprocessed > 0) {
+            //System.out.println("---------------------------generateMissingSources for getSources().count = " + getSources().getAllSourcesAndTheirJoinType().size());
+            for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
+                final ISource source = sourceAndItsJoinType.getKey();
+                getSources().getCompounds().addAll(source.generateMissingSources()); //source.getReferencingProps()
+            }
 
-	while (countOfUnprocessed > 0) {
-	    //System.out.println("---------------------------generateMissingSources for getSources().count = " + getSources().getAllSourcesAndTheirJoinType().size());
-	    for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
-		final ISource source = sourceAndItsJoinType.getKey();
-		getSources().getCompounds().addAll(source.generateMissingSources()); //source.getReferencingProps()
-	    }
+            //System.out.println("---------------------------countOfUnprocessed = " + countOfUnprocessed);
+            final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
+            associateSubqueriesWithMasterQuery(immediateSubqueries);
 
-	    //System.out.println("---------------------------countOfUnprocessed = " + countOfUnprocessed);
-	    final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
-	    associateSubqueriesWithMasterQuery(immediateSubqueries);
+            final List<EntProp> propsToBeResolved = new ArrayList<EntProp>();
+            propsToBeResolved.addAll(getPropsByStage(getImmediateProps(), EntPropStage.UNPROCESSED));
+            propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries, EntPropStage.UNPROCESSED));
 
-	    final List<EntProp> propsToBeResolved = new ArrayList<EntProp>();
-	    propsToBeResolved.addAll(getPropsByStage(getImmediateProps(), EntPropStage.UNPROCESSED));
-	    propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries, EntPropStage.UNPROCESSED));
+            countOfUnprocessed = propsToBeResolved.size();
+            //System.out.println("================propsToBeResolved preliminary=========" + propsToBeResolved);
 
-	    countOfUnprocessed = propsToBeResolved.size();
-	    //System.out.println("================propsToBeResolved preliminary=========" + propsToBeResolved);
+            unresolvedProps.addAll(resolveProps(propsToBeResolved, generator));
 
-	    unresolvedProps.addAll(resolveProps(propsToBeResolved, generator));
+            if (!isSubQuery() && unresolvedProps.size() > 0) {
+                throw new RuntimeException("Couldn't resolve the following props: " + unresolvedProps);
+            }
 
-	    if (!isSubQuery() && unresolvedProps.size() > 0) {
-		throw new RuntimeException("Couldn't resolve the following props: " + unresolvedProps);
-	    }
+            final List<EntProp> immediatePropertiesFinally = getPropsByStage(getImmediateProps(), EntPropStage.PRELIMINARY_RESOLVED);
 
-	    final List<EntProp> immediatePropertiesFinally = getPropsByStage(getImmediateProps(), EntPropStage.PRELIMINARY_RESOLVED);
+            final List<EntProp> propsToBeResolvedFinally = new ArrayList<EntProp>();
+            propsToBeResolvedFinally.addAll(immediatePropertiesFinally);
+            propsToBeResolvedFinally.addAll(collectUnresolvedPropsFromSubqueries(getImmediateSubqueries(), EntPropStage.PRELIMINARY_RESOLVED));
+            propsToBeResolvedFinally.removeAll(unresolvedProps);
 
-	    final List<EntProp> propsToBeResolvedFinally = new ArrayList<EntProp>();
-	    propsToBeResolvedFinally.addAll(immediatePropertiesFinally);
-	    propsToBeResolvedFinally.addAll(collectUnresolvedPropsFromSubqueries(getImmediateSubqueries(), EntPropStage.PRELIMINARY_RESOLVED));
-	    propsToBeResolvedFinally.removeAll(unresolvedProps);
+            resolveProps(propsToBeResolvedFinally, generator);
+        }
 
-	    resolveProps(propsToBeResolvedFinally, generator);
-	}
+        for (final EntProp entProp : getPropsByStage(getImmediateProps(), EntPropStage.EXTERNAL)) {
+            entProp.setExternal(false);
+            unresolvedProps.add(entProp);
+            if (!entProp.getStage().equals(EntPropStage.UNPROCESSED)) {
+                throw new RuntimeException("IS NOT UNPROCESSED!");
+            }
+        }
 
-	for (final EntProp entProp : getPropsByStage(getImmediateProps(), EntPropStage.EXTERNAL)) {
-	    entProp.setExternal(false);
-	    unresolvedProps.add(entProp);
-	    if (!entProp.getStage().equals(EntPropStage.UNPROCESSED)) {
-		throw new RuntimeException("IS NOT UNPROCESSED!");
-	    }
-	}
-
-	for (final EntProp entProp : unresolvedProps) {
-	    entProp.setUnresolved(false);
-	}
+        for (final EntProp entProp : unresolvedProps) {
+            entProp.setUnresolved(false);
+        }
     }
 
     private void setMaster(final EntQuery master) {
@@ -527,10 +524,10 @@ public class EntQuery implements ISingleOperand {
         final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<EntProp>();
         for (final EntQuery entQuery : subqueries) {
             for (final EntProp entProp : entQuery.unresolvedProps) {
-		if (propStage.equals(entProp.getStage())) {
-		    unresolvedPropsFromSubqueries.add(entProp);
-		}
-	    }
+                if (propStage.equals(entProp.getStage())) {
+                    unresolvedPropsFromSubqueries.add(entProp);
+                }
+            }
 
             //entQuery.unresolvedProps.clear();
         }
@@ -544,7 +541,7 @@ public class EntQuery implements ISingleOperand {
             if (!propToBeResolvedPair.isFinallyResolved()) {
                 final Map<ISource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
                 if (sourceCandidates.size() == 0) {
-            	propToBeResolvedPair.setUnresolved(true);
+                    propToBeResolvedPair.setUnresolved(true);
                     unresolvedProps.add(propToBeResolvedPair);
                 } else {
                     final Pair<PropResolutionInfo, ISource> propResolutionResult = performPropResolveAction(sourceCandidates);
@@ -562,24 +559,23 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Map<ISource, PropResolutionInfo> findSourceMatchCandidates(final EntProp prop) {
-	final Map<ISource, PropResolutionInfo> result = new HashMap<ISource, PropResolutionInfo>();
+        final Map<ISource, PropResolutionInfo> result = new HashMap<ISource, PropResolutionInfo>();
 
-	for (final ISource source : sources.getAllSources()) {
-	    if ((prop.getStage().equals(EntPropStage.PRELIMINARY_RESOLVED) || (prop.getStage().equals(EntPropStage.UNPROCESSED) && !source.generated()))
-		    || (prop.isGenerated())) {
-		final PropResolutionInfo hasProp = source.containsProperty(prop);
-		if (hasProp != null) {
-		    result.put(source, hasProp);
-		}
-	    }
-	}
+        for (final ISource source : sources.getAllSources()) {
+            if ((prop.getStage().equals(EntPropStage.PRELIMINARY_RESOLVED) || (prop.getStage().equals(EntPropStage.UNPROCESSED) && !source.generated())) || (prop.isGenerated())) {
+                final PropResolutionInfo hasProp = source.containsProperty(prop);
+                if (hasProp != null) {
+                    result.put(source, hasProp);
+                }
+            }
+        }
 
-	return result;
+        return result;
     }
 
     /**
      * If property is found within holder query sources then establish link between them (inlc. prop type setting) and return null, else return pair (holder, prop).
-     *
+     * 
      * @param holder
      * @param prop
      * @return
@@ -625,7 +621,7 @@ public class EntQuery implements ISingleOperand {
 
     /**
      * By immediate props here are meant props used within this query and not within it's (nested) subqueries.
-     *
+     * 
      * @return
      */
     public List<EntProp> getImmediateProps() {
@@ -710,14 +706,14 @@ public class EntQuery implements ISingleOperand {
     @Override
     public Object hibType() {
         if (yields.size() == 1) {
-          return yields.getFirstYield().getInfo().getHibType();
+            return yields.getFirstYield().getInfo().getHibType();
         }
         return null;
     }
 
     @Override
     public boolean isNullable() {
-	return true;
+        return true;
     }
 
     @Override

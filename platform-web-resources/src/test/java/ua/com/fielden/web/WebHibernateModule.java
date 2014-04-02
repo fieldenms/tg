@@ -34,39 +34,39 @@ import com.google.inject.name.Names;
 
 /**
  * Guice injector module for Hibernate related injections, which are specific to testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class WebHibernateModule extends CommonFactoryModule {
 
     private final ISerialisationClassProvider serialisationClassProvider;
 
     public WebHibernateModule(//
-	    final SessionFactory sessionFactory,//
-	    final DomainMetadata domainMetadata,//
-	    final ISerialisationClassProvider serialisationClassProvider) {
-	super(sessionFactory, domainMetadata);
-	this.serialisationClassProvider = serialisationClassProvider;
+    final SessionFactory sessionFactory,//
+            final DomainMetadata domainMetadata,//
+            final ISerialisationClassProvider serialisationClassProvider) {
+        super(sessionFactory, domainMetadata);
+        this.serialisationClassProvider = serialisationClassProvider;
     }
 
     @Override
     protected void configure() {
-	super.configure();
-	bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
-	bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
-	bind(ISerialiser0.class).to(TgKryo0.class);
-	bind(ISerialiser.class).to(TgKryo.class);
-	// bind DAO
-	bind(IInspectedEntityDao.class).to(InspectedEntityDao.class);
-	bind(IUserRoleDao.class).to(UserRoleDao.class);
-	bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
-	bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
-	bind(IUserController.class).to(UserController.class); // UserControllerForTestPurposes.class
-	bind(IUserDao.class).to(UserController.class);
-	bind(ISecurityTokenController.class).to(SecurityTokenController.class);
-	bindConstant().annotatedWith(Names.named("attachments.location")).to(".");
-	bind(IAttachment.class).to(AttachmentDao.class);
-	bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
+        super.configure();
+        bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
+        bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
+        bind(ISerialiser0.class).to(TgKryo0.class);
+        bind(ISerialiser.class).to(TgKryo.class);
+        // bind DAO
+        bind(IInspectedEntityDao.class).to(InspectedEntityDao.class);
+        bind(IUserRoleDao.class).to(UserRoleDao.class);
+        bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
+        bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
+        bind(IUserController.class).to(UserController.class); // UserControllerForTestPurposes.class
+        bind(IUserDao.class).to(UserController.class);
+        bind(ISecurityTokenController.class).to(SecurityTokenController.class);
+        bindConstant().annotatedWith(Names.named("attachments.location")).to(".");
+        bind(IAttachment.class).to(AttachmentDao.class);
+        bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
     }
 }

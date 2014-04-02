@@ -11,23 +11,24 @@ import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.YIELD;
 
 public class OrderByBuilder extends AbstractTokensBuilder {
     private boolean descOrder;
+
     protected OrderByBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-	super(parent, queryBuilder, paramValues);
+        super(parent, queryBuilder, paramValues);
     }
 
     @Override
     public boolean isClosing() {
-	return getSize() == 2;
+        return getSize() == 2;
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-	final QueryTokens orderDirection = (QueryTokens) secondValue();
-	if (firstCat() == YIELD) {
-	    return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy((String) firstValue(), QueryTokens.ASC.equals(orderDirection) ? false : true));
-	} else {
-	    final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
-	    return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy(operand, QueryTokens.ASC.equals(orderDirection) ? false : true));
-	}
+        final QueryTokens orderDirection = (QueryTokens) secondValue();
+        if (firstCat() == YIELD) {
+            return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy((String) firstValue(), QueryTokens.ASC.equals(orderDirection) ? false : true));
+        } else {
+            final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
+            return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy(operand, QueryTokens.ASC.equals(orderDirection) ? false : true));
+        }
     }
 }

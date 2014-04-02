@@ -22,7 +22,7 @@ public class Cypher {
     private final String DEFAULT_SEPARATOR = "/";
 
     public Cypher() throws Exception {
-	cipher = Cipher.getInstance(algorithm);
+        cipher = Cipher.getInstance(algorithm);
     }
 
     /**
@@ -37,14 +37,14 @@ public class Cypher {
      * @throws Exception
      */
     public String encrypt(final String value, final String privateKey) throws Exception {
-	final byte[] inputBytes = value.getBytes();
-	if (inputBytes.length <= BLOCK_SIZE) {
-	    final PrivateKey key = AsymmetricKeyGenerator.restorePrivateKey(privateKey);
-	    cipher.init(Cipher.ENCRYPT_MODE, key);
-	    return HexString.bufferToHex(cipher.doFinal(inputBytes));
-	} else {
-	    return encrypt(value, privateKey, DEFAULT_SEPARATOR);
-	}
+        final byte[] inputBytes = value.getBytes();
+        if (inputBytes.length <= BLOCK_SIZE) {
+            final PrivateKey key = AsymmetricKeyGenerator.restorePrivateKey(privateKey);
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            return HexString.bufferToHex(cipher.doFinal(inputBytes));
+        } else {
+            return encrypt(value, privateKey, DEFAULT_SEPARATOR);
+        }
 
     }
 
@@ -57,25 +57,25 @@ public class Cypher {
      * @throws Exception
      */
     public String encrypt(final String text, final String privateKey, final String separator) throws Exception {
-	final PrivateKey key = AsymmetricKeyGenerator.restorePrivateKey(privateKey);
-	cipher.init(Cipher.ENCRYPT_MODE, key);
-	// split text into chunks of BLOCK_SIZE and encode them separately
-	final List<String> encodedParts = new ArrayList<String>();
-	final byte[] textAsBytes = text.getBytes();
-	int fromIndex = 0;
-	while (fromIndex < textAsBytes.length) {
-	    final int toIndex = fromIndex + ((fromIndex + BLOCK_SIZE < textAsBytes.length) ? BLOCK_SIZE : textAsBytes.length - fromIndex);
-	    final byte[] portion = Arrays.copyOfRange(textAsBytes, fromIndex, toIndex);
-	    encodedParts.add(HexString.bufferToHex(cipher.doFinal(portion)));
-	    fromIndex = toIndex;
-	}
+        final PrivateKey key = AsymmetricKeyGenerator.restorePrivateKey(privateKey);
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        // split text into chunks of BLOCK_SIZE and encode them separately
+        final List<String> encodedParts = new ArrayList<String>();
+        final byte[] textAsBytes = text.getBytes();
+        int fromIndex = 0;
+        while (fromIndex < textAsBytes.length) {
+            final int toIndex = fromIndex + ((fromIndex + BLOCK_SIZE < textAsBytes.length) ? BLOCK_SIZE : textAsBytes.length - fromIndex);
+            final byte[] portion = Arrays.copyOfRange(textAsBytes, fromIndex, toIndex);
+            encodedParts.add(HexString.bufferToHex(cipher.doFinal(portion)));
+            fromIndex = toIndex;
+        }
 
-	// concatenate encoded parts into one string using provided separator
-	final StringBuffer combined = new StringBuffer();
-	for (int index = 0; index < encodedParts.size(); index++) {
-	    combined.append(encodedParts.get(index) + (index + 1 < encodedParts.size() ? DEFAULT_SEPARATOR : ""));
-	}
-	return combined.toString();
+        // concatenate encoded parts into one string using provided separator
+        final StringBuffer combined = new StringBuffer();
+        for (int index = 0; index < encodedParts.size(); index++) {
+            combined.append(encodedParts.get(index) + (index + 1 < encodedParts.size() ? DEFAULT_SEPARATOR : ""));
+        }
+        return combined.toString();
     }
 
     /**
@@ -87,7 +87,7 @@ public class Cypher {
      * @throws Exception
      */
     public String encrypt(final int numberOfLicences, final String privateKey) throws Exception {
-	return encrypt(Integer.toString(numberOfLicences), privateKey);
+        return encrypt(Integer.toString(numberOfLicences), privateKey);
     }
 
     /**
@@ -99,16 +99,16 @@ public class Cypher {
      * @throws Exception
      */
     public String decrypt(final String encryptedValue, final String publicKey) throws Exception {
-	final PublicKey key = AsymmetricKeyGenerator.restorePublicKey(publicKey);
-	cipher.init(Cipher.DECRYPT_MODE, key);
+        final PublicKey key = AsymmetricKeyGenerator.restorePublicKey(publicKey);
+        cipher.init(Cipher.DECRYPT_MODE, key);
 
-	if (encryptedValue.contains(DEFAULT_SEPARATOR)) {
-	    return decrypt(encryptedValue, publicKey, DEFAULT_SEPARATOR);
-	} else {
-	    final byte[] recoveredBytes = cipher.doFinal(HexString.hexToBuffer(encryptedValue));
-	    final String value = new String(recoveredBytes);
-	    return value;
-	}
+        if (encryptedValue.contains(DEFAULT_SEPARATOR)) {
+            return decrypt(encryptedValue, publicKey, DEFAULT_SEPARATOR);
+        } else {
+            final byte[] recoveredBytes = cipher.doFinal(HexString.hexToBuffer(encryptedValue));
+            final String value = new String(recoveredBytes);
+            return value;
+        }
     }
 
     /**
@@ -121,15 +121,15 @@ public class Cypher {
      * @throws Exception
      */
     public String decrypt(final String encryptedText, final String publicKey, final String separator) throws Exception {
-	final PublicKey key = AsymmetricKeyGenerator.restorePublicKey(publicKey);
-	cipher.init(Cipher.DECRYPT_MODE, key);
+        final PublicKey key = AsymmetricKeyGenerator.restorePublicKey(publicKey);
+        cipher.init(Cipher.DECRYPT_MODE, key);
 
-	final String[] encodedTokenParts = encryptedText.split(separator);
-	final StringBuffer decodedToken = new StringBuffer();
-	for (final String encodedToken : encodedTokenParts) {
-	    decodedToken.append(decrypt(encodedToken, publicKey));
-	}
-	return decodedToken.toString();
+        final String[] encodedTokenParts = encryptedText.split(separator);
+        final StringBuffer decodedToken = new StringBuffer();
+        for (final String encodedToken : encodedTokenParts) {
+            decodedToken.append(decrypt(encodedToken, publicKey));
+        }
+        return decodedToken.toString();
     }
 
     /**
@@ -141,6 +141,6 @@ public class Cypher {
      * @throws Exception
      */
     public int decryptInt(final String encryptedValue, final String publicKey) throws Exception {
-	return Integer.valueOf(decrypt(encryptedValue, publicKey));
+        return Integer.valueOf(decrypt(encryptedValue, publicKey));
     }
 }

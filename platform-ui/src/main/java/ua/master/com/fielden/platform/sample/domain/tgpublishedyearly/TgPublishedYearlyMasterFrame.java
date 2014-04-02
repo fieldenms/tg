@@ -19,9 +19,9 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
  * A frame holding a master view for entity {@link TgPublishedYearly}.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 public class TgPublishedYearlyMasterFrame extends BaseFrame {
 
@@ -29,15 +29,15 @@ public class TgPublishedYearlyMasterFrame extends BaseFrame {
     private final TgPublishedYearlyMasterView view;
 
     public TgPublishedYearlyMasterFrame(//
-    			final IEntityProducer<TgPublishedYearly> entityProducer,//
-    		        final IEntityMasterCache cache,//
-    		        final TgPublishedYearly entityObject,//
-    		        final ITgPublishedYearly companionObject,//
-    		        final IValueMatcherFactory valueMatcherFactory,//
-    		        final IUmViewOwner owner,//
-    		        final IMasterDomainTreeManager masterManager,//
-    		        final ICriteriaGenerator criteriaGenerator,//
-    		        final IPostInitCallback<TgPublishedYearly, ITgPublishedYearly> postInitCallback) {
+    final IEntityProducer<TgPublishedYearly> entityProducer,//
+            final IEntityMasterCache cache,//
+            final TgPublishedYearly entityObject,//
+            final ITgPublishedYearly companionObject,//
+            final IValueMatcherFactory valueMatcherFactory,//
+            final IUmViewOwner owner,//
+            final IMasterDomainTreeManager masterManager,//
+            final ICriteriaGenerator criteriaGenerator,//
+            final IPostInitCallback<TgPublishedYearly, ITgPublishedYearly> postInitCallback) {
         setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
         model = new TgPublishedYearlyMasterModel(entityProducer, cache, entityObject, companionObject, valueMatcherFactory, owner, new FrameTitleUpdater(this), masterManager, criteriaGenerator, postInitCallback);
 
@@ -49,17 +49,17 @@ public class TgPublishedYearlyMasterFrame extends BaseFrame {
         RefineryUtilities.centerFrameOnScreen(this);
     }
 
-     @Override
-     protected void notify(final ICloseGuard guard) {
-         view.notify(guard.whyCannotClose(), MessageType.WARNING);
-     }
+    @Override
+    protected void notify(final ICloseGuard guard) {
+        view.notify(guard.whyCannotClose(), MessageType.WARNING);
+    }
 
-     public void enforceNewState() {
-         model.getNewAction().actionPerformed(null);
-     }
+    public void enforceNewState() {
+        model.getNewAction().actionPerformed(null);
+    }
 
-     public void enforceEditState() {
-         model.getEditAction().actionPerformed(null);
-     }
+    public void enforceEditState() {
+        model.getEditAction().actionPerformed(null);
+    }
 
 }

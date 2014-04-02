@@ -34,7 +34,7 @@ public class VerticalLabelUI extends BasicLabelUI {
      * Constructs a <code>VerticalLabelUI</code> with the default counterclockwise rotation
      */
     public VerticalLabelUI() {
-	this(false);
+        this(false);
     }
 
     /**
@@ -45,18 +45,18 @@ public class VerticalLabelUI extends BasicLabelUI {
      *            true to rotate clockwise, false for counterclockwise
      */
     public VerticalLabelUI(final boolean clockwise) {
-	this.clockwise = clockwise;
+        this.clockwise = clockwise;
     }
 
     /**
      * @see ComponentUI#createUI(javax.swing.JComponent)
      */
     public static ComponentUI createUI(final JComponent c) {
-	if (System.getSecurityManager() != null) {
-	    return SAFE_VERTICAL_LABEL_UI;
-	} else {
-	    return verticalLabelUI;
-	}
+        if (System.getSecurityManager() != null) {
+            return SAFE_VERTICAL_LABEL_UI;
+        } else {
+            return verticalLabelUI;
+        }
     }
 
     /**
@@ -66,8 +66,8 @@ public class VerticalLabelUI extends BasicLabelUI {
      */
     @Override
     public int getBaseline(final JComponent c, final int width, final int height) {
-	super.getBaseline(c, width, height);
-	return -1;
+        super.getBaseline(c, width, height);
+        return -1;
     }
 
     /**
@@ -77,8 +77,8 @@ public class VerticalLabelUI extends BasicLabelUI {
      */
     @Override
     public Component.BaselineResizeBehavior getBaselineResizeBehavior(final JComponent c) {
-	super.getBaselineResizeBehavior(c);
-	return Component.BaselineResizeBehavior.OTHER;
+        super.getBaselineResizeBehavior(c);
+        return Component.BaselineResizeBehavior.OTHER;
     }
 
     /**
@@ -88,17 +88,17 @@ public class VerticalLabelUI extends BasicLabelUI {
     @Override
     protected String layoutCL(final JLabel label, final FontMetrics fontMetrics, String text, final Icon icon, Rectangle viewR, Rectangle iconR, Rectangle textR) {
 
-	viewR.setBounds(viewR.x, viewR.y + 5, viewR.width, viewR.height + 10);
-	verticalViewR = transposeRectangle(viewR, verticalViewR);
-	verticalIconR = transposeRectangle(iconR, verticalIconR);
-	verticalTextR = transposeRectangle(textR, verticalTextR);
+        viewR.setBounds(viewR.x, viewR.y + 5, viewR.width, viewR.height + 10);
+        verticalViewR = transposeRectangle(viewR, verticalViewR);
+        verticalIconR = transposeRectangle(iconR, verticalIconR);
+        verticalTextR = transposeRectangle(textR, verticalTextR);
 
-	text = super.layoutCL(label, fontMetrics, text, icon, verticalViewR, verticalIconR, verticalTextR);
+        text = super.layoutCL(label, fontMetrics, text, icon, verticalViewR, verticalIconR, verticalTextR);
 
-	viewR = copyRectangle(verticalViewR, viewR);
-	iconR = copyRectangle(verticalIconR, iconR);
-	textR = copyRectangle(verticalTextR, textR);
-	return text;
+        viewR = copyRectangle(verticalViewR, viewR);
+        iconR = copyRectangle(verticalIconR, iconR);
+        textR = copyRectangle(verticalTextR, textR);
+        return text;
     }
 
     /**
@@ -106,14 +106,14 @@ public class VerticalLabelUI extends BasicLabelUI {
      */
     @Override
     public void paint(final Graphics g, final JComponent c) {
-	final Graphics2D g2 = (Graphics2D) g.create();
-	if (clockwise) {
-	    g2.rotate(Math.PI / 2, c.getSize().width / 2, c.getSize().width / 2);
-	} else {
-	    g2.rotate(-Math.PI / 2, c.getSize().height / 2, c.getSize().height / 2);
-	}
+        final Graphics2D g2 = (Graphics2D) g.create();
+        if (clockwise) {
+            g2.rotate(Math.PI / 2, c.getSize().width / 2, c.getSize().width / 2);
+        } else {
+            g2.rotate(-Math.PI / 2, c.getSize().height / 2, c.getSize().height / 2);
+        }
 
-	super.paint(g2, c);
+        super.paint(g2, c);
     }
 
     /**
@@ -123,7 +123,7 @@ public class VerticalLabelUI extends BasicLabelUI {
      */
     @Override
     public Dimension getPreferredSize(final JComponent c) {
-	return transposeDimension(super.getPreferredSize(c));
+        return transposeDimension(super.getPreferredSize(c));
     }
 
     /**
@@ -133,7 +133,7 @@ public class VerticalLabelUI extends BasicLabelUI {
      */
     @Override
     public Dimension getMaximumSize(final JComponent c) {
-	return transposeDimension(super.getMaximumSize(c));
+        return transposeDimension(super.getMaximumSize(c));
     }
 
     /**
@@ -143,33 +143,33 @@ public class VerticalLabelUI extends BasicLabelUI {
      */
     @Override
     public Dimension getMinimumSize(final JComponent c) {
-	return transposeDimension(super.getMinimumSize(c));
+        return transposeDimension(super.getMinimumSize(c));
     }
 
     private Dimension transposeDimension(final Dimension from) {
-	return new Dimension(from.height, from.width + 10);
+        return new Dimension(from.height, from.width + 10);
     }
 
     private Rectangle transposeRectangle(final Rectangle from, Rectangle to) {
-	if (to == null) {
-	    to = new Rectangle();
-	}
-	to.x = from.y;
-	to.y = from.x;
-	to.width = from.height;
-	to.height = from.width;
-	return to;
+        if (to == null) {
+            to = new Rectangle();
+        }
+        to.x = from.y;
+        to.y = from.x;
+        to.width = from.height;
+        to.height = from.width;
+        return to;
     }
 
     private Rectangle copyRectangle(final Rectangle from, Rectangle to) {
-	if (to == null) {
-	    to = new Rectangle();
-	}
-	to.x = from.x;
-	to.y = from.y;
-	to.width = from.width;
-	to.height = from.height;
-	return to;
+        if (to == null) {
+            to = new Rectangle();
+        }
+        to.x = from.x;
+        to.y = from.y;
+        to.width = from.width;
+        to.height = from.height;
+        return to;
     }
 
 }

@@ -9,9 +9,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * Structure that holds the list of query models and enhanced type that was used for query model generation and binary representation of the generated type.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  */
 public class AnalysisResultClassBundle<T extends AbstractEntity<?>> {
@@ -21,29 +21,29 @@ public class AnalysisResultClassBundle<T extends AbstractEntity<?>> {
     private final List<IQueryComposer<T>> queries;
     private final ICentreDomainTreeManagerAndEnhancer cdtmeWithWhichAnalysesQueryHaveBeenCreated;
 
-    public AnalysisResultClassBundle(final ICentreDomainTreeManagerAndEnhancer cdtmeWithWhichAnalysesQueryHaveBeenCreated, final Class<T> generatedClass, final byte[] generatedClassRepresentation, final List<IQueryComposer<T>> queries){
-	this.cdtmeWithWhichAnalysesQueryHaveBeenCreated = cdtmeWithWhichAnalysesQueryHaveBeenCreated;
-	this.generatedClass = generatedClass;
-	this.generatedClassRepresentation = generatedClassRepresentation;
-	this.queries = new ArrayList<>();
-	if (queries != null) {
-	    this.queries.addAll(queries);
-	}
+    public AnalysisResultClassBundle(final ICentreDomainTreeManagerAndEnhancer cdtmeWithWhichAnalysesQueryHaveBeenCreated, final Class<T> generatedClass, final byte[] generatedClassRepresentation, final List<IQueryComposer<T>> queries) {
+        this.cdtmeWithWhichAnalysesQueryHaveBeenCreated = cdtmeWithWhichAnalysesQueryHaveBeenCreated;
+        this.generatedClass = generatedClass;
+        this.generatedClassRepresentation = generatedClassRepresentation;
+        this.queries = new ArrayList<>();
+        if (queries != null) {
+            this.queries.addAll(queries);
+        }
     }
 
     public Class<T> getGeneratedClass() {
-	return generatedClass;
+        return generatedClass;
     }
 
     public byte[] getGeneratedClassRepresentation() {
-	return generatedClassRepresentation;
+        return generatedClassRepresentation;
     }
 
     public List<IQueryComposer<T>> getQueries() {
-	return Collections.unmodifiableList(queries);
+        return Collections.unmodifiableList(queries);
     }
 
     public ICentreDomainTreeManagerAndEnhancer getCdtmeWithWhichAnalysesQueryHaveBeenCreated() {
-	return cdtmeWithWhichAnalysesQueryHaveBeenCreated;
+        return cdtmeWithWhichAnalysesQueryHaveBeenCreated;
     }
 }

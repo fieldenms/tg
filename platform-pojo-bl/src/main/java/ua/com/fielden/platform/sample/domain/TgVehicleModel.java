@@ -21,19 +21,20 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 public class TgVehicleModel extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @Required
+    @IsProperty
+    @Required
     @MapTo
     @Title(value = "Test vehicle model", desc = "Test vehicle model")
     private TgVehicleMake make;
 
     @Observable
     public TgVehicleModel setMake(final TgVehicleMake make) {
-	this.make = make;
-	return this;
+        this.make = make;
+        return this;
     }
 
     public TgVehicleMake getMake() {
-	return make;
+        return make;
     }
 
     /**

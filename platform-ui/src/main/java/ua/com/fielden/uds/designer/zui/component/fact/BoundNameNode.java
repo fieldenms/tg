@@ -34,137 +34,137 @@ public class BoundNameNode extends AbstractNode implements IDraggable, Cloneable
     private transient OperatorType operatorType = OperatorType.ANY;
 
     public BoundNameNode(String boundName, OperatorType operatorType) {
-	decorate();
-	this.operatorType = operatorType;
+        decorate();
+        this.operatorType = operatorType;
 
-	createBoundNameNode(boundName);
-	setValue(new SingularityStringValue());
-	value.registerUpdater(new Updater(this));
-	value.setValue(boundName);
+        createBoundNameNode(boundName);
+        setValue(new SingularityStringValue());
+        value.registerUpdater(new Updater(this));
+        value.setValue(boundName);
 
-	reshape(false);
+        reshape(false);
 
-	addInputEventListener(new Event(this));
+        addInputEventListener(new Event(this));
     }
 
     protected void decorate() {
-	Paint paint = new Color(175, 175, 16); // (new Color(47, 132, 53)).brighter();
-	setBackgroundColor(paint);
-	setStrokePaint(paint);
-	setPedding(new Pedding(2, 2, 2, 2));
-	setCurvaturePrc(40);
-	setRounding(new BorderRounding(true, true, false, false));
+        Paint paint = new Color(175, 175, 16); // (new Color(47, 132, 53)).brighter();
+        setBackgroundColor(paint);
+        setStrokePaint(paint);
+        setPedding(new Pedding(2, 2, 2, 2));
+        setCurvaturePrc(40);
+        setRounding(new BorderRounding(true, true, false, false));
     }
 
     private void createBoundNameNode(String boundName) {
-	boundNameNode = new TextNode(GlobalObjects.canvas, boundName, new WordDocumentFilter());
-	boundNameNode.setOnClickHook(this);
-	boundNameNode.setPickable(false);
-	boundNameNode.setFontSize(13);
-	boundNameNode.setTextPaint(Color.white);
-	boundNameNode.setStrokePaint(new Color(1, 1, 1, 0));
-	boundNameNode.setBackgroundColor(new Color(1, 1, 1, 0));
-	boundNameNode.getEditor().setBackground((Color) getBackgroundColor());
-	boundNameNode.setPedding(new Pedding(3, 3, 3, 3));
-	boundNameNode.reshape(false);
-	addChild(boundNameNode);
+        boundNameNode = new TextNode(GlobalObjects.canvas, boundName, new WordDocumentFilter());
+        boundNameNode.setOnClickHook(this);
+        boundNameNode.setPickable(false);
+        boundNameNode.setFontSize(13);
+        boundNameNode.setTextPaint(Color.white);
+        boundNameNode.setStrokePaint(new Color(1, 1, 1, 0));
+        boundNameNode.setBackgroundColor(new Color(1, 1, 1, 0));
+        boundNameNode.getEditor().setBackground((Color) getBackgroundColor());
+        boundNameNode.setPedding(new Pedding(3, 3, 3, 3));
+        boundNameNode.reshape(false);
+        addChild(boundNameNode);
     }
 
     private static class Event extends PBasicInputEventHandler {
-	private BoundNameNode node;
+        private BoundNameNode node;
 
-	public Event(BoundNameNode node) {
-	    this.node = node;
-	    getEventFilter().setAndMask(InputEvent.BUTTON3_MASK);
-	}
+        public Event(BoundNameNode node) {
+            this.node = node;
+            getEventFilter().setAndMask(InputEvent.BUTTON3_MASK);
+        }
 
-	public void mouseClicked(PInputEvent event) {
-	    node.boundNameNode.setTextPaint(Color.black);
-	    node.boundNameNode.initiateEditing(event);
-	}
+        public void mouseClicked(PInputEvent event) {
+            node.boundNameNode.setTextPaint(Color.black);
+            node.boundNameNode.initiateEditing(event);
+        }
     };
 
     protected static class Updater implements IUpdater<String>, Serializable {
-	private static final long serialVersionUID = 4751693210475629677L;
+        private static final long serialVersionUID = 4751693210475629677L;
 
-	private BoundNameNode node;
+        private BoundNameNode node;
 
-	public Updater(BoundNameNode node) {
-	    this.node = node;
-	}
+        public Updater(BoundNameNode node) {
+            this.node = node;
+        }
 
-	public void update(String newValue) {
-	    node.boundNameNode.setText(newValue);
-	    node.boundNameNode.reshape(false);
-	    node.reshape(false);
-	    if (node.getParent() instanceof AbstractNode) {
-		((AbstractNode) node.getParent()).reshape(false);
-	    }
-	}
+        public void update(String newValue) {
+            node.boundNameNode.setText(newValue);
+            node.boundNameNode.reshape(false);
+            node.reshape(false);
+            if (node.getParent() instanceof AbstractNode) {
+                ((AbstractNode) node.getParent()).reshape(false);
+            }
+        }
     }
 
     public SingularityStringValue getValue() {
-	return value;
+        return value;
     }
 
     private class DummyValue implements IValue<StringValue>, Serializable {
-	private static final long serialVersionUID = -6486719761594914920L;
-	private StringValue value1 = new StringValue("IValueisbound");
+        private static final long serialVersionUID = -6486719761594914920L;
+        private StringValue value1 = new StringValue("IValueisbound");
 
-	public StringValue getValue() {
-	    return value1;
-	}
+        public StringValue getValue() {
+            return value1;
+        }
 
-	public void setValue(StringValue value) {
-	    this.value1 = value;
-	}
+        public void setValue(StringValue value) {
+            this.value1 = value;
+        }
 
-	public Object clone() {
-	    try {
-		return super.clone();
-	    } catch (CloneNotSupportedException e) {
-		throw new RuntimeException(e);
-	    }
-	}
+        public Object clone() {
+            try {
+                return super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-	public void registerUpdater(IUpdater<StringValue> updater) {
-	}
+        public void registerUpdater(IUpdater<StringValue> updater) {
+        }
 
-	public void removeUpdater(IUpdater<StringValue> updater) {
-	}
+        public void removeUpdater(IUpdater<StringValue> updater) {
+        }
 
-	public String getDefaultValue() {
-	    return null;
-	}
+        public String getDefaultValue() {
+            return null;
+        }
 
-	public boolean isEmptyPermitted() {
-	    return false;
-	}
+        public boolean isEmptyPermitted() {
+            return false;
+        }
 
-	public void setDefaultValue(String defaultValue) {
-	}
+        public void setDefaultValue(String defaultValue) {
+        }
 
-	public void setEmptyPermitted(boolean emptyPermitted) {
-	}
+        public void setEmptyPermitted(boolean emptyPermitted) {
+        }
     };
 
     protected void setValue(SingularityStringValue value) {
-	this.value = value;
-	DummyValue dummyValue = new DummyValue();
-	dummyValue.setValue(value);
-	boundNameNode.bind(dummyValue);
+        this.value = value;
+        DummyValue dummyValue = new DummyValue();
+        dummyValue.setValue(value);
+        boundNameNode.bind(dummyValue);
     }
 
     public boolean canBeDetached() {
-	return true;
+        return true;
     }
 
     public boolean canDrag() {
-	return true;
+        return true;
     }
 
     public boolean getRemoveAfterDrop() {
-	return false;
+        return false;
     }
 
     public void setRemoveAfterDrop(boolean flag) {
@@ -172,32 +172,32 @@ public class BoundNameNode extends AbstractNode implements IDraggable, Cloneable
 
     @Override
     public boolean equals(Object obj) {
-	if (!(obj instanceof BoundNameNode)) {
-	    return false;
-	}
-	if (obj == this) {
-	    return true;
-	}
+        if (!(obj instanceof BoundNameNode)) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
 
-	BoundNameNode cmpTo = (BoundNameNode) obj;
+        BoundNameNode cmpTo = (BoundNameNode) obj;
 
-	return getValue().equals(cmpTo.getValue());
+        return getValue().equals(cmpTo.getValue());
     }
 
     public Object clone() {
-	BoundNameNode clone = new BoundNameNode(boundNameNode.getText(), type());
-	clone.setOffset(this.getOffset());
-	clone.setValue(this.getValue());
-	clone.getValue().registerUpdater(new Updater(clone));
-	return clone;
+        BoundNameNode clone = new BoundNameNode(boundNameNode.getText(), type());
+        clone.setOffset(this.getOffset());
+        clone.setValue(this.getValue());
+        clone.getValue().registerUpdater(new Updater(clone));
+        return clone;
     }
 
     public OperatorType type() {
-	return operatorType;
+        return operatorType;
     }
 
     public void click(PInputEvent event) {
-	boundNameNode.setPickable(false);
-	boundNameNode.setTextPaint(Color.white);
+        boundNameNode.setPickable(false);
+        boundNameNode.setTextPaint(Color.white);
     }
 }

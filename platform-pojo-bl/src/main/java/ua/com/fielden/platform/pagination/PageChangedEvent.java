@@ -6,9 +6,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * An {@link EventObject} that encapsulates page changed event.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  */
 public class PageChangedEvent extends EventObject {
@@ -19,22 +19,24 @@ public class PageChangedEvent extends EventObject {
 
     /**
      * Initiates this {@link PageChangedEvent} with specified {@link PageHolder} instance which page has changed.
-     *
-     * @param source - specified {@link IPageHolder} instance which page has changed.
-     * @param newPage - new page that was set.
+     * 
+     * @param source
+     *            - specified {@link IPageHolder} instance which page has changed.
+     * @param newPage
+     *            - new page that was set.
      */
     public PageChangedEvent(final PageHolder source, final IPage<? extends AbstractEntity<?>> newPage) {
-	super(source);
-	this.newPage = newPage;
+        super(source);
+        this.newPage = newPage;
     }
 
     /**
      * Returns the new page.
-     *
+     * 
      * @return
      */
     public IPage<? extends AbstractEntity<?>> getNewPage() {
-	return newPage;
+        return newPage;
     }
 
     /**
@@ -42,6 +44,6 @@ public class PageChangedEvent extends EventObject {
      */
     @Override
     public PageHolder getSource() {
-	return (PageHolder)super.getSource();
+        return (PageHolder) super.getSource();
     }
 }

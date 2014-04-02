@@ -6,10 +6,10 @@ public class TypeCastAsBoolean implements ITypeCast {
 
     @Override
     public String typecast(final String argument, final DbVersion dbVersion) {
-	if (DbVersion.H2.equals(dbVersion)) {
-	    return "CAST(" + argument + " AS CHAR(1))" ;
-	} else {
-	    return argument;
-	}
+        if (DbVersion.H2.equals(dbVersion)) {
+            return "CAST(" + argument + " AS CHAR(1))";
+        } else {
+            return argument;
+        }
     }
 }

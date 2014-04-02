@@ -22,48 +22,48 @@ public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends
     private static final long serialVersionUID = -1464413279095086886L;
 
     public PivotAnalysisConfigurationView(//
-	    final PivotAnalysisConfigurationModel<T> model, //
-	    final Map<Object, DetailsFrame> detailsCache, //
-	    final IDetailsCustomiser detailsCustomiser, //
-	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, detailsCache, detailsCustomiser, owner, progressLayer);
-	addConfigurationEventListener(createOpenAnalysisEventListener());
+    final PivotAnalysisConfigurationModel<T> model, //
+            final Map<Object, DetailsFrame> detailsCache, //
+            final IDetailsCustomiser detailsCustomiser, //
+            final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        super(model, detailsCache, detailsCustomiser, owner, progressLayer);
+        addConfigurationEventListener(createOpenAnalysisEventListener());
     }
 
     @Override
     public PivotAnalysisConfigurationModel<T> getModel() {
-	return (PivotAnalysisConfigurationModel<T>)super.getModel();
+        return (PivotAnalysisConfigurationModel<T>) super.getModel();
     }
 
     @Override
     protected PivotAnalysisView<T> createConfigurableView() {
-	return new PivotAnalysisView<T>(getModel().createPivotAnalysisModel(), this);
+        return new PivotAnalysisView<T>(getModel().createPivotAnalysisModel(), this);
     }
 
     private IAbstractConfigurationViewEventListener createOpenAnalysisEventListener() {
-	return new IAbstractConfigurationViewEventListener() {
+        return new IAbstractConfigurationViewEventListener() {
 
-	    @Override
-	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
-		switch (event.getEventAction()) {
-		case OPEN:
-		    IPivotDomainTreeManager pdtme = (IPivotDomainTreeManager) getModel().getAnalysisManager();
-		    if(pdtme == null){
-			getModel().initAnalysisManager(AnalysisType.PIVOT);
-			getModel().save();
-			pdtme = (IPivotDomainTreeManager) getModel().getAnalysisManager();
-		    }
-		    if(pdtme == null){
-			return new Result(PivotAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));
-		    }
-		    getModel().setAnalysisVisible(true);
-		    return getModel().canSetMode(ReportMode.REPORT);
+            @Override
+            public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
+                switch (event.getEventAction()) {
+                case OPEN:
+                    IPivotDomainTreeManager pdtme = (IPivotDomainTreeManager) getModel().getAnalysisManager();
+                    if (pdtme == null) {
+                        getModel().initAnalysisManager(AnalysisType.PIVOT);
+                        getModel().save();
+                        pdtme = (IPivotDomainTreeManager) getModel().getAnalysisManager();
+                    }
+                    if (pdtme == null) {
+                        return new Result(PivotAnalysisConfigurationView.this, new IllegalStateException("The analysis can not be initialized!"));
+                    }
+                    getModel().setAnalysisVisible(true);
+                    return getModel().canSetMode(ReportMode.REPORT);
 
-		default:
-		    return Result.successful(PivotAnalysisConfigurationView.this);
-		}
-	    }
-	};
+                default:
+                    return Result.successful(PivotAnalysisConfigurationView.this);
+                }
+            }
+        };
     }
 }

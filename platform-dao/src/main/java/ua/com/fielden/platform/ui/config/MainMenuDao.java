@@ -38,9 +38,9 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link IMainMenu}.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 @EntityType(MainMenu.class)
 public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu {
@@ -58,326 +58,331 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
     @Inject
     public MainMenuDao(final IFilter filter, final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IEntityLocatorConfigController elcController, final IEntityMasterConfigController emcController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory, final ISerialiser serialiser, final ISerialiser0 serialiser0) {
         super(filter);
-	this.mmiController = mmiController;
-	this.eccController = eccController;
-	this.elcController = elcController;
-	this.emcController = emcController;
-	this.ecacController = ecacController;
-	this.mmiiController = mmiiController;
-	this.factory = factory;
-	this.versionMaintainer = new DomainTreeVersionMaintainer(serialiser, serialiser0, elcController, eccController, emcController);
+        this.mmiController = mmiController;
+        this.eccController = eccController;
+        this.elcController = elcController;
+        this.emcController = emcController;
+        this.ecacController = ecacController;
+        this.mmiiController = mmiiController;
+        this.factory = factory;
+        this.versionMaintainer = new DomainTreeVersionMaintainer(serialiser, serialiser0, elcController, eccController, emcController);
     }
 
     @Override
     @SessionRequired
     public MainMenu save(final MainMenu entity) {
-	Pair<String, DateTime> newMessageAndNewSt = new Pair<String, DateTime>(null, new DateTime());
+        Pair<String, DateTime> newMessageAndNewSt = new Pair<String, DateTime>(null, new DateTime());
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "BUILD DEVELOPMENT ITEMS");
-	final List<MainMenuItem> developmentMainMenuItems = new ArrayList<MainMenuItem>(new MainMenuStructureFactory(factory).pushAll(entity.getMenuItems()).build());
-	final List<MainMenuItem> updatedMainMenuItems = new ArrayList<MainMenuItem>();
+        newMessageAndNewSt = info(newMessageAndNewSt, "BUILD DEVELOPMENT ITEMS");
+        final List<MainMenuItem> developmentMainMenuItems = new ArrayList<MainMenuItem>(new MainMenuStructureFactory(factory).pushAll(entity.getMenuItems()).build());
+        final List<MainMenuItem> updatedMainMenuItems = new ArrayList<MainMenuItem>();
 
-	// newMessageAndNewSt = info(newMessageAndNewSt, "MAINTAIN VERSIONS for all ECC, ELC, EMC");
-	// maintainConfigurationVersions();
+        // newMessageAndNewSt = info(newMessageAndNewSt, "MAINTAIN VERSIONS for all ECC, ELC, EMC");
+        // maintainConfigurationVersions();
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all ECC, ECAC");
-	final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac = select(EntityCentreAnalysisConfig.class).model();
-	final EntityResultQueryModel<EntityCentreConfig> modelEcc = select(EntityCentreConfig.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
-	// retrieve all EntityCentreConfig's, locally keep meta-info, and then purge them all
-	final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = retrieveCentresKeysAndBodies(modelEcac, modelEcc);
+        newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all ECC, ECAC");
+        final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac = select(EntityCentreAnalysisConfig.class).model();
+        final EntityResultQueryModel<EntityCentreConfig> modelEcc = select(EntityCentreConfig.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
+        // retrieve all EntityCentreConfig's, locally keep meta-info, and then purge them all
+        final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = retrieveCentresKeysAndBodies(modelEcac, modelEcc);
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all ECC, ECAC");
-	purgeCentres(modelEcac, modelEcc);
+        newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all ECC, ECAC");
+        purgeCentres(modelEcac, modelEcc);
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all MMII");
-	// retrieve all MainMenuItemInvisibility's, locally keep meta-info, and then purge them all
-	final EntityResultQueryModel<MainMenuItemInvisibility> modelMmii = select(MainMenuItemInvisibility.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
-	final List<MainMenuItemInvisibility> mmiis = mmiiController.getAllEntities(from(modelMmii).model());
-	final Set<MainMenuItemInvisibilityKey> invisibilitiesKeys = new HashSet<MainMenuItemInvisibilityKey>();
-	for (final MainMenuItemInvisibility mmii : mmiis) {
-	    invisibilitiesKeys.add(new MainMenuItemInvisibilityKey(mmii.getOwner(), mmii.getMenuItem().getKey()));
-	}
+        newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all MMII");
+        // retrieve all MainMenuItemInvisibility's, locally keep meta-info, and then purge them all
+        final EntityResultQueryModel<MainMenuItemInvisibility> modelMmii = select(MainMenuItemInvisibility.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
+        final List<MainMenuItemInvisibility> mmiis = mmiiController.getAllEntities(from(modelMmii).model());
+        final Set<MainMenuItemInvisibilityKey> invisibilitiesKeys = new HashSet<MainMenuItemInvisibilityKey>();
+        for (final MainMenuItemInvisibility mmii : mmiis) {
+            invisibilitiesKeys.add(new MainMenuItemInvisibilityKey(mmii.getOwner(), mmii.getMenuItem().getKey()));
+        }
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all MMII");
-	mmiiController.delete(modelMmii);
+        newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all MMII");
+        mmiiController.delete(modelMmii);
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all MMI");
-	purgeAllMMI();
+        newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all MMI");
+        purgeAllMMI();
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all MMI");
-	// persist new menu items
-	for (final MainMenuItem rootDevelopmentMainMenuItem : developmentMainMenuItems) {
-	    updatedMainMenuItems.add(saveMenuItem(rootDevelopmentMainMenuItem));
-	}
+        newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all MMI");
+        // persist new menu items
+        for (final MainMenuItem rootDevelopmentMainMenuItem : developmentMainMenuItems) {
+            updatedMainMenuItems.add(saveMenuItem(rootDevelopmentMainMenuItem));
+        }
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all ECC, ECAC");
-	// persist old EntityCentreConfig's
-	for (final Entry<EntityCentreConfigKey, EntityCentreConfigBody> centresKeyAndBody : centresKeysAndBodies.entrySet()) {
-	    final MainMenuItem mmi = mmiController.findByKey(centresKeyAndBody.getKey().getMainMenuItemKey());
-	    if (mmi != null) {
-		final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, centresKeyAndBody.getKey().getOwner(), centresKeyAndBody.getKey().getTitle(), mmi);
-		ecc.setPrincipal(centresKeyAndBody.getValue().isPrincipal());
-		ecc.setConfigBody(centresKeyAndBody.getValue().getConfigBody());
-		final EntityCentreConfig newECC = eccController.save(ecc);
-		for (final String analysisName : centresKeyAndBody.getKey().getAnalysesNames()) {
-		    final EntityCentreAnalysisConfig ecac = factory.newByKey(EntityCentreAnalysisConfig.class, newECC, analysisName);
-		    ecacController.save(ecac);
-		}
-	    } else {
-		logger.warn("The Entity Centre Config for owner [" + centresKeyAndBody.getKey().getOwner() + "] and title " + centresKeyAndBody.getKey().getTitle() + " and item [" + centresKeyAndBody.getKey().getMainMenuItemKey() + "] has been purged due to non-existence of item [" + centresKeyAndBody.getKey().getMainMenuItemKey() + "] after update procedure.");
-	    }
-	}
+        newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all ECC, ECAC");
+        // persist old EntityCentreConfig's
+        for (final Entry<EntityCentreConfigKey, EntityCentreConfigBody> centresKeyAndBody : centresKeysAndBodies.entrySet()) {
+            final MainMenuItem mmi = mmiController.findByKey(centresKeyAndBody.getKey().getMainMenuItemKey());
+            if (mmi != null) {
+                final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, centresKeyAndBody.getKey().getOwner(), centresKeyAndBody.getKey().getTitle(), mmi);
+                ecc.setPrincipal(centresKeyAndBody.getValue().isPrincipal());
+                ecc.setConfigBody(centresKeyAndBody.getValue().getConfigBody());
+                final EntityCentreConfig newECC = eccController.save(ecc);
+                for (final String analysisName : centresKeyAndBody.getKey().getAnalysesNames()) {
+                    final EntityCentreAnalysisConfig ecac = factory.newByKey(EntityCentreAnalysisConfig.class, newECC, analysisName);
+                    ecacController.save(ecac);
+                }
+            } else {
+                logger.warn("The Entity Centre Config for owner [" + centresKeyAndBody.getKey().getOwner() + "] and title " + centresKeyAndBody.getKey().getTitle() + " and item ["
+                        + centresKeyAndBody.getKey().getMainMenuItemKey() + "] has been purged due to non-existence of item [" + centresKeyAndBody.getKey().getMainMenuItemKey()
+                        + "] after update procedure.");
+            }
+        }
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all MMII");
-	// persist old MainMenuItemInvisibility's
-	for (final MainMenuItemInvisibilityKey invisibilityKey : invisibilitiesKeys) {
-	    final MainMenuItem mmi = mmiController.findByKey(invisibilityKey.getMainMenuItemKey());
-	    if (mmi != null) {
-		final MainMenuItemInvisibility mmii = factory.newByKey(MainMenuItemInvisibility.class, invisibilityKey.getOwner(), mmi);
-		mmiiController.save(mmii);
-	    } else {
-		logger.warn("The Main Menu Item Invisibility for owner [" + invisibilityKey.getOwner() + "] and item [" + invisibilityKey.getMainMenuItemKey() + "] has been purged due to non-existence of item [" + invisibilityKey.getMainMenuItemKey() + "] after update procedure.");
-	    }
-	}
+        newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all MMII");
+        // persist old MainMenuItemInvisibility's
+        for (final MainMenuItemInvisibilityKey invisibilityKey : invisibilitiesKeys) {
+            final MainMenuItem mmi = mmiController.findByKey(invisibilityKey.getMainMenuItemKey());
+            if (mmi != null) {
+                final MainMenuItemInvisibility mmii = factory.newByKey(MainMenuItemInvisibility.class, invisibilityKey.getOwner(), mmi);
+                mmiiController.save(mmii);
+            } else {
+                logger.warn("The Main Menu Item Invisibility for owner [" + invisibilityKey.getOwner() + "] and item [" + invisibilityKey.getMainMenuItemKey()
+                        + "] has been purged due to non-existence of item [" + invisibilityKey.getMainMenuItemKey() + "] after update procedure.");
+            }
+        }
 
-	newMessageAndNewSt = info(newMessageAndNewSt, "DONE");
+        newMessageAndNewSt = info(newMessageAndNewSt, "DONE");
         return entity;
     }
 
     private String str(final char c, final int n) {
-	return str0(c, n, "");
+        return str0(c, n, "");
     }
+
     private String str0(final char c, final int n, final String accu) {
-	if (n == 0) {
-	    return accu;
-	} else {
-	    return str0(c, n - 1, accu + c);
-	}
+        if (n == 0) {
+            return accu;
+        } else {
+            return str0(c, n - 1, accu + c);
+        }
     }
+
     private String wrap(final String s, final int width) {
-	final int partCount = (width - s.length()) / 2;
-	final String part = str('=', partCount);
-	final String all = part + s + part;
-	return all.length() == width ? all : all + '=';
+        final int partCount = (width - s.length()) / 2;
+        final String part = str('=', partCount);
+        final String all = part + s + part;
+        return all.length() == width ? all : all + '=';
     }
 
     private Pair<String, DateTime> info(final Pair<String, DateTime> oldMessageAndOldSt, final String newMessage) {
-	final Period pd = new Period(oldMessageAndOldSt.getValue(), new DateTime());
-	final int width = 60;
-	final String row = str('=', width);
-	logger.info(str('-', width));
-	logger.info(row);
-	logger.info(oldMessageAndOldSt.getKey() == null ? row : wrap(oldMessageAndOldSt.getKey() + "...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms", width));
-	logger.info(row);
-	logger.info(wrap(newMessage, width));
-	logger.info(row);
-	logger.info(row);
-	logger.info(row);
-	logger.info(str('-', width));
-	return new Pair<String, DateTime>(newMessage, new DateTime()); // return newMessageAndNewSt
+        final Period pd = new Period(oldMessageAndOldSt.getValue(), new DateTime());
+        final int width = 60;
+        final String row = str('=', width);
+        logger.info(str('-', width));
+        logger.info(row);
+        logger.info(oldMessageAndOldSt.getKey() == null ? row : wrap(oldMessageAndOldSt.getKey() + "...done in " + pd.getSeconds() + " s " + pd.getMillis() + " ms", width));
+        logger.info(row);
+        logger.info(wrap(newMessage, width));
+        logger.info(row);
+        logger.info(row);
+        logger.info(row);
+        logger.info(str('-', width));
+        return new Pair<String, DateTime>(newMessage, new DateTime()); // return newMessageAndNewSt
     }
 
     private static final class EntityCentreConfigKey {
-	private final User owner;
-	private final String title;
-	private final String mainMenuItemKey;
-	private final List<String> analysesNames;
+        private final User owner;
+        private final String title;
+        private final String mainMenuItemKey;
+        private final List<String> analysesNames;
 
-	protected EntityCentreConfigKey(final User owner, final String title, final String mainMenuItemKey, final List<String> analysesNames) {
-	    this.owner = owner;
-	    this.title = title;
-	    this.mainMenuItemKey = mainMenuItemKey;
-	    this.analysesNames = new ArrayList<String>();
-	    this.analysesNames.addAll(analysesNames);
-	}
+        protected EntityCentreConfigKey(final User owner, final String title, final String mainMenuItemKey, final List<String> analysesNames) {
+            this.owner = owner;
+            this.title = title;
+            this.mainMenuItemKey = mainMenuItemKey;
+            this.analysesNames = new ArrayList<String>();
+            this.analysesNames.addAll(analysesNames);
+        }
 
-	public User getOwner() {
-	    return owner;
-	}
+        public User getOwner() {
+            return owner;
+        }
 
-	public String getTitle() {
-	    return title;
-	}
+        public String getTitle() {
+            return title;
+        }
 
-	public String getMainMenuItemKey() {
-	    return mainMenuItemKey;
-	}
+        public String getMainMenuItemKey() {
+            return mainMenuItemKey;
+        }
 
-	public List<String> getAnalysesNames() {
-	    return analysesNames;
-	}
+        public List<String> getAnalysesNames() {
+            return analysesNames;
+        }
     }
 
     private static final class EntityCentreConfigBody {
-	private final boolean principal;
-	private final byte[] configBody;
+        private final boolean principal;
+        private final byte[] configBody;
 
-	protected EntityCentreConfigBody(final boolean principal, final byte[] configBody) {
-	    this.principal = principal;
-	    this.configBody = configBody;
-	}
+        protected EntityCentreConfigBody(final boolean principal, final byte[] configBody) {
+            this.principal = principal;
+            this.configBody = configBody;
+        }
 
-	public boolean isPrincipal() {
-	    return principal;
-	}
+        public boolean isPrincipal() {
+            return principal;
+        }
 
-	public byte[] getConfigBody() {
-	    return configBody;
-	}
+        public byte[] getConfigBody() {
+            return configBody;
+        }
     }
 
     private static final class MainMenuItemInvisibilityKey {
-	private final User owner;
-	private final String mainMenuItemKey;
+        private final User owner;
+        private final String mainMenuItemKey;
 
-	protected MainMenuItemInvisibilityKey(final User owner, final String mainMenuItemKey) {
-	    this.owner = owner;
-	    this.mainMenuItemKey = mainMenuItemKey;
-	}
+        protected MainMenuItemInvisibilityKey(final User owner, final String mainMenuItemKey) {
+            this.owner = owner;
+            this.mainMenuItemKey = mainMenuItemKey;
+        }
 
-	public User getOwner() {
-	    return owner;
-	}
+        public User getOwner() {
+            return owner;
+        }
 
-	public String getMainMenuItemKey() {
-	    return mainMenuItemKey;
-	}
+        public String getMainMenuItemKey() {
+            return mainMenuItemKey;
+        }
     }
 
     /**
      * Retrieves all centres and its analyses.
-     *
+     * 
      * @param modelEcac
      * @param modelEcc
      * @return
      */
     private Map<EntityCentreConfigKey, EntityCentreConfigBody> retrieveCentresKeysAndBodies(final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac, final EntityResultQueryModel<EntityCentreConfig> modelEcc) {
-	final Map<Long, List<String>> analysesMap = new LinkedHashMap<Long, List<String>>();
-	final List<EntityCentreAnalysisConfig> ecacs = ecacController.getAllEntities(from(modelEcac).with(fetchOnly(EntityCentreAnalysisConfig.class).with("entityCentreConfig", fetchOnly(EntityCentreConfig.class).with("id")).with("title")).model());
-	for (final EntityCentreAnalysisConfig ecac : ecacs) {
-	    if (!analysesMap.containsKey(ecac.getEntityCentreConfig().getId())) {
-		analysesMap.put(ecac.getEntityCentreConfig().getId(), new ArrayList<String>());
-	    }
-	    analysesMap.get(ecac.getEntityCentreConfig().getId()).add(ecac.getTitle());
-	}
+        final Map<Long, List<String>> analysesMap = new LinkedHashMap<Long, List<String>>();
+        final List<EntityCentreAnalysisConfig> ecacs = ecacController.getAllEntities(from(modelEcac).with(fetchOnly(EntityCentreAnalysisConfig.class).with("entityCentreConfig", fetchOnly(EntityCentreConfig.class).with("id")).with("title")).model());
+        for (final EntityCentreAnalysisConfig ecac : ecacs) {
+            if (!analysesMap.containsKey(ecac.getEntityCentreConfig().getId())) {
+                analysesMap.put(ecac.getEntityCentreConfig().getId(), new ArrayList<String>());
+            }
+            analysesMap.get(ecac.getEntityCentreConfig().getId()).add(ecac.getTitle());
+        }
 
-	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(modelEcc).model());
-	final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = new LinkedHashMap<EntityCentreConfigKey, EntityCentreConfigBody>();
-	for (final EntityCentreConfig ecc : eccs) {
-	    final List<String> analyseNames = analysesMap.get(ecc.getId()) == null ? new ArrayList<String>() : analysesMap.get(ecc.getId());
-	    centresKeysAndBodies.put(new EntityCentreConfigKey(ecc.getOwner(), ecc.getTitle(), ecc.getMenuItem().getKey(), analyseNames), new EntityCentreConfigBody(ecc.isPrincipal(), ecc.getConfigBody()));
-	}
-	return centresKeysAndBodies;
+        final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(modelEcc).model());
+        final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = new LinkedHashMap<EntityCentreConfigKey, EntityCentreConfigBody>();
+        for (final EntityCentreConfig ecc : eccs) {
+            final List<String> analyseNames = analysesMap.get(ecc.getId()) == null ? new ArrayList<String>() : analysesMap.get(ecc.getId());
+            centresKeysAndBodies.put(new EntityCentreConfigKey(ecc.getOwner(), ecc.getTitle(), ecc.getMenuItem().getKey(), analyseNames), new EntityCentreConfigBody(ecc.isPrincipal(), ecc.getConfigBody()));
+        }
+        return centresKeysAndBodies;
     }
 
     /**
      * Maintains versions of all centres, locators and masters.
      */
     protected void maintainConfigurationVersions() {
-	System.err.println("Started centres maintenance...");
-	int i = 0;
-	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(select(EntityCentreConfig.class).model()).model());
-	for (final EntityCentreConfig ecc : eccs) {
-	    System.err.println("\tECC... " + (++i * 100.0 / eccs.size()) + "%");
-	    try {
-		versionMaintainer.maintainCentreVersion(ecc);
-	    } catch (final Exception e) {
-		e.printStackTrace();
-		final String message = "Unable to maintain entity-centre instance version for [" + ecc.toString() + "].";
-		error(message);
-	    }
-	}
-	System.err.println("Ended centres maintenance.");
+        System.err.println("Started centres maintenance...");
+        int i = 0;
+        final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(select(EntityCentreConfig.class).model()).model());
+        for (final EntityCentreConfig ecc : eccs) {
+            System.err.println("\tECC... " + (++i * 100.0 / eccs.size()) + "%");
+            try {
+                versionMaintainer.maintainCentreVersion(ecc);
+            } catch (final Exception e) {
+                e.printStackTrace();
+                final String message = "Unable to maintain entity-centre instance version for [" + ecc.toString() + "].";
+                error(message);
+            }
+        }
+        System.err.println("Ended centres maintenance.");
 
-	System.err.println("Started locators maintenance...");
-	i = 0;
-	final List<EntityLocatorConfig> elcs = elcController.getAllEntities(from(select(EntityLocatorConfig.class).model()).model());
-	for (final EntityLocatorConfig elc : elcs) {
-	    System.err.println("\tELC... " + (++i * 100.0 / elcs.size()) + "%");
-	    try {
-		versionMaintainer.maintainLocatorVersion(elc);
-	    } catch (final Exception e) {
-		e.printStackTrace();
-		final String message = "Unable to maintain default entity-locator instance version for [" + elc.toString() + "].";
-		error(message);
-	    }
-	}
-	System.err.println("Ended locators maintenance.");
+        System.err.println("Started locators maintenance...");
+        i = 0;
+        final List<EntityLocatorConfig> elcs = elcController.getAllEntities(from(select(EntityLocatorConfig.class).model()).model());
+        for (final EntityLocatorConfig elc : elcs) {
+            System.err.println("\tELC... " + (++i * 100.0 / elcs.size()) + "%");
+            try {
+                versionMaintainer.maintainLocatorVersion(elc);
+            } catch (final Exception e) {
+                e.printStackTrace();
+                final String message = "Unable to maintain default entity-locator instance version for [" + elc.toString() + "].";
+                error(message);
+            }
+        }
+        System.err.println("Ended locators maintenance.");
 
-	System.err.println("Started masters maintenance...");
-	i = 0;
-	final List<EntityMasterConfig> emcs = emcController.getAllEntities(from(select(EntityMasterConfig.class).model()).model());
-	for (final EntityMasterConfig emc : emcs) {
-	    System.err.println("\tEMC... " + (++i * 100.0 / emcs.size()) + "%");
-	    try {
-		versionMaintainer.maintainMasterVersion(emc);
-	    } catch (final Exception e) {
-		e.printStackTrace();
-		final String message = "Unable to maintain entity-master instance version for [" + emc.toString() + "].";
-		error(message);
-	    }
-	}
-	System.err.println("Ended masters maintenance.");
+        System.err.println("Started masters maintenance...");
+        i = 0;
+        final List<EntityMasterConfig> emcs = emcController.getAllEntities(from(select(EntityMasterConfig.class).model()).model());
+        for (final EntityMasterConfig emc : emcs) {
+            System.err.println("\tEMC... " + (++i * 100.0 / emcs.size()) + "%");
+            try {
+                versionMaintainer.maintainMasterVersion(emc);
+            } catch (final Exception e) {
+                e.printStackTrace();
+                final String message = "Unable to maintain entity-master instance version for [" + emc.toString() + "].";
+                error(message);
+            }
+        }
+        System.err.println("Ended masters maintenance.");
     }
 
     /**
      * Logs and throws an {@link IllegalArgumentException} error with specified message.
-     *
+     * 
      * @param message
      */
     private void error(final String message) {
-	logger.error(message);
-	// throw new IllegalArgumentException(message);
+        logger.error(message);
+        // throw new IllegalArgumentException(message);
     }
 
     /**
      * Saves hierarchically menu item and its children.
-     *
+     * 
      * @param developmentMainMenuItem
      * @return
      */
     private MainMenuItem saveMenuItem(final MainMenuItem developmentMainMenuItem) {
-	// System.err.println("Added menu item [" + developmentMainMenuItem + "].");
-	final MainMenuItem itemToSave = factory.newByKey(MainMenuItem.class, developmentMainMenuItem.getKey());
-	itemToSave.setDesc(developmentMainMenuItem.getDesc());
-	itemToSave.setOrder(developmentMainMenuItem.getOrder());
-	itemToSave.setTitle(developmentMainMenuItem.getTitle());
-	itemToSave.setParent(developmentMainMenuItem.getParent() == null ? null : mmiController.findByKey(developmentMainMenuItem.getParent().getKey())); // should be updated instance!
-	final MainMenuItem savedMainMenuItem = mmiController.save(itemToSave);
+        // System.err.println("Added menu item [" + developmentMainMenuItem + "].");
+        final MainMenuItem itemToSave = factory.newByKey(MainMenuItem.class, developmentMainMenuItem.getKey());
+        itemToSave.setDesc(developmentMainMenuItem.getDesc());
+        itemToSave.setOrder(developmentMainMenuItem.getOrder());
+        itemToSave.setTitle(developmentMainMenuItem.getTitle());
+        itemToSave.setParent(developmentMainMenuItem.getParent() == null ? null : mmiController.findByKey(developmentMainMenuItem.getParent().getKey())); // should be updated instance!
+        final MainMenuItem savedMainMenuItem = mmiController.save(itemToSave);
 
-	// iterate through children hierarchy
-	for (final MainMenuItem child : developmentMainMenuItem.getChildren()) {
-	    savedMainMenuItem.addChild(saveMenuItem(child));
-	}
-	return savedMainMenuItem;
+        // iterate through children hierarchy
+        for (final MainMenuItem child : developmentMainMenuItem.getChildren()) {
+            savedMainMenuItem.addChild(saveMenuItem(child));
+        }
+        return savedMainMenuItem;
     }
 
     private void purgeAllMMI() {
-	mmiController.delete(select(MainMenuItem.class).model());
+        mmiController.delete(select(MainMenuItem.class).model());
     }
 
-//    private void purgeAllMMI(final List<MainMenuItem> mmis) {
-//	for (final MainMenuItem rootItem : mmis) {
-//	    purgeAll(rootItem);
-//	}
-//    }
-//    private void purgeAll(final MainMenuItem mmi) {
-//	for (final MainMenuItem child : mmi.getChildren()) {
-//	    if (child.isPersisted()) {
-//		purgeAll(child);
-//	    }
-//	}
-//	mmiController.delete(mmi);
-//    }
+    //    private void purgeAllMMI(final List<MainMenuItem> mmis) {
+    //	for (final MainMenuItem rootItem : mmis) {
+    //	    purgeAll(rootItem);
+    //	}
+    //    }
+    //    private void purgeAll(final MainMenuItem mmi) {
+    //	for (final MainMenuItem child : mmi.getChildren()) {
+    //	    if (child.isPersisted()) {
+    //		purgeAll(child);
+    //	    }
+    //	}
+    //	mmiController.delete(mmi);
+    //    }
 
     /**
      * Purges all centres and its analyses.
-     *
+     * 
      * @param modelEcac
      * @param modelEcc
      */
     public void purgeCentres(final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac, final EntityResultQueryModel<EntityCentreConfig> modelEcc) {
-	ecacController.delete(modelEcac);
-	eccController.delete(modelEcc);
+        ecacController.delete(modelEcac);
+        eccController.delete(modelEcc);
     }
 }

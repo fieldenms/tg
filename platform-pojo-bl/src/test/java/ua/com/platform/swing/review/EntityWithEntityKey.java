@@ -23,12 +23,12 @@ public class EntityWithEntityKey extends AbstractEntity<KeyEntity> {
     private KeyEntity keyEntity;
 
     public KeyEntity getKeyEntity() {
-	return keyEntity;
+        return keyEntity;
     }
 
     @Observable
     public void setKeyEntity(final KeyEntity keyEntity) {
-	this.keyEntity = keyEntity;
+        this.keyEntity = keyEntity;
     }
 
 }

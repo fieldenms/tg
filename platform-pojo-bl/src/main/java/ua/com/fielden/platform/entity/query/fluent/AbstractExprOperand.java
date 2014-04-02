@@ -7,11 +7,11 @@ abstract class AbstractExprOperand<T1, T2, ET extends AbstractEntity<?>> extends
     abstract T2 getParent2();
 
     protected AbstractExprOperand(final Tokens queryTokens) {
-	super(queryTokens);
+        super(queryTokens);
     }
 
     @Override
     public T2 beginExpr() {
-	return copy(getParent2(), getTokens().beginExpression());
+        return copy(getParent2(), getTokens().beginExpression());
     }
 }

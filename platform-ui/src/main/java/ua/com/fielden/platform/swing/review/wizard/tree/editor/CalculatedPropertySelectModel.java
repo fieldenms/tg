@@ -7,7 +7,7 @@ import ua.com.fielden.platform.expression.editor.AbstractPropertyProvider;
  * 
  * @author TG Team
  */
-public class CalculatedPropertySelectModel extends AbstractPropertyProvider{
+public class CalculatedPropertySelectModel extends AbstractPropertyProvider {
 
     private String selectedProperty = null;
     private boolean isSelected = false;
@@ -18,7 +18,7 @@ public class CalculatedPropertySelectModel extends AbstractPropertyProvider{
      * @return
      */
     public String getSelectedProperty() {
-	return selectedProperty;
+        return selectedProperty;
     }
 
     /**
@@ -26,15 +26,15 @@ public class CalculatedPropertySelectModel extends AbstractPropertyProvider{
      * 
      * @return
      */
-    public boolean isPropertySelected(){
-	return isSelected;
+    public boolean isPropertySelected() {
+        return isSelected;
     }
 
     @Override
     public void propertyStateChanged(final String propertyName, final boolean isSelect) {
-	this.selectedProperty = propertyName;
-	this.isSelected = isSelect;
-	fireSelectionPropertyEvent(propertyName, isSelect);
+        this.selectedProperty = propertyName;
+        this.isSelected = isSelect;
+        fireSelectionPropertyEvent(propertyName, isSelect);
     }
 
 }

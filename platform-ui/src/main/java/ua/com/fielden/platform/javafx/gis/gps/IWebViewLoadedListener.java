@@ -6,9 +6,9 @@ import javafx.scene.web.WebView;
 
 /**
  * {@link EventListener} that listens the {@link WebView}'s load events.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IWebViewLoadedListener extends EventListener {
 

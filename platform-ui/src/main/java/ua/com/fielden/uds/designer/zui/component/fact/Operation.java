@@ -25,34 +25,34 @@ public enum Operation {
     private String representation;
 
     private Operation(String representation) {
-	setRepresentation(representation);
+        setRepresentation(representation);
     }
 
     public String getRepresentation() {
-	return representation;
+        return representation;
     }
 
     private void setRepresentation(String representation) {
-	this.representation = representation;
+        this.representation = representation;
     }
 
     public boolean equals(Operation op) {
-	if (op == null) {
-	    return false;
-	}
-	if (op == this) {
-	    return true;
-	}
-	return getRepresentation().equals(op.getRepresentation());
+        if (op == null) {
+            return false;
+        }
+        if (op == this) {
+            return true;
+        }
+        return getRepresentation().equals(op.getRepresentation());
     }
 
     public String toString() {
-	return representation;
+        return representation;
     }
 
     public static void main(String[] args) {
-	System.out.println(Operation.CONTAINS.equals(Operation.CONTAINS));
-	System.out.println(Operation.CONTAINS.equals(Operation.EQUAL));
+        System.out.println(Operation.CONTAINS.equals(Operation.CONTAINS));
+        System.out.println(Operation.CONTAINS.equals(Operation.EQUAL));
     }
 
 }

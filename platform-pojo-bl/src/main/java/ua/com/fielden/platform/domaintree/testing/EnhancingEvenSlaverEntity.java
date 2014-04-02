@@ -13,9 +13,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity for "domain tree enhancing" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key title", desc = "Key desc")
@@ -42,52 +42,63 @@ public class EnhancingEvenSlaverEntity extends AbstractEntity<String> {
     private Collection<EnhancingEvenSlaverEntity> evenSlaverEntityCollProp;
 
     public EnhancingMasterEntity getMasterEntityProp() {
-	return masterEntityProp;
+        return masterEntityProp;
     }
+
     @Observable
     public void setMasterEntityProp(final EnhancingMasterEntity masterEntityProp) {
-	this.masterEntityProp = masterEntityProp;
+        this.masterEntityProp = masterEntityProp;
     }
 
     public EnhancingSlaveEntity getSlaveEntityProp() {
-	return slaveEntityProp;
+        return slaveEntityProp;
     }
+
     @Observable
     public void setSlaveEntityProp(final EnhancingSlaveEntity slaveEntityProp) {
-	this.slaveEntityProp = slaveEntityProp;
+        this.slaveEntityProp = slaveEntityProp;
     }
 
     public EnhancingEvenSlaverEntity getEvenSlaverEntityProp() {
         return evenSlaverEntityProp;
     }
+
     @Observable
     public void setEvenSlaverEntityProp(final EnhancingEvenSlaverEntity evenSlaverEntityProp) {
         this.evenSlaverEntityProp = evenSlaverEntityProp;
     }
+
     public List<EnhancingMasterEntity> getMasterEntityCollProp() {
         return masterEntityCollProp;
     }
+
     @Observable
     public void setMasterEntityCollProp(final List<EnhancingMasterEntity> masterEntityCollProp) {
         this.masterEntityCollProp = masterEntityCollProp;
     }
+
     public Set<EnhancingSlaveEntity> getSlaveEntityCollProp() {
         return slaveEntityCollProp;
     }
+
     @Observable
     public void setSlaveEntityCollProp(final Set<EnhancingSlaveEntity> slaveEntityCollProp) {
         this.slaveEntityCollProp = slaveEntityCollProp;
     }
+
     public Collection<EnhancingEvenSlaverEntity> getEvenSlaverEntityCollProp() {
         return evenSlaverEntityCollProp;
     }
+
     @Observable
     public void setEvenSlaverEntityCollProp(final Collection<EnhancingEvenSlaverEntity> evenSlaverEntityCollProp) {
         this.evenSlaverEntityCollProp = evenSlaverEntityCollProp;
     }
+
     public Integer getIntegerProp() {
         return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;

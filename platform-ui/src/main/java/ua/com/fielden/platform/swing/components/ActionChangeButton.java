@@ -33,26 +33,26 @@ public class ActionChangeButton extends JCommandButton {
      *            - specified default action
      */
     public ActionChangeButton(final ActionChanger<?> action) {
-	this((String) action.getValue(Action.NAME), (ResizableIcon) action.getValue(Action.LARGE_ICON_KEY));
-	addAction(action);
-	setDefaultAction(action);
-	setState(ElementState.SMALL, true);
-	setCommandButtonKind(CommandButtonKind.ACTION_AND_POPUP_MAIN_ACTION);
+        this((String) action.getValue(Action.NAME), (ResizableIcon) action.getValue(Action.LARGE_ICON_KEY));
+        addAction(action);
+        setDefaultAction(action);
+        setState(ElementState.SMALL, true);
+        setCommandButtonKind(CommandButtonKind.ACTION_AND_POPUP_MAIN_ACTION);
 
-	this.addPopupMenuListener(new PopupMenuListener() {
+        this.addPopupMenuListener(new PopupMenuListener() {
 
-	    @Override
-	    public void menuAboutToShow(final JPopupMenu popup) {
-		for (final Action action : actions) {
-		    popup.add(new JMenuItem(action));
-		}
-	    }
+            @Override
+            public void menuAboutToShow(final JPopupMenu popup) {
+                for (final Action action : actions) {
+                    popup.add(new JMenuItem(action));
+                }
+            }
 
-	});
+        });
     }
 
     private ActionChangeButton(final String name, final ResizableIcon icon) {
-	super(name, icon);
+        super(name, icon);
     }
 
     /**
@@ -60,7 +60,7 @@ public class ActionChangeButton extends JCommandButton {
      * @return the default action
      */
     public ActionChanger<?> getDefaultAction() {
-	return defaultAction;
+        return defaultAction;
     }
 
     /**
@@ -70,17 +70,17 @@ public class ActionChangeButton extends JCommandButton {
      *            - specified new default action
      */
     public void setDefaultAction(final ActionChanger<?> defaultAction) {
-	if ((defaultAction != null) && (actions.indexOf(defaultAction) != -1)) {
-	    removeActionListener(this.defaultAction);
-	    this.defaultAction = defaultAction;
-	    addActionListener(this.defaultAction);
-	    final Object objIcon = defaultAction.getValue(Action.LARGE_ICON_KEY);
-	    if (objIcon instanceof ResizableIcon) {
-		setIcon((ResizableIcon) objIcon);
-	    }
-	    setText((String) defaultAction.getValue(Action.NAME));
-	    setToolTipText((String) defaultAction.getValue(Action.SHORT_DESCRIPTION));
-	}
+        if ((defaultAction != null) && (actions.indexOf(defaultAction) != -1)) {
+            removeActionListener(this.defaultAction);
+            this.defaultAction = defaultAction;
+            addActionListener(this.defaultAction);
+            final Object objIcon = defaultAction.getValue(Action.LARGE_ICON_KEY);
+            if (objIcon instanceof ResizableIcon) {
+                setIcon((ResizableIcon) objIcon);
+            }
+            setText((String) defaultAction.getValue(Action.NAME));
+            setToolTipText((String) defaultAction.getValue(Action.SHORT_DESCRIPTION));
+        }
     }
 
     /**
@@ -90,10 +90,10 @@ public class ActionChangeButton extends JCommandButton {
      *            - specified action for the new JMenuItem instance
      */
     public void addAction(final ActionChanger<?> action) {
-	if ((action != null) && (actions.indexOf(action) == -1)) {
-	    actions.add(action);
-	    action.setButton(this);
-	}
+        if ((action != null) && (actions.indexOf(action) == -1)) {
+            actions.add(action);
+            action.setButton(this);
+        }
     }
 
     /**
@@ -104,9 +104,9 @@ public class ActionChangeButton extends JCommandButton {
      * @return the removed action from menu item
      */
     public ActionChanger<?> removeAction(final int index) {
-	final ActionChanger<?> action = actions.remove(index);
-	action.setButton(null);
-	return action;
+        final ActionChanger<?> action = actions.remove(index);
+        action.setButton(null);
+        return action;
     }
 
     /**
@@ -117,8 +117,8 @@ public class ActionChangeButton extends JCommandButton {
      * @return the removed action from menu item
      */
     public ActionChanger<?> removeAction(final ActionChanger<?> action) {
-	final int index = actions.indexOf(action);
-	return removeAction(index);
+        final int index = actions.indexOf(action);
+        return removeAction(index);
     }
 
 }

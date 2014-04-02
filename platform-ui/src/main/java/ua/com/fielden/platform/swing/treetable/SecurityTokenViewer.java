@@ -36,34 +36,34 @@ public class SecurityTokenViewer extends BlockingIndefiniteProgressLayer {
      * @param model
      */
     public SecurityTokenViewer(final SecurityTokenViewerModel model) {
-	super(null, "");
+        super(null, "");
 
-	// creates the panel that is the view of the blocking panel
-	final JPanel panel = new JPanel(new MigLayout("fill", "[]push[]", "[fill,grow][]"));
-	setView(panel);
-	// creating load and save buttons
-	loadAction = model.getLoadAction(this);
-	saveAction = model.getSaveAction(this);
-	final JButton loadButton = new JButton(loadAction);
-	final JButton saveButton = new JButton(saveAction);
+        // creates the panel that is the view of the blocking panel
+        final JPanel panel = new JPanel(new MigLayout("fill", "[]push[]", "[fill,grow][]"));
+        setView(panel);
+        // creating load and save buttons
+        loadAction = model.getLoadAction(this);
+        saveAction = model.getSaveAction(this);
+        final JButton loadButton = new JButton(loadAction);
+        final JButton saveButton = new JButton(saveAction);
 
-	// creating security tree table and filter control to filter it
-	securityTable = new FilterableTreeTablePanel<SecurityTreeTable>(new SecurityTreeTable(new FilterableTreeTableModel(model.getTreeTableModel())), new WordFilter(), "find token");
+        // creating security tree table and filter control to filter it
+        securityTable = new FilterableTreeTablePanel<SecurityTreeTable>(new SecurityTreeTable(new FilterableTreeTableModel(model.getTreeTableModel())), new WordFilter(), "find token");
 
-	panel.add(securityTable, "span 2, growx, wrap");
-	panel.add(loadButton);
-	panel.add(saveButton);
+        panel.add(securityTable, "span 2, growx, wrap");
+        panel.add(loadButton);
+        panel.add(saveButton);
 
-	// component listener is responsible for data loading after the blocking panel was first time resized
-	addComponentListener(new ComponentAdapter() {
-	    @Override
-	    public void componentResized(final ComponentEvent e) {
-		loadAction.actionPerformed(null);
+        // component listener is responsible for data loading after the blocking panel was first time resized
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(final ComponentEvent e) {
+                loadAction.actionPerformed(null);
 
-		final ComponentListener refToThis = this;
-		SecurityTokenViewer.this.removeComponentListener(refToThis);
-	    }
-	});
+                final ComponentListener refToThis = this;
+                SecurityTokenViewer.this.removeComponentListener(refToThis);
+            }
+        });
     }
 
 }

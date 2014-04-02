@@ -39,7 +39,7 @@ public class PropertyDescriptor<T extends AbstractEntity> extends AbstractEntity
     private String propertyName;
 
     protected PropertyDescriptor() {
-	super(null, null, null);
+        super(null, null, null);
     }
 
     /**
@@ -51,55 +51,55 @@ public class PropertyDescriptor<T extends AbstractEntity> extends AbstractEntity
      *            -- name of the property that directly belongs to the specified entity (i.e. support for dot notation does not make any sense in this case)
      */
     public PropertyDescriptor(final Class<T> entityType, final String propertyName) {
-	final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
-	setKey(pair.getKey());
-	setDesc(pair.getValue());
-	this.entityType = entityType;
-	this.propertyName = propertyName;
+        final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
+        setKey(pair.getKey());
+        setDesc(pair.getValue());
+        this.entityType = entityType;
+        this.propertyName = propertyName;
     }
 
     public Class<T> getEntityType() {
-	return entityType;
+        return entityType;
     }
 
     public String getPropertyName() {
-	return propertyName;
+        return propertyName;
     }
 
     @Override
     public String toString() {
-	return entityType.getName() + ":" + propertyName;
+        return entityType.getName() + ":" + propertyName;
     }
 
     /** A convenient factory method, which instantiates property descriptor from its toString representation. */
     public static <T extends AbstractEntity> PropertyDescriptor<T> fromString(final String toStringRepresentation) throws Exception {
-	final String[] parts = toStringRepresentation.split(":");
-	final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
-	final String propertyName = parts[1];
-	return new PropertyDescriptor<T>(entityType, propertyName);
+        final String[] parts = toStringRepresentation.split(":");
+        final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
+        final String propertyName = parts[1];
+        return new PropertyDescriptor<T>(entityType, propertyName);
     }
 
     /** A convenient factory method, which instantiates property descriptor from its toString representation. */
     public static <T extends AbstractEntity> PropertyDescriptor<T> fromString(final String toStringRepresentation, final EntityFactory factory) throws Exception {
-	final String[] parts = toStringRepresentation.split(":");
-	final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
-	final String propertyName = parts[1];
+        final String[] parts = toStringRepresentation.split(":");
+        final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
+        final String propertyName = parts[1];
 
-	final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
-	final PropertyDescriptor inst = factory.newByKey(PropertyDescriptor.class, pair.getKey());
-	inst.setDesc(pair.getValue());
-	inst.setEntityType(entityType);
-	inst.setPropertyName(propertyName);
+        final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
+        final PropertyDescriptor inst = factory.newByKey(PropertyDescriptor.class, pair.getKey());
+        inst.setDesc(pair.getValue());
+        inst.setEntityType(entityType);
+        inst.setPropertyName(propertyName);
 
-	return inst;//new PropertyDescriptor<T>(entityType, propertyName);
+        return inst;//new PropertyDescriptor<T>(entityType, propertyName);
     }
 
     private void setEntityType(final Class<T> entityType) {
-	this.entityType = entityType;
+        this.entityType = entityType;
     }
 
     private void setPropertyName(final String propertyName) {
-	this.propertyName = propertyName;
+        this.propertyName = propertyName;
     }
 
 }

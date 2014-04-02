@@ -20,11 +20,11 @@ public class DomainMetaPropertyConfig {
      * @return
      */
     public IAfterChangeEventHandler getDefiner(final Class<?> entityType, final String propertyName) {
-	final Map<String, IAfterChangeEventHandler> map = domainMetaDefiners.get(entityType);
-	if (map != null) { // some of the entity properties are mapped to some domain validators
-	    return map.get(propertyName); // may return null if propertyName is not associated with any domain validator
-	}
-	return null; // entity's properties are not mapped to any domain validator
+        final Map<String, IAfterChangeEventHandler> map = domainMetaDefiners.get(entityType);
+        if (map != null) { // some of the entity properties are mapped to some domain validators
+            return map.get(propertyName); // may return null if propertyName is not associated with any domain validator
+        }
+        return null; // entity's properties are not mapped to any domain validator
     }
 
     /**
@@ -36,10 +36,11 @@ public class DomainMetaPropertyConfig {
      * @return
      */
     public DomainMetaPropertyConfig setDefiner(final Class<?> entityType, final String propertyName, final IAfterChangeEventHandler domainMetaDefiner) {
-	final Map<String, IAfterChangeEventHandler> map = domainMetaDefiners.get(entityType) == null ? new HashMap<String, IAfterChangeEventHandler>() : domainMetaDefiners.get(entityType);
-	map.put(propertyName, domainMetaDefiner); // this put replaces a validator if there was already one associated with the specified property
-	domainMetaDefiners.put(entityType, map);
-	return this;
+        final Map<String, IAfterChangeEventHandler> map = domainMetaDefiners.get(entityType) == null ? new HashMap<String, IAfterChangeEventHandler>()
+                : domainMetaDefiners.get(entityType);
+        map.put(propertyName, domainMetaDefiner); // this put replaces a validator if there was already one associated with the specified property
+        domainMetaDefiners.put(entityType, map);
+        return this;
     }
 
 }

@@ -14,9 +14,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Type representing the details side of One-to-Many association.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key")
@@ -42,25 +42,24 @@ public class DetailsEntityForInvalidOneToManyAssociation extends AbstractEntity<
     @CompositeKeyMember(3)
     private MasterEntityWithInvalidOneToManyAssociation key3;
 
-
     @Observable
     public DetailsEntityForInvalidOneToManyAssociation setKey2(final Integer key2) {
-	this.key2 = key2;
-	return this;
+        this.key2 = key2;
+        return this;
     }
 
     public Integer getKey2() {
-	return key2;
+        return key2;
     }
 
     @Observable
     public DetailsEntityForInvalidOneToManyAssociation setKey1(final MasterEntityWithInvalidOneToManyAssociation key1) {
-	this.key1 = key1;
-	return this;
+        this.key1 = key1;
+        return this;
     }
 
     public MasterEntityWithInvalidOneToManyAssociation getKey1() {
-	return key1;
+        return key1;
     }
 
     @IsProperty
@@ -80,34 +79,32 @@ public class DetailsEntityForInvalidOneToManyAssociation extends AbstractEntity<
 
     @Observable
     public DetailsEntityForInvalidOneToManyAssociation setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
-
 
     @Observable
     public DetailsEntityForInvalidOneToManyAssociation setIntProp(final Integer intProp) {
-	this.intProp = intProp;
-	return this;
+        this.intProp = intProp;
+        return this;
     }
 
     public Integer getIntProp() {
-	return intProp;
+        return intProp;
     }
-
 
     @Observable
     public DetailsEntityForInvalidOneToManyAssociation setStrProp(final String strProp) {
-	this.strProp = strProp;
-	return this;
+        this.strProp = strProp;
+        return this;
     }
 
     public String getStrProp() {
-	return strProp;
+        return strProp;
     }
 
     public MasterEntityWithInvalidOneToManyAssociation getKey3() {

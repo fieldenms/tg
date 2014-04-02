@@ -44,29 +44,24 @@ package ua.com.fielden.platform.snappy;
 
 /**
  * Snappy application model for TG systems.
- *
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- *
+ * 
+ * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy
+ * related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy
+ * integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will
+ * be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been
+ * commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG
+ * platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until
+ * snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy
+ * integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will
+ * be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been
+ * commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG
+ * platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
+ * 
  * @author TG Team
- *
+ * 
  */
-public class TgSnappyApplicationModel {}
+public class TgSnappyApplicationModel {
+}
 //extends ApplicationModel<TgSnappyComponentsActivator> {
 //    private final List<Class<? extends AbstractEntity>> entityClasses;
 //    private final Map<Class<?>, RuleBlock<?>> entityRules = new HashMap<Class<?>, RuleBlock<?>>();

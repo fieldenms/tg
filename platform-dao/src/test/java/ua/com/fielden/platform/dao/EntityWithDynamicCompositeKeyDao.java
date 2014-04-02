@@ -9,15 +9,15 @@ import com.google.inject.Inject;
 
 /**
  * This is a test DOA with a composite key implemented by {@link DynamicEntityKey}.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @EntityType(EntityWithDynamicCompositeKey.class)
 public class EntityWithDynamicCompositeKeyDao extends CommonEntityDao<EntityWithDynamicCompositeKey> {
 
     @Inject
     protected EntityWithDynamicCompositeKeyDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

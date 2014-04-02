@@ -16,12 +16,12 @@ public class EntityExt extends Entity {
     private Double additionalProperty;
 
     public Double getAdditionalProperty() {
-	return additionalProperty;
+        return additionalProperty;
     }
 
     @Observable
     public void setAdditionalProperty(final Double additionalProperty) {
-	this.additionalProperty = additionalProperty;
+        this.additionalProperty = additionalProperty;
     }
 
 }

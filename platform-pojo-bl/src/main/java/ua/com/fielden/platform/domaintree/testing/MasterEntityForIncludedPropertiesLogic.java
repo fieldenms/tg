@@ -12,9 +12,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity for "included properties logic" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @DescTitle(value = "Desc title", desc = "Desc desc")
@@ -44,6 +44,7 @@ public class MasterEntityForIncludedPropertiesLogic extends AbstractEntity<Strin
     public Integer getIntegerProp() {
         return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
@@ -52,6 +53,7 @@ public class MasterEntityForIncludedPropertiesLogic extends AbstractEntity<Strin
     public SlaveEntityForIncludedPropertiesLogic getEntityProp() {
         return entityProp;
     }
+
     @Observable
     public void setEntityProp(final SlaveEntityForIncludedPropertiesLogic entityProp) {
         this.entityProp = entityProp;
@@ -60,6 +62,7 @@ public class MasterEntityForIncludedPropertiesLogic extends AbstractEntity<Strin
     public List<SlaveEntityForIncludedPropertiesLogic> getEntityPropCollection() {
         return entityPropCollection;
     }
+
     @Observable
     public void setEntityPropCollection(final List<SlaveEntityForIncludedPropertiesLogic> collection) {
         this.entityPropCollection.clear();
@@ -69,6 +72,7 @@ public class MasterEntityForIncludedPropertiesLogic extends AbstractEntity<Strin
     public MasterEntityForIncludedPropertiesLogic getEntityPropOfSelfType() {
         return entityPropOfSelfType;
     }
+
     @Observable
     public void setEntityPropOfSelfType(final MasterEntityForIncludedPropertiesLogic entityPropOfSelfType) {
         this.entityPropOfSelfType = entityPropOfSelfType;

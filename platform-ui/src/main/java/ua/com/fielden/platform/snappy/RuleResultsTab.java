@@ -38,29 +38,24 @@ package ua.com.fielden.platform.snappy;
 //import ua.com.fielden.snappy.RsAggrResult;
 
 /**
- *
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
- *
+ * 
+ * TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy
+ * related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy
+ * integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will
+ * be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been
+ * commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG
+ * platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until
+ * snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy
+ * integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will
+ * be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been
+ * commented until snappy related stuff will be migrated to TG platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG
+ * platform. TODO Snappy integration logic has been commented until snappy related stuff will be migrated to TG platform.
+ * 
  * @author TG Team
- *
+ * 
  */
-public class RuleResultsTab {}
+public class RuleResultsTab {
+}
 //extends JPanel {
 //    private static final long serialVersionUID = 1L;
 //

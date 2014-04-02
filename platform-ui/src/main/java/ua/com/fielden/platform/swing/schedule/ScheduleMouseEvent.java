@@ -16,38 +16,38 @@ public class ScheduleMouseEvent<T extends AbstractEntity<?>> extends EventObject
     private final Date x;
     private final String y;
 
-    public ScheduleMouseEvent(final ScheduleChartPanel<T> source, final MouseEvent sourceEvent, final T entity, final ScheduleSeries<T> series,  final Date x, final String y) {
-	super(source);
-	this.sourceEvent = sourceEvent;
-	this.entity = entity;
-	this.series = series;
-	this.x = x;
-	this.y = y;
+    public ScheduleMouseEvent(final ScheduleChartPanel<T> source, final MouseEvent sourceEvent, final T entity, final ScheduleSeries<T> series, final Date x, final String y) {
+        super(source);
+        this.sourceEvent = sourceEvent;
+        this.entity = entity;
+        this.series = series;
+        this.x = x;
+        this.y = y;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public ScheduleChartPanel<T> getSource() {
-        return (ScheduleChartPanel<T>)super.getSource();
+        return (ScheduleChartPanel<T>) super.getSource();
     }
 
     public T getEntity() {
-	return entity;
+        return entity;
     }
 
     public ScheduleSeries<T> getSeries() {
-	return series;
+        return series;
     }
 
     public Date getX() {
-	return x;
+        return x;
     }
 
     public String getY() {
-	return y;
+        return y;
     }
 
     public MouseEvent getSourceEvent() {
-	return sourceEvent;
+        return sourceEvent;
     }
 }

@@ -16,42 +16,42 @@ public class StandAloneConditionBuilder1 extends AbstractTokensBuilder1 {
     private final boolean negated;
 
     public StandAloneConditionBuilder1(final EntQueryGenerator1 queryBuilder, final ConditionModel exprModel, final boolean negated) {
-	super(null, queryBuilder);
-	this.negated = negated;
-	setChild(new ConditionBuilder1(this, queryBuilder));
+        super(null, queryBuilder);
+        this.negated = negated;
+        setChild(new ConditionBuilder1(this, queryBuilder));
 
-	for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
-	    add(tokenPair.getKey(), tokenPair.getValue());
-	}
+        for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
+            add(tokenPair.getKey(), tokenPair.getValue());
+        }
     }
 
     @Override
     public boolean isClosing() {
-	return false;
+        return false;
     }
 
     @Override
     public boolean canBeClosed() {
-	return getChild() == null;
+        return getChild() == null;
     }
 
     public Conditions1 getModel() {
-	if (getChild() != null) {
-	    throw new RuntimeException("Unable to produce result - unfinished model state!");
-	}
+        if (getChild() != null) {
+            throw new RuntimeException("Unable to produce result - unfinished model state!");
+        }
 
-	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-	final ICondition1<? extends ICondition2> firstCondition = (ICondition1<? extends ICondition2>) iterator.next().getValue();
-	final List<CompoundCondition1> otherConditions = new ArrayList<CompoundCondition1>();
-	for (; iterator.hasNext();) {
-	    final CompoundCondition1 subsequentCompoundCondition = (CompoundCondition1) iterator.next().getValue();
-	    otherConditions.add(subsequentCompoundCondition);
-	}
-	return new Conditions1(negated, firstCondition, otherConditions);
+        final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
+        final ICondition1<? extends ICondition2> firstCondition = (ICondition1<? extends ICondition2>) iterator.next().getValue();
+        final List<CompoundCondition1> otherConditions = new ArrayList<CompoundCondition1>();
+        for (; iterator.hasNext();) {
+            final CompoundCondition1 subsequentCompoundCondition = (CompoundCondition1) iterator.next().getValue();
+            otherConditions.add(subsequentCompoundCondition);
+        }
+        return new Conditions1(negated, firstCondition, otherConditions);
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-	throw new RuntimeException("Not applicable!");
+        throw new RuntimeException("Not applicable!");
     }
 }

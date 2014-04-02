@@ -20,6 +20,7 @@ public class AnotherSimplePartEntity extends AbstractEntity<String> {
     public SimplePartEntity getSimplePartEntity() {
         return simplePartEntity;
     }
+
     @Observable
     public void setSimplePartEntity(final SimplePartEntity simplePartEntity) {
         this.simplePartEntity = simplePartEntity;

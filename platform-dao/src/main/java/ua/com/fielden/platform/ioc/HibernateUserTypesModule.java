@@ -19,21 +19,21 @@ import com.google.inject.AbstractModule;
 
 /**
  * Guice injector module for binding between custom hibernate types and their interfaces-markers.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class HibernateUserTypesModule extends AbstractModule {
 
     @Override
     protected void configure() {
-	bind(ISecurityTokenType.class).to(SecurityTokenType.class);
-	bind(IPropertyDescriptorType.class).to(PropertyDescriptorType.class);
+        bind(ISecurityTokenType.class).to(SecurityTokenType.class);
+        bind(IPropertyDescriptorType.class).to(PropertyDescriptorType.class);
 
-	bind(IMoneyUserType.class).to(MoneyUserType.class);
-	bind(ISimpleMoneyType.class).to(SimpleMoneyType.class);
-	bind(ISimplyMoneyWithTaxAndExTaxAmountType.class).to(SimplyMoneyWithTaxAndExTaxAmountType.class);
-	bind(ISimplyMoneyWithTaxAmountType.class).to(SimplyMoneyWithTaxAmountType.class);
-	bind(IMoneyWithTaxAmountUserType.class).to(MoneyWithTaxAmountUserType.class);
+        bind(IMoneyUserType.class).to(MoneyUserType.class);
+        bind(ISimpleMoneyType.class).to(SimpleMoneyType.class);
+        bind(ISimplyMoneyWithTaxAndExTaxAmountType.class).to(SimplyMoneyWithTaxAndExTaxAmountType.class);
+        bind(ISimplyMoneyWithTaxAmountType.class).to(SimplyMoneyWithTaxAmountType.class);
+        bind(IMoneyWithTaxAmountUserType.class).to(MoneyWithTaxAmountUserType.class);
     }
 }

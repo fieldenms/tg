@@ -14,22 +14,22 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation of {@link IEntityCentreConfigController}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(EntityCentreConfig.class)
 public class EntityCentreConfigControllerDao extends CommonEntityDao<EntityCentreConfig> implements IEntityCentreConfigController {
 
     @Inject
     protected EntityCentreConfigControllerDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
     @Override
     @SessionRequired
     public void delete(final EntityCentreConfig entity) {
-	defaultDelete(entity);
+        defaultDelete(entity);
     }
 
     @Override

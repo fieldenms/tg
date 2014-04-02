@@ -20,10 +20,10 @@ public abstract class DemoDatasetFactory {
      */
     public static CategoryDataset createCategoryDataset() {
 
-	final double[][] data = new double[][] { { 10.0, 4.0, 15.0, 14.0 }, { -5.0, -7.0, 14.0, -3.0 }, { 6.0, 17.0, -12.0, 7.0 }, { 7.0, 15.0, 11.0, 0.0 },
-		{ -8.0, -6.0, 10.0, -9.0 }, { 9.0, 8.0, 0.0, 6.0 }, { -10.0, 9.0, 7.0, 7.0 }, { 11.0, 13.0, 9.0, 9.0 }, { -3.0, 7.0, 11.0, -10.0 } };
+        final double[][] data = new double[][] { { 10.0, 4.0, 15.0, 14.0 }, { -5.0, -7.0, 14.0, -3.0 }, { 6.0, 17.0, -12.0, 7.0 }, { 7.0, 15.0, 11.0, 0.0 },
+                { -8.0, -6.0, 10.0, -9.0 }, { 9.0, 8.0, 0.0, 6.0 }, { -10.0, 9.0, 7.0, 7.0 }, { 11.0, 13.0, 9.0, 9.0 }, { -3.0, 7.0, 11.0, -10.0 } };
 
-	return DatasetUtilities.createCategoryDataset("Series ", "Category ", data);
+        return DatasetUtilities.createCategoryDataset("Series ", "Category ", data);
 
     }
 
@@ -34,10 +34,10 @@ public abstract class DemoDatasetFactory {
      */
     public static CategoryDataset createSingleCategoryDataset() {
 
-	final Number[][] data = new Integer[][] { { new Integer(10) }, { new Integer(-5) }, { new Integer(6) }, { new Integer(7) }, { new Integer(-8) }, { new Integer(9) },
-		{ new Integer(-10) }, { new Integer(11) }, { new Integer(-3) } };
+        final Number[][] data = new Integer[][] { { new Integer(10) }, { new Integer(-5) }, { new Integer(6) }, { new Integer(7) }, { new Integer(-8) }, { new Integer(9) },
+                { new Integer(-10) }, { new Integer(11) }, { new Integer(-3) } };
 
-	return DatasetUtilities.createCategoryDataset("Series ", "Category ", data);
+        return DatasetUtilities.createCategoryDataset("Series ", "Category ", data);
 
     }
 

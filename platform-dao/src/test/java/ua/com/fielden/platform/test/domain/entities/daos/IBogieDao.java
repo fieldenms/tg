@@ -8,9 +8,9 @@ import ua.com.fielden.platform.test.domain.entities.Bogie;
 
 /**
  * Contract for DAO handling bogie.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 public interface IBogieDao extends IEntityDao<Bogie> {
 

@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.expression;
 
-
 /***
  * Class modelling the lexeme (aka token) concept.
- *
+ * 
  * @author TG Team
  */
 public class Token {
@@ -14,34 +13,34 @@ public class Token {
 
     /**
      * Primary constructor, which creates a token with category, text and position information.
-     *
+     * 
      * @param category
      * @param text
      * @param startIndex
      * @param endIndex
      */
     public Token(final ILexemeCategory category, final String text, final Integer startIndex, final Integer endIndex) {
-	if (category == null || text == null) {
-	    throw new IllegalArgumentException("Both token category and text should be specified.");
-	}
-	this.beginIndex = startIndex;
-	this.endIndex = endIndex;
-	this.category = category;
-	this.text = text;
+        if (category == null || text == null) {
+            throw new IllegalArgumentException("Both token category and text should be specified.");
+        }
+        this.beginIndex = startIndex;
+        this.endIndex = endIndex;
+        this.category = category;
+        this.text = text;
     }
 
     /**
      * This constructor should be used in cases where token position in the original text is irrelevant or not known.
-     *
+     * 
      * @param category
      * @param text
      */
     public Token(final ILexemeCategory category, final String text) {
-	this(category, text, null, null);
+        this(category, text, null, null);
     }
 
     public String toString() {
-	return "<'" + text + "'," + category.getName() + ">";
+        return "<'" + text + "'," + category.getName() + ">";
     }
 
     @Override
@@ -51,7 +50,7 @@ public class Token {
 
     @Override
     public boolean equals(final Object obj) {
-	if (obj == this) {
+        if (obj == this) {
             return true;
         }
         if (!(obj instanceof Token)) {

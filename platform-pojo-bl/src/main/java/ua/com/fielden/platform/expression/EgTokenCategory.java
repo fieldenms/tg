@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.expression;
 
-
 /**
  * Enumeration of token categories used by the expression language grammar.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public enum EgTokenCategory implements ILexemeCategory {
     EOF(0),
@@ -63,29 +62,28 @@ public enum EgTokenCategory implements ILexemeCategory {
     SECONDS(47),
     NOW(42);
 
-
     public final int index;
 
     private EgTokenCategory(final int index) {
-	this.index = index;
+        this.index = index;
     }
 
     @Override
     public String getName() {
-	return toString();
+        return toString();
     }
 
     @Override
     public int getIndex() {
-	return index;
+        return index;
     }
 
     public static EgTokenCategory byIndex(final int index) {
-	for (final EgTokenCategory value : EgTokenCategory.values()) {
-	    if (value.index == index) {
-		return value;
-	    }
-	}
-	throw new IllegalArgumentException("There is no token category with index " + index);
+        for (final EgTokenCategory value : EgTokenCategory.values()) {
+            if (value.index == index) {
+                return value;
+            }
+        }
+        throw new IllegalArgumentException("There is no token category with index " + index);
     }
 }

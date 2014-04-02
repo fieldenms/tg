@@ -32,10 +32,12 @@ public class Workorderable extends AbstractUnionEntity {
     public Wheelset getWheelset() {
         return wheelset;
     }
+
     @Observable
     public void setBogie(final Bogie bogie) {
         this.bogie = bogie;
     }
+
     @Observable
     public void setWheelset(final Wheelset wheelset) {
         this.wheelset = wheelset;

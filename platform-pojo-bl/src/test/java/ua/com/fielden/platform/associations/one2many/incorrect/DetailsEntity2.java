@@ -12,9 +12,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Type representing the details side of One-to-Many association.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key")
@@ -39,31 +39,31 @@ public class DetailsEntity2 extends AbstractEntity<DynamicEntityKey> {
 
     @Observable
     public DetailsEntity2 setKey3(final Integer key3) {
-	this.key3 = key3;
-	return this;
+        this.key3 = key3;
+        return this;
     }
 
     public Integer getKey3() {
-	return key3;
+        return key3;
     }
 
     @Observable
     public DetailsEntity2 setKey2(final Integer key2) {
-	this.key2 = key2;
-	return this;
+        this.key2 = key2;
+        return this;
     }
 
     public Integer getKey2() {
-	return key2;
+        return key2;
     }
 
     @Observable
     public DetailsEntity2 setKey1(final MasterEntity2 key1) {
-	this.key1 = key1;
-	return this;
+        this.key1 = key1;
+        return this;
     }
 
     public MasterEntity2 getKey1() {
-	return key1;
+        return key1;
     }
 }

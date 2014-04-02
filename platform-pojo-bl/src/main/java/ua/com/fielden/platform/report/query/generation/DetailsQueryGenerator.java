@@ -15,14 +15,14 @@ public class DetailsQueryGenerator<T extends AbstractEntity<?>, CDTME extends IC
     private final List<Pair<String, Object>> conditions;
 
     public DetailsQueryGenerator(final Class<T> root, final CDTME cdtme, final List<Pair<String, Object>> conditions) {
-	super(root, cdtme);
-	this.conditions = conditions == null ? new ArrayList<Pair<String, Object>>() : conditions;
+        super(root, cdtme);
+        this.conditions = conditions == null ? new ArrayList<Pair<String, Object>>() : conditions;
     }
 
     @Override
     public ICompleted<T> createQuery() {
         ICompleted<T> query = super.createQuery();
-        for(final Pair<String, Object> entry : conditions){
+        for (final Pair<String, Object> entry : conditions) {
             query = where(query).prop(property(StringUtils.isEmpty(entry.getKey()) ? "id" : entry.getKey())).eq().val(entry.getValue());
         }
         return query;

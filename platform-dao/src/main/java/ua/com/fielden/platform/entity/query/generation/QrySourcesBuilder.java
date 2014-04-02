@@ -14,50 +14,50 @@ import ua.com.fielden.platform.utils.Pair;
 public class QrySourcesBuilder extends AbstractTokensBuilder {
 
     protected QrySourcesBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-	super(null, queryBuilder, paramValues);
-	setChild(new QrySourceBuilder(this, queryBuilder, paramValues));
+        super(null, queryBuilder, paramValues);
+        setChild(new QrySourceBuilder(this, queryBuilder, paramValues));
     }
 
     @Override
     public void add(final TokenCategory cat, final Object value) {
-	switch (cat) {
-	case JOIN_TYPE: //eats token
-	    finaliseChild();
-	    setChild(new CompoundQrySourceBuilder(this, getQueryBuilder(), getParamValues(), cat, value));
-	    break;
-	default:
-	    super.add(cat, value);
-	    break;
-	}
+        switch (cat) {
+        case JOIN_TYPE: //eats token
+            finaliseChild();
+            setChild(new CompoundQrySourceBuilder(this, getQueryBuilder(), getParamValues(), cat, value));
+            break;
+        default:
+            super.add(cat, value);
+            break;
+        }
     }
 
     @Override
     public boolean isClosing() {
-	return false;
+        return false;
     }
 
     @Override
     public boolean canBeClosed() {
-	return getChild() == null;
+        return getChild() == null;
     }
 
     public Sources getModel() {
-	if (getChild() != null) {
-	    finaliseChild();
-	}
-	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-	final ISource mainSource = (ISource) iterator.next().getValue();
-	final List<CompoundSource> otherSources = new ArrayList<CompoundSource>();
-	for (; iterator.hasNext();) {
-	    final CompoundSource subsequentSource= (CompoundSource) iterator.next().getValue();
-	    otherSources.add(subsequentSource);
-	}
-	return new Sources(mainSource, otherSources);
+        if (getChild() != null) {
+            finaliseChild();
+        }
+        final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
+        final ISource mainSource = (ISource) iterator.next().getValue();
+        final List<CompoundSource> otherSources = new ArrayList<CompoundSource>();
+        for (; iterator.hasNext();) {
+            final CompoundSource subsequentSource = (CompoundSource) iterator.next().getValue();
+            otherSources.add(subsequentSource);
+        }
+        return new Sources(mainSource, otherSources);
 
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-	throw new RuntimeException("Not applicable!");
+        throw new RuntimeException("Not applicable!");
     }
 }

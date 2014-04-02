@@ -11,9 +11,9 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 
 /**
  * Represents a simplified work order entity.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Wo No")
@@ -34,7 +34,6 @@ public class WorkOrder extends AbstractEntity<String> {
     @Title(value = "Important Property", desc = "Property that has a special meaning")
     private PropertyDescriptor<WorkOrder> importantProperty;
 
-
     /**
      * Constructor for Hibernate.
      */
@@ -44,15 +43,15 @@ public class WorkOrder extends AbstractEntity<String> {
 
     /**
      * The main constructor.
-     *
+     * 
      * @param number
      * @param desc
      * @param equipment
      */
     public WorkOrder(final String number, final String desc, final Wagon equipment) {
-	super(null, number, desc);
-	setEquipment(equipment);
-	setStatus(WorkOrderStatus.E);
+        super(null, number, desc);
+        setEquipment(equipment);
+        setStatus(WorkOrderStatus.E);
     }
 
     public Wagon getEquipment() {

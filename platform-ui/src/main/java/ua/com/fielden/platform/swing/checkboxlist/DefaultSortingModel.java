@@ -22,78 +22,78 @@ public class DefaultSortingModel<T> implements ListSortingModel<T> {
 
     @Override
     public void setItemUnsortable(final T value) {
-	sortableValues.add(value);
+        sortableValues.add(value);
     }
 
     @Override
     public boolean isSortable(final T value) {
-	return !sortableValues.contains(value);
+        return !sortableValues.contains(value);
     }
 
     @Override
     public void addSorterEventListener(final SorterEventListener<T> listener) {
-	listenerList.add(SorterEventListener.class, listener);
+        listenerList.add(SorterEventListener.class, listener);
     }
 
     @Override
     public void removeSorterEventListener(final SorterEventListener<T> listener) {
-	listenerList.remove(SorterEventListener.class, listener);
+        listenerList.remove(SorterEventListener.class, listener);
     }
 
     @SuppressWarnings("unchecked")
     protected void fireListSorterEvent(final SorterChangedEvent<T> event) {
-	final Object[] listeners = listenerList.getListenerList();
-	// Process the listeners last to first, notifying
-	// those that are interested in this event
-	for (int i = listeners.length - 2; i >= 0; i -= 2) {
-	    if (listeners[i] == SorterEventListener.class) {
-		    ((SorterEventListener<T>) listeners[i + 1]).valueChanged(event);
-	    }
-	}
+        final Object[] listeners = listenerList.getListenerList();
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == SorterEventListener.class) {
+                ((SorterEventListener<T>) listeners[i + 1]).valueChanged(event);
+            }
+        }
     }
 
     @Override
     public void toggleSorter(final T item) {
-	toggleSortingItem(item, false);
+        toggleSortingItem(item, false);
     }
 
     @Override
     public void toggleSorterSingle(final T item) {
-	toggleSortingItem(item, true);
+        toggleSortingItem(item, true);
     }
 
     @Override
     public List<Pair<T, Ordering>> getSortObjects() {
-	return new ArrayList<Pair<T, Ordering>>(sortObjects);
+        return new ArrayList<Pair<T, Ordering>>(sortObjects);
     }
 
     /**
      * Toggles the {@link Ordering} for the specified item (multiple or single)
-     *
+     * 
      * @param item
      * @param single
      */
-    private void toggleSortingItem(final T item, final boolean single){
-	final Iterator<Pair<T, Ordering>> iterator = sortObjects.iterator();
-	boolean wasToggled = false;
-	while(iterator.hasNext()){
-	    final Pair<T, Ordering> pair = iterator.next();
-	    if (!pair.getKey().equals(item)) {
-		if (single) {
-		    iterator.remove();
-		}
-	    }else{
-		if (Ordering.ASCENDING.equals(pair.getValue())) {
-		    pair.setValue(Ordering.DESCENDING);
-		} else { // Ordering.DESCENDING
-		    iterator.remove();
-		}
-		wasToggled = true;
-	    }
-	}
-	if(!wasToggled){
-	    sortObjects.add(new Pair<T, Ordering>(item, Ordering.ASCENDING));
-	}
-	fireListSorterEvent(new SorterChangedEvent<T>(this, Collections.unmodifiableList(sortObjects), null));
+    private void toggleSortingItem(final T item, final boolean single) {
+        final Iterator<Pair<T, Ordering>> iterator = sortObjects.iterator();
+        boolean wasToggled = false;
+        while (iterator.hasNext()) {
+            final Pair<T, Ordering> pair = iterator.next();
+            if (!pair.getKey().equals(item)) {
+                if (single) {
+                    iterator.remove();
+                }
+            } else {
+                if (Ordering.ASCENDING.equals(pair.getValue())) {
+                    pair.setValue(Ordering.DESCENDING);
+                } else { // Ordering.DESCENDING
+                    iterator.remove();
+                }
+                wasToggled = true;
+            }
+        }
+        if (!wasToggled) {
+            sortObjects.add(new Pair<T, Ordering>(item, Ordering.ASCENDING));
+        }
+        fireListSorterEvent(new SorterChangedEvent<T>(this, Collections.unmodifiableList(sortObjects), null));
     }
 }

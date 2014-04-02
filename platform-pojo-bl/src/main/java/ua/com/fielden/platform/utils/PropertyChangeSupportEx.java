@@ -46,7 +46,7 @@ public final class PropertyChangeSupportEx extends PropertyChangeSupport {
      * 
      */
     public enum CheckingStrategy {
-	CHECK_EQUALITY, CHECK_IDENTITY, CHECK_NOTHING
+        CHECK_EQUALITY, CHECK_IDENTITY, CHECK_NOTHING
     }
 
     // Instance Creation ******************************************************
@@ -61,7 +61,7 @@ public final class PropertyChangeSupportEx extends PropertyChangeSupport {
      *            The bean to be given as the source for any events.
      */
     public PropertyChangeSupportEx(final Object sourceBean) {
-	this(sourceBean, CheckingStrategy.CHECK_EQUALITY);
+        this(sourceBean, CheckingStrategy.CHECK_EQUALITY);
     }
 
     /**
@@ -73,9 +73,9 @@ public final class PropertyChangeSupportEx extends PropertyChangeSupport {
      *            true enables the identity check by default
      */
     public PropertyChangeSupportEx(final Object sourceBean, final CheckingStrategy checkingStrategyDefault) {
-	super(sourceBean);
-	this.source = sourceBean;
-	this.checkingStrategyDefault = checkingStrategyDefault;
+        super(sourceBean);
+        this.source = sourceBean;
+        this.checkingStrategyDefault = checkingStrategyDefault;
     }
 
     // Firing Events **********************************************************
@@ -93,7 +93,7 @@ public final class PropertyChangeSupportEx extends PropertyChangeSupport {
      */
     @Override
     public void firePropertyChange(final PropertyChangeEvent evt) {
-	firePropertyChange(evt, checkingStrategyDefault, false);
+        firePropertyChange(evt, checkingStrategyDefault, false);
     }
 
     /**
@@ -113,7 +113,7 @@ public final class PropertyChangeSupportEx extends PropertyChangeSupport {
      */
     @Override
     public void firePropertyChange(final String propertyName, final Object oldValue, final Object newValue) {
-	firePropertyChange(propertyName, oldValue, newValue, checkingStrategyDefault, false);
+        firePropertyChange(propertyName, oldValue, newValue, checkingStrategyDefault, false);
     }
 
     /**
@@ -129,21 +129,21 @@ public final class PropertyChangeSupportEx extends PropertyChangeSupport {
      *            {@link PropertyChangeListener}s
      */
     public void firePropertyChange(final PropertyChangeEvent evt, final CheckingStrategy checkingStrategy, final boolean fireOnlyIncorrectAttemptListeners) {
-	final Object oldValue = evt.getOldValue();
-	final Object newValue = evt.getNewValue();
-	if (checkingStrategy == CheckingStrategy.CHECK_NOTHING) {
-	    fireUnchecked(evt, fireOnlyIncorrectAttemptListeners);
-	} else if (checkingStrategy == CheckingStrategy.CHECK_IDENTITY) {
-	    if (oldValue != null && oldValue == newValue) {
-		return;
-	    }
-	    fireUnchecked(evt, fireOnlyIncorrectAttemptListeners);
-	} else { // checkingStrategy == CHECK_EQUALITY
-	    if (oldValue != null && newValue != null && oldValue.equals(newValue)) {
-		return;
-	    }
-	    fireUnchecked(evt, fireOnlyIncorrectAttemptListeners);
-	}
+        final Object oldValue = evt.getOldValue();
+        final Object newValue = evt.getNewValue();
+        if (checkingStrategy == CheckingStrategy.CHECK_NOTHING) {
+            fireUnchecked(evt, fireOnlyIncorrectAttemptListeners);
+        } else if (checkingStrategy == CheckingStrategy.CHECK_IDENTITY) {
+            if (oldValue != null && oldValue == newValue) {
+                return;
+            }
+            fireUnchecked(evt, fireOnlyIncorrectAttemptListeners);
+        } else { // checkingStrategy == CHECK_EQUALITY
+            if (oldValue != null && newValue != null && oldValue.equals(newValue)) {
+                return;
+            }
+            fireUnchecked(evt, fireOnlyIncorrectAttemptListeners);
+        }
     }
 
     /**
@@ -163,19 +163,19 @@ public final class PropertyChangeSupportEx extends PropertyChangeSupport {
      *            {@link PropertyChangeListener}s
      */
     public void firePropertyChange(final String propertyName, final Object oldValue, final Object newValue, final CheckingStrategy checkingStrategy, final boolean fireOnlyIncorrectAttemptListeners) {
-	if (checkingStrategy == CheckingStrategy.CHECK_NOTHING) {
-	    fireUnchecked(new PropertyChangeEvent(source, propertyName, oldValue, newValue), fireOnlyIncorrectAttemptListeners);
-	} else if (checkingStrategy == CheckingStrategy.CHECK_IDENTITY) {
-	    if (oldValue != null && oldValue == newValue) {
-		return;
-	    }
-	    fireUnchecked(new PropertyChangeEvent(source, propertyName, oldValue, newValue), fireOnlyIncorrectAttemptListeners);
-	} else { // checkingStrategy == CHECK_EQUALITY
-	    if (oldValue != null && newValue != null && oldValue.equals(newValue)) {
-		return;
-	    }
-	    fireUnchecked(new PropertyChangeEvent(source, propertyName, oldValue, newValue), fireOnlyIncorrectAttemptListeners);
-	}
+        if (checkingStrategy == CheckingStrategy.CHECK_NOTHING) {
+            fireUnchecked(new PropertyChangeEvent(source, propertyName, oldValue, newValue), fireOnlyIncorrectAttemptListeners);
+        } else if (checkingStrategy == CheckingStrategy.CHECK_IDENTITY) {
+            if (oldValue != null && oldValue == newValue) {
+                return;
+            }
+            fireUnchecked(new PropertyChangeEvent(source, propertyName, oldValue, newValue), fireOnlyIncorrectAttemptListeners);
+        } else { // checkingStrategy == CHECK_EQUALITY
+            if (oldValue != null && newValue != null && oldValue.equals(newValue)) {
+                return;
+            }
+            fireUnchecked(new PropertyChangeEvent(source, propertyName, oldValue, newValue), fireOnlyIncorrectAttemptListeners);
+        }
     }
 
     /**
@@ -198,26 +198,26 @@ public final class PropertyChangeSupportEx extends PropertyChangeSupport {
      * @see PropertyChangeSupport#getPropertyChangeListeners()
      */
     private void fireUnchecked(final PropertyChangeEvent evt, final boolean fireOnlyIncorrectAttemptListeners) {
-	PropertyChangeListener[] listeners;
-	synchronized (this) {
-	    listeners = getPropertyChangeListeners();
-	}
-	for (final PropertyChangeListener listener : listeners) {
-	    final String propertyName = evt.getPropertyName();
-	    if (listener instanceof PropertyChangeListenerProxy) {
-		final PropertyChangeListenerProxy proxy = (PropertyChangeListenerProxy) listener;
-		final boolean theProxyListenerNeedToBeProcessed = fireOnlyIncorrectAttemptListeners ? (proxy.getListener() instanceof PropertyChangeOrIncorrectAttemptListener)
-			: true;
-		if (theProxyListenerNeedToBeProcessed && proxy.getPropertyName().equals(propertyName)) {
-		    proxy.propertyChange(evt);
-		}
-	    } else {
-		final boolean theSimpleListenerNeedToBeProcessed = fireOnlyIncorrectAttemptListeners ? (listener instanceof PropertyChangeOrIncorrectAttemptListener) : true;
-		if (theSimpleListenerNeedToBeProcessed) {
-		    listener.propertyChange(evt);
-		}
-	    }
-	}
+        PropertyChangeListener[] listeners;
+        synchronized (this) {
+            listeners = getPropertyChangeListeners();
+        }
+        for (final PropertyChangeListener listener : listeners) {
+            final String propertyName = evt.getPropertyName();
+            if (listener instanceof PropertyChangeListenerProxy) {
+                final PropertyChangeListenerProxy proxy = (PropertyChangeListenerProxy) listener;
+                final boolean theProxyListenerNeedToBeProcessed = fireOnlyIncorrectAttemptListeners ? (proxy.getListener() instanceof PropertyChangeOrIncorrectAttemptListener)
+                        : true;
+                if (theProxyListenerNeedToBeProcessed && proxy.getPropertyName().equals(propertyName)) {
+                    proxy.propertyChange(evt);
+                }
+            } else {
+                final boolean theSimpleListenerNeedToBeProcessed = fireOnlyIncorrectAttemptListeners ? (listener instanceof PropertyChangeOrIncorrectAttemptListener) : true;
+                if (theSimpleListenerNeedToBeProcessed) {
+                    listener.propertyChange(evt);
+                }
+            }
+        }
     }
 
     /**

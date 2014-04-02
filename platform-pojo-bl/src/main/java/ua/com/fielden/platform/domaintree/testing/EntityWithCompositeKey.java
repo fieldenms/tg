@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity for "domain tree representation" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(DynamicEntityKey.class)
@@ -23,7 +23,7 @@ public class EntityWithCompositeKey extends AbstractEntity<DynamicEntityKey> {
      * Constructor for the entity factory from TG.
      */
     protected EntityWithCompositeKey() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     @CompositeKeyMember(1)
@@ -37,15 +37,18 @@ public class EntityWithCompositeKey extends AbstractEntity<DynamicEntityKey> {
     public Integer getIntegerProp() {
         return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
     }
+
     public Integer getKey1() {
-	return key1;
+        return key1;
     }
+
     @Observable
     public void setKey1(final Integer key1) {
-	this.key1 = key1;
+        this.key1 = key1;
     }
 }

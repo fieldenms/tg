@@ -18,9 +18,9 @@ import ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals;
 
 /**
  * Creates bounded mapping for plain {@link String} property of {@link AbstractEntity} class. This mapping uses {@link JFormattedTextField} as editor.
- *
+ * 
  * @author Yura
- *
+ * 
  * @param <T>
  * @param <K>
  */
@@ -32,25 +32,25 @@ public class BoundedPlainStringMapping<T extends AbstractEntity> extends Abstrac
     private final EditorCase editorCase;
 
     public BoundedPlainStringMapping(final Class<T> entityClass, final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final EditorCase editorCase, final IOnCommitAction<T>... onCommitActions) {
-	super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction);
+        super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction);
 
-	this.editorCase = editorCase;
-	this.onCommitActions = onCommitActions;
+        this.editorCase = editorCase;
+        this.onCommitActions = onCommitActions;
     }
 
     @Override
     public EditorComponent<BoundedValidationLayer<JTextField>, JTextField> createBoundedEditorFor(final T entity) {
-	final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
-	final BoundedValidationLayer<JTextField> boundedValidationLayer = ComponentFactory.createStringTextField(entity, getPropertyName(), true, "string text field", editorCase, onCommitActionWrappers);
-	return new EditorComponent<BoundedValidationLayer<JTextField>, JTextField>(boundedValidationLayer, boundedValidationLayer.getView());
+        final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
+        final BoundedValidationLayer<JTextField> boundedValidationLayer = ComponentFactory.createStringTextField(entity, getPropertyName(), true, "string text field", editorCase, onCommitActionWrappers);
+        return new EditorComponent<BoundedValidationLayer<JTextField>, JTextField>(boundedValidationLayer, boundedValidationLayer.getView());
     }
 
     public IOnCommitAction<T>[] getOnCommitActions() {
-	return onCommitActions;
+        return onCommitActions;
     }
 
     public EditorCase getEditorCase() {
-	return editorCase;
+        return editorCase;
     }
 
 }

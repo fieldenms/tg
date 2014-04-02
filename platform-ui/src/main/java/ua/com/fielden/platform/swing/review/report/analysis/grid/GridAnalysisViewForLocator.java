@@ -25,29 +25,29 @@ public class GridAnalysisViewForLocator<T extends AbstractEntity<?>> extends Gri
     private final List<T> selectedEntities;
 
     public GridAnalysisViewForLocator(final GridAnalysisModelForLocator<T> model, final GridConfigurationViewForLocator<T> owner) {
-	super(model, owner);
-	this.selectedEntities = model.getLocatorSelectionModel();
-	final EntityGridInspector<T> egi = getEgiPanel().getEgi();
-	final ListSelectionListener listener = createEgiSelectionListener(egi, getCentre().getOwner().isMultipleSelection());
-	egi.setSelectionMode(getCentre().getOwner().isMultipleSelection() ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
-	egi.getSelectionModel().addListSelectionListener(listener);
-	egi.getColumnModel().getSelectionModel().addListSelectionListener(listener);
-	egi.addMouseListener(new MouseAdapter() {
-	    @Override
-	    public void mouseClicked(final MouseEvent e) {
-		if (e.getClickCount() == 2) {
-		    final int row = egi.rowAtPoint(e.getPoint());
-		    if (row >= 0) {
-			getCentre().getSelectAction().actionPerformed(null);
-		    }
-		}
-	    }
-	});
+        super(model, owner);
+        this.selectedEntities = model.getLocatorSelectionModel();
+        final EntityGridInspector<T> egi = getEgiPanel().getEgi();
+        final ListSelectionListener listener = createEgiSelectionListener(egi, getCentre().getOwner().isMultipleSelection());
+        egi.setSelectionMode(getCentre().getOwner().isMultipleSelection() ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
+        egi.getSelectionModel().addListSelectionListener(listener);
+        egi.getColumnModel().getSelectionModel().addListSelectionListener(listener);
+        egi.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    final int row = egi.rowAtPoint(e.getPoint());
+                    if (row >= 0) {
+                        getCentre().getSelectAction().actionPerformed(null);
+                    }
+                }
+            }
+        });
     }
 
     @Override
     public GridConfigurationViewForLocator<T> getOwner() {
-        return (GridConfigurationViewForLocator<T>)super.getOwner();
+        return (GridConfigurationViewForLocator<T>) super.getOwner();
     }
 
     @Override
@@ -61,60 +61,60 @@ public class GridAnalysisViewForLocator<T extends AbstractEntity<?>> extends Gri
     }
 
     private ListSelectionListener createEgiSelectionListener(final EntityGridInspector<T> egi, final boolean isMultipleSelection) {
-	return new ListSelectionListener() {
+        return new ListSelectionListener() {
 
-	    @Override
-	    public void valueChanged(final ListSelectionEvent e) {
-		if (!e.getValueIsAdjusting()) {
-		    if (e.getFirstIndex() < 0 || e.getLastIndex() < 0) {
-			return;
-		    }
-		    final int rows[] = isMultipleSelection ? new int[e.getLastIndex() - e.getFirstIndex() + 1] //
-			    : new int[e.getFirstIndex() == e.getLastIndex() ? 1 : 2];
-		    if (!isMultipleSelection) {
-			if (e.getFirstIndex() == e.getLastIndex()) {
-			    rows[0] = e.getFirstIndex();
-			} else {
-			    rows[0] = e.getFirstIndex();
-			    rows[1] = e.getLastIndex();
-			}
-		    } else {
-			for (int rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-			    rows[rowIndex] = e.getFirstIndex() + rowIndex;
-			}
-		    }
-		    final int actualRows[] = TableModelWrapperUtils.getActualRowsAt(egi.getModel(), rows, false);
-		    for (int rowIndex = 0; rowIndex < actualRows.length; rowIndex++) {
-			final T instance = egi.getActualModel().instance(actualRows[rowIndex]);
-			final boolean isSelected = egi.isRowSelected(rows[rowIndex]);
-			if (isSelected) {
-			    performSelection(instance);
-			} else {
-			    performDeselect(instance);
-			}
-		    }
-		}
-	    }
+            @Override
+            public void valueChanged(final ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    if (e.getFirstIndex() < 0 || e.getLastIndex() < 0) {
+                        return;
+                    }
+                    final int rows[] = isMultipleSelection ? new int[e.getLastIndex() - e.getFirstIndex() + 1] //
+                            : new int[e.getFirstIndex() == e.getLastIndex() ? 1 : 2];
+                    if (!isMultipleSelection) {
+                        if (e.getFirstIndex() == e.getLastIndex()) {
+                            rows[0] = e.getFirstIndex();
+                        } else {
+                            rows[0] = e.getFirstIndex();
+                            rows[1] = e.getLastIndex();
+                        }
+                    } else {
+                        for (int rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                            rows[rowIndex] = e.getFirstIndex() + rowIndex;
+                        }
+                    }
+                    final int actualRows[] = TableModelWrapperUtils.getActualRowsAt(egi.getModel(), rows, false);
+                    for (int rowIndex = 0; rowIndex < actualRows.length; rowIndex++) {
+                        final T instance = egi.getActualModel().instance(actualRows[rowIndex]);
+                        final boolean isSelected = egi.isRowSelected(rows[rowIndex]);
+                        if (isSelected) {
+                            performSelection(instance);
+                        } else {
+                            performDeselect(instance);
+                        }
+                    }
+                }
+            }
 
-	    private boolean isSelected(final T entityToCheck) {
-		return selectedEntities.contains(entityToCheck);
-	    }
+            private boolean isSelected(final T entityToCheck) {
+                return selectedEntities.contains(entityToCheck);
+            }
 
-	    private void performDeselect(final T selectedObject) {
-		selectedEntities.remove(selectedObject);
-	    }
+            private void performDeselect(final T selectedObject) {
+                selectedEntities.remove(selectedObject);
+            }
 
-	    private void performSelection(final T selectedObject) {
-		if (isMultipleSelection) {
-		    if (!isSelected(selectedObject)) {
-			selectedEntities.add(selectedObject);
-		    }
-		} else {
-		    selectedEntities.clear();
-		    selectedEntities.add(selectedObject);
-		}
-	    }
+            private void performSelection(final T selectedObject) {
+                if (isMultipleSelection) {
+                    if (!isSelected(selectedObject)) {
+                        selectedEntities.add(selectedObject);
+                    }
+                } else {
+                    selectedEntities.clear();
+                    selectedEntities.add(selectedObject);
+                }
+            }
 
-	};
+        };
     }
 }

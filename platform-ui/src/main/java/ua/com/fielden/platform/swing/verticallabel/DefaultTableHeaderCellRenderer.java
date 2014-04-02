@@ -16,15 +16,14 @@ import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
 
-
 /**
  * A default cell renderer for a JTableHeader.
  * <P>
  * Extends {@link DefaultTableCellRenderer}.
  * <P>
- *
+ * 
  * To apply any desired customization, DefaultTableHeaderCellRenderer may be suitably extended.
- *
+ * 
  * @author oleh
  */
 public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
@@ -44,12 +43,12 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
      */
     @SuppressWarnings("unchecked")
     public DefaultTableHeaderCellRenderer() {
-	setHorizontalAlignment(CENTER);
-	setHorizontalTextPosition(LEFT);
-	setOpaque(false);
+        setHorizontalAlignment(CENTER);
+        setHorizontalTextPosition(LEFT);
+        setOpaque(false);
 
-	headerEnable = (Painter<JComponent>) UIManager.get("TableHeader:" + '"' + "TableHeader.renderer" + '"' + "[Enabled].backgroundPainter");
-	headerMouseOver = (Painter<JComponent>) UIManager.get("TableHeader:" + '"' + "TableHeader.renderer" + '"' + "[MouseOver].backgroundPainter");
+        headerEnable = (Painter<JComponent>) UIManager.get("TableHeader:" + '"' + "TableHeader.renderer" + '"' + "[Enabled].backgroundPainter");
+        headerMouseOver = (Painter<JComponent>) UIManager.get("TableHeader:" + '"' + "TableHeader.renderer" + '"' + "[MouseOver].backgroundPainter");
 
     }
 
@@ -59,7 +58,7 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
      * The icon is set as appropriate for the header cell of a sorted or unsorted column, and the border appropriate to a table header cell is applied.
      * <P>
      * Subclasses may override this method to provide custom content or formatting.
-     *
+     * 
      * @param table
      *            the <code>JTable</code>.
      * @param value
@@ -73,34 +72,34 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
      * @param column
      *            the column of the header cell to render
      * @return the default table header cell renderer
-     *
+     * 
      * @see DefaultTableCellRenderer#getTableCellRendererComponent(JTable, Object, boolean, boolean, int, int)
      */
     @Override
     public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, final int column) {
-	super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-	setIcon(getIcon(table, column));
-	setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-	return this;
+        super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        setIcon(getIcon(table, column));
+        setBorder(UIManager.getBorder("TableHeader.cellBorder"));
+        return this;
     }
 
     @Override
     public void paint(final Graphics g) {
-	if (isMouseOver()) {
-	    if (headerMouseOver != null) {
-		headerMouseOver.paint((Graphics2D) g, null, getWidth(), getHeight());
-	    }
-	} else {
-	    if (headerEnable != null) {
-		headerEnable.paint((Graphics2D) g, null, getWidth(), getHeight());
-	    }
-	}
-	super.paint(g);
+        if (isMouseOver()) {
+            if (headerMouseOver != null) {
+                headerMouseOver.paint((Graphics2D) g, null, getWidth(), getHeight());
+            }
+        } else {
+            if (headerEnable != null) {
+                headerEnable.paint((Graphics2D) g, null, getWidth(), getHeight());
+            }
+        }
+        super.paint(g);
     }
 
     /**
      * Overridden to return an icon suitable to a sorted column, or null if the column is unsorted.
-     *
+     * 
      * @param table
      *            the <code>JTable</code>.
      * @param column
@@ -108,52 +107,52 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
      * @return the sort icon, or null if the column is unsorted.
      */
     protected Icon getIcon(final JTable table, final int column) {
-	final SortKey sortKey = getSortKey(table);
-	if (sortKey != null && sortKey.getColumn() == column) {
-	    final SortOrder sortOrder = sortKey.getSortOrder();
-	    switch (sortOrder) {
-	    case ASCENDING:
-		return UIManager.getIcon("Table.ascendingSortIcon");
-	    case DESCENDING:
-		return UIManager.getIcon("Table.descendingSortIcon");
-	    case UNSORTED:
-		break;
-	    default:
-		break;
-	    }
-	}
-	return null;
+        final SortKey sortKey = getSortKey(table);
+        if (sortKey != null && sortKey.getColumn() == column) {
+            final SortOrder sortOrder = sortKey.getSortOrder();
+            switch (sortOrder) {
+            case ASCENDING:
+                return UIManager.getIcon("Table.ascendingSortIcon");
+            case DESCENDING:
+                return UIManager.getIcon("Table.descendingSortIcon");
+            case UNSORTED:
+                break;
+            default:
+                break;
+            }
+        }
+        return null;
     }
 
     protected SortKey getSortKey(final JTable table) {
-	final RowSorter<? extends TableModel> rowSorter = table.getRowSorter();
-	if (rowSorter == null) {
-	    return null;
-	}
+        final RowSorter<? extends TableModel> rowSorter = table.getRowSorter();
+        if (rowSorter == null) {
+            return null;
+        }
 
-	final List<? extends SortKey> sortedColumns = rowSorter.getSortKeys();
-	if (sortedColumns.size() > 0) {
-	    return sortedColumns.get(0);
-	}
-	return null;
+        final List<? extends SortKey> sortedColumns = rowSorter.getSortKeys();
+        if (sortedColumns.size() > 0) {
+            return sortedColumns.get(0);
+        }
+        return null;
     }
 
     /**
      * Set the mouse over property. This property is used during painting the cell renderer component.
-     *
+     * 
      * @param mouseOver
      */
     public void setMouseOver(final boolean mouseOver) {
-	this.mouseOver = mouseOver;
+        this.mouseOver = mouseOver;
     }
 
     /**
      * Returns the mouse over property. See {@link #setMouseOver(boolean)} for more information about that property.
-     *
+     * 
      * @return
      */
     public boolean isMouseOver() {
-	return mouseOver;
+        return mouseOver;
     }
 
 }

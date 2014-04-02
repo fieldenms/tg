@@ -27,22 +27,22 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
     private boolean wasAnalysisLoaded;
 
     public AbstractSingleAnalysisEntityCentre(final AbstractEntityCentreModel<T, CDTME> model, final AbstractConfigurationView<? extends AbstractEntityCentre<T, CDTME>, ?> owner) {
-	super(model, owner);
-	this.defaultAnalysis = null;
-	this.wasResized = false;
-	this.wasAnalysisLoaded = false;
-	createReview();
-	addComponentListener(createComponentWasResized());
+        super(model, owner);
+        this.defaultAnalysis = null;
+        this.wasResized = false;
+        this.wasAnalysisLoaded = false;
+        createReview();
+        addComponentListener(createComponentWasResized());
     }
 
     @Override
     public JComponent getReviewPanel() {
-	return getReviewProgressLayer();
+        return getReviewProgressLayer();
     }
 
     @Override
     public void selectAnalysis(final String name) {
-	throw new UnsupportedOperationException("This entity centre has only one analysis that is always selected. No need to select it twice!");
+        throw new UnsupportedOperationException("This entity centre has only one analysis that is always selected. No need to select it twice!");
     }
 
     @Override
@@ -52,39 +52,39 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 
     @Override
     public void close() {
-	if (getSingleAnalysis() != null && getSingleAnalysis() instanceof GridConfigurationView) {
-	    final GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> v = (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>) getSingleAnalysis();
-	    if (v.getPreviousView() != null) {
-		v.getPreviousView().getModel().stopDeltaRetrievalIfAny();
-	    }
-	}
-	
-	wasResized = false;
-	wasAnalysisLoaded = false;
-	setSize(new Dimension(0, 0));
-	super.close();
+        if (getSingleAnalysis() != null && getSingleAnalysis() instanceof GridConfigurationView) {
+            final GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> v = (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>) getSingleAnalysis();
+            if (v.getPreviousView() != null) {
+                v.getPreviousView().getModel().stopDeltaRetrievalIfAny();
+            }
+        }
+
+        wasResized = false;
+        wasAnalysisLoaded = false;
+        setSize(new Dimension(0, 0));
+        super.close();
     }
 
     /**
      * Returns the single analysis view.
-     *
+     * 
      * @return
      */
-    public AbstractAnalysisConfigurationView<T, CDTME, ?, ?> getSingleAnalysis(){
-	return defaultAnalysis;
+    public AbstractAnalysisConfigurationView<T, CDTME, ?, ?> getSingleAnalysis() {
+        return defaultAnalysis;
     }
 
     /**
      * Creates single grid analysis view.
-     *
+     * 
      * @return
      */
     protected abstract AbstractAnalysisConfigurationView<T, CDTME, ?, ?> createDefaultAnalysis();
 
     /**
-     * Adds the {@link ILoadListener} to the specified {@link GridConfigurationView}. That "load listener" determines when the specified component was loaded.
-     * Also if this component wasn't loaded yet it fires load event for this {@link AbstractConfigurationView} instance.
-     *
+     * Adds the {@link ILoadListener} to the specified {@link GridConfigurationView}. That "load listener" determines when the specified component was loaded. Also if this
+     * component wasn't loaded yet it fires load event for this {@link AbstractConfigurationView} instance.
+     * 
      * @param component
      */
     private void addLoadListenerToAnalysis(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?> analysis) {
@@ -92,21 +92,21 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 
             @Override
             public void viewWasLoaded(final LoadEvent event) {
-        	synchronized (AbstractSingleAnalysisEntityCentre.this) {
-        	    // should child load event be handled?
-        	    if (!wasAnalysisLoaded) {
-        		// yes, so this one is first, lets handle it and set flag
-        		// to indicate that we won't handle any more
-        		// child load events.
-        		wasAnalysisLoaded = true;
+                synchronized (AbstractSingleAnalysisEntityCentre.this) {
+                    // should child load event be handled?
+                    if (!wasAnalysisLoaded) {
+                        // yes, so this one is first, lets handle it and set flag
+                        // to indicate that we won't handle any more
+                        // child load events.
+                        wasAnalysisLoaded = true;
 
-        		//The child was loaded so lets see whether this component was resized if that is true then fire
-        		//event that this was loaded.
-        		if(wasResized){
-        		    fireLoadEvent(new LoadEvent(AbstractSingleAnalysisEntityCentre.this));
-        		}
-        	    }
-        	}
+                        //The child was loaded so lets see whether this component was resized if that is true then fire
+                        //event that this was loaded.
+                        if (wasResized) {
+                            fireLoadEvent(new LoadEvent(AbstractSingleAnalysisEntityCentre.this));
+                        }
+                    }
+                }
             }
         });
 
@@ -114,45 +114,45 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 
     /**
      * Creates the main centre's review panel.
-     *
+     * 
      */
     private void createReview() {
-	final BlockingIndefiniteProgressLayer reviewProgressLayer = getReviewProgressLayer();
-	defaultAnalysis = createDefaultAnalysis();
-	addLoadListenerToAnalysis(defaultAnalysis);
-	reviewProgressLayer.setView(defaultAnalysis);
-	setCurrentAnalysisConfigurationView(defaultAnalysis);
-	defaultAnalysis.open();
+        final BlockingIndefiniteProgressLayer reviewProgressLayer = getReviewProgressLayer();
+        defaultAnalysis = createDefaultAnalysis();
+        addLoadListenerToAnalysis(defaultAnalysis);
+        reviewProgressLayer.setView(defaultAnalysis);
+        setCurrentAnalysisConfigurationView(defaultAnalysis);
+        defaultAnalysis.open();
     }
 
     /**
-     * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined.
-     * Also if child component was also loaded then it fires the load event.
-     *
+     * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined. Also if child component was also loaded then it fires the
+     * load event.
+     * 
      * @return
      */
     private ComponentListener createComponentWasResized() {
-	return new ComponentAdapter() {
+        return new ComponentAdapter() {
 
-	    @Override
-	    public void componentResized(final ComponentEvent e) {
-		synchronized (AbstractSingleAnalysisEntityCentre.this) {
-		    // should size change event be handled?
-		    if (!wasResized) {
-			// yes, so this one is first, lets handle it and set flag
-			// to indicate that we won't handle any more
-			// size changed events
-			wasResized = true;
+            @Override
+            public void componentResized(final ComponentEvent e) {
+                synchronized (AbstractSingleAnalysisEntityCentre.this) {
+                    // should size change event be handled?
+                    if (!wasResized) {
+                        // yes, so this one is first, lets handle it and set flag
+                        // to indicate that we won't handle any more
+                        // size changed events
+                        wasResized = true;
 
-			//The component was resized so lets see whether analysis was loaded if that is true then fire
-			//event that this component was loaded.
-			if(wasAnalysisLoaded){
-			    fireLoadEvent(new LoadEvent(AbstractSingleAnalysisEntityCentre.this));
-			}
-		    }
-		}
-	    }
-	};
+                        //The component was resized so lets see whether analysis was loaded if that is true then fire
+                        //event that this component was loaded.
+                        if (wasAnalysisLoaded) {
+                            fireLoadEvent(new LoadEvent(AbstractSingleAnalysisEntityCentre.this));
+                        }
+                    }
+                }
+            }
+        };
     }
 
 }

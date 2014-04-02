@@ -14,10 +14,10 @@ import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 
 /**
  * TODO: Yura/Oleh should provide documentation for this class.
- *
+ * 
  * @author Yura, Oleh
  * @author 01es
- *
+ * 
  */
 @SuppressWarnings("unchecked")
 public class EntityInspectorModel<T extends AbstractEntity> {
@@ -31,44 +31,44 @@ public class EntityInspectorModel<T extends AbstractEntity> {
 
     /**
      * Principle constructor.
-     *
+     * 
      * @param entity
      * @param binder
      */
     public EntityInspectorModel(final T entity, final IPropertyBinder binder) {
-	final Date curr = new Date();
-	logger.debug("Creating EntityInspectorModel (with binding)...");
-	this.entity = entity;
-	this.binder = binder;
-	if (binder instanceof ILightweightPropertyBinder) {
-	    editors = new HashMap<String, IPropertyEditor>();
-	    ((ILightweightPropertyBinder) binder).rebind(editors, entity);
-	} else {
-	    editors = binder.bind(entity);
-	}
-	logger.debug("Creating EntityInspectorModel (with binding)...done in ..." + (new Date().getTime() - curr.getTime()) + "ms");
+        final Date curr = new Date();
+        logger.debug("Creating EntityInspectorModel (with binding)...");
+        this.entity = entity;
+        this.binder = binder;
+        if (binder instanceof ILightweightPropertyBinder) {
+            editors = new HashMap<String, IPropertyEditor>();
+            ((ILightweightPropertyBinder) binder).rebind(editors, entity);
+        } else {
+            editors = binder.bind(entity);
+        }
+        logger.debug("Creating EntityInspectorModel (with binding)...done in ..." + (new Date().getTime() - curr.getTime()) + "ms");
     }
 
     /**
      * Needed purely for internal purposes to support entity reloading.
-     *
+     * 
      * @param entity
      */
     protected void setEntity(final T entity) {
-	this.entity = entity;
-	if (binder instanceof ILightweightPropertyBinder) {
-	    ((ILightweightPropertyBinder) binder).rebind(editors, entity);
-	} else {
-	    binder.bind(entity);
-	}
+        this.entity = entity;
+        if (binder instanceof ILightweightPropertyBinder) {
+            ((ILightweightPropertyBinder) binder).rebind(editors, entity);
+        } else {
+            binder.bind(entity);
+        }
     }
 
     public T getEntity() {
-	return entity;
+        return entity;
     }
 
     public Map<String, IPropertyEditor> getEditors() {
-	return Collections.unmodifiableMap(editors);
+        return Collections.unmodifiableMap(editors);
     }
 
 }

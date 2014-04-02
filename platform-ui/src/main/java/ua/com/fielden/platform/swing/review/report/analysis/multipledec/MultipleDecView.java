@@ -81,305 +81,303 @@ public class MultipleDecView<T extends AbstractEntity<?>> extends AbstractAnalys
     private final IPropertyUsageListener distrUsageListener;
 
     public MultipleDecView(final MultipleDecModel<T> model, final MultipleDecConfigurationView<T> owner) {
-	super(model, owner);
-	this.toolBar = createToolBar();
-	this.distributionList = createDistributionList();
-	this.aggregationList = createAggregationList();
-	this.multipleDecView = createMultipleDecPanel();
+        super(model, owner);
+        this.toolBar = createToolBar();
+        this.distributionList = createDistributionList();
+        this.aggregationList = createAggregationList();
+        this.multipleDecView = createMultipleDecPanel();
 
-	DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), //
-		new MultipleDecAggregationDragToSupport<T>(//
-			getModel().getCriteria().getEntityClass(), //
-			getModel().adtme().getSecondTick(),//
-			aggregationList, multipleDecView, getModel().getChartModel()), true);
-	DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), //
-		new AnalysisListDragToSupport<T>(distributionList, getModel().getCriteria().getEntityClass(), getModel().adtme().getFirstTick()), true);
+        DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), //
+                new MultipleDecAggregationDragToSupport<T>(//
+                getModel().getCriteria().getEntityClass(), //
+                getModel().adtme().getSecondTick(),//
+                aggregationList, multipleDecView, getModel().getChartModel()), true);
+        DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), //
+                new AnalysisListDragToSupport<T>(distributionList, getModel().getCriteria().getEntityClass(), getModel().adtme().getFirstTick()), true);
 
-	this.addSelectionEventListener(createMultipleDecSelectionListener());
+        this.addSelectionEventListener(createMultipleDecSelectionListener());
 
-	distrUsageListener = createDistributionTickListener(distributionList);
-	final IAnalysisAddToDistributionTickManager firstTick = model.adtme().getFirstTick();
-	firstTick.addWeakPropertyUsageListener(distrUsageListener);
+        distrUsageListener = createDistributionTickListener(distributionList);
+        final IAnalysisAddToDistributionTickManager firstTick = model.adtme().getFirstTick();
+        firstTick.addWeakPropertyUsageListener(distrUsageListener);
 
-	layoutComponents();
+        layoutComponents();
     }
 
     /**
      * Creates the multiple dec analysis tool bar.
-     *
+     * 
      * @return
      */
     private JToolBar createToolBar() {
-	final JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
-	toolBar.setFloatable(false);
-	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+        final JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
+        toolBar.setFloatable(false);
+        toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
-	getConfigureAction().putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/configure.png"));
-	getConfigureAction().putValue(Action.SHORT_DESCRIPTION, "Configure analysis");
+        getConfigureAction().putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/configure.png"));
+        getConfigureAction().putValue(Action.SHORT_DESCRIPTION, "Configure analysis");
 
-	toolBar.add(getConfigureAction());
-	return toolBar;
+        toolBar.add(getConfigureAction());
+        return toolBar;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public MultipleDecConfigurationView<T> getOwner() {
-        return (MultipleDecConfigurationView<T>)super.getOwner();
+        return (MultipleDecConfigurationView<T>) super.getOwner();
     }
 
     /**
      * Creates the multiple dec panel.
-     *
+     * 
      * @return
      */
     private NDecPanel<T> createMultipleDecPanel() {
-	final NDecPanel<T> multipleDecView = new NDecPanel<T>(getOwner().getMultipleDecModel(getModel().getChartModel()));
-	multipleDecView.addAnalysisDoubleClickListener(createDoubleClickListener());
-	return multipleDecView;
+        final NDecPanel<T> multipleDecView = new NDecPanel<T>(getOwner().getMultipleDecModel(getModel().getChartModel()));
+        multipleDecView.addAnalysisDoubleClickListener(createDoubleClickListener());
+        return multipleDecView;
     }
 
     /**
      * Returns the {@link JList} of distribution properties.
-     *
+     * 
      * @return
      */
     private JList<String> createDistributionList() {
-	final DefaultListModel<String> listModel = new DefaultListModel<String>();
+        final DefaultListModel<String> listModel = new DefaultListModel<String>();
 
-	final Class<T> root = getModel().getCriteria().getEntityClass();
-	final IAnalysisAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
+        final Class<T> root = getModel().getCriteria().getEntityClass();
+        final IAnalysisAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
 
-	for (final String distributionProperty : firstTick.checkedProperties(root)) {
-	    listModel.addElement(distributionProperty);
-	}
-	final JList<String> distributionList = new JList<String>(listModel);
-	distributionList.setCellRenderer(new DefaultListCellRenderer() {
+        for (final String distributionProperty : firstTick.checkedProperties(root)) {
+            listModel.addElement(distributionProperty);
+        }
+        final JList<String> distributionList = new JList<String>(listModel);
+        distributionList.setCellRenderer(new DefaultListCellRenderer() {
 
-	    private static final long serialVersionUID = 7712966992046861840L;
+            private static final long serialVersionUID = 7712966992046861840L;
 
-	    private final EntityDescriptor ed = new EntityDescriptor(getModel().getCriteria().getManagedType(), firstTick.checkedProperties(root));
+            private final EntityDescriptor ed = new EntityDescriptor(getModel().getCriteria().getManagedType(), firstTick.checkedProperties(root));
 
-	    @Override
-	    public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
-		super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            @Override
+            public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-		final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value.toString());
-		setText(titleAndDesc.getKey());
-		setToolTipText(titleAndDesc.getValue());
+                final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value.toString());
+                setText(titleAndDesc.getKey());
+                setToolTipText(titleAndDesc.getValue());
 
-		if (!isSelected) {
-		    if (getModel().getChartModel().categoryProperties().contains(value)) {
-			setBackground(new Color(175, 240, 208));
-		    } else {
-			setBackground(Color.WHITE);
-		    }
-		}
-		return this;
-	    }
+                if (!isSelected) {
+                    if (getModel().getChartModel().categoryProperties().contains(value)) {
+                        setBackground(new Color(175, 240, 208));
+                    } else {
+                        setBackground(Color.WHITE);
+                    }
+                }
+                return this;
+            }
 
+        });
+        distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        final List<String> usedProperties = firstTick.usedProperties(root);
+        if (usedProperties.size() == 1) {
+            distributionList.setSelectedValue(usedProperties.get(0), true);
+        }
+        /**
+         * Adds the listener that listens the property usage changes and synchronises them with ui model.
+         */
+        distributionList.addListSelectionListener(new ListSelectionListener() {
 
-	});
-	distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	final List<String> usedProperties = firstTick.usedProperties(root);
-	if (usedProperties.size() == 1) {
-	    distributionList.setSelectedValue(usedProperties.get(0), true);
-	}
-	/**
-	 * Adds the listener that listens the property usage changes and synchronises them with ui model.
-	 */
-	distributionList.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(final ListSelectionEvent e) {
 
-	    @Override
-	    public void valueChanged(final ListSelectionEvent e) {
-
-		if(!e.getValueIsAdjusting()){
-		    final Object selectedValue = distributionList.getSelectedValue();
-		    final boolean hasSelection = selectedValue != null;
-		    if(!hasSelection && firstTick.usedProperties(root).size() != 0){
-			for(final String usedProperty : firstTick.usedProperties(root)){
-			    firstTick.use(root, usedProperty, false);
-			}
-		    }else if(hasSelection && !firstTick.isUsed(root, selectedValue.toString())){
-			firstTick.use(root, selectedValue.toString(), true);
-		    }
-		}
-	    }
-	});
-	return distributionList;
+                if (!e.getValueIsAdjusting()) {
+                    final Object selectedValue = distributionList.getSelectedValue();
+                    final boolean hasSelection = selectedValue != null;
+                    if (!hasSelection && firstTick.usedProperties(root).size() != 0) {
+                        for (final String usedProperty : firstTick.usedProperties(root)) {
+                            firstTick.use(root, usedProperty, false);
+                        }
+                    } else if (hasSelection && !firstTick.isUsed(root, selectedValue.toString())) {
+                        firstTick.use(root, selectedValue.toString(), true);
+                    }
+                }
+            }
+        });
+        return distributionList;
     }
 
     private IPropertyUsageListener createDistributionTickListener(final JList<String> distributionList) {
         return new IPropertyUsageListener() {
 
-	    @Override
-	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
-		final boolean isSelected = property.equals(distributionList.getSelectedValue());
-		if(isSelected != hasBeenUsed){
-		    distributionList.setSelectedValue(property, hasBeenUsed);
-		}
-	    }
-	};
+            @Override
+            public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
+                final boolean isSelected = property.equals(distributionList.getSelectedValue());
+                if (isSelected != hasBeenUsed) {
+                    distributionList.setSelectedValue(property, hasBeenUsed);
+                }
+            }
+        };
     }
 
     /**
      * Returns the {@link SortableList} of aggregation properties.
-     *
+     * 
      * @return
      */
     private SortingCheckboxList<String> createAggregationList() {
-	final DefaultListModel<String> listModel = new DefaultListModel<String>();
+        final DefaultListModel<String> listModel = new DefaultListModel<String>();
 
-	final Class<T> root = getModel().getCriteria().getEntityClass();
-	final IAnalysisAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
+        final Class<T> root = getModel().getCriteria().getEntityClass();
+        final IAnalysisAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
 
-	for (final String aggregationProperty : secondTick.checkedProperties(root)) {
-	    listModel.addElement(aggregationProperty);
-	}
-	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel, 0);
-	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList) {
+        for (final String aggregationProperty : secondTick.checkedProperties(root)) {
+            listModel.addElement(aggregationProperty);
+        }
+        final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel, 0);
+        aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList) {
 
-	    private static final long serialVersionUID = -6751336113879821723L;
+            private static final long serialVersionUID = -6751336113879821723L;
 
-	    private final EntityDescriptor ed = new EntityDescriptor(getModel().getCriteria().getManagedType(), secondTick.checkedProperties(root));
+            private final EntityDescriptor ed = new EntityDescriptor(getModel().getCriteria().getManagedType(), secondTick.checkedProperties(root));
 
-	    @Override
-	    public Component getListCellRendererComponent(final JList<? extends String> list, final String value, final int index, final boolean isSelected, final boolean cellHasFocus) {
-		final Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-		final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value);
-		defaultRenderer.setText(titleAndDesc.getKey());
-		setToolTipText(titleAndDesc.getValue());
-		return rendererComponent;
-	    }
+            @Override
+            public Component getListCellRendererComponent(final JList<? extends String> list, final String value, final int index, final boolean isSelected, final boolean cellHasFocus) {
+                final Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                final Pair<String, String> titleAndDesc = ed.getTitleAndDesc(value);
+                defaultRenderer.setText(titleAndDesc.getKey());
+                setToolTipText(titleAndDesc.getValue());
+                return rendererComponent;
+            }
 
-	    @Override
-	    public boolean isSortingAvailable(final String element) {
-		return aggregationList.isSortable(element);
-	    }
-	});
-	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            @Override
+            public boolean isSortingAvailable(final String element) {
+                return aggregationList.isSortable(element);
+            }
+        });
+        aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-	final ListSortingModel<String> sortingModel = new DomainTreeListSortingModel<T>(root, secondTick, getModel().adtme().getRepresentation().getSecondTick());
-	sortingModel.addSorterEventListener(new SorterEventListener<String>() {
+        final ListSortingModel<String> sortingModel = new DomainTreeListSortingModel<T>(root, secondTick, getModel().adtme().getRepresentation().getSecondTick());
+        sortingModel.addSorterEventListener(new SorterEventListener<String>() {
 
-	    @Override
-	    public void valueChanged(final SorterChangedEvent<String> e) {
-		getModel().sortLoadedData();
-	    }
-	});
-	aggregationList.setSortingModel(sortingModel);
-	return aggregationList;
+            @Override
+            public void valueChanged(final SorterChangedEvent<String> e) {
+                getModel().sortLoadedData();
+            }
+        });
+        aggregationList.setSortingModel(sortingModel);
+        return aggregationList;
     }
 
-    private void layoutComponents(){
-	removeAll();
+    private void layoutComponents() {
+        removeAll();
 
-	final JPanel topLeftPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));
-	final JLabel distributionLabel = DummyBuilder.label("Distribution properties");
-	topLeftPanel.add(distributionLabel, "wrap");
-	topLeftPanel.add(new JScrollPane(distributionList));
+        final JPanel topLeftPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));
+        final JLabel distributionLabel = DummyBuilder.label("Distribution properties");
+        topLeftPanel.add(distributionLabel, "wrap");
+        topLeftPanel.add(new JScrollPane(distributionList));
 
-	final JPanel bottomLeftPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));
-	final JLabel aggregationLabel = DummyBuilder.label("Aggregation properties");
-	bottomLeftPanel.add(aggregationLabel, "wrap");
-	bottomLeftPanel.add(new JScrollPane(aggregationList));
+        final JPanel bottomLeftPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));
+        final JLabel aggregationLabel = DummyBuilder.label("Aggregation properties");
+        bottomLeftPanel.add(aggregationLabel, "wrap");
+        bottomLeftPanel.add(new JScrollPane(aggregationList));
 
-	//Configuring controls those allows to choose distribution properties.
-	final JSplitPane leftPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-	leftPanel.setTopComponent(topLeftPanel);
-	leftPanel.setBottomComponent(bottomLeftPanel);
-	addLoadListener(new ILoadListener() {
+        //Configuring controls those allows to choose distribution properties.
+        final JSplitPane leftPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        leftPanel.setTopComponent(topLeftPanel);
+        leftPanel.setBottomComponent(bottomLeftPanel);
+        addLoadListener(new ILoadListener() {
 
-	    @Override
-	    public void viewWasLoaded(final LoadEvent event) {
-		leftPanel.setDividerLocation(0.5);
-	    }
-	});
+            @Override
+            public void viewWasLoaded(final LoadEvent event) {
+                leftPanel.setDividerLocation(0.5);
+            }
+        });
 
-	final JPanel rightPanel = new JPanel(new MigLayout("fill, insets 3", "[fill,grow]", "[][grow,fill]"));
-	rightPanel.add(toolBar, "wrap");
-	rightPanel.add(multipleDecView);
+        final JPanel rightPanel = new JPanel(new MigLayout("fill, insets 3", "[fill,grow]", "[][grow,fill]"));
+        rightPanel.add(toolBar, "wrap");
+        rightPanel.add(multipleDecView);
 
-	//Configuring main view panel.
-	final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-	splitPane.setOneTouchExpandable(true);
-	splitPane.setLeftComponent(leftPanel);
-	splitPane.setRightComponent(rightPanel);
+        //Configuring main view panel.
+        final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setLeftComponent(leftPanel);
+        splitPane.setRightComponent(rightPanel);
 
-	setLayout(new MigLayout("insets 0, fill", "[fill,grow]", "[fill,grow]"));
-	add(splitPane);
+        setLayout(new MigLayout("insets 0, fill", "[fill,grow]", "[fill,grow]"));
+        add(splitPane);
 
-	invalidate();
-	validate();
-	repaint();
+        invalidate();
+        validate();
+        repaint();
     }
 
     @Override
     public MultipleDecModel<T> getModel() {
-        return (MultipleDecModel<T>)super.getModel();
+        return (MultipleDecModel<T>) super.getModel();
     }
 
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
-     *
+     * 
      * @return
      */
     private ISelectionEventListener createMultipleDecSelectionListener() {
-	return new ISelectionEventListener() {
+        return new ISelectionEventListener() {
 
-	    @Override
-	    public void viewWasSelected(final SelectionEvent event) {
-		//Managing the default, design and custom action changer button enablements.
-		getCentre().getDefaultAction().setEnabled(getCentre().getCriteriaPanel() != null);
-		if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {
-		    getCentre().getCriteriaPanel().getSwitchAction().setEnabled(true);
-		}
-		if (getCentre().getCustomActionChanger() != null) {
-		    getCentre().getCustomActionChanger().setEnabled(true);
-		}
-		//Managing the paginator's enablements.
-		getCentre().getPaginator().setEnableActions(false, false);
-		//Managing load and export enablements.
-		getCentre().getExportAction().setEnabled(false);
-		getCentre().getRunAction().setEnabled(true);
-	    }
-	};
+            @Override
+            public void viewWasSelected(final SelectionEvent event) {
+                //Managing the default, design and custom action changer button enablements.
+                getCentre().getDefaultAction().setEnabled(getCentre().getCriteriaPanel() != null);
+                if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {
+                    getCentre().getCriteriaPanel().getSwitchAction().setEnabled(true);
+                }
+                if (getCentre().getCustomActionChanger() != null) {
+                    getCentre().getCustomActionChanger().setEnabled(true);
+                }
+                //Managing the paginator's enablements.
+                getCentre().getPaginator().setEnableActions(false, false);
+                //Managing load and export enablements.
+                getCentre().getExportAction().setEnabled(false);
+                getCentre().getRunAction().setEnabled(true);
+            }
+        };
     }
 
     private IMultipleDecDoubleClickListener createDoubleClickListener() {
-	return new IMultipleDecDoubleClickListener() {
+        return new IMultipleDecDoubleClickListener() {
 
-	    @Override
-	    public void doubleClick(final AnalysisDataEvent<ChartMouseEvent> event) {
-		performCustomAction(event);
-	    }
-	};
+            @Override
+            public void doubleClick(final AnalysisDataEvent<ChartMouseEvent> event) {
+                performCustomAction(event);
+            }
+        };
     }
 
     private void performCustomAction(final AnalysisDataEvent<ChartMouseEvent> clickedData) {
-	final ChartEntity entity = clickedData.getData().getEntity();
-	if (entity instanceof CategoryItemEntity) {
-	    getOwner().showDetails(createAnalysisData(((CategoryItemEntity) entity).getColumnKey()), AnalysisDetailsData.class);
-	} else if (entity instanceof CategoryLabelEntity) {
-	    getOwner().showDetails(createAnalysisData(((CategoryLabelEntity) entity).getKey()), AnalysisDetailsData.class);
-	}
+        final ChartEntity entity = clickedData.getData().getEntity();
+        if (entity instanceof CategoryItemEntity) {
+            getOwner().showDetails(createAnalysisData(((CategoryItemEntity) entity).getColumnKey()), AnalysisDetailsData.class);
+        } else if (entity instanceof CategoryLabelEntity) {
+            getOwner().showDetails(createAnalysisData(((CategoryLabelEntity) entity).getKey()), AnalysisDetailsData.class);
+        }
     }
 
     private AnalysisDetailsData<T> createAnalysisData(final Comparable<?> columnKey) {
-	final List<Pair<String, Object>> linkPropValues = new ArrayList<>();
-	final EntityWrapper entityWrapper = (EntityWrapper) columnKey;
-	final List<String> categories = getModel().getChartModel().categoryProperties();
-	if(categories.size() == 1){
-	    linkPropValues.add(new Pair<String, Object>(categories.get(0), entityWrapper.getEntity()));
-	}
-	final ICentreDomainTreeManagerAndEnhancer baseCdtme = getModel().getCriteria().getCentreDomainTreeManagerAndEnhnacerCopy();
-	baseCdtme.setRunAutomatically(true);
+        final List<Pair<String, Object>> linkPropValues = new ArrayList<>();
+        final EntityWrapper entityWrapper = (EntityWrapper) columnKey;
+        final List<String> categories = getModel().getChartModel().categoryProperties();
+        if (categories.size() == 1) {
+            linkPropValues.add(new Pair<String, Object>(categories.get(0), entityWrapper.getEntity()));
+        }
+        final ICentreDomainTreeManagerAndEnhancer baseCdtme = getModel().getCriteria().getCentreDomainTreeManagerAndEnhnacerCopy();
+        baseCdtme.setRunAutomatically(true);
 
-	return new AnalysisDetailsData<>(
-		getModel().getCriteria().getEntityClass(), //
-		getOwner().getOwner().getModel().getName(), //
-		getOwner().getModel().getName(), //
-		baseCdtme, //
-		getModel().adtme(),//
-		linkPropValues);
+        return new AnalysisDetailsData<>(getModel().getCriteria().getEntityClass(), //
+        getOwner().getOwner().getModel().getName(), //
+        getOwner().getModel().getName(), //
+        baseCdtme, //
+        getModel().adtme(),//
+        linkPropValues);
     }
 }

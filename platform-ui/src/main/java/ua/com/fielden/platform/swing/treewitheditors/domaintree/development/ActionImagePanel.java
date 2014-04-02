@@ -16,25 +16,25 @@ public class ActionImagePanel extends ImagePanel {
 
     private final Action action;
 
-    public ActionImagePanel(final Action action){
-	super((ImageIcon)action.getValue(Action.LARGE_ICON_KEY));
-	this.action = action;
-	setToolTipText((String)action.getValue(Action.SHORT_DESCRIPTION));
-	setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-	addMouseListener(createClickListener());
-	setBackground(null);
+    public ActionImagePanel(final Action action) {
+        super((ImageIcon) action.getValue(Action.LARGE_ICON_KEY));
+        this.action = action;
+        setToolTipText((String) action.getValue(Action.SHORT_DESCRIPTION));
+        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        addMouseListener(createClickListener());
+        setBackground(null);
     }
 
     private MouseListener createClickListener() {
-	return new MouseAdapter() {
-	    @Override
-	    public void mouseClicked(final MouseEvent e) {
-		action.actionPerformed(null);
-	    }
-	};
+        return new MouseAdapter() {
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                action.actionPerformed(null);
+            }
+        };
     }
 
     public Action getAction() {
-	return action;
+        return action;
     }
 }

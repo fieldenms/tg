@@ -7,11 +7,11 @@ import java.util.Map;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import com.google.inject.Inject;
 
-/** 
+/**
  * DAO implementation for companion object {@link ITgPublishedYearly}.
  * 
  * @author Developers
- *
+ * 
  */
 @EntityType(TgPublishedYearly.class)
 public class TgPublishedYearlyDao extends CommonEntityDao<TgPublishedYearly> implements ITgPublishedYearly {

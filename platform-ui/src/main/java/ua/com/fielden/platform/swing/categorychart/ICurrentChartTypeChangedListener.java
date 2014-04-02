@@ -4,9 +4,9 @@ import java.util.EventListener;
 
 /**
  * {@link EventListener} contract that provides ability to listen chart type change events.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface ICurrentChartTypeChangedListener extends EventListener {
 

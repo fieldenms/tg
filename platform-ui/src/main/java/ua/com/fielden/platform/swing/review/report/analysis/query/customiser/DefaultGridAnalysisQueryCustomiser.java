@@ -10,7 +10,7 @@ public class DefaultGridAnalysisQueryCustomiser<T extends AbstractEntity<?>, CDT
 
     @Override
     public IReportQueryGenerator<T> getQueryGenerator(final GridAnalysisModel<T, CDTME> analysisModel) {
-	return new GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(analysisModel.getCriteria().getEntityClass(), analysisModel.getCriteria().getCentreDomainTreeMangerAndEnhancer());
+        return new GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(analysisModel.getCriteria().getEntityClass(), analysisModel.getCriteria().getCentreDomainTreeMangerAndEnhancer());
     }
 
 }

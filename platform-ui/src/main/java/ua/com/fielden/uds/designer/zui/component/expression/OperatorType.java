@@ -10,6 +10,6 @@ public enum OperatorType {
     BOOLEAN, ARITHMETIC, ANY;
 
     public static boolean areCompatible(OperatorType thisType, OperatorType type) {
-	return type == OperatorType.ANY || thisType == OperatorType.ANY || thisType == type;
+        return type == OperatorType.ANY || thisType == OperatorType.ANY || thisType == type;
     }
 }

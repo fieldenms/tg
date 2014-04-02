@@ -25,13 +25,13 @@ public @interface CritOnly {
      * 
      */
     public enum Type {
-	/**
-	 * Indicates that property should be selected by left and right boundary (if it is range property) and by single boundary (if it is single property).
-	 */
-	RANGE,
-	/**
-	 * Indicates that property should be selected only by single boundary (even if it is range property).
-	 */
-	SINGLE
+        /**
+         * Indicates that property should be selected by left and right boundary (if it is range property) and by single boundary (if it is single property).
+         */
+        RANGE,
+        /**
+         * Indicates that property should be selected only by single boundary (even if it is range property).
+         */
+        SINGLE
     }
 }

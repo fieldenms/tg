@@ -14,9 +14,9 @@ import com.google.inject.Inject;
 
 /**
  * RAO implementation for companion object {@link IEntityCentreAnalysisConfig}.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 @EntityType(EntityCentreAnalysisConfig.class)
 public class EntityCentreAnalysisConfigRao extends CommonEntityRao<EntityCentreAnalysisConfig> implements IEntityCentreAnalysisConfig {

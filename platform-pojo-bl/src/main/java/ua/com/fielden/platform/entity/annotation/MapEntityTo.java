@@ -8,7 +8,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * An annotation used for specifying mapping of entities to corresponding tables.
- *
+ * 
  * @author TG Team
  */
 

@@ -21,34 +21,34 @@ import com.google.inject.Inject;
 
 /**
  * Db driven implementation of the {@link IUserRoleDao}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(UserRole.class)
 public class UserRoleDao extends CommonEntityDao<UserRole> implements IUserRoleDao {
 
     @Inject
     protected UserRoleDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
     @Override
     @SessionRequired
     public List<UserRole> findAll() {
-	final EntityResultQueryModel<UserRole> model = select(UserRole.class).model();
-	final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
-	return getAllEntities(from(model).with(orderBy).model());
+        final EntityResultQueryModel<UserRole> model = select(UserRole.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
+        return getAllEntities(from(model).with(orderBy).model());
     }
 
     @Override
     public List<UserRole> findByIds(final Long... ids) {
-	if (ids == null || ids.length == 0) {
-	    return new ArrayList<UserRole>();
-	}
+        if (ids == null || ids.length == 0) {
+            return new ArrayList<UserRole>();
+        }
 
-	final EntityResultQueryModel<UserRole> model = select(UserRole.class).where().prop(AbstractEntity.ID).in().values(ids).model();
-	final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
-	return getAllEntities(from(model).with(orderBy).model());
+        final EntityResultQueryModel<UserRole> model = select(UserRole.class).where().prop(AbstractEntity.ID).in().values(ids).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
+        return getAllEntities(from(model).with(orderBy).model());
     }
 }

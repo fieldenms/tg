@@ -16,33 +16,33 @@ public abstract class AbstractEntityReview<T extends AbstractEntity<?>, CDTME ex
 
     private final ConfigureAction configureAction/*, saveAction, saveAsAction, saveAsDefaultAction, loadDefaultAction, removeAction*/;
 
-    public AbstractEntityReview(final AbstractEntityReviewModel<T, CDTME> model, final AbstractConfigurationView<? extends AbstractEntityReview<T, CDTME>, ?> owner){
-	this.model = model;
-	this.owner = owner;
-	this.configureAction = createConfigureAction();
+    public AbstractEntityReview(final AbstractEntityReviewModel<T, CDTME> model, final AbstractConfigurationView<? extends AbstractEntityReview<T, CDTME>, ?> owner) {
+        this.model = model;
+        this.owner = owner;
+        this.configureAction = createConfigureAction();
     }
 
     @Override
-    public final ConfigureAction getConfigureAction(){
-	return configureAction;
+    public final ConfigureAction getConfigureAction() {
+        return configureAction;
     }
 
     public AbstractConfigurationView<?, ?> getOwner() {
-	return owner;
+        return owner;
     }
 
     @Override
     public String getInfo() {
-	return "Entity centre";
+        return "Entity centre";
     }
 
     /**
      * Returns the {@link AbstractEntityReviewModel} for this entity review.
-     *
+     * 
      * @return
      */
     public AbstractEntityReviewModel<T, CDTME> getModel() {
-	return model;
+        return model;
     }
 
     abstract protected ConfigureAction createConfigureAction();

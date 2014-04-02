@@ -20,7 +20,7 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
 
     @Inject
     protected KeyNumberDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
     /**
@@ -28,18 +28,18 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
      */
     @Transactional
     public Integer nextNumber(final String key) {
-	KeyNumber number = findByKey(key); // find an instance
-	if (number != null) {
-	    // re-fetch instance with pessimistic UPGRADE lock
-	    number = (KeyNumber) getSession().get(KeyNumber.class, number.getId(), LockMode.UPGRADE);
-	} else { // this would most likely never happen since the target legacy db should already have some values in table NUMBERS
-	    number = new KeyNumber(key, "0");
-	}
+        KeyNumber number = findByKey(key); // find an instance
+        if (number != null) {
+            // re-fetch instance with pessimistic UPGRADE lock
+            number = (KeyNumber) getSession().get(KeyNumber.class, number.getId(), LockMode.UPGRADE);
+        } else { // this would most likely never happen since the target legacy db should already have some values in table NUMBERS
+            number = new KeyNumber(key, "0");
+        }
 
-	final Integer nextNo = new Integer(Integer.parseInt(number.getValue()) + 1);
-	number.setValue(nextNo.toString());
-	save(number);
-	return nextNo;
+        final Integer nextNo = new Integer(Integer.parseInt(number.getValue()) + 1);
+        number.setValue(nextNo.toString());
+        save(number);
+        return nextNo;
     }
 
     /**
@@ -47,10 +47,10 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
      */
     @SessionRequired
     public Integer currNumber(final String key) {
-	final KeyNumber number = findByKey(key); // find an instance
-	if (number == null) {
-	    throw new RuntimeException("No number associated with '" + key + "'.");
-	}
-	return new Integer(number.getValue());
+        final KeyNumber number = findByKey(key); // find an instance
+        if (number == null) {
+            throw new RuntimeException("No number associated with '" + key + "'.");
+        }
+        return new Integer(number.getValue());
     }
 }

@@ -11,28 +11,28 @@ import ua.com.fielden.platform.utils.Pair;
 public class QryGroupsBuilder1 extends AbstractTokensBuilder1 {
 
     protected QryGroupsBuilder1(final EntQueryGenerator1 queryBuilder) {
-	super(null, queryBuilder);
+        super(null, queryBuilder);
     }
 
     @Override
     public boolean isClosing() {
-	return false;
+        return false;
     }
 
     public GroupBys1 getModel() {
-	if (getChild() != null && getSize() == 0) {
-	    throw new RuntimeException("Unable to produce result - unfinished model state!");
-	}
-	final List<GroupBy1> groups = new ArrayList<GroupBy1>();
-	for (final Pair<TokenCategory, Object> pair : getTokens()) {
-	    groups.add((GroupBy1) pair.getValue());
-	}
+        if (getChild() != null && getSize() == 0) {
+            throw new RuntimeException("Unable to produce result - unfinished model state!");
+        }
+        final List<GroupBy1> groups = new ArrayList<GroupBy1>();
+        for (final Pair<TokenCategory, Object> pair : getTokens()) {
+            groups.add((GroupBy1) pair.getValue());
+        }
 
-	return new GroupBys1(groups);
+        return new GroupBys1(groups);
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-	throw new RuntimeException("Not applicable!");
+        throw new RuntimeException("Not applicable!");
     }
 }

@@ -11,19 +11,19 @@ import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.ITgAuthor;
 import com.google.inject.Inject;
 
-/** 
+/**
  * Mixin implementation for companion object {@link ITgAuthor}.
  * 
  * @author Developers
- *
+ * 
  */
 public class TgAuthorMixin {
-    
+
     private final ITgAuthor companion;
-    
+
     @Inject
     public TgAuthorMixin(final ITgAuthor companion) {
         this.companion = companion;
     }
-    
+
 }

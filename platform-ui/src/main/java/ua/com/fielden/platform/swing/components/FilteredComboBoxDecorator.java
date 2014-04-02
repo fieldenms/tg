@@ -35,27 +35,27 @@ public class FilteredComboBoxDecorator {
      * the work that is mentioned in decorate(...) method's JavaDocs
      */
     private FilteredComboBoxDecorator(final JComboBox comboBox, final StringAutocompleter autoCompleter) {
-	// initialising references
-	if (comboBox == null) {
-	    throw new NullPointerException();
-	}
-	this.comboBox = comboBox;
-	this.editor = (JTextComponent) comboBox.getEditor().getEditorComponent();
-	if (autoCompleter == null) {
-	    throw new NullPointerException();
-	}
-	this.autoCompleter = autoCompleter;
+        // initialising references
+        if (comboBox == null) {
+            throw new NullPointerException();
+        }
+        this.comboBox = comboBox;
+        this.editor = (JTextComponent) comboBox.getEditor().getEditorComponent();
+        if (autoCompleter == null) {
+            throw new NullPointerException();
+        }
+        this.autoCompleter = autoCompleter;
 
-	// comboBox should be editable to enable filtering while user types into comboBox' editor
-	comboBox.setEditable(true);
+        // comboBox should be editable to enable filtering while user types into comboBox' editor
+        comboBox.setEditable(true);
 
-	// removing all items from comboBox - its items should be obtained through StringAutoCompleter instance
-	comboBox.removeAllItems();
+        // removing all items from comboBox - its items should be obtained through StringAutoCompleter instance
+        comboBox.removeAllItems();
 
-	// adding listeners for managing user operations on comboBox
-	comboBox.getModel().addListDataListener(listDataListener);
-	editor.getDocument().addDocumentListener(documentListener);
-	editor.addKeyListener(keyListener);
+        // adding listeners for managing user operations on comboBox
+        comboBox.getModel().addListDataListener(listDataListener);
+        editor.getDocument().addDocumentListener(documentListener);
+        editor.addKeyListener(keyListener);
     }
 
     /**
@@ -78,8 +78,8 @@ public class FilteredComboBoxDecorator {
      *            parameter return empty(BUT NOT NULL) array of strings.
      */
     public static void decorate(final JComboBox comboBox, final StringAutocompleter autoCompleter) {
-	// creating instance of FilteredComboBoxDecorator that implicitly associates comboBox with autoCompleter and makes all the decorations
-	new FilteredComboBoxDecorator(comboBox, autoCompleter);
+        // creating instance of FilteredComboBoxDecorator that implicitly associates comboBox with autoCompleter and makes all the decorations
+        new FilteredComboBoxDecorator(comboBox, autoCompleter);
     }
 
     /**
@@ -87,26 +87,26 @@ public class FilteredComboBoxDecorator {
      */
     private ListDataListener listDataListener = new ListDataListener() {
 
-	public void contentsChanged(ListDataEvent e) {
-	    // contents changed - user selected some other value using arrow keys, mouse or something else
-	    // this will lead to changing text inside comboBox' editor, and this will fire event on document of comboBox' editor and this will lead to calling
-	    // documentListener.contentsChanged(...) method - we should disallow this, because this is undesired behaviour
-	    // we'll temporarily remove this listener from document
-	    editor.getDocument().removeDocumentListener(documentListener);
+        public void contentsChanged(ListDataEvent e) {
+            // contents changed - user selected some other value using arrow keys, mouse or something else
+            // this will lead to changing text inside comboBox' editor, and this will fire event on document of comboBox' editor and this will lead to calling
+            // documentListener.contentsChanged(...) method - we should disallow this, because this is undesired behaviour
+            // we'll temporarily remove this listener from document
+            editor.getDocument().removeDocumentListener(documentListener);
 
-	    // then we'll set text to the same as in selected item - and this will not cause calling of documentListener.contentsChanged(...) method, because documentListener is
-	    // not in the document's list of listeners
-	    editor.setText(comboBox.getSelectedItem().toString());
+            // then we'll set text to the same as in selected item - and this will not cause calling of documentListener.contentsChanged(...) method, because documentListener is
+            // not in the document's list of listeners
+            editor.setText(comboBox.getSelectedItem().toString());
 
-	    // then we add documentListener again to document of comboBox' editor
-	    editor.getDocument().addDocumentListener(documentListener);
-	}
+            // then we add documentListener again to document of comboBox' editor
+            editor.getDocument().addDocumentListener(documentListener);
+        }
 
-	public void intervalAdded(ListDataEvent e) {
-	}
+        public void intervalAdded(ListDataEvent e) {
+        }
 
-	public void intervalRemoved(ListDataEvent e) {
-	}
+        public void intervalRemoved(ListDataEvent e) {
+        }
     };
 
     /*
@@ -114,84 +114,84 @@ public class FilteredComboBoxDecorator {
      */
     private DocumentListener documentListener = new DocumentListener() {
 
-	private String previousText = "";
+        private String previousText = "";
 
-	public void changedUpdate(DocumentEvent e) {
-	}
+        public void changedUpdate(DocumentEvent e) {
+        }
 
-	public void insertUpdate(DocumentEvent e) {
-	    contentsChanged(e);
-	}
+        public void insertUpdate(DocumentEvent e) {
+            contentsChanged(e);
+        }
 
-	public void removeUpdate(DocumentEvent e) {
-	    contentsChanged(e);
-	}
+        public void removeUpdate(DocumentEvent e) {
+            contentsChanged(e);
+        }
 
-	private void contentsChanged(DocumentEvent e) {
-	    // contents of comboBox' editor changed - we should define whether there are some items corresponding to new text, and change comboBox' model
-	    // because we are in listener, we should do this after this DocumentEvent will be dispatched, so we'll invoke this code later on the EDT ...
-	    EventQueue.invokeLater(new Runnable() {
-		public void run() {
-		    if ("".equals(editor.getText())) {
-			// lets allow user to delete text
+        private void contentsChanged(DocumentEvent e) {
+            // contents of comboBox' editor changed - we should define whether there are some items corresponding to new text, and change comboBox' model
+            // because we are in listener, we should do this after this DocumentEvent will be dispatched, so we'll invoke this code later on the EDT ...
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    if ("".equals(editor.getText())) {
+                        // lets allow user to delete text
 
-			// there are some items corresponding to entered text, that is why we will have to change comboBox' model
-			// while we are changing model, some Document or ListDataModel events may be fired, and our listeners may react, what may lead to undesirable behaviour
-			// so we'll temporarily disable them
-			comboBox.getModel().removeListDataListener(listDataListener);
-			editor.getDocument().removeDocumentListener(documentListener);
+                        // there are some items corresponding to entered text, that is why we will have to change comboBox' model
+                        // while we are changing model, some Document or ListDataModel events may be fired, and our listeners may react, what may lead to undesirable behaviour
+                        // so we'll temporarily disable them
+                        comboBox.getModel().removeListDataListener(listDataListener);
+                        editor.getDocument().removeDocumentListener(documentListener);
 
-			comboBox.hidePopup();
-			// storing current text, because after model is substituted, it will change again
-			comboBox.setModel(new DefaultComboBoxModel(new Object[] {}));
-			// changing editor text back to what we had
+                        comboBox.hidePopup();
+                        // storing current text, because after model is substituted, it will change again
+                        comboBox.setModel(new DefaultComboBoxModel(new Object[] {}));
+                        // changing editor text back to what we had
 
-			// enabling event listeners again
-			editor.getDocument().addDocumentListener(documentListener);
-			comboBox.getModel().addListDataListener(listDataListener);
+                        // enabling event listeners again
+                        editor.getDocument().addDocumentListener(documentListener);
+                        comboBox.getModel().addListDataListener(listDataListener);
 
-			// this text in editor is considered as 'successful', because there are some items corresponding to it
-			// lets save this text in private field, so when user tries to enter 'unsuccessful' text, we will set it again to 'successful' one
-			// this behaviour disallow user to enter other items than those obtained from autoCompleter
-			previousText = "";
-			return;
-		    }
+                        // this text in editor is considered as 'successful', because there are some items corresponding to it
+                        // lets save this text in private field, so when user tries to enter 'unsuccessful' text, we will set it again to 'successful' one
+                        // this behaviour disallow user to enter other items than those obtained from autoCompleter
+                        previousText = "";
+                        return;
+                    }
 
-		    // getting values for entered text
-		    final String[] values = autoCompleter.getStringsCorrespondingTo(editor.getText());
-		    if (values.length > 0) {
-			// there are some items corresponding to entered text, that is why we will have to change comboBox' model
-			// while we are changing model, some Document or ListDataModel events may be fired, and our listeners may react, what may lead to undesirable behaviour
-			// so we'll temporarily disable them
-			comboBox.getModel().removeListDataListener(listDataListener);
-			editor.getDocument().removeDocumentListener(documentListener);
+                    // getting values for entered text
+                    final String[] values = autoCompleter.getStringsCorrespondingTo(editor.getText());
+                    if (values.length > 0) {
+                        // there are some items corresponding to entered text, that is why we will have to change comboBox' model
+                        // while we are changing model, some Document or ListDataModel events may be fired, and our listeners may react, what may lead to undesirable behaviour
+                        // so we'll temporarily disable them
+                        comboBox.getModel().removeListDataListener(listDataListener);
+                        editor.getDocument().removeDocumentListener(documentListener);
 
-			comboBox.hidePopup();
-			// storing current text, because after model is substituted, it will change again
-			String editorText = editor.getText();
-			// setting new comboBox' model with items
-			comboBox.setModel(new DefaultComboBoxModel(values));
-			// selecting first of items
-			comboBox.setSelectedIndex(0);
-			// changing editor text back to what we had
-			editor.setText(editorText);
-			comboBox.showPopup();
+                        comboBox.hidePopup();
+                        // storing current text, because after model is substituted, it will change again
+                        String editorText = editor.getText();
+                        // setting new comboBox' model with items
+                        comboBox.setModel(new DefaultComboBoxModel(values));
+                        // selecting first of items
+                        comboBox.setSelectedIndex(0);
+                        // changing editor text back to what we had
+                        editor.setText(editorText);
+                        comboBox.showPopup();
 
-			// enabling event listeners again
-			editor.getDocument().addDocumentListener(documentListener);
-			comboBox.getModel().addListDataListener(listDataListener);
+                        // enabling event listeners again
+                        editor.getDocument().addDocumentListener(documentListener);
+                        comboBox.getModel().addListDataListener(listDataListener);
 
-			// this text in editor is considered as 'successful', because there are some items corresponding to it
-			// lets save this text in private field, so when user tries to enter 'unsuccessful' text, we will set it again to 'successful' one
-			// this behaviour disallow user to enter other items than those obtained from autoCompleter
-			previousText = editorText;
-		    } else {
-			// there are no items corresponding to entered text, that means it is 'unsuccessful' and that means we should return to last 'successful' text
-			editor.setText(previousText);
-		    }
-		}
-	    });
-	}
+                        // this text in editor is considered as 'successful', because there are some items corresponding to it
+                        // lets save this text in private field, so when user tries to enter 'unsuccessful' text, we will set it again to 'successful' one
+                        // this behaviour disallow user to enter other items than those obtained from autoCompleter
+                        previousText = editorText;
+                    } else {
+                        // there are no items corresponding to entered text, that means it is 'unsuccessful' and that means we should return to last 'successful' text
+                        editor.setText(previousText);
+                    }
+                }
+            });
+        }
 
     };
 
@@ -200,25 +200,25 @@ public class FilteredComboBoxDecorator {
      * select, but he presses enter or escape. In such situation, this listener will automatically select first item from the list.
      */
     private KeyListener keyListener = new KeyAdapter() {
-	public void keyPressed(KeyEvent event) {
-	    if (event.getKeyCode() == KeyEvent.VK_ENTER || event.getKeyCode() == KeyEvent.VK_ESCAPE) {
-		// enter or esc is pressed so we should set text to first item in drop-down list if there is any
-		// or otherwise to an empty string
-		if (comboBox.getModel().getSize() > 0) {
-		    int index = 0;
-		    for (int i = 0; i < comboBox.getModel().getSize(); i++) {
-			if (comboBox.getModel().getElementAt(i).equals(editor.getText())) {
-			    index = i;
-			    break;
-			}
-		    }
-		    comboBox.setSelectedIndex(index);
-		    editor.setText(comboBox.getModel().getSelectedItem().toString());
-		} else {
-		    editor.setText("");
-		}
-	    }
-	}
+        public void keyPressed(KeyEvent event) {
+            if (event.getKeyCode() == KeyEvent.VK_ENTER || event.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                // enter or esc is pressed so we should set text to first item in drop-down list if there is any
+                // or otherwise to an empty string
+                if (comboBox.getModel().getSize() > 0) {
+                    int index = 0;
+                    for (int i = 0; i < comboBox.getModel().getSize(); i++) {
+                        if (comboBox.getModel().getElementAt(i).equals(editor.getText())) {
+                            index = i;
+                            break;
+                        }
+                    }
+                    comboBox.setSelectedIndex(index);
+                    editor.setText(comboBox.getModel().getSelectedItem().toString());
+                } else {
+                    editor.setText("");
+                }
+            }
+        }
     };
 
     /**
@@ -228,7 +228,7 @@ public class FilteredComboBoxDecorator {
      */
     public static interface StringAutocompleter {
 
-	public String[] getStringsCorrespondingTo(String value);
+        public String[] getStringsCorrespondingTo(String value);
 
     }
 

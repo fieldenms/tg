@@ -42,7 +42,7 @@ public abstract class AbstractTableModelBuilder<EntityType extends AbstractEntit
      * @param enclosingClass
      */
     public AbstractTableModelBuilder(final Class<EntityType> enclosingClass) {
-	this.entityClass = enclosingClass;
+        this.entityClass = enclosingClass;
     }
 
     /**
@@ -51,52 +51,52 @@ public abstract class AbstractTableModelBuilder<EntityType extends AbstractEntit
      * @param propertyColumnMapping
      */
     public B add(final AbstractPropertyColumnMapping<EntityType> propertyColumnMapping) {
-	if (propertyColumnMapping == null) {
-	    throw new NullPointerException();
-	}
-	propertyColumnMappings.add(propertyColumnMapping);
-	return (B) this;
+        if (propertyColumnMapping == null) {
+            throw new NullPointerException();
+        }
+        propertyColumnMappings.add(propertyColumnMapping);
+        return (B) this;
     }
 
     public B setGroupingAlgo(final GroupingAlgorithm<EntityType> groupingAlgo) {
-	this.groupingAlgo = groupingAlgo;
-	return (B) this;
+        this.groupingAlgo = groupingAlgo;
+        return (B) this;
     }
 
     public B setRowColoringScheme(final IColouringScheme<EntityType> rowColoringScheme) {
-	this.rowColoringScheme = rowColoringScheme;
-	return (B) this;
+        this.rowColoringScheme = rowColoringScheme;
+        return (B) this;
     }
 
     public B addPropertyColoring(final String propertyName, final IColouringScheme<EntityType> propertyColoringScheme) {
-	propertyColoringSchemes.put(propertyName, propertyColoringScheme);
-	return (B) this;
+        propertyColoringSchemes.put(propertyName, propertyColoringScheme);
+        return (B) this;
     }
 
     /**
      * @return list of mappings. Change order of these mappings at your own risk.
      */
     public List<AbstractPropertyColumnMapping<EntityType>> getPropertyColumnMappings() {
-	return propertyColumnMappings;
+        return propertyColumnMappings;
     }
 
     /**
      * @return entity class, passed to constructor
      */
     public Class<EntityType> getEntityClass() {
-	return entityClass;
+        return entityClass;
     }
 
     public GroupingAlgorithm<EntityType> getGroupingAlgo() {
-	return groupingAlgo;
+        return groupingAlgo;
     }
 
     public IColouringScheme<EntityType> getRowColoringScheme() {
-	return rowColoringScheme;
+        return rowColoringScheme;
     }
 
     public Map<String, IColouringScheme<EntityType>> getPropertyColoringSchemes() {
-	return propertyColoringSchemes;
+        return propertyColoringSchemes;
     }
 
     /**

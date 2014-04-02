@@ -10,15 +10,15 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
 /**
  * A contract for criteria generator.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface ICriteriaGenerator {
 
     /**
      * Generates and configures {@link EntityQueryCriteria} instance.
-     *
+     * 
      * @param <T>
      * @param root
      * @param cdtm

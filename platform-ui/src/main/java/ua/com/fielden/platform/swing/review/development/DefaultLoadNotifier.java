@@ -12,18 +12,18 @@ public class DefaultLoadNotifier implements ILoadNotifier {
 
     @Override
     public void addLoadListener(final ILoadListener listener) {
-	listenerList.add(ILoadListener.class, listener);
+        listenerList.add(ILoadListener.class, listener);
     }
 
     @Override
     public void removeLoadListener(final ILoadListener listener) {
-	listenerList.add(ILoadListener.class, listener);
+        listenerList.add(ILoadListener.class, listener);
     }
 
-    public void fireLoadEvent(final LoadEvent event){
-	for(final ILoadListener listener : listenerList.getListeners(ILoadListener.class)){
-	    listener.viewWasLoaded(event);
-	}
+    public void fireLoadEvent(final LoadEvent event) {
+        for (final ILoadListener listener : listenerList.getListeners(ILoadListener.class)) {
+            listener.viewWasLoaded(event);
+        }
     }
 
 }

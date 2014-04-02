@@ -8,10 +8,10 @@ public class ValueContainer {
     Map<String, Object> primitives = new HashMap<String, Object>();
 
     public ValueContainer(final ICompositeUserTypeInstantiate hibType) {
-	this.hibType = hibType;
+        this.hibType = hibType;
     }
 
     public Object instantiate() {
-	return hibType.instantiate(primitives);
+        return hibType.instantiate(primitives);
     }
 }

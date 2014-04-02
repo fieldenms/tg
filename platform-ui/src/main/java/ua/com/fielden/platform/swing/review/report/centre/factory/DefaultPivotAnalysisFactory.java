@@ -30,41 +30,41 @@ public class DefaultPivotAnalysisFactory<T extends AbstractEntity<?>> implements
     private IDetailsCustomiser detailsCustomiser;
 
     public DefaultPivotAnalysisFactory(//
-	    final EntityFactory entityFactory, //
-	    final ICriteriaGenerator criteriaGenerator, //
-	    final IEntityMasterManager masterManager){
-	detailsCustomiser = new MapBasedDetailsCustomiser()//
-		.addDetails(AnalysisDetailsData.class, new DefaultGroupingAnalysisDetails<T>(entityFactory, criteriaGenerator, masterManager));
+    final EntityFactory entityFactory, //
+            final ICriteriaGenerator criteriaGenerator, //
+            final IEntityMasterManager masterManager) {
+        detailsCustomiser = new MapBasedDetailsCustomiser()//
+        .addDetails(AnalysisDetailsData.class, new DefaultGroupingAnalysisDetails<T>(entityFactory, criteriaGenerator, masterManager));
     }
 
     @Override
     public PivotAnalysisConfigurationView<T> createAnalysis(final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
-	    final String name, //
-	    final Map<Object, DetailsFrame> detailsCache,//
-	    final BlockingIndefiniteProgressLayer progressLayer) {
-	final PivotAnalysisConfigurationModel<T> analysisModel = new PivotAnalysisConfigurationModel<T>(criteria, name);
-	return new PivotAnalysisConfigurationView<T>(analysisModel, detailsCache, detailsCustomiser, owner, progressLayer);
+            final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
+            final String name, //
+            final Map<Object, DetailsFrame> detailsCache,//
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        final PivotAnalysisConfigurationModel<T> analysisModel = new PivotAnalysisConfigurationModel<T>(criteria, name);
+        return new PivotAnalysisConfigurationView<T>(analysisModel, detailsCache, detailsCustomiser, owner, progressLayer);
     }
 
     @Override
     public DefaultPivotAnalysisFactory<T> setToolbarCustomiser(final IToolbarCustomiser<?> toolbarCustomiser) {
-	throw new UnsupportedOperationException("The analysis tool bar customiser can not be set for pivot analysis factory.");
+        throw new UnsupportedOperationException("The analysis tool bar customiser can not be set for pivot analysis factory.");
     }
 
     @Override
     public IAnalysisFactory<T, PivotAnalysisConfigurationView<T>> setQueryCustomiser(final IAnalysisQueryCustomiser<T, ?> queryCustomiser) {
-	throw new UnsupportedOperationException("The analysis query customiser can not be set for pivot analysis factory.");
+        throw new UnsupportedOperationException("The analysis query customiser can not be set for pivot analysis factory.");
     }
 
     @Override
     public IAnalysisFactory<T, PivotAnalysisConfigurationView<T>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
-	this.detailsCustomiser = detailsCustomiser;
-	return this;
+        this.detailsCustomiser = detailsCustomiser;
+        return this;
     }
 
     @Override
     public IAnalysisFactory<T, PivotAnalysisConfigurationView<T>> setAnalysisViewCustomiser(final IAnalysisViewCustomiser<?> analysisViewCustomiser) {
-	throw new UnsupportedOperationException("The analysis view customiser can not be set for pivot analysis factory.");
+        throw new UnsupportedOperationException("The analysis view customiser can not be set for pivot analysis factory.");
     }
 }

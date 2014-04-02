@@ -29,7 +29,7 @@ public class EntityWithDependentProperties extends AbstractEntity<String> {
     private String three;
 
     @IsProperty
-    @Dependent({"one", "five"})
+    @Dependent({ "one", "five" })
     private String four;
 
     @IsProperty
@@ -37,43 +37,43 @@ public class EntityWithDependentProperties extends AbstractEntity<String> {
     private String five;
 
     public String getOne() {
-	return one;
+        return one;
     }
 
     @Observable
     @DomainValidation
     public void setOne(final String one) {
-	this.one = one;
+        this.one = one;
     }
 
     public String getTwo() {
-	return two;
+        return two;
     }
 
     @Observable
     @DomainValidation
     public void setTwo(final String two) {
-	this.two = two;
+        this.two = two;
     }
 
     public String getThree() {
-	return three;
+        return three;
     }
 
     @Observable
     @DomainValidation
     public void setThree(final String three) {
-	this.three = three;
+        this.three = three;
     }
 
     public String getFour() {
-	return four;
+        return four;
     }
 
     @Observable
     @DomainValidation
     public void setFour(final String four) {
-	this.four = four;
+        this.four = four;
     }
 
     public String getFive() {

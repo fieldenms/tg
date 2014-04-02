@@ -10,20 +10,20 @@ import com.google.inject.Inject;
 
 /**
  * RAO implementation of {@link IEntityLocatorConfigController}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(EntityLocatorConfig.class)
 public class EntityLocatorConfigControllerRao extends CommonEntityRao<EntityLocatorConfig> implements IEntityLocatorConfigController {
 
     @Inject
     public EntityLocatorConfigControllerRao(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 
     protected WebResourceType getDefaultWebResourceType() {
-	return WebResourceType.SYSTEM;
+        return WebResourceType.SYSTEM;
     }
 
 }

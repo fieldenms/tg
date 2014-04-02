@@ -19,9 +19,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 /**
  * DAO implementation of {@link IMainMenuItemInvisibilityController}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(MainMenuItemInvisibility.class)
 public class MainMenuItemInvisibilityControllerDao extends CommonEntityDao<MainMenuItemInvisibility> implements IMainMenuItemInvisibilityController {
@@ -30,35 +30,35 @@ public class MainMenuItemInvisibilityControllerDao extends CommonEntityDao<MainM
 
     @Inject
     protected MainMenuItemInvisibilityControllerDao(final IFilter filter, final EntityFactory factory) {
-	super(filter);
-	this.factory = factory;
+        super(filter);
+        this.factory = factory;
     }
 
     @Override
     @SessionRequired
     public void delete(final MainMenuItemInvisibility entity) {
-	super.defaultDelete(entity);
+        super.defaultDelete(entity);
     }
 
     @Override
     @SessionRequired
     public void delete(final EntityResultQueryModel<MainMenuItemInvisibility> model, final Map<String, Object> paramValues) {
-	super.defaultDelete(model, paramValues);
+        super.defaultDelete(model, paramValues);
     }
 
     @Override
     public void makeInvisible(final MainMenuItem menuItem, final User user) {
-	final MainMenuItemInvisibility invisibility = factory.newByKey(MainMenuItemInvisibility.class, user, menuItem);
-	save(invisibility);
+        final MainMenuItemInvisibility invisibility = factory.newByKey(MainMenuItemInvisibility.class, user, menuItem);
+        save(invisibility);
 
     }
 
     @Override
     public void makeVisible(final MainMenuItem menuItem, final User user) {
-	final EntityResultQueryModel<MainMenuItemInvisibility> model = select(MainMenuItemInvisibility.class).where()//
-	.prop("owner").eq().val(user).and()//
-	.prop("menuItem").eq().val(menuItem).model();
+        final EntityResultQueryModel<MainMenuItemInvisibility> model = select(MainMenuItemInvisibility.class).where()//
+        .prop("owner").eq().val(user).and()//
+        .prop("menuItem").eq().val(menuItem).model();
 
-	delete(model);
+        delete(model);
     }
 }

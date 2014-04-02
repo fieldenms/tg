@@ -20,11 +20,15 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 public class TgAuthorship extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo @Title("Author")
+    @IsProperty
+    @MapTo
+    @Title("Author")
     @CompositeKeyMember(1)
     private TgAuthor author;
 
-    @IsProperty @MapTo @Title("Book title")
+    @IsProperty
+    @MapTo
+    @Title("Book title")
     @CompositeKeyMember(2)
     private String title;
 
@@ -35,12 +39,12 @@ public class TgAuthorship extends AbstractEntity<DynamicEntityKey> {
 
     @Observable
     public TgAuthorship setYear(final Integer year) {
-	this.year = year;
-	return this;
+        this.year = year;
+        return this;
     }
 
     public Integer getYear() {
-	return year;
+        return year;
     }
 
     public TgAuthor getAuthor() {

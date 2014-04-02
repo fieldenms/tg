@@ -10,18 +10,18 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
 
-/** 
+/**
  * Mixin implementation for companion object {@link IUserAndRoleAssociationBatchAction}.
  * 
  * @author Developers
- *
+ * 
  */
 public class UserAndRoleAssociationBatchActionMixin {
-    
+
     private final IUserAndRoleAssociationBatchAction companion;
-    
+
     public UserAndRoleAssociationBatchActionMixin(final IUserAndRoleAssociationBatchAction companion) {
         this.companion = companion;
     }
-    
+
 }

@@ -17,15 +17,15 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisVie
 
 /**
  * {@link GridAnalysisView} for {@link Machine} main details with EGI and GIS views.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class MachineGpsGridAnalysisView<T extends AbstractEntity<?>> extends GpsGridAnalysisView<T, MachineGpsGisViewPanel<T>> {
     private static final long serialVersionUID = 553731585658593055L;
 
     public MachineGpsGridAnalysisView(final GpsGridAnalysisModel<T> model, final GpsGridConfigurationView<T> owner) {
-	super(model, owner);
+        super(model, owner);
     }
 
     @Override
@@ -35,16 +35,16 @@ public class MachineGpsGridAnalysisView<T extends AbstractEntity<?>> extends Gps
 
     @Override
     protected IColouringScheme<AbstractEntity> createRowColoringScheme() {
-	return new IColouringScheme<AbstractEntity>() {
-	    @Override
-	    public Color getColor(final AbstractEntity entity) {
-		final MessagePoint p = getGisViewPanel().getCorrespondingPoint(entity);
-		if (p == null) {
-		    return Color.WHITE;
-		} else {
-		    return CategoryChartFactory.getAwtColor(getGisViewPanel().getColor(p));
-		}
-	    }
-	};
+        return new IColouringScheme<AbstractEntity>() {
+            @Override
+            public Color getColor(final AbstractEntity entity) {
+                final MessagePoint p = getGisViewPanel().getCorrespondingPoint(entity);
+                if (p == null) {
+                    return Color.WHITE;
+                } else {
+                    return CategoryChartFactory.getAwtColor(getGisViewPanel().getColor(p));
+                }
+            }
+        };
     }
 }

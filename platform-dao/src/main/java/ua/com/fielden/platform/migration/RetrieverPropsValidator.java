@@ -26,58 +26,63 @@ final class RetrieverPropsValidator {
     private final boolean updater;
 
     public RetrieverPropsValidator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> ret) {
-	this.dma = dma;
-	this.entityType = ret.type();
-	this.retrievedProps = ret.resultFields().keySet();
-	this.updater = ret.isUpdater();
+        this.dma = dma;
+        this.entityType = ret.type();
+        this.retrievedProps = ret.resultFields().keySet();
+        this.updater = ret.isUpdater();
     }
 
     public enum RetrievedPropValidationError {
-	INCORRECTLY_SPELLED, INAPPROPRIATE_BUT_PRESENT, REQUIRED_BUT_MISSING
+        INCORRECTLY_SPELLED, INAPPROPRIATE_BUT_PRESENT, REQUIRED_BUT_MISSING
     }
 
     SortedMap<String, RetrievedPropValidationError> validate() {
-	final SortedMap<String, RetrievedPropValidationError> result = new TreeMap<String, RetrievedPropValidationError>();
+        final SortedMap<String, RetrievedPropValidationError> result = new TreeMap<String, RetrievedPropValidationError>();
 
-	final Set<String> incorrectlySpelledProps = getIncorrectlySpelledProps();
-	result.putAll(markWithError(incorrectlySpelledProps, INCORRECTLY_SPELLED));
+        final Set<String> incorrectlySpelledProps = getIncorrectlySpelledProps();
+        result.putAll(markWithError(incorrectlySpelledProps, INCORRECTLY_SPELLED));
 
-	final Set<String> correctlySpelledProps = subtract(retrievedProps, incorrectlySpelledProps);
-	final Set<String> requiredProps = updater ? Collections.<String>emptySet() : subtract(dma.getEntityMetadata(entityType).getNotNullableProps(), new HashSet<String>(){{add("id"); add("version");}});
-	final Set<String> expectedProps = getExpectedSubprops(union(requiredProps, union(EntityUtils.getFirstLevelProps(correctlySpelledProps), Finder.getFieldNames(Finder.getKeyMembers(entityType)))));
+        final Set<String> correctlySpelledProps = subtract(retrievedProps, incorrectlySpelledProps);
+        final Set<String> requiredProps = updater ? Collections.<String> emptySet() : subtract(dma.getEntityMetadata(entityType).getNotNullableProps(), new HashSet<String>() {
+            {
+                add("id");
+                add("version");
+            }
+        });
+        final Set<String> expectedProps = getExpectedSubprops(union(requiredProps, union(EntityUtils.getFirstLevelProps(correctlySpelledProps), Finder.getFieldNames(Finder.getKeyMembers(entityType)))));
 
-	result.putAll(markWithError(subtract(correctlySpelledProps, expectedProps), INAPPROPRIATE_BUT_PRESENT));
-	result.putAll(markWithError(subtract(expectedProps, correctlySpelledProps), REQUIRED_BUT_MISSING));
-	return result;
+        result.putAll(markWithError(subtract(correctlySpelledProps, expectedProps), INAPPROPRIATE_BUT_PRESENT));
+        result.putAll(markWithError(subtract(expectedProps, correctlySpelledProps), REQUIRED_BUT_MISSING));
+        return result;
     }
 
     private Set<String> getIncorrectlySpelledProps() {
-	final Set<String> result = new HashSet<String>();
-	for (final String prop : retrievedProps) {
-	    if (dma.getInfoForDotNotatedProp(entityType, prop) == null) {
-		result.add(prop);
-	    }
-	}
-	return result;
+        final Set<String> result = new HashSet<String>();
+        for (final String prop : retrievedProps) {
+            if (dma.getInfoForDotNotatedProp(entityType, prop) == null) {
+                result.add(prop);
+            }
+        }
+        return result;
     }
 
     private Map<String, RetrievedPropValidationError> markWithError(final Set<String> props, final RetrievedPropValidationError error) {
-	final Map<String, RetrievedPropValidationError> result = new HashMap<String, RetrievedPropValidationError>();
-	for (final String string : props) {
-	    result.put(string, error);
-	}
-	return result;
+        final Map<String, RetrievedPropValidationError> result = new HashMap<String, RetrievedPropValidationError>();
+        for (final String string : props) {
+            result.put(string, error);
+        }
+        return result;
     }
 
     private Set<String> getExpectedSubprops(final Set<String> firstLevelProps) {
-	return dma.getLeafPropsFromFirstLevelProps(null, entityType, firstLevelProps);
+        return dma.getLeafPropsFromFirstLevelProps(null, entityType, firstLevelProps);
     }
 
     private static Set<String> subtract(final Collection<String> set1, final Collection<String> set2) {
-	return new HashSet<String>(CollectionUtils.subtract(set1, set2));
+        return new HashSet<String>(CollectionUtils.subtract(set1, set2));
     }
 
     private static Set<String> union(final Collection<String> set1, final Collection<String> set2) {
-	return new HashSet<String>(CollectionUtils.union(set1, set2));
+        return new HashSet<String>(CollectionUtils.union(set1, set2));
     }
 }

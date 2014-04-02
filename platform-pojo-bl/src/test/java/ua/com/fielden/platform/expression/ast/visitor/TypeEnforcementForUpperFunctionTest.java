@@ -27,179 +27,178 @@ public class TypeEnforcementForUpperFunctionTest {
 
     @Test
     public void test_upper_with_literals_case_1() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(2)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", Integer.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(2)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", Integer.class, ex.getOffendingType());
+        }
     }
 
     @Test
     public void test_upper_with_literals_case_2() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(2.6)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", BigDecimal.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(2.6)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", BigDecimal.class, ex.getOffendingType());
+        }
     }
 
     @Test
     public void test_upper_with_literals_case_3() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(\"hello\")").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", String.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(\"hello\")").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", String.class, ex.getOffendingType());
+        }
     }
 
     @Test
     public void test_upper_with_literals_case_4() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(1d)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", Day.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(1d)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", Day.class, ex.getOffendingType());
+        }
     }
 
     @Test
     public void test_upper_with_literals_case_5() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(3m)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", Month.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(3m)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", Month.class, ex.getOffendingType());
+        }
     }
 
     @Test
     public void test_upper_with_literals_case_6() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(3y)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", Year.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(3y)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", Year.class, ex.getOffendingType());
+        }
     }
 
     @Test
     public void test_upper_with_constant_expression() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(2.6 + 6 / 2 - 4 * 7)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", BigDecimal.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(2.6 + 6 / 2 - 4 * 7)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", BigDecimal.class, ex.getOffendingType());
+        }
     }
-
 
     @Test
     public void test_upper_int_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(intProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", Integer.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(intProperty)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", Integer.class, ex.getOffendingType());
+        }
     }
 
     @Test
     public void test_upper_decimal_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(decimalProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", BigDecimal.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(decimalProperty)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", BigDecimal.class, ex.getOffendingType());
+        }
     }
 
     @Test
     public void test_upper_money_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(moneyProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", Money.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(moneyProperty)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", Money.class, ex.getOffendingType());
+        }
     }
 
     @Test
     public void test_upper_date_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(dateProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect offending type.", Date.class, ex.getOffendingType());
-	}
+        final Token[] tokens = new ExpressionLexer("UPPER(dateProperty)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect offending type.", Date.class, ex.getOffendingType());
+        }
     }
 
     @Test
     public void test_upper_string_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(strProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", String.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("UPPER(strProperty)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", String.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
     @Test
     public void test_complex_expression_with_multple_parties_1() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("UPPER(strProperty  + \"string value\")").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", String.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("UPPER(strProperty  + \"string value\")").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", String.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
     @Test
     public void test_complex_expression_with_multple_parties_2() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("\"string value\" + (UPPER(strProperty)) + strProperty").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", String.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("\"string value\" + (UPPER(strProperty)) + strProperty").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", String.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
 }

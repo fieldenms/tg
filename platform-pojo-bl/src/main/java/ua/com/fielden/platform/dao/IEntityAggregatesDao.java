@@ -17,7 +17,7 @@ public interface IEntityAggregatesDao extends IComputationMonitor {
 
     /**
      * Returns a number of entities retrieved using the provided model.
-     *
+     * 
      * @param model
      * @return
      */
@@ -25,10 +25,9 @@ public interface IEntityAggregatesDao extends IComputationMonitor {
 
     int count(final AggregatedResultQueryModel model);
 
-
     /**
      * Returns results from running given aggregation query.
-     *
+     * 
      * @param model
      * @return
      */
@@ -37,7 +36,7 @@ public interface IEntityAggregatesDao extends IComputationMonitor {
     /**
      * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
      * found then a null value is returned.
-     *
+     * 
      * @param model
      * @return
      */
@@ -45,7 +44,7 @@ public interface IEntityAggregatesDao extends IComputationMonitor {
 
     /**
      * Returns results from running given aggregation query.
-     *
+     * 
      * @param aggregatesQueryModel
      * @return
      */
@@ -53,7 +52,7 @@ public interface IEntityAggregatesDao extends IComputationMonitor {
 
     /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query model (new EntityQuery).
-     *
+     * 
      * @param pageCapacity
      * @param query
      * @return
@@ -62,7 +61,7 @@ public interface IEntityAggregatesDao extends IComputationMonitor {
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query model (new EntityQuery).
-     *
+     * 
      * @param model
      * @param pageNo
      * @param pageCapacity
@@ -72,7 +71,7 @@ public interface IEntityAggregatesDao extends IComputationMonitor {
 
     /**
      * The same as {@link #getPage(IQueryOrderedModel, int, int)}, but with page count information, which could be taken into account during implementation.
-     *
+     * 
      * @param model
      * @param pageNo
      * @param pageCount
@@ -85,7 +84,7 @@ public interface IEntityAggregatesDao extends IComputationMonitor {
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
      * <p>
      * For example it could be a byte array of GZipped Excel data.
-     *
+     * 
      * @param query
      *            -- query result of which should be exported.
      * @param propertyNames
@@ -94,6 +93,5 @@ public interface IEntityAggregatesDao extends IComputationMonitor {
      *            -- titles corresponding to the properties being exported, which are used as headers of columns.
      * @return
      */
-    byte[] export(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final String[] propertyNames, final String[] propertyTitles)
-	    throws IOException;
+    byte[] export(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
 }

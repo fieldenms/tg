@@ -8,9 +8,9 @@ import com.google.inject.Injector;
 
 /**
  * Default implementation for {@link ICompanionObjectFinder}, which utilises injector for creating controller instances.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
 
@@ -18,17 +18,17 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
 
     @Override
     public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T find(final Class<E> type) {
-	if (type.isAnnotationPresent(CompanionObject.class)) {
-	    try {
-		final Class<T> controllerType = (Class<T>) type.getAnnotation(CompanionObject.class).value();
-		return injector.getInstance(controllerType);
-	    } catch (final Exception e) {
-		// if controller could not be instantiated for whatever reason it can be considered non-existent
-		// thus, returning null
-		return null;
-	    }
-	}
-	return null;
+        if (type.isAnnotationPresent(CompanionObject.class)) {
+            try {
+                final Class<T> controllerType = (Class<T>) type.getAnnotation(CompanionObject.class).value();
+                return injector.getInstance(controllerType);
+            } catch (final Exception e) {
+                // if controller could not be instantiated for whatever reason it can be considered non-existent
+                // thus, returning null
+                return null;
+            }
+        }
+        return null;
     }
 
     public Injector getInjector() {

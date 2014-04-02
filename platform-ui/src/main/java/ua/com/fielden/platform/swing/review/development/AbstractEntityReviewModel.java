@@ -8,11 +8,11 @@ public abstract class AbstractEntityReviewModel<T extends AbstractEntity<?>, CDT
 
     private final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria;
 
-    public AbstractEntityReviewModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria){
-	this.criteria = criteria;
+    public AbstractEntityReviewModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria) {
+        this.criteria = criteria;
     }
 
     public EntityQueryCriteria<CDTME, T, IEntityDao<T>> getCriteria() {
-	return criteria;
+        return criteria;
     }
 }

@@ -19,9 +19,9 @@ import com.google.inject.Injector;
 /**
  * This is {@link Restlet} implementation that provides logic for correct entity lifecycle resource instantiation. Specifically, it should be used to instantiate
  * {@link EntityLifecycleResource} for specific entity types.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @SuppressWarnings("unchecked")
 public class EntityLifecycleResourceFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends Restlet {
@@ -31,28 +31,28 @@ public class EntityLifecycleResourceFactory<T extends AbstractEntity<?>, DAO ext
 
     /**
      * Instances of DAO and factory should be thread-safe as they are used by multiple instances of resources serving concurrent requests.
-     *
+     * 
      * @param dao
      * @param factory
      */
     public EntityLifecycleResourceFactory(final Class<DAO> daoType, final Injector injector) {
-	this.daoType = daoType;
-	this.injector = injector;
-	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.daoType = daoType;
+        this.injector = injector;
+        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
     }
 
     @Override
     public void handle(final Request request, final Response response) {
-	super.handle(request, response);
+        super.handle(request, response);
 
-	final DAO dao = injector.getInstance(daoType);
-	if (dao instanceof ILifecycleDao) {
-	    if (Method.POST.equals(request.getMethod())) {
-		final String username = (String) request.getAttributes().get("username");
-		injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+        final DAO dao = injector.getInstance(daoType);
+        if (dao instanceof ILifecycleDao) {
+            if (Method.POST.equals(request.getMethod())) {
+                final String username = (String) request.getAttributes().get("username");
+                injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-		new EntityLifecycleResource<T>((ILifecycleDao<T>) dao, restUtil, getContext(), request, response).handle();
-	    }
-	}
+                new EntityLifecycleResource<T>((ILifecycleDao<T>) dao, restUtil, getContext(), request, response).handle();
+            }
+        }
     }
 }

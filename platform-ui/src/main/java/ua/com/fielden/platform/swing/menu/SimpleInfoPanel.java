@@ -23,8 +23,8 @@ public class SimpleInfoPanel extends JPanel {
      * @param info
      */
     public SimpleInfoPanel(final String info) {
-	super(new MigLayout("fill", "[fill, grow, c]", "[top]"));
-	add(new JLabel(info));
+        super(new MigLayout("fill", "[fill, grow, c]", "[top]"));
+        add(new JLabel(info));
     }
 
 }

@@ -26,11 +26,11 @@ import ua.com.fielden.platform.utils.MiscUtilities;
 
 /**
  * This resource should be associated with {@link Attachment}.
- *
+ * 
  * Its behaviour is similar to {@link EntityTypeResource}j, but in addition it uploads an associated file that gets saved into a designated location on the server.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class AttachmentTypeResource extends EntityTypeResource<Attachment> {
 
@@ -38,80 +38,80 @@ public class AttachmentTypeResource extends EntityTypeResource<Attachment> {
     private final String location;
 
     public AttachmentTypeResource(final String location, final IAttachment controller, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	super(controller, factory, restUtil, context, request, response);
-	this.location = location;
+        super(controller, factory, restUtil, context, request, response);
+        this.location = location;
     }
 
     /**
      * Accepts and processes a representation posted to the resource.
-     *
+     * 
      * Expects a multi-part request representing
      */
     @Put
     @Override
     public Representation put(final Representation entity) {
-	if (entity != null) {
-	    if (MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true)) {
+        if (entity != null) {
+            if (MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true)) {
 
-		// The Apache FileUpload project parses HTTP requests which
-		// conform to RFC 1867, "Form-based File Upload in HTML". That
-		// is, if an HTTP request is submitted using the POST method,
-		// and with a content type of "multipart/form-data", then
-		// FileUpload can parse that request, and get all uploaded files
-		// as FileItem.
+                // The Apache FileUpload project parses HTTP requests which
+                // conform to RFC 1867, "Form-based File Upload in HTML". That
+                // is, if an HTTP request is submitted using the POST method,
+                // and with a content type of "multipart/form-data", then
+                // FileUpload can parse that request, and get all uploaded files
+                // as FileItem.
 
-		// Create a factory for disk-based file items
-		final DiskFileItemFactory factory = new DiskFileItemFactory();
-		factory.setSizeThreshold(10485760); // 10Mb limit
+                // Create a factory for disk-based file items
+                final DiskFileItemFactory factory = new DiskFileItemFactory();
+                factory.setSizeThreshold(10485760); // 10Mb limit
 
-		// Create a new file upload handler based on the Restlet
-		// FileUpload extension that will parse Restlet requests and
-		// generates FileItems.
-		final RestletFileUpload upload = new RestletFileUpload(factory);
+                // Create a new file upload handler based on the Restlet
+                // FileUpload extension that will parse Restlet requests and
+                // generates FileItems.
+                final RestletFileUpload upload = new RestletFileUpload(factory);
 
-		try {
-		    // Request is parsed by the handler which generates a list of FileItems
-		    final List<FileItem> items = upload.parseRepresentation(entity);
+                try {
+                    // Request is parsed by the handler which generates a list of FileItems
+                    final List<FileItem> items = upload.parseRepresentation(entity);
 
-		    if (items.size() != 4) {
-			getResponse().setEntity(new StringRepresentation("Unexpected structure of the request.", MediaType.TEXT_PLAIN));
-			getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-		    } else {
-			final String key = MiscUtilities.convertToString(items.get(0).getInputStream());
-			final String desc = MiscUtilities.convertToString(items.get(1).getInputStream());
-			final boolean modified = Boolean.parseBoolean(MiscUtilities.convertToString(items.get(2).getInputStream()));
-			final File file = new File(location + "/" + key);
+                    if (items.size() != 4) {
+                        getResponse().setEntity(new StringRepresentation("Unexpected structure of the request.", MediaType.TEXT_PLAIN));
+                        getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                    } else {
+                        final String key = MiscUtilities.convertToString(items.get(0).getInputStream());
+                        final String desc = MiscUtilities.convertToString(items.get(1).getInputStream());
+                        final boolean modified = Boolean.parseBoolean(MiscUtilities.convertToString(items.get(2).getInputStream()));
+                        final File file = new File(location + "/" + key);
 
-			if (file.exists() && modified) {
-			    Files.copy(items.get(3).getInputStream(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			} else {
-			    items.get(3).write(file);
-			}
+                        if (file.exists() && modified) {
+                            Files.copy(items.get(3).getInputStream(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        } else {
+                            items.get(3).write(file);
+                        }
 
-			Attachment attachment;
-			if (modified) {
-			    attachment = getDao().findByKeyAndFetch(fetchAll(Attachment.class), key);
-			} else {
-			    attachment = getFactory().newEntity(Attachment.class, key, desc);
-			}
-			attachment.setFile(file);
-			attachment = getDao().save(attachment);
+                        Attachment attachment;
+                        if (modified) {
+                            attachment = getDao().findByKeyAndFetch(fetchAll(Attachment.class), key);
+                        } else {
+                            attachment = getFactory().newEntity(Attachment.class, key, desc);
+                        }
+                        attachment.setFile(file);
+                        attachment = getDao().save(attachment);
 
-			try {
-			    return getRestUtil().singleRepresentation(attachment);
-			} catch (final Exception ex) {
-			    return getRestUtil().errorRepresentation(ex);
-			}
-		    }
-		} catch (final Exception ex) {
-		    // The message of all thrown exception is sent back to client
-		    return getRestUtil().errorRepresentation(ex);
-		}
-	    }
-	} else {
-	    // PUT request with no entity.
-	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-	}
-	return new StringRepresentation("no result");
+                        try {
+                            return getRestUtil().singleRepresentation(attachment);
+                        } catch (final Exception ex) {
+                            return getRestUtil().errorRepresentation(ex);
+                        }
+                    }
+                } catch (final Exception ex) {
+                    // The message of all thrown exception is sent back to client
+                    return getRestUtil().errorRepresentation(ex);
+                }
+            }
+        } else {
+            // PUT request with no entity.
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+        }
+        return new StringRepresentation("no result");
     }
 }

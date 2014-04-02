@@ -45,74 +45,74 @@ public class Bicycle extends AbstractEntity<String> {
     }
 
     public Integer getYear() {
-	return year;
+        return year;
     }
 
     @Observable
     @NotNull
     public Bicycle setYear(final Integer year) {
-	this.year = year;
-	return this;
+        this.year = year;
+        return this;
     }
 
     public String getFrameName() {
-	return frameName;
+        return frameName;
     }
 
     @NotNull
     @Observable
     public Bicycle setFrameName(final String frameName) {
-	this.frameName = frameName;
-	return this;
+        this.frameName = frameName;
+        return this;
     }
 
     public Money getPrice() {
-	return price;
+        return price;
     }
 
     @NotNull
     @Observable
     public Bicycle setPrice(final Money cost) {
-	this.price = cost;
-	return this;
+        this.price = cost;
+        return this;
     }
 
     public Date getDate() {
-	return date;
+        return date;
     }
 
     @NotNull
     @Observable
     public Bicycle setDate(final Date date) {
-	this.date = date;
-	return this;
+        this.date = date;
+        return this;
     }
 
     public Bicycle getFriendly() {
-	return friendly;
+        return friendly;
     }
 
     @NotNull
     @Observable
     public Bicycle setFriendly(final Bicycle friendly) {
-	this.friendly = friendly;
-	return this;
+        this.friendly = friendly;
+        return this;
     }
 
     public boolean isInStock() {
-	return inStock;
+        return inStock;
     }
 
     @Observable
     @DomainValidation
     public Bicycle setInStock(final boolean inStock) {
-	this.inStock = inStock;
-	return this;
+        this.inStock = inStock;
+        return this;
     }
 
     @Override
     public String toString() {
-	return "Bicycle : " + super.toString();
+        return "Bicycle : " + super.toString();
     }
 
 }

@@ -17,11 +17,11 @@ import ua.com.fielden.platform.swing.treewitheditors.development.Tree;
 
 /**
  * {@link JTree} that supports filtering.
- *
+ * 
  * @author oleh
- *
+ * 
  */
-public class FilterableTree extends Tree{
+public class FilterableTree extends Tree {
     private static final long serialVersionUID = 3587126586223668990L;
 
     private FilterableTreeModel model;
@@ -29,7 +29,7 @@ public class FilterableTree extends Tree{
     /**
      * Creates new {@link FilterableTree} with specified {@link IFilter}. Also it may select first item of the tree if the shouldSelectFirstMenuItem parameter is true. If the
      * rootVisible parameter is true then root of the tree will be visible otherwise not.
-     *
+     * 
      * @param root
      *            - The root of the tree.
      * @param filter
@@ -37,13 +37,13 @@ public class FilterableTree extends Tree{
      * @param rootVisible
      */
     public FilterableTree(final TreeNode root, final IFilter filter, final boolean shouldSelectFirstMenuItem, final boolean rootVisible) {
-	super(root);
-	configureTree(filter, shouldSelectFirstMenuItem, rootVisible);
+        super(root);
+        configureTree(filter, shouldSelectFirstMenuItem, rootVisible);
     }
 
     /**
      * See {@link #FilterableTree(TreeNode, IFilter, boolean, boolean)}.
-     *
+     * 
      * @param treeModel
      *            - specified {@link TreeModel} of the tree.
      * @param filter
@@ -51,57 +51,55 @@ public class FilterableTree extends Tree{
      * @param rootVisible
      */
     public FilterableTree(final DefaultTreeModel treeModel, final IFilter filter, final boolean shouldSelectFirstItem, final boolean rootVisible) {
-	super(treeModel);
-	configureTree(filter, shouldSelectFirstItem, rootVisible);
+        super(treeModel);
+        configureTree(filter, shouldSelectFirstItem, rootVisible);
     }
 
     /**
      * Creates {@link FilterableTreeModel} for this tree and initialize it with appropriate {@link IFilterListener}s.
      */
     private void configureTree(final IFilter filter, final boolean shouldSelectFirstItem, final boolean rootVisible) {
-	// wrap the model
-	model = new FilterableTreeModel((DefaultTreeModel) super.getModel());
-	model.addFilter(filter);
-	setModel(model);
+        // wrap the model
+        model = new FilterableTreeModel((DefaultTreeModel) super.getModel());
+        model.addFilter(filter);
+        setModel(model);
 
-	// set root visibility according to the rootVisible parameter
-	setRootVisible(rootVisible);
+        // set root visibility according to the rootVisible parameter
+        setRootVisible(rootVisible);
 
-	// add the filter listener
-	getModel().addFilterListener(new IFilterListener() {
-	    private TreePath prevSelected;
+        // add the filter listener
+        getModel().addFilterListener(new IFilterListener() {
+            private TreePath prevSelected;
 
-	    @Override
-	    public void postFilter(final IFilterableModel model) {
-		expandAll();
-		FilterableTree.this.setSelectionPath(prevSelected);
-	    }
+            @Override
+            public void postFilter(final IFilterableModel model) {
+                expandAll();
+                FilterableTree.this.setSelectionPath(prevSelected);
+            }
 
-	    @Override
-	    public boolean nodeVisibilityChanged(final TreeNode treeNode, final boolean prevValue, final boolean newValue) {
-		return false;
-	    }
+            @Override
+            public boolean nodeVisibilityChanged(final TreeNode treeNode, final boolean prevValue, final boolean newValue) {
+                return false;
+            }
 
-	    @Override
-	    public void preFilter(final IFilterableModel model) {
-		prevSelected = getSelectionPath();
-	    }
-	});
+            @Override
+            public void preFilter(final IFilterableModel model) {
+                prevSelected = getSelectionPath();
+            }
+        });
 
+        setCellRenderer(new FilterCellRenderer(getModel(), (DefaultTreeCellRenderer) getCellRenderer()));
+        final TreeSelectionModel selectionModel = getSelectionModel();
+        selectionModel.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
-	setCellRenderer(new FilterCellRenderer(getModel(), (DefaultTreeCellRenderer)getCellRenderer()));
-	final TreeSelectionModel selectionModel = getSelectionModel();
-	selectionModel.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-
-	if (shouldSelectFirstItem) {
-	    setSelectionRow(0);
-	}
+        if (shouldSelectFirstItem) {
+            setSelectionRow(0);
+        }
     }
 
     @Override
     public FilterableTreeModel getModel() {
-	return model;
+        return model;
     }
-
 
 }

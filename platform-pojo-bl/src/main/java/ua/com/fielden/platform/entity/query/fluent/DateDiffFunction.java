@@ -9,12 +9,12 @@ public class DateDiffFunction<T, ET extends AbstractEntity<?>> extends AbstractQ
     T parent;
 
     DateDiffFunction(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     public IDateDiffFunctionArgument<T, ET> between() {
-	return new DateDiffFunctionArgument<T, ET>(getTokens(), parent);
+        return new DateDiffFunctionArgument<T, ET>(getTokens(), parent);
     }
 }

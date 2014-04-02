@@ -147,9 +147,9 @@ import com.google.inject.Inject;
 
 /**
  * WARNING: this is an OLD version!
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @Deprecated
 public class TgKryo0 extends Kryo implements ISerialiser0 {
@@ -158,15 +158,15 @@ public class TgKryo0 extends Kryo implements ISerialiser0 {
 
     /** Default buffer sizes for */
     private enum BUFFER_SIZE {
-	QUERY(1024), // 1Kb
-	DATA(1024 * 32), // 32Kb
-	INSTANCE(1024 * 16); // 16Kb
+        QUERY(1024), // 1Kb
+        DATA(1024 * 32), // 32Kb
+        INSTANCE(1024 * 16); // 16Kb
 
-	final int size;
+        final int size;
 
-	BUFFER_SIZE(final int size) {
-	    this.size = size;
-	}
+        BUFFER_SIZE(final int size) {
+            this.size = size;
+        }
     }
 
     private final EntityFactory factory;
@@ -215,432 +215,430 @@ public class TgKryo0 extends Kryo implements ISerialiser0 {
 
     @Inject
     public TgKryo0(final EntityFactory factory, final ISerialisationClassProvider provider) {
-	setRegistrationOptional(true);
-	setClassLoader(ClassLoader.getSystemClassLoader());
+        setRegistrationOptional(true);
+        setClassLoader(ClassLoader.getSystemClassLoader());
 
-	this.factory = factory;
-	this.provider = provider;
+        this.factory = factory;
+        this.provider = provider;
 
-	moneySerialiser = new MoneySerialiser(this);
-	resultSerialiser = new ResultSerialiser(this);
-	bigDecimalSerialiser = new BigDecimalSerializer();
-	bigIntegerSerialiser = new BigIntegerSerializer();
-	intSerialiser = new IntSerializer();
-	longSerialiser = new LongSerializer();
-	stringSerialiser = new StringSerializer();
-	booleanSerialiser = new BooleanSerializer();
-	dateSerialiser = new DateSerializer();
-	dateTimeSerialiser = new DateTimeSerializer();
-	pdSerialiser = new ProperyDescriptorSerialiser(factory);
-	classSerialiser = new ClassSerialiser(this);
-	intervalSerializer = new IntervalSerializer();
-	colorSerializer = new ColorSerializer();
-	sortKeySerialiser = new SortKeySerialiser(this);
-	// "domain trees" serialisers
-	locatorManager0Serialiser = new LocatorManager0Serialiser(this);
-	domainTreeEnhancer0Serialiser = new DomainTreeEnhancer0Serialiser(this);
-	centreDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(this);
-	pivotDomainTreeRepresentationSerialiser = new PivotDomainTreeRepresentationSerialiser(this);
-	analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(this);
-	sentinelDomainTreeRepresentationSerialiser = new SentinelDomainTreeRepresentationSerialiser(this);
-	lifecycleDomainTreeRepresentationSerialiser = new LifecycleDomainTreeRepresentationSerialiser(this);
-	multipleDecDomainTreeRepresentationSerialiser = new MultipleDecDomainTreeRepresentationSerialiser(this);
-	locatorDomainTreeManager0Serialiser = new LocatorDomainTreeManager0Serialiser(this);
-	centreDomainTreeManager0Serialiser = new CentreDomainTreeManager0Serialiser(this);
-	masterDomainTreeManager0Serialiser = new MasterDomainTreeManager0Serialiser(this);
-	locatorDomainTreeRepresentationSerialiser = new LocatorDomainTreeRepresentationSerialiser(this);
-	addToCriteriaTickManagerForLocator0Serialiser = new AddToCriteriaTickManagerForLocator0Serialiser(this);
-	addToCriteriaTickManager0Serialiser = new AddToCriteriaTickManager0Serialiser(this);
-	pivotDomainTreeManagerSerialiser = new PivotDomainTreeManagerSerialiser(this);
-	analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(this);
-	sentinelDomainTreeManagerSerialiser = new SentinelDomainTreeManagerSerialiser(this);
-	lifecycleDomainTreeManagerSerialiser = new LifecycleDomainTreeManagerSerialiser(this);
-	multipleDecDomainTreeManagerSerialiser = new MultipleDecDomainTreeManagerSerialiser(this);
-	locatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser = new LocatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(this);
-	centreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser = new CentreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(this);
-	dynamicallyTypedQueryContainerSerialiser = new DynamicallyTypedQueryContainerSerialiser(this);
-	lifecycleQueryContainerSerialiser = new LifecycleQueryContainerSerialiser(this);
+        moneySerialiser = new MoneySerialiser(this);
+        resultSerialiser = new ResultSerialiser(this);
+        bigDecimalSerialiser = new BigDecimalSerializer();
+        bigIntegerSerialiser = new BigIntegerSerializer();
+        intSerialiser = new IntSerializer();
+        longSerialiser = new LongSerializer();
+        stringSerialiser = new StringSerializer();
+        booleanSerialiser = new BooleanSerializer();
+        dateSerialiser = new DateSerializer();
+        dateTimeSerialiser = new DateTimeSerializer();
+        pdSerialiser = new ProperyDescriptorSerialiser(factory);
+        classSerialiser = new ClassSerialiser(this);
+        intervalSerializer = new IntervalSerializer();
+        colorSerializer = new ColorSerializer();
+        sortKeySerialiser = new SortKeySerialiser(this);
+        // "domain trees" serialisers
+        locatorManager0Serialiser = new LocatorManager0Serialiser(this);
+        domainTreeEnhancer0Serialiser = new DomainTreeEnhancer0Serialiser(this);
+        centreDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(this);
+        pivotDomainTreeRepresentationSerialiser = new PivotDomainTreeRepresentationSerialiser(this);
+        analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(this);
+        sentinelDomainTreeRepresentationSerialiser = new SentinelDomainTreeRepresentationSerialiser(this);
+        lifecycleDomainTreeRepresentationSerialiser = new LifecycleDomainTreeRepresentationSerialiser(this);
+        multipleDecDomainTreeRepresentationSerialiser = new MultipleDecDomainTreeRepresentationSerialiser(this);
+        locatorDomainTreeManager0Serialiser = new LocatorDomainTreeManager0Serialiser(this);
+        centreDomainTreeManager0Serialiser = new CentreDomainTreeManager0Serialiser(this);
+        masterDomainTreeManager0Serialiser = new MasterDomainTreeManager0Serialiser(this);
+        locatorDomainTreeRepresentationSerialiser = new LocatorDomainTreeRepresentationSerialiser(this);
+        addToCriteriaTickManagerForLocator0Serialiser = new AddToCriteriaTickManagerForLocator0Serialiser(this);
+        addToCriteriaTickManager0Serialiser = new AddToCriteriaTickManager0Serialiser(this);
+        pivotDomainTreeManagerSerialiser = new PivotDomainTreeManagerSerialiser(this);
+        analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(this);
+        sentinelDomainTreeManagerSerialiser = new SentinelDomainTreeManagerSerialiser(this);
+        lifecycleDomainTreeManagerSerialiser = new LifecycleDomainTreeManagerSerialiser(this);
+        multipleDecDomainTreeManagerSerialiser = new MultipleDecDomainTreeManagerSerialiser(this);
+        locatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser = new LocatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(this);
+        centreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser = new CentreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(this);
+        dynamicallyTypedQueryContainerSerialiser = new DynamicallyTypedQueryContainerSerialiser(this);
+        lifecycleQueryContainerSerialiser = new LifecycleQueryContainerSerialiser(this);
 
-	// the following order of class registration is important
-	register(String[].class);
-	register(byte[].class);
-	register(Date.class);
-	register(DateTime.class);
-	register(BigDecimal.class);
-	register(BigInteger.class);
-	register(Currency.class);
-	register(ArrayList.class);
-	register(List.class);
-	register(HashMap.class);
-	register(HashSet.class);
-	register(ListOrderedMap.class);
-	register(TreeSet.class);
-	register(Set.class);
-	register(Money.class);
-	register(Result.class);
-	register(Warning.class);
-	register(Pair.class);
-	register(Color.class);
-	// default platform entities
-	register(PropertyDescriptor.class);
-	register(User.class);
-	register(UserAndRoleAssociation.class);
-	register(UserRole.class);
-	register(SecurityRoleAssociation.class);
-	register(ISecurityToken.class);
-	register(Attachment.class);
-	register(EntityAttachmentAssociation.class);
-	register(AnalysisResultClass.class);
-	register(ICategorizer.class);
-	register(LifecycleModel.class);
-	register(EntityPropertyLifecycle.class);
-	register(ValuedInterval.class);
-	register(Interval.class);
-	register(LifecycleQueryContainer.class);
+        // the following order of class registration is important
+        register(String[].class);
+        register(byte[].class);
+        register(Date.class);
+        register(DateTime.class);
+        register(BigDecimal.class);
+        register(BigInteger.class);
+        register(Currency.class);
+        register(ArrayList.class);
+        register(List.class);
+        register(HashMap.class);
+        register(HashSet.class);
+        register(ListOrderedMap.class);
+        register(TreeSet.class);
+        register(Set.class);
+        register(Money.class);
+        register(Result.class);
+        register(Warning.class);
+        register(Pair.class);
+        register(Color.class);
+        // default platform entities
+        register(PropertyDescriptor.class);
+        register(User.class);
+        register(UserAndRoleAssociation.class);
+        register(UserRole.class);
+        register(SecurityRoleAssociation.class);
+        register(ISecurityToken.class);
+        register(Attachment.class);
+        register(EntityAttachmentAssociation.class);
+        register(AnalysisResultClass.class);
+        register(ICategorizer.class);
+        register(LifecycleModel.class);
+        register(EntityPropertyLifecycle.class);
+        register(ValuedInterval.class);
+        register(Interval.class);
+        register(LifecycleQueryContainer.class);
 
-	// entity query classes
-	register(EntityAggregates.class);
-	register(QueryModel.class);
-	register(EntityResultQueryModel.class);
-	register(AggregatedResultQueryModel.class);
-	register(ExpressionModel.class);
-	register(PrimitiveResultQueryModel.class);
-	register(QueryExecutionModel.class);
-	register(fetch.FetchCategory.class);
-	register(fetch.class);
-	register(OrderingModel.class);
-	register(TokenCategory.class);
-	register(QueryTokens.class);
-	register(LogicalOperator.class);
-	register(ComparisonOperator.class);
-	register(ArithmeticalOperator.class);
-	register(Functions.class);
-	register(DynamicallyTypedQueryContainer.class);
-	register(JoinType.class);
+        // entity query classes
+        register(EntityAggregates.class);
+        register(QueryModel.class);
+        register(EntityResultQueryModel.class);
+        register(AggregatedResultQueryModel.class);
+        register(ExpressionModel.class);
+        register(PrimitiveResultQueryModel.class);
+        register(QueryExecutionModel.class);
+        register(fetch.FetchCategory.class);
+        register(fetch.class);
+        register(OrderingModel.class);
+        register(TokenCategory.class);
+        register(QueryTokens.class);
+        register(LogicalOperator.class);
+        register(ComparisonOperator.class);
+        register(ArithmeticalOperator.class);
+        register(Functions.class);
+        register(DynamicallyTypedQueryContainer.class);
+        register(JoinType.class);
 
-	register(Class.class);
-	// register menu and configuration related
-	register(MainMenuItem.class);
-	register(MainMenuItemInvisibility.class);
-	register(EntityCentreConfig.class);
-	register(EntityMasterConfig.class);
-	register(EntityLocatorConfig.class);
+        register(Class.class);
+        // register menu and configuration related
+        register(MainMenuItem.class);
+        register(MainMenuItemInvisibility.class);
+        register(EntityCentreConfig.class);
+        register(EntityMasterConfig.class);
+        register(EntityLocatorConfig.class);
 
-	// register classes provided by the provider
-	for (final Class<?> type : provider.classes()) {
-	    try {
-		register(type);
-	    } catch (final IllegalArgumentException e) {
-		e.printStackTrace();
-		throw new IllegalArgumentException("The type [" + type + "] can not be registered. Cause = [" + e.getMessage() + "]");
-	    }
-	}
+        // register classes provided by the provider
+        for (final Class<?> type : provider.classes()) {
+            try {
+                register(type);
+            } catch (final IllegalArgumentException e) {
+                e.printStackTrace();
+                throw new IllegalArgumentException("The type [" + type + "] can not be registered. Cause = [" + e.getMessage() + "]");
+            }
+        }
     }
 
     /**
      * Returns all types (including inner classes, enumeration values etc.) to be registered for all <code>baseTypes</code> in specified [path; package].
-     *
+     * 
      * @param path
      * @param packageName
      * @param baseTypes
      * @return
      */
     public static List<Class<?>> typesForRegistration(final String path, final String packageName, final List<Class<?>> baseTypes) {
-	final List<Class<?>> types = new ArrayList<Class<?>>();
-	for (final Class<?> type : baseTypes) {
-	    types.add(type);
-	    if (!EntityUtils.isEnum(type)) {
-		try {
-		    types.addAll(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, type));
-		} catch (final Exception e) {
-		    e.printStackTrace();
-		    throw new IllegalStateException("Retrieval of the [" + type.getSimpleName() + "] descendants from [" + path + "; " + packageName + "] has been failed.");
-		}
-	    }
-	}
-	final List<Class<?>> theTypes = new ArrayList<Class<?>>();
-	for (final Class<?> type : types) {
-	    if (EntityUtils.isEnum(type)) {
-		final List<Class<?>> enumTypes = EntityUtils.extractTypes((Class<Enum>) type);
-		for (final Class<?> klass : enumTypes) {
-		    theTypes.add(klass);
-		}
-	    } else if (!AbstractEntity.class.equals(type)) {
-		theTypes.add(type);
-	    }
-	}
-	return theTypes;
+        final List<Class<?>> types = new ArrayList<Class<?>>();
+        for (final Class<?> type : baseTypes) {
+            types.add(type);
+            if (!EntityUtils.isEnum(type)) {
+                try {
+                    types.addAll(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, type));
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                    throw new IllegalStateException("Retrieval of the [" + type.getSimpleName() + "] descendants from [" + path + "; " + packageName + "] has been failed.");
+                }
+            }
+        }
+        final List<Class<?>> theTypes = new ArrayList<Class<?>>();
+        for (final Class<?> type : types) {
+            if (EntityUtils.isEnum(type)) {
+                final List<Class<?>> enumTypes = EntityUtils.extractTypes((Class<Enum>) type);
+                for (final Class<?> klass : enumTypes) {
+                    theTypes.add(klass);
+                }
+            } else if (!AbstractEntity.class.equals(type)) {
+                theTypes.add(type);
+            }
+        }
+        return theTypes;
     }
 
     @Override
     public final RegisteredClass getRegisteredClass(final Class type) {
-	if (AbstractEntity.class.isAssignableFrom(type)) {
-	    return super.getRegisteredClass(PropertyTypeDeterminator.stripIfNeeded(type));
-	} else if (Set.class.isAssignableFrom(type) && type.isInterface()) { //
-	    return super.getRegisteredClass(HashSet.class);
-	} else if (List.class.isAssignableFrom(type) && type.isInterface()) {
-	    return super.getRegisteredClass(ArrayList.class);
-	} else if (Map.class.isAssignableFrom(type) && !ListOrderedMap.class.isAssignableFrom(type) && type.isInterface()) {
-	    return super.getRegisteredClass(HashMap.class);
-	} else if (Date.class.isAssignableFrom(type)) {
-	    return super.getRegisteredClass(Date.class);
-	}
-	return super.getRegisteredClass(type);
+        if (AbstractEntity.class.isAssignableFrom(type)) {
+            return super.getRegisteredClass(PropertyTypeDeterminator.stripIfNeeded(type));
+        } else if (Set.class.isAssignableFrom(type) && type.isInterface()) { //
+            return super.getRegisteredClass(HashSet.class);
+        } else if (List.class.isAssignableFrom(type) && type.isInterface()) {
+            return super.getRegisteredClass(ArrayList.class);
+        } else if (Map.class.isAssignableFrom(type) && !ListOrderedMap.class.isAssignableFrom(type) && type.isInterface()) {
+            return super.getRegisteredClass(HashMap.class);
+        } else if (Date.class.isAssignableFrom(type)) {
+            return super.getRegisteredClass(Date.class);
+        }
+        return super.getRegisteredClass(type);
     }
 
     /**
      * Creates serialisers for entity types in such a way that each seprate type has its own serialiser.
-     *
+     * 
      * This allows for type specific serialisation optimisation such as caching of property information etc.
      */
     @Override
     public Serializer newSerializer(final Class type) {
-	if (Result.class.isAssignableFrom(type)) {
-	    return resultSerialiser;
-	} else if (PropertyDescriptor.class.isAssignableFrom(type)) { // PropertyDescriptor must always be checked before any other entity
-	    return pdSerialiser;
-	} else if (AbstractEntity.class.isAssignableFrom(type)) {
-	    final Class<AbstractEntity> entityType = (Class<AbstractEntity>) PropertyTypeDeterminator.stripIfNeeded(type);
-	    Serializer ser = entitySerialisers.get(entityType);
-	    if (ser == null) {
-		ser = new EntitySerialiser(this, entityType, factory);
-		entitySerialisers.put(entityType, ser);
-	    }
-	    return ser;
-	} else if (Money.class.isAssignableFrom(type)) {
-	    return moneySerialiser;
-	} else if (String.class.isAssignableFrom(type)) {
-	    return stringSerialiser;
-	} else if (Long.class.isAssignableFrom(type) || long.class.isAssignableFrom(type)) {
-	    return longSerialiser;
-	} else if (Date.class.isAssignableFrom(type)) {
-	    return dateSerialiser;
-	} else if (BigDecimal.class.isAssignableFrom(type)) {
-	    return bigDecimalSerialiser;
-	} else if (BigInteger.class.isAssignableFrom(type)) {
-	    return bigIntegerSerialiser;
-	} else if (Integer.class.isAssignableFrom(type) || int.class.isAssignableFrom(type)) {
-	    return intSerialiser;
-	} else if (Boolean.class.isAssignableFrom(type) || boolean.class.isAssignableFrom(type)) {
-	    return booleanSerialiser;
-	} else if (DateTime.class.isAssignableFrom(type)) {
-	    return dateTimeSerialiser;
-	} else if (Class.class.isAssignableFrom(type)) {
-	    return classSerialiser;
-	} else if (Interval.class.isAssignableFrom(type)) {
-	    return intervalSerializer;
-	} else if (Color.class.isAssignableFrom(type)) {
-	    return colorSerializer;
-	} else if (SortKey.class.isAssignableFrom(type)) {
-	    return sortKeySerialiser;
-	} else if (DomainTreeEnhancer0.class.isAssignableFrom(type)) { // "domain tree" serialisers
-	    return domainTreeEnhancer0Serialiser;
-	} else if (LocatorManager0.class.isAssignableFrom(type)) {
-	    return locatorManager0Serialiser;
-	} else if (LocatorDomainTreeRepresentation.class.isAssignableFrom(type)) { // higher in hierarchy above CriteriaDomainTreeRepresentation!
-	    return locatorDomainTreeRepresentationSerialiser;
-	} else if (CentreDomainTreeRepresentation.class.isAssignableFrom(type)) {
-	    return centreDomainTreeRepresentationSerialiser;
-	} else if (PivotDomainTreeRepresentation.class.isAssignableFrom(type)) {
-	    return pivotDomainTreeRepresentationSerialiser;
-	} else if (SentinelDomainTreeRepresentation.class.isAssignableFrom(type)) {
-	    return sentinelDomainTreeRepresentationSerialiser;
-	} else if (AnalysisDomainTreeRepresentation.class.isAssignableFrom(type)) {
-	    return analysisDomainTreeRepresentationSerialiser;
-	} else if (LifecycleDomainTreeRepresentation.class.isAssignableFrom(type)) {
-	    return lifecycleDomainTreeRepresentationSerialiser;
-	} else if (MultipleDecDomainTreeRepresentation.class.isAssignableFrom(type)) {
-	    return multipleDecDomainTreeRepresentationSerialiser;
-	} else if (LocatorDomainTreeManager0.class.isAssignableFrom(type)) { // higher in hierarchy above CriteriaDomainTreeManager!
-	    return locatorDomainTreeManager0Serialiser;
-	} else if (CentreDomainTreeManager0.class.isAssignableFrom(type)) {
-	    return centreDomainTreeManager0Serialiser;
-	} else if (MasterDomainTreeManager0.class.isAssignableFrom(type)) {
-	    return masterDomainTreeManager0Serialiser;
-	} else if (AddToCriteriaTickManagerForLocator0.class.isAssignableFrom(type)) {
-	    return addToCriteriaTickManagerForLocator0Serialiser;
-	} else if (AddToCriteriaTickManager0.class.isAssignableFrom(type)) {
-	    return addToCriteriaTickManager0Serialiser;
-	} else if (PivotDomainTreeManager.class.isAssignableFrom(type)) {
-	    return pivotDomainTreeManagerSerialiser;
-	} else if (SentinelDomainTreeManager.class.isAssignableFrom(type)) {
-	    return sentinelDomainTreeManagerSerialiser;
-	} else if (AnalysisDomainTreeManager.class.isAssignableFrom(type)) {
-	    return analysisDomainTreeManagerSerialiser;
-	} else if (LifecycleDomainTreeManager.class.isAssignableFrom(type)) {
-	    return lifecycleDomainTreeManagerSerialiser;
-	} else if (MultipleDecDomainTreeManager.class.isAssignableFrom(type)) {
-	    return multipleDecDomainTreeManagerSerialiser;
-	} else if (LocatorDomainTreeManagerAndEnhancer0.class.isAssignableFrom(type)) { // higher in hierarchy above CentreDomainTreeManagerAndEnhancer0!
-	    return locatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser;
-	} else if (CentreDomainTreeManagerAndEnhancer0.class.isAssignableFrom(type)) {
-	    return centreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser;
-	} else if (DynamicallyTypedQueryContainer.class.isAssignableFrom(type)) {
-	    return dynamicallyTypedQueryContainerSerialiser;
-	} else if (LifecycleQueryContainer.class.isAssignableFrom(type)) {
-	    return lifecycleQueryContainerSerialiser;
-	}
-	return super.newSerializer(type);
+        if (Result.class.isAssignableFrom(type)) {
+            return resultSerialiser;
+        } else if (PropertyDescriptor.class.isAssignableFrom(type)) { // PropertyDescriptor must always be checked before any other entity
+            return pdSerialiser;
+        } else if (AbstractEntity.class.isAssignableFrom(type)) {
+            final Class<AbstractEntity> entityType = (Class<AbstractEntity>) PropertyTypeDeterminator.stripIfNeeded(type);
+            Serializer ser = entitySerialisers.get(entityType);
+            if (ser == null) {
+                ser = new EntitySerialiser(this, entityType, factory);
+                entitySerialisers.put(entityType, ser);
+            }
+            return ser;
+        } else if (Money.class.isAssignableFrom(type)) {
+            return moneySerialiser;
+        } else if (String.class.isAssignableFrom(type)) {
+            return stringSerialiser;
+        } else if (Long.class.isAssignableFrom(type) || long.class.isAssignableFrom(type)) {
+            return longSerialiser;
+        } else if (Date.class.isAssignableFrom(type)) {
+            return dateSerialiser;
+        } else if (BigDecimal.class.isAssignableFrom(type)) {
+            return bigDecimalSerialiser;
+        } else if (BigInteger.class.isAssignableFrom(type)) {
+            return bigIntegerSerialiser;
+        } else if (Integer.class.isAssignableFrom(type) || int.class.isAssignableFrom(type)) {
+            return intSerialiser;
+        } else if (Boolean.class.isAssignableFrom(type) || boolean.class.isAssignableFrom(type)) {
+            return booleanSerialiser;
+        } else if (DateTime.class.isAssignableFrom(type)) {
+            return dateTimeSerialiser;
+        } else if (Class.class.isAssignableFrom(type)) {
+            return classSerialiser;
+        } else if (Interval.class.isAssignableFrom(type)) {
+            return intervalSerializer;
+        } else if (Color.class.isAssignableFrom(type)) {
+            return colorSerializer;
+        } else if (SortKey.class.isAssignableFrom(type)) {
+            return sortKeySerialiser;
+        } else if (DomainTreeEnhancer0.class.isAssignableFrom(type)) { // "domain tree" serialisers
+            return domainTreeEnhancer0Serialiser;
+        } else if (LocatorManager0.class.isAssignableFrom(type)) {
+            return locatorManager0Serialiser;
+        } else if (LocatorDomainTreeRepresentation.class.isAssignableFrom(type)) { // higher in hierarchy above CriteriaDomainTreeRepresentation!
+            return locatorDomainTreeRepresentationSerialiser;
+        } else if (CentreDomainTreeRepresentation.class.isAssignableFrom(type)) {
+            return centreDomainTreeRepresentationSerialiser;
+        } else if (PivotDomainTreeRepresentation.class.isAssignableFrom(type)) {
+            return pivotDomainTreeRepresentationSerialiser;
+        } else if (SentinelDomainTreeRepresentation.class.isAssignableFrom(type)) {
+            return sentinelDomainTreeRepresentationSerialiser;
+        } else if (AnalysisDomainTreeRepresentation.class.isAssignableFrom(type)) {
+            return analysisDomainTreeRepresentationSerialiser;
+        } else if (LifecycleDomainTreeRepresentation.class.isAssignableFrom(type)) {
+            return lifecycleDomainTreeRepresentationSerialiser;
+        } else if (MultipleDecDomainTreeRepresentation.class.isAssignableFrom(type)) {
+            return multipleDecDomainTreeRepresentationSerialiser;
+        } else if (LocatorDomainTreeManager0.class.isAssignableFrom(type)) { // higher in hierarchy above CriteriaDomainTreeManager!
+            return locatorDomainTreeManager0Serialiser;
+        } else if (CentreDomainTreeManager0.class.isAssignableFrom(type)) {
+            return centreDomainTreeManager0Serialiser;
+        } else if (MasterDomainTreeManager0.class.isAssignableFrom(type)) {
+            return masterDomainTreeManager0Serialiser;
+        } else if (AddToCriteriaTickManagerForLocator0.class.isAssignableFrom(type)) {
+            return addToCriteriaTickManagerForLocator0Serialiser;
+        } else if (AddToCriteriaTickManager0.class.isAssignableFrom(type)) {
+            return addToCriteriaTickManager0Serialiser;
+        } else if (PivotDomainTreeManager.class.isAssignableFrom(type)) {
+            return pivotDomainTreeManagerSerialiser;
+        } else if (SentinelDomainTreeManager.class.isAssignableFrom(type)) {
+            return sentinelDomainTreeManagerSerialiser;
+        } else if (AnalysisDomainTreeManager.class.isAssignableFrom(type)) {
+            return analysisDomainTreeManagerSerialiser;
+        } else if (LifecycleDomainTreeManager.class.isAssignableFrom(type)) {
+            return lifecycleDomainTreeManagerSerialiser;
+        } else if (MultipleDecDomainTreeManager.class.isAssignableFrom(type)) {
+            return multipleDecDomainTreeManagerSerialiser;
+        } else if (LocatorDomainTreeManagerAndEnhancer0.class.isAssignableFrom(type)) { // higher in hierarchy above CentreDomainTreeManagerAndEnhancer0!
+            return locatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser;
+        } else if (CentreDomainTreeManagerAndEnhancer0.class.isAssignableFrom(type)) {
+            return centreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser;
+        } else if (DynamicallyTypedQueryContainer.class.isAssignableFrom(type)) {
+            return dynamicallyTypedQueryContainerSerialiser;
+        } else if (LifecycleQueryContainer.class.isAssignableFrom(type)) {
+            return lifecycleQueryContainerSerialiser;
+        }
+        return super.newSerializer(type);
     }
 
     @Override
     protected Serializer newDefaultSerializer(final Class type) {
-	return new ReferenceFieldSerializer(this, type);
+        return new ReferenceFieldSerializer(this, type);
     }
 
     @Override
     public <T> T newInstance(final Class<T> type) {
-	if (Set.class.isAssignableFrom(type) && type.isInterface()) {
-	    return (T) new HashSet();
-	} else if (List.class.isAssignableFrom(type) && type.isInterface()) {
-	    return (T) new ArrayList();
-	} else if (Map.class.isAssignableFrom(type) && type.isInterface()) {
-	    return (T) new HashMap();
-	} else if (type.getName().contains("java.util.Arrays$ArrayList")) {
-	    // using Arrays.asList produces instance of List of type Arrays$ArrayList, which do not have a default constructor;
-	    // thus, need to instantiate ArrayList instead.
-	    return (T) new ArrayList();
-	}
-	return super.newInstance(type);
+        if (Set.class.isAssignableFrom(type) && type.isInterface()) {
+            return (T) new HashSet();
+        } else if (List.class.isAssignableFrom(type) && type.isInterface()) {
+            return (T) new ArrayList();
+        } else if (Map.class.isAssignableFrom(type) && type.isInterface()) {
+            return (T) new HashMap();
+        } else if (type.getName().contains("java.util.Arrays$ArrayList")) {
+            // using Arrays.asList produces instance of List of type Arrays$ArrayList, which do not have a default constructor;
+            // thus, need to instantiate ArrayList instead.
+            return (T) new ArrayList();
+        }
+        return super.newInstance(type);
     }
 
     /**
      * Writes an object and resizes the buffer in case if its limit is exceeded.
-     *
+     * 
      * @param writeBuffer
      * @param obj
      * @return
      */
     private ByteBuffer safeWrite(final ByteBuffer writeBuffer, final Object obj) {
-	ByteBuffer buffer = writeBuffer;
-	final Class<?> type = PropertyTypeDeterminator.stripIfNeeded(obj.getClass());
-	boolean keepWriting = true;
-	while (keepWriting) {
-	    try {
-		writeClass(buffer, type);
-		writeObject(buffer, obj);
-		keepWriting = false;
-	    } catch (final SerializationException e) {
-		if (e.getMessage().startsWith("Buffer limit exceeded")) {
-		    buffer = ByteBuffer.allocate(buffer.capacity() * 2);
-		} else {
-		    throw e;
-		}
-	    }
-	}
-	return buffer;
+        ByteBuffer buffer = writeBuffer;
+        final Class<?> type = PropertyTypeDeterminator.stripIfNeeded(obj.getClass());
+        boolean keepWriting = true;
+        while (keepWriting) {
+            try {
+                writeClass(buffer, type);
+                writeObject(buffer, obj);
+                keepWriting = false;
+            } catch (final SerializationException e) {
+                if (e.getMessage().startsWith("Buffer limit exceeded")) {
+                    buffer = ByteBuffer.allocate(buffer.capacity() * 2);
+                } else {
+                    throw e;
+                }
+            }
+        }
+        return buffer;
     }
 
     @Override
     public byte[] serialise(final Object obj) {
-	//	int size;
-	//	if (obj instanceof IQueryOrderedModel) {
-	//	    size = BUFFER_SIZE.QUERY.size;
-	//	} else if (((obj instanceof Result) && ((Result) obj).getInstance() instanceof List) || obj instanceof Collection) {
-	//	    size = BUFFER_SIZE.DATA.size;
-	//	} else {
-	//	    size = BUFFER_SIZE.INSTANCE.size;
-	//	}
+        //	int size;
+        //	if (obj instanceof IQueryOrderedModel) {
+        //	    size = BUFFER_SIZE.QUERY.size;
+        //	} else if (((obj instanceof Result) && ((Result) obj).getInstance() instanceof List) || obj instanceof Collection) {
+        //	    size = BUFFER_SIZE.DATA.size;
+        //	} else {
+        //	    size = BUFFER_SIZE.INSTANCE.size;
+        //	}
 
-	final ByteBuffer writeBuffer = safeWrite(ByteBuffer.allocate(BUFFER_SIZE.DATA.size), obj);
-	writeBuffer.flip();
-	final byte[] data = new byte[writeBuffer.limit()];
-	writeBuffer.get(data);
-	writeBuffer.clear();
+        final ByteBuffer writeBuffer = safeWrite(ByteBuffer.allocate(BUFFER_SIZE.DATA.size), obj);
+        writeBuffer.flip();
+        final byte[] data = new byte[writeBuffer.limit()];
+        writeBuffer.get(data);
+        writeBuffer.clear();
 
-	// Compress the bytes
-	final Deflater compressor = new Deflater(Deflater.BEST_COMPRESSION);
-	compressor.setInput(data);
-	compressor.finish();
-	final ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length);
+        // Compress the bytes
+        final Deflater compressor = new Deflater(Deflater.BEST_COMPRESSION);
+        compressor.setInput(data);
+        compressor.finish();
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length);
 
-	final byte[] buf = new byte[1024];
-	while (!compressor.finished()) {
-	    final int count = compressor.deflate(buf);
-	    bos.write(buf, 0, count);
-	}
-	try {
-	    bos.close();
-	} catch (final IOException e) {
-	}
+        final byte[] buf = new byte[1024];
+        while (!compressor.finished()) {
+            final int count = compressor.deflate(buf);
+            bos.write(buf, 0, count);
+        }
+        try {
+            bos.close();
+        } catch (final IOException e) {
+        }
 
-	// return the compressed data
-	return bos.toByteArray();
+        // return the compressed data
+        return bos.toByteArray();
     }
 
     @Override
     public <T> T deserialise(final byte[] content, final Class<T> type) throws Exception {
-	final ByteArrayInputStream bis = new ByteArrayInputStream(content);
-	return deserialise(bis, type);
+        final ByteArrayInputStream bis = new ByteArrayInputStream(content);
+        return deserialise(bis, type);
     }
 
     @Override
     public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
-	final InflaterInputStream in = new InflaterInputStream(content);
-	final ByteBuffer readBuffer = IoHelper.readAsByteBuffer(in);
-	try {
-	    final Class<?> serialisedType = readClass(readBuffer).getType();
-	    final T result = readObject(readBuffer, /* serialisedType */ type);
-	    executeDefiners();
-	    return result;
-	} finally {
-	    readBuffer.clear();
-	}
+        final InflaterInputStream in = new InflaterInputStream(content);
+        final ByteBuffer readBuffer = IoHelper.readAsByteBuffer(in);
+        try {
+            final Class<?> serialisedType = readClass(readBuffer).getType();
+            final T result = readObject(readBuffer, /* serialisedType */type);
+            executeDefiners();
+            return result;
+        } finally {
+            readBuffer.clear();
+        }
     }
 
     /**
      * All entity instances are cached during deserialisation.
-     *
+     * 
      * Once serialisation is completed it is necessary to execute respective definers for all cached instances.
-     *
+     * 
      * Definers cannot be executed inside {@link EntitySerialiser} due to the use of cache in conjunction with sub-requests issued by some of the definers leasing to an incorrect
      * deserialisation (specifically, object identifiers in cache get mixed up with the ones from newly obtained stream of data).
-     *
+     * 
      */
     private void executeDefiners() {
-	final Context context = getContext();
-	final References references = (References) context.get(ENTITY_REFERENCES);
-	if (references != null) {
-	    // references is thread local variable, which gets reset if a nested deserialisation happens
-	    // therefore need to make a local cache of the present in references entities
-	    final List<AbstractEntity<?>> refs = new ArrayList<AbstractEntity<?>>(references.referenceCount);
+        final Context context = getContext();
+        final References references = (References) context.get(ENTITY_REFERENCES);
+        if (references != null) {
+            // references is thread local variable, which gets reset if a nested deserialisation happens
+            // therefore need to make a local cache of the present in references entities
+            final List<AbstractEntity<?>> refs = new ArrayList<AbstractEntity<?>>(references.referenceCount);
 
-	    for (int index = 2; index < 2 + references.referenceCount; index++) {
-		final Object obj = references.referenceToObject.get(index);
+            for (int index = 2; index < 2 + references.referenceCount; index++) {
+                final Object obj = references.referenceToObject.get(index);
 
-		// let's try to identify whether we are loading generated types here
-		if (obj != null && DynamicEntityClassLoader.isEnhanced(obj.getClass())) {
-		    return;
-		}
+                // let's try to identify whether we are loading generated types here
+                if (obj != null && DynamicEntityClassLoader.isEnhanced(obj.getClass())) {
+                    return;
+                }
 
-		// interested only in instances of the enhanced AbstractEntity.
-		if (obj instanceof AbstractEntity) {
-		    refs.add((AbstractEntity) obj);
-		}
-	    }
-	    // explicit reset in order to make the reason for the above snippet more explicit
-	    references.reset();
+                // interested only in instances of the enhanced AbstractEntity.
+                if (obj instanceof AbstractEntity) {
+                    refs.add((AbstractEntity) obj);
+                }
+            }
+            // explicit reset in order to make the reason for the above snippet more explicit
+            references.reset();
 
-	    // iterate through all locally cached entity instances and execute respective definers
-	    for (final AbstractEntity<?> entity : refs) {
-		entity.setInitialising(true);
-		for (final Object mt : entity.getProperties().values()) {
-		    final MetaProperty prop = (MetaProperty) mt;
-		    if (prop != null) {
-			if (!prop.isCollectional()) {
-			    prop.define(prop.getOriginalValue());
-			}
-		    }
-		}
-		entity.setInitialising(false);
-	    }
-	}
+            // iterate through all locally cached entity instances and execute respective definers
+            for (final AbstractEntity<?> entity : refs) {
+                entity.setInitialising(true);
+                for (final Object mt : entity.getProperties().values()) {
+                    final MetaProperty prop = (MetaProperty) mt;
+                    if (prop != null) {
+                        if (!prop.isCollectional()) {
+                            prop.define(prop.getOriginalValue());
+                        }
+                    }
+                }
+                entity.setInitialising(false);
+            }
+        }
     }
 
     @Override
     public EntityFactory factory() {
-	return factory;
+        return factory;
     }
 }
-
-

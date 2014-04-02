@@ -19,75 +19,75 @@ public class GenericContainerLayer extends PLayer implements IContainer, IDragga
     private Paint backgroundColor;
 
     public void attach(PInputEvent event, PNode node, boolean animate) {
-	if (isCompatible(node)) {
-	    // need to remove a node from its original parent
-	    if (node.getParent() instanceof IContainer) {
-		((IContainer) node.getParent()).detach(event, node, animate, false);
-	    } else {
-		node.removeFromParent();
-	    }
+        if (isCompatible(node)) {
+            // need to remove a node from its original parent
+            if (node.getParent() instanceof IContainer) {
+                ((IContainer) node.getParent()).detach(event, node, animate, false);
+            } else {
+                node.removeFromParent();
+            }
 
-	    addChild(node);
+            addChild(node);
 
-	    if (node instanceof IDraggable) {
-		((IDraggable) node).setRemoveAfterDrop(true);
-	    }
-	    doAfterAttach(node);
-	}
+            if (node instanceof IDraggable) {
+                ((IDraggable) node).setRemoveAfterDrop(true);
+            }
+            doAfterAttach(node);
+        }
     }
 
     public void detach(PInputEvent event, PNode node, boolean animate, boolean forcedDetach) {
-	node.removeFromParent();
-	doAfterDetach(node);
+        node.removeFromParent();
+        doAfterDetach(node);
     }
 
     public boolean isCompatible(PNode node) {
-	return true;
+        return true;
     }
 
     public boolean canDrag() {
-	return drag;
+        return drag;
     }
 
     public void setDrag(boolean drag) {
-	this.drag = drag;
+        this.drag = drag;
     }
 
     public boolean getRemoveAfterDrop() {
-	return true;
+        return true;
     }
 
     public void setRemoveAfterDrop(boolean flag) {
     }
 
     public boolean canBeDetached() {
-	return false;
+        return false;
     }
 
     public void dehighlight() {
-	super.setPaint(getBackgroundColor());
+        super.setPaint(getBackgroundColor());
     }
 
     public Paint getBackgroundColor() {
-	return backgroundColor;
+        return backgroundColor;
     }
 
     public void setBackgroundColor(Paint backgroundColor) {
-	this.backgroundColor = backgroundColor;
-	setPaint(backgroundColor);
+        this.backgroundColor = backgroundColor;
+        setPaint(backgroundColor);
     }
 
     public IBasicNode getDeepParent(MutablePoint2D offset) {
-	return this;
+        return this;
     }
 
     public void highlight(Stroke stroke) {
-	// TODO Auto-generated method stub
+        // TODO Auto-generated method stub
 
     }
 
     public void highlight(PNode node, Paint paint) {
-	super.setPaint(paint);
+        super.setPaint(paint);
     }
 
     public void doAfterAttach(PNode node) {
@@ -112,7 +112,7 @@ public class GenericContainerLayer extends PLayer implements IContainer, IDragga
     }
 
     public boolean showToolTip() {
-	return false;
+        return false;
     }
 
     public void reshape(boolean animate) {

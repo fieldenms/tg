@@ -10,19 +10,19 @@ import com.google.inject.Inject;
 
 /**
  * RAO implementation of {@link IEntityCentreConfigController}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(EntityCentreConfig.class)
 public class EntityCentreConfigControllerRao extends CommonEntityRao<EntityCentreConfig> implements IEntityCentreConfigController {
 
     @Inject
     public EntityCentreConfigControllerRao(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 
     protected WebResourceType getDefaultWebResourceType() {
-	return WebResourceType.SYSTEM;
+        return WebResourceType.SYSTEM;
     }
 }

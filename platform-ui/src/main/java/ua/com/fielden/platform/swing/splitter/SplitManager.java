@@ -45,11 +45,11 @@ public class SplitManager {
      */
     public SplitManager(final Container componentToSplit) {
 
-	this.containerToSplit = componentToSplit;
-	this.idSplit = new HashMap<String, JSplitPane>();
+        this.containerToSplit = componentToSplit;
+        this.idSplit = new HashMap<String, JSplitPane>();
 
-	this.currentSplitEnum = null;
-	this.currentSplitPane = null;
+        this.currentSplitEnum = null;
+        this.currentSplitPane = null;
     }
 
     /**
@@ -60,26 +60,26 @@ public class SplitManager {
      * @return
      */
     public SplitManager split(final SplitEnum side, final String id) {
-	if (rootSplitPane == null) {
-	    switch (side) {
-	    case NORTH:
-	    case SOUTH:
-		currentSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, null, null);
-		break;
-	    case EAST:
-	    case WEST:
-		currentSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, null, null);
-	    }
-	    rootSplitPane = currentSplitPane;
-	} else {
-	    currentSplitPane = side.splitNext(currentSplitEnum, currentSplitPane);
-	}
-	currentSplitPane.setOneTouchExpandable(rootSplitPane.isOneTouchExpandable());
-	currentSplitPane.setContinuousLayout(rootSplitPane.isContinuousLayout());
-	currentSplitPane.setDividerSize(rootSplitPane.getDividerSize());
-	idSplit.put(id, currentSplitPane);
-	currentSplitEnum = side;
-	return this;
+        if (rootSplitPane == null) {
+            switch (side) {
+            case NORTH:
+            case SOUTH:
+                currentSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, null, null);
+                break;
+            case EAST:
+            case WEST:
+                currentSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, null, null);
+            }
+            rootSplitPane = currentSplitPane;
+        } else {
+            currentSplitPane = side.splitNext(currentSplitEnum, currentSplitPane);
+        }
+        currentSplitPane.setOneTouchExpandable(rootSplitPane.isOneTouchExpandable());
+        currentSplitPane.setContinuousLayout(rootSplitPane.isContinuousLayout());
+        currentSplitPane.setDividerSize(rootSplitPane.getDividerSize());
+        idSplit.put(id, currentSplitPane);
+        currentSplitEnum = side;
+        return this;
     }
 
     /**
@@ -90,20 +90,20 @@ public class SplitManager {
      * @return
      */
     public SplitManager splitNew(final SplitEnum side, final String id) {
-	return new SplitManager(containerToSplit).split(side, id);
+        return new SplitManager(containerToSplit).split(side, id);
     }
 
     /**
      * removes the root split panel from the frame and rests all the properties of this instance
      */
     public void reset() {
-	if (rootSplitPane != null) {
-	    containerToSplit.remove(rootSplitPane);
-	}
-	idSplit.clear();
-	currentSplitEnum = null;
-	currentSplitPane = null;
-	rootSplitPane = null;
+        if (rootSplitPane != null) {
+            containerToSplit.remove(rootSplitPane);
+        }
+        idSplit.clear();
+        currentSplitEnum = null;
+        currentSplitPane = null;
+        rootSplitPane = null;
     }
 
     /**
@@ -112,7 +112,7 @@ public class SplitManager {
      * @return
      */
     public boolean isOneTouchExpandable() {
-	return rootSplitPane.isOneTouchExpandable();
+        return rootSplitPane.isOneTouchExpandable();
     }
 
     /**
@@ -121,10 +121,10 @@ public class SplitManager {
      * @param oneTouchExpandable
      */
     public void setOneTouchExpandable(final boolean oneTouchExpandable) {
-	final Iterator<JSplitPane> splitIterator = idSplit.values().iterator();
-	while (splitIterator.hasNext()) {
-	    splitIterator.next().setOneTouchExpandable(oneTouchExpandable);
-	}
+        final Iterator<JSplitPane> splitIterator = idSplit.values().iterator();
+        while (splitIterator.hasNext()) {
+            splitIterator.next().setOneTouchExpandable(oneTouchExpandable);
+        }
     }
 
     /**
@@ -134,14 +134,14 @@ public class SplitManager {
      *            parameter used by the layout manager
      */
     public void flush(final Object constraints) {
-	if (rootSplitPane != null) {
-	    if (containerToSplit.getComponentCount() != 0) {
-		containerToSplit.removeAll();
-	    }
-	    containerToSplit.add(rootSplitPane, constraints);
-	    containerToSplit.validate();
-	    containerToSplit.repaint();
-	}
+        if (rootSplitPane != null) {
+            if (containerToSplit.getComponentCount() != 0) {
+                containerToSplit.removeAll();
+            }
+            containerToSplit.add(rootSplitPane, constraints);
+            containerToSplit.validate();
+            containerToSplit.repaint();
+        }
     }
 
     /**
@@ -152,10 +152,10 @@ public class SplitManager {
      * @param side
      */
     public void setComponent(final String id, final JComponent component, final String side) {
-	final JSplitPane pane = idSplit.get(id);
-	if (pane != null) {
-	    pane.add(component, side);
-	}
+        final JSplitPane pane = idSplit.get(id);
+        if (pane != null) {
+            pane.add(component, side);
+        }
     }
 
     /**
@@ -164,7 +164,7 @@ public class SplitManager {
      * @return
      */
     public boolean isContinuesLayout() {
-	return rootSplitPane.isContinuousLayout();
+        return rootSplitPane.isContinuousLayout();
     }
 
     /**
@@ -173,10 +173,10 @@ public class SplitManager {
      * @param continuesLayout
      */
     public void setContinuesLayout(final boolean continuesLayout) {
-	final Iterator<JSplitPane> splitIterator = idSplit.values().iterator();
-	while (splitIterator.hasNext()) {
-	    splitIterator.next().setContinuousLayout(continuesLayout);
-	}
+        final Iterator<JSplitPane> splitIterator = idSplit.values().iterator();
+        while (splitIterator.hasNext()) {
+            splitIterator.next().setContinuousLayout(continuesLayout);
+        }
     }
 
     /**
@@ -185,7 +185,7 @@ public class SplitManager {
      * @return
      */
     public int getDividerSize() {
-	return rootSplitPane.getDividerSize();
+        return rootSplitPane.getDividerSize();
     }
 
     /**
@@ -194,10 +194,10 @@ public class SplitManager {
      * @param dividerSize
      */
     public void setDividerSize(final int dividerSize) {
-	final Iterator<JSplitPane> splitIterator = idSplit.values().iterator();
-	while (splitIterator.hasNext()) {
-	    splitIterator.next().setDividerSize(dividerSize);
-	}
+        final Iterator<JSplitPane> splitIterator = idSplit.values().iterator();
+        while (splitIterator.hasNext()) {
+            splitIterator.next().setDividerSize(dividerSize);
+        }
     }
 
     /**
@@ -206,7 +206,7 @@ public class SplitManager {
      * @return
      */
     public Container getContainerToSplit() {
-	return containerToSplit;
+        return containerToSplit;
     }
 
 }

@@ -34,127 +34,127 @@ public class PropertyBinderEnhancer {
 
     /**
      * Enhances existing property editors (specifically labels) by correct titles/description (labels + toolTips) using unified TG algorithm.
-     *
+     * 
      * @param editors
      * @param ed
      */
     public static <T extends AbstractEntity<?>> void enhancePropertyEditors(final Class<T> entityType, final Map<String, IPropertyEditor> editors, final boolean master) {
-	final Pair<Class<?>, Set<String>> realRootPropertyNames = getRealRootAndPropertyNames(entityType, editors.keySet());
-	final EntityDescriptor ed = new EntityDescriptor(realRootPropertyNames.getKey(), new ArrayList<String>(realRootPropertyNames.getValue()));
-	for (final String propertyName : editors.keySet()) {
-	    final Pair<Class<?>, String> realRootAndPropertyName = getPropertyRootAndName(entityType, propertyName);
-	    final Pair<String, String> tad = ed.getTitleAndDesc(realRootAndPropertyName.getValue());
-	    if (tad != null) {
-		final IPropertyEditor pe = editors.get(propertyName);
+        final Pair<Class<?>, Set<String>> realRootPropertyNames = getRealRootAndPropertyNames(entityType, editors.keySet());
+        final EntityDescriptor ed = new EntityDescriptor(realRootPropertyNames.getKey(), new ArrayList<String>(realRootPropertyNames.getValue()));
+        for (final String propertyName : editors.keySet()) {
+            final Pair<Class<?>, String> realRootAndPropertyName = getPropertyRootAndName(entityType, propertyName);
+            final Pair<String, String> tad = ed.getTitleAndDesc(realRootAndPropertyName.getValue());
+            if (tad != null) {
+                final IPropertyEditor pe = editors.get(propertyName);
 
-		final JLabel label = pe.getLabel();
-		label.setFont(new Font("SansSerif", Font.BOLD, 12));
-		label.setForeground(new Color(0x646464)); // 0x858585
-		label.setText(tad.getKey() + ":");
-		// Important : there are some problems when using setText(stringOfLessLength). Use StyledLabel.clearStyleRanges() to remove internal layout exceptions
-		// (BasicStyledLabelUI).
-		((StyledLabel) label).clearStyleRanges();
-		label.setToolTipText(tad.getValue());
+                final JLabel label = pe.getLabel();
+                label.setFont(new Font("SansSerif", Font.BOLD, 12));
+                label.setForeground(new Color(0x646464)); // 0x858585
+                label.setText(tad.getKey() + ":");
+                // Important : there are some problems when using setText(stringOfLessLength). Use StyledLabel.clearStyleRanges() to remove internal layout exceptions
+                // (BasicStyledLabelUI).
+                ((StyledLabel) label).clearStyleRanges();
+                label.setToolTipText(tad.getValue());
 
-		enhanceEditor(pe, entityType, realRootAndPropertyName, ed, master);
-	    } else {
-		logger.debug("There is no title and desc retrieved from property [" + propertyName + "] in klass [" + entityType + "] using unified TG algorithm.");
-	    }
-	}
+                enhanceEditor(pe, entityType, realRootAndPropertyName, ed, master);
+            } else {
+                logger.debug("There is no title and desc retrieved from property [" + propertyName + "] in klass [" + entityType + "] using unified TG algorithm.");
+            }
+        }
     }
 
     /**
-     * Returns the pair of entity type and list of properties.
-     * If the entityType parameter is an {@link EntityQueryCriteria} class then it returns pair of real entity type and checked property names.
-     *
+     * Returns the pair of entity type and list of properties. If the entityType parameter is an {@link EntityQueryCriteria} class then it returns pair of real entity type and
+     * checked property names.
+     * 
      * @param entityType
      * @param propertyNames
      * @return
      */
-    private static <T extends AbstractEntity<?>> Pair<Class<?>, Set<String>> getRealRootAndPropertyNames(final Class<T> entityType, final Set<String> propertyNames){
-	final Set<Class<?>> realEntityTypes = new HashSet<Class<?>>();
-	final Set<String> realPropertyNames = new HashSet<String>();
-	for(final String propertyName : propertyNames){
-	    final Pair<Class<?>, String> realRootAndPropertyName = getPropertyRootAndName(entityType, propertyName);
-	    realEntityTypes.add(realRootAndPropertyName.getKey());
-	    realPropertyNames.add(realRootAndPropertyName.getValue());
-	}
+    private static <T extends AbstractEntity<?>> Pair<Class<?>, Set<String>> getRealRootAndPropertyNames(final Class<T> entityType, final Set<String> propertyNames) {
+        final Set<Class<?>> realEntityTypes = new HashSet<Class<?>>();
+        final Set<String> realPropertyNames = new HashSet<String>();
+        for (final String propertyName : propertyNames) {
+            final Pair<Class<?>, String> realRootAndPropertyName = getPropertyRootAndName(entityType, propertyName);
+            realEntityTypes.add(realRootAndPropertyName.getKey());
+            realPropertyNames.add(realRootAndPropertyName.getValue());
+        }
 
-	//Real entity types set may be empty, or may have only one real entity type. Other cases are illegal.
-	if(realEntityTypes.size() > 1){
-	    throw new IllegalStateException("The property names are associated with more then one entity type!");
-	}
-	final Class<?> realEntityType = realEntityTypes.isEmpty() ? null : realEntityTypes.toArray(new Class<?>[0])[0];
-	return new Pair<Class<?>, Set<String>>(realEntityType, realPropertyNames);
+        //Real entity types set may be empty, or may have only one real entity type. Other cases are illegal.
+        if (realEntityTypes.size() > 1) {
+            throw new IllegalStateException("The property names are associated with more then one entity type!");
+        }
+        final Class<?> realEntityType = realEntityTypes.isEmpty() ? null : realEntityTypes.toArray(new Class<?>[0])[0];
+        return new Pair<Class<?>, Set<String>>(realEntityType, realPropertyNames);
     }
 
     /**
      * Returns the real root and property for specified root and property name. (It is needed when the passed root and property name are related to criteria property).
-     *
+     * 
      * @param root
      * @param propertyName
      * @return
      */
-    private static <T extends AbstractEntity<?>> Pair<Class<?>, String> getPropertyRootAndName(final Class<T> root, final String propertyName){
-	final CriteriaProperty criteriaProperty = AnnotationReflector.getPropertyAnnotation(CriteriaProperty.class, root, propertyName);
-	if(criteriaProperty == null){
-	    return new Pair<Class<?>, String>(root, propertyName);
-	} else {
-	    return new Pair<Class<?>, String>(criteriaProperty.rootType(), criteriaProperty.propertyName());
-	}
+    private static <T extends AbstractEntity<?>> Pair<Class<?>, String> getPropertyRootAndName(final Class<T> root, final String propertyName) {
+        final CriteriaProperty criteriaProperty = AnnotationReflector.getPropertyAnnotation(CriteriaProperty.class, root, propertyName);
+        if (criteriaProperty == null) {
+            return new Pair<Class<?>, String>(root, propertyName);
+        } else {
+            return new Pair<Class<?>, String>(criteriaProperty.rootType(), criteriaProperty.propertyName());
+        }
     }
 
-    private static <T extends AbstractEntity<?>> void enhanceEditor(final IPropertyEditor propertyEditor, final Class<T> entityType, final Pair<Class<?>, String> realRootAndPropertyName, final EntityDescriptor ed, final boolean master){
-	if (propertyEditor.getEditor() instanceof BoundedValidationLayer) {
-	    final BoundedValidationLayer<?> bvl = (BoundedValidationLayer<?>) propertyEditor.getEditor();
+    private static <T extends AbstractEntity<?>> void enhanceEditor(final IPropertyEditor propertyEditor, final Class<T> entityType, final Pair<Class<?>, String> realRootAndPropertyName, final EntityDescriptor ed, final boolean master) {
+        if (propertyEditor.getEditor() instanceof BoundedValidationLayer) {
+            final BoundedValidationLayer<?> bvl = (BoundedValidationLayer<?>) propertyEditor.getEditor();
 
-	    bvl.setCaption(createCaption(propertyEditor.getPropertyName(), entityType, realRootAndPropertyName, ed, master));
-	    bvl.setToolTip(createTooltip(propertyEditor.getPropertyName(), entityType, realRootAndPropertyName, ed, master));
-	}
+            bvl.setCaption(createCaption(propertyEditor.getPropertyName(), entityType, realRootAndPropertyName, ed, master));
+            bvl.setToolTip(createTooltip(propertyEditor.getPropertyName(), entityType, realRootAndPropertyName, ed, master));
+        }
     }
 
-    private static<T extends AbstractEntity<?>> String createCaption(final String propertyName, final Class<T> entityType, final Pair<Class<?>, String> realRootAndPropertyName, final EntityDescriptor ed, final boolean master) {
-	final String strWithoutHtml = TitlesDescsGetter.removeHtml(ed.getTitle(realRootAndPropertyName.getValue()));
-	return createString(propertyName, entityType, master, strWithoutHtml, "");
+    private static <T extends AbstractEntity<?>> String createCaption(final String propertyName, final Class<T> entityType, final Pair<Class<?>, String> realRootAndPropertyName, final EntityDescriptor ed, final boolean master) {
+        final String strWithoutHtml = TitlesDescsGetter.removeHtml(ed.getTitle(realRootAndPropertyName.getValue()));
+        return createString(propertyName, entityType, master, strWithoutHtml, "");
     }
 
     private static <T extends AbstractEntity<?>> String createTooltip(final String propertyName, final Class<T> entityType, final Pair<Class<?>, String> realRootAndPropertyName, final EntityDescriptor ed, final boolean master) {
-	final String topDesc = ed.getDescTop(realRootAndPropertyName.getValue());
-	final String strWithoutHtml = TitlesDescsGetter.removeHtmlTag(master ? topDesc : topDesc.toLowerCase());
-	final String s = createString(propertyName, entityType, master, strWithoutHtml, strWithoutHtml);
-	return TitlesDescsGetter.addHtmlTag(s + "<br>" + ed.getDescBottom(realRootAndPropertyName.getValue()));
+        final String topDesc = ed.getDescTop(realRootAndPropertyName.getValue());
+        final String strWithoutHtml = TitlesDescsGetter.removeHtmlTag(master ? topDesc : topDesc.toLowerCase());
+        final String s = createString(propertyName, entityType, master, strWithoutHtml, strWithoutHtml);
+        return TitlesDescsGetter.addHtmlTag(s + "<br>" + ed.getDescBottom(realRootAndPropertyName.getValue()));
     }
 
     private static <T extends AbstractEntity<?>> String createString(final String propertyName, final Class<T> entityType, final boolean master, final String strWithoutHtml, final String masterStr) {
-	final String s;
-	final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
-	final boolean isFirstParam = CriteriaReflector.isFirstParam(entityType, propertyName);
-	final boolean isSecondParam = CriteriaReflector.isSecondParam(entityType, propertyName);
-	final boolean isBoolean = boolean.class.isAssignableFrom(propertyType) || Boolean.class.isAssignableFrom(propertyType);
-	final boolean isRange = EntityUtils.isRangeType(propertyType);
+        final String s;
+        final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
+        final boolean isFirstParam = CriteriaReflector.isFirstParam(entityType, propertyName);
+        final boolean isSecondParam = CriteriaReflector.isSecondParam(entityType, propertyName);
+        final boolean isBoolean = boolean.class.isAssignableFrom(propertyType) || Boolean.class.isAssignableFrom(propertyType);
+        final boolean isRange = EntityUtils.isRangeType(propertyType);
 
-	if(master){
-	    s = masterStr;
-	}else if (isRange) {
-	    if (isFirstParam) {
-		s = FILTER_BY + " " + strWithoutHtml + " from" + DOTS;
-	    } else if (isSecondParam) {
-		s = FILTER_BY + " " + strWithoutHtml + " to" + DOTS;
-	    } else {
-		s = FILTER_BY + " " + strWithoutHtml + DOTS;
-	    }
-	} else if (isBoolean) {
-	    if (isFirstParam) {
-		s = FILTER_BY + ": is " + strWithoutHtml + DOTS;
-	    } else if (isSecondParam) {
-		s = FILTER_BY + ": is not " + strWithoutHtml + DOTS;
-	    } else {
-		s = FILTER_BY + " " + strWithoutHtml + DOTS;
-	    }
-	} else {
-	    s = FILTER_BY + " " + strWithoutHtml + DOTS;
-	}
-	return s;
+        if (master) {
+            s = masterStr;
+        } else if (isRange) {
+            if (isFirstParam) {
+                s = FILTER_BY + " " + strWithoutHtml + " from" + DOTS;
+            } else if (isSecondParam) {
+                s = FILTER_BY + " " + strWithoutHtml + " to" + DOTS;
+            } else {
+                s = FILTER_BY + " " + strWithoutHtml + DOTS;
+            }
+        } else if (isBoolean) {
+            if (isFirstParam) {
+                s = FILTER_BY + ": is " + strWithoutHtml + DOTS;
+            } else if (isSecondParam) {
+                s = FILTER_BY + ": is not " + strWithoutHtml + DOTS;
+            } else {
+                s = FILTER_BY + " " + strWithoutHtml + DOTS;
+            }
+        } else {
+            s = FILTER_BY + " " + strWithoutHtml + DOTS;
+        }
+        return s;
     }
 
     //    /**

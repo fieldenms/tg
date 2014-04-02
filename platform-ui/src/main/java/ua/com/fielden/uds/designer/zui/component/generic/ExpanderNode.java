@@ -19,130 +19,130 @@ public class ExpanderNode extends PPath {
     private final PBasicInputEventHandler defaultEventHandler;
 
     public ExpanderNode(ICollapsable expandableNode, boolean initialOrientationIsUp) {
-	setPaint(new Color(1, 21, 118));
-	setStrokePaint(getPaint());
+        setPaint(new Color(1, 21, 118));
+        setStrokePaint(getPaint());
 
-	if (initialOrientationIsUp) {
-	    up();
-	} else {
-	    down();
-	}
+        if (initialOrientationIsUp) {
+            up();
+        } else {
+            down();
+        }
 
-	defaultEventHandler = new DefaultEventHandler(this);
-	addInputEventListener(defaultEventHandler);
+        defaultEventHandler = new DefaultEventHandler(this);
+        addInputEventListener(defaultEventHandler);
 
-	setExpandableNode(expandableNode);
+        setExpandableNode(expandableNode);
     }
 
     public void down() {
-	setUp(false);
-	reset();
-	moveTo(0, -4);
-	lineTo(4, 0);
-	lineTo(8, -4);
-	closePath();
-	// collapse a node if it is provided
-	if (expandableNode != null) {
-	    expandableNode.collapse();
-	}
+        setUp(false);
+        reset();
+        moveTo(0, -4);
+        lineTo(4, 0);
+        lineTo(8, -4);
+        closePath();
+        // collapse a node if it is provided
+        if (expandableNode != null) {
+            expandableNode.collapse();
+        }
 
     }
 
     public void up() {
-	setUp(true);
-	reset();
-	moveTo(0, 0);
-	lineTo(4, -4);
-	lineTo(8, 0);
-	closePath();
-	// expand a node if it is provided
-	if (expandableNode != null) {
-	    expandableNode.expand();
-	}
+        setUp(true);
+        reset();
+        moveTo(0, 0);
+        lineTo(4, -4);
+        lineTo(8, 0);
+        closePath();
+        // expand a node if it is provided
+        if (expandableNode != null) {
+            expandableNode.expand();
+        }
     }
 
     private static class DefaultEventHandler extends PBasicInputEventHandler implements Serializable {
-	private static final long serialVersionUID = 3762542608255322737L;
+        private static final long serialVersionUID = 3762542608255322737L;
 
-	private static final Paint highPaint = new Color(107, 133, 254);
-	private static Paint prevPaint;
+        private static final Paint highPaint = new Color(107, 133, 254);
+        private static Paint prevPaint;
 
-	private ExpanderNode expander;
+        private ExpanderNode expander;
 
-	public DefaultEventHandler(ExpanderNode expander) {
-	    this.expander = expander;
-	    prevPaint = expander.getPaint();
-	}
+        public DefaultEventHandler(ExpanderNode expander) {
+            this.expander = expander;
+            prevPaint = expander.getPaint();
+        }
 
-	/**
-	 * Handles button highlighting.
-	 */
-	public void mouseEntered(PInputEvent event) {
-	    if (event.isLeftMouseButton()) {
-		return;
-	    }
+        /**
+         * Handles button highlighting.
+         */
+        public void mouseEntered(PInputEvent event) {
+            if (event.isLeftMouseButton()) {
+                return;
+            }
 
-	    prevPaint = expander.getPaint();
-	    expander.setPaint(highPaint);
-	    expander.setStrokePaint(highPaint);
-	}
+            prevPaint = expander.getPaint();
+            expander.setPaint(highPaint);
+            expander.setStrokePaint(highPaint);
+        }
 
-	/**
-	 * Handles button highlighting.
-	 */
-	public void mouseExited(PInputEvent event) {
-	    if (event.isLeftMouseButton()) {
-		return;
-	    }
+        /**
+         * Handles button highlighting.
+         */
+        public void mouseExited(PInputEvent event) {
+            if (event.isLeftMouseButton()) {
+                return;
+            }
 
-	    expander.setPaint(prevPaint);
-	    expander.setStrokePaint(prevPaint);
-	}
+            expander.setPaint(prevPaint);
+            expander.setStrokePaint(prevPaint);
+        }
 
-	/**
-	 * Sequentially invokes all registered on_click_event_listeners.
-	 */
-	public void mouseClicked(PInputEvent event) {
-	    if (expander.isUp()) {
-		expander.down();
-	    } else {
-		expander.up();
-	    }
-	}
+        /**
+         * Sequentially invokes all registered on_click_event_listeners.
+         */
+        public void mouseClicked(PInputEvent event) {
+            if (expander.isUp()) {
+                expander.down();
+            } else {
+                expander.up();
+            }
+        }
 
-	/**
-	 * Handles button highlighting.
-	 */
-	public void mouseReleased(PInputEvent event) {
-	    Rectangle2D bounds = new Rectangle2D.Double(event.getPosition().getX(), event.getPosition().getY(), 1, 1);
-	    bounds = expander.globalToLocal(bounds);
+        /**
+         * Handles button highlighting.
+         */
+        public void mouseReleased(PInputEvent event) {
+            Rectangle2D bounds = new Rectangle2D.Double(event.getPosition().getX(), event.getPosition().getY(), 1, 1);
+            bounds = expander.globalToLocal(bounds);
 
-	    if (expander.intersects(bounds)) {
-		expander.setPaint(highPaint);
-	    } else {
-		expander.setPaint(prevPaint);
-	    }
-	}
+            if (expander.intersects(bounds)) {
+                expander.setPaint(highPaint);
+            } else {
+                expander.setPaint(prevPaint);
+            }
+        }
     }
 
     public ICollapsable getExpandableNode() {
-	return expandableNode;
+        return expandableNode;
     }
 
     private void setExpandableNode(ICollapsable expandableNode) {
-	this.expandableNode = expandableNode;
+        this.expandableNode = expandableNode;
     }
 
     private boolean isUp() {
-	return up;
+        return up;
     }
 
     private void setUp(boolean up) {
-	this.up = up;
+        this.up = up;
     }
 
     public PBasicInputEventHandler getDefaultEventHandler() {
-	return defaultEventHandler;
+        return defaultEventHandler;
     }
 
 }

@@ -40,13 +40,10 @@ import javax.swing.SwingUtilities;
 import edu.umd.cs.piccolox.pswing.PSwingCanvas;
 
 /**
- * <b>PSwingFrame</b> is meant to be subclassed by applications that just need a
- * PSwingCanvas in a JFrame. It also includes full screen mode functionality
- * when run in JDK 1.4. These subclasses should override the initialize method
- * and start adding their own code there.
+ * <b>PSwingFrame</b> is meant to be subclassed by applications that just need a PSwingCanvas in a JFrame. It also includes full screen mode functionality when run in JDK 1.4.
+ * These subclasses should override the initialize method and start adding their own code there.
  * 
- * PSwingFrame functionality is exactly the same as for PFrame, but instead of
- * PCanvas it uses PSwingCanvas.
+ * PSwingFrame functionality is exactly the same as for PFrame, but instead of PCanvas it uses PSwingCanvas.
  * 
  * @version 1.0
  * @author Jesse Grosjean (PFrame)
@@ -61,62 +58,62 @@ public class PSwingFrame extends JFrame {
     private EventListener escapeFullScreenModeListener;
 
     public PSwingFrame() {
-	this("", false, null);
+        this("", false, null);
     }
 
     public PSwingFrame(final String title, final boolean fullScreenMode, final PSwingCanvas aCanvas) {
-	this(title, GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice(), fullScreenMode, aCanvas);
+        this(title, GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice(), fullScreenMode, aCanvas);
     }
 
     public PSwingFrame(final String title, final GraphicsDevice aDevice, final boolean fullScreenMode, final PSwingCanvas aCanvas) {
-	super(title, aDevice.getDefaultConfiguration());
+        super(title, aDevice.getDefaultConfiguration());
 
-	graphicsDevice = aDevice;
+        graphicsDevice = aDevice;
 
-	try {
-	    originalDisplayMode = graphicsDevice.getDisplayMode();
-	} catch (final InternalError e) {
-	    e.printStackTrace();
-	}
+        try {
+            originalDisplayMode = graphicsDevice.getDisplayMode();
+        } catch (final InternalError e) {
+            e.printStackTrace();
+        }
 
-	setBounds(getDefaultFrameBounds());
-	setBackground(null);
+        setBounds(getDefaultFrameBounds());
+        setBackground(null);
 
-	try {
-	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	} catch (final SecurityException e) {
-	} // expected from applets
+        try {
+            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        } catch (final SecurityException e) {
+        } // expected from applets
 
-	if (aCanvas == null) {
-	    canvas = new PSwingCanvas();
-	} else {
-	    canvas = aCanvas;
-	}
+        if (aCanvas == null) {
+            canvas = new PSwingCanvas();
+        } else {
+            canvas = aCanvas;
+        }
 
-	getContentPane().add(canvas);
-	validate();
-	setFullScreenMode(fullScreenMode);
-	canvas.requestFocus();
-	beforeInitialize();
+        getContentPane().add(canvas);
+        validate();
+        setFullScreenMode(fullScreenMode);
+        canvas.requestFocus();
+        beforeInitialize();
 
-	// Manipulation of Piccolo's scene graph should be done from Swings
-	// event dispatch thread since Piccolo is not thread safe. This code calls
-	// initialize() from that thread once the PFrame is initialized, so you are
-	// safe to start working with Piccolo in the initialize() method.
-	SwingUtilities.invokeLater(new Runnable() {
-	    public void run() {
-		PSwingFrame.this.initialize();
-		repaint();
-	    }
-	});
+        // Manipulation of Piccolo's scene graph should be done from Swings
+        // event dispatch thread since Piccolo is not thread safe. This code calls
+        // initialize() from that thread once the PFrame is initialized, so you are
+        // safe to start working with Piccolo in the initialize() method.
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                PSwingFrame.this.initialize();
+                repaint();
+            }
+        });
     }
 
     public PSwingCanvas getCanvas() {
-	return canvas;
+        return canvas;
     }
 
     public Rectangle getDefaultFrameBounds() {
-	return new Rectangle(100, 100, 400, 400);
+        return new Rectangle(100, 100, 400, 400);
     }
 
     // ****************************************************************
@@ -124,108 +121,104 @@ public class PSwingFrame extends JFrame {
     // ****************************************************************
 
     public boolean isFullScreenMode() {
-	return graphicsDevice.getFullScreenWindow() != null;
+        return graphicsDevice.getFullScreenWindow() != null;
     }
 
     public void setFullScreenMode(final boolean fullScreenMode) {
-	if (fullScreenMode) {
-	    addEscapeFullScreenModeListener();
+        if (fullScreenMode) {
+            addEscapeFullScreenModeListener();
 
-	    if (isDisplayable()) {
-		dispose();
-	    }
+            if (isDisplayable()) {
+                dispose();
+            }
 
-	    setUndecorated(true);
-	    setResizable(false);
-	    graphicsDevice.setFullScreenWindow(this);
+            setUndecorated(true);
+            setResizable(false);
+            graphicsDevice.setFullScreenWindow(this);
 
-	    if (graphicsDevice.isDisplayChangeSupported()) {
-		chooseBestDisplayMode(graphicsDevice);
-	    }
-	    validate();
-	} else {
-	    removeEscapeFullScreenModeListener();
+            if (graphicsDevice.isDisplayChangeSupported()) {
+                chooseBestDisplayMode(graphicsDevice);
+            }
+            validate();
+        } else {
+            removeEscapeFullScreenModeListener();
 
-	    if (isDisplayable()) {
-		dispose();
-	    }
+            if (isDisplayable()) {
+                dispose();
+            }
 
-	    setUndecorated(false);
-	    setResizable(true);
-	    graphicsDevice.setFullScreenWindow(null);
-	    validate();
-	    setVisible(true);
-	}
+            setUndecorated(false);
+            setResizable(true);
+            graphicsDevice.setFullScreenWindow(null);
+            validate();
+            setVisible(true);
+        }
     }
 
     protected void chooseBestDisplayMode(final GraphicsDevice device) {
-	final DisplayMode best = getBestDisplayMode(device);
-	if (best != null) {
-	    device.setDisplayMode(best);
-	}
+        final DisplayMode best = getBestDisplayMode(device);
+        if (best != null) {
+            device.setDisplayMode(best);
+        }
     }
 
     protected DisplayMode getBestDisplayMode(final GraphicsDevice device) {
-	final Iterator itr = getPreferredDisplayModes(device).iterator();
-	while (itr.hasNext()) {
-	    final DisplayMode each = (DisplayMode) itr.next();
-	    final DisplayMode[] modes = device.getDisplayModes();
-	    for (int i = 0; i < modes.length; i++) {
-		if (modes[i].getWidth() == each.getWidth() && modes[i].getHeight() == each.getHeight() && modes[i].getBitDepth() == each.getBitDepth()) {
-		    return each;
-		}
-	    }
-	}
+        final Iterator itr = getPreferredDisplayModes(device).iterator();
+        while (itr.hasNext()) {
+            final DisplayMode each = (DisplayMode) itr.next();
+            final DisplayMode[] modes = device.getDisplayModes();
+            for (int i = 0; i < modes.length; i++) {
+                if (modes[i].getWidth() == each.getWidth() && modes[i].getHeight() == each.getHeight() && modes[i].getBitDepth() == each.getBitDepth()) {
+                    return each;
+                }
+            }
+        }
 
-	return null;
+        return null;
     }
 
     /**
-     * By default return the current display mode. Subclasses may override this
-     * method to return other modes in the collection.
+     * By default return the current display mode. Subclasses may override this method to return other modes in the collection.
      */
     protected Collection getPreferredDisplayModes(final GraphicsDevice device) {
-	final ArrayList result = new ArrayList();
+        final ArrayList result = new ArrayList();
 
-	result.add(device.getDisplayMode());
-	/*
-	 * result.add(new DisplayMode(640, 480, 32, 0)); result.add(new
-	 * DisplayMode(640, 480, 16, 0)); result.add(new DisplayMode(640, 480,
-	 * 8, 0));
-	 */
+        result.add(device.getDisplayMode());
+        /*
+         * result.add(new DisplayMode(640, 480, 32, 0)); result.add(new
+         * DisplayMode(640, 480, 16, 0)); result.add(new DisplayMode(640, 480,
+         * 8, 0));
+         */
 
-	return result;
+        return result;
     }
 
     /**
-     * This method adds a key listener that will take this PFrame out of full
-     * screen mode when the escape key is pressed. This is called for you
-     * automatically when the frame enters full screen mode.
+     * This method adds a key listener that will take this PFrame out of full screen mode when the escape key is pressed. This is called for you automatically when the frame enters
+     * full screen mode.
      */
     public void addEscapeFullScreenModeListener() {
-	removeEscapeFullScreenModeListener();
-	escapeFullScreenModeListener = new KeyAdapter() {
-	    @Override
-	    public void keyPressed(final KeyEvent aEvent) {
-		if (aEvent.getKeyCode() == KeyEvent.VK_ESCAPE) {
-		    setFullScreenMode(false);
-		}
-	    }
-	};
-	canvas.addKeyListener((KeyListener) escapeFullScreenModeListener);
+        removeEscapeFullScreenModeListener();
+        escapeFullScreenModeListener = new KeyAdapter() {
+            @Override
+            public void keyPressed(final KeyEvent aEvent) {
+                if (aEvent.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    setFullScreenMode(false);
+                }
+            }
+        };
+        canvas.addKeyListener((KeyListener) escapeFullScreenModeListener);
     }
 
     /**
-     * This method removes the escape full screen mode key listener. It will be
-     * called for you automatically when full screen mode exits, but the method
-     * has been made public for applications that wish to use other methods for
-     * exiting full screen mode.
+     * This method removes the escape full screen mode key listener. It will be called for you automatically when full screen mode exits, but the method has been made public for
+     * applications that wish to use other methods for exiting full screen mode.
      */
     public void removeEscapeFullScreenModeListener() {
-	if (escapeFullScreenModeListener != null) {
-	    canvas.removeKeyListener((KeyListener) escapeFullScreenModeListener);
-	    escapeFullScreenModeListener = null;
-	}
+        if (escapeFullScreenModeListener != null) {
+            canvas.removeKeyListener((KeyListener) escapeFullScreenModeListener);
+            escapeFullScreenModeListener = null;
+        }
     }
 
     // ****************************************************************
@@ -233,24 +226,20 @@ public class PSwingFrame extends JFrame {
     // ****************************************************************
 
     /**
-     * This method will be called before the initialize() method and will be
-     * called on the thread that is constructing this object.
+     * This method will be called before the initialize() method and will be called on the thread that is constructing this object.
      */
     public void beforeInitialize() {
     }
 
     /**
-     * Subclasses should override this method and add their Piccolo
-     * initialization code there. This method will be called on the swing event
-     * dispatch thread. Note that the constructors of PFrame subclasses may not
-     * be complete when this method is called. If you need to initailize some
-     * things in your class before this method is called place that code in
-     * beforeInitialize();
+     * Subclasses should override this method and add their Piccolo initialization code there. This method will be called on the swing event dispatch thread. Note that the
+     * constructors of PFrame subclasses may not be complete when this method is called. If you need to initailize some things in your class before this method is called place that
+     * code in beforeInitialize();
      */
     public void initialize() {
     }
 
     public static void main(final String[] argv) {
-	new PSwingFrame();
+        new PSwingFrame();
     }
 }

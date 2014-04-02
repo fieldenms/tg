@@ -27,83 +27,84 @@ import ua.com.fielden.platform.utils.Pair;
 public class DomainMetadataExpressionsGenerator {
 
     ExpressionModel generateUnionEntityPropertyExpression(final Class<? extends AbstractUnionEntity> entityType, final String commonPropName) {
-	final List<Field> props = AbstractUnionEntity.unionProperties(entityType);
-	final Iterator<Field> iterator = props.iterator();
-	final String firstUnionPropName = iterator.next().getName();
-	ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose,AbstractEntity<?>> expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName + "." + commonPropName);
+        final List<Field> props = AbstractUnionEntity.unionProperties(entityType);
+        final Iterator<Field> iterator = props.iterator();
+        final String firstUnionPropName = iterator.next().getName();
+        ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName
+                + "." + commonPropName);
 
-	for (; iterator.hasNext();) {
-	    final String unionPropName = iterator.next().getName();
-	    expressionModelInProgress = expressionModelInProgress.when().prop(unionPropName).isNotNull().then().prop(unionPropName + "." + commonPropName);
-	}
+        for (; iterator.hasNext();) {
+            final String unionPropName = iterator.next().getName();
+            expressionModelInProgress = expressionModelInProgress.when().prop(unionPropName).isNotNull().then().prop(unionPropName + "." + commonPropName);
+        }
 
-	return expressionModelInProgress.otherwise().val(null).end().model();
+        return expressionModelInProgress.otherwise().val(null).end().model();
     }
 
     ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
-	final Iterator<Field> iterator = keyMembers.iterator();
-	IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().concat().prop(getKeyMemberConcatenationExpression(iterator.next()));
-	for (; iterator.hasNext();) {
-	    expressionModelInProgress = expressionModelInProgress.with().val(Reflector.getKeyMemberSeparator(entityType));
-	    expressionModelInProgress = expressionModelInProgress.with().prop(getKeyMemberConcatenationExpression(iterator.next()));
-	}
-	return expressionModelInProgress.end().model();
+        final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+        final Iterator<Field> iterator = keyMembers.iterator();
+        IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().concat().prop(getKeyMemberConcatenationExpression(iterator.next()));
+        for (; iterator.hasNext();) {
+            expressionModelInProgress = expressionModelInProgress.with().val(Reflector.getKeyMemberSeparator(entityType));
+            expressionModelInProgress = expressionModelInProgress.with().prop(getKeyMemberConcatenationExpression(iterator.next()));
+        }
+        return expressionModelInProgress.end().model();
     }
 
     private String getKeyMemberConcatenationExpression(final Field keyMember) {
-	if (EntityUtils.isEntityType(keyMember.getType())) {
-	    return keyMember.getName() + ".key";
-	} else {
-	    return keyMember.getName();
-	}
+        if (EntityUtils.isEntityType(keyMember.getType())) {
+            return keyMember.getName() + ".key";
+        } else {
+            return keyMember.getName();
+        }
     }
 
     ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-	final Calculated calcAnnotation = AnnotationReflector.getAnnotation(calculatedPropfield, Calculated.class);
-	if (!"".equals(calcAnnotation.value())) {
-	    return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
-	} else {
-	    try {
-		final Field exprField = Finder.getFieldByName(entityType, calculatedPropfield.getName() + "_");
-		exprField.setAccessible(true);
-		return (ExpressionModel) exprField.get(null);
-	    } catch (final Exception e) {
-		throw new IllegalStateException("Hard-coded expression model for prop [" + calculatedPropfield.getName() + "] is missing! ---" + e);
-	    }
-	}
+        final Calculated calcAnnotation = AnnotationReflector.getAnnotation(calculatedPropfield, Calculated.class);
+        if (!"".equals(calcAnnotation.value())) {
+            return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
+        } else {
+            try {
+                final Field exprField = Finder.getFieldByName(entityType, calculatedPropfield.getName() + "_");
+                exprField.setAccessible(true);
+                return (ExpressionModel) exprField.get(null);
+            } catch (final Exception e) {
+                throw new IllegalStateException("Hard-coded expression model for prop [" + calculatedPropfield.getName() + "] is missing! ---" + e);
+            }
+        }
     }
 
     private ExpressionText2ModelConverter createExpressionText2ModelConverter(final Class<? extends AbstractEntity<?>> entityType, final Calculated calcAnnotation)
-	    throws Exception {
-	if (AnnotationReflector.isContextual(calcAnnotation)) {
-	    return new ExpressionText2ModelConverter(getRootType(calcAnnotation), calcAnnotation.contextPath(), calcAnnotation.value());
-	} else {
-	    return new ExpressionText2ModelConverter(entityType, calcAnnotation.value());
-	}
+            throws Exception {
+        if (AnnotationReflector.isContextual(calcAnnotation)) {
+            return new ExpressionText2ModelConverter(getRootType(calcAnnotation), calcAnnotation.contextPath(), calcAnnotation.value());
+        } else {
+            return new ExpressionText2ModelConverter(entityType, calcAnnotation.value());
+        }
     }
 
     public Class<? extends AbstractEntity<?>> getRootType(final Calculated calcAnnotation) throws ClassNotFoundException {
-	return (Class<? extends AbstractEntity<?>>) ClassLoader.getSystemClassLoader().loadClass(calcAnnotation.rootTypeName());
+        return (Class<? extends AbstractEntity<?>>) ClassLoader.getSystemClassLoader().loadClass(calcAnnotation.rootTypeName());
     }
 
     private PrimitiveResultQueryModel getReferenceCountForSingleProp(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
-	return select(entityType).where().prop(propName).eq().extProp("id").yield().countAll().modelAsPrimitive();
+        return select(entityType).where().prop(propName).eq().extProp("id").yield().countAll().modelAsPrimitive();
     }
 
     ExpressionModel getReferencesCountPropForEntity(final Set<Pair<Class<? extends AbstractEntity<?>>, String>> references) {
-	if (references.size() == 0) {
-	    return expr().val(0).model();
-	}
+        if (references.size() == 0) {
+            return expr().val(0).model();
+        }
 
-	final Iterator<Pair<Class<? extends AbstractEntity<?>>, String>> iterator = references.iterator();
-	final Pair<Class<? extends AbstractEntity<?>>,String> firstEntry = iterator.next();
-	IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(getReferenceCountForSingleProp(firstEntry.getKey(), firstEntry.getValue()));
-	for (; iterator.hasNext();) {
-	    final Pair<Class<? extends AbstractEntity<?>>,String> entry = iterator.next();
-	    expressionModelInProgress = expressionModelInProgress.add().model(getReferenceCountForSingleProp(entry.getKey(), entry.getValue()));
-	}
-	return expressionModelInProgress.model();
+        final Iterator<Pair<Class<? extends AbstractEntity<?>>, String>> iterator = references.iterator();
+        final Pair<Class<? extends AbstractEntity<?>>, String> firstEntry = iterator.next();
+        IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(getReferenceCountForSingleProp(firstEntry.getKey(), firstEntry.getValue()));
+        for (; iterator.hasNext();) {
+            final Pair<Class<? extends AbstractEntity<?>>, String> entry = iterator.next();
+            expressionModelInProgress = expressionModelInProgress.add().model(getReferenceCountForSingleProp(entry.getKey(), entry.getValue()));
+        }
+        return expressionModelInProgress.model();
     }
 
 }

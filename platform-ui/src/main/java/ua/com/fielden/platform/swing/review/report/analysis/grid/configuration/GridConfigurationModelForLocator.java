@@ -13,10 +13,10 @@ public class GridConfigurationModelForLocator<T extends AbstractEntity<?>> exten
     private final List<T> locatorSelectionModel;
 
     public GridConfigurationModelForLocator(//
-	    final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria,//
-	    final List<T> locatorSelectionModel) {
-	super(criteria, null);
-	this.locatorSelectionModel = locatorSelectionModel;
+    final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria,//
+            final List<T> locatorSelectionModel) {
+        super(criteria, null);
+        this.locatorSelectionModel = locatorSelectionModel;
     }
 
     @Override

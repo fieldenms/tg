@@ -7,11 +7,11 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 class JoinAlias<ET extends AbstractEntity<?>> extends JoinOn<ET> implements IJoinAlias<ET> {
 
     JoinAlias(final Tokens queryTokens) {
-	super(queryTokens);
+        super(queryTokens);
     }
 
     @Override
     public IJoinCondition<ET> as(final String alias) {
-	return new JoinOn<ET>(getTokens().joinAlias(alias));
+        return new JoinOn<ET>(getTokens().joinAlias(alias));
     }
 }

@@ -25,7 +25,7 @@ import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
 @CompanionObject(ITgTimesheet.class)
-public class TgTimesheet  extends AbstractEntity<DynamicEntityKey> {
+public class TgTimesheet extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
@@ -59,45 +59,45 @@ public class TgTimesheet  extends AbstractEntity<DynamicEntityKey> {
     private String incident;
 
     @Observable
-    public TgTimesheet  setDuration(final BigDecimal duration) {
-	this.duration = duration;
-	return this;
+    public TgTimesheet setDuration(final BigDecimal duration) {
+        this.duration = duration;
+        return this;
     }
 
     public BigDecimal getDuration() {
-	return duration;
+        return duration;
     }
 
     @Observable
     @GeProperty("startDate")
-    public TgTimesheet  setFinishDate(final Date finishDate) {
-	this.finishDate = finishDate;
-	return this;
+    public TgTimesheet setFinishDate(final Date finishDate) {
+        this.finishDate = finishDate;
+        return this;
     }
 
     public Date getFinishDate() {
-	return finishDate;
+        return finishDate;
     }
 
     @Observable
     @LeProperty("finishDate")
-    public TgTimesheet  setStartDate(final Date startDate) {
-	this.startDate = startDate;
-	return this;
+    public TgTimesheet setStartDate(final Date startDate) {
+        this.startDate = startDate;
+        return this;
     }
 
     public Date getStartDate() {
-	return startDate;
+        return startDate;
     }
 
     @Observable
-    public TgTimesheet  setPerson(final String person) {
-	this.person = person;
-	return this;
+    public TgTimesheet setPerson(final String person) {
+        this.person = person;
+        return this;
     }
 
     public String getPerson() {
-	return person;
+        return person;
     }
 
     public String getIncident() {

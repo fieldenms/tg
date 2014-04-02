@@ -18,11 +18,11 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Editor for an entity property represented by a collection.
- *
+ * 
  * TODO The current implementation is rather a stub serving as a read-only place holder.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 public class CollectionalPropertyEditor implements IPropertyEditor {
 
@@ -33,64 +33,64 @@ public class CollectionalPropertyEditor implements IPropertyEditor {
     private final JTextField editor;
 
     public CollectionalPropertyEditor(final AbstractEntity<?> entity, final String propertyName) {
-	this.entity = entity;
-	this.propertyName = propertyName;
+        this.entity = entity;
+        this.propertyName = propertyName;
 
-	final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
+        final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
 
-	label = DummyBuilder.label(titleAndDesc.getKey());
-	label.setToolTipText(titleAndDesc.getValue());
-	editor = createEditor(entity, entity.getProperty(propertyName));
+        label = DummyBuilder.label(titleAndDesc.getKey());
+        label.setToolTipText(titleAndDesc.getValue());
+        editor = createEditor(entity, entity.getProperty(propertyName));
     }
 
     private JTextField createEditor(final AbstractEntity<?> entity, final MetaProperty metaProperty) {
-	final JTextField editor = new JTextField();
-	editor.setText(((Collection<?>) entity.get(propertyName)).size() + "");
-	editor.setEditable(false);
-	editor.setHorizontalAlignment(SwingConstants.RIGHT);
-	editor.setToolTipText(metaProperty.getDesc());
-	return editor;
+        final JTextField editor = new JTextField();
+        editor.setText(((Collection<?>) entity.get(propertyName)).size() + "");
+        editor.setEditable(false);
+        editor.setHorizontalAlignment(SwingConstants.RIGHT);
+        editor.setToolTipText(metaProperty.getDesc());
+        return editor;
     }
 
     @Override
     public void bind(final AbstractEntity<?> entity) {
-	this.entity = entity;
-	SwingUtilitiesEx.invokeLater(new Runnable() {
-	    @Override
-	    public void run() {
-		editor.setText(((Collection<?>) entity.get(propertyName)).size() + "");
-	    }
-	});
+        this.entity = entity;
+        SwingUtilitiesEx.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                editor.setText(((Collection<?>) entity.get(propertyName)).size() + "");
+            }
+        });
     }
 
     @Override
     public AbstractEntity<?> getEntity() {
-	return entity;
+        return entity;
     }
 
     @Override
     public String getPropertyName() {
-	return propertyName;
+        return propertyName;
     }
 
     public JLabel getLabel() {
-	return label;
+        return label;
     }
 
     public JComponent getEditor() {
-	return editor;
+        return editor;
     }
 
     @Override
     public JPanel getDefaultLayout() {
-	final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
-	panel.add(label);
-	panel.add(editor, "growx");
-	return panel;
+        final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
+        panel.add(label);
+        panel.add(editor, "growx");
+        return panel;
     }
 
     @Override
     public IValueMatcher<?> getValueMatcher() {
-	throw new UnsupportedOperationException("Value matcher are not applicable for collectional properties.");
+        throw new UnsupportedOperationException("Value matcher are not applicable for collectional properties.");
     }
 }

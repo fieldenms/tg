@@ -23,60 +23,58 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity<?>, C
     private AbstractAnalysisReview<T, CDTME, ADTME> analysisView;
 
     public AbstractAnalysisReviewModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final ADTME adtme) {
-	super(criteria);
-	this.adtme = adtme;
-	this.pageHolder = new PageHolder();
-	this.analysisView = null;
+        super(criteria);
+        this.adtme = adtme;
+        this.pageHolder = new PageHolder();
+        this.analysisView = null;
     }
 
     /**
-     * Set the analysis view for this model.
-     * Please note that one can set analysis view only once.
-     * Otherwise The {@link IllegalStateException} will be thrown.
-     *
+     * Set the analysis view for this model. Please note that one can set analysis view only once. Otherwise The {@link IllegalStateException} will be thrown.
+     * 
      * @param analysisView
      */
-    final void setAnalysisView(final AbstractAnalysisReview<T, CDTME, ADTME> analysisView){
-	if(this.analysisView != null){
-	    throw new IllegalStateException("The analysis view can be set only once!");
-	}
-	this.analysisView = analysisView;
+    final void setAnalysisView(final AbstractAnalysisReview<T, CDTME, ADTME> analysisView) {
+        if (this.analysisView != null) {
+            throw new IllegalStateException("The analysis view can be set only once!");
+        }
+        this.analysisView = analysisView;
     }
 
     /**
      * Returns the associated {@link IAbstractAnalysisDomainTreeManager}.
-     *
+     * 
      * @return
      */
-    public final ADTME adtme(){
-	return adtme;
+    public final ADTME adtme() {
+        return adtme;
     }
 
     /**
      * Returns the {@link PageHolder} instance, that is associated with this analysis model.
-     *
+     * 
      * @return
      */
-    public final PageHolder getPageHolder(){
-	return pageHolder;
+    public final PageHolder getPageHolder() {
+        return pageHolder;
     }
 
     protected AbstractAnalysisReview<T, CDTME, ADTME> getAnalysisView() {
-	return analysisView;
+        return analysisView;
     }
 
     /**
      * Runs the last executed query.
-     *
+     * 
      * @return
      */
     protected Result reExecuteAnalysisQuery() {
-	throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     /**
      * Executes analysis query, and returns the result set of the query execution.
-     *
+     * 
      * @return
      */
     abstract protected Result executeAnalysisQuery();
@@ -88,14 +86,14 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity<?>, C
 
     /**
      * Returns the array of available file extensions to export.
-     *
+     * 
      * @return
      */
     abstract protected String[] getExportFileExtensions();
 
     /**
      * Returns default export file extension if user didn't specified one.
-     *
+     * 
      * @return
      */
     abstract protected String getDefaultExportFileExtension();

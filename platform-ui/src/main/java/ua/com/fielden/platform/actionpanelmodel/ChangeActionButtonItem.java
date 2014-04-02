@@ -23,7 +23,7 @@ public class ChangeActionButtonItem implements IActionItem {
      * @param actionList
      */
     public ChangeActionButtonItem(final List<? extends ActionChanger<?>> actionList) {
-	this.actionList = actionList;
+        this.actionList = actionList;
     }
 
     /**
@@ -31,13 +31,13 @@ public class ChangeActionButtonItem implements IActionItem {
      */
     @Override
     public void build(final JToolBar toolBar) {
-	if (actionList.size() != 0) {
-	    final ActionChangeButton changeButton = new ActionChangeButton(actionList.get(0));
-	    for (int actionIndex = 1; actionIndex < actionList.size(); actionIndex++) {
-		changeButton.addAction(actionList.get(actionIndex));
-	    }
-	    toolBar.add(changeButton);
-	}
+        if (actionList.size() != 0) {
+            final ActionChangeButton changeButton = new ActionChangeButton(actionList.get(0));
+            for (int actionIndex = 1; actionIndex < actionList.size(); actionIndex++) {
+                changeButton.addAction(actionList.get(actionIndex));
+            }
+            toolBar.add(changeButton);
+        }
     }
 
     /**
@@ -46,7 +46,7 @@ public class ChangeActionButtonItem implements IActionItem {
      * @return
      */
     public List<? extends ActionChanger<?>> getActionList() {
-	return actionList;
+        return actionList;
     }
 
 }

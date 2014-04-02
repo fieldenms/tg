@@ -16,7 +16,7 @@ import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuild
 import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisFactory;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
-public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>{
+public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     private final IAnalysisBuilder<T> analysisBuilder;
     private final IAnalysisFactory<T, ?> analysisFactory;
@@ -28,41 +28,41 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
     private final ICentreDomainTreeManagerAndEnhancer cdtme;
 
     public ManualCentreConfigurationModel(final Class<T> entityType, //
-	    final IAnalysisFactory<T, ?> analysisFactory,//
-	    final ICentreDomainTreeManagerAndEnhancer cdtme, //
-	    final IEntityMasterManager masterManager, //
-	    final ICriteriaGenerator criteriaGenerator) {
-	super(entityType, null, null, masterManager, criteriaGenerator);
-	this.cdtme = cdtme;
-	this.analysisFactory = analysisFactory;
-	this.analysisBuilder = new DefaultAnalysisBuilder<>(analysisFactory);
+            final IAnalysisFactory<T, ?> analysisFactory,//
+            final ICentreDomainTreeManagerAndEnhancer cdtme, //
+            final IEntityMasterManager masterManager, //
+            final ICriteriaGenerator criteriaGenerator) {
+        super(entityType, null, null, masterManager, criteriaGenerator);
+        this.cdtme = cdtme;
+        this.analysisFactory = analysisFactory;
+        this.analysisBuilder = new DefaultAnalysisBuilder<>(analysisFactory);
     }
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
-	if(ReportMode.WIZARD.equals(mode)){
-	    return new Result(this, new IllegalArgumentException("The wizard mode can not be set for manual entity centre."));
-	}
-	return Result.successful(this);
+        if (ReportMode.WIZARD.equals(mode)) {
+            return new Result(this, new IllegalArgumentException("The wizard mode can not be set for manual entity centre."));
+        }
+        return Result.successful(this);
     }
 
     @Override
     protected DomainTreeEditorModel<T> createDomainTreeEditorModel() {
-	throw new UnsupportedOperationException("The manual centre can not be configured!");
+        throw new UnsupportedOperationException("The manual centre can not be configured!");
     }
 
     @Override
     protected EntityCentreModel<T> createEntityCentreModel() {
-	return new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
+        return new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
     }
 
     /**
      * Returns the {@link ICentreDomainTreeManagerAndEnhancer} instance for this manual entity centre config. model
-     *
+     * 
      * @return
      */
     public ICentreDomainTreeManagerAndEnhancer getCdtme() {
-	return cdtme;
+        return cdtme;
     }
 
     public IAnalysisFactory<T, ?> getAnalysisFactory() {
@@ -73,13 +73,12 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
      * Builds and executes query.
      */
     public void refresh() {
-	if (view != null && view.getPreviousView() != null) {
-	    if (view.getPreviousView().getSingleAnalysis().getModel().getMode() == ReportMode.REPORT) {
-		view.getPreviousView().getSingleAnalysis().getPreviousView().refresh();
-	    }
-	}
+        if (view != null && view.getPreviousView() != null) {
+            if (view.getPreviousView().getSingleAnalysis().getModel().getMode() == ReportMode.REPORT) {
+                view.getPreviousView().getSingleAnalysis().getPreviousView().refresh();
+            }
+        }
     }
-
 
     public ManualCentreConfigurationView<T> getView() {
         return view;
@@ -91,12 +90,12 @@ public class ManualCentreConfigurationModel<T extends AbstractEntity<?>> extends
 
     /**
      * Creates the {@link EntityInspectorModel} for the specified criteria
-     *
+     * 
      * @param criteria
      * @return
      */
     private EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria) {
-	return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>(criteria,//
-		CentrePropertyBinder.<T> createLocatorPropertyBinder());
+        return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>(criteria,//
+        CentrePropertyBinder.<T> createLocatorPropertyBinder());
     }
 }

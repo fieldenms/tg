@@ -18,37 +18,37 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 public class DefaultLifecycleAnalysisFactory<T extends AbstractEntity<?>> implements IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> {
 
-    public DefaultLifecycleAnalysisFactory(){
+    public DefaultLifecycleAnalysisFactory() {
     }
 
     @Override
-        public LifecycleAnalysisConfigurationView<T> createAnalysis(//
-            final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
-	    final String name, //
-	    final Map<Object, DetailsFrame> detailsCache,//
-	    final BlockingIndefiniteProgressLayer progressLayer) {
-	final LifecycleAnalysisConfigurationModel<T> analysisModel = new LifecycleAnalysisConfigurationModel<T>(criteria, name);
-	return LifecycleAnalysisConfigurationView.createLifecycleAnalysisWithDefaultToolbar(analysisModel, detailsCache, null, owner, progressLayer);
-        }
+    public LifecycleAnalysisConfigurationView<T> createAnalysis(//
+    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+            final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
+            final String name, //
+            final Map<Object, DetailsFrame> detailsCache,//
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        final LifecycleAnalysisConfigurationModel<T> analysisModel = new LifecycleAnalysisConfigurationModel<T>(criteria, name);
+        return LifecycleAnalysisConfigurationView.createLifecycleAnalysisWithDefaultToolbar(analysisModel, detailsCache, null, owner, progressLayer);
+    }
 
     @Override
     public DefaultLifecycleAnalysisFactory<T> setToolbarCustomiser(final IToolbarCustomiser<?> toolbarCustomiser) {
-	throw new UnsupportedOperationException("The analysis tool bar customiser can not be set for lifecycle analysis factory.");
+        throw new UnsupportedOperationException("The analysis tool bar customiser can not be set for lifecycle analysis factory.");
     }
 
     @Override
     public IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> setQueryCustomiser(final IAnalysisQueryCustomiser<T, ?> queryCustomiser) {
-	throw new UnsupportedOperationException("The analysis query customiser can not be set for lifecycle analysis factory.");
+        throw new UnsupportedOperationException("The analysis query customiser can not be set for lifecycle analysis factory.");
     }
 
     @Override
     public IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> setDetailsCustomiser(final IDetailsCustomiser detailsCustomiser) {
-	throw new UnsupportedOperationException("The details are not supported yet for the default lifecycle analysis.");
+        throw new UnsupportedOperationException("The details are not supported yet for the default lifecycle analysis.");
     }
 
     @Override
     public IAnalysisFactory<T, LifecycleAnalysisConfigurationView<T>> setAnalysisViewCustomiser(final IAnalysisViewCustomiser<?> analysisViewCustomiser) {
-	throw new UnsupportedOperationException("The analysis view customiser can not be set for lifecycle analysis factory.");
+        throw new UnsupportedOperationException("The analysis view customiser can not be set for lifecycle analysis factory.");
     }
 }

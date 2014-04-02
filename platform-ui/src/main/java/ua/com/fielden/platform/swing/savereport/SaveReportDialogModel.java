@@ -33,8 +33,8 @@ public class SaveReportDialogModel<T extends AbstractEntity<?>> {
      *            - the directory where removable reports must be saved.
      */
     public SaveReportDialogModel(final CentreConfigurationModel<T> centreConfigurationModel) {
-	this.centreConfigurationModel = centreConfigurationModel;
-	this.returnValue = SaveReportOptions.CANCEL;
+        this.centreConfigurationModel = centreConfigurationModel;
+        this.returnValue = SaveReportOptions.CANCEL;
     }
 
     /**
@@ -43,11 +43,11 @@ public class SaveReportDialogModel<T extends AbstractEntity<?>> {
      * @return
      */
     public ListModel getAvailableReports() {
-	final DefaultListModel listModel = new DefaultListModel();
-	for (final String centerName : centreConfigurationModel.loadNonPrincipleEntityCentreNames()) {
-	    listModel.addElement(centerName);
-	}
-	return listModel;
+        final DefaultListModel listModel = new DefaultListModel();
+        for (final String centerName : centreConfigurationModel.loadNonPrincipleEntityCentreNames()) {
+            listModel.addElement(centerName);
+        }
+        return listModel;
     }
 
     /**
@@ -57,48 +57,48 @@ public class SaveReportDialogModel<T extends AbstractEntity<?>> {
      * @return
      */
     public Action getApproveAction(final SaveReportDialog saveReportDialog) {
-	return new Command<Void>("Save") {
+        return new Command<Void>("Save") {
 
-	    private static final long serialVersionUID = -7758200445145077970L;
+            private static final long serialVersionUID = -7758200445145077970L;
 
-	    {
-		putValue(Action.SHORT_DESCRIPTION, "Creates the report");
-		putValue(Action.MNEMONIC_KEY, KeyEvent.VK_S);
-	    }
+            {
+                putValue(Action.SHORT_DESCRIPTION, "Creates the report");
+                putValue(Action.MNEMONIC_KEY, KeyEvent.VK_S);
+            }
 
-	    @Override
-	    protected boolean preAction() {
-		final boolean result = super.preAction();
-		if (!result) {
-		    return result;
-		}
-		final String reportTitle = saveReportDialog.getEnteredFileName().trim();
-		if (StringUtils.isEmpty(reportTitle)) {
-		    JOptionPane.showMessageDialog(saveReportDialog, "Please provide report title.", "Save Report Warning", JOptionPane.WARNING_MESSAGE);
-		} else if (!saveReportDialog.isNameAvailable(reportTitle)) {
-		    saveReportDialog.selectItem(reportTitle);
-		    JOptionPane.showMessageDialog(saveReportDialog, "Report with this title already exists.", "Save Report Warning", JOptionPane.WARNING_MESSAGE);
-		} else if (false //TODO Global domain tree manager must provide ability to determine whether this
-			/*!centerController.isNonPrincipleCenterNameValid(principleKey, reportTitle)*/) {
-		    JOptionPane.showMessageDialog(saveReportDialog, "The title contains illegal characters. Please change the title and try again.", "Save Report Warning", JOptionPane.WARNING_MESSAGE);
-		} else {
-		    return true;
-		}
-		return false;
-	    }
+            @Override
+            protected boolean preAction() {
+                final boolean result = super.preAction();
+                if (!result) {
+                    return result;
+                }
+                final String reportTitle = saveReportDialog.getEnteredFileName().trim();
+                if (StringUtils.isEmpty(reportTitle)) {
+                    JOptionPane.showMessageDialog(saveReportDialog, "Please provide report title.", "Save Report Warning", JOptionPane.WARNING_MESSAGE);
+                } else if (!saveReportDialog.isNameAvailable(reportTitle)) {
+                    saveReportDialog.selectItem(reportTitle);
+                    JOptionPane.showMessageDialog(saveReportDialog, "Report with this title already exists.", "Save Report Warning", JOptionPane.WARNING_MESSAGE);
+                } else if (false //TODO Global domain tree manager must provide ability to determine whether this
+                /*!centerController.isNonPrincipleCenterNameValid(principleKey, reportTitle)*/) {
+                    JOptionPane.showMessageDialog(saveReportDialog, "The title contains illegal characters. Please change the title and try again.", "Save Report Warning", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    return true;
+                }
+                return false;
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		returnValue = SaveReportOptions.APPROVE;
-		saveReportDialog.closeDialog();
-	    }
-	};
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                returnValue = SaveReportOptions.APPROVE;
+                saveReportDialog.closeDialog();
+            }
+        };
     }
 
     /**
@@ -108,27 +108,27 @@ public class SaveReportDialogModel<T extends AbstractEntity<?>> {
      * @return
      */
     public Action getCancelAction(final SaveReportDialog saveReportDialog) {
-	return new Command<Void>("Cancel") {
-	    private static final long serialVersionUID = -2730860592583696528L;
+        return new Command<Void>("Cancel") {
+            private static final long serialVersionUID = -2730860592583696528L;
 
-	    {
-		putValue(Action.SHORT_DESCRIPTION, "Cancel saving");
-		putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
-	    }
+            {
+                putValue(Action.SHORT_DESCRIPTION, "Cancel saving");
+                putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		returnValue = SaveReportOptions.CANCEL;
-		saveReportDialog.closeDialog();
-	    }
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                returnValue = SaveReportOptions.CANCEL;
+                saveReportDialog.closeDialog();
+            }
 
-	};
+        };
     }
 
     /**
@@ -137,7 +137,7 @@ public class SaveReportDialogModel<T extends AbstractEntity<?>> {
      * @return
      */
     public SaveReportOptions getReturnValue() {
-	return returnValue;
+        return returnValue;
     }
 
 }

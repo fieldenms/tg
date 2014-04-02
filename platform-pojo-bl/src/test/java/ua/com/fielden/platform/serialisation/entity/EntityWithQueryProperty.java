@@ -16,12 +16,12 @@ public class EntityWithQueryProperty extends AbstractEntity<String> {
     private EntityResultQueryModel<BaseEntity> query;
 
     public EntityResultQueryModel<BaseEntity> getQuery() {
-	return query;
+        return query;
     }
 
     @Observable
     public void setQuery(final EntityResultQueryModel<BaseEntity> query) {
-	this.query = query;
+        this.query = query;
     }
 
 }

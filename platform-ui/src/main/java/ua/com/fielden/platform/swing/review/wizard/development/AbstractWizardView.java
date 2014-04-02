@@ -22,12 +22,12 @@ import ua.com.fielden.platform.swing.utils.DummyBuilder;
 
 /**
  * Generic implementation for domain tree wizard. This wizard defines basic user interface and functionality that might be extended only for configuring purposes.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  */
-public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends SelectableAndLoadBasePanel implements IWizard{
+public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends SelectableAndLoadBasePanel implements IWizard {
 
     private static final long serialVersionUID = 268187881676011630L;
 
@@ -46,143 +46,143 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Se
 
     /**
      * Initiates this {@link AbstractWizardView} and creates main parts of the entity review wizard (domain tree editor and action panel).
-     *
+     * 
      * @param treeEditorModel
      * @param progressLayer
      */
-    public AbstractWizardView(final AbstractConfigurationView<?, ? extends AbstractWizardView<T>> owner, final IDomainTreeManager domainTreeManager, final String domainEditorCaption){
-	this.owner = owner;
-	this.domainEditorCaption = domainEditorCaption;
-	this.domainTreeManager = domainTreeManager;
-	this.buildAction = createBuildAction();
-	this.cancelAction = createCancelAction();
-	this.actionPanel = createActionPanel();
-	this.wasLoaded = false;
-	addComponentListener(createComponentWasResized());
+    public AbstractWizardView(final AbstractConfigurationView<?, ? extends AbstractWizardView<T>> owner, final IDomainTreeManager domainTreeManager, final String domainEditorCaption) {
+        this.owner = owner;
+        this.domainEditorCaption = domainEditorCaption;
+        this.domainTreeManager = domainTreeManager;
+        this.buildAction = createBuildAction();
+        this.cancelAction = createCancelAction();
+        this.actionPanel = createActionPanel();
+        this.wasLoaded = false;
+        addComponentListener(createComponentWasResized());
     }
 
     /**
      * Returns the {@link IDomainTreeManager} associated with {@link DomainTreeEditorModel}.
-     *
+     * 
      * @return
      */
-    public IDomainTreeManager getDomainTreeManager(){
-	return domainTreeManager;
+    public IDomainTreeManager getDomainTreeManager() {
+        return domainTreeManager;
     }
 
     /**
      * Returns the domain tree view for this {@link AbstractWizardView}.
-     *
+     * 
      * @return
      */
     public abstract JPanel getTreeView();
 
     /**
      * Returns the action panel for this {@link AbstractWizardView}.
-     *
+     * 
      * @return
      */
     public final JPanel getActionPanel() {
-	return actionPanel;
+        return actionPanel;
     }
 
     /**
      * Returns the {@link AbstractConfigurationView} instance that owns this wizard.
-     *
+     * 
      * @return
      */
     public AbstractConfigurationView<?, ?> getOwner() {
-	return owner;
+        return owner;
     }
 
     @Override
     public String getInfo() {
-	return "An wizard for entity review.";
+        return "An wizard for entity review.";
     }
 
     @Override
     public BuildAction getBuildAction() {
-	return buildAction;
+        return buildAction;
     }
 
     @Override
     public CancelAction getCancelAction() {
-	return cancelAction;
+        return cancelAction;
     }
 
     @Override
     public void close() {
-	wasLoaded = false;
-	super.close();
+        wasLoaded = false;
+        super.close();
     }
 
     /**
      * Returns the value that indicates whether this wizard was loaded or not.
-     *
+     * 
      * @return
      */
-    public boolean isLoaded(){
-	return wasLoaded;
+    public boolean isLoaded() {
+        return wasLoaded;
     }
 
     /**
      * Might be overridden to provide custom build action (see {@link #getBuildAction()} for more information about the purpose of this action).
-     *
+     * 
      * @return
      */
     abstract protected BuildAction createBuildAction();
 
     /**
      * Might be overridden to provide custom cancel action (see {@link #getCancelAction()} for more information about the purpose of this action).
-     *
+     * 
      * @return
      */
     abstract protected CancelAction createCancelAction();
 
     /**
      * Might be overridden if there is need to add some other controls to the action panel.
-     *
+     * 
      * @return
      */
     protected JPanel createActionPanel() {
-	final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 0", "push[fill, :100:][fill, :100:]", "[c]"));
-	actionPanel.add(new JButton(getBuildAction()));
-	actionPanel.add(new JButton(getCancelAction()));
-	return actionPanel;
+        final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 0", "push[fill, :100:][fill, :100:]", "[c]"));
+        actionPanel.add(new JButton(getBuildAction()));
+        actionPanel.add(new JButton(getCancelAction()));
+        return actionPanel;
     }
 
     /**
      * Layouts the components of this wizard view.
      */
-    protected void layoutComponents(){
-	setLayout(new MigLayout("fill, insets 5", "[fill, grow]", "[][fill, grow][]"));
+    protected void layoutComponents() {
+        setLayout(new MigLayout("fill, insets 5", "[fill, grow]", "[][fill, grow][]"));
 
-	add(DummyBuilder.label(domainEditorCaption), "wrap");
-	add(getTreeView(), "wrap");
-	add(getActionPanel());
+        add(DummyBuilder.label(domainEditorCaption), "wrap");
+        add(getTreeView(), "wrap");
+        add(getActionPanel());
     }
 
     /**
      * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined.
-     *
+     * 
      * @return
      */
     private ComponentListener createComponentWasResized() {
-	return new ComponentAdapter() {
+        return new ComponentAdapter() {
 
-	    @Override
-	    public void componentResized(final ComponentEvent e) {
-		synchronized (AbstractWizardView.this) {
-		    // should size change event be handled?
-		    if (!wasLoaded) {
-			// yes, so this one is first, lets handle it and set flag
-			// to indicate that we won't handle any more
-			// size changed events.
-			wasLoaded = true;
-			fireLoadEvent(new LoadEvent(AbstractWizardView.this));
-		    }
-		}
-	    }
-	};
+            @Override
+            public void componentResized(final ComponentEvent e) {
+                synchronized (AbstractWizardView.this) {
+                    // should size change event be handled?
+                    if (!wasLoaded) {
+                        // yes, so this one is first, lets handle it and set flag
+                        // to indicate that we won't handle any more
+                        // size changed events.
+                        wasLoaded = true;
+                        fireLoadEvent(new LoadEvent(AbstractWizardView.this));
+                    }
+                }
+            }
+        };
     }
 }

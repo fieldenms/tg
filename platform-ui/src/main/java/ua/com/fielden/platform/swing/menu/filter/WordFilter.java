@@ -13,28 +13,28 @@ public class WordFilter implements IFilter {
 
     @Override
     public boolean isEnabled() {
-	return enabled;
+        return enabled;
     }
 
     @Override
     public void setEnabled(final boolean enabled) {
-	this.enabled = enabled;
+        this.enabled = enabled;
     }
 
     @Override
     public boolean filter(final Object value, final String valuefilterCrit) {
-	boolean result = false;
-	int emptyCount = 0;
-	final String[] criteria = valuefilterCrit.split(",");
-	for (final String crit : criteria) {
-	    final String word = crit.trim().toUpperCase();
-	    if (!StringUtils.isEmpty(word)) {
-		result = result || value.toString().toUpperCase().contains(word);
-	    } else {
-		emptyCount++;
-	    }
-	}
-	return emptyCount == criteria.length ? false : !result;
+        boolean result = false;
+        int emptyCount = 0;
+        final String[] criteria = valuefilterCrit.split(",");
+        for (final String crit : criteria) {
+            final String word = crit.trim().toUpperCase();
+            if (!StringUtils.isEmpty(word)) {
+                result = result || value.toString().toUpperCase().contains(word);
+            } else {
+                emptyCount++;
+            }
+        }
+        return emptyCount == criteria.length ? false : !result;
     }
 
     /**
@@ -44,8 +44,8 @@ public class WordFilter implements IFilter {
      * @return
      */
     private String removeFromStart(final String value) {
-	final String result = value.startsWith("\\*") ? value.substring(1) : value;
-	return value.startsWith("\\*") ? removeFromStart(result) : result;
+        final String result = value.startsWith("\\*") ? value.substring(1) : value;
+        return value.startsWith("\\*") ? removeFromStart(result) : result;
     }
 
     /**
@@ -56,23 +56,23 @@ public class WordFilter implements IFilter {
      * @return
      */
     private String removeFromEnd(final String value) {
-	final String result = value.endsWith("\\*") ? value.substring(0, value.length() - 1) : value;
-	return value.endsWith("\\*") ? removeFromEnd(result) : result;
+        final String result = value.endsWith("\\*") ? value.substring(0, value.length() - 1) : value;
+        return value.endsWith("\\*") ? removeFromEnd(result) : result;
     }
 
     public static void main(final String[] args) {
-	final WordFilter flt = new WordFilter();
+        final WordFilter flt = new WordFilter();
 
-	final String value = "scala rocks";
-	System.out.println(flt.filter(value, "*"));
-	System.out.println(flt.filter(value, "scala rocks"));
-	System.out.println(flt.filter(value, "something else"));
-	System.out.println(flt.filter(value, "scala *"));
-	System.out.println(flt.filter(value, "*rocks"));
-	System.out.println(flt.filter(value, "*sca*ro*"));
-	System.out.println(flt.filter(value, "sca*ro*"));
-	System.out.println(flt.filter(value, "*ca*rocks"));
-	System.out.println(flt.filter(value, ""));
+        final String value = "scala rocks";
+        System.out.println(flt.filter(value, "*"));
+        System.out.println(flt.filter(value, "scala rocks"));
+        System.out.println(flt.filter(value, "something else"));
+        System.out.println(flt.filter(value, "scala *"));
+        System.out.println(flt.filter(value, "*rocks"));
+        System.out.println(flt.filter(value, "*sca*ro*"));
+        System.out.println(flt.filter(value, "sca*ro*"));
+        System.out.println(flt.filter(value, "*ca*rocks"));
+        System.out.println(flt.filter(value, ""));
 
     }
 

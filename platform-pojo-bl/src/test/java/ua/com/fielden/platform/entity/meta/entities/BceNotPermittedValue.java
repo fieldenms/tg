@@ -12,10 +12,10 @@ public class BceNotPermittedValue implements IBeforeChangeEventHandler<String> {
 
     @Override
     public Result handle(final MetaProperty property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
-	if (notPermittedValue.equalsIgnoreCase(newValue)) {
-	    return new Result(newValue, new IllegalArgumentException("The value is not permitted"));
-	}
-	return Result.successful(newValue);
+        if (notPermittedValue.equalsIgnoreCase(newValue)) {
+            return new Result(newValue, new IllegalArgumentException("The value is not permitted"));
+        }
+        return Result.successful(newValue);
     }
 
 }

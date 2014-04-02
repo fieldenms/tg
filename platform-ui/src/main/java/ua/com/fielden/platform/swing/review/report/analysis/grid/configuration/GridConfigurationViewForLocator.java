@@ -11,22 +11,22 @@ public class GridConfigurationViewForLocator<T extends AbstractEntity<?>> extend
     private static final long serialVersionUID = -2775914712318096562L;
 
     public GridConfigurationViewForLocator(final GridConfigurationModelForLocator<T> model, final SingleAnalysisEntityLocator<T> owner, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, owner, progressLayer);
+        super(model, owner, progressLayer);
     }
 
     @Override
     public SingleAnalysisEntityLocator<T> getOwner() {
-        return (SingleAnalysisEntityLocator<T>)super.getOwner();
+        return (SingleAnalysisEntityLocator<T>) super.getOwner();
     }
 
     @Override
     public GridConfigurationModelForLocator<T> getModel() {
-        return (GridConfigurationModelForLocator<T>)super.getModel();
+        return (GridConfigurationModelForLocator<T>) super.getModel();
     }
 
     @Override
     protected GridAnalysisViewForLocator<T> createConfigurableView() {
-	return new GridAnalysisViewForLocator<T>(getModel().createGridAnalysisModel(), this);
+        return new GridAnalysisViewForLocator<T>(getModel().createGridAnalysisModel(), this);
     }
 
 }

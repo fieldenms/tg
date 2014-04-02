@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.swing.review.wizard.tree.editor;
 
-
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -30,116 +29,116 @@ public class DomainTreeEditorView<T extends AbstractEntity<?>> extends BasePanel
 
     private final ExpressionEditorView editorView;
 
-    public DomainTreeEditorView(final DomainTreeEditorModel<T> domainTreeEditorModel){
-	super(new MigLayout("fill, insets 0", "[fill, grow]", "[fill, grow][]"));
-	this.domainTreeEditorModel = domainTreeEditorModel;
+    public DomainTreeEditorView(final DomainTreeEditorModel<T> domainTreeEditorModel) {
+        super(new MigLayout("fill, insets 0", "[fill, grow]", "[fill, grow][]"));
+        this.domainTreeEditorModel = domainTreeEditorModel;
 
-	//Configuring the entities tree.
-	final EntitiesTreeModel2 treeModel = domainTreeEditorModel.createTreeModel();
-	final EditableEntitiesTree tree = new EditableEntitiesTree(treeModel,//
-		domainTreeEditorModel.getExpressionModel().getNewAction(),//
-		domainTreeEditorModel.getExpressionModel().getEditAction(),//
-		domainTreeEditorModel.getCopyAction(),//
-		domainTreeEditorModel.getExpressionModel().getDeleteAction());
-	tree.addMouseListener(createPropertyChosenListener(tree));
-	tree.getSelectionModel().addTreeSelectionListener(createCalculatedPropertySelectionListener(tree));
-	final EntitiesTreePanel treePanel = new EntitiesTreePanel(tree);
-	add(treePanel, "wrap");
+        //Configuring the entities tree.
+        final EntitiesTreeModel2 treeModel = domainTreeEditorModel.createTreeModel();
+        final EditableEntitiesTree tree = new EditableEntitiesTree(treeModel,//
+        domainTreeEditorModel.getExpressionModel().getNewAction(),//
+        domainTreeEditorModel.getExpressionModel().getEditAction(),//
+        domainTreeEditorModel.getCopyAction(),//
+        domainTreeEditorModel.getExpressionModel().getDeleteAction());
+        tree.addMouseListener(createPropertyChosenListener(tree));
+        tree.getSelectionModel().addTreeSelectionListener(createCalculatedPropertySelectionListener(tree));
+        final EntitiesTreePanel treePanel = new EntitiesTreePanel(tree);
+        add(treePanel, "wrap");
 
-	//Configuring the expression editor.
-	editorView = new ExpressionEditorView(domainTreeEditorModel.getExpressionModel());
-	domainTreeEditorModel.addPropertyEditListener(createPropertyEditListener(tree));
+        //Configuring the expression editor.
+        editorView = new ExpressionEditorView(domainTreeEditorModel.getExpressionModel());
+        domainTreeEditorModel.addPropertyEditListener(createPropertyEditListener(tree));
     }
 
     /**
      * Returns the associated wizard model.
-     *
+     * 
      * @return
      */
-    public DomainTreeEditorModel<T> getModel(){
-	return domainTreeEditorModel;
+    public DomainTreeEditorModel<T> getModel() {
+        return domainTreeEditorModel;
     }
 
     @Override
     public String getInfo() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     private IPropertyEditListener createPropertyEditListener(final EntitiesTree2 tree) {
-	return new IPropertyEditListener() {
+        return new IPropertyEditListener() {
 
-	    @Override
-	    public void startEdit() {
-		tree.setEditable(false);
-		setEditorViewVisible(true);
-	    }
+            @Override
+            public void startEdit() {
+                tree.setEditable(false);
+                setEditorViewVisible(true);
+            }
 
-	    @Override
-	    public void finishEdit() {
-		tree.setEditable(true);
-		tree.startEditingAtPath(tree.getSelectionPath());
-		setEditorViewVisible(false);
-	    }
-	};
+            @Override
+            public void finishEdit() {
+                tree.setEditable(true);
+                tree.startEditingAtPath(tree.getSelectionPath());
+                setEditorViewVisible(false);
+            }
+        };
     }
 
     private TreeSelectionListener createCalculatedPropertySelectionListener(final JTree tree) {
-	return new TreeSelectionListener() {
+        return new TreeSelectionListener() {
 
-	    @Override
-	    public void valueChanged(final TreeSelectionEvent e) {
-		final boolean isSeleted = tree.getSelectionModel().isPathSelected(e.getPath());
-		getModel().getPropertySelectionModel().propertyStateChanged(getUserObjectFor(e.getPath()).getValue(), isSeleted);
-	    }
-	};
+            @Override
+            public void valueChanged(final TreeSelectionEvent e) {
+                final boolean isSeleted = tree.getSelectionModel().isPathSelected(e.getPath());
+                getModel().getPropertySelectionModel().propertyStateChanged(getUserObjectFor(e.getPath()).getValue(), isSeleted);
+            }
+        };
     }
 
     private MouseListener createPropertyChosenListener(final JTree tree) {
-	return new MouseAdapter() {
-	    @Override
-	    public void mousePressed(final MouseEvent e) {
-		final int x = e.getX();
-		final int y = e.getY();
-		final TreePath path = tree.getPathForLocation(x, y);
-		if (path != null && getModel().getExpressionModel().getState() != UmState.VIEW) {
-		    getModel().getExpressionModel().getPropertySelectionModel().propertyStateChanged(getUserObjectFor(path).getValue(),true);
-		}
-	    }
-	};
+        return new MouseAdapter() {
+            @Override
+            public void mousePressed(final MouseEvent e) {
+                final int x = e.getX();
+                final int y = e.getY();
+                final TreePath path = tree.getPathForLocation(x, y);
+                if (path != null && getModel().getExpressionModel().getState() != UmState.VIEW) {
+                    getModel().getExpressionModel().getPropertySelectionModel().propertyStateChanged(getUserObjectFor(path).getValue(), true);
+                }
+            }
+        };
     }
 
     /**
      * Shows or hide editor's panel.
-     *
+     * 
      * @param visible
      */
-    private void setEditorViewVisible(final boolean visible){
-	if(visible){
-	    if(editorView.getParent() == null){
-		add(editorView);
-		validate();
-		repaint();
-	    }
-	} else {
-	    if(editorView.getParent() == this){
-		remove(editorView);
-		validate();
-		repaint();
-	    }
-	}
+    private void setEditorViewVisible(final boolean visible) {
+        if (visible) {
+            if (editorView.getParent() == null) {
+                add(editorView);
+                validate();
+                repaint();
+            }
+        } else {
+            if (editorView.getParent() == this) {
+                remove(editorView);
+                validate();
+                repaint();
+            }
+        }
     }
 
     /**
      * Returns the user object for the last component of the specified tree path.
-     *
+     * 
      * @param path
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Pair<Class<?>, String> getUserObjectFor(final TreePath path){
-	final DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-	return (Pair<Class<?>, String>) node.getUserObject();
+    private Pair<Class<?>, String> getUserObjectFor(final TreePath path) {
+        final DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+        return (Pair<Class<?>, String>) node.getUserObject();
 
     }
 }

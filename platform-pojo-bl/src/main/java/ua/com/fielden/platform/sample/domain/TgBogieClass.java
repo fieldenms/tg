@@ -17,19 +17,19 @@ public class TgBogieClass extends AbstractEntity<String> {
 
     private static final long serialVersionUID = 1L;
 
-//    @IsProperty(BogieClassCompatibility.class)
-//    private Set<BogieClassCompatibility> compatibles = new HashSet<BogieClassCompatibility>();
-    @IsProperty @MapTo
+    //    @IsProperty(BogieClassCompatibility.class)
+    //    private Set<BogieClassCompatibility> compatibles = new HashSet<BogieClassCompatibility>();
+    @IsProperty
+    @MapTo
     private Integer tonnage;
-
 
     protected TgBogieClass() {
 
     }
 
-    public TgBogieClass (final String code, final String desc, final Integer tonnage) {
-	super(null, code, desc);
-	setTonnage(tonnage);
+    public TgBogieClass(final String code, final String desc, final Integer tonnage) {
+        super(null, code, desc);
+        setTonnage(tonnage);
     }
 
     public Integer getTonnage() {
@@ -42,16 +42,16 @@ public class TgBogieClass extends AbstractEntity<String> {
         return this;
     }
 
-//    public Set<BogieClassCompatibility> getCompatibles() {
-//	return this.compatibles;
-//    }
-//
-//    @Observable
-//    protected void setCompatibles(final Set<BogieClassCompatibility> compatibles) {
-//	this.compatibles = compatibles;
-//    }
-//
+    //    public Set<BogieClassCompatibility> getCompatibles() {
+    //	return this.compatibles;
+    //    }
+    //
+    //    @Observable
+    //    protected void setCompatibles(final Set<BogieClassCompatibility> compatibles) {
+    //	this.compatibles = compatibles;
+    //    }
+    //
     public int getNumberOfWheelsets() {
-	return 2;
+        return 2;
     }
 }

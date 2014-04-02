@@ -26,11 +26,11 @@ public class CompanionResource extends ServerResource {
     private final IComputationMonitor resource;
 
     public CompanionResource(final IComputationMonitor resource, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	setNegotiated(false);
-	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
-	this.restUtil = restUtil;
-	this.resource = resource;
+        init(context, request, response);
+        setNegotiated(false);
+        getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
+        this.restUtil = restUtil;
+        this.resource = resource;
     }
 
     /**
@@ -39,13 +39,13 @@ public class CompanionResource extends ServerResource {
     @Get
     @Override
     public Representation get() {
-	try {
-	    final Integer progress = resource.progress();
-	    return restUtil.resultRepresentation(Result.successful(progress)); //new StringRepresentation(progress == null ? "indefinite" : progress.toString());
-	} catch (final Exception ex) {
-	    getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
-	    return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
-	}
+        try {
+            final Integer progress = resource.progress();
+            return restUtil.resultRepresentation(Result.successful(progress)); //new StringRepresentation(progress == null ? "indefinite" : progress.toString());
+        } catch (final Exception ex) {
+            getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+            return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
+        }
     }
 
     /**
@@ -54,27 +54,27 @@ public class CompanionResource extends ServerResource {
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-	try {
-	    resource.stop();
-	    return restUtil.resultRepresentation(Result.successful("stopped"));
-	} catch (final Exception ex) {
-	    getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
-	    final String msg = !StringUtils.isEmpty(ex.getMessage()) ? ex.getMessage() : "Exception does not contain any specific message.";
-	    return restUtil.errorRepresentation(msg);
-	}
+        try {
+            resource.stop();
+            return restUtil.resultRepresentation(Result.successful("stopped"));
+        } catch (final Exception ex) {
+            getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+            final String msg = !StringUtils.isEmpty(ex.getMessage()) ? ex.getMessage() : "Exception does not contain any specific message.";
+            return restUtil.errorRepresentation(msg);
+        }
     }
 
     @Delete
     @Override
     public Representation delete() {
-	try {
-	    getResponse().setStatus(Status.SERVER_ERROR_NOT_IMPLEMENTED);
-	} catch (final Exception ex) {
-	    getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
-	    restUtil.setHeaderEntry(getResponse(), HttpHeaders.ERROR, ex.getMessage());
-	}
+        try {
+            getResponse().setStatus(Status.SERVER_ERROR_NOT_IMPLEMENTED);
+        } catch (final Exception ex) {
+            getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+            restUtil.setHeaderEntry(getResponse(), HttpHeaders.ERROR, ex.getMessage());
+        }
 
-	return new StringRepresentation("delete");
+        return new StringRepresentation("delete");
     }
 
 }

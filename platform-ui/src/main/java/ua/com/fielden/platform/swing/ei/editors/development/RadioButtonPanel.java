@@ -30,7 +30,7 @@ public class RadioButtonPanel extends JPanel {
      */
     @SuppressWarnings("rawtypes")
     public RadioButtonPanel() {
-	this.radioButtonMap = new HashMap<Enum, BoundedValidationLayer<JRadioButton>>();
+        this.radioButtonMap = new HashMap<Enum, BoundedValidationLayer<JRadioButton>>();
     }
 
     /**
@@ -41,7 +41,7 @@ public class RadioButtonPanel extends JPanel {
      */
     @SuppressWarnings("rawtypes")
     public BoundedValidationLayer<JRadioButton> getEditorFor(final Enum key) {
-	return radioButtonMap.get(key);
+        return radioButtonMap.get(key);
     }
 
     /**
@@ -52,7 +52,7 @@ public class RadioButtonPanel extends JPanel {
      */
     @SuppressWarnings("rawtypes")
     public void addEditor(final Enum key, final BoundedValidationLayer<JRadioButton> radioButton) {
-	radioButtonMap.put(key, radioButton);
+        radioButtonMap.put(key, radioButton);
     }
 
     /**
@@ -63,10 +63,10 @@ public class RadioButtonPanel extends JPanel {
      */
     @SuppressWarnings("rawtypes")
     public void layoutEditor(final Enum key, final Object constrained) {
-	final BoundedValidationLayer<JRadioButton> value = radioButtonMap.get(key);
-	if (value != null) {
-	    add(value, constrained);
-	}
+        final BoundedValidationLayer<JRadioButton> value = radioButtonMap.get(key);
+        if (value != null) {
+            add(value, constrained);
+        }
     }
 
     /**
@@ -76,10 +76,10 @@ public class RadioButtonPanel extends JPanel {
      */
     @SuppressWarnings("rawtypes")
     public void layoutEditor(final Enum key) {
-	final BoundedValidationLayer<JRadioButton> value = radioButtonMap.get(key);
-	if (value != null) {
-	    add(value);
-	}
+        final BoundedValidationLayer<JRadioButton> value = radioButtonMap.get(key);
+        if (value != null) {
+            add(value);
+        }
     }
 
     /**
@@ -90,12 +90,12 @@ public class RadioButtonPanel extends JPanel {
      */
     @SuppressWarnings("rawtypes")
     public BoundedValidationLayer<JRadioButton> removeEditor(final Enum key) {
-	final BoundedValidationLayer<JRadioButton> value = radioButtonMap.get(key);
-	if (value != null) {
-	    remove(value);
-	    return value;
-	}
-	return null;
+        final BoundedValidationLayer<JRadioButton> value = radioButtonMap.get(key);
+        if (value != null) {
+            remove(value);
+            return value;
+        }
+        return null;
     }
 
     /**
@@ -106,8 +106,8 @@ public class RadioButtonPanel extends JPanel {
      */
     @SuppressWarnings("rawtypes")
     public BoundedValidationLayer<JRadioButton> removeFromMap(final Enum key) {
-	removeEditor(key);
-	return radioButtonMap.remove(key);
+        removeEditor(key);
+        return radioButtonMap.remove(key);
     }
 
     /**
@@ -116,6 +116,6 @@ public class RadioButtonPanel extends JPanel {
      * @return
      */
     public Collection<BoundedValidationLayer<JRadioButton>> getEditors() {
-	return radioButtonMap.values();
+        return radioButtonMap.values();
     }
 }

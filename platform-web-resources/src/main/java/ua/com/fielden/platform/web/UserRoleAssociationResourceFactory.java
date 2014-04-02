@@ -16,9 +16,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct instantiation of {@link UserRoleAssociationResource}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class UserRoleAssociationResourceFactory extends Restlet {
     private final Injector injector;
@@ -28,22 +28,22 @@ public class UserRoleAssociationResourceFactory extends Restlet {
      * Principle constructor.
      */
     public UserRoleAssociationResourceFactory(final Injector injector) {
-	this.injector = injector;
-	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.injector = injector;
+        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
     }
 
     @Override
     public void handle(final Request request, final Response response) {
-	super.handle(request, response);
+        super.handle(request, response);
 
-	if (Method.POST.equals(request.getMethod())) {
-	    final IUserController controller = injector.getInstance(IUserController.class);
-	    final IUserRoleDao userRoleDao = injector.getInstance(IUserRoleDao.class);
+        if (Method.POST.equals(request.getMethod())) {
+            final IUserController controller = injector.getInstance(IUserController.class);
+            final IUserRoleDao userRoleDao = injector.getInstance(IUserRoleDao.class);
 
-	    final String username = (String) request.getAttributes().get("username");
-	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+            final String username = (String) request.getAttributes().get("username");
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	    new UserRoleAssociationResource(controller, userRoleDao, restUtil, getContext(), request, response).handle();
-	}
+            new UserRoleAssociationResource(controller, userRoleDao, restUtil, getContext(), request, response).handle();
+        }
     }
 }

@@ -10,15 +10,15 @@ import com.google.inject.Inject;
 
 /**
  * DAO for {@link MigrationError}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(MigrationError.class)
 public class MigrationErrorDao extends CommonEntityDao<MigrationError> implements IMigrationErrorDao {
 
     @Inject
     protected MigrationErrorDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

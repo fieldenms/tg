@@ -35,8 +35,8 @@ public class EditorComponent<CellEditorComponentType extends JComponent, EditorI
      * @param editorItself
      */
     public EditorComponent(final CellEditorComponentType cellEditorComponent, final EditorItselfType editorItself) {
-	this.cellEditorComponent = cellEditorComponent;
-	this.editorItself = editorItself;
+        this.cellEditorComponent = cellEditorComponent;
+        this.editorItself = editorItself;
     }
 
     /**
@@ -45,7 +45,7 @@ public class EditorComponent<CellEditorComponentType extends JComponent, EditorI
      * @return
      */
     public CellEditorComponentType getCellEditorComponent() {
-	return cellEditorComponent;
+        return cellEditorComponent;
     }
 
     /**
@@ -54,7 +54,7 @@ public class EditorComponent<CellEditorComponentType extends JComponent, EditorI
      * @return
      */
     public EditorItselfType getEditorItself() {
-	return editorItself;
+        return editorItself;
     }
 
 }

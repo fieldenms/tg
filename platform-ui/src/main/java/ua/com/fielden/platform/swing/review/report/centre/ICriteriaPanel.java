@@ -6,7 +6,7 @@ import javax.swing.Action;
  * Represents configurable criteria panel.
  * 
  * @author TG Team
- *
+ * 
  */
 public interface ICriteriaPanel {
 
@@ -23,7 +23,7 @@ public interface ICriteriaPanel {
      * @return
      */
     Action getSwitchAction();
-    
+
     /**
      * Must updates the underlying model according to it's view.
      * 

@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface Annotation2 {
     String value() default "value";
+
     int intValue();
+
     Class<?> type() default Void.class;
 }

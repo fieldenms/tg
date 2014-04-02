@@ -7,26 +7,26 @@ public class Minus extends AbstractOperator {
     }
 
     public String getExpression() {
-	return "-";
+        return "-";
     }
 
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
-	IOperator operator = new Minus();
-	IOperand operand = operator.getOperands().get(0);
-	operand.setValue("100");
-	operand = (HybridOperand) operator.getOperands().get(1);
-	operand.setValue("20");
+        IOperator operator = new Minus();
+        IOperand operand = operator.getOperands().get(0);
+        operand.setValue("100");
+        operand = (HybridOperand) operator.getOperands().get(1);
+        operand.setValue("20");
 
-	System.out.println(operator.getRepresentation());
+        System.out.println(operator.getRepresentation());
 
-	operator.append(new HybridOperand("12"));
+        operator.append(new HybridOperand("12"));
 
-	System.out.println(operator.getRepresentation());
+        System.out.println(operator.getRepresentation());
     }
 
     public Object getDefaultValue() {
-	return "0";
+        return "0";
     }
 
 }

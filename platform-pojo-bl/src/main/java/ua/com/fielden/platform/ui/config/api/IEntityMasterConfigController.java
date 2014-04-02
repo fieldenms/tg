@@ -5,9 +5,9 @@ import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 
 /**
  * A DAO/RAO controller contract for {@link EntityMasterConfig}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IEntityMasterConfigController extends IEntityDao<EntityMasterConfig> {
 

@@ -13,9 +13,9 @@ import com.google.inject.Inject;
 
 /**
  * A convenient factory for producing new instances of {@link AttachmentEntityAssociationFrame}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class AttachmentEntityAssociationMasterFactory {
 
@@ -28,38 +28,38 @@ public class AttachmentEntityAssociationMasterFactory {
     @Inject
     public AttachmentEntityAssociationMasterFactory(//
     final IEntityAttachmentAssociationController attachmentEntityAssociationController,//
-	    final IEntityMasterManager entityMasterFactory, //
-	    final IValueMatcherFactory valueMatcherFactory,//
-	    final ICriteriaGenerator criteriaGenerator,//
-	    final IGlobalDomainTreeManager gdtm) {
+            final IEntityMasterManager entityMasterFactory, //
+            final IValueMatcherFactory valueMatcherFactory,//
+            final ICriteriaGenerator criteriaGenerator,//
+            final IGlobalDomainTreeManager gdtm) {
 
-	this.attachmentEntityAssociationController = attachmentEntityAssociationController;
-	this.entityMasterFactory = entityMasterFactory;
-	this.valueMatcherFactory = valueMatcherFactory;
-	this.criteriaGenerator = criteriaGenerator;
-	this.gdtm = gdtm;
+        this.attachmentEntityAssociationController = attachmentEntityAssociationController;
+        this.entityMasterFactory = entityMasterFactory;
+        this.valueMatcherFactory = valueMatcherFactory;
+        this.criteriaGenerator = criteriaGenerator;
+        this.gdtm = gdtm;
     }
 
     public final AttachmentEntityAssociationFrame createAndMakeVisible(final AbstractEntity<?> entity) {
-	final AttachmentEntityAssociationFrame frame = create(entity);
-	frame.refresh();
-	frame.setVisible(false);
-	frame.setVisible(true);
-	return frame;
+        final AttachmentEntityAssociationFrame frame = create(entity);
+        frame.refresh();
+        frame.setVisible(false);
+        frame.setVisible(true);
+        return frame;
     }
 
     public final AttachmentEntityAssociationFrame create(final AbstractEntity<?> entity) {
-	IMasterDomainTreeManager masterManager = gdtm.getMasterDomainTreeManager(EntityAttachmentAssociation.class);
-	if (masterManager == null) {
-	    gdtm.initMasterDomainTreeManager(EntityAttachmentAssociation.class);
-	    masterManager = gdtm.getMasterDomainTreeManager(EntityAttachmentAssociation.class);
-	}
+        IMasterDomainTreeManager masterManager = gdtm.getMasterDomainTreeManager(EntityAttachmentAssociation.class);
+        if (masterManager == null) {
+            gdtm.initMasterDomainTreeManager(EntityAttachmentAssociation.class);
+            masterManager = gdtm.getMasterDomainTreeManager(EntityAttachmentAssociation.class);
+        }
 
-	return new AttachmentEntityAssociationFrame(entity, //
-	attachmentEntityAssociationController, //
-	valueMatcherFactory,//
-	entityMasterFactory,//
-	masterManager,//
-	criteriaGenerator);
+        return new AttachmentEntityAssociationFrame(entity, //
+        attachmentEntityAssociationController, //
+        valueMatcherFactory,//
+        entityMasterFactory,//
+        masterManager,//
+        criteriaGenerator);
     }
 }

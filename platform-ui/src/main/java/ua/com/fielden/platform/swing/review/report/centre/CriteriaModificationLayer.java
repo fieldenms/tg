@@ -59,9 +59,9 @@ import ua.com.fielden.snappy.MnemonicEnum;
  * 4. date mnemonics;
  * <p>
  * 5. ALL/ANY collectional criteria.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class CriteriaModificationLayer extends JXLayer<JComponent> implements ItemListener {
     private static final Logger logger = Logger.getLogger(CriteriaModificationLayer.class);
@@ -91,206 +91,212 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 
     /**
      * A class representing a date mnemonic state, for e.g. "Previous + Day + AndAfter" or "Current + Month".
-     *
+     * 
      * @author TG Team
-     *
+     * 
      */
     private class DateState {
-	private DateRangePrefixEnum datePrefix = null;
-	private MnemonicEnum dateMnemonic = null;
-	/**
-	 * "Null" means [a; b) mnemonic interval, <code>true</code> means [-infinity; b) and <code>false</code> means [a; +infinity)
-	 */
-	private Boolean andBefore = null;
+        private DateRangePrefixEnum datePrefix = null;
+        private MnemonicEnum dateMnemonic = null;
+        /**
+         * "Null" means [a; b) mnemonic interval, <code>true</code> means [-infinity; b) and <code>false</code> means [a; +infinity)
+         */
+        private Boolean andBefore = null;
 
-	public DateState() {
-	}
+        public DateState() {
+        }
 
-	public DateState(final DateRangePrefixEnum datePrefix, final MnemonicEnum dateMnemonic, final Boolean andBefore) {
-	    this.datePrefix = datePrefix;
-	    this.dateMnemonic = dateMnemonic;
-	    this.andBefore = andBefore;
-	}
+        public DateState(final DateRangePrefixEnum datePrefix, final MnemonicEnum dateMnemonic, final Boolean andBefore) {
+            this.datePrefix = datePrefix;
+            this.dateMnemonic = dateMnemonic;
+            this.andBefore = andBefore;
+        }
 
-	public DateRangePrefixEnum getDatePrefix() {
-	    return datePrefix;
-	}
-	public void setDatePrefix(final DateRangePrefixEnum datePrefix) {
-	    this.datePrefix = datePrefix;
-	}
-	public MnemonicEnum getDateMnemonic() {
-	    return dateMnemonic;
-	}
-	public void setDateMnemonic(final MnemonicEnum dateMnemonic) {
-	    this.dateMnemonic = dateMnemonic;
-	}
-	/** "Null" means [a; b) mnemonic interval, <code>true</code> means [-infinity; b) and <code>false</code> means [a; +infinity). */
-	public Boolean getAndBefore() {
-	    return andBefore;
-	}
-	public void setAndBefore(final Boolean andBefore) {
-	    this.andBefore = andBefore;
-	}
+        public DateRangePrefixEnum getDatePrefix() {
+            return datePrefix;
+        }
 
-	/**
-	 * Returns <code>true</code> when no mnemonic has been chosen for this date state, <code>false</code> otherwise.
-	 * <br><br>
-	 * Throws {@link IllegalStateException} if date state is incorrect.
-	 *
-	 * @return
-	 */
-	private boolean isEmpty() {
-	    if (datePrefix == null && dateMnemonic != null || (datePrefix != null && dateMnemonic == null)) {
-		throw new IllegalStateException("Incorrect date state.");
-	    }
-	    return datePrefix == null && dateMnemonic == null;
-	}
+        public void setDatePrefix(final DateRangePrefixEnum datePrefix) {
+            this.datePrefix = datePrefix;
+        }
 
-	@Override
-	public int hashCode() {
-	    final int prime = 31;
-	    int result = 1;
-	    result = prime * result + getOuterType().hashCode();
-	    result = prime * result + ((andBefore == null) ? 0 : andBefore.hashCode());
-	    result = prime * result + ((dateMnemonic == null) ? 0 : dateMnemonic.hashCode());
-	    result = prime * result + ((datePrefix == null) ? 0 : datePrefix.hashCode());
-	    return result;
-	}
+        public MnemonicEnum getDateMnemonic() {
+            return dateMnemonic;
+        }
 
-	@Override
-	public boolean equals(final Object obj) {
-	    if (this == obj)
-		return true;
-	    if (obj == null)
-		return false;
-	    if (getClass() != obj.getClass())
-		return false;
-	    final DateState other = (DateState) obj;
-	    if (!getOuterType().equals(other.getOuterType()))
-		return false;
-	    if (andBefore == null) {
-		if (other.andBefore != null)
-		    return false;
-	    } else if (!andBefore.equals(other.andBefore))
-		return false;
-	    if (dateMnemonic != other.dateMnemonic)
-		return false;
-	    if (datePrefix != other.datePrefix)
-		return false;
-	    return true;
-	}
+        public void setDateMnemonic(final MnemonicEnum dateMnemonic) {
+            this.dateMnemonic = dateMnemonic;
+        }
 
-	private CriteriaModificationLayer getOuterType() {
-	    return CriteriaModificationLayer.this;
-	}
+        /** "Null" means [a; b) mnemonic interval, <code>true</code> means [-infinity; b) and <code>false</code> means [a; +infinity). */
+        public Boolean getAndBefore() {
+            return andBefore;
+        }
+
+        public void setAndBefore(final Boolean andBefore) {
+            this.andBefore = andBefore;
+        }
+
+        /**
+         * Returns <code>true</code> when no mnemonic has been chosen for this date state, <code>false</code> otherwise. <br>
+         * <br>
+         * Throws {@link IllegalStateException} if date state is incorrect.
+         * 
+         * @return
+         */
+        private boolean isEmpty() {
+            if (datePrefix == null && dateMnemonic != null || (datePrefix != null && dateMnemonic == null)) {
+                throw new IllegalStateException("Incorrect date state.");
+            }
+            return datePrefix == null && dateMnemonic == null;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ((andBefore == null) ? 0 : andBefore.hashCode());
+            result = prime * result + ((dateMnemonic == null) ? 0 : dateMnemonic.hashCode());
+            result = prime * result + ((datePrefix == null) ? 0 : datePrefix.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            final DateState other = (DateState) obj;
+            if (!getOuterType().equals(other.getOuterType()))
+                return false;
+            if (andBefore == null) {
+                if (other.andBefore != null)
+                    return false;
+            } else if (!andBefore.equals(other.andBefore))
+                return false;
+            if (dateMnemonic != other.dateMnemonic)
+                return false;
+            if (datePrefix != other.datePrefix)
+                return false;
+            return true;
+        }
+
+        private CriteriaModificationLayer getOuterType() {
+            return CriteriaModificationLayer.this;
+        }
     }
 
     /**
      * Creates a modification layer for a property editor which represents a complete concept of entity property editor (it could be "range" editor, boolean, single or just simple
      * one).
-     *
+     * 
      * @param propertyEditor
      */
     @SuppressWarnings("unchecked")
     public CriteriaModificationLayer(final IPropertyEditor propertyEditor) {
-	super(propertyEditor.getEditor());
-	setUI(new CriteriaModificationUi());
+        super(propertyEditor.getEditor());
+        setUI(new CriteriaModificationUi());
 
-	this.propertyEditor = propertyEditor;
+        this.propertyEditor = propertyEditor;
 
-	this.eqc = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>) this.propertyEditor.getEntity();
-	final IPropertyEditor leftPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getFromEditor()
-		: this.propertyEditor;
-	final IPropertyEditor rightPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getToEditor() : null;
-	propertyName = CriteriaReflector.getCriteriaProperty(eqc.getType(), leftPropertyEditor.getPropertyName());
-	rootType = eqc.getEntityClass();
-	managedType = eqc.getManagedType();
-	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
-	leftValidationLayer = (BoundedValidationLayer<?>) leftPropertyEditor.getEditor();
-	rightValidationLayer = rightPropertyEditor != null ? (BoundedValidationLayer<?>) rightPropertyEditor.getEditor() : null;
+        this.eqc = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>) this.propertyEditor.getEntity();
+        final IPropertyEditor leftPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getFromEditor()
+                : this.propertyEditor;
+        final IPropertyEditor rightPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getToEditor() : null;
+        propertyName = CriteriaReflector.getCriteriaProperty(eqc.getType(), leftPropertyEditor.getPropertyName());
+        rootType = eqc.getEntityClass();
+        managedType = eqc.getManagedType();
+        final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
+        leftValidationLayer = (BoundedValidationLayer<?>) leftPropertyEditor.getEditor();
+        rightValidationLayer = rightPropertyEditor != null ? (BoundedValidationLayer<?>) rightPropertyEditor.getEditor() : null;
 
-	// update an initial state of criteria modification layer:
-	loadInitialState();
+        // update an initial state of criteria modification layer:
+        loadInitialState();
 
-	// create popup menu and its items and update their initial state:
-	popup = new JPopupMenu();
+        // create popup menu and its items and update their initial state:
+        popup = new JPopupMenu();
 
-	final CritOnly critOnly = StringUtils.isEmpty(propertyName) ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
-	final boolean isCritOnly = critOnly != null;
-	final boolean isCritOnlyAndSingle = isCritOnly && Type.SINGLE.equals(critOnly.value());
+        final CritOnly critOnly = StringUtils.isEmpty(propertyName) ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
+        final boolean isCritOnly = critOnly != null;
+        final boolean isCritOnlyAndSingle = isCritOnly && Type.SINGLE.equals(critOnly.value());
 
-	nullMenuItem = new JCheckBoxMenuItem(MISSING_VALUE);
-	nullMenuItem.setMnemonic(KeyEvent.VK_H);
-	nullMenuItem.setSelected(Boolean.TRUE.equals(orNull));
-	nullMenuItem.addItemListener(this);
-	final boolean isNotBoolOrCritOnlyDate = !(this.propertyEditor instanceof RangePropertyEditor && ( ((RangePropertyEditor) this.propertyEditor).isBool() || ((RangePropertyEditor) this.propertyEditor).isDate() && isCritOnly));
-	if (isNotBoolOrCritOnlyDate) { // all criteria could be altered by emptiness except boolean criteria
-	    popup.add(nullMenuItem);
-	}
-	notMenuItem = new JCheckBoxMenuItem(NOT);
-	notMenuItem.setMnemonic(KeyEvent.VK_N);
-	notMenuItem.setSelected(Boolean.TRUE.equals(not));
-	notMenuItem.addItemListener(this);
-	if (isNotBoolOrCritOnlyDate) { // all criteria could be negated except single (TODO should it be?) /boolean criteria
-	    popup.add(notMenuItem);
-	}
-	fromExclusiveMenuItem = new JCheckBoxMenuItem(EXCLUSIVE);
-	fromExclusiveMenuItem.setMnemonic(KeyEvent.VK_X);
-	fromExclusiveMenuItem.setSelected(Boolean.TRUE.equals(fromExclusive));
-	fromExclusiveMenuItem.addItemListener(this);
-	toExclusiveMenuItem = new JCheckBoxMenuItem(EXCLUSIVE);
-	toExclusiveMenuItem.setMnemonic(KeyEvent.VK_X);
-	toExclusiveMenuItem.setSelected(Boolean.TRUE.equals(toExclusive));
-	toExclusiveMenuItem.addItemListener(this);
+        nullMenuItem = new JCheckBoxMenuItem(MISSING_VALUE);
+        nullMenuItem.setMnemonic(KeyEvent.VK_H);
+        nullMenuItem.setSelected(Boolean.TRUE.equals(orNull));
+        nullMenuItem.addItemListener(this);
+        final boolean isNotBoolOrCritOnlyDate = !(this.propertyEditor instanceof RangePropertyEditor && (((RangePropertyEditor) this.propertyEditor).isBool() || ((RangePropertyEditor) this.propertyEditor).isDate()
+                && isCritOnly));
+        if (isNotBoolOrCritOnlyDate) { // all criteria could be altered by emptiness except boolean criteria
+            popup.add(nullMenuItem);
+        }
+        notMenuItem = new JCheckBoxMenuItem(NOT);
+        notMenuItem.setMnemonic(KeyEvent.VK_N);
+        notMenuItem.setSelected(Boolean.TRUE.equals(not));
+        notMenuItem.addItemListener(this);
+        if (isNotBoolOrCritOnlyDate) { // all criteria could be negated except single (TODO should it be?) /boolean criteria
+            popup.add(notMenuItem);
+        }
+        fromExclusiveMenuItem = new JCheckBoxMenuItem(EXCLUSIVE);
+        fromExclusiveMenuItem.setMnemonic(KeyEvent.VK_X);
+        fromExclusiveMenuItem.setSelected(Boolean.TRUE.equals(fromExclusive));
+        fromExclusiveMenuItem.addItemListener(this);
+        toExclusiveMenuItem = new JCheckBoxMenuItem(EXCLUSIVE);
+        toExclusiveMenuItem.setMnemonic(KeyEvent.VK_X);
+        toExclusiveMenuItem.setSelected(Boolean.TRUE.equals(toExclusive));
+        toExclusiveMenuItem.addItemListener(this);
 
-	// create date related menu items:
-	dateMenusSeparator = new JSeparator();
-	prevMenu = new JMenu("Previous");
-	currMenu = new JMenu("Current");
-	nextMenu = new JMenu("Next");
-	dateStateItems = new HashMap<DateState, CriteriaModificationLayer.DateCheckBoxMenuItem>();
-	final boolean isDate = this.propertyEditor instanceof RangePropertyEditor && ((RangePropertyEditor) this.propertyEditor).isDate();
-	if (isDate) {
-	    fillDateStateItems();
-	}
-	final MouseListener popupShower = new PopupListener();
+        // create date related menu items:
+        dateMenusSeparator = new JSeparator();
+        prevMenu = new JMenu("Previous");
+        currMenu = new JMenu("Current");
+        nextMenu = new JMenu("Next");
+        dateStateItems = new HashMap<DateState, CriteriaModificationLayer.DateCheckBoxMenuItem>();
+        final boolean isDate = this.propertyEditor instanceof RangePropertyEditor && ((RangePropertyEditor) this.propertyEditor).isDate();
+        if (isDate) {
+            fillDateStateItems();
+        }
+        final MouseListener popupShower = new PopupListener();
 
-	if (!isCritOnlyAndSingle) { // no criteria modifications are permitted for Single critOnly properties
-	    if (this.propertyEditor instanceof RangePropertyEditor) {
-		final RangePropertyEditor rpe = (RangePropertyEditor) this.propertyEditor;
-		rpe.getEditor().addMouseListener(popupShower);
-		assignTo(popupShower, rpe.getFromEditor(), rpe.getToEditor());
-	    } else {
-		assignTo(popupShower, this.propertyEditor);
-	    }
-	}
+        if (!isCritOnlyAndSingle) { // no criteria modifications are permitted for Single critOnly properties
+            if (this.propertyEditor instanceof RangePropertyEditor) {
+                final RangePropertyEditor rpe = (RangePropertyEditor) this.propertyEditor;
+                rpe.getEditor().addMouseListener(popupShower);
+                assignTo(popupShower, rpe.getFromEditor(), rpe.getToEditor());
+            } else {
+                assignTo(popupShower, this.propertyEditor);
+            }
+        }
 
-	// update an initial state to be sure that saved state is correct and to make sure it will be rendered properly
-	updateState();
+        // update an initial state to be sure that saved state is correct and to make sure it will be rendered properly
+        updateState();
     }
 
     private void loadInitialState() {
-	final IAddToCriteriaTickManager ftm = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+        final IAddToCriteriaTickManager ftm = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 
-	not = ftm.getNot(rootType, propertyName); // update Not state
-	orNull = ftm.getOrNull(rootType, propertyName); // update OrNull state
+        not = ftm.getNot(rootType, propertyName); // update Not state
+        orNull = ftm.getOrNull(rootType, propertyName); // update OrNull state
 
-	if (AbstractDomainTree.isDoubleCriterion(managedType, propertyName)) {
-	    fromExclusive = ftm.getExclusive(rootType, propertyName); // update left exclusiveness
-	    toExclusive = ftm.getExclusive2(rootType, propertyName); // update right exclusiveness
-	}
+        if (AbstractDomainTree.isDoubleCriterion(managedType, propertyName)) {
+            fromExclusive = ftm.getExclusive(rootType, propertyName); // update left exclusiveness
+            toExclusive = ftm.getExclusive2(rootType, propertyName); // update right exclusiveness
+        }
 
-	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
-	if (EntityUtils.isDate(propertyType)) {
-	    dateState.setDatePrefix(ftm.getDatePrefix(rootType, propertyName)); // update date prefix
-	    dateState.setDateMnemonic(ftm.getDateMnemonic(rootType, propertyName)); // update date mnemonic
-	    dateState.setAndBefore(ftm.getAndBefore(rootType, propertyName)); // update andBefore
-	}
+        final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
+        if (EntityUtils.isDate(propertyType)) {
+            dateState.setDatePrefix(ftm.getDatePrefix(rootType, propertyName)); // update date prefix
+            dateState.setDateMnemonic(ftm.getDateMnemonic(rootType, propertyName)); // update date mnemonic
+            dateState.setAndBefore(ftm.getAndBefore(rootType, propertyName)); // update andBefore
+        }
     }
 
     /**
      * Creates and register a menu structure for [Prefix + Mnemonic] with three sub-items: "Full period item", "And before item" and "And after item".
-     *
+     * 
      * @param prefix
      * @param mnemonic
      * @param mnemonicTitle
@@ -298,528 +304,528 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
      * @return
      */
     private JMenu createDateMnemonicSubMenu(final DateRangePrefixEnum prefix, final MnemonicEnum mnemonic, final String mnemonicTitle, final String prefixWithMnemonicTitle) {
-	final JMenu menu = new JMenu(mnemonicTitle);
+        final JMenu menu = new JMenu(mnemonicTitle);
 
-	final DateCheckBoxMenuItem fullPeriod = new DateCheckBoxMenuItem(new DateState(prefix, mnemonic, null), prefixWithMnemonicTitle);
-	menu.add(fullPeriod);
-	dateStateItems.put(fullPeriod.getDateState(), fullPeriod);
+        final DateCheckBoxMenuItem fullPeriod = new DateCheckBoxMenuItem(new DateState(prefix, mnemonic, null), prefixWithMnemonicTitle);
+        menu.add(fullPeriod);
+        dateStateItems.put(fullPeriod.getDateState(), fullPeriod);
 
-	final DateCheckBoxMenuItem andBefore = new DateCheckBoxMenuItem(new DateState(prefix, mnemonic, Boolean.TRUE), prefixWithMnemonicTitle + " and before");
-	menu.add(andBefore);
-	dateStateItems.put(andBefore.getDateState(), andBefore);
+        final DateCheckBoxMenuItem andBefore = new DateCheckBoxMenuItem(new DateState(prefix, mnemonic, Boolean.TRUE), prefixWithMnemonicTitle + " and before");
+        menu.add(andBefore);
+        dateStateItems.put(andBefore.getDateState(), andBefore);
 
-	final DateCheckBoxMenuItem andAfter = new DateCheckBoxMenuItem(new DateState(prefix, mnemonic, Boolean.FALSE), prefixWithMnemonicTitle + " and after");
-	menu.add(andAfter);
-	dateStateItems.put(andAfter.getDateState(), andAfter);
+        final DateCheckBoxMenuItem andAfter = new DateCheckBoxMenuItem(new DateState(prefix, mnemonic, Boolean.FALSE), prefixWithMnemonicTitle + " and after");
+        menu.add(andAfter);
+        dateStateItems.put(andAfter.getDateState(), andAfter);
 
-	return menu;
+        return menu;
     }
 
     /**
      * Creates and adds sub-menus (related to date mnemonics, except "DAY") to appropriate <code>groupMenu</code>.
-     *
+     * 
      * @param drpe
      * @param groupMenu
      * @param pref
      */
     private void addNonDayMnemonics(final DateRangePrefixEnum drpe, final JMenu groupMenu, final String pref) {
-	groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.WEEK, "Week", pref + " week"));
-	groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.MONTH, "Month", pref + " month"));
-	groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.QRT1, "1-st quarter", pref + " year's 1-st quarter"));
-	groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.QRT2, "2-nd quarter", pref + " year's 2-nd quarter"));
-	groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.QRT3, "3-rd quarter", pref + " year's 3-rd quarter"));
-	groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.QRT4, "4-th quarter", pref + " year's 4-th quarter"));
-	groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.YEAR, "Year", pref + " year"));
-	groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.OZ_FIN_YEAR, "Financial year", pref + " financial year"));
+        groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.WEEK, "Week", pref + " week"));
+        groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.MONTH, "Month", pref + " month"));
+        groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.QRT1, "1-st quarter", pref + " year's 1-st quarter"));
+        groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.QRT2, "2-nd quarter", pref + " year's 2-nd quarter"));
+        groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.QRT3, "3-rd quarter", pref + " year's 3-rd quarter"));
+        groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.QRT4, "4-th quarter", pref + " year's 4-th quarter"));
+        groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.YEAR, "Year", pref + " year"));
+        groupMenu.add(createDateMnemonicSubMenu(drpe, MnemonicEnum.OZ_FIN_YEAR, "Financial year", pref + " financial year"));
     }
 
     /**
      * Creates date group menu sub-items and adds them to appropriate Prev, Curr or Next group menu items.
-     *
+     * 
      * @return
      */
     private void fillDateStateItems() {
-	// PREV
-	prevMenu.add(createDateMnemonicSubMenu(DateRangePrefixEnum.PREV, MnemonicEnum.DAY, "Day", "Yesterday"));
-	addNonDayMnemonics(DateRangePrefixEnum.PREV, prevMenu, "Previous");
+        // PREV
+        prevMenu.add(createDateMnemonicSubMenu(DateRangePrefixEnum.PREV, MnemonicEnum.DAY, "Day", "Yesterday"));
+        addNonDayMnemonics(DateRangePrefixEnum.PREV, prevMenu, "Previous");
 
-	// CURR
-	currMenu.add(createDateMnemonicSubMenu(DateRangePrefixEnum.CURR, MnemonicEnum.DAY, "Day", "Today"));
-	addNonDayMnemonics(DateRangePrefixEnum.CURR, currMenu, "Current");
+        // CURR
+        currMenu.add(createDateMnemonicSubMenu(DateRangePrefixEnum.CURR, MnemonicEnum.DAY, "Day", "Today"));
+        addNonDayMnemonics(DateRangePrefixEnum.CURR, currMenu, "Current");
 
-	// NEXT
-	nextMenu.add(createDateMnemonicSubMenu(DateRangePrefixEnum.NEXT, MnemonicEnum.DAY, "Day", "Tomorrow"));
-	addNonDayMnemonics(DateRangePrefixEnum.NEXT, nextMenu, "Next");
+        // NEXT
+        nextMenu.add(createDateMnemonicSubMenu(DateRangePrefixEnum.NEXT, MnemonicEnum.DAY, "Day", "Tomorrow"));
+        addNonDayMnemonics(DateRangePrefixEnum.NEXT, nextMenu, "Next");
     }
 
     /**
      * A {@link JCheckBoxMenuItem} for date editor's range state modification.
-     *
+     * 
      * @author TG Team
-     *
+     * 
      */
     private class DateCheckBoxMenuItem extends JCheckBoxMenuItem {
-	private static final long serialVersionUID = 4121216244336230700L;
-	private final DateState dateState;
-	private final String stateCaption;
+        private static final long serialVersionUID = 4121216244336230700L;
+        private final DateState dateState;
+        private final String stateCaption;
 
-	public DateCheckBoxMenuItem(final DateState dateState, final String stateCaption) {
-	    super(stateCaption);
-	    if (dateState == null || dateState.getDatePrefix() == null || dateState.getDateMnemonic() == null) {
-		throw new RuntimeException("Incorrect date state [" + dateState + "] for date mnemonic menu item.");
-	    }
-	    this.dateState = dateState;
+        public DateCheckBoxMenuItem(final DateState dateState, final String stateCaption) {
+            super(stateCaption);
+            if (dateState == null || dateState.getDatePrefix() == null || dateState.getDateMnemonic() == null) {
+                throw new RuntimeException("Incorrect date state [" + dateState + "] for date mnemonic menu item.");
+            }
+            this.dateState = dateState;
 
-	    this.stateCaption = stateCaption;
+            this.stateCaption = stateCaption;
 
-	    // this.setMnemonic(KeyEvent.VK_X);
-	    // update state of item according to initial CML state:
-	    this.setSelected(this.dateState.equals(CriteriaModificationLayer.this.dateState));
-	    // add a listener for this item:
-	    this.addItemListener(CriteriaModificationLayer.this);
-	}
+            // this.setMnemonic(KeyEvent.VK_X);
+            // update state of item according to initial CML state:
+            this.setSelected(this.dateState.equals(CriteriaModificationLayer.this.dateState));
+            // add a listener for this item:
+            this.addItemListener(CriteriaModificationLayer.this);
+        }
 
-	public DateState getDateState() {
-	    return dateState;
-	}
+        public DateState getDateState() {
+            return dateState;
+        }
 
-	public String getStateCaption() {
-	    return stateCaption;
-	}
+        public String getStateCaption() {
+            return stateCaption;
+        }
     }
 
     /** Assigns popupShower to a list of {@link BoundedValidationLayer}s. */
     private void assignTo(final MouseListener popupShower, final IPropertyEditor... editors) {
-	for (final IPropertyEditor editor : editors) {
-	    final BoundedValidationLayer<?> bvl = (BoundedValidationLayer<?>) editor.getEditor();
-	    // add "after commit" property change listener to update state of this crit-modif layer:
-	    bvl.addOnCommitAction(new IOnCommitAction() {
-		@Override
-		public void postSuccessfulCommitAction() {
-		}
+        for (final IPropertyEditor editor : editors) {
+            final BoundedValidationLayer<?> bvl = (BoundedValidationLayer<?>) editor.getEditor();
+            // add "after commit" property change listener to update state of this crit-modif layer:
+            bvl.addOnCommitAction(new IOnCommitAction() {
+                @Override
+                public void postSuccessfulCommitAction() {
+                }
 
-		@Override
-		public void postCommitAction() {
-		    updateState();
-		}
+                @Override
+                public void postCommitAction() {
+                    updateState();
+                }
 
-		@Override
-		public void postNotSuccessfulCommitAction() {
-		}
-	    });
+                @Override
+                public void postNotSuccessfulCommitAction() {
+                }
+            });
 
-	    //TODO does this property change support is needed any longer.
-	    //	    eqc.getChangeSupport().addPropertyChangeListener(DynamicEntityQueryCriteria.DEFAULT + editor.getPropertyName(), new PropertyChangeListener() {
-	    //		@Override
-	    //		public void propertyChange(final PropertyChangeEvent evt) {
-	    //		    // "default" crit-modif state, after the value has been defaulted:
-	    //		    notMenuItem.setSelected(false);
-	    //		    nullMenuItem.setSelected(false);
-	    //
-	    //		    // "default" (remove) date specific mnemonics, after the value has been defaulted:
-	    //		    setDateState(new DateState());
-	    //		}
-	    //	    });
+            //TODO does this property change support is needed any longer.
+            //	    eqc.getChangeSupport().addPropertyChangeListener(DynamicEntityQueryCriteria.DEFAULT + editor.getPropertyName(), new PropertyChangeListener() {
+            //		@Override
+            //		public void propertyChange(final PropertyChangeEvent evt) {
+            //		    // "default" crit-modif state, after the value has been defaulted:
+            //		    notMenuItem.setSelected(false);
+            //		    nullMenuItem.setSelected(false);
+            //
+            //		    // "default" (remove) date specific mnemonics, after the value has been defaulted:
+            //		    setDateState(new DateState());
+            //		}
+            //	    });
 
-	    bvl.addIncapsulatedMouseListener(popupShower);
-	}
+            bvl.addIncapsulatedMouseListener(popupShower);
+        }
     }
 
     /**
      * Updates a state of crit-modif layer according to an ignore state property editor which is wrapped. Also triggers repainting of a component which state has been updated.
      */
     public void updateState() {
-	if (propertyEditor instanceof RangePropertyEditor) {
-	    final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
-	    if (!rpe.isSingle() && !rpe.isBool()) { // update exclusiveness according to an ignore state of each sub-editor:
-		if (isPropertyIgnored(true) && Boolean.TRUE.equals(fromExclusive)) {
-		    System.out.print("Remove from exclusiveness. ");
-		    isInFromEditorHierarchy = true;
-		    fromExclusiveMenuItem.setSelected(false);
-		    isInFromEditorHierarchy = null;
-		}
-		if (isPropertyIgnored(false) && Boolean.TRUE.equals(toExclusive)) {
-		    System.out.print("Remove to exclusiveness. ");
-		    isInFromEditorHierarchy = false;
-		    toExclusiveMenuItem.setSelected(false);
-		    isInFromEditorHierarchy = null;
-		}
-	    }
-	}
+        if (propertyEditor instanceof RangePropertyEditor) {
+            final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
+            if (!rpe.isSingle() && !rpe.isBool()) { // update exclusiveness according to an ignore state of each sub-editor:
+                if (isPropertyIgnored(true) && Boolean.TRUE.equals(fromExclusive)) {
+                    System.out.print("Remove from exclusiveness. ");
+                    isInFromEditorHierarchy = true;
+                    fromExclusiveMenuItem.setSelected(false);
+                    isInFromEditorHierarchy = null;
+                }
+                if (isPropertyIgnored(false) && Boolean.TRUE.equals(toExclusive)) {
+                    System.out.print("Remove to exclusiveness. ");
+                    isInFromEditorHierarchy = false;
+                    toExclusiveMenuItem.setSelected(false);
+                    isInFromEditorHierarchy = null;
+                }
+            }
+        }
 
-	if (Boolean.TRUE.equals(not) && isIgnored()) { // update negation according to an ignore state of property editor:
-	    System.out.print("Remove negation.");
-	    notMenuItem.setSelected(false);
-	}
+        if (Boolean.TRUE.equals(not) && isIgnored()) { // update negation according to an ignore state of property editor:
+            System.out.print("Remove negation.");
+            notMenuItem.setSelected(false);
+        }
 
-	// update a colour of exlusiveness
-	leftValidationLayer.setColour(Boolean.TRUE.equals(fromExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
-	if (rightValidationLayer != null) {
-	    rightValidationLayer.setColour(Boolean.TRUE.equals(toExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
-	}
+        // update a colour of exlusiveness
+        leftValidationLayer.setColour(Boolean.TRUE.equals(fromExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
+        if (rightValidationLayer != null) {
+            rightValidationLayer.setColour(Boolean.TRUE.equals(toExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
+        }
 
-	// trigger repainting:
-	repaint();
+        // trigger repainting:
+        repaint();
     }
 
     /**
-     * Returns <code>true</code> if underlying property editor is empty and no date mnemonics have been assigned (in case of date range editor) and "missing value" modification is not applied, otherwise returns <code>false</code>.
-     *
+     * Returns <code>true</code> if underlying property editor is empty and no date mnemonics have been assigned (in case of date range editor) and "missing value" modification is
+     * not applied, otherwise returns <code>false</code>.
+     * 
      * @return
      */
-    private boolean isIgnored(){
-	return isPropertyIgnored() && dateState.isEmpty() && !Boolean.TRUE.equals(orNull);
+    private boolean isIgnored() {
+        return isPropertyIgnored() && dateState.isEmpty() && !Boolean.TRUE.equals(orNull);
     }
 
-    private boolean isPropertyIgnored(){
-	if(propertyEditor instanceof RangePropertyEditor){
-	    final RangePropertyEditor rangeEditor = (RangePropertyEditor) propertyEditor;
-	    return (isPropertyIgnored(true) && isPropertyIgnored(false)) || (rangeEditor.isBool() && !isPropertyIgnored(true) && !isPropertyIgnored(false));
-	}else{
-	    return isPropertyIgnored(true);
-	}
+    private boolean isPropertyIgnored() {
+        if (propertyEditor instanceof RangePropertyEditor) {
+            final RangePropertyEditor rangeEditor = (RangePropertyEditor) propertyEditor;
+            return (isPropertyIgnored(true) && isPropertyIgnored(false)) || (rangeEditor.isBool() && !isPropertyIgnored(true) && !isPropertyIgnored(false));
+        } else {
+            return isPropertyIgnored(true);
+        }
     }
 
-    private boolean isPropertyIgnored(final boolean first){
-	final IAddToCriteriaTickManager ftm= eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-	return first ? ftm.isValueEmpty(rootType, propertyName) : ftm.is2ValueEmpty(rootType, propertyName);
+    private boolean isPropertyIgnored(final boolean first) {
+        final IAddToCriteriaTickManager ftm = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+        return first ? ftm.isValueEmpty(rootType, propertyName) : ftm.is2ValueEmpty(rootType, propertyName);
     }
-
 
     /**
      * Popup menu invocator.
-     *
+     * 
      * @author TG Team
-     *
+     * 
      */
     private class PopupListener extends MouseAdapter {
-	@Override
-	public void mousePressed(final MouseEvent e) {
-	    maybeShowPopup(e);
-	}
+        @Override
+        public void mousePressed(final MouseEvent e) {
+            maybeShowPopup(e);
+        }
 
-	@Override
-	public void mouseReleased(final MouseEvent e) {
-	    maybeShowPopup(e);
-	}
+        @Override
+        public void mouseReleased(final MouseEvent e) {
+            maybeShowPopup(e);
+        }
 
-	private void exclusiveAdd(final boolean add, final boolean from) {
-	    final JCheckBoxMenuItem mi = from ? fromExclusiveMenuItem : toExclusiveMenuItem;
-	    if (add) {
-		if (popup.getComponentIndex(mi) < 0) {
-		    popup.add(mi);
-		}
-	    } else {
-		if (popup.getComponentIndex(mi) >= 0) {
-		    popup.remove(mi);
-		}
-	    }
-	}
+        private void exclusiveAdd(final boolean add, final boolean from) {
+            final JCheckBoxMenuItem mi = from ? fromExclusiveMenuItem : toExclusiveMenuItem;
+            if (add) {
+                if (popup.getComponentIndex(mi) < 0) {
+                    popup.add(mi);
+                }
+            } else {
+                if (popup.getComponentIndex(mi) >= 0) {
+                    popup.remove(mi);
+                }
+            }
+        }
 
-	private void addDateMenuItems(final boolean add) {
-	    if (add) {
-		if (popup.getComponentIndex(dateMenusSeparator) < 0) {
-		    popup.add(dateMenusSeparator);
-		    popup.add(prevMenu);
-		    popup.add(currMenu);
-		    popup.add(nextMenu);
-		}
-	    } else {
-		if (popup.getComponentIndex(dateMenusSeparator) >= 0) {
-		    popup.remove(nextMenu);
-		    popup.remove(currMenu);
-		    popup.remove(prevMenu);
-		    popup.remove(dateMenusSeparator);
-		}
-	    }
-	}
+        private void addDateMenuItems(final boolean add) {
+            if (add) {
+                if (popup.getComponentIndex(dateMenusSeparator) < 0) {
+                    popup.add(dateMenusSeparator);
+                    popup.add(prevMenu);
+                    popup.add(currMenu);
+                    popup.add(nextMenu);
+                }
+            } else {
+                if (popup.getComponentIndex(dateMenusSeparator) >= 0) {
+                    popup.remove(nextMenu);
+                    popup.remove(currMenu);
+                    popup.remove(prevMenu);
+                    popup.remove(dateMenusSeparator);
+                }
+            }
+        }
 
-	private void maybeShowPopup(final MouseEvent e) {
-	    if (e.isPopupTrigger()) {
-		// invoke committing process for all buffered sub-editors before showing popup:
-		if (leftValidationLayer.canCommit()) {
-		    leftValidationLayer.commit();
-		}
-		if (rightValidationLayer != null && rightValidationLayer.canCommit()) {
-		    rightValidationLayer.commit();
-		}
-		// invoke a background "waiter" that waits until all committing logic to be completed and then updates/shows popup menu:
-		new Command<Result>("Update and invoke popup menu") {
-		    private static final long serialVersionUID = -193882193087849022L;
+        private void maybeShowPopup(final MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                // invoke committing process for all buffered sub-editors before showing popup:
+                if (leftValidationLayer.canCommit()) {
+                    leftValidationLayer.commit();
+                }
+                if (rightValidationLayer != null && rightValidationLayer.canCommit()) {
+                    rightValidationLayer.commit();
+                }
+                // invoke a background "waiter" that waits until all committing logic to be completed and then updates/shows popup menu:
+                new Command<Result>("Update and invoke popup menu") {
+                    private static final long serialVersionUID = -193882193087849022L;
 
-		    @Override
-		    protected Result action(final ActionEvent e) throws Exception {
-			// invoke a background "waiter" that waits until all committing logic to be completed:
-			return eqc.isValid();
-		    }
+                    @Override
+                    protected Result action(final ActionEvent e) throws Exception {
+                        // invoke a background "waiter" that waits until all committing logic to be completed:
+                        return eqc.isValid();
+                    }
 
-		    @Override
-		    protected void postAction(final Result value) {
-			super.postAction(value);
-			// delete popup menu "date" items:
-			if (propertyEditor instanceof RangePropertyEditor) { // only non-single date-criteria could be altered by date mnemonics, not single/boolean criteria.
-			    final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
-			    if (!rpe.isSingle() && rpe.isDate()) {
-				addDateMenuItems(false);
-			    }
-			}
+                    @Override
+                    protected void postAction(final Result value) {
+                        super.postAction(value);
+                        // delete popup menu "date" items:
+                        if (propertyEditor instanceof RangePropertyEditor) { // only non-single date-criteria could be altered by date mnemonics, not single/boolean criteria.
+                            final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
+                            if (!rpe.isSingle() && rpe.isDate()) {
+                                addDateMenuItems(false);
+                            }
+                        }
 
-			// update popup menu "exclusiveness" items:
-			if (propertyEditor instanceof RangePropertyEditor) { // only range-criteria could be altered by boundary exclusiveness, not single/boolean criteria.
-			    final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
-			    if (!rpe.isSingle() && !rpe.isBool()) {
-				isInFromEditorHierarchy = isInFromEditorHierarchy(e.getComponent());
-				if (isInFromEditorHierarchy != null) {
-				    exclusiveAdd(true, isInFromEditorHierarchy);
-				    exclusiveAdd(false, !isInFromEditorHierarchy);
-				} else {
-				    exclusiveAdd(false, true);
-				    exclusiveAdd(false, false);
-				}
-			    } else {
-				exclusiveAdd(false, true);
-				exclusiveAdd(false, false);
-			    }
-			    final boolean mnemonicDeselected = dateState.isEmpty();
-			    fromExclusiveMenuItem.setEnabled(!isPropertyIgnored(true) && mnemonicDeselected);
-			    toExclusiveMenuItem.setEnabled(!isPropertyIgnored(false) && mnemonicDeselected);
-			} else {
-			    exclusiveAdd(false, true);
-			    exclusiveAdd(false, false);
-			}
+                        // update popup menu "exclusiveness" items:
+                        if (propertyEditor instanceof RangePropertyEditor) { // only range-criteria could be altered by boundary exclusiveness, not single/boolean criteria.
+                            final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
+                            if (!rpe.isSingle() && !rpe.isBool()) {
+                                isInFromEditorHierarchy = isInFromEditorHierarchy(e.getComponent());
+                                if (isInFromEditorHierarchy != null) {
+                                    exclusiveAdd(true, isInFromEditorHierarchy);
+                                    exclusiveAdd(false, !isInFromEditorHierarchy);
+                                } else {
+                                    exclusiveAdd(false, true);
+                                    exclusiveAdd(false, false);
+                                }
+                            } else {
+                                exclusiveAdd(false, true);
+                                exclusiveAdd(false, false);
+                            }
+                            final boolean mnemonicDeselected = dateState.isEmpty();
+                            fromExclusiveMenuItem.setEnabled(!isPropertyIgnored(true) && mnemonicDeselected);
+                            toExclusiveMenuItem.setEnabled(!isPropertyIgnored(false) && mnemonicDeselected);
+                        } else {
+                            exclusiveAdd(false, true);
+                            exclusiveAdd(false, false);
+                        }
 
-			// update popup menu "date" items:
-			if (propertyEditor instanceof RangePropertyEditor) { // only non-single date-criteria could be altered by date mnemonics, not single/boolean criteria.
-			    final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
-			    if (!rpe.isSingle() && rpe.isDate()) {
-				addDateMenuItems(true);
-			    } else {
-				addDateMenuItems(false);
-			    }
-			}
+                        // update popup menu "date" items:
+                        if (propertyEditor instanceof RangePropertyEditor) { // only non-single date-criteria could be altered by date mnemonics, not single/boolean criteria.
+                            final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
+                            if (!rpe.isSingle() && rpe.isDate()) {
+                                addDateMenuItems(true);
+                            } else {
+                                addDateMenuItems(false);
+                            }
+                        }
 
-			// update popup menu "negation" item:
-			notMenuItem.setEnabled(!isIgnored());
-			// invoke popup menu:
-			if(popup.getComponentCount() != 0){
-			    popup.show(e.getComponent(), e.getX(), e.getY());
-			}
-		    }
-		}.actionPerformed(null);
-	    }
-	}
+                        // update popup menu "negation" item:
+                        notMenuItem.setEnabled(!isIgnored());
+                        // invoke popup menu:
+                        if (popup.getComponentCount() != 0) {
+                            popup.show(e.getComponent(), e.getX(), e.getY());
+                        }
+                    }
+                }.actionPerformed(null);
+            }
+        }
 
-	private Boolean isInFromEditorHierarchy(final Component component) {
-	    final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
+        private Boolean isInFromEditorHierarchy(final Component component) {
+            final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
 
-	    Component comp = component;
-	    while (comp != null) {
-		if (comp.equals(rpe.getFromEditor().getEditor())) {
-		    return true;
-		} else if (comp.equals(rpe.getToEditor().getEditor())) {
-		    return false;
-		}
-		comp = comp.getParent();
-	    }
+            Component comp = component;
+            while (comp != null) {
+                if (comp.equals(rpe.getFromEditor().getEditor())) {
+                    return true;
+                } else if (comp.equals(rpe.getToEditor().getEditor())) {
+                    return false;
+                }
+                comp = comp.getParent();
+            }
 
-	    return null;
-	}
+            return null;
+        }
     }
 
     @Override
     public void itemStateChanged(final ItemEvent e) {
-	final Object source = e.getItemSelectable();
-	if (source == nullMenuItem) {
-	    setOrNull(e.getStateChange() == ItemEvent.SELECTED);
-	} else if (source == notMenuItem) {
-	    setNot(e.getStateChange() == ItemEvent.SELECTED);
-	} else if (source == fromExclusiveMenuItem || source == toExclusiveMenuItem) {
-	    setExclusive(e.getStateChange() == ItemEvent.SELECTED);
-	} else if (source instanceof DateCheckBoxMenuItem) {
-	    final DateCheckBoxMenuItem dcbmi = (DateCheckBoxMenuItem) source;
-	    setDateState((e.getStateChange() == ItemEvent.SELECTED) ? dcbmi.getDateState() : new DateState());
-	}
+        final Object source = e.getItemSelectable();
+        if (source == nullMenuItem) {
+            setOrNull(e.getStateChange() == ItemEvent.SELECTED);
+        } else if (source == notMenuItem) {
+            setNot(e.getStateChange() == ItemEvent.SELECTED);
+        } else if (source == fromExclusiveMenuItem || source == toExclusiveMenuItem) {
+            setExclusive(e.getStateChange() == ItemEvent.SELECTED);
+        } else if (source instanceof DateCheckBoxMenuItem) {
+            final DateCheckBoxMenuItem dcbmi = (DateCheckBoxMenuItem) source;
+            setDateState((e.getStateChange() == ItemEvent.SELECTED) ? dcbmi.getDateState() : new DateState());
+        }
     }
 
     /**
      * Sets date mnemonic (prefix + mnemonic, e.g. PREV+MONTH) for this "date" crit-modif layer.
-     *
+     * 
      * @param newDatePrefix
      * @param newDateMnemonic
      */
     private void setDateState(final DateState newDateState) {
-	final boolean wasNot = Boolean.TRUE.equals(not);
-	final boolean wasOrNull = Boolean.TRUE.equals(orNull);
-	if (!dateState.isEmpty()) { // unselect previously selected item:
-	    dateStateItems.get(dateState).setSelected(false);
-	}
+        final boolean wasNot = Boolean.TRUE.equals(not);
+        final boolean wasOrNull = Boolean.TRUE.equals(orNull);
+        if (!dateState.isEmpty()) { // unselect previously selected item:
+            dateStateItems.get(dateState).setSelected(false);
+        }
 
-	dateState.setDatePrefix(newDateState.getDatePrefix());
-	dateState.setDateMnemonic(newDateState.getDateMnemonic());
-	dateState.setAndBefore(newDateState.getAndBefore());
+        dateState.setDatePrefix(newDateState.getDatePrefix());
+        dateState.setDateMnemonic(newDateState.getDateMnemonic());
+        dateState.setAndBefore(newDateState.getAndBefore());
 
-	if (wasOrNull && !dateState.isEmpty()){
-	    nullMenuItem.setSelected(true);
-	}
-	if (wasNot && !dateState.isEmpty()){
-	    notMenuItem.setSelected(true);
-	}
+        if (wasOrNull && !dateState.isEmpty()) {
+            nullMenuItem.setSelected(true);
+        }
+        if (wasNot && !dateState.isEmpty()) {
+            notMenuItem.setSelected(true);
+        }
 
-	updateDynamicPropertiesState();
-	// update state according to editor emptiness:
-	updateState();
+        updateDynamicPropertiesState();
+        // update state according to editor emptiness:
+        updateState();
     }
 
     /**
      * Sets an "exclusiveness" for currently selected boundary => "from" or "to".
-     *
+     * 
      * @param isExclusive
      */
     private void setExclusive(final boolean isExclusive) {
-	if (isInFromEditorHierarchy != null && isInFromEditorHierarchy) {
-	    fromExclusive = isExclusive;
-	    updateDynamicPropertiesState();
-	    // update state according to editor emptiness:
-	    updateState();
-	} else if (isInFromEditorHierarchy != null && !isInFromEditorHierarchy) {
-	    toExclusive = isExclusive;
-	    updateDynamicPropertiesState();
-	    // update state according to editor emptiness:
-	    updateState();
-	} else {
-	    throw new RuntimeException("Could not alter exclusiveness for undefined part of range.");
-	}
+        if (isInFromEditorHierarchy != null && isInFromEditorHierarchy) {
+            fromExclusive = isExclusive;
+            updateDynamicPropertiesState();
+            // update state according to editor emptiness:
+            updateState();
+        } else if (isInFromEditorHierarchy != null && !isInFromEditorHierarchy) {
+            toExclusive = isExclusive;
+            updateDynamicPropertiesState();
+            // update state according to editor emptiness:
+            updateState();
+        } else {
+            throw new RuntimeException("Could not alter exclusiveness for undefined part of range.");
+        }
     }
 
     /**
      * Sets an "Or null" parameter for crit-modif layer.
-     *
+     * 
      * @param isNot
      */
     private void setOrNull(final boolean isOrNull) {
-	// if originally state was null (e.g. has been retrieved from persistent criteria) change it to OrNull = false state.
-	if (orNull == null) {
-	    orNull = false;
-	}
-	// update orNull parameter:
-	orNull = isOrNull;
-	updateDynamicPropertiesState();
-	// update state according to editor emptiness:
-	updateState();
+        // if originally state was null (e.g. has been retrieved from persistent criteria) change it to OrNull = false state.
+        if (orNull == null) {
+            orNull = false;
+        }
+        // update orNull parameter:
+        orNull = isOrNull;
+        updateDynamicPropertiesState();
+        // update state according to editor emptiness:
+        updateState();
     }
 
     /**
      * Sets a "negation" for crit-modif layer.
-     *
+     * 
      * @param isNot
      */
     private void setNot(final boolean isNot) {
-	// if originally state was null (e.g. has been retrieved from persistent criteria) change it to OrNull = false state.
-	if (not == null) {
-	    not = false;
-	}
-	// update orNull parameter:
-	not = isNot;
-	updateDynamicPropertiesState();
-	// update state according to editor emptiness:
-	updateState();
+        // if originally state was null (e.g. has been retrieved from persistent criteria) change it to OrNull = false state.
+        if (not == null) {
+            not = false;
+        }
+        // update orNull parameter:
+        not = isNot;
+        updateDynamicPropertiesState();
+        // update state according to editor emptiness:
+        updateState();
     }
 
     /**
      * Updates a {@link IAddToCriteriaTickManager} model with corresponding emptiness/negation/exclusiveness/dateValue.
      */
     private void updateDynamicPropertiesState() {
-	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
-	// update an initial state of criteria modification layer:
-	final IAddToCriteriaTickManager ftm = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-	ftm.setNot(rootType, propertyName, not); // update Not state
-	ftm.setOrNull(rootType, propertyName, orNull); // update "or null" parameter
-	if(EntityUtils.isRangeType(propertyType)){
-	    ftm.setExclusive(rootType, propertyName, fromExclusive); // update exclusiveness
-	    if(rightValidationLayer != null){
-		ftm.setExclusive2(rootType, propertyName, toExclusive); // update right exclusiveness
-	    }
-	    if(Date.class.isAssignableFrom(propertyType)){
-		ftm.setDatePrefix(rootType, propertyName, dateState.getDatePrefix()); // update date prefix
-		ftm.setDateMnemonic(rootType, propertyName, dateState.getDateMnemonic()); // update date mnemonic
-		ftm.setAndBefore(rootType, propertyName, dateState.getAndBefore()); // update andBefore
-	    }
-	}
+        final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
+        // update an initial state of criteria modification layer:
+        final IAddToCriteriaTickManager ftm = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+        ftm.setNot(rootType, propertyName, not); // update Not state
+        ftm.setOrNull(rootType, propertyName, orNull); // update "or null" parameter
+        if (EntityUtils.isRangeType(propertyType)) {
+            ftm.setExclusive(rootType, propertyName, fromExclusive); // update exclusiveness
+            if (rightValidationLayer != null) {
+                ftm.setExclusive2(rootType, propertyName, toExclusive); // update right exclusiveness
+            }
+            if (Date.class.isAssignableFrom(propertyType)) {
+                ftm.setDatePrefix(rootType, propertyName, dateState.getDatePrefix()); // update date prefix
+                ftm.setDateMnemonic(rootType, propertyName, dateState.getDateMnemonic()); // update date mnemonic
+                ftm.setAndBefore(rootType, propertyName, dateState.getAndBefore()); // update andBefore
+            }
+        }
     }
 
     /**
      * Provides painting logic.
-     *
+     * 
      * @author TG Team
-     *
+     * 
      */
     private class CriteriaModificationUi extends AbstractLayerUI<JComponent> {
-	private CriteriaModificationUi() {
-	}
+        private CriteriaModificationUi() {
+        }
 
-	/**
-	 * Paints the state.
-	 */
-	@Override
-	protected void paintLayer(final Graphics2D g2, final JXLayer<JComponent> layer) {
-	    super.paintLayer(g2, layer); // this paints layer as is
+        /**
+         * Paints the state.
+         */
+        @Override
+        protected void paintLayer(final Graphics2D g2, final JXLayer<JComponent> layer) {
+            super.paintLayer(g2, layer); // this paints layer as is
 
-	    final Color transparentWhite = new Color(255, 255, 255, 240);
-	    final Color moreTransparentWhite = new Color(255, 255, 255, 100);
-	    //	    leftValidationLayer.setColour(Boolean.TRUE.equals(fromExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
-	    //	    if (rightValidationLayer != null) {
-	    //		rightValidationLayer.setColour(Boolean.TRUE.equals(toExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
-	    //	    }
-	    if (!dateState.isEmpty()){
-		drawText(g2, layer, transparentWhite, dateStateItems.get(dateState).getStateCaption());
-	    }
-	    if (Boolean.TRUE.equals(orNull)) {
-		paintColour(g2, BoundedValidationLayer.WARNING_COLOUR, layer.getView());
-	    }
-	    if (Boolean.TRUE.equals(not)) {
-		paintColour(g2, moreTransparentWhite, layer.getView());
-		g2.setColor(new Color(115, 164, 209));
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g2.drawLine(0, layer.getHeight(), layer.getWidth(), 0);
-	    }
-	}
+            final Color transparentWhite = new Color(255, 255, 255, 240);
+            final Color moreTransparentWhite = new Color(255, 255, 255, 100);
+            //	    leftValidationLayer.setColour(Boolean.TRUE.equals(fromExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
+            //	    if (rightValidationLayer != null) {
+            //		rightValidationLayer.setColour(Boolean.TRUE.equals(toExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
+            //	    }
+            if (!dateState.isEmpty()) {
+                drawText(g2, layer, transparentWhite, dateStateItems.get(dateState).getStateCaption());
+            }
+            if (Boolean.TRUE.equals(orNull)) {
+                paintColour(g2, BoundedValidationLayer.WARNING_COLOUR, layer.getView());
+            }
+            if (Boolean.TRUE.equals(not)) {
+                paintColour(g2, moreTransparentWhite, layer.getView());
+                g2.setColor(new Color(115, 164, 209));
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.drawLine(0, layer.getHeight(), layer.getWidth(), 0);
+            }
+        }
 
-	private void drawText(final Graphics2D g2, final JXLayer<JComponent> layer, final Color backgroundColor, final String text) {
-	    final JComponent component = layer.getView();
-	    paintColour(g2, backgroundColor, component);
+        private void drawText(final Graphics2D g2, final JXLayer<JComponent> layer, final Color backgroundColor, final String text) {
+            final JComponent component = layer.getView();
+            paintColour(g2, backgroundColor, component);
 
-	    final int leftInset = leftValidationLayer.getIncapsulatedInsets().left;
-	    // define how many characters in the caption can be drawn
-	    final int actualInsets = leftInset - component.getInsets().left;
+            final int leftInset = leftValidationLayer.getIncapsulatedInsets().left;
+            // define how many characters in the caption can be drawn
+            final int actualInsets = leftInset - component.getInsets().left;
 
-	    //	    // define how many characters in the caption can be drawn
-	    //	    final FontMetrics fm = g2.getFontMetrics();
-	    //	    Rectangle2D textBounds = fm.getStringBounds(text, g2);
-	    //	    int count = text.length();
-	    //	    while ((textBounds.getWidth() > fitToWidth) && (count > 4)) {
-	    //		textBounds = fm.getStringBounds(text.substring(0, count--), g2);
-	    //	    }
-	    //	    return count == text.length() ? text : StringUtils.abbreviate(text, count);
+            //	    // define how many characters in the caption can be drawn
+            //	    final FontMetrics fm = g2.getFontMetrics();
+            //	    Rectangle2D textBounds = fm.getStringBounds(text, g2);
+            //	    int count = text.length();
+            //	    while ((textBounds.getWidth() > fitToWidth) && (count > 4)) {
+            //		textBounds = fm.getStringBounds(text.substring(0, count--), g2);
+            //	    }
+            //	    return count == text.length() ? text : StringUtils.abbreviate(text, count);
 
-	    final String textToDisplay = Utils2D.abbreviate(g2, text, component.getSize().width - actualInsets);
+            final String textToDisplay = Utils2D.abbreviate(g2, text, component.getSize().width - actualInsets);
 
-	    // paint the caption
-	    g2.setColor(new Color(0f, 0f, 0f, 1.0f));
-	    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+            // paint the caption
+            g2.setColor(new Color(0f, 0f, 0f, 1.0f));
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 
-	    final double xPos = leftInset;
-	    final Rectangle2D textBounds = g2.getFontMetrics().getStringBounds(textToDisplay, g2);
-	    final int h = component.getSize().height;
-	    final double yPos = (h - textBounds.getHeight()) / 2. + g2.getFontMetrics().getAscent();
-	    g2.drawString(textToDisplay, (float) xPos, (float) yPos);
-	}
+            final double xPos = leftInset;
+            final Rectangle2D textBounds = g2.getFontMetrics().getStringBounds(textToDisplay, g2);
+            final int h = component.getSize().height;
+            final double yPos = (h - textBounds.getHeight()) / 2. + g2.getFontMetrics().getAscent();
+            g2.drawString(textToDisplay, (float) xPos, (float) yPos);
+        }
 
-	private void paintColour(final Graphics2D g2, final Color backgroundColor, final JComponent component) {
-	    g2.setColor(backgroundColor);
-	    final int w = component.getSize().width - (component.getInsets().left + component.getInsets().right);
-	    final int h = component.getSize().height - (component.getInsets().top + component.getInsets().bottom);
-	    g2.fillRect(component.getInsets().left, component.getInsets().top, w, h);
-	}
+        private void paintColour(final Graphics2D g2, final Color backgroundColor, final JComponent component) {
+            g2.setColor(backgroundColor);
+            final int w = component.getSize().width - (component.getInsets().left + component.getInsets().right);
+            final int h = component.getSize().height - (component.getInsets().top + component.getInsets().bottom);
+            g2.fillRect(component.getInsets().left, component.getInsets().top, w, h);
+        }
 
     }
 

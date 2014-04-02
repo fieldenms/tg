@@ -19,7 +19,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A web resource representing a list of dependencies.
- *
+ * 
  * @author TG Team
  */
 public class ReferenceDependencyListResource extends ServerResource {
@@ -30,13 +30,13 @@ public class ReferenceDependencyListResource extends ServerResource {
     private final File location;
 
     public ReferenceDependencyListResource(final String location, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	setNegotiated(false);
-	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
+        init(context, request, response);
+        setNegotiated(false);
+        getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 
-	this.location = new File(location);
-	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
+        this.location = new File(location);
+        this.restUtil = restUtil;
+        this.username = (String) request.getAttributes().get("username");
     }
 
     /**
@@ -45,14 +45,14 @@ public class ReferenceDependencyListResource extends ServerResource {
     @Get
     @Override
     public Representation get() {
-	// process GET request
-	try {
-	    final Map<String, Pair<String, Long>> map = Checksum.sha1(location);
-	    final Result result = Result.successful(map);
-	    return restUtil.resultRepresentation(result);
-	} catch (final Exception ex) {
-	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-	    return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
-	}
+        // process GET request
+        try {
+            final Map<String, Pair<String, Long>> map = Checksum.sha1(location);
+            final Result result = Result.successful(map);
+            return restUtil.resultRepresentation(result);
+        } catch (final Exception ex) {
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
+        }
     }
 }

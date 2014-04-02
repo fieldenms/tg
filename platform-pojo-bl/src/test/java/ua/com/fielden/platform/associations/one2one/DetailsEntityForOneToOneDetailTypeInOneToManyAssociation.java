@@ -37,14 +37,13 @@ public class DetailsEntityForOneToOneDetailTypeInOneToManyAssociation extends Ab
 
     @Observable
     public DetailsEntityForOneToOneDetailTypeInOneToManyAssociation setDecimalProp(final BigDecimal doubleProp) {
-	this.decimalProp = doubleProp;
-	return this;
+        this.decimalProp = doubleProp;
+        return this;
     }
 
     public BigDecimal getDecimalProp() {
-	return decimalProp;
+        return decimalProp;
     }
-
 
     public DetailEntityForOneToOneAssociationWithOneToManyAssociation getKey1() {
         return key1;
@@ -63,6 +62,5 @@ public class DetailsEntityForOneToOneDetailTypeInOneToManyAssociation extends Ab
     public void setKey2(final Integer key2) {
         this.key2 = key2;
     }
-
 
 }

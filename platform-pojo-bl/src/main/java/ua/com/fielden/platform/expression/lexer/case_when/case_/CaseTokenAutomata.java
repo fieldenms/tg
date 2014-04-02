@@ -6,25 +6,25 @@ import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;
 
 /**
  * NDA for recognising CASE token of the expression language.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class CaseTokenAutomata extends BaseNonDeterministicAutomata {
 
     public CaseTokenAutomata() {
-	super(EgTokenCategory.CASE, TEXT_POST_PROCESSING.REMOVE_WS, new State0(), new State1(), new State2(), new State3(), new State4(), new State5());
+        super(EgTokenCategory.CASE, TEXT_POST_PROCESSING.REMOVE_WS, new State0(), new State1(), new State2(), new State3(), new State4(), new State5());
     }
 
     @Override
     public String recognisePartiallyFromStart(final String input, final Integer posInOriginalSequence) throws SequenceRecognitionFailed {
-	final String result = super.recognisePartiallyFromStart(input, posInOriginalSequence);
-	return result.substring(0, result.length()).toUpperCase();
+        final String result = super.recognisePartiallyFromStart(input, posInOriginalSequence);
+        return result.substring(0, result.length()).toUpperCase();
     }
 
     @Override
     public String toString() {
-	return "CASE token automata";
+        return "CASE token automata";
     }
 
 }

@@ -10,11 +10,11 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Validator that checks entity value for existence using an {@link IEntityDao} instance.
- *
+ * 
  * IMPORTANT: value null is considered valid.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class EntityExistsValidator implements IBeforeChangeEventHandler<Object> {
 
@@ -24,30 +24,30 @@ public class EntityExistsValidator implements IBeforeChangeEventHandler<Object> 
     }
 
     public EntityExistsValidator(final IEntityDao dao) {
-	this.companionObject = dao;
+        this.companionObject = dao;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-	if (companionObject == null) {
-	    throw new IllegalStateException("Entity exists validator is not fully initialise: companion object is missing");
-	}
-	final AbstractEntity<?> entity = property.getEntity();
-	try {
-	    if (newValue == null) {
-		return new Result(entity, "EntityExists validator : Entity " + newValue + " is null.");
-	    }
+        if (companionObject == null) {
+            throw new IllegalStateException("Entity exists validator is not fully initialise: companion object is missing");
+        }
+        final AbstractEntity<?> entity = property.getEntity();
+        try {
+            if (newValue == null) {
+                return new Result(entity, "EntityExists validator : Entity " + newValue + " is null.");
+            }
 
-	    final boolean exists = newValue instanceof AbstractEntity ? companionObject.entityExists((AbstractEntity<?>) newValue) : companionObject.entityWithKeyExists(newValue);
-	    if (!exists) {
-		return new Result(entity, new Exception("EntityExists validator : Could not find entity " + newValue));
-	    } else {
-		return new Result(entity, "EntityExists validator : Entity " + newValue + " is valid.");
-	    }
-	} catch (final Exception e) {
-	    return new Result(entity, "EntityExists validator : Failed validation for property " + property.getName() + " on type " + entity.getType(), e);
-	}
+            final boolean exists = newValue instanceof AbstractEntity ? companionObject.entityExists((AbstractEntity<?>) newValue) : companionObject.entityWithKeyExists(newValue);
+            if (!exists) {
+                return new Result(entity, new Exception("EntityExists validator : Could not find entity " + newValue));
+            } else {
+                return new Result(entity, "EntityExists validator : Entity " + newValue + " is valid.");
+            }
+        } catch (final Exception e) {
+            return new Result(entity, "EntityExists validator : Failed validation for property " + property.getName() + " on type " + entity.getType(), e);
+        }
     }
 
 }

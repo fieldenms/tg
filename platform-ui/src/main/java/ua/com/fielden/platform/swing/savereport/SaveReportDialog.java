@@ -29,9 +29,9 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
  * A dialog implementing user interaction for saving copies of ad hoc reports.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class SaveReportDialog extends JPanel {
 
@@ -46,92 +46,92 @@ public class SaveReportDialog extends JPanel {
 
     /**
      * Creates new {@link SaveReportDialog} for the specified {@link SaveReportDialogModel}.
-     *
+     * 
      * @param model
      */
     public SaveReportDialog(final SaveReportDialogModel model) {
-	super(new MigLayout("fill, insets 3", "[grow,fill,:200:]", "[][][][grow,fill][]"));
-	this.model = model;
-	add(DummyBuilder.label("Report title"), "wrap");
-	add(newFileName, "wrap");
-	add(DummyBuilder.label("Saved reports"), "wrap");
-	// TODO is that necessary to load all this stuff? model.getAvailableReports()
-	availableItems = new JList();
-	add(new JScrollPane(availableItems), "wrap");
-	final JPanel buttonControl = new JPanel(new MigLayout("fill, insets 0", "push[:70:,fill][:70:,fill]", "[c,fill]"));
-	buttonControl.add(jbApprove = new JButton(model.getApproveAction(this)));
-	buttonControl.add(new JButton(model.getCancelAction(this)));
-	add(buttonControl);
+        super(new MigLayout("fill, insets 3", "[grow,fill,:200:]", "[][][][grow,fill][]"));
+        this.model = model;
+        add(DummyBuilder.label("Report title"), "wrap");
+        add(newFileName, "wrap");
+        add(DummyBuilder.label("Saved reports"), "wrap");
+        // TODO is that necessary to load all this stuff? model.getAvailableReports()
+        availableItems = new JList();
+        add(new JScrollPane(availableItems), "wrap");
+        final JPanel buttonControl = new JPanel(new MigLayout("fill, insets 0", "push[:70:,fill][:70:,fill]", "[c,fill]"));
+        buttonControl.add(jbApprove = new JButton(model.getApproveAction(this)));
+        buttonControl.add(new JButton(model.getCancelAction(this)));
+        add(buttonControl);
     }
 
     /**
      * Shows the {@link SaveReportDialog} and returns value that indicates the chosen action.
-     *
+     * 
      * @return
      */
     public SaveReportOptions showDialog() {
-	availableItems.setModel(model.getAvailableReports());
-	final JDialog availableDialog = new JDialog((Frame) null, "Save report", true);
-	availableDialog.setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
-	availableDialog.setModalityType(ModalityType.APPLICATION_MODAL);
-	availableDialog.add(this);
+        availableItems.setModel(model.getAvailableReports());
+        final JDialog availableDialog = new JDialog((Frame) null, "Save report", true);
+        availableDialog.setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
+        availableDialog.setModalityType(ModalityType.APPLICATION_MODAL);
+        availableDialog.add(this);
 
-	final JRootPane rootPane = availableDialog.getRootPane();
-	final InputMap iMap = rootPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-	iMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
-	final ActionMap aMap = rootPane.getActionMap();
-	aMap.put("escape", new AbstractAction() {
-	    private static final long serialVersionUID = 1L;
+        final JRootPane rootPane = availableDialog.getRootPane();
+        final InputMap iMap = rootPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        iMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
+        final ActionMap aMap = rootPane.getActionMap();
+        aMap.put("escape", new AbstractAction() {
+            private static final long serialVersionUID = 1L;
 
-	    public void actionPerformed(final ActionEvent e) {
-		availableDialog.setVisible(false);
-	    }
-	});
+            public void actionPerformed(final ActionEvent e) {
+                availableDialog.setVisible(false);
+            }
+        });
 
-	rootPane.setDefaultButton(jbApprove);
+        rootPane.setDefaultButton(jbApprove);
 
-	availableDialog.pack();
-	RefineryUtilities.centerFrameOnScreen(availableDialog);
-	availableDialog.setVisible(true);
-	availableDialog.removeAll();
-	availableDialog.dispose();
-	return model.getReturnValue();
+        availableDialog.pack();
+        RefineryUtilities.centerFrameOnScreen(availableDialog);
+        availableDialog.setVisible(true);
+        availableDialog.removeAll();
+        availableDialog.dispose();
+        return model.getReturnValue();
     }
 
     /**
      * Returns title of the new ad hoc report.
-     *
+     * 
      * @return
      */
     public String getEnteredFileName() {
-	return newFileName.getText();
+        return newFileName.getText();
     }
 
     /**
      * Selects specified item in the {@link JList} of existing reports.
-     *
+     * 
      * @param item
      */
     public void selectItem(final String item) {
-	availableItems.setSelectedValue(item, true);
+        availableItems.setSelectedValue(item, true);
     }
 
     /**
      * Closes currently opened {@link SaveReportDialog}.
      */
     public void closeDialog() {
-	if (SwingUtilities.getWindowAncestor(this) != null) {
-	    SwingUtilities.getWindowAncestor(this).setVisible(false);
-	}
+        if (SwingUtilities.getWindowAncestor(this) != null) {
+            SwingUtilities.getWindowAncestor(this).setVisible(false);
+        }
     }
 
     /**
      * Determines whether specified name of the report can be used or not.
-     *
+     * 
      * @param name
      * @return
      */
     public boolean isNameAvailable(final String name) {
-	return !((DefaultListModel) availableItems.getModel()).contains(name);
+        return !((DefaultListModel) availableItems.getModel()).contains(name);
     }
 }

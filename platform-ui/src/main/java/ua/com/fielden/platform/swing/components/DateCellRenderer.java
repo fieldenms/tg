@@ -20,16 +20,16 @@ public class DateCellRenderer implements TableCellRenderer {
     private final TableCellRenderer delegate;
 
     public DateCellRenderer(final TableCellRenderer delegate) {
-	this.delegate = delegate;
+        this.delegate = delegate;
     }
 
     public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, final int column) {
-	final Component c = delegate.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        final Component c = delegate.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-	if (value instanceof Date && c instanceof JLabel) {
-	    ((JLabel) c).setText(DateFormat.getDateInstance().format(value));
-	    ((JLabel) c).setHorizontalAlignment(SwingConstants.RIGHT);
-	}
-	return c;
+        if (value instanceof Date && c instanceof JLabel) {
+            ((JLabel) c).setText(DateFormat.getDateInstance().format(value));
+            ((JLabel) c).setHorizontalAlignment(SwingConstants.RIGHT);
+        }
+        return c;
     }
 }

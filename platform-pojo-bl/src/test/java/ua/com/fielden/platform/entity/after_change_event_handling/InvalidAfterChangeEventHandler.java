@@ -4,12 +4,10 @@ import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 
 /**
- * Invalid ACE event handler for testing purposes.
- * It contains another ACE handler as of its properties.
- * This is not a problem as long as this property is not used as parameter.
- *
+ * Invalid ACE event handler for testing purposes. It contains another ACE handler as of its properties. This is not a problem as long as this property is not used as parameter.
+ * 
  * @author TG Team
- *
+ * 
  */
 public class InvalidAfterChangeEventHandler implements IAfterChangeEventHandler<Object> {
 
@@ -19,7 +17,7 @@ public class InvalidAfterChangeEventHandler implements IAfterChangeEventHandler<
 
     @Override
     public void handle(final MetaProperty property, final Object entityPropertyValue) {
-	setInvoked(true);
+        setInvoked(true);
     }
 
     public AfterChangeEventHandler getInvalidParam() {

@@ -28,9 +28,9 @@ import com.google.inject.Inject;
 
 /**
  * DbDriven implementation of the {@link ISecurityRoleAssociationDao}
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(SecurityRoleAssociation.class)
 public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAssociation> implements ISecurityRoleAssociationDao {
@@ -40,50 +40,49 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
      */
     @Inject
     protected SecurityRoleAssociationDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
     @Override
     @SessionRequired
-    public List<SecurityRoleAssociation> findAssociationsFor(final  Class<? extends ISecurityToken> securityToken) {
-	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).where().prop("securityToken").eq().val(securityToken.getName()).model();
-	final OrderingModel orderBy = orderBy().prop("role").asc().model();
-	return getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).with(orderBy).model());
+    public List<SecurityRoleAssociation> findAssociationsFor(final Class<? extends ISecurityToken> securityToken) {
+        final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).where().prop("securityToken").eq().val(securityToken.getName()).model();
+        final OrderingModel orderBy = orderBy().prop("role").asc().model();
+        return getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).with(orderBy).model());
     }
 
     @Override
     @SessionRequired
     public Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations() {
 
-	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
+        final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
 
-	final List<SecurityRoleAssociation> associations = getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).model());
+        final List<SecurityRoleAssociation> associations = getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).model());
 
-	final Map<Class<? extends ISecurityToken>, Set<UserRole>> associationMap = new HashMap<>();
-	for(final SecurityRoleAssociation association : associations) {
-	    Set<UserRole> roles = associationMap.get(association.getSecurityToken());
-	    if (roles == null) {
-		roles = new HashSet<>();
-		associationMap.put(association.getSecurityToken(), roles);
-	    }
-	    roles.add(association.getRole());
-	}
+        final Map<Class<? extends ISecurityToken>, Set<UserRole>> associationMap = new HashMap<>();
+        for (final SecurityRoleAssociation association : associations) {
+            Set<UserRole> roles = associationMap.get(association.getSecurityToken());
+            if (roles == null) {
+                roles = new HashSet<>();
+                associationMap.put(association.getSecurityToken(), roles);
+            }
+            roles.add(association.getRole());
+        }
 
-	return associationMap;
+        return associationMap;
     }
 
     @Override
     @SessionRequired
-    public void removeAssociationsFor(final  Class<? extends ISecurityToken> securityToken) {
-	getSession().createQuery("delete from " + SecurityRoleAssociation.class.getName() + " where securityToken = '" + securityToken.getName() + "'").executeUpdate();
+    public void removeAssociationsFor(final Class<? extends ISecurityToken> securityToken) {
+        getSession().createQuery("delete from " + SecurityRoleAssociation.class.getName() + " where securityToken = '" + securityToken.getName() + "'").executeUpdate();
     }
 
     @Override
     @SessionRequired
     public int countAssociations(final String username, final Class<? extends ISecurityToken> token) {
-	final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class).where().prop("user.key").eq().val(username).and()
-	.prop("userRole.id").eq().prop("sra.role.id").model();
-	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).as("sra").where().prop("sra.securityToken").eq().val(token.getName()).and().exists(slaveModel).model();
-	return count(model, Collections.<String, Object> emptyMap());
+        final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class).where().prop("user.key").eq().val(username).and().prop("userRole.id").eq().prop("sra.role.id").model();
+        final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).as("sra").where().prop("sra.securityToken").eq().val(token.getName()).and().exists(slaveModel).model();
+        return count(model, Collections.<String, Object> emptyMap());
     }
 }

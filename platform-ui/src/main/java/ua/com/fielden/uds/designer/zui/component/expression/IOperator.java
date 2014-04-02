@@ -44,7 +44,7 @@ public interface IOperator extends Cloneable {
      * Removes a passed operand from the list of operands.
      * 
      * @param operand
-     *                item to be removed
+     *            item to be removed
      * @return true is removed successfully
      */
     boolean remove(IOperand<IValue> operand);
@@ -53,9 +53,9 @@ public interface IOperator extends Cloneable {
      * Insert an operand at position index.
      * 
      * @param index
-     *                position where operand should be inserted
+     *            position where operand should be inserted
      * @param operand
-     *                item to be inserted
+     *            item to be inserted
      * @return
      */
     void insert(int index, IOperand<IValue> operand);

@@ -9,10 +9,12 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface Annotation1 {
     String value() default "default";
+
     double doubleValue();
+
     ENUM1 enumValue();
 
     public enum ENUM1 {
-	E1, E2
+        E1, E2
     }
 }

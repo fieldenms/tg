@@ -10,7 +10,7 @@ import javax.swing.JViewport;
  * {@link EventObject} that represents an event that is triggered when {@link JViewport} changes it's state (e.g. viewport position, viewport size, e.t.c.).
  * 
  * @author TG Team
- *
+ * 
  */
 public class ViewportChangeEvent extends EventObject {
 
@@ -36,11 +36,11 @@ public class ViewportChangeEvent extends EventObject {
      * @param extSize
      * @param size
      */
-    public ViewportChangeEvent(final Object source, final Point viewportPosition,final Dimension extSize,final Dimension size) {
-	super(source);
-	this.viewportPosition=viewportPosition;
-	this.extSize=extSize;
-	this.size=size;
+    public ViewportChangeEvent(final Object source, final Point viewportPosition, final Dimension extSize, final Dimension size) {
+        super(source);
+        this.viewportPosition = viewportPosition;
+        this.extSize = extSize;
+        this.size = size;
     }
 
     /**
@@ -49,7 +49,7 @@ public class ViewportChangeEvent extends EventObject {
      * @return
      */
     public Point getViewportPosition() {
-	return new Point(viewportPosition);
+        return new Point(viewportPosition);
     }
 
     /**
@@ -58,7 +58,7 @@ public class ViewportChangeEvent extends EventObject {
      * @return
      */
     public Dimension getSize() {
-	return new Dimension(size);
+        return new Dimension(size);
     }
 
     /**
@@ -67,7 +67,7 @@ public class ViewportChangeEvent extends EventObject {
      * @return
      */
     public Dimension getExtSize() {
-	return new Dimension(extSize);
+        return new Dimension(extSize);
     }
 
 }

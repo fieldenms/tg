@@ -13,6 +13,6 @@ public class TgBogieLocationDao extends CommonEntityDao<TgBogieLocation> impleme
 
     @Inject
     protected TgBogieLocationDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

@@ -23,9 +23,9 @@ public class TabAction extends AbstractAction {
 
     public void actionPerformed(final ActionEvent e) {
         if (forward) {
-    	tabForward();
+            tabForward();
         } else {
-    	tabBackward();
+            tabBackward();
         }
     }
 
@@ -34,11 +34,11 @@ public class TabAction extends AbstractAction {
         manager.focusNextComponent();
 
         SwingUtilities.invokeLater(new Runnable() {
-    	public void run() {
-    	    if (manager.getFocusOwner() instanceof JScrollBar) {
-    		manager.focusNextComponent();
-    	    }
-    	}
+            public void run() {
+                if (manager.getFocusOwner() instanceof JScrollBar) {
+                    manager.focusNextComponent();
+                }
+            }
         });
     }
 
@@ -47,11 +47,11 @@ public class TabAction extends AbstractAction {
         manager.focusPreviousComponent();
 
         SwingUtilities.invokeLater(new Runnable() {
-    	public void run() {
-    	    if (manager.getFocusOwner() instanceof JScrollBar) {
-    		manager.focusPreviousComponent();
-    	    }
-    	}
+            public void run() {
+                if (manager.getFocusOwner() instanceof JScrollBar) {
+                    manager.focusPreviousComponent();
+                }
+            }
         });
     }
 }

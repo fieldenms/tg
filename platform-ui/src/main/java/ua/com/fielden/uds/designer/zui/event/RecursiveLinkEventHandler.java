@@ -19,43 +19,43 @@ import edu.umd.cs.piccolo.event.PInputEvent;
  */
 public class RecursiveLinkEventHandler extends PDragEventHandler {
     public RecursiveLinkEventHandler() {
-	getEventFilter().setMarksAcceptedEventsAsHandled(true);
+        getEventFilter().setMarksAcceptedEventsAsHandled(true);
     }
 
     private Set<PNode> processedNodes;
 
     protected void startDrag(PInputEvent event) {
-	super.startDrag(event);
-	processedNodes = new HashSet<PNode>();
+        super.startDrag(event);
+        processedNodes = new HashSet<PNode>();
     }
 
     @SuppressWarnings("unchecked")
     protected void drag(PInputEvent event) {
-	super.drag(event);
-	PNode node = event.getPickedNode();
-	List<ILink> links = (List<ILink>) node.getAttribute("links");
-	if (links != null && links.size() > 0) {
-	    ILink link = links.get(0); // can pick up any link -- the rest should be triggered recursively
-	    link.reset(node, event.getDelta(), processedNodes);
-	}
-	processedNodes.clear(); // need to clear a set of processed nodes so that the next drag could process all nodes again
+        super.drag(event);
+        PNode node = event.getPickedNode();
+        List<ILink> links = (List<ILink>) node.getAttribute("links");
+        if (links != null && links.size() > 0) {
+            ILink link = links.get(0); // can pick up any link -- the rest should be triggered recursively
+            link.reset(node, event.getDelta(), processedNodes);
+        }
+        processedNodes.clear(); // need to clear a set of processed nodes so that the next drag could process all nodes again
     }
 
     protected void endDrag(PInputEvent event) {
-	super.endDrag(event);
-	processedNodes.clear();
+        super.endDrag(event);
+        processedNodes.clear();
     }
 
     public void mouseEntered(PInputEvent e) {
-	if (e.getButton() == 0) {
-	    e.getPickedNode().setPaint(Color.red);
-	}
+        if (e.getButton() == 0) {
+            e.getPickedNode().setPaint(Color.red);
+        }
     }
 
     public void mouseExited(PInputEvent e) {
-	if (e.getButton() == 0) {
-	    e.getPickedNode().setPaint(Color.white);
-	}
+        if (e.getButton() == 0) {
+            e.getPickedNode().setPaint(Color.white);
+        }
     }
 
 }

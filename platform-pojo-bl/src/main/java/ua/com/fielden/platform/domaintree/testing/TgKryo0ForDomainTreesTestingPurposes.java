@@ -13,32 +13,32 @@ import com.esotericsoftware.kryo.Serializer;
 
 /**
  * WARNING: this is an OLD version!
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @Deprecated
 public class TgKryo0ForDomainTreesTestingPurposes extends TgKryo0 {
 
     public TgKryo0ForDomainTreesTestingPurposes(final EntityFactory factory, final ISerialisationClassProvider provider) {
-	super(factory, provider);
+        super(factory, provider);
     }
 
     @Override
     public Serializer newSerializer(final Class type) {
-	if (DomainTreeManager1.class.isAssignableFrom(type)) {
-	    return new DomainTreeManagerForTestSerialiser(this);
-	} else if (DomainTreeManagerAndEnhancer1.class.isAssignableFrom(type)) {
-	    return new DomainTreeManagerAndEnhancerForTestSerialiser(this);
-	} else if (DomainTreeRepresentation1.class.isAssignableFrom(type)) {
-	    return new DomainTreeRepresentationForTestSerialiser(this);
-	} else if (AbstractAnalysisDomainTreeManager1.class.isAssignableFrom(type)) {
-	    return new AbstractAnalysisDomainTreeManager1Serialiser(this);
-	} else if (AbstractAnalysisDomainTreeRepresentation1.class.isAssignableFrom(type)) {
-	    return new AbstractAnalysisDomainTreeRepresentation1Serialiser(this);
-	} else {
-	    return super.newSerializer(type);
-	}
+        if (DomainTreeManager1.class.isAssignableFrom(type)) {
+            return new DomainTreeManagerForTestSerialiser(this);
+        } else if (DomainTreeManagerAndEnhancer1.class.isAssignableFrom(type)) {
+            return new DomainTreeManagerAndEnhancerForTestSerialiser(this);
+        } else if (DomainTreeRepresentation1.class.isAssignableFrom(type)) {
+            return new DomainTreeRepresentationForTestSerialiser(this);
+        } else if (AbstractAnalysisDomainTreeManager1.class.isAssignableFrom(type)) {
+            return new AbstractAnalysisDomainTreeManager1Serialiser(this);
+        } else if (AbstractAnalysisDomainTreeRepresentation1.class.isAssignableFrom(type)) {
+            return new AbstractAnalysisDomainTreeRepresentation1Serialiser(this);
+        } else {
+            return super.newSerializer(type);
+        }
     }
 
 }

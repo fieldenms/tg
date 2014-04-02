@@ -57,254 +57,253 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
      */
     private boolean isOk;
 
-    public EntityLocatorDialog(final LocatorConfigurationModel<VT, RT> locatorConfigurationModel, final boolean isMulti){
-	//	this.textFieldLayer = new AutocompleterTextFieldLayerWithEntityLocator<VT>(entity, locatorConfigurationModel.name, //
-	//		textComponent, locatorConfigurationModel.entityFactory, createEntityLocatorValueMatcher(), entityMasterFactory,//
-	//		expression, cellRenderer, caption, valueSeparator);
-	super(null, "", ModalityType.APPLICATION_MODAL);
-	//TODO must be changed later, when the locatorManager will allow one to determine the type of locator: default or local.
-	//locatorType = defineLocatorType(locatorConfigurationModel);
+    public EntityLocatorDialog(final LocatorConfigurationModel<VT, RT> locatorConfigurationModel, final boolean isMulti) {
+        //	this.textFieldLayer = new AutocompleterTextFieldLayerWithEntityLocator<VT>(entity, locatorConfigurationModel.name, //
+        //		textComponent, locatorConfigurationModel.entityFactory, createEntityLocatorValueMatcher(), entityMasterFactory,//
+        //		expression, cellRenderer, caption, valueSeparator);
+        super(null, "", ModalityType.APPLICATION_MODAL);
+        //TODO must be changed later, when the locatorManager will allow one to determine the type of locator: default or local.
+        //locatorType = defineLocatorType(locatorConfigurationModel);
 
-	//Configuring locator configuration mode. Add save, save as default and load default listeners those change the locator type.
+        //Configuring locator configuration mode. Add save, save as default and load default listeners those change the locator type.
 
+        //Configuring the content view of the locator dialog.
+        final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
+        this.locatorConfigurationView = new LocatorConfigurationView<VT, RT>(locatorConfigurationModel, progressLayer, isMulti);
+        this.locatorConfigurationView.addLocatorEventListener(createLocatorEventListener());
+        this.locatorConfigurationView.addLocatorConfigurationEventListener(createLocatorConfigurationListener());
+        this.locatorConfigurationView.addConfigurationEventListener(createCancelCloseListener());
+        this.autocompleterFocusListener = createComponentFocusListener();
+        this.isOk = false;
+        progressLayer.setView(locatorConfigurationView);
+        getContentPane().add(progressLayer);
 
-	//Configuring the content view of the locator dialog.
-	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
-	this.locatorConfigurationView = new LocatorConfigurationView<VT, RT>(locatorConfigurationModel, progressLayer, isMulti);
-	this.locatorConfigurationView.addLocatorEventListener(createLocatorEventListener());
-	this.locatorConfigurationView.addLocatorConfigurationEventListener(createLocatorConfigurationListener());
-	this.locatorConfigurationView.addConfigurationEventListener(createCancelCloseListener());
-	this.autocompleterFocusListener = createComponentFocusListener();
-	this.isOk = false;
-	progressLayer.setView(locatorConfigurationView);
-	getContentPane().add(progressLayer);
-
-	//Configuring the entity locator's dialog.
-	setPreferredSize(new Dimension(800, 600));
-	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
-	setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-	addWindowListener(createWindowCloseHandler());
-	//setTitle(generateTitle(locatorType, locatorConfigurationModel.entityType, locatorConfigurationModel.name));
+        //Configuring the entity locator's dialog.
+        setPreferredSize(new Dimension(800, 600));
+        setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
+        setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        addWindowListener(createWindowCloseHandler());
+        //setTitle(generateTitle(locatorType, locatorConfigurationModel.entityType, locatorConfigurationModel.name));
 
     }
 
     /**
      * Creates the listener that close this first time opened entity locator dialog on cancel event.
-     *
+     * 
      * @return
      */
     private IAbstractConfigurationViewEventListener createCancelCloseListener() {
-	return new IAbstractConfigurationViewEventListener() {
+        return new IAbstractConfigurationViewEventListener() {
 
-	    @Override
-	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
-		switch(event.getEventAction()){
-		case PRE_CANCEL:
-		    if (locatorConfigurationView.isNewConfigurationView()) {
-			sendCloseEvent();
-			return new Result(new Exception("Can not cancel first time open entity locator"));
-		    }
-		    break;
-		default:
-		    break;
-		}
-		return Result.successful(event.getSource());
-	    }
-	};
+            @Override
+            public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
+                switch (event.getEventAction()) {
+                case PRE_CANCEL:
+                    if (locatorConfigurationView.isNewConfigurationView()) {
+                        sendCloseEvent();
+                        return new Result(new Exception("Can not cancel first time open entity locator"));
+                    }
+                    break;
+                default:
+                    break;
+                }
+                return Result.successful(event.getSource());
+            }
+        };
     }
 
     /**
      * Binds this entity locator dialog to the passed autocompleter.
-     *
+     * 
      * @param autocompleter
      */
     @SuppressWarnings("unchecked")
-    public void bindToAutocompleter(final AutocompleterTextFieldLayerWithEntityLocator<VT> autocompleter){
-	if(this.autocompleter == autocompleter){
-	    return;
-	}
-	if(autocompleter == null){
-	    this.autocompleter.getAutocompleter().getTextComponent().removeFocusListener(autocompleterFocusListener);
-	    this.autocompleter = null;
-	} else {
-	    final AutocompleterUiWithEntityLocator<VT> ui = (AutocompleterUiWithEntityLocator<VT>) autocompleter.getUI();
-	    if(ui.getEntityLocatorDialog() == this){
-		if(this.autocompleter != null){
-		    this.autocompleter.getAutocompleter().getTextComponent().removeFocusListener(autocompleterFocusListener);
-		}
-		this.autocompleter = autocompleter;
-		this.autocompleter.getAutocompleter().getTextComponent().addFocusListener(autocompleterFocusListener);
-	    } else {
-		throw new IllegalArgumentException("The autocompleter is not bind with this entity locaotr dialog!");
-	    }
-	}
+    public void bindToAutocompleter(final AutocompleterTextFieldLayerWithEntityLocator<VT> autocompleter) {
+        if (this.autocompleter == autocompleter) {
+            return;
+        }
+        if (autocompleter == null) {
+            this.autocompleter.getAutocompleter().getTextComponent().removeFocusListener(autocompleterFocusListener);
+            this.autocompleter = null;
+        } else {
+            final AutocompleterUiWithEntityLocator<VT> ui = (AutocompleterUiWithEntityLocator<VT>) autocompleter.getUI();
+            if (ui.getEntityLocatorDialog() == this) {
+                if (this.autocompleter != null) {
+                    this.autocompleter.getAutocompleter().getTextComponent().removeFocusListener(autocompleterFocusListener);
+                }
+                this.autocompleter = autocompleter;
+                this.autocompleter.getAutocompleter().getTextComponent().addFocusListener(autocompleterFocusListener);
+            } else {
+                throw new IllegalArgumentException("The autocompleter is not bind with this entity locaotr dialog!");
+            }
+        }
 
     }
 
     /**
      * Shows this entity locator dialog.
      */
-    public void showDialog(){
-	//save the autocompleter's state.
-	previousCaretPosition = autocompleter.getView().getCaretPosition();
-	startSelectedIndex = autocompleter.getView().getSelectionStart();
-	endSelectedIndex = autocompleter.getView().getSelectionEnd();
+    public void showDialog() {
+        //save the autocompleter's state.
+        previousCaretPosition = autocompleter.getView().getCaretPosition();
+        startSelectedIndex = autocompleter.getView().getSelectionStart();
+        endSelectedIndex = autocompleter.getView().getSelectionEnd();
 
-	//Configuring the entity locator title.
-	setTitle(generateTitle());
+        //Configuring the entity locator title.
+        setTitle(generateTitle());
 
-	//Configuring the content and size of the entity locator and display it.
-	setPreferredSize(new Dimension(800, 600));
-	pack();
-	RefineryUtilities.centerFrameOnScreen(this);
-	locatorConfigurationView.open();
-	setVisible(true);
+        //Configuring the content and size of the entity locator and display it.
+        setPreferredSize(new Dimension(800, 600));
+        pack();
+        RefineryUtilities.centerFrameOnScreen(this);
+        locatorConfigurationView.open();
+        setVisible(true);
     }
 
     /**
      * Returns the list of selected entities.
-     *
+     * 
      * @return
      */
-    private List<VT> getSelectedEntities(){
-	return EntityUtils.makeNotEnhanced(locatorConfigurationView.getSelectedEntities());
+    private List<VT> getSelectedEntities() {
+        return EntityUtils.makeNotEnhanced(locatorConfigurationView.getSelectedEntities());
     }
 
     /**
      * Resets the locator's selection.
      */
-    private void resetLocatorSelection(){
-	locatorConfigurationView.resetLocatorSelection();
+    private void resetLocatorSelection() {
+        locatorConfigurationView.resetLocatorSelection();
     }
 
     /**
      * Creates the {@link WindowListener} that handles entity locator's close event.
-     *
+     * 
      * @return
      */
     private WindowListener createWindowCloseHandler() {
-	return new WindowAdapter() {
-	    @Override
-	    public void windowClosing(final WindowEvent e) {
-		final LocatorConfigurationModel<VT, RT> model = locatorConfigurationView.getModel();
-		boolean isChanged = model.isChanged();
-		if(!isChanged && model.isInFreezedPhase()){
-		    model.discard();
-		    isChanged = model.isChanged();
-		}
-		if (isChanged) {
-		    final boolean isFreezed = model.isInFreezedPhase();
-		    final Object options[] = { "Save", "Save as default", "No" };
-		    final int chosenOption = JOptionPane.showOptionDialog(EntityLocatorDialog.this, "This locator has been changed, would you like to save it?", "Save entity locator configuration", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-		    switch (chosenOption) {
-		    case JOptionPane.YES_OPTION:
-			if(isFreezed){
-			    model.save();
-			}
-			model.save();
-			break;
-		    case JOptionPane.NO_OPTION:
-			if(isFreezed){
-			    model.save();
-			}
-			model.saveGlobally();
-			model.save();
-			break;
-		    case JOptionPane.CANCEL_OPTION:
-		    case JOptionPane.CLOSED_OPTION:
-			if(isFreezed){
-			    model.discard();
-			}
-			model.discard();
-			break;
-		    }
-		} else {
-		    model.discard();
-		}
-		locatorConfigurationView.close();
-		dispose();
-		SwingUtilities.windowForComponent(autocompleter.getAutocompleter().getTextComponent()).setVisible(true);
-		autocompleter.getAutocompleter().getTextComponent().requestFocusInWindow();
-	    }
+        return new WindowAdapter() {
+            @Override
+            public void windowClosing(final WindowEvent e) {
+                final LocatorConfigurationModel<VT, RT> model = locatorConfigurationView.getModel();
+                boolean isChanged = model.isChanged();
+                if (!isChanged && model.isInFreezedPhase()) {
+                    model.discard();
+                    isChanged = model.isChanged();
+                }
+                if (isChanged) {
+                    final boolean isFreezed = model.isInFreezedPhase();
+                    final Object options[] = { "Save", "Save as default", "No" };
+                    final int chosenOption = JOptionPane.showOptionDialog(EntityLocatorDialog.this, "This locator has been changed, would you like to save it?", "Save entity locator configuration", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                    switch (chosenOption) {
+                    case JOptionPane.YES_OPTION:
+                        if (isFreezed) {
+                            model.save();
+                        }
+                        model.save();
+                        break;
+                    case JOptionPane.NO_OPTION:
+                        if (isFreezed) {
+                            model.save();
+                        }
+                        model.saveGlobally();
+                        model.save();
+                        break;
+                    case JOptionPane.CANCEL_OPTION:
+                    case JOptionPane.CLOSED_OPTION:
+                        if (isFreezed) {
+                            model.discard();
+                        }
+                        model.discard();
+                        break;
+                    }
+                } else {
+                    model.discard();
+                }
+                locatorConfigurationView.close();
+                dispose();
+                SwingUtilities.windowForComponent(autocompleter.getAutocompleter().getTextComponent()).setVisible(true);
+                autocompleter.getAutocompleter().getTextComponent().requestFocusInWindow();
+            }
 
-	};
+        };
     }
 
     /**
-     * Returns the {@link ILocatorConfigurationEventListener} that handles the POST_SAVE, POST_SAVE_AS_DEFAULT and LOAD_DEFAULT events and changes the loaded locator type according to the generated event.
-     *
+     * Returns the {@link ILocatorConfigurationEventListener} that handles the POST_SAVE, POST_SAVE_AS_DEFAULT and LOAD_DEFAULT events and changes the loaded locator type according
+     * to the generated event.
+     * 
      * @return
      */
     private ILocatorConfigurationEventListener createLocatorConfigurationListener() {
-	return new ILocatorConfigurationEventListener() {
+        return new ILocatorConfigurationEventListener() {
 
-	    @Override
-	    public boolean locatorConfigurationEventPerformed(final LocatorConfigurationEvent event) {
-		setTitle(generateTitle());
-		return true;
-	    }
+            @Override
+            public boolean locatorConfigurationEventPerformed(final LocatorConfigurationEvent event) {
+                setTitle(generateTitle());
+                return true;
+            }
 
-
-	};
+        };
     }
 
     /**
      * Creates the window closing event listener.
-     *
+     * 
      * @return
      */
     private ILocatorEventListener createLocatorEventListener() {
-	return new ILocatorEventListener() {
+        return new ILocatorEventListener() {
 
-	    @SuppressWarnings("incomplete-switch")
-	    @Override
-	    public void locatorActionPerformed(final LocatorEvent event) {
-		switch(event.getLocatorAction()){
-		case SELECT :
-		    isOk = true;
-		    break;
-		}
-		sendCloseEvent();
-	    }
-	};
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void locatorActionPerformed(final LocatorEvent event) {
+                switch (event.getLocatorAction()) {
+                case SELECT:
+                    isOk = true;
+                    break;
+                }
+                sendCloseEvent();
+            }
+        };
     }
 
     /**
      * Sends close event to this entity locator dialog.
      */
-    private void sendCloseEvent(){
-	final WindowEvent wev = new WindowEvent(EntityLocatorDialog.this, WindowEvent.WINDOW_CLOSING);
-	Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(wev);
+    private void sendCloseEvent() {
+        final WindowEvent wev = new WindowEvent(EntityLocatorDialog.this, WindowEvent.WINDOW_CLOSING);
+        Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(wev);
     }
 
     /**
      * Creates the focus listener for autocompleter's component.
-     *
+     * 
      * @return
      */
     private FocusListener createComponentFocusListener() {
-	return new FocusAdapter() {
-	    @Override
-	    public void focusGained(final FocusEvent e) {
-		final List<VT> selectedEntities = getSelectedEntities();
-		if (isOk && selectedEntities.size() > 0) {
-		    final Object selectedString = autocompleter.getAutocompleter().getSelectedHint(selectedEntities, startSelectedIndex, endSelectedIndex, previousCaretPosition);
-		    autocompleter.getAutocompleter().acceptHint(selectedString);
-		    resetLocatorSelection();
-		    isOk = false;
-		}
-	    }
-	};
+        return new FocusAdapter() {
+            @Override
+            public void focusGained(final FocusEvent e) {
+                final List<VT> selectedEntities = getSelectedEntities();
+                if (isOk && selectedEntities.size() > 0) {
+                    final Object selectedString = autocompleter.getAutocompleter().getSelectedHint(selectedEntities, startSelectedIndex, endSelectedIndex, previousCaretPosition);
+                    autocompleter.getAutocompleter().acceptHint(selectedString);
+                    resetLocatorSelection();
+                    isOk = false;
+                }
+            }
+        };
     }
 
     /**
      * Generates the title for the locator dialog.
-     *
+     * 
      * @return
      */
     private String generateTitle() {
-	final LocatorConfigurationModel<VT, RT> locatorConfigurationModel = locatorConfigurationView.getModel();
-	return TitlesDescsGetter.getEntityTitleAndDesc(locatorConfigurationModel.getEntityType()).getKey() + " " //
-		+ locatorConfigurationModel.getType() + " entity locator";
+        final LocatorConfigurationModel<VT, RT> locatorConfigurationModel = locatorConfigurationView.getModel();
+        return TitlesDescsGetter.getEntityTitleAndDesc(locatorConfigurationModel.getEntityType()).getKey() + " " //
+                + locatorConfigurationModel.getType() + " entity locator";
     }
 }

@@ -45,180 +45,180 @@ public class SecurityTreeTable extends FilterableTreeTable {
      * @param model
      */
     public SecurityTreeTable(final FilterableTreeTableModel model) {
-	super(model, false);
+        super(model, false);
 
-	for (int counter = 0; counter < getColumnCount(); counter++) {
-	    setVerticalHeaderFor(counter);
-	}
+        for (int counter = 0; counter < getColumnCount(); counter++) {
+            setVerticalHeaderFor(counter);
+        }
 
-	getColumnModel().addColumnModelListener(new TableColumnModelListener() {
+        getColumnModel().addColumnModelListener(new TableColumnModelListener() {
 
-	    @Override
-	    public void columnAdded(final TableColumnModelEvent e) {
-		setVerticalHeaderFor(e.getToIndex());
-	    }
+            @Override
+            public void columnAdded(final TableColumnModelEvent e) {
+                setVerticalHeaderFor(e.getToIndex());
+            }
 
-	    @Override
-	    public void columnMarginChanged(final ChangeEvent e) {
+            @Override
+            public void columnMarginChanged(final ChangeEvent e) {
 
-	    }
+            }
 
-	    @Override
-	    public void columnMoved(final TableColumnModelEvent e) {
+            @Override
+            public void columnMoved(final TableColumnModelEvent e) {
 
-	    }
+            }
 
-	    @Override
-	    public void columnRemoved(final TableColumnModelEvent e) {
+            @Override
+            public void columnRemoved(final TableColumnModelEvent e) {
 
-	    }
+            }
 
-	    @Override
-	    public void columnSelectionChanged(final ListSelectionEvent e) {
+            @Override
+            public void columnSelectionChanged(final ListSelectionEvent e) {
 
-	    }
+            }
 
-	});
-	final JPopupMenu popupMenu = new JPopupMenu();
-	final PopupMenuListener popupListener = new PopupMenuListener(popupMenu);
-	addMouseListener(popupListener);
-	popupMenu.add(new JMenuItem(createCheckAction(popupListener, "Allow all", "Allow all", true)));
-	popupMenu.add(new JMenuItem(createCheckAction(popupListener, "Deny all", "Deny all", false)));
-	final MouseDefaultHeaderHandler mouseHandler = new MouseDefaultHeaderHandler();
-	getTableHeader().addMouseMotionListener(mouseHandler);
-	getTableHeader().addMouseListener(mouseHandler);
-	getTableHeader().setReorderingAllowed(false);
-	addToolTipSuportForTableHeader();
-	setShowGrid(true, true);
-	setGridColor(new Color(214, 217, 223));
-	setHorizontalScrollEnabled(true);
-	setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        });
+        final JPopupMenu popupMenu = new JPopupMenu();
+        final PopupMenuListener popupListener = new PopupMenuListener(popupMenu);
+        addMouseListener(popupListener);
+        popupMenu.add(new JMenuItem(createCheckAction(popupListener, "Allow all", "Allow all", true)));
+        popupMenu.add(new JMenuItem(createCheckAction(popupListener, "Deny all", "Deny all", false)));
+        final MouseDefaultHeaderHandler mouseHandler = new MouseDefaultHeaderHandler();
+        getTableHeader().addMouseMotionListener(mouseHandler);
+        getTableHeader().addMouseListener(mouseHandler);
+        getTableHeader().setReorderingAllowed(false);
+        addToolTipSuportForTableHeader();
+        setShowGrid(true, true);
+        setGridColor(new Color(214, 217, 223));
+        setHorizontalScrollEnabled(true);
+        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     }
 
     private class PopupMenuListener extends MouseAdapter {
 
-	private final JPopupMenu popupMenu;
+        private final JPopupMenu popupMenu;
 
-	private Point mousePosition;
+        private Point mousePosition;
 
-	public PopupMenuListener(final JPopupMenu menu) {
-	    this.popupMenu = menu;
-	}
+        public PopupMenuListener(final JPopupMenu menu) {
+            this.popupMenu = menu;
+        }
 
-	@Override
-	public void mousePressed(final MouseEvent e) {
-	    showMenu(e);
-	}
+        @Override
+        public void mousePressed(final MouseEvent e) {
+            showMenu(e);
+        }
 
-	@Override
-	public void mouseReleased(final MouseEvent e) {
-	    showMenu(e);
-	}
+        @Override
+        public void mouseReleased(final MouseEvent e) {
+            showMenu(e);
+        }
 
-	private void showMenu(final MouseEvent e) {
-	    if (e.isPopupTrigger() && SecurityTreeTable.this.isEnabled()) {
-		final Point p = new Point(e.getX(), e.getY());
-		final int col = SecurityTreeTable.this.columnAtPoint(p);
-		final int row = SecurityTreeTable.this.rowAtPoint(p);
+        private void showMenu(final MouseEvent e) {
+            if (e.isPopupTrigger() && SecurityTreeTable.this.isEnabled()) {
+                final Point p = new Point(e.getX(), e.getY());
+                final int col = SecurityTreeTable.this.columnAtPoint(p);
+                final int row = SecurityTreeTable.this.rowAtPoint(p);
 
-		if (row >= 0 && row < SecurityTreeTable.this.getRowCount() && col >= 0 && col < SecurityTreeTable.this.getColumnCount()) {
-		    popupMenu.show(SecurityTreeTable.this, p.x, p.y);
-		    mousePosition = p;
-		}
-	    }
-	}
+                if (row >= 0 && row < SecurityTreeTable.this.getRowCount() && col >= 0 && col < SecurityTreeTable.this.getColumnCount()) {
+                    popupMenu.show(SecurityTreeTable.this, p.x, p.y);
+                    mousePosition = p;
+                }
+            }
+        }
 
-	public Point getMousePosition() {
-	    return mousePosition;
-	}
+        public Point getMousePosition() {
+            return mousePosition;
+        }
 
     }
 
     // adds the tool tips to the table headers
     private void addToolTipSuportForTableHeader() {
-	getTableHeader().addMouseMotionListener(new MouseMotionAdapter() {
-	    @Override
-	    public void mouseMoved(final MouseEvent e) {
-		final int vColIndex = columnAtPoint(e.getPoint());
-		final JTableHeader header = getTableHeader();
+        getTableHeader().addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(final MouseEvent e) {
+                final int vColIndex = columnAtPoint(e.getPoint());
+                final JTableHeader header = getTableHeader();
 
-		if (vColIndex >= 0) {
-		    final SecurityTreeTableModel treeTableModel = (SecurityTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-		    header.setToolTipText(treeTableModel.getColumnDesc(convertColumnIndexToModel(vColIndex)));
+                if (vColIndex >= 0) {
+                    final SecurityTreeTableModel treeTableModel = (SecurityTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
+                    header.setToolTipText(treeTableModel.getColumnDesc(convertColumnIndexToModel(vColIndex)));
 
-		}
-	    }
-	});
+                }
+            }
+        });
     }
 
     private Action createCheckAction(final PopupMenuListener menuHandler, final String name, final String description, final boolean checked) {
-	return new Command<Void>(name) {
+        return new Command<Void>(name) {
 
-	    private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = 1L;
 
-	    {
-		putValue(Action.SHORT_DESCRIPTION, description);
-	    }
+            {
+                putValue(Action.SHORT_DESCRIPTION, description);
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		final TreePath treePath = getPathForLocation(menuHandler.getMousePosition().x, menuHandler.getMousePosition().y);
-		if (treePath == null) {
-		    return;
-		}
-		final int column = columnAtPoint(menuHandler.getMousePosition());
-		if (column < 0 || column >= getColumnCount()) {
-		    return;
-		}
-		if (isHierarchical(column)) {
-		    selectTree(treePath, checked, 0, getColumnCount() - 1);
-		} else {
-		    selectTree(treePath, checked, column, column);
-		}
-		if (getModel() instanceof AbstractTableModel) {
-		    ((AbstractTableModel) getModel()).fireTableDataChanged();
-		}
-	    }
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                final TreePath treePath = getPathForLocation(menuHandler.getMousePosition().x, menuHandler.getMousePosition().y);
+                if (treePath == null) {
+                    return;
+                }
+                final int column = columnAtPoint(menuHandler.getMousePosition());
+                if (column < 0 || column >= getColumnCount()) {
+                    return;
+                }
+                if (isHierarchical(column)) {
+                    selectTree(treePath, checked, 0, getColumnCount() - 1);
+                } else {
+                    selectTree(treePath, checked, column, column);
+                }
+                if (getModel() instanceof AbstractTableModel) {
+                    ((AbstractTableModel) getModel()).fireTableDataChanged();
+                }
+            }
 
-	    @SuppressWarnings("rawtypes")
-	    private void selectTree(final TreePath treePath, final boolean checked, final int columnStart, final int columnFinish) {
-		final TreeTableNode node = (TreeTableNode) treePath.getLastPathComponent();
-		for (int columnCounter = columnStart; columnCounter <= columnFinish; columnCounter++) {
-		    if (!isHierarchical(columnCounter)) {
-			node.setValueAt(checked, columnCounter);
-		    }
-		}
-		if (node.getChildCount() >= 0) {
-		    for (final Enumeration childrenEnum = node.children(); childrenEnum.hasMoreElements();) {
-			final TreeTableNode n = (TreeTableNode) childrenEnum.nextElement();
-			final TreePath path = treePath.pathByAddingChild(n);
-			selectTree(path, checked, columnStart, columnFinish);
-		    }
-		}
-	    }
+            @SuppressWarnings("rawtypes")
+            private void selectTree(final TreePath treePath, final boolean checked, final int columnStart, final int columnFinish) {
+                final TreeTableNode node = (TreeTableNode) treePath.getLastPathComponent();
+                for (int columnCounter = columnStart; columnCounter <= columnFinish; columnCounter++) {
+                    if (!isHierarchical(columnCounter)) {
+                        node.setValueAt(checked, columnCounter);
+                    }
+                }
+                if (node.getChildCount() >= 0) {
+                    for (final Enumeration childrenEnum = node.children(); childrenEnum.hasMoreElements();) {
+                        final TreeTableNode n = (TreeTableNode) childrenEnum.nextElement();
+                        final TreePath path = treePath.pathByAddingChild(n);
+                        selectTree(path, checked, columnStart, columnFinish);
+                    }
+                }
+            }
 
-	};
+        };
     }
 
     @Override
     public String getToolTipText(final MouseEvent event) {
-	final int row = rowAtPoint(event.getPoint());
-	final int col = columnAtPoint(event.getPoint());
-	if (row >= 0 && col >= 0) {
-	    if (isHierarchical(col)) {
-		final SecurityTreeTableNode node = (SecurityTreeTableNode) getPathForRow(row).getLastPathComponent();
-		return node.getLongDesc();
-	    } else {
-		return getValueAt(row, col).toString();
-	    }
-	}
-	return super.getToolTipText(event);
+        final int row = rowAtPoint(event.getPoint());
+        final int col = columnAtPoint(event.getPoint());
+        if (row >= 0 && col >= 0) {
+            if (isHierarchical(col)) {
+                final SecurityTreeTableNode node = (SecurityTreeTableNode) getPathForRow(row).getLastPathComponent();
+                return node.getLongDesc();
+            } else {
+                return getValueAt(row, col).toString();
+            }
+        }
+        return super.getToolTipText(event);
     }
 
     /**
@@ -227,12 +227,12 @@ public class SecurityTreeTable extends FilterableTreeTable {
      * @param column
      */
     public void setVerticalHeaderFor(final int column) {
-	final TableColumn tableColumn = getColumnModel().getColumn(column);
-	if (!(tableColumn.getHeaderRenderer() instanceof VerticalTableHeaderCellRenderer)) {
-	    if (!isHierarchical(column)) {
-		getColumn(column).setHeaderRenderer(new VerticalTableHeaderCellRenderer());
-	    }
-	}
+        final TableColumn tableColumn = getColumnModel().getColumn(column);
+        if (!(tableColumn.getHeaderRenderer() instanceof VerticalTableHeaderCellRenderer)) {
+            if (!isHierarchical(column)) {
+                getColumn(column).setHeaderRenderer(new VerticalTableHeaderCellRenderer());
+            }
+        }
     }
 
     /**
@@ -241,7 +241,7 @@ public class SecurityTreeTable extends FilterableTreeTable {
      * @param column
      */
     public void setHorizontalHeaderFor(final int column) {
-	getColumn(column).setHeaderRenderer(null);
+        getColumn(column).setHeaderRenderer(null);
     }
 
 }

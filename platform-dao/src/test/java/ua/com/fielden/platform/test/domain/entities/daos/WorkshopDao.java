@@ -9,15 +9,15 @@ import com.google.inject.Inject;
 
 /**
  * DAO for retrieving workshop related data: workshop itself, contained rotables, existing active workorders.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(Workshop.class)
 public class WorkshopDao extends CommonEntityDao<Workshop> implements IWorkshopDao {
 
     @Inject
     protected WorkshopDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

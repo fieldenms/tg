@@ -9,17 +9,17 @@ final class IfNullFunctionArgument<T, ET extends AbstractEntity<?>> extends Abst
     T parent;
 
     IfNullFunctionArgument(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     IExprOperand0<IIfNullFunctionThen<T, ET>, ET> getParent2() {
-	return new ExprOperand0<IIfNullFunctionThen<T, ET>, ET>(getTokens(), new IfNullFunctionThen<T, ET>(getTokens(), parent));
+        return new ExprOperand0<IIfNullFunctionThen<T, ET>, ET>(getTokens(), new IfNullFunctionThen<T, ET>(getTokens(), parent));
     }
 
     @Override
     IIfNullFunctionThen<T, ET> getParent() {
-	return new IfNullFunctionThen<T, ET>(getTokens(), parent);
+        return new IfNullFunctionThen<T, ET>(getTokens(), parent);
     }
 }

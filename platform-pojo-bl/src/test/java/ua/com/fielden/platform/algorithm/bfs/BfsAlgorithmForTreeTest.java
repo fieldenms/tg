@@ -10,9 +10,9 @@ import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 
 /**
  * A test case to ensure correct functionality of the Breadth-First Search algorithm when the state space is a tree.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class BfsAlgorithmForTreeTest {
     // let's create the test tree
@@ -49,53 +49,53 @@ public class BfsAlgorithmForTreeTest {
 
     @Before
     public void setUp() {
-	visitAllPredicate = new ITreeNodePredicate<String, TreeNode>() {
-	    private int numberOfVisitedNodes = 0;
+        visitAllPredicate = new ITreeNodePredicate<String, TreeNode>() {
+            private int numberOfVisitedNodes = 0;
 
-	    @Override
-	    public boolean eval(final TreeNode node) {
-		node.incVisitCount();
-		numberOfVisitedNodes++;
-		return false;
-	    }
+            @Override
+            public boolean eval(final TreeNode node) {
+                node.incVisitCount();
+                numberOfVisitedNodes++;
+                return false;
+            }
 
-	    public String toString() {
-		return numberOfVisitedNodes + "";
-	    };
-	};
+            public String toString() {
+                return numberOfVisitedNodes + "";
+            };
+        };
 
-	level1_1.reset();
-	level1_1_1.reset();
-	level1_1_2.reset();
-	level1_2.reset();
-	level1_2_1.reset();
-	level1_2_2.reset();
-	level1_3.reset();
-	level1_3_1.reset();
-	level1_3_2.reset();
-	level1_3_3.reset();
+        level1_1.reset();
+        level1_1_1.reset();
+        level1_1_2.reset();
+        level1_2.reset();
+        level1_2_1.reset();
+        level1_2_2.reset();
+        level1_3.reset();
+        level1_3_1.reset();
+        level1_3_2.reset();
+        level1_3_3.reset();
     }
 
     @Test
     public void test_that_all_nodes_are_visited_exactly_once() {
-	final BreadthFirstSearch<String, TreeNode> bfs = new BreadthFirstSearch<String, TreeNode>();
-	bfs.search(tree, visitAllPredicate);
-	assertEquals("Incorrect number of visited nodes.", "11", visitAllPredicate.toString());
+        final BreadthFirstSearch<String, TreeNode> bfs = new BreadthFirstSearch<String, TreeNode>();
+        bfs.search(tree, visitAllPredicate);
+        assertEquals("Incorrect number of visited nodes.", "11", visitAllPredicate.toString());
 
-	assertEquals("Incorrect number of node visitations.", 1, tree.visits());
+        assertEquals("Incorrect number of node visitations.", 1, tree.visits());
 
-	assertEquals("Incorrect number of node visitations.", 1, level1_1.visits());
-	assertEquals("Incorrect number of node visitations.", 1, level1_1_1.visits());
-	assertEquals("Incorrect number of node visitations.", 1, level1_1_2.visits());
+        assertEquals("Incorrect number of node visitations.", 1, level1_1.visits());
+        assertEquals("Incorrect number of node visitations.", 1, level1_1_1.visits());
+        assertEquals("Incorrect number of node visitations.", 1, level1_1_2.visits());
 
-	assertEquals("Incorrect number of node visitations.", 1, level1_2.visits());
-	assertEquals("Incorrect number of node visitations.", 1, level1_2_1.visits());
-	assertEquals("Incorrect number of node visitations.", 1, level1_2_2.visits());
+        assertEquals("Incorrect number of node visitations.", 1, level1_2.visits());
+        assertEquals("Incorrect number of node visitations.", 1, level1_2_1.visits());
+        assertEquals("Incorrect number of node visitations.", 1, level1_2_2.visits());
 
-	assertEquals("Incorrect number of node visitations.", 1, level1_3.visits());
-	assertEquals("Incorrect number of node visitations.", 1, level1_3_1.visits());
-	assertEquals("Incorrect number of node visitations.", 1, level1_3_2.visits());
-	assertEquals("Incorrect number of node visitations.", 1, level1_3_3.visits());
+        assertEquals("Incorrect number of node visitations.", 1, level1_3.visits());
+        assertEquals("Incorrect number of node visitations.", 1, level1_3_1.visits());
+        assertEquals("Incorrect number of node visitations.", 1, level1_3_2.visits());
+        assertEquals("Incorrect number of node visitations.", 1, level1_3_3.visits());
     }
 
 }

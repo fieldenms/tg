@@ -6,7 +6,7 @@ public class Empty implements Annotation {
 
     @Override
     public Class<? extends Annotation> annotationType() {
-	return Empty.class;
+        return Empty.class;
     }
 
 }

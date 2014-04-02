@@ -12,15 +12,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 /**
  * Mixin implementation for companion object {@link ITgAuthorRoyalty}.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 public class TgAuthorRoyaltyMixin {
 
-
     private final ITgAuthorRoyalty companion;
-
 
     public TgAuthorRoyaltyMixin(final ITgAuthorRoyalty companion) {
         this.companion = companion;

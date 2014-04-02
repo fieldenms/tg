@@ -19,9 +19,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 /**
  * Master entity object.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key", desc = "Some key description")
@@ -48,40 +48,40 @@ public class TgPublishedYearly extends AbstractEntity<DynamicEntityKey> {
     @Observable
     @EntityExists(TgAuthor.class)
     public TgPublishedYearly setAuthor(final TgAuthor author) {
-	this.author = author;
-	return this;
+        this.author = author;
+        return this;
     }
 
     private static EntityResultQueryModel<TgPublishedYearly> model() {
-	return select(TgAuthorship.class). //
-		groupBy().prop("year"). //
-		yield().prop("year").as("year").  //
-		yield().countAll().as("qty").  //
-		yield().model(select(TgAuthor.class).where().prop("surname").eq().val("GRIES").model()).as("author"). //
-		modelAsEntity(TgPublishedYearly.class);
+        return select(TgAuthorship.class). //
+        groupBy().prop("year"). //
+        yield().prop("year").as("year"). //
+        yield().countAll().as("qty"). //
+        yield().model(select(TgAuthor.class).where().prop("surname").eq().val("GRIES").model()).as("author"). //
+        modelAsEntity(TgPublishedYearly.class);
     }
 
     public TgAuthor getAuthor() {
-	return author;
+        return author;
     }
 
     @Observable
     public TgPublishedYearly setQty(final Integer qty) {
-	this.qty = qty;
-	return this;
+        this.qty = qty;
+        return this;
     }
 
     public Integer getQty() {
-	return qty;
+        return qty;
     }
 
     @Observable
     public TgPublishedYearly setYear(final Integer year) {
-	this.year = year;
-	return this;
+        this.year = year;
+        return this;
     }
 
     public Integer getYear() {
-	return year;
+        return year;
     }
 }

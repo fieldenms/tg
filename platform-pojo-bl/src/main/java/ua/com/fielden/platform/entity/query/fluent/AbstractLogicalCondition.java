@@ -6,16 +6,16 @@ abstract class AbstractLogicalCondition<T> extends AbstractQueryLink implements 
     abstract T getParent();
 
     protected AbstractLogicalCondition(final Tokens queryTokens) {
-	super(queryTokens);
+        super(queryTokens);
     }
 
     @Override
     public T and() {
-	return copy(getParent(), getTokens().and());
+        return copy(getParent(), getTokens().and());
     }
 
     @Override
     public T or() {
-	return copy(getParent(), getTokens().or());
+        return copy(getParent(), getTokens().or());
     }
 }

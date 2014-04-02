@@ -12,7 +12,7 @@ public class AssociationAnalysisReview<T extends AbstractEntity<?>> extends Abst
     private static final long serialVersionUID = 3508595248282014853L;
 
     public AssociationAnalysisReview(final AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IAbstractAnalysisDomainTreeManager> model, final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAbstractAnalysisDomainTreeManager, ?> owner) {
-	super(model, owner);
+        super(model, owner);
     }
 
 }

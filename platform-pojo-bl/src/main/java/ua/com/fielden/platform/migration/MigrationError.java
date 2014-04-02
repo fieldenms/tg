@@ -61,15 +61,15 @@ public class MigrationError extends AbstractEntity<DynamicEntityKey> {
      * Constructor for the entity factory from TG.
      */
     protected MigrationError() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     public MigrationHistory getMigrationHistory() {
-	return migrationHistory;
+        return migrationHistory;
     }
 
     public String getErrorText() {
-	return errorText;
+        return errorText;
     }
 
     public Integer getErrorNo() {
@@ -102,38 +102,44 @@ public class MigrationError extends AbstractEntity<DynamicEntityKey> {
 
     @Observable
     public void setMigrationHistory(final MigrationHistory migrationHistory) {
-	this.migrationHistory = migrationHistory;
+        this.migrationHistory = migrationHistory;
     }
 
     @Observable
     public void setErrorText(final String errorText) {
-	this.errorText = errorText;
+        this.errorText = errorText;
     }
 
     @Observable
     public void setErrorNo(final Integer errorNo) {
         this.errorNo = errorNo;
     }
+
     @Observable
     public void setRawData(final String rawData) {
         this.rawData = rawData;
     }
+
     @Observable
     public void setErrorPreCause(final String errorPreCause) {
         this.errorPreCause = errorPreCause;
     }
+
     @Observable
     public void setErrorPropName(final String errorPropName) {
         this.errorPropName = errorPropName;
     }
+
     @Observable
     public void setErrorPropType(final String errorPropType) {
         this.errorPropType = errorPropType;
     }
+
     @Observable
     public void setErrorPropValue(final String errorPropValue) {
         this.errorPropValue = errorPropValue;
     }
+
     @Observable
     public void setErrorType(final String errorType) {
         this.errorType = errorType;

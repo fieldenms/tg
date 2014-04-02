@@ -11,16 +11,16 @@ import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
 public class FilterCellRendererWithIcon extends FilterCellRenderer {
 
     public FilterCellRendererWithIcon(final IFilterableModel model, final DefaultTreeCellRenderer renderer) {
-	super(model, renderer);
+        super(model, renderer);
     }
 
     @Override
     public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
-	final JLabel label = (JLabel)super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-	if (value instanceof TreeMenuItem && ((TreeMenuItem<?>)value).getIcon() != null) {
-	    label.setIcon(((TreeMenuItem<?>)value).getIcon());
-	}
-	return label;
+        final JLabel label = (JLabel) super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+        if (value instanceof TreeMenuItem && ((TreeMenuItem<?>) value).getIcon() != null) {
+            label.setIcon(((TreeMenuItem<?>) value).getIcon());
+        }
+        return label;
     }
 
 }

@@ -7,14 +7,15 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Represents a computational model for expressions, which can be used together with entity query API.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class OrderingModel extends AbstractModel {
-    protected OrderingModel() {}
+    protected OrderingModel() {
+    }
 
     public OrderingModel(final List<Pair<TokenCategory, Object>> tokens) {
-	super(tokens);
+        super(tokens);
     }
 }

@@ -20,8 +20,8 @@ public class GZipOutputStreamEx extends GZIPOutputStream {
      * @throws IOException
      */
     public GZipOutputStreamEx(final OutputStream out, final int size, final int compressionLevel) throws IOException {
-	super(out, size);
-	def.setLevel(compressionLevel);
+        super(out, size);
+        def.setLevel(compressionLevel);
     }
 
     /**
@@ -32,7 +32,7 @@ public class GZipOutputStreamEx extends GZIPOutputStream {
      * @throws IOException
      */
     public GZipOutputStreamEx(final OutputStream out, final int compressionLevel) throws IOException {
-	super(out);
-	def.setLevel(compressionLevel);
+        super(out);
+        def.setLevel(compressionLevel);
     }
 }

@@ -21,7 +21,8 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 public class TgOrgUnit4 extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @Required
+    @IsProperty
+    @Required
     @MapTo
     @Title(value = "Parent", desc = "Parent")
     @CompositeKeyMember(1)
@@ -35,21 +36,21 @@ public class TgOrgUnit4 extends AbstractEntity<DynamicEntityKey> {
 
     @Observable
     public TgOrgUnit4 setName(final String name) {
-	this.name = name;
-	return this;
+        this.name = name;
+        return this;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     @Observable
     public TgOrgUnit4 setParent(final TgOrgUnit3 parent) {
-	this.parent = parent;
-	return this;
+        this.parent = parent;
+        return this;
     }
 
     public TgOrgUnit3 getParent() {
-	return parent;
+        return parent;
     }
 }

@@ -25,9 +25,9 @@ public class HexString {
      * @return the hex string version of the input string
      */
     public static String stringToHex(final String s) {
-	final byte[] stringBytes = s.getBytes();
+        final byte[] stringBytes = s.getBytes();
 
-	return HexString.bufferToHex(stringBytes);
+        return HexString.bufferToHex(stringBytes);
     }
 
     /**
@@ -39,7 +39,7 @@ public class HexString {
      * @return the hex string version of the input buffer
      */
     public static String bufferToHex(final byte buffer[]) {
-	return HexString.bufferToHex(buffer, 0, buffer.length);
+        return HexString.bufferToHex(buffer, 0, buffer.length);
     }
 
     /**
@@ -55,14 +55,14 @@ public class HexString {
      * @return the hex string version of the input buffer
      */
     public static String bufferToHex(final byte buffer[], final int startOffset, final int length) {
-	final StringBuffer hexString = new StringBuffer(2 * length);
-	final int endOffset = startOffset + length;
+        final StringBuffer hexString = new StringBuffer(2 * length);
+        final int endOffset = startOffset + length;
 
-	for (int i = startOffset; i < endOffset; i++) {
-	    HexString.appendHexPair(buffer[i], hexString);
-	}
+        for (int i = startOffset; i < endOffset; i++) {
+            HexString.appendHexPair(buffer[i], hexString);
+        }
 
-	return hexString.toString();
+        return hexString.toString();
     }
 
     /**
@@ -78,9 +78,9 @@ public class HexString {
      * @throws NumberFormatException
      */
     public static String hexToString(final String hexString) throws NumberFormatException {
-	final byte[] bytes = HexString.hexToBuffer(hexString);
+        final byte[] bytes = HexString.hexToBuffer(hexString);
 
-	return new String(bytes);
+        return new String(bytes);
     }
 
     /**
@@ -95,37 +95,37 @@ public class HexString {
      * @throws NumberFormatException
      */
     public static byte[] hexToBuffer(final String hexString) throws NumberFormatException {
-	final int length = hexString.length();
-	final byte[] buffer = new byte[(length + 1) / 2];
-	boolean evenByte = true;
-	byte nextByte = 0;
-	int bufferOffset = 0;
+        final int length = hexString.length();
+        final byte[] buffer = new byte[(length + 1) / 2];
+        boolean evenByte = true;
+        byte nextByte = 0;
+        int bufferOffset = 0;
 
-	// If given an odd-length input string, there is an implicit
-	// leading '0' that is not being given to us in the string.
-	// In that case, act as if we had processed a '0' first.
-	// It's sufficient to set evenByte to false, and leave nextChar
-	// as zero which is what it would be if we handled a '0'.
-	if ((length % 2) == 1) {
-	    evenByte = false;
-	}
+        // If given an odd-length input string, there is an implicit
+        // leading '0' that is not being given to us in the string.
+        // In that case, act as if we had processed a '0' first.
+        // It's sufficient to set evenByte to false, and leave nextChar
+        // as zero which is what it would be if we handled a '0'.
+        if ((length % 2) == 1) {
+            evenByte = false;
+        }
 
-	for (int i = 0; i < length; i++) {
-	    final char c = hexString.charAt(i);
-	    // A "nibble" is 4 bits: a decimal 0..15
-	    final int nibble = determineNibble(c);
+        for (int i = 0; i < length; i++) {
+            final char c = hexString.charAt(i);
+            // A "nibble" is 4 bits: a decimal 0..15
+            final int nibble = determineNibble(c);
 
-	    if (evenByte) {
-		nextByte = (byte) (nibble << 4);
-	    } else {
-		nextByte += (byte) nibble;
-		buffer[bufferOffset++] = nextByte;
-	    }
+            if (evenByte) {
+                nextByte = (byte) (nibble << 4);
+            } else {
+                nextByte += (byte) nibble;
+                buffer[bufferOffset++] = nextByte;
+            }
 
-	    evenByte = !evenByte;
-	}
+            evenByte = !evenByte;
+        }
 
-	return buffer;
+        return buffer;
     }
 
     /**
@@ -135,15 +135,15 @@ public class HexString {
      * @return
      */
     private static int determineNibble(final char c) {
-	if ((c >= '0') && (c <= '9')) {
-	    return c - '0';
-	} else if ((c >= 'A') && (c <= 'F')) {
-	    return c - 'A' + 0x0A;
-	} else if ((c >= 'a') && (c <= 'f')) {
-	    return c - 'a' + 0x0A;
-	} else {
-	    throw new NumberFormatException("Invalid hex digit '" + c + "'.");
-	}
+        if ((c >= '0') && (c <= '9')) {
+            return c - '0';
+        } else if ((c >= 'A') && (c <= 'F')) {
+            return c - 'A' + 0x0A;
+        } else if ((c >= 'a') && (c <= 'f')) {
+            return c - 'a' + 0x0A;
+        } else {
+            throw new NumberFormatException("Invalid hex digit '" + c + "'.");
+        }
     }
 
     /**
@@ -155,11 +155,11 @@ public class HexString {
      *            the string to append the hex digits to
      */
     private static void appendHexPair(final byte b, final StringBuffer hexString) {
-	final char highNibble = kHexChars[(b & 0xF0) >> 4];
-	final char lowNibble = kHexChars[b & 0x0F];
+        final char highNibble = kHexChars[(b & 0xF0) >> 4];
+        final char lowNibble = kHexChars[b & 0x0F];
 
-	hexString.append(highNibble);
-	hexString.append(lowNibble);
+        hexString.append(highNibble);
+        hexString.append(lowNibble);
     }
 
     private static final char kHexChars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };

@@ -53,10 +53,9 @@ import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.Zoomable;
 
 /**
- * A class that handles mouse wheel events for the {@link ChartPanel} class.
- * Mouse wheel event support was added in JDK 1.4, so this class will be omitted
- * from JFreeChart if you build it using JDK 1.3.
- *
+ * A class that handles mouse wheel events for the {@link ChartPanel} class. Mouse wheel event support was added in JDK 1.4, so this class will be omitted from JFreeChart if you
+ * build it using JDK 1.3.
+ * 
  * @since 1.0.13
  */
 class MouseWheelHandler implements MouseWheelListener, Serializable {
@@ -69,8 +68,9 @@ class MouseWheelHandler implements MouseWheelListener, Serializable {
 
     /**
      * Creates a new instance.
-     *
-     * @param chartPanel  the chart panel (<code>null</code> not permitted).
+     * 
+     * @param chartPanel
+     *            the chart panel (<code>null</code> not permitted).
      */
     public MouseWheelHandler(final ChartPanel chartPanel) {
         this.chartPanel = chartPanel;
@@ -79,11 +79,10 @@ class MouseWheelHandler implements MouseWheelListener, Serializable {
     }
 
     /**
-     * Returns the current zoom factor.  The default value is 0.10 (ten
-     * percent).
-     *
+     * Returns the current zoom factor. The default value is 0.10 (ten percent).
+     * 
      * @return The zoom factor.
-     *
+     * 
      * @see #setZoomFactor(double)
      */
     public double getZoomFactor() {
@@ -92,9 +91,10 @@ class MouseWheelHandler implements MouseWheelListener, Serializable {
 
     /**
      * Sets the zoom factor.
-     *
-     * @param zoomFactor  the zoom factor.
-     *
+     * 
+     * @param zoomFactor
+     *            the zoom factor.
+     * 
      * @see #getZoomFactor()
      */
     public void setZoomFactor(final double zoomFactor) {
@@ -103,8 +103,9 @@ class MouseWheelHandler implements MouseWheelListener, Serializable {
 
     /**
      * Handles a mouse wheel event from the underlying chart panel.
-     *
-     * @param e  the event.
+     * 
+     * @param e
+     *            the event.
      */
     public void mouseWheelMoved(final MouseWheelEvent e) {
         final JFreeChart chart = this.chartPanel.getChart();
@@ -123,9 +124,11 @@ class MouseWheelHandler implements MouseWheelListener, Serializable {
 
     /**
      * Handle the case where a plot implements the {@link Zoomable} interface.
-     *
-     * @param zoomable  the zoomable plot.
-     * @param e  the mouse wheel event.
+     * 
+     * @param zoomable
+     *            the zoomable plot.
+     * @param e
+     *            the mouse wheel event.
      */
     private void handleZoomable(final Zoomable zoomable, final MouseWheelEvent e) {
         final Plot plot = (Plot) zoomable;
@@ -139,8 +142,7 @@ class MouseWheelHandler implements MouseWheelListener, Serializable {
         int direction = 0;
         if (clicks < 0) {
             direction = -1;
-        }
-        else if (clicks > 0) {
+        } else if (clicks > 0) {
             direction = 1;
         }
 
@@ -152,8 +154,7 @@ class MouseWheelHandler implements MouseWheelListener, Serializable {
         if (direction > 0) {
             zoomable.zoomDomainAxes(increment, pinfo, p, true);
             zoomable.zoomRangeAxes(increment, pinfo, p, true);
-        }
-        else if (direction < 0) {
+        } else if (direction < 0) {
             zoomable.zoomDomainAxes(1.0 / increment, pinfo, p, true);
             zoomable.zoomRangeAxes(1.0 / increment, pinfo, p, true);
         }

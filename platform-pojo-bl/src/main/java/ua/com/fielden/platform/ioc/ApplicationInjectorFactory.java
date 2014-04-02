@@ -11,43 +11,42 @@ import com.google.inject.Module;
 
 /**
  * A factory for instantiation of Guice injector with correctly initialised TG applications modules, which support contract {@link IModuleWithInjector}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public final class ApplicationInjectorFactory {
 
-   private Injector injector;
+    private Injector injector;
 
-   private final Set<Module> modules = new HashSet<Module>();
+    private final Set<Module> modules = new HashSet<Module>();
 
-   public ApplicationInjectorFactory add(final Module... otherModules) {
-       if (injector != null) {
-	   throw new IllegalStateException("Injector has already been created. No module modification is permitted.");
-       }
+    public ApplicationInjectorFactory add(final Module... otherModules) {
+        if (injector != null) {
+            throw new IllegalStateException("Injector has already been created. No module modification is permitted.");
+        }
 
-       for (final Module module : otherModules) {
-	   this.modules.add(module);
-       }
+        for (final Module module : otherModules) {
+            this.modules.add(module);
+        }
 
-       return this;
-   }
+        return this;
+    }
 
+    public Injector getInjector() {
+        if (injector != null) {
+            return injector;
+        }
 
-   public Injector getInjector() {
-       if (injector != null) {
-	   return injector;
-       }
+        injector = Guice.createInjector(modules.toArray(new Module[] {}));
 
-       injector = Guice.createInjector(modules.toArray(new Module[]{}));
+        for (final Module module : modules) {
+            if (module instanceof IModuleWithInjector) {
+                ((IModuleWithInjector) module).setInjector(injector);
+            }
+        }
 
-       for(final Module module : modules) {
-	   if (module instanceof IModuleWithInjector) {
-	       ((IModuleWithInjector) module).setInjector(injector);
-	   }
-       }
-
-       return injector;
-   }
+        return injector;
+    }
 
 }

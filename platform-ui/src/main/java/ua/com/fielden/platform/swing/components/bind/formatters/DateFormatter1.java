@@ -27,7 +27,7 @@ public class DateFormatter1 extends InternationalFormatter1 {
      * This is shorthand for <code>new DateFormatter(DateFormat.getDateInstance())</code>.
      */
     public DateFormatter1() {
-	this(DateFormat.getDateInstance());
+        this(DateFormat.getDateInstance());
     }
 
     /**
@@ -37,8 +37,8 @@ public class DateFormatter1 extends InternationalFormatter1 {
      *            Format used to dictate legal values
      */
     public DateFormatter1(final DateFormat format) {
-	super(format);
-	setFormat(format);
+        super(format);
+        setFormat(format);
     }
 
     /**
@@ -50,7 +50,7 @@ public class DateFormatter1 extends InternationalFormatter1 {
      *            DateFormat instance used for converting from/to Strings
      */
     public void setFormat(final DateFormat format) {
-	super.setFormat(format);
+        super.setFormat(format);
     }
 
     /**
@@ -58,12 +58,12 @@ public class DateFormatter1 extends InternationalFormatter1 {
      * returned.
      */
     protected Calendar getCalendar() {
-	final Format f = getFormat();
+        final Format f = getFormat();
 
-	if (f instanceof DateFormat) {
-	    return ((DateFormat) f).getCalendar();
-	}
-	return Calendar.getInstance();
+        if (f instanceof DateFormat) {
+            return ((DateFormat) f).getCalendar();
+        }
+        return Calendar.getInstance();
     }
 
     /**
@@ -71,7 +71,7 @@ public class DateFormatter1 extends InternationalFormatter1 {
      */
     @Override
     boolean getSupportsIncrement() {
-	return true;
+        return true;
     }
 
     /**
@@ -79,16 +79,16 @@ public class DateFormatter1 extends InternationalFormatter1 {
      */
     @Override
     Object getAdjustField(final int start, final Map attributes) {
-	final Iterator attrs = attributes.keySet().iterator();
+        final Iterator attrs = attributes.keySet().iterator();
 
-	while (attrs.hasNext()) {
-	    final Object key = attrs.next();
+        while (attrs.hasNext()) {
+            final Object key = attrs.next();
 
-	    if ((key instanceof DateFormat.Field) && (key == DateFormat.Field.HOUR1 || ((DateFormat.Field) key).getCalendarField() != -1)) {
-		return key;
-	    }
-	}
-	return null;
+            if ((key instanceof DateFormat.Field) && (key == DateFormat.Field.HOUR1 || ((DateFormat.Field) key).getCalendarField() != -1)) {
+                return key;
+            }
+        }
+        return null;
     }
 
     /**
@@ -96,32 +96,32 @@ public class DateFormatter1 extends InternationalFormatter1 {
      */
     @Override
     Object adjustValue(Object value, final Map attributes, Object key, final int direction) throws BadLocationException, ParseException {
-	if (key != null) {
-	    int field;
+        if (key != null) {
+            int field;
 
-	    // HOUR1 has no corresponding calendar field, thus, map
-	    // it to HOUR0 which will give the correct behavior.
-	    if (key == DateFormat.Field.HOUR1) {
-		key = DateFormat.Field.HOUR0;
-	    }
-	    field = ((DateFormat.Field) key).getCalendarField();
+            // HOUR1 has no corresponding calendar field, thus, map
+            // it to HOUR0 which will give the correct behavior.
+            if (key == DateFormat.Field.HOUR1) {
+                key = DateFormat.Field.HOUR0;
+            }
+            field = ((DateFormat.Field) key).getCalendarField();
 
-	    final Calendar calendar = getCalendar();
+            final Calendar calendar = getCalendar();
 
-	    if (calendar != null) {
-		calendar.setTime((Date) value);
+            if (calendar != null) {
+                calendar.setTime((Date) value);
 
-		final int fieldValue = calendar.get(field);
+                final int fieldValue = calendar.get(field);
 
-		try {
-		    calendar.add(field, direction);
-		    value = calendar.getTime();
-		} catch (final Throwable th) {
-		    value = null;
-		}
-		return value;
-	    }
-	}
-	return null;
+                try {
+                    calendar.add(field, direction);
+                    value = calendar.getTime();
+                } catch (final Throwable th) {
+                    value = null;
+                }
+                return value;
+            }
+        }
+        return null;
     }
 }

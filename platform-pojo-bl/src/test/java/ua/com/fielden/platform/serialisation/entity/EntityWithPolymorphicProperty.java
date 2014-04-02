@@ -24,5 +24,4 @@ public class EntityWithPolymorphicProperty extends AbstractEntity<String> {
         this.polyProperty = polyProperty;
     }
 
-
 }

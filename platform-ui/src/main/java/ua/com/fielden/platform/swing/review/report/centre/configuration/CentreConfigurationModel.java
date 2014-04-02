@@ -26,14 +26,14 @@ import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorM
 
 /**
  * Model for entity centre. This model allows one to configure and view report.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <DTME>
  * @param <T>
  * @param <DAO>
  */
-public class CentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>{
+public class CentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
     private final static Logger logger = Logger.getLogger(CentreConfigurationModel.class);
     /**
      * The type of menu item with which this centre configuration model is associated.
@@ -52,122 +52,125 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Initiates this {@link CentreConfigurationModel} with instance of {@link IGlobalDomainTreeManager}, entity type and {@link EntityFactory}.
-     *
-     * @param entityType - the entity type for which this {@link CentreConfigurationModel} will be created.
-     * @param gdtm - Associated {@link GlobalDomainTreeManager} instance.
-     * @param entityFactory - {@link EntityFactory} needed for wizard model creation.
+     * 
+     * @param entityType
+     *            - the entity type for which this {@link CentreConfigurationModel} will be created.
+     * @param gdtm
+     *            - Associated {@link GlobalDomainTreeManager} instance.
+     * @param entityFactory
+     *            - {@link EntityFactory} needed for wizard model creation.
      */
-    public CentreConfigurationModel(final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final String name, final IAnalysisBuilder<T> analysisBuilder, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
-	super((Class<T>) GlobalDomainTreeManager.validateMenuItemTypeRootType(menuItemType), name, entityFactory, masterManager, criteriaGenerator);
-	this.menuItemType = menuItemType;
-	this.analysisBuilder = analysisBuilder;
-	this.gdtm = gdtm;
+    public CentreConfigurationModel(final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final String name, final IAnalysisBuilder<T> analysisBuilder, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator) {
+        super((Class<T>) GlobalDomainTreeManager.validateMenuItemTypeRootType(menuItemType), name, entityFactory, masterManager, criteriaGenerator);
+        this.menuItemType = menuItemType;
+        this.analysisBuilder = analysisBuilder;
+        this.gdtm = gdtm;
     }
 
     /**
      * Saves this configuration.
      */
-    public void save(){
-	gdtm.saveEntityCentreManager(menuItemType, getName());
+    public void save() {
+        gdtm.saveEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Returns value that indicates whether current user owns this entity centre or not.
-     *
+     * 
      * @return
      */
-    public boolean isEntityCentreOwner(){
-	return gdtm.isEntityCentreManagerOwner(menuItemType, getName());
+    public boolean isEntityCentreOwner() {
+        return gdtm.isEntityCentreManagerOwner(menuItemType, getName());
     }
 
     /**
      * Discards changes in the entity centre.
      */
-    public void discard(){
-	discardAnalysis();
-	gdtm.discardEntityCentreManager(menuItemType, getName());
+    public void discard() {
+        discardAnalysis();
+        gdtm.discardEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Saves as this configuration.
      */
-    public void saveAs(final String saveAsName){
-	gdtm.saveAsEntityCentreManager(menuItemType, getName(), saveAsName);
+    public void saveAs(final String saveAsName) {
+        gdtm.saveAsEntityCentreManager(menuItemType, getName(), saveAsName);
     }
 
     /**
      * Removes this configuration.
      */
-    public void remove(){
-	gdtm.removeEntityCentreManager(menuItemType, getName());
+    public void remove() {
+        gdtm.removeEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Returns the value that indicates whether this entity centre has changed or not.
-     *
+     * 
      * @return
      */
-    public boolean isChanged(){
-	return gdtm.isChangedEntityCentreManager(menuItemType, getName());
+    public boolean isChanged() {
+        return gdtm.isChangedEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Returns value that indicates whether this entity centre is freezed or not.
-     *
+     * 
      * @return
      */
-    public boolean isFreezed(){
-	return gdtm.isFreezedEntityCentreManager(menuItemType, getName());
+    public boolean isFreezed() {
+        return gdtm.isFreezedEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Freezes the associated entity centre model.
      */
-    public void freez(){
-	gdtm.freezeEntityCentreManager(menuItemType, getName());
+    public void freez() {
+        gdtm.freezeEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Returns the entity centre manager for this centre configuration model.
-     *
+     * 
      * @return
      */
-    public ICentreDomainTreeManagerAndEnhancer getEntityCentreManager(){
-	return gdtm.getEntityCentreManager(menuItemType, getName());
+    public ICentreDomainTreeManagerAndEnhancer getEntityCentreManager() {
+        return gdtm.getEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Initialises the entity centre.
      */
-    public void initEntityCentreManager(){
-	gdtm.initEntityCentreManager(menuItemType, getName());
+    public void initEntityCentreManager() {
+        gdtm.initEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * See {@link IGlobalDomainTreeManager#copyDefaults(Class, String)}.
      */
     public void copyDefaults() {
-	gdtm.copyDefaults(menuItemType, getName());
+        gdtm.copyDefaults(menuItemType, getName());
     }
 
     /**
      * Heavy-weight operation that returns a list of non-principle entity centre names.
-     *
+     * 
      * @return
      */
-    public List<String> loadNonPrincipleEntityCentreNames(){
-	return new ArrayList<String>(gdtm.nonPrincipleEntityCentreNames(menuItemType));
+    public List<String> loadNonPrincipleEntityCentreNames() {
+        return new ArrayList<String>(gdtm.nonPrincipleEntityCentreNames(menuItemType));
     }
 
     /**
      * Accepts all the modifications applied to the analysis manager.
      */
-    public void saveAnalysis(){
+    public void saveAnalysis() {
         final ICentreDomainTreeManagerAndEnhancer cdtm = getEntityCentreManager();
-        if(cdtm == null){
+        if (cdtm == null) {
             return;
         }
-        for(final String analysis : cdtm.analysisKeys()){
+        for (final String analysis : cdtm.analysisKeys()) {
             cdtm.acceptAnalysisManager(analysis);
         }
     }
@@ -175,59 +178,59 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     /**
      * Discards the analysis managers.
      */
-    public void discardAnalysis(){
+    public void discardAnalysis() {
         final ICentreDomainTreeManagerAndEnhancer cdtm = getEntityCentreManager();
-        if(cdtm == null){
+        if (cdtm == null) {
             return;
         }
-        for(final String analysis : cdtm.analysisKeys()){
+        for (final String analysis : cdtm.analysisKeys()) {
             cdtm.discardAnalysisManager(analysis);
         }
     }
 
     @Override
     protected final EntityCentreModel<T> createEntityCentreModel() {
-	logger.debug("Creating EntityCentreModel...");
-	final ICentreDomainTreeManagerAndEnhancer cdtme = getEntityCentreManager();
-	if(cdtme == null || cdtme.getSecondTick().checkedProperties(getEntityType()).isEmpty()){
-	    throw new IllegalStateException("The centre manager is not specified");
-	}
-	final EntityCentreModel<T> ecm = new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
-	logger.debug("Creating EntityCentreModel...done");
-	return ecm;
+        logger.debug("Creating EntityCentreModel...");
+        final ICentreDomainTreeManagerAndEnhancer cdtme = getEntityCentreManager();
+        if (cdtme == null || cdtme.getSecondTick().checkedProperties(getEntityType()).isEmpty()) {
+            throw new IllegalStateException("The centre manager is not specified");
+        }
+        final EntityCentreModel<T> ecm = new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
+        logger.debug("Creating EntityCentreModel...done");
+        return ecm;
     }
 
     @Override
     protected DomainTreeEditorModel<T> createDomainTreeEditorModel() {
-	final ICentreDomainTreeManagerAndEnhancer cdtm = getEntityCentreManager();
-	if(cdtm == null){
-	    throw new IllegalStateException("The centre manager is not specified");
-	}
-	return new DomainTreeEditorModel<T>(getEntityFactory(), cdtm, getEntityType());
+        final ICentreDomainTreeManagerAndEnhancer cdtm = getEntityCentreManager();
+        if (cdtm == null) {
+            throw new IllegalStateException("The centre manager is not specified");
+        }
+        return new DomainTreeEditorModel<T>(getEntityFactory(), cdtm, getEntityType());
     }
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
-	if(ReportMode.REPORT.equals(mode)){
-	    final ICentreDomainTreeManager cdtm = getEntityCentreManager();
-	    if(cdtm == null){
-		throw new IllegalStateException("The entity centre must be initialized!");
-	    }
-	    if(cdtm.getSecondTick().checkedProperties(getEntityType()).isEmpty()){
-		return new Result(this, new CanNotSetModeException("Please choose properties to add to the result set!"));
-	    }
-	}
-	return Result.successful(this);
+        if (ReportMode.REPORT.equals(mode)) {
+            final ICentreDomainTreeManager cdtm = getEntityCentreManager();
+            if (cdtm == null) {
+                throw new IllegalStateException("The entity centre must be initialized!");
+            }
+            if (cdtm.getSecondTick().checkedProperties(getEntityType()).isEmpty()) {
+                return new Result(this, new CanNotSetModeException("Please choose properties to add to the result set!"));
+            }
+        }
+        return Result.successful(this);
     }
 
     /**
      * Creates the {@link EntityInspectorModel} for the specified criteria
-     *
+     * 
      * @param criteria
      * @return
      */
-    private EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao<T>> criteria){
-	return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao<T>>>(criteria,//
-		CentrePropertyBinder.<T>createCentrePropertyBinder(getCriteriaGenerator()));
+    private EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria) {
+        return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>(criteria,//
+        CentrePropertyBinder.<T> createCentrePropertyBinder(getCriteriaGenerator()));
     }
 }

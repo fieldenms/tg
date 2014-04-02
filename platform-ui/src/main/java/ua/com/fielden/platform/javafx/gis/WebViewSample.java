@@ -13,22 +13,24 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
-
 public class WebViewSample extends Application {
     private Scene scene;
-    @Override public void start(final Stage stage) {
+
+    @Override
+    public void start(final Stage stage) {
         // create the scene
         stage.setTitle("Web View");
-        scene = new Scene(new Browser(),750,500, Color.web("#666970"));
+        scene = new Scene(new Browser(), 750, 500, Color.web("#666970"));
         stage.setScene(scene);
         scene.getStylesheets().add("webviewsample/BrowserToolbar.css");
         stage.show();
     }
 
-    public static void main(final String[] args){
+    public static void main(final String[] args) {
         launch(args);
     }
 }
+
 class Browser extends Region {
 
     final WebView browser = new WebView();
@@ -43,23 +45,27 @@ class Browser extends Region {
         getChildren().add(browser);
 
     }
+
     private Node createSpacer() {
         final Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         return spacer;
     }
 
-    @Override protected void layoutChildren() {
+    @Override
+    protected void layoutChildren() {
         final double w = getWidth();
         final double h = getHeight();
-        layoutInArea(browser,0,0,w,h,0, HPos.CENTER, VPos.CENTER);
+        layoutInArea(browser, 0, 0, w, h, 0, HPos.CENTER, VPos.CENTER);
     }
 
-    @Override protected double computePrefWidth(final double height) {
+    @Override
+    protected double computePrefWidth(final double height) {
         return 750;
     }
 
-    @Override protected double computePrefHeight(final double width) {
+    @Override
+    protected double computePrefHeight(final double width) {
         return 500;
     }
 }

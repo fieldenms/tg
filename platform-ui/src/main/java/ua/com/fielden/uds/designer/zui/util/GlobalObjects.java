@@ -17,6 +17,6 @@ public class GlobalObjects {
     public static Graphics2D graphics2D;
 
     public static boolean isInitialised() {
-	return canvas != null && linkLayer != null && frame != null;
+        return canvas != null && linkLayer != null && frame != null;
     }
 }

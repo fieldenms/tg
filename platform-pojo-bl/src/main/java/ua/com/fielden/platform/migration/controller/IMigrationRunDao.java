@@ -5,9 +5,9 @@ import ua.com.fielden.platform.migration.MigrationRun;
 
 /**
  * DAO contract for {@link MigrationRun}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IMigrationRunDao extends IEntityDao<MigrationRun> {
 

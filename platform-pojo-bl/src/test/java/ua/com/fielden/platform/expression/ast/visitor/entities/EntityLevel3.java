@@ -26,34 +26,32 @@ public class EntityLevel3 extends AbstractEntity<String> {
     @Title(value = "Date Property", desc = "Property to test date functions in expression language.")
     private Date dateProperty;
 
-
     @Observable
     public EntityLevel3 setStrProperty(final String strProperty) {
-	this.strProperty = strProperty;
-	return this;
+        this.strProperty = strProperty;
+        return this;
     }
 
     public String getStrProperty() {
-	return strProperty;
+        return strProperty;
     }
 
-
     public Money getMoneyProperty() {
-	return moneyProperty;
+        return moneyProperty;
     }
 
     @Observable
     public void setMoneyProperty(final Money moneyProperty) {
-	this.moneyProperty = moneyProperty;
+        this.moneyProperty = moneyProperty;
     }
 
     @Observable
     public EntityLevel3 setDateProperty(final Date dateProperty) {
-	this.dateProperty = dateProperty;
-	return this;
+        this.dateProperty = dateProperty;
+        return this;
     }
 
     public Date getDateProperty() {
-	return dateProperty;
+        return dateProperty;
     }
 }

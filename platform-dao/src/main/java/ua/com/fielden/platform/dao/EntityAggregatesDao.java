@@ -22,12 +22,12 @@ public class EntityAggregatesDao implements IEntityAggregatesDao {
 
     @Inject
     protected EntityAggregatesDao(final CommonEntityAggregatesDao dao) {
-	this.dao = dao;
+        this.dao = dao;
     }
 
     @Override
     public List<EntityAggregates> getAllEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel) {
-	return dao.getAllEntities(aggregatesQueryModel);
+        return dao.getAllEntities(aggregatesQueryModel);
     }
 
     @Override
@@ -37,42 +37,43 @@ public class EntityAggregatesDao implements IEntityAggregatesDao {
 
     @Override
     public List<EntityAggregates> getFirstEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel, final int numberOfEntities) {
-	return dao.getFirstEntities(aggregatesQueryModel, numberOfEntities);
+        return dao.getFirstEntities(aggregatesQueryModel, numberOfEntities);
     }
 
     @Override
     public IPage<EntityAggregates> firstPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final int pageCapacity) {
-	return dao.firstPage(query, pageCapacity);
+        return dao.firstPage(query, pageCapacity);
     }
 
     @Override
     public IPage<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final int pageNo, final int pageCapacity) {
-	return getPage(query, pageNo, 0, pageCapacity);
+        return getPage(query, pageNo, 0, pageCapacity);
     }
 
     @Override
     public IPage<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model, final int pageNo, final int pageCount, final int pageCapacity) {
-	return dao.getPage(model, pageNo, pageCount, pageCapacity);
+        return dao.getPage(model, pageNo, pageCount, pageCapacity);
     }
 
     @Override
-    public byte[] export(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-	return dao.export(query, propertyNames, propertyTitles);
+    public byte[] export(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final String[] propertyNames, final String[] propertyTitles)
+            throws IOException {
+        return dao.export(query, propertyNames, propertyTitles);
     }
 
     @Override
     public final String getUsername() {
-	return up.getUser().getKey();
+        return up.getUser().getKey();
     }
 
     @Override
     public int count(final AggregatedResultQueryModel model, final Map<String, Object> paramValues) {
-	return dao.count(model, paramValues);
+        return dao.count(model, paramValues);
     }
 
     @Override
     public int count(final AggregatedResultQueryModel model) {
-	return dao.count(model);
+        return dao.count(model);
     }
 
     @Override

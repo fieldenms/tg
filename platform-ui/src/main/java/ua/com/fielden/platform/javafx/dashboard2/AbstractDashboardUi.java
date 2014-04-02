@@ -30,9 +30,9 @@ import com.jidesoft.swing.StyledLabelBuilder;
 
 /**
  * UI class for dashboard.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public abstract class AbstractDashboardUi<DASHBOARD_MODEL extends AbstractDashboard<? extends AbstractDashboardUi>> extends BaseNotifPanel<StubUiModel> {
     private static final long serialVersionUID = 7623224149991897675L;
@@ -41,25 +41,25 @@ public abstract class AbstractDashboardUi<DASHBOARD_MODEL extends AbstractDashbo
     private final DASHBOARD_MODEL dashboardModel;
 
     public AbstractDashboardUi(final JComponent paramsGetterUi, final List<IDashboardItemUi> dashboardItemUis, final DASHBOARD_MODEL dashboardModel) {
-	super(new MenuNotificationPanel("Dashboard"){
-	    @Override
-	    protected JPanel createLayerComponent(final String caption) {
-		final JPanel panel = new JPanel(new MigLayout("fill, insets 0 5 0 5", "[left][right]", "[grow,fill,c,30:30:30]"));
-		panel.setBorder(new EmptyBorder(0, 0, 0, 0));
-		final JLabel headerLable = new StyledLabelBuilder().add(caption, "bold,f:darkgray").createLabel();
-		panel.add(headerLable);
-		panel.add(new ButtonsUI(new Runnable() {
-		    public void run() {
-			dashboardModel.refreshAll();
-		    }
-		}));
-	        return panel;
-	    }
-	}, new StubUiModel(true));
+        super(new MenuNotificationPanel("Dashboard") {
+            @Override
+            protected JPanel createLayerComponent(final String caption) {
+                final JPanel panel = new JPanel(new MigLayout("fill, insets 0 5 0 5", "[left][right]", "[grow,fill,c,30:30:30]"));
+                panel.setBorder(new EmptyBorder(0, 0, 0, 0));
+                final JLabel headerLable = new StyledLabelBuilder().add(caption, "bold,f:darkgray").createLabel();
+                panel.add(headerLable);
+                panel.add(new ButtonsUI(new Runnable() {
+                    public void run() {
+                        dashboardModel.refreshAll();
+                    }
+                }));
+                return panel;
+            }
+        }, new StubUiModel(true));
 
-	this.dashboardModel = dashboardModel;
-	this.paramsGetterUi = paramsGetterUi;
-	this.dashboardItemUis = dashboardItemUis;
+        this.dashboardModel = dashboardModel;
+        this.paramsGetterUi = paramsGetterUi;
+        this.dashboardItemUis = dashboardItemUis;
     }
 
     @Override
@@ -69,23 +69,23 @@ public abstract class AbstractDashboardUi<DASHBOARD_MODEL extends AbstractDashbo
     protected abstract void layoutComponents();
 
     protected JComponent getParamsGetterUi() {
-	return paramsGetterUi;
+        return paramsGetterUi;
     }
 
     protected List<IDashboardItemUi> getDashboardItemUis() {
-	return dashboardItemUis;
+        return dashboardItemUis;
     }
 
     public DASHBOARD_MODEL getDashboardModel() {
-	return dashboardModel;
+        return dashboardModel;
     }
 
     public static Group createSettingsGroup(final Runnable action) {
-	return wrap(createSettingsShape(), action);
+        return wrap(createSettingsShape(), action);
     }
 
     public static Group createRefreshGroup(final Runnable action) {
-	return wrap(createRefreshShape(), action);
+        return wrap(createRefreshShape(), action);
     }
 
     private static Shape createSettingsShape() {
@@ -112,8 +112,8 @@ public abstract class AbstractDashboardUi<DASHBOARD_MODEL extends AbstractDashbo
         final Group group = new Group();
 
         final double w = shape.getBoundsInParent().getWidth();
-	final double h = shape.getBoundsInParent().getHeight();
-	final Rectangle basement = new Rectangle(-w / 2, -h / 2, w, h);
+        final double h = shape.getBoundsInParent().getHeight();
+        final Rectangle basement = new Rectangle(-w / 2, -h / 2, w, h);
         basement.setFill(Color.TRANSPARENT);
         group.getChildren().add(basement);
 
@@ -122,16 +122,16 @@ public abstract class AbstractDashboardUi<DASHBOARD_MODEL extends AbstractDashbo
         group.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
             public void handle(final MouseEvent event) {
-        	shape.setEffect(new InnerShadow(BlurType.GAUSSIAN, Color.RED, 15, 0, 0, 0));
+                shape.setEffect(new InnerShadow(BlurType.GAUSSIAN, Color.RED, 15, 0, 0, 0));
             }
         });
         group.setOnMouseReleased(new EventHandler<MouseEvent>() {
             @Override
             public void handle(final MouseEvent event) {
-        	shape.setEffect(null);
+                shape.setEffect(null);
 
-        	SwingUtilitiesEx.invokeLater(action);
-        	// refreshAction.run();
+                SwingUtilitiesEx.invokeLater(action);
+                // refreshAction.run();
             }
         });
         return group;

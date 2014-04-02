@@ -16,7 +16,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Abstract property editor for entities. Do not contains editor, because it could be created in several ways (i.e. with string binding or without etc.)
- *
+ * 
  * @author TG Team
  */
 public abstract class AbstractEntityPropertyEditor implements IPropertyEditor {
@@ -29,48 +29,48 @@ public abstract class AbstractEntityPropertyEditor implements IPropertyEditor {
     private final JLabel label;
 
     public AbstractEntityPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final IValueMatcher<?> valueMatcher) {
-	this.entity = entity;
-	this.propertyName = propertyName;
-	this.valueMatcher = valueMatcher;
+        this.entity = entity;
+        this.propertyName = propertyName;
+        this.valueMatcher = valueMatcher;
 
-	final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
+        final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
 
-	label = DummyBuilder.label(titleAndDesc.getKey());
-	label.setToolTipText(titleAndDesc.getValue());
+        label = DummyBuilder.label(titleAndDesc.getKey());
+        label.setToolTipText(titleAndDesc.getValue());
     }
 
     @Override
     public void bind(final AbstractEntity<?> entity) {
-	this.entity = entity;
-	getEditor().rebindTo(entity);
+        this.entity = entity;
+        getEditor().rebindTo(entity);
     }
 
     @Override
     public AbstractEntity<?> getEntity() {
-	return entity;
+        return entity;
     }
 
     @Override
     public String getPropertyName() {
-	return propertyName;
+        return propertyName;
     }
 
     public JLabel getLabel() {
-	return label;
+        return label;
     }
 
     public abstract BoundedValidationLayer<AutocompleterTextFieldLayer> getEditor();
 
     @Override
     public JPanel getDefaultLayout() {
-	final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
-	panel.add(label);
-	panel.add(getEditor(), "growx");
-	return panel;
+        final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
+        panel.add(label);
+        panel.add(getEditor(), "growx");
+        return panel;
     }
 
     @Override
     public IValueMatcher<?> getValueMatcher() {
-	return valueMatcher;
+        return valueMatcher;
     }
 }

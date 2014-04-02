@@ -28,21 +28,21 @@ public class TgBogieLocation extends AbstractUnionEntity {
 
     @Observable
     public TgBogieLocation setWorkshop(final TgWorkshop workshop) {
-	this.workshop = workshop;
-	return this;
+        this.workshop = workshop;
+        return this;
     }
 
     public TgWorkshop getWorkshop() {
-	return workshop;
+        return workshop;
     }
 
     @Observable
     public TgBogieLocation setWagonSlot(final TgWagonSlot wagonSlot) {
-	this.wagonSlot = wagonSlot;
-	return this;
+        this.wagonSlot = wagonSlot;
+        return this;
     }
 
     public TgWagonSlot getWagonSlot() {
-	return wagonSlot;
+        return wagonSlot;
     }
 }

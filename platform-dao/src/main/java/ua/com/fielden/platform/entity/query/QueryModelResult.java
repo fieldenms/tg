@@ -14,10 +14,10 @@ public final class QueryModelResult<T extends AbstractEntity<?>> {
     private final SortedSet<ResultQueryYieldDetails> yieldedPropsInfo;
 
     public QueryModelResult(final Class<T> resultType, final String sql, final SortedSet<ResultQueryYieldDetails> yieldedPropsInfo, final Map<String, Object> paramValues) {
-	this.resultType = resultType;
-	this.sql = sql;
-	this.paramValues = paramValues;
-	this.yieldedPropsInfo = yieldedPropsInfo;
+        this.resultType = resultType;
+        this.sql = sql;
+        this.paramValues = paramValues;
+        this.yieldedPropsInfo = yieldedPropsInfo;
     }
 
     public Class<T> getResultType() {
@@ -33,10 +33,10 @@ public final class QueryModelResult<T extends AbstractEntity<?>> {
     }
 
     public SortedSet<ResultQueryYieldDetails> getYieldedPropsInfo() {
-	return yieldedPropsInfo;
+        return yieldedPropsInfo;
     }
 
     public boolean idOnlyQuery() {
-	return EntityUtils.isPersistedEntityType(resultType) && yieldedPropsInfo.size() == 1 && "id".equals(yieldedPropsInfo.iterator().next().getName());
+        return EntityUtils.isPersistedEntityType(resultType) && yieldedPropsInfo.size() == 1 && "id".equals(yieldedPropsInfo.iterator().next().getName());
     }
 }

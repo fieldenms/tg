@@ -40,9 +40,9 @@ import com.google.inject.Injector;
 
 /**
  * Provides a test specific implementation of {@link IDbDrivenTestCaseConfiguration}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseConfiguration {
     protected final EntityFactory entityFactory;
@@ -54,81 +54,81 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
     static {
-	hibTypeDefaults.put(boolean.class, YesNoType.class);
-	hibTypeDefaults.put(Boolean.class, YesNoType.class);
-	hibTypeDefaults.put(Date.class, DateTimeType.class);
-	hibTypeDefaults.put(Money.class, MoneyUserType.class);
+        hibTypeDefaults.put(boolean.class, YesNoType.class);
+        hibTypeDefaults.put(Boolean.class, YesNoType.class);
+        hibTypeDefaults.put(Date.class, DateTimeType.class);
+        hibTypeDefaults.put(Money.class, MoneyUserType.class);
     }
 
-    private ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] {InspectedEntity.class});
+    private ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class });
 
     /**
      * Required for dynamic instantiation by {@link DbDrivenTestCase}
      */
     public PlatformWebDbDrivenTestCaseConfiguration() {
-	// instantiate all the factories and Hibernate utility
-	final ProxyInterceptor interceptor = new ProxyInterceptor();
-	try {
+        // instantiate all the factories and Hibernate utility
+        final ProxyInterceptor interceptor = new ProxyInterceptor();
+        try {
 
-	    final Configuration cfg = new Configuration();
-	    final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
-	    domainTypes.add(User.class);
-	    domainTypes.add(UserRole.class);
-	    domainTypes.add(UserAndRoleAssociation.class);
-	    domainTypes.add(UserAndRoleAssociationBatchAction.class);
-	    domainTypes.add(SecurityRoleAssociation.class);
-	    domainTypes.add(InspectedEntity.class);
-	    domainTypes.add(Attachment.class);
-	    final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, DbVersion.H2);
-	    cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
+            final Configuration cfg = new Configuration();
+            final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
+            domainTypes.add(User.class);
+            domainTypes.add(UserRole.class);
+            domainTypes.add(UserAndRoleAssociation.class);
+            domainTypes.add(UserAndRoleAssociationBatchAction.class);
+            domainTypes.add(SecurityRoleAssociation.class);
+            domainTypes.add(InspectedEntity.class);
+            domainTypes.add(Attachment.class);
+            final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, DbVersion.H2);
+            cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
 
-	    cfg.setProperty("hibernate.current_session_context_class", "thread");
-	    cfg.setProperty("hibernate.show_sql", "false");
-	    cfg.setProperty("hibernate.format_sql", "true");
-	    cfg.setProperty("hibernate.connection.url", "jdbc:h2:src/test/resources/db/testdb");
-	    cfg.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
-	    cfg.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-	    cfg.setProperty("hibernate.connection.username", "sa");
-	    cfg.setProperty("hibernate.connection.password", "");
+            cfg.setProperty("hibernate.current_session_context_class", "thread");
+            cfg.setProperty("hibernate.show_sql", "false");
+            cfg.setProperty("hibernate.format_sql", "true");
+            cfg.setProperty("hibernate.connection.url", "jdbc:h2:src/test/resources/db/testdb");
+            cfg.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
+            cfg.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+            cfg.setProperty("hibernate.connection.username", "sa");
+            cfg.setProperty("hibernate.connection.password", "");
 
-	    hibernateUtil = new HibernateUtil(interceptor, cfg);
-	    hibernateModule = new WebHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata, serialisationClassProvider);
-	    injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
-	    entityFactory = injector.getInstance(EntityFactory.class);
-	    interceptor.setFactory(entityFactory);
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    throw new RuntimeException(e);
-	}
+            hibernateUtil = new HibernateUtil(interceptor, cfg);
+            hibernateModule = new WebHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata, serialisationClassProvider);
+            injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
+            entityFactory = injector.getInstance(EntityFactory.class);
+            interceptor.setFactory(entityFactory);
+        } catch (final Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public EntityFactory getEntityFactory() {
-	return entityFactory;
+        return entityFactory;
     }
 
     @Override
     public HibernateUtil getHibernateUtil() {
-	return hibernateUtil;
+        return hibernateUtil;
     }
 
     @Override
     public Injector getInjector() {
-	return injector;
+        return injector;
     }
 
     @Override
     public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-	return hibernateModule.getDomainMetaPropertyConfig();
+        return hibernateModule.getDomainMetaPropertyConfig();
     }
 
     @Override
     public DomainValidationConfig getDomainValidationConfig() {
-	return hibernateModule.getDomainValidationConfig();
+        return hibernateModule.getDomainValidationConfig();
     }
 
     @Override
     public List<String> getDdl() {
-	return null;
+        return null;
     }
 }

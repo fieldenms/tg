@@ -12,57 +12,57 @@ import ua.com.fielden.platform.reflection.Finder;
 
 public class RetrieverBatchUpdateStmtGenerator extends AbstractRetrieverBatchStmtGenerator {
     public RetrieverBatchUpdateStmtGenerator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever) {
-	super(dma, retriever);
+        super(dma, retriever);
     }
 
     @Override
-    protected  List<PropertyMetadata> getInsertFields(final List<PropertyMetadata> fields) {
-	final List<PropertyMetadata> result = new ArrayList<>();
-	result.addAll(fields);
-	return result;
+    protected List<PropertyMetadata> getInsertFields(final List<PropertyMetadata> fields) {
+        final List<PropertyMetadata> result = new ArrayList<>();
+        result.addAll(fields);
+        return result;
     }
 
     @Override
     protected String generateInsertStmt(final List<PropertyMetadata> fields, final String tableName) {
-	final StringBuffer sb = new StringBuffer();
+        final StringBuffer sb = new StringBuffer();
 
-	sb.append("UPDATE ");
-	sb.append(tableName);
-	sb.append(" SET ");
-	for (final Iterator<PropertyMetadata> iterator = fields.iterator(); iterator.hasNext();) {
-	    final PropertyMetadata propName = iterator.next();
+        sb.append("UPDATE ");
+        sb.append(tableName);
+        sb.append(" SET ");
+        for (final Iterator<PropertyMetadata> iterator = fields.iterator(); iterator.hasNext();) {
+            final PropertyMetadata propName = iterator.next();
 
-	    sb.append(propName.getColumn() + " = ? ");
-	    sb.append(iterator.hasNext() ? ", " : "");
-	}
-	sb.append(" WHERE _ID = ?");
+            sb.append(propName.getColumn() + " = ? ");
+            sb.append(iterator.hasNext() ? ", " : "");
+        }
+        sb.append(" WHERE _ID = ?");
 
-	return sb.toString();
+        return sb.toString();
     }
 
     List<Object> transformValues(final ResultSet rs, final IdCache cache, final int id) throws Exception {
-	final List<Object> result = new ArrayList<>();
-	for (final Container container : getContainers()) {
-	    final List<Object> values = new ArrayList<>();
-	    for (final Integer index : container.indices) {
-		values.add(rs.getObject(index.intValue()));
-	    }
-	    result.add(transformValue(container.propType, values, cache));
-	}
-	result.add(id);
+        final List<Object> result = new ArrayList<>();
+        for (final Container container : getContainers()) {
+            final List<Object> values = new ArrayList<>();
+            for (final Integer index : container.indices) {
+                values.add(rs.getObject(index.intValue()));
+            }
+            result.add(transformValue(container.propType, values, cache));
+        }
+        result.add(id);
 
-	return result;
+        return result;
     }
 
     @Override
     protected List<PropertyMetadata> extractFields() {
-	final List<String> keyMembersFirstLevelProps = Finder.getFieldNames(Finder.getKeyMembers(getRetriever().type()));
-	final List<PropertyMetadata> result = new ArrayList<>();
-	for (final PropertyMetadata pmd : extractAllFields(getEmd())) {
-	    if (!keyMembersFirstLevelProps.contains(pmd.getName())) {
-		result.add(pmd);
-	    }
-	}
-	return result;
+        final List<String> keyMembersFirstLevelProps = Finder.getFieldNames(Finder.getKeyMembers(getRetriever().type()));
+        final List<PropertyMetadata> result = new ArrayList<>();
+        for (final PropertyMetadata pmd : extractAllFields(getEmd())) {
+            if (!keyMembersFirstLevelProps.contains(pmd.getName())) {
+                result.add(pmd);
+            }
+        }
+        return result;
     }
 }

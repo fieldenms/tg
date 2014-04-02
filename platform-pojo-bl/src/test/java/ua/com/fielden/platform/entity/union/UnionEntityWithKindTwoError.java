@@ -19,30 +19,30 @@ public class UnionEntityWithKindTwoError extends AbstractUnionEntity {
     private EntityTwo propertyThree;
 
     public EntityOne getPropertyOne() {
-	return propertyOne;
+        return propertyOne;
     }
 
     @Observable
     public void setPropertyOne(final EntityOne propertyOne) {
-	this.propertyOne = propertyOne;
+        this.propertyOne = propertyOne;
     }
 
     public EntityTwo getPropertyTwo() {
-	return propertyTwo;
+        return propertyTwo;
     }
 
     @Observable
     public void setPropertyTwo(final EntityTwo propertyTwo) {
-	this.propertyTwo = propertyTwo;
+        this.propertyTwo = propertyTwo;
     }
 
     public EntityTwo getPropertyThree() {
-	return propertyThree;
+        return propertyThree;
     }
 
     @Observable
     public void setPropertyThree(final EntityTwo propertyThree) {
-	this.propertyThree = propertyThree;
+        this.propertyThree = propertyThree;
     }
 
 }

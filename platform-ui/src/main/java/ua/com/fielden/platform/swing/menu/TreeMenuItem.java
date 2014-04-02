@@ -18,10 +18,10 @@ import ua.com.fielden.platform.swing.view.BasePanel;
  * The provided view should become visible upon menu item selection. This behaviour should be controlled by a tree selection listener associated with a tree representing a menu.
  * <p>
  * The <code>toString</code> method of the provided view is used as a menu item title. Thus, one should take care by overriding view's <code>toString</code>.
- *
+ * 
  * @author TG Team
  */
-public class TreeMenuItem<V extends BasePanel> extends DefaultMutableTreeNode implements ITreeNode<ITreeNode>{
+public class TreeMenuItem<V extends BasePanel> extends DefaultMutableTreeNode implements ITreeNode<ITreeNode> {
     private static final long serialVersionUID = 1L;
 
     private final V view;
@@ -49,128 +49,126 @@ public class TreeMenuItem<V extends BasePanel> extends DefaultMutableTreeNode im
 
     /**
      * This is a primary constructor accepting both the view and info panel.
-     *
+     * 
      * @param view
      * @param infoPanel
      */
     public TreeMenuItem(final V view, final String title, final JPanel infoPanel, final boolean groupItem) {
-	this.view = view;
-	if (this.view != null) {
-	    this.view.setAssociatedTreeMenuItem(this);
-	    setState(TreeMenuItemState.ALL);
-	} else {
-	    setState(TreeMenuItemState.NONE);
-	}
-	this.infoPanel = infoPanel;
-	this.groupItem = groupItem;
-	this.title = title;
+        this.view = view;
+        if (this.view != null) {
+            this.view.setAssociatedTreeMenuItem(this);
+            setState(TreeMenuItemState.ALL);
+        } else {
+            setState(TreeMenuItemState.NONE);
+        }
+        this.infoPanel = infoPanel;
+        this.groupItem = groupItem;
+        this.title = title;
     }
 
     /**
      * This is a convenience constructor, which can be used where info panel is not required.
-     *
+     * 
      * @param view
      */
     public TreeMenuItem(final V view) {
-	this(view, view.toString(), new SimpleInfoPanel(view.getInfo()), false);
+        this(view, view.toString(), new SimpleInfoPanel(view.getInfo()), false);
     }
 
     /**
      * This is a convenience constructor, which can be used for constructing group items.
-     *
+     * 
      * @param view
      */
     public TreeMenuItem(final String title, final String info) {
-	this(null, title, new SimpleInfoPanel(info), true);
+        this(null, title, new SimpleInfoPanel(info), true);
     }
 
     @Override
     public String toString() {
-	return title;
+        return title;
     }
 
     /**
      * Returns title of this {@link TreeMenuItem}.
-     *
+     * 
      * @return
      */
     public String getTitle() {
-	return title;
+        return title;
     }
 
     /**
      * A convenient wrapper around vector's add method for appending menu items.
-     *
+     * 
      * @param item
      * @return
      */
     public TreeMenuItem<V> addItem(final TreeMenuItem<?> item) {
-	super.add(item);
-	return this;
+        super.add(item);
+        return this;
     }
 
     public V getView() {
-	return view;
+        return view;
     }
 
     public JPanel getInfoPanel() {
-	return infoPanel;
+        return infoPanel;
     }
 
     /**
      * A convenient method advising if an info panel is associated with this menu item.
-     *
+     * 
      * @return
      */
     public boolean hasInfoPanel() {
-	return infoPanel != null;
+        return infoPanel != null;
     }
 
     public boolean isGroupItem() {
-	return groupItem;
+        return groupItem;
     }
 
     public TreeMenuItemState getState() {
-	return state;
+        return state;
     }
 
     public void setState(final TreeMenuItemState state) {
-	this.state = state;
+        this.state = state;
     }
 
     public Icon getIcon() {
-	return icon;
+        return icon;
     }
 
     public void setIcon(final Icon icon) {
-	this.icon = icon;
+        this.icon = icon;
     }
 
     public boolean isVisible() {
-	return visible;
+        return visible;
     }
 
     public void setVisible(final boolean visible) {
-	this.visible = visible;
+        this.visible = visible;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public ITreeNode<ITreeNode> state() {
-	return (ITreeNode)getParent();
+        return (ITreeNode) getParent();
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public List<? extends ITreeNode<ITreeNode>> daughters() {
-	final List<ITreeNode<ITreeNode>> daughters = new ArrayList<ITreeNode<ITreeNode>>();
-	final Enumeration children = children();
-	while(children.hasMoreElements()){
-	    daughters.add((ITreeNode<ITreeNode>) children.nextElement());
-	}
-	return daughters;
+        final List<ITreeNode<ITreeNode>> daughters = new ArrayList<ITreeNode<ITreeNode>>();
+        final Enumeration children = children();
+        while (children.hasMoreElements()) {
+            daughters.add((ITreeNode<ITreeNode>) children.nextElement());
+        }
+        return daughters;
     }
-
-
 
 }

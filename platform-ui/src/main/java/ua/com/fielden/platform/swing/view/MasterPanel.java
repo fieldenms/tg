@@ -23,32 +23,32 @@ public abstract class MasterPanel extends BasePanel {
     private TreeMenuPanel treeMenuPanel;
 
     public MasterPanel() {
-	super(new MigLayout("fill", "[grow,fill]", "[grow,fill]"));
+        super(new MigLayout("fill", "[grow,fill]", "[grow,fill]"));
 
-	spittterPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true);
-	spittterPane.setOneTouchExpandable(true);
+        spittterPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true);
+        spittterPane.setOneTouchExpandable(true);
 
-	add(spittterPane);
+        add(spittterPane);
     }
 
     protected void addTreeMenuPanel(final TreeMenuPanel treeMenuPanel) {
-	this.treeMenuPanel = treeMenuPanel;
-	spittterPane.setLeftComponent(treeMenuPanel);
-	spittterPane.setRightComponent(treeMenuPanel.getTree().getHolder());
+        this.treeMenuPanel = treeMenuPanel;
+        spittterPane.setLeftComponent(treeMenuPanel);
+        spittterPane.setRightComponent(treeMenuPanel.getTree().getHolder());
     }
 
     public MasterPanel setDividerLocation(final double dividerLocation) {
-	spittterPane.setDividerLocation(dividerLocation);
-	return this;
+        spittterPane.setDividerLocation(dividerLocation);
+        return this;
     }
 
     public MasterPanel setOneTouchExpandable(final boolean flag) {
-	spittterPane.setOneTouchExpandable(flag);
-	return this;
+        spittterPane.setOneTouchExpandable(flag);
+        return this;
     }
 
     public TreeMenuPanel getTreeMenuPanel() {
-	return treeMenuPanel;
+        return treeMenuPanel;
     }
 
 }

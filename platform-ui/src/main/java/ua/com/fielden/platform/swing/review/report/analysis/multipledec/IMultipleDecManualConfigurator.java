@@ -6,15 +6,15 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * A contract that allows one to configure multiple dec analysis.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IMultipleDecManualConfigurator<T extends AbstractEntity<?>> {
 
     /**
      * Configures multiple dec analysis.
-     *
+     * 
      * @param cdtme
      * @param multipleDec
      * @param root

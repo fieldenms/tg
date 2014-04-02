@@ -12,9 +12,9 @@ import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Represents a work order status required field.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 public class WoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
@@ -31,41 +31,41 @@ public class WoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
      * Default constructor for instantiation by Hibernate.
      */
     protected WoStatusRequiredField() {
-	super(null, null, "");
-	setKey(new DynamicEntityKey(this));
+        super(null, null, "");
+        setKey(new DynamicEntityKey(this));
     }
 
     /**
      * The main constructor.
-     *
+     * 
      * @param
      */
     public WoStatusRequiredField(final WorkOrderStatus woStatus, final PropertyDescriptor<WorkOrder> requiredField) {
-	this();
-	setKey(new DynamicEntityKey(this));
-	setWoStatus(woStatus);
-	setRequiredProperty(requiredField);
+        this();
+        setKey(new DynamicEntityKey(this));
+        setWoStatus(woStatus);
+        setRequiredProperty(requiredField);
     }
 
     public WorkOrderStatus getWoStatus() {
-	return woStatus;
+        return woStatus;
     }
 
     @NotNull
     @Final
     @Observable
     public void setWoStatus(final WorkOrderStatus woStatus) {
-	this.woStatus = woStatus;
+        this.woStatus = woStatus;
     }
 
     public PropertyDescriptor<WorkOrder> getRequiredProperty() {
-	return requiredProperty;
+        return requiredProperty;
     }
 
     @NotNull
     @Final
     @Observable
     public void setRequiredProperty(final PropertyDescriptor<WorkOrder> requiredField) {
-	this.requiredProperty = requiredField;
+        this.requiredProperty = requiredField;
     }
 }

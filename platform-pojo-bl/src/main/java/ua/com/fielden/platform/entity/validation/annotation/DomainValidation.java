@@ -25,11 +25,11 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
  * <li>If mutator is <code>incremetor</code> (starts with <i>addTo</i>) then <code>newValue</code> matches mutator's parameter and <code>oldValue</code> is null.
  * <li>If mutator is <code>decremetor</code> (starts with <i>removeFrom</i>) then <code>newValue</code> is null and <code>oldValue</code> matches mutator's parameter.
  * </ul>
- *
+ * 
  * <b>IMPORTANT:</b><i>This annotation is deprecated. {@link BeforeChange} should be used instead.</i>
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @Deprecated
 @Retention(RetentionPolicy.RUNTIME)

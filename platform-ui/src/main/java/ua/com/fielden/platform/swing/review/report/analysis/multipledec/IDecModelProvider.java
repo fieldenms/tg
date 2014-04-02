@@ -7,16 +7,16 @@ import ua.com.fielden.platform.swing.review.report.analysis.chart.ICategoryAnaly
 
 /**
  * A contract that allows one to customise multiple dec analysis view.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  */
 public interface IDecModelProvider<T extends AbstractEntity<?>> {
 
     /**
      * Returns the multiple dec model for specified {@link ICategoryAnalysisDataProvider} instance
-     *
+     * 
      * @param chartModel
      * @return
      */

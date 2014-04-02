@@ -17,9 +17,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "dynamic query" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("SLAVE_ENTITY")
@@ -70,6 +70,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public MasterEntity getMasterEntityProp() {
         return masterEntityProp;
     }
+
     @Observable
     public void setMasterEntityProp(final MasterEntity masterEntityProp) {
         this.masterEntityProp = masterEntityProp;
@@ -78,6 +79,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Integer getIntegerProp() {
         return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
@@ -86,6 +88,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Double getDoubleProp() {
         return doubleProp;
     }
+
     @Observable
     public void setDoubleProp(final Double doubleProp) {
         this.doubleProp = doubleProp;
@@ -94,6 +97,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public BigDecimal getBigDecimalProp() {
         return bigDecimalProp;
     }
+
     @Observable
     public void setBigDecimalProp(final BigDecimal bigDecimalProp) {
         this.bigDecimalProp = bigDecimalProp;
@@ -102,6 +106,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Money getMoneyProp() {
         return moneyProp;
     }
+
     @Observable
     public void setMoneyProp(final Money moneyProp) {
         this.moneyProp = moneyProp;
@@ -110,6 +115,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public Date getDateProp() {
         return dateProp;
     }
+
     @Observable
     public void setDateProp(final Date dateProp) {
         this.dateProp = dateProp;
@@ -118,6 +124,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public boolean isBooleanProp() {
         return booleanProp;
     }
+
     @Observable
     public void setBooleanProp(final boolean booleanProp) {
         this.booleanProp = booleanProp;
@@ -126,6 +133,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public String getStringProp() {
         return stringProp;
     }
+
     @Observable
     public void setStringProp(final String stringProp) {
         this.stringProp = stringProp;
@@ -134,6 +142,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     public List<EvenSlaverEntity> getCollection() {
         return collection;
     }
+
     @Observable
     public void setCollection(final List<EvenSlaverEntity> collection) {
         this.collection.clear();

@@ -20,9 +20,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity class used for {@link QueryProperty} testing.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
@@ -33,7 +33,10 @@ public class EntityForQueryPropertyTesting extends AbstractEntity<String> {
 
     public static final String NOT_NULL_MSG = "Missing value";
 
-    private enum EnumType { E1, E2 }
+    private enum EnumType {
+        E1, E2
+    }
+
     ////////// Unsupported types //////////
     @IsProperty
     private Boolean unsupportedProp1 = null;
@@ -79,80 +82,80 @@ public class EntityForQueryPropertyTesting extends AbstractEntity<String> {
     }
 
     public Integer getFirstProperty() {
-	return firstProperty;
+        return firstProperty;
     }
 
     @Observable
     public EntityForQueryPropertyTesting setFirstProperty(final Integer property) {
-	this.firstProperty = property;
-	return this;
+        this.firstProperty = property;
+        return this;
     }
 
     public Double getObservableProperty() {
-	return observableProperty;
+        return observableProperty;
     }
 
     @Observable
     public EntityForQueryPropertyTesting setObservableProperty(final Double observableProperty) {
-	this.observableProperty = observableProperty;
-	return this;
+        this.observableProperty = observableProperty;
+        return this;
     }
 
     public List<EntityForQueryPropertyTesting> getEntities() {
-	return entities;
+        return entities;
     }
 
     @Observable
     public void setEntities(final List<EntityForQueryPropertyTesting> entities) {
-	this.entities.clear();
-	this.entities.addAll(entities);
+        this.entities.clear();
+        this.entities.addAll(entities);
     }
 
     public List<CollectionParentEntity> getColl() {
-	return coll;
+        return coll;
     }
 
     @Observable
     public void setColl(final List<CollectionParentEntity> coll) {
-	this.coll.clear();
-	this.coll.addAll(coll);
+        this.coll.clear();
+        this.coll.addAll(coll);
     }
 
     public EntityForQueryPropertyTesting getEntity1() {
-	return entity1;
+        return entity1;
     }
 
     @Observable
     public void setEntity1(final EntityForQueryPropertyTesting entity1) {
-	this.entity1 = entity1;
+        this.entity1 = entity1;
     }
 
     public Date getDate() {
-	return date;
+        return date;
     }
 
     @Observable
     public void setDate(final Date date) {
-	this.date = date;
+        this.date = date;
     }
 
     public Money getMoney() {
-	return money;
+        return money;
     }
 
     @Observable
     public void setMoney(final Money money) {
-	this.money = money;
+        this.money = money;
     }
 
     @Observable
     @NotEmpty
     public void setStrProp(final String strProp) {
-	this.strProp = strProp;
+        this.strProp = strProp;
     }
 
     public String getStrProp() {
-	return strProp;
+        return strProp;
     }
 
     public boolean isBool() {
@@ -185,6 +188,7 @@ public class EntityForQueryPropertyTesting extends AbstractEntity<String> {
     public Boolean getUnsupportedProp1() {
         return unsupportedProp1;
     }
+
     @Observable
     public void setUnsupportedProp1(final Boolean unsupportedProp1) {
         this.unsupportedProp1 = unsupportedProp1;
@@ -193,6 +197,7 @@ public class EntityForQueryPropertyTesting extends AbstractEntity<String> {
     public EnumType getUnsupportedProp2() {
         return unsupportedProp2;
     }
+
     @Observable
     public void setUnsupportedProp2(final EnumType unsupportedProp2) {
         this.unsupportedProp2 = unsupportedProp2;

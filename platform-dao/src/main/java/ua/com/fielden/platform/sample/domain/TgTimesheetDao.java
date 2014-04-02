@@ -10,16 +10,16 @@ import com.google.inject.Inject;
 
 /**
  * DAO for retrieving TgTimesheets.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(TgTimesheet.class)
 public class TgTimesheetDao extends CommonEntityDao<TgTimesheet> implements ITgTimesheet {
 
     @Inject
     protected TgTimesheetDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
 }

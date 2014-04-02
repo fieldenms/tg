@@ -77,114 +77,114 @@ public class DnDCanvas extends PSwingCanvas {
      * creates new DnDCanvas instance and adds selection event listener
      */
     public DnDCanvas(final ForcedDehighlighter forcedDehighlighter) {
-	super();
+        super();
 
-	// initiating the dragSource
-	source = DragSource.getDefaultDragSource();
-	source.createDefaultDragGestureRecognizer(this, getAccepetableDropAction(), new DragSourceHandler());
+        // initiating the dragSource
+        source = DragSource.getDefaultDragSource();
+        source.createDefaultDragGestureRecognizer(this, getAccepetableDropAction(), new DragSourceHandler());
 
-	// initiating auto scroll and drag-and-drop supporters
-	setDragEnabled(false);
-	setAutoscrollEnable(false);
-	isDnD = false;
-	isMoving = false;
+        // initiating auto scroll and drag-and-drop supporters
+        setDragEnabled(false);
+        setAutoscrollEnable(false);
+        isDnD = false;
+        isMoving = false;
 
-	// adding selection and drag event handlers to the canvas
-	setPanEventHandler(null);
-	setZoomEventHandler(null);
-	setSelectionHandler(createSelectionHandler(getLayer(), getLayer()));
-	addInputEventListener(getSelectionHandler());
-	setDragEventHandler(new ExtendedMultipleDrag(this, forcedDehighlighter, new SelectionHolder(getSelectionHandler())));
-	addInputEventListener(getDragEventHandler());
+        // adding selection and drag event handlers to the canvas
+        setPanEventHandler(null);
+        setZoomEventHandler(null);
+        setSelectionHandler(createSelectionHandler(getLayer(), getLayer()));
+        addInputEventListener(getSelectionHandler());
+        setDragEventHandler(new ExtendedMultipleDrag(this, forcedDehighlighter, new SelectionHolder(getSelectionHandler())));
+        addInputEventListener(getDragEventHandler());
 
-	// setting the drop target for this component
-	setDropTarget(new DropTarget(this, new DropTargetHandler()));
+        // setting the drop target for this component
+        setDropTarget(new DropTarget(this, new DropTargetHandler()));
 
-	// initializing timer and minimal distance for where the scrolling process starts
-	final Toolkit toolkit = Toolkit.getDefaultToolkit();
-	Integer property = (Integer) toolkit.getDesktopProperty("DnD.Autoscroll.interval");
-	timer = new Timer(property == null ? 100 : property.intValue(), new TimerHandler());
-	property = (Integer) toolkit.getDesktopProperty("DnD.Autoscroll.initialDelay");
-	timer.setInitialDelay(property == null ? 100 : property.intValue());
-	setMaxDist(20);
+        // initializing timer and minimal distance for where the scrolling process starts
+        final Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Integer property = (Integer) toolkit.getDesktopProperty("DnD.Autoscroll.interval");
+        timer = new Timer(property == null ? 100 : property.intValue(), new TimerHandler());
+        property = (Integer) toolkit.getDesktopProperty("DnD.Autoscroll.initialDelay");
+        timer.setInitialDelay(property == null ? 100 : property.intValue());
+        setMaxDist(20);
     }
 
     // creates multiple selection handler for the DnDCanvas instance
     private MultipleSelectionHandler createSelectionHandler(final PNode marqueParent, final PNode selectableParent) {
-	return new MultipleSelectionHandler(marqueParent, selectableParent) {
+        return new MultipleSelectionHandler(marqueParent, selectableParent) {
 
-	    @Override
-	    protected void startDrag(final PInputEvent e) {
-		super.startDrag(e);
-		lastPosition = e.getCanvasPosition();
-	    }
+            @Override
+            protected void startDrag(final PInputEvent e) {
+                super.startDrag(e);
+                lastPosition = e.getCanvasPosition();
+            }
 
-	    @Override
-	    protected void drag(final PInputEvent e) {
-		super.drag(e);
-		lastPosition = e.getCanvasPosition();
-		if (autoscrollEnable) {
-		    updateAutoscroll(e.getCanvasPosition());
-		}
+            @Override
+            protected void drag(final PInputEvent e) {
+                super.drag(e);
+                lastPosition = e.getCanvasPosition();
+                if (autoscrollEnable) {
+                    updateAutoscroll(e.getCanvasPosition());
+                }
 
-	    }
+            }
 
-	    @Override
-	    protected void startStandardOptionSelection(final PInputEvent pie) {
-		if (dragEnabled) {
-		    if (!isDnDStarted(pie.getSourceSwingEvent())) {
-			super.startStandardOptionSelection(pie);
-		    }
-		} else {
-		    super.startStandardOptionSelection(pie);
-		}
-	    }
+            @Override
+            protected void startStandardOptionSelection(final PInputEvent pie) {
+                if (dragEnabled) {
+                    if (!isDnDStarted(pie.getSourceSwingEvent())) {
+                        super.startStandardOptionSelection(pie);
+                    }
+                } else {
+                    super.startStandardOptionSelection(pie);
+                }
+            }
 
-	    @Override
-	    protected void endDrag(final PInputEvent e) {
-		lastPosition = null;
-		if (timer.isRunning()) {
-		    timer.stop();
-		}
-		if (dragEnabled) {
-		    if (isDnD) {
-			isDnD = false;
-			super.endDrag(e);
-			return;
-		    }
-		    PNode pressNode = e.getInputManager().getMouseOver().getPickedNode();
-		    if (pressNode instanceof PCamera) {
-			pressNode = null;
-		    }
-		    if ((pressNode != null) && (isOptionSelection(e) && isDnDStarted(e.getSourceSwingEvent())) && (!isMarqueeSelection(e))) {
-			if (isSelectable(pressNode)) {
-			    if (isSelected(pressNode)) {
-				unselect(pressNode);
-			    } else {
-				select(pressNode);
-			    }
-			}
-		    }
+            @Override
+            protected void endDrag(final PInputEvent e) {
+                lastPosition = null;
+                if (timer.isRunning()) {
+                    timer.stop();
+                }
+                if (dragEnabled) {
+                    if (isDnD) {
+                        isDnD = false;
+                        super.endDrag(e);
+                        return;
+                    }
+                    PNode pressNode = e.getInputManager().getMouseOver().getPickedNode();
+                    if (pressNode instanceof PCamera) {
+                        pressNode = null;
+                    }
+                    if ((pressNode != null) && (isOptionSelection(e) && isDnDStarted(e.getSourceSwingEvent())) && (!isMarqueeSelection(e))) {
+                        if (isSelectable(pressNode)) {
+                            if (isSelected(pressNode)) {
+                                unselect(pressNode);
+                            } else {
+                                select(pressNode);
+                            }
+                        }
+                    }
 
-		}
-		super.endDrag(e);
-	    }
+                }
+                super.endDrag(e);
+            }
 
-	    @Override
-	    protected void dragActivityStep(final PInputEvent event) {
-		super.dragActivityStep(event);
-		if (isMarqueeSelection(event)) {
-		    updateMarquee(event);
+            @Override
+            protected void dragActivityStep(final PInputEvent event) {
+                super.dragActivityStep(event);
+                if (isMarqueeSelection(event)) {
+                    updateMarquee(event);
 
-		    if (!isOptionSelection(event)) {
-			computeMarqueeSelection(event);
-		    } else {
-			computeOptionMarqueeSelection(event);
-		    }
-		}
-	    }
+                    if (!isOptionSelection(event)) {
+                        computeMarqueeSelection(event);
+                    } else {
+                        computeOptionMarqueeSelection(event);
+                    }
+                }
+            }
 
-	};
+        };
     }
 
     /**
@@ -194,7 +194,7 @@ public class DnDCanvas extends PSwingCanvas {
      *            - the value that indicates whether the drag - and-drop is supported or not
      */
     public void setDragEnabled(final boolean dragEnabled) {
-	this.dragEnabled = dragEnabled;
+        this.dragEnabled = dragEnabled;
     }
 
     /**
@@ -204,7 +204,7 @@ public class DnDCanvas extends PSwingCanvas {
      *            - the value that indicates whether the autoscroll support must be enabled or disabled
      */
     public void setAutoscrollEnable(final boolean autoscrollEnable) {
-	this.autoscrollEnable = autoscrollEnable;
+        this.autoscrollEnable = autoscrollEnable;
     }
 
     /**
@@ -214,7 +214,7 @@ public class DnDCanvas extends PSwingCanvas {
      * @return the object that must be transferred
      */
     protected Object getTransferObject(final Point2D point) {
-	return getSelectionHandler().getSelection();
+        return getSelectionHandler().getSelection();
     }
 
     /**
@@ -224,48 +224,48 @@ public class DnDCanvas extends PSwingCanvas {
      *            - specified MultipleSelectionHandler that must be added to this canvas as the InputEventHandler
      */
     private void setSelectionHandler(final MultipleSelectionHandler selectionHandler) {
-	this.selectionHandler = selectionHandler;
+        this.selectionHandler = selectionHandler;
     }
 
     /**
      * @return MultipleSelectionHandler instance associated with this Canvas
      */
     public MultipleSelectionHandler getSelectionHandler() {
-	return selectionHandler;
+        return selectionHandler;
     }
 
     // checks if the the transferred data can be dropped in to the canvas
     private boolean isDragOk(final DropTargetDragEvent e) {
 
-	if (!e.isDataFlavorSupported(DnDSupport2.TG_DATA_FLAVOR)) {
-	    return false;
-	}
+        if (!e.isDataFlavorSupported(DnDSupport2.TG_DATA_FLAVOR)) {
+            return false;
+        }
 
-	// the actions specified when the source
-	// created the DragGestureRecognizer
-	final int sa = e.getSourceActions();
+        // the actions specified when the source
+        // created the DragGestureRecognizer
+        final int sa = e.getSourceActions();
 
-	// we're saying that these actions are necessary
-	if ((sa & getAccepetableDropAction()) == 0) {
-	    return false;
-	}
-	try {
-	    final TransferredObject transferredObject = (TransferredObject) e.getTransferable().getTransferData(DnDSupport2.TG_DATA_FLAVOR);
-	    if (transferredObject != null) {
-		if (isOkToDrop(transferredObject.getObject(), getLayerPoint(e.getLocation()))) {
-		    return true;
-		} else {
-		    return false;
-		}
-	    } else {
-		return false;
-	    }
-	} catch (final UnsupportedFlavorException e1) {
-	    e1.printStackTrace();
-	} catch (final IOException e1) {
-	    e1.printStackTrace();
-	}
-	return false;
+        // we're saying that these actions are necessary
+        if ((sa & getAccepetableDropAction()) == 0) {
+            return false;
+        }
+        try {
+            final TransferredObject transferredObject = (TransferredObject) e.getTransferable().getTransferData(DnDSupport2.TG_DATA_FLAVOR);
+            if (transferredObject != null) {
+                if (isOkToDrop(transferredObject.getObject(), getLayerPoint(e.getLocation()))) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } catch (final UnsupportedFlavorException e1) {
+            e1.printStackTrace();
+        } catch (final IOException e1) {
+            e1.printStackTrace();
+        }
+        return false;
 
     }
 
@@ -277,9 +277,9 @@ public class DnDCanvas extends PSwingCanvas {
      * @return the transformed point
      */
     private Point2D getLayerPoint(final Point2D point) {
-	Point2D layerPoint = getLayer().globalToLocal(new Point2D.Double(point.getX(), point.getY()));
-	layerPoint = getCamera().localToView(layerPoint);
-	return layerPoint;
+        Point2D layerPoint = getLayer().globalToLocal(new Point2D.Double(point.getX(), point.getY()));
+        layerPoint = getCamera().localToView(layerPoint);
+        return layerPoint;
     }
 
     /**
@@ -290,145 +290,145 @@ public class DnDCanvas extends PSwingCanvas {
      */
     private class DragSourceHandler implements DragGestureListener, DragSourceListener {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void dragGestureRecognized(final DragGestureEvent dge) {
-	    // if drag is not enabled then there is nothing to do any more
-	    if ((!dragEnabled)) {
-		return;
-	    }
-	    // the additional test that determines whether the drag will be handled or not
-	    if (!isDnDStarted(dge.getTriggerEvent())) {
-		return;
-	    }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void dragGestureRecognized(final DragGestureEvent dge) {
+            // if drag is not enabled then there is nothing to do any more
+            if ((!dragEnabled)) {
+                return;
+            }
+            // the additional test that determines whether the drag will be handled or not
+            if (!isDnDStarted(dge.getTriggerEvent())) {
+                return;
+            }
 
-	    // Figure out where the drag started
-	    final MouseEvent inputEvent = (MouseEvent) dge.getTriggerEvent();
-	    final int x = inputEvent.getX();
-	    final int y = inputEvent.getY();
-	    final Point2D localPoint = getLayerPoint(new Point(x, y));
+            // Figure out where the drag started
+            final MouseEvent inputEvent = (MouseEvent) dge.getTriggerEvent();
+            final int x = inputEvent.getX();
+            final int y = inputEvent.getY();
+            final Point2D localPoint = getLayerPoint(new Point(x, y));
 
-	    // searching for the chosen nodes
-	    final Rectangle2D selectableRect = new Rectangle2D.Double(localPoint.getX(), localPoint.getY(), 0.1, 0.1);
-	    final ArrayList<PNode> intersectedNodes = new ArrayList<PNode>();
-	    DnDCanvas.this.getLayer().findIntersectingNodes(selectableRect, intersectedNodes);
+            // searching for the chosen nodes
+            final Rectangle2D selectableRect = new Rectangle2D.Double(localPoint.getX(), localPoint.getY(), 0.1, 0.1);
+            final ArrayList<PNode> intersectedNodes = new ArrayList<PNode>();
+            DnDCanvas.this.getLayer().findIntersectingNodes(selectableRect, intersectedNodes);
 
-	    // if there is selected node then create transferable and initiate dragging
-	    for (final PNode node : intersectedNodes) {
-		if (selectionHandler.isSelected(node)) {
-		    isDnD = true;
-		    isMoving = false;
-		    final Transferable transferable = new Transferable() {
+            // if there is selected node then create transferable and initiate dragging
+            for (final PNode node : intersectedNodes) {
+                if (selectionHandler.isSelected(node)) {
+                    isDnD = true;
+                    isMoving = false;
+                    final Transferable transferable = new Transferable() {
 
-			/**
-			 * {@inheritDoc}
-			 * 
-			 * @param flavor
-			 *            - preferred data type
-			 * @return the object that must be transfered
-			 * @throws UnsupportedFlavorException
-			 *             if the data flavor of the preferred object to transfer isn't supported by this Transferable Object then the UnsupportedFlavorException will
-			 *             be thrown
-			 * @throws IOException
-			 *             if the data isn't available any longer then the IOException will be thrown
-			 */
-			@Override
-			public Object getTransferData(final DataFlavor flavor) throws UnsupportedFlavorException, IOException {
-			    if (!isDataFlavorSupported(flavor)) {
-				throw new UnsupportedFlavorException(flavor);
-			    }
-			    final Object object4Transfer = getTransferObject(localPoint);
-			    final TransferredObject transferObject = new TransferredObject(object4Transfer, DnDCanvas.this);
-			    return transferObject;
-			}
+                        /**
+                         * {@inheritDoc}
+                         * 
+                         * @param flavor
+                         *            - preferred data type
+                         * @return the object that must be transfered
+                         * @throws UnsupportedFlavorException
+                         *             if the data flavor of the preferred object to transfer isn't supported by this Transferable Object then the UnsupportedFlavorException will
+                         *             be thrown
+                         * @throws IOException
+                         *             if the data isn't available any longer then the IOException will be thrown
+                         */
+                        @Override
+                        public Object getTransferData(final DataFlavor flavor) throws UnsupportedFlavorException, IOException {
+                            if (!isDataFlavorSupported(flavor)) {
+                                throw new UnsupportedFlavorException(flavor);
+                            }
+                            final Object object4Transfer = getTransferObject(localPoint);
+                            final TransferredObject transferObject = new TransferredObject(object4Transfer, DnDCanvas.this);
+                            return transferObject;
+                        }
 
-			/**
-			 * {@inheritDoc}
-			 * 
-			 * @return the supported data flavor by this Transferable instance
-			 */
-			@Override
-			public DataFlavor[] getTransferDataFlavors() {
-			    return new DataFlavor[] { DnDSupport2.TG_DATA_FLAVOR };
-			}
+                        /**
+                         * {@inheritDoc}
+                         * 
+                         * @return the supported data flavor by this Transferable instance
+                         */
+                        @Override
+                        public DataFlavor[] getTransferDataFlavors() {
+                            return new DataFlavor[] { DnDSupport2.TG_DATA_FLAVOR };
+                        }
 
-			/**
-			 * {@inheritDoc}
-			 * 
-			 * indicates whether the given data flavor is supported by this Transferable instance or not
-			 * 
-			 * @param flavor
-			 *            - given data flavor to test the compatibility
-			 * @return - true if the given data flavor is supported else it returns false
-			 */
-			@Override
-			public boolean isDataFlavorSupported(final DataFlavor flavor) {
-			    if (flavor.equals(DnDSupport2.TG_DATA_FLAVOR)) {
-				return true;
-			    } else {
-				return false;
-			    }
-			}
+                        /**
+                         * {@inheritDoc}
+                         * 
+                         * indicates whether the given data flavor is supported by this Transferable instance or not
+                         * 
+                         * @param flavor
+                         *            - given data flavor to test the compatibility
+                         * @return - true if the given data flavor is supported else it returns false
+                         */
+                        @Override
+                        public boolean isDataFlavorSupported(final DataFlavor flavor) {
+                            if (flavor.equals(DnDSupport2.TG_DATA_FLAVOR)) {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
 
-		    };
-		    dge.startDrag(null, transferable, this);
-		}
+                    };
+                    dge.startDrag(null, transferable, this);
+                }
 
-	    }
+            }
 
-	}
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void dragDropEnd(final DragSourceDropEvent dsde) {
-	    final DragSourceContext dsc = dsde.getDragSourceContext();
-	    TransferredObject transferObject = null;
-	    try {
-		transferObject = (TransferredObject) dsc.getTransferable().getTransferData(DnDSupport2.TG_DATA_FLAVOR);
-	    } catch (final UnsupportedFlavorException e) {
-		e.printStackTrace();
-	    } catch (final IOException e) {
-		e.printStackTrace();
-	    }
-	    if ((dsde.getDropSuccess()) && (transferObject != null)) {
-		dropDone(transferObject.getDraggedTo(), transferObject.getObject(), dsde.getDropAction());
-	    } else {
-		dropDone(transferObject.getDraggedTo(), transferObject.getObject(), DnDConstants.ACTION_NONE);
-	    }
-	}
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void dragDropEnd(final DragSourceDropEvent dsde) {
+            final DragSourceContext dsc = dsde.getDragSourceContext();
+            TransferredObject transferObject = null;
+            try {
+                transferObject = (TransferredObject) dsc.getTransferable().getTransferData(DnDSupport2.TG_DATA_FLAVOR);
+            } catch (final UnsupportedFlavorException e) {
+                e.printStackTrace();
+            } catch (final IOException e) {
+                e.printStackTrace();
+            }
+            if ((dsde.getDropSuccess()) && (transferObject != null)) {
+                dropDone(transferObject.getDraggedTo(), transferObject.getObject(), dsde.getDropAction());
+            } else {
+                dropDone(transferObject.getDraggedTo(), transferObject.getObject(), DnDConstants.ACTION_NONE);
+            }
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void dragEnter(final DragSourceDragEvent dsde) {
-	}
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void dragEnter(final DragSourceDragEvent dsde) {
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void dragExit(final DragSourceEvent dse) {
-	}
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void dragExit(final DragSourceEvent dse) {
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void dragOver(final DragSourceDragEvent dsde) {
-	}
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void dragOver(final DragSourceDragEvent dsde) {
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void dropActionChanged(final DragSourceDragEvent dsde) {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void dropActionChanged(final DragSourceDragEvent dsde) {
 
-	}
+        }
 
     }
 
@@ -440,166 +440,166 @@ public class DnDCanvas extends PSwingCanvas {
      */
     private class DropTargetHandler implements DropTargetListener {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void dragEnter(final DropTargetDragEvent dtde) {
-	    try {
-		final TransferredObject transferObject = (TransferredObject) dtde.getTransferable().getTransferData(DnDSupport2.TG_DATA_FLAVOR);
-		transferObject.setDraggedTo(DnDCanvas.this);
-		initDrag(getLayerPoint(dtde.getLocation()), transferObject.getObject());
-	    } catch (final UnsupportedFlavorException e) {
-		e.printStackTrace();
-		dtde.rejectDrag();
-		return;
-	    } catch (final IOException e) {
-		e.printStackTrace();
-		dtde.rejectDrag();
-		return;
-	    }
-	    if (isDragOk(dtde)) {
-		dtde.acceptDrag(dtde.getDropAction());
-	    } else {
-		dtde.rejectDrag();
-	    }
-	    lastPosition = dtde.getLocation();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void dragEnter(final DropTargetDragEvent dtde) {
+            try {
+                final TransferredObject transferObject = (TransferredObject) dtde.getTransferable().getTransferData(DnDSupport2.TG_DATA_FLAVOR);
+                transferObject.setDraggedTo(DnDCanvas.this);
+                initDrag(getLayerPoint(dtde.getLocation()), transferObject.getObject());
+            } catch (final UnsupportedFlavorException e) {
+                e.printStackTrace();
+                dtde.rejectDrag();
+                return;
+            } catch (final IOException e) {
+                e.printStackTrace();
+                dtde.rejectDrag();
+                return;
+            }
+            if (isDragOk(dtde)) {
+                dtde.acceptDrag(dtde.getDropAction());
+            } else {
+                dtde.rejectDrag();
+            }
+            lastPosition = dtde.getLocation();
 
-	}
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void dragExit(final DropTargetEvent dte) {
-	    if (timer.isRunning()) {
-		timer.stop();
-	    }
-	    lastPosition = null;
-	    cleanUpDrag(dte, false);
-	}
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void dragExit(final DropTargetEvent dte) {
+            if (timer.isRunning()) {
+                timer.stop();
+            }
+            lastPosition = null;
+            cleanUpDrag(dte, false);
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void dragOver(final DropTargetDragEvent dtde) {
-	    if (isDragOk(dtde)) {
-		dtde.acceptDrag(dtde.getDropAction());
-	    } else {
-		dtde.rejectDrag();
-	    }
-	    updateDrag(getLayerPoint(dtde.getLocation()));
-	    if (autoscrollEnable) {
-		updateAutoscroll(dtde.getLocation());
-	    }
-	    lastPosition = dtde.getLocation();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void dragOver(final DropTargetDragEvent dtde) {
+            if (isDragOk(dtde)) {
+                dtde.acceptDrag(dtde.getDropAction());
+            } else {
+                dtde.rejectDrag();
+            }
+            updateDrag(getLayerPoint(dtde.getLocation()));
+            if (autoscrollEnable) {
+                updateAutoscroll(dtde.getLocation());
+            }
+            lastPosition = dtde.getLocation();
 
-	}
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void drop(final DropTargetDropEvent dtde) {
-	    if (timer.isRunning()) {
-		timer.stop();
-	    }
-	    lastPosition = null;
-	    if (!dtde.isDataFlavorSupported(DnDSupport2.TG_DATA_FLAVOR)) {
-		dtde.rejectDrop();
-		cleanUpDrag(dtde, false);
-		return;
-	    }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void drop(final DropTargetDropEvent dtde) {
+            if (timer.isRunning()) {
+                timer.stop();
+            }
+            lastPosition = null;
+            if (!dtde.isDataFlavorSupported(DnDSupport2.TG_DATA_FLAVOR)) {
+                dtde.rejectDrop();
+                cleanUpDrag(dtde, false);
+                return;
+            }
 
-	    // the actions specified when the source
-	    // created the DragGestureRecognizer
-	    final int sa = dtde.getSourceActions();
+            // the actions specified when the source
+            // created the DragGestureRecognizer
+            final int sa = dtde.getSourceActions();
 
-	    // we're saying that these actions are necessary
-	    if ((sa & getAccepetableDropAction()) == 0) {
-		dtde.rejectDrop();
-		cleanUpDrag(dtde, false);
-		return;
-	    }
-	    TransferredObject transferredObject = null;
-	    boolean success;
-	    try {
+            // we're saying that these actions are necessary
+            if ((sa & getAccepetableDropAction()) == 0) {
+                dtde.rejectDrop();
+                cleanUpDrag(dtde, false);
+                return;
+            }
+            TransferredObject transferredObject = null;
+            boolean success;
+            try {
 
-		transferredObject = (TransferredObject) dtde.getTransferable().getTransferData(DnDSupport2.TG_DATA_FLAVOR);
-		if (transferredObject != null) {
-		    if (isOkToDrop(transferredObject.getObject(), getLayerPoint(dtde.getLocation()))) {
-			success = importTranserred(transferredObject.getObject(), getLayerPoint(dtde.getLocation()));
-			dtde.acceptDrop(dtde.getDropAction());
-			cleanUpDrag(dtde, true);
-		    } else {
-			dtde.rejectDrop();
-			cleanUpDrag(dtde, false);
-			return;
-		    }
-		} else {
-		    dtde.rejectDrop();
-		    cleanUpDrag(dtde, false);
-		    return;
-		}
-	    } catch (final UnsupportedFlavorException e1) {
-		e1.printStackTrace();
-		cleanUpDrag(dtde, false);
-		success = false;
+                transferredObject = (TransferredObject) dtde.getTransferable().getTransferData(DnDSupport2.TG_DATA_FLAVOR);
+                if (transferredObject != null) {
+                    if (isOkToDrop(transferredObject.getObject(), getLayerPoint(dtde.getLocation()))) {
+                        success = importTranserred(transferredObject.getObject(), getLayerPoint(dtde.getLocation()));
+                        dtde.acceptDrop(dtde.getDropAction());
+                        cleanUpDrag(dtde, true);
+                    } else {
+                        dtde.rejectDrop();
+                        cleanUpDrag(dtde, false);
+                        return;
+                    }
+                } else {
+                    dtde.rejectDrop();
+                    cleanUpDrag(dtde, false);
+                    return;
+                }
+            } catch (final UnsupportedFlavorException e1) {
+                e1.printStackTrace();
+                cleanUpDrag(dtde, false);
+                success = false;
 
-	    } catch (final IOException e1) {
-		e1.printStackTrace();
-		cleanUpDrag(dtde, false);
-		success = false;
-	    }
-	    dtde.dropComplete(success);
-	}
+            } catch (final IOException e1) {
+                e1.printStackTrace();
+                cleanUpDrag(dtde, false);
+                success = false;
+            }
+            dtde.dropComplete(success);
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void dropActionChanged(final DropTargetDragEvent dtde) {
-	    if (isDragOk(dtde)) {
-		dtde.acceptDrag(dtde.getDropAction());
-	    } else {
-		dtde.rejectDrag();
-	    }
-	}
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void dropActionChanged(final DropTargetDragEvent dtde) {
+            if (isDragOk(dtde)) {
+                dtde.acceptDrag(dtde.getDropAction());
+            } else {
+                dtde.rejectDrag();
+            }
+        }
     }
 
     private class TimerHandler implements ActionListener {
 
-	@Override
-	public void actionPerformed(final ActionEvent e) {
-	    if (autoscrollEnable) {
-		scroll();
-	    }
-	}
+        @Override
+        public void actionPerformed(final ActionEvent e) {
+            if (autoscrollEnable) {
+                scroll();
+            }
+        }
 
-	private void scroll() {
-	    final Point2D pos = new Point2D.Double(lastPosition.getX(), lastPosition.getY());
-	    final Dimension canvasBounds = getSize();
-	    final Point2D delta = new Point2D.Double();
-	    double incrementX = 0, incrementY = 0;
-	    if (pos.getX() < getMaxDist()) {
-		incrementX = -1 * getScrollincrementX(getMaxDist() - pos.getX());
-	    } else if (canvasBounds.getWidth() - pos.getX() < getMaxDist()) {
-		incrementX = getScrollincrementX(getMaxDist() - (canvasBounds.getWidth() - pos.getX()));
-	    }
-	    if (pos.getY() < getMaxDist()) {
-		incrementY = -1 * getScrollincrementY(getMaxDist() - pos.getY());
-	    } else if (canvasBounds.getHeight() - pos.getY() < getMaxDist()) {
-		incrementY = getScrollincrementY(getMaxDist() - (canvasBounds.getHeight() - pos.getY()));
-	    }
-	    delta.setLocation(incrementX, incrementY);
-	    getCamera().translateView(-1 * incrementX, -1 * incrementY);
-	    if (isMoving) {
-		dragEventHandler.updateDragPosition(delta);
-	    } else {
-		updateCanvas(delta);
-	    }
-	}
+        private void scroll() {
+            final Point2D pos = new Point2D.Double(lastPosition.getX(), lastPosition.getY());
+            final Dimension canvasBounds = getSize();
+            final Point2D delta = new Point2D.Double();
+            double incrementX = 0, incrementY = 0;
+            if (pos.getX() < getMaxDist()) {
+                incrementX = -1 * getScrollincrementX(getMaxDist() - pos.getX());
+            } else if (canvasBounds.getWidth() - pos.getX() < getMaxDist()) {
+                incrementX = getScrollincrementX(getMaxDist() - (canvasBounds.getWidth() - pos.getX()));
+            }
+            if (pos.getY() < getMaxDist()) {
+                incrementY = -1 * getScrollincrementY(getMaxDist() - pos.getY());
+            } else if (canvasBounds.getHeight() - pos.getY() < getMaxDist()) {
+                incrementY = getScrollincrementY(getMaxDist() - (canvasBounds.getHeight() - pos.getY()));
+            }
+            delta.setLocation(incrementX, incrementY);
+            getCamera().translateView(-1 * incrementX, -1 * incrementY);
+            if (isMoving) {
+                dragEventHandler.updateDragPosition(delta);
+            } else {
+                updateCanvas(delta);
+            }
+        }
     }
 
     /**
@@ -610,85 +610,85 @@ public class DnDCanvas extends PSwingCanvas {
      */
     private class ExtendedMultipleDrag extends MultipleDragEventHandler {
 
-	public ExtendedMultipleDrag(final PCanvas canvas, final ForcedDehighlighter forcedDehighlighter, final SelectionHolder selectionHolder) {
-	    super(canvas, forcedDehighlighter, selectionHolder);
-	}
+        public ExtendedMultipleDrag(final PCanvas canvas, final ForcedDehighlighter forcedDehighlighter, final SelectionHolder selectionHolder) {
+            super(canvas, forcedDehighlighter, selectionHolder);
+        }
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @param pie
-	 *            - generated inputEvent
-	 */
-	@Override
-	protected void startDrag(final PInputEvent pie) {
-	    if (isDnDStarted(pie.getSourceSwingEvent())) {
-		return;
-	    }
-	    super.startDrag(pie);
-	    isMoving = true;
-	    lastPosition = pie.getCanvasPosition();
-	}
+        /**
+         * {@inheritDoc}
+         * 
+         * @param pie
+         *            - generated inputEvent
+         */
+        @Override
+        protected void startDrag(final PInputEvent pie) {
+            if (isDnDStarted(pie.getSourceSwingEvent())) {
+                return;
+            }
+            super.startDrag(pie);
+            isMoving = true;
+            lastPosition = pie.getCanvasPosition();
+        }
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @param e
-	 *            -generated inputEvent
-	 */
-	@Override
-	protected void drag(final PInputEvent e) {
-	    if (isDnD) {
-		return;
-	    }
-	    super.drag(e);
-	    lastPosition = e.getCanvasPosition();
-	    if (autoscrollEnable) {
-		updateAutoscroll(e.getCanvasPosition());
-	    }
-	}
+        /**
+         * {@inheritDoc}
+         * 
+         * @param e
+         *            -generated inputEvent
+         */
+        @Override
+        protected void drag(final PInputEvent e) {
+            if (isDnD) {
+                return;
+            }
+            super.drag(e);
+            lastPosition = e.getCanvasPosition();
+            if (autoscrollEnable) {
+                updateAutoscroll(e.getCanvasPosition());
+            }
+        }
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @param e
-	 *            - generated inputEvent
-	 */
-	@Override
-	protected void endDrag(final PInputEvent e) {
-	    super.endDrag(e);
-	    if (timer.isRunning()) {
-		timer.stop();
-	    }
-	    lastPosition = null;
-	    isMoving = false;
-	}
+        /**
+         * {@inheritDoc}
+         * 
+         * @param e
+         *            - generated inputEvent
+         */
+        @Override
+        protected void endDrag(final PInputEvent e) {
+            super.endDrag(e);
+            if (timer.isRunning()) {
+                timer.stop();
+            }
+            lastPosition = null;
+            isMoving = false;
+        }
 
-	/**
-	 * used only to update position of the dragged nodes when scroll was performed for the canvas
-	 * 
-	 * @param offset
-	 *            - the offset of the view transform
-	 */
-	public void updateDragPosition(final Point2D offset) {
-	    for (final PNode draggedNode : draggedNodes) {
-		draggedNode.offset(offset.getX(), offset.getY());
-	    }
-	}
+        /**
+         * used only to update position of the dragged nodes when scroll was performed for the canvas
+         * 
+         * @param offset
+         *            - the offset of the view transform
+         */
+        public void updateDragPosition(final Point2D offset) {
+            for (final PNode draggedNode : draggedNodes) {
+                draggedNode.offset(offset.getX(), offset.getY());
+            }
+        }
     }
 
     private void updateAutoscroll(final Point2D cursorPosition) {
-	final Dimension canvasBounds = getSize();
-	if ((cursorPosition.getX() < getMaxDist()) || (cursorPosition.getY() < getMaxDist()) || (canvasBounds.getWidth() - cursorPosition.getX() < getMaxDist())
-		|| (canvasBounds.getHeight() - cursorPosition.getY() < getMaxDist())) {
-	    if (!timer.isRunning()) {
-		timer.start();
-	    }
-	} else {
-	    if (timer.isRunning()) {
-		timer.stop();
-	    }
-	}
+        final Dimension canvasBounds = getSize();
+        if ((cursorPosition.getX() < getMaxDist()) || (cursorPosition.getY() < getMaxDist()) || (canvasBounds.getWidth() - cursorPosition.getX() < getMaxDist())
+                || (canvasBounds.getHeight() - cursorPosition.getY() < getMaxDist())) {
+            if (!timer.isRunning()) {
+                timer.start();
+            }
+        } else {
+            if (timer.isRunning()) {
+                timer.stop();
+            }
+        }
     }
 
     /**
@@ -701,7 +701,7 @@ public class DnDCanvas extends PSwingCanvas {
      * @return return the value that indicates whether the data can be dropped or not
      */
     protected boolean isOkToDrop(final Object object, final Point2D location) {
-	return true;
+        return true;
     }
 
     /**
@@ -714,7 +714,7 @@ public class DnDCanvas extends PSwingCanvas {
      * @return the value that indicates whether the data import was successful or not
      */
     protected boolean importTranserred(final Object object, final Point2D location) {
-	return false;
+        return false;
     }
 
     /**
@@ -739,7 +739,7 @@ public class DnDCanvas extends PSwingCanvas {
      * @return the value that indicates whether the drag event is recognized or not
      */
     protected boolean isDnDStarted(final InputEvent dge) {
-	return false;
+        return false;
     }
 
     /**
@@ -781,7 +781,7 @@ public class DnDCanvas extends PSwingCanvas {
      * @return the acceptable drop action for this canvas
      */
     protected int getAccepetableDropAction() {
-	return DnDConstants.ACTION_COPY_OR_MOVE;
+        return DnDConstants.ACTION_COPY_OR_MOVE;
     }
 
     /**
@@ -801,7 +801,7 @@ public class DnDCanvas extends PSwingCanvas {
      * @return the increment value that is used while scrolling the camera view
      */
     protected double getScrollincrementX(final double diff) {
-	return diff + 5;
+        return diff + 5;
     }
 
     /**
@@ -812,7 +812,7 @@ public class DnDCanvas extends PSwingCanvas {
      * @return the increment value that is used while scrolling the camera view
      */
     protected double getScrollincrementY(final double diff) {
-	return diff + 5;
+        return diff + 5;
     }
 
     /**
@@ -832,14 +832,14 @@ public class DnDCanvas extends PSwingCanvas {
      *            - specified MultipleDragEventHandler instance
      */
     private void setDragEventHandler(final ExtendedMultipleDrag dragEventHandler) {
-	this.dragEventHandler = dragEventHandler;
+        this.dragEventHandler = dragEventHandler;
     }
 
     /**
      * @return the MultipleDragEventHandler instance associated with this canvas
      */
     public MultipleDragEventHandler getDragEventHandler() {
-	return dragEventHandler;
+        return dragEventHandler;
     }
 
     /**
@@ -847,14 +847,14 @@ public class DnDCanvas extends PSwingCanvas {
      *            the distance of the mouse cursor to the border of the component where the autoscroll process activates
      */
     public void setMaxDist(final int maxDist) {
-	this.maxDist = maxDist;
+        this.maxDist = maxDist;
     }
 
     /**
      * @return the maxDist - the distance of the mouse cursor to the border of the component where the autoscroll process activates
      */
     public int getMaxDist() {
-	return maxDist;
+        return maxDist;
     }
 
 }

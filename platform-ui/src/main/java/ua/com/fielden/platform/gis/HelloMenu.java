@@ -12,11 +12,12 @@ import javafx.stage.Stage;
 
 public class HelloMenu extends Application {
 
-    @Override public void start(final Stage stage) {
+    @Override
+    public void start(final Stage stage) {
         // load the image
         //final Image image = new Image("file:marker.png");
-	final Image image = new Image("/image.jpg", true);
-	System.out.println(image.isError());
+        final Image image = new Image("/image.jpg", true);
+        System.out.println(image.isError());
 
         // simple displays ImageView the image as is
         final ImageView iv1 = new ImageView();
@@ -52,9 +53,9 @@ public class HelloMenu extends Application {
         stage.setTitle("ImageView");
         stage.setWidth(415);
         stage.setHeight(200);
-        stage.setScene(scene); 
-        stage.sizeToScene(); 
-        stage.show(); 
+        stage.setScene(scene);
+        stage.sizeToScene();
+        stage.show();
     }
 
     public static void main(final String[] args) {

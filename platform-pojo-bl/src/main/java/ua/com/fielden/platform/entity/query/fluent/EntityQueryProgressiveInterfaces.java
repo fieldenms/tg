@@ -12,9 +12,9 @@ import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
 /**
  * Class for collecting all interfaces, which are part of Entity Query Progressive Interfaces.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface EntityQueryProgressiveInterfaces {
 
@@ -51,14 +51,14 @@ public interface EntityQueryProgressiveInterfaces {
     interface IBeginCondition<T> {
         /**
          * Starts new group of conditions (opens new parenthesis).
-         *
+         * 
          * @return
          */
         T begin();
 
         /**
          * Starts new negated group of conditions (opens new parenthesis with NOT preceding it).
-         *
+         * 
          * @return
          */
         T notBegin();
@@ -67,7 +67,7 @@ public interface EntityQueryProgressiveInterfaces {
     interface IEndCondition<T> {
         /**
          * Closes parenthesis of the nearest condition group.
-         *
+         * 
          * @return
          */
         T end();
@@ -81,46 +81,79 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface ISingleOperand<T, ET extends AbstractEntity<?>> {
         T prop(String propertyName);
+
         T extProp(String propertyName);
+
         T val(Object value);
+
         T iVal(Object value);
+
         T param(String paramName);
+
         T iParam(String paramName);
+
         T model(SingleResultQueryModel<?> model);
+
         T expr(ExpressionModel Expr);
 
         // built-in SQL functions
         T now();
+
         IDateDiffIntervalFunction<T, ET> count();
+
         IFunctionLastArgument<T, ET> upperCase();
+
         IFunctionLastArgument<T, ET> lowerCase();
+
         IFunctionLastArgument<T, ET> secondOf();
+
         IFunctionLastArgument<T, ET> minuteOf();
+
         IFunctionLastArgument<T, ET> hourOf();
+
         IFunctionLastArgument<T, ET> dayOf();
+
         IFunctionLastArgument<T, ET> monthOf();
+
         IFunctionLastArgument<T, ET> yearOf();
+
         IIfNullFunctionArgument<T, ET> ifNull();
+
         IFunctionWhere0<T, ET> caseWhen();
+
         IRoundFunctionArgument<T, ET> round();
+
         IConcatFunctionArgument<T, ET> concat();
+
         IFunctionLastArgument<T, ET> absOf();
+
         IFunctionLastArgument<T, ET> dateOf();
     }
 
     interface IMultipleOperand<T, ET extends AbstractEntity<?>> //
     extends ISingleOperand<T, ET> {
         T anyOfProps(String... propertyNames);
+
         T anyOfValues(Object... values);
+
         T anyOfParams(String... paramNames);
+
         T anyOfIParams(String... paramNames);
+
         T anyOfModels(PrimitiveResultQueryModel... models);
+
         T anyOfExpressions(ExpressionModel... Expressions);
+
         T allOfProps(String... propertyNames);
+
         T allOfValues(Object... values);
+
         T allOfParams(String... paramNames);
+
         T allOfIParams(String... paramNames);
+
         T allOfModels(PrimitiveResultQueryModel... models);
+
         T allOfExpressions(ExpressionModel... expressions);
     }
 
@@ -129,23 +162,24 @@ public interface EntityQueryProgressiveInterfaces {
     /*    */IBeginExpression<IExprOperand0<T, ET>> /*another entry point*/{
     }
 
-    interface IExistenceOperator<T extends ILogicalOperator<?>>  {
+    interface IExistenceOperator<T extends ILogicalOperator<?>> {
         T exists(QueryModel subQuery);
 
         T notExists(QueryModel subQuery);
 
-        T existsAnyOf(QueryModel ... subQueries);
+        T existsAnyOf(QueryModel... subQueries);
 
-        T notExistsAnyOf(QueryModel ... subQueries);
+        T notExistsAnyOf(QueryModel... subQueries);
 
-        T existsAllOf(QueryModel ... subQueries);
+        T existsAllOf(QueryModel... subQueries);
 
-        T notExistsAllOf(QueryModel ... subQueries);
+        T notExistsAllOf(QueryModel... subQueries);
     }
 
     interface IQuantifiedOperand<T, ET extends AbstractEntity<?>> //
     extends IMultipleOperand<T, ET> {
         T all(SingleResultQueryModel subQuery);
+
         T any(SingleResultQueryModel subQuery);
     }
 
@@ -156,9 +190,13 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IComparisonSetOperand<T> {
         <E extends Object> T values(E... values);
+
         T props(String... properties);
+
         T params(String... paramNames);
+
         T iParams(String... paramNames);
+
         T model(SingleResultQueryModel model);
         // beginSet();
     }
@@ -166,32 +204,46 @@ public interface EntityQueryProgressiveInterfaces {
     interface IYieldOperand<T, ET extends AbstractEntity<?>> //
     extends ISingleOperand<T, ET> {
         IFunctionLastArgument<T, ET> maxOf();
+
         IFunctionLastArgument<T, ET> minOf();
+
         IFunctionLastArgument<T, ET> sumOf();
+
         IFunctionLastArgument<T, ET> countOf();
+
         IFunctionLastArgument<T, ET> avgOf();
+
         T countAll();
+
         IFunctionLastArgument<T, ET> sumOfDistinct();
+
         IFunctionLastArgument<T, ET> countOfDistinct();
+
         IFunctionLastArgument<T, ET> avgOfDistinct();
     }
 
     interface IDateDiffFunction<T, ET extends AbstractEntity<?>> {
-	/** Indicates difference between more recent date and earlier date.
-	 * @return
-	 */
-	IDateDiffFunctionArgument<T, ET> between();
+        /**
+         * Indicates difference between more recent date and earlier date.
+         * 
+         * @return
+         */
+        IDateDiffFunctionArgument<T, ET> between();
     }
 
     interface IDateDiffIntervalFunction<T, ET extends AbstractEntity<?>> {
-	IDateDiffFunction<T, ET> seconds();
-	IDateDiffFunction<T, ET> minutes();
-	IDateDiffFunction<T, ET> hours();
-	IDateDiffFunction<T, ET> days();
-	IDateDiffFunction<T, ET> months();
-	IDateDiffFunction<T, ET> years();
-    }
+        IDateDiffFunction<T, ET> seconds();
 
+        IDateDiffFunction<T, ET> minutes();
+
+        IDateDiffFunction<T, ET> hours();
+
+        IDateDiffFunction<T, ET> days();
+
+        IDateDiffFunction<T, ET> months();
+
+        IDateDiffFunction<T, ET> years();
+    }
 
     interface ICaseWhenFunction<T, ET extends AbstractEntity<?>> {
         ICaseWhenFunctionArgument<T, ET> then();
@@ -203,15 +255,19 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface ICaseWhenFunctionEnd<T> {
         T end();
+
         T endAsInt();
+
         T endAsBool();
+
         T endAsStr(int length);
+
         T endAsDecimal(int scale, int presicion);
     }
 
     interface ICaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> //
     extends ICaseWhenFunctionEnd<T> {
-        ICaseWhenFunctionLastArgument<T, ET>  otherwise();
+        ICaseWhenFunctionLastArgument<T, ET> otherwise();
     }
 
     interface ICaseWhenFunctionWhen<T, ET extends AbstractEntity<?>> //
@@ -224,8 +280,9 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     interface IConcatFunctionWith<T, ET extends AbstractEntity<?>> {
-	IConcatFunctionArgument<T, ET> with();
-	T end();
+        IConcatFunctionArgument<T, ET> with();
+
+        T end();
     }
 
     interface IRoundFunctionTo<T> {
@@ -234,21 +291,29 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IFirstYieldedItemAlias<T> {
         T as(String alias);
+
         T asRequired(String alias);
+
         <E extends AbstractEntity<?>> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
+
         PrimitiveResultQueryModel modelAsPrimitive();
     }
 
-    interface ISubsequentYieldedItemAlias<T> /*extends ICompletedAndYielded*/ {
+    interface ISubsequentYieldedItemAlias<T> /*extends ICompletedAndYielded*/{
         T as(String alias);
+
         T asRequired(String alias);
     }
 
     interface IArithmeticalOperator<T> {
         T add();
+
         T sub();
+
         T mult();
+
         T div();
+
         T mod();
     }
 
@@ -279,12 +344,12 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IJoinAlias<ET extends AbstractEntity<?>> //
     extends IJoinCondition<ET> {
-	IJoinCondition<ET> as(String alias);
+        IJoinCondition<ET> as(String alias);
     }
 
     interface IFromAlias<ET extends AbstractEntity<?>> //
     extends IJoin<ET> {
-	IJoin<ET> as(String alias);
+        IJoin<ET> as(String alias);
     }
 
     public interface IPlainJoin<ET extends AbstractEntity<?>> //
@@ -304,27 +369,29 @@ public interface EntityQueryProgressiveInterfaces {
     public interface ICompletedAndYielded<ET extends AbstractEntity<?>> //
     extends ICompletedCommon<ET> {
         IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield();
+
         //////////////////// RETURN /////////////////////////
         EntityResultQueryModel<ET> model();
     }
 
     public interface ISubsequentCompletedAndYielded<ET extends AbstractEntity<?>> //
-    extends ICompletedCommon<ET>{
+    extends ICompletedCommon<ET> {
         IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield();
     }
 
     public interface ICompletedCommon<ET extends AbstractEntity<?>> {
         //////////////////// RETURN /////////////////////////
         <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(Class<T> resultType);
+
         AggregatedResultQueryModel modelAsAggregate();
     }
 
-//    interface IWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, T3, ET extends AbstractEntity<?>> //
-//    extends IComparisonOperand<T1, ET>, //
-//    /*    */IExistenceOperator<T2>, //
-//    /*    */IBeginCondition<T3> {
-//        T2 condition(ConditionModel condition);
-//    }
+    //    interface IWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, T3, ET extends AbstractEntity<?>> //
+    //    extends IComparisonOperand<T1, ET>, //
+    //    /*    */IExistenceOperator<T2>, //
+    //    /*    */IBeginCondition<T3> {
+    //        T2 condition(ConditionModel condition);
+    //    }
     interface IWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, T3, ET extends AbstractEntity<?>> //
     extends IWhereWithoutNesting<T1, T2, ET>, //
     /*    */IBeginCondition<T3> {
@@ -334,6 +401,7 @@ public interface EntityQueryProgressiveInterfaces {
     extends IComparisonOperand<T1, ET>, //
     /*    */IExistenceOperator<T2> {
         T2 condition(ConditionModel condition);
+
         T2 negatedCondition(ConditionModel condition);
     }
 
@@ -585,7 +653,7 @@ public interface EntityQueryProgressiveInterfaces {
 
     /////////////////////////////////////////////////////---OTHERS ---///////////////////////////////////////////////////
     interface IDateDiffFunctionArgument<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET>{
+    extends IExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET> {
     }
 
     interface ICaseWhenFunctionArgument<T, ET extends AbstractEntity<?>> //
@@ -619,7 +687,7 @@ public interface EntityQueryProgressiveInterfaces {
     /////////////////////////////////////////////////////---STAND-ALONE EXPRESSION ---///////////////////////////////////////////////////
     interface IStandAloneExprOperationAndClose //
     extends IArithmeticalOperator<IStandAloneExprOperand> {
-	ExpressionModel model();
+        ExpressionModel model();
     }
 
     interface IStandAloneExprOperand //
@@ -628,12 +696,12 @@ public interface EntityQueryProgressiveInterfaces {
 
     /////////////////////////////////////////////////////---STAND-ALONE CONDITION ---///////////////////////////////////////////////////
     interface IStandAloneConditionOperand<ET extends AbstractEntity<?>> //
-    extends IWhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET>{
+    extends IWhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET> {
     }
 
     interface IStandAloneConditionCompoundCondition<ET extends AbstractEntity<?>> //
     extends ILogicalOperator<IStandAloneConditionOperand<ET>> {
-	ConditionModel model();
+        ConditionModel model();
     }
 
     interface IStandAloneConditionComparisonOperator<ET extends AbstractEntity<?>> //
@@ -643,6 +711,7 @@ public interface EntityQueryProgressiveInterfaces {
     /////////////////////////////////////////////////////---ORDER BY ---///////////////////////////////////////////////////
     interface IOrder<T> {
         T asc();
+
         T desc();
     }
 
@@ -652,11 +721,11 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IOrderingItemCloseable //
     extends IOrderingItem {
-	OrderingModel model();
+        OrderingModel model();
     }
 
     interface IOrderingItem //
     extends IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> {
-	ISingleOperandOrderable yield(String yieldAlias);
+        ISingleOperandOrderable yield(String yieldAlias);
     }
 }

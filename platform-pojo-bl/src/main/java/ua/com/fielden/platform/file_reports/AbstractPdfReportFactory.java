@@ -27,81 +27,81 @@ public abstract class AbstractPdfReportFactory implements IReportFactory {
      */
     @Override
     public byte[] createReport(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final IEntityAggregatesDao aggregatesDao, final Map<String, Object> allParams)
-	    throws Exception {
+            throws Exception {
 
-	// obtaining necessary for report data
-	final List<EntityAggregates> reportData = aggregatesDao.getAllEntities(query);
+        // obtaining necessary for report data
+        final List<EntityAggregates> reportData = aggregatesDao.getAllEntities(query);
 
-	// compiling report template file
-	String reportTemplatePath = null;
-	try {
-	    reportTemplatePath = ResourceLoader.getURL(reportTemplatePath()).getFile();
-	} catch (final Exception e) {
-	    reportTemplatePath = reportTemplatePath();
-	}
+        // compiling report template file
+        String reportTemplatePath = null;
+        try {
+            reportTemplatePath = ResourceLoader.getURL(reportTemplatePath()).getFile();
+        } catch (final Exception e) {
+            reportTemplatePath = reportTemplatePath();
+        }
 
-	final JasperReport report = JasperCompileManager.compileReport(reportTemplatePath);
-	addPdfFontsToStyles(report.getStyles());
-	// filling report template with data
-	final JRRewindableDataSource jrs = new EntityAggregatesReportSource(reportData.toArray(new EntityAggregates[] {}), reportProps());
-	final JasperPrint print = JasperFillManager.fillReport(report, prepareReportParamsValues(allParams, report.getParameters()), jrs);
+        final JasperReport report = JasperCompileManager.compileReport(reportTemplatePath);
+        addPdfFontsToStyles(report.getStyles());
+        // filling report template with data
+        final JRRewindableDataSource jrs = new EntityAggregatesReportSource(reportData.toArray(new EntityAggregates[] {}), reportProps());
+        final JasperPrint print = JasperFillManager.fillReport(report, prepareReportParamsValues(allParams, report.getParameters()), jrs);
 
-	// exporting to PDF file as byte array
-	final JRPdfExporter exporter = new JRPdfExporter();
-	exporter.setParameter(JRExporterParameter.CHARACTER_ENCODING, "UTF-8");
+        // exporting to PDF file as byte array
+        final JRPdfExporter exporter = new JRPdfExporter();
+        exporter.setParameter(JRExporterParameter.CHARACTER_ENCODING, "UTF-8");
 
-	final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-	exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, outputStream);
-	exporter.exportReport();
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+        exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, outputStream);
+        exporter.exportReport();
 
-	return outputStream.toByteArray();
+        return outputStream.toByteArray();
     }
 
     private void addPdfFontsToStyles(final JRStyle[] styles) {
-	if (styles != null) {
-	    for (final JRStyle style : styles) {
-		if (style.getName().equals("reportStyle")) {
-		    style.setPdfFontName("fonts/times.ttf");
-		    style.setBlankWhenNull(true);
-		}
+        if (styles != null) {
+            for (final JRStyle style : styles) {
+                if (style.getName().equals("reportStyle")) {
+                    style.setPdfFontName("fonts/times.ttf");
+                    style.setBlankWhenNull(true);
+                }
 
-		if (style.getName().equals("reportBoldStyle")) {
-		    style.setPdfFontName("fonts/timesbd.ttf");
-		    style.setBlankWhenNull(true);
-		}
+                if (style.getName().equals("reportBoldStyle")) {
+                    style.setPdfFontName("fonts/timesbd.ttf");
+                    style.setBlankWhenNull(true);
+                }
 
-	    }
-	}
+            }
+        }
     }
 
     /**
      * Extracts values for report parameters from all (report & query) parameters values map.
-     *
+     * 
      * @param allParams
      * @param reportParams
      * @return
      */
     private Map<String, Object> prepareReportParamsValues(final Map<String, Object> allParams, final JRParameter[] reportParams) {
-	final Map<String, Object> result = new HashMap<String, Object>();
-	for (final JRParameter jrParameter : reportParams) {
-	    if (allParams.containsKey(jrParameter.getName())) {
-		result.put(jrParameter.getName(), allParams.get(jrParameter.getName()));
-	    }
-	}
-	return result;
+        final Map<String, Object> result = new HashMap<String, Object>();
+        for (final JRParameter jrParameter : reportParams) {
+            if (allParams.containsKey(jrParameter.getName())) {
+                result.put(jrParameter.getName(), allParams.get(jrParameter.getName()));
+            }
+        }
+        return result;
     }
 
     /**
      * Should provide report template path.
-     *
+     * 
      * @return
      */
     protected abstract String reportTemplatePath();
 
     /**
      * Should provide report data source properties and their types.
-     *
+     * 
      * @return
      */
     protected abstract Map<String, Class> reportProps();

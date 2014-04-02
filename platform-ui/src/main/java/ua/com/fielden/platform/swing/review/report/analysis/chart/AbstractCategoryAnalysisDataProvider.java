@@ -11,12 +11,12 @@ public abstract class AbstractCategoryAnalysisDataProvider<CDT, ADT, LDT> implem
 
     @Override
     public void addAnalysisModelChangedListener(final AnalysisModelChangedListener l) {
-	this.listenerList.add(AnalysisModelChangedListener.class, l);
+        this.listenerList.add(AnalysisModelChangedListener.class, l);
     }
 
     @Override
     public void removeAnalysisModelChangedListener(final AnalysisModelChangedListener l) {
-	this.listenerList.remove(AnalysisModelChangedListener.class, l);
+        this.listenerList.remove(AnalysisModelChangedListener.class, l);
     }
 
     /**
@@ -25,9 +25,9 @@ public abstract class AbstractCategoryAnalysisDataProvider<CDT, ADT, LDT> implem
      * @param event
      */
     protected final void fireAnalysisModelChangeEvent(final AnalysisModelChangedEvent event) {
-	for(final AnalysisModelChangedListener listener : listenerList.getListeners(AnalysisModelChangedListener.class)){
-	    listener.cahrtModelChanged(event);
-	}
+        for (final AnalysisModelChangedListener listener : listenerList.getListeners(AnalysisModelChangedListener.class)) {
+            listener.cahrtModelChanged(event);
+        }
     }
 
 }

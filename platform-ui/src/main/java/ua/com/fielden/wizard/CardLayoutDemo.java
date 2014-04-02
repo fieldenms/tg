@@ -1,4 +1,5 @@
 package ua.com.fielden.wizard;
+
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Container;
@@ -47,14 +48,12 @@ public class CardLayoutDemo implements ItemListener {
 
     @Override
     public void itemStateChanged(final ItemEvent evt) {
-        final CardLayout cl = (CardLayout)(cards.getLayout());
-        cl.show(cards, (String)evt.getItem());
+        final CardLayout cl = (CardLayout) (cards.getLayout());
+        cl.show(cards, (String) evt.getItem());
     }
 
     /**
-     * Create the GUI and show it.  For thread safety,
-     * this method should be invoked from the
-     * event dispatch thread.
+     * Create the GUI and show it. For thread safety, this method should be invoked from the event dispatch thread.
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
@@ -91,7 +90,7 @@ public class CardLayoutDemo implements ItemListener {
         //creating and showing this application's GUI.
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             @Override
-	    public void run() {
+            public void run() {
                 createAndShowGUI();
             }
         });

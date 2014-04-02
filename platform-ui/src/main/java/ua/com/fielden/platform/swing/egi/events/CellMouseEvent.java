@@ -25,18 +25,18 @@ public class CellMouseEvent<T extends AbstractEntity> extends EventObject {
     private final MouseEvent initiatorEvent;
 
     public CellMouseEvent(final MouseEvent event, final T entity, final String propertyName) {
-	super(event.getSource());
-	this.entity = entity;
-	this.propertyName = propertyName;
-	this.initiatorEvent = event;
+        super(event.getSource());
+        this.entity = entity;
+        this.propertyName = propertyName;
+        this.initiatorEvent = event;
     }
 
     public T getEntity() {
-	return entity;
+        return entity;
     }
 
     public String getPropertyName() {
-	return propertyName;
+        return propertyName;
     }
 
     /**
@@ -45,7 +45,7 @@ public class CellMouseEvent<T extends AbstractEntity> extends EventObject {
      * @return
      */
     public MouseEvent getInitiatorEvent() {
-	return initiatorEvent;
+        return initiatorEvent;
     }
 
 }

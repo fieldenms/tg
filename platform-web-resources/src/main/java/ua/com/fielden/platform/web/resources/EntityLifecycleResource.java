@@ -17,10 +17,11 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 
 /**
- * Represents a web resource mapped to URI /lifecycle/entity-alias-type. It handles POST requests provided with {@link EntityResultQueryModel} and a "propertyName" with lifecycle "period" to provide the result of the query as lifecycle data.
+ * Represents a web resource mapped to URI /lifecycle/entity-alias-type. It handles POST requests provided with {@link EntityResultQueryModel} and a "propertyName" with lifecycle
+ * "period" to provide the result of the query as lifecycle data.
  * <p>
  * Each request is handled by a new resource instance, thus the only thread-safety requirement is to have provided DAO and entity factory thread-safe.
- *
+ * 
  * @author TG Team
  */
 public class EntityLifecycleResource<T extends AbstractEntity<?>> extends ServerResource {
@@ -30,18 +31,18 @@ public class EntityLifecycleResource<T extends AbstractEntity<?>> extends Server
 
     /**
      * The main resource constructor accepting a LifecycleDAO instance in addition to the standard {@link Resource} parameters.
-     *
+     * 
      * @param dao
      * @param context
      * @param request
      * @param response
      */
     public EntityLifecycleResource(final ILifecycleDao<T> lifecycleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	setNegotiated(false);
-	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
-	this.lifecycleDao = lifecycleDao;
-	this.restUtil = restUtil;
+        init(context, request, response);
+        setNegotiated(false);
+        getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
+        this.lifecycleDao = lifecycleDao;
+        this.restUtil = restUtil;
     }
 
     /**
@@ -50,18 +51,17 @@ public class EntityLifecycleResource<T extends AbstractEntity<?>> extends Server
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-	try {
-	    final LifecycleQueryContainer container = restUtil.restoreLifecycleQueryContainer(envelope);
+        try {
+            final LifecycleQueryContainer container = restUtil.restoreLifecycleQueryContainer(envelope);
 
-	    //getResponse().setEntity(restUtil.lifecycleRepresentation(lifecycleDao.getLifecycleInformation(container.getModel(), container.getBinaryTypes(), //
-	    //    container.getDistributionProperties(), container.getPropertyName(), container.getFrom(), container.getTo())));
-	    return restUtil.lifecycleRepresentation(lifecycleDao.getLifecycleInformation(container.getModel(), container.getBinaryTypes(), //
-		    container.getDistributionProperties(), container.getPropertyName(), container.getFrom(), container.getTo()));
-	} catch (final Exception ex) {
-	    ex.printStackTrace();
-	    //getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
-	    return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
-	}
+            //getResponse().setEntity(restUtil.lifecycleRepresentation(lifecycleDao.getLifecycleInformation(container.getModel(), container.getBinaryTypes(), //
+            //    container.getDistributionProperties(), container.getPropertyName(), container.getFrom(), container.getTo())));
+            return restUtil.lifecycleRepresentation(lifecycleDao.getLifecycleInformation(container.getModel(), container.getBinaryTypes(), //
+                    container.getDistributionProperties(), container.getPropertyName(), container.getFrom(), container.getTo()));
+        } catch (final Exception ex) {
+            ex.printStackTrace();
+            //getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
+            return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
+        }
     }
 }
-

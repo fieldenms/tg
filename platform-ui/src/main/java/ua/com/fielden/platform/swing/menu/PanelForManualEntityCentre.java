@@ -16,27 +16,27 @@ public class PanelForManualEntityCentre<T extends AbstractEntity<?>> extends Bas
 
     @SuppressWarnings("unchecked")
     public PanelForManualEntityCentre(final String caption, final String description, final ManualCentreConfigurationView<T> manualEntityCentre) {
-	super(caption, new DefaultUiModel(true));
-	this.description = description;
-	this.manualEntityCentre = manualEntityCentre;
-	getHoldingPanel().removeAll();
-	getHoldingPanel().setLayout(new MigLayout("fill, insets 0", "[fill, grow]", "[c, grow, fill]"));
-	add(manualEntityCentre.getProgressLayer());
-	getModel().setView(this);
+        super(caption, new DefaultUiModel(true));
+        this.description = description;
+        this.manualEntityCentre = manualEntityCentre;
+        getHoldingPanel().removeAll();
+        getHoldingPanel().setLayout(new MigLayout("fill, insets 0", "[fill, grow]", "[c, grow, fill]"));
+        add(manualEntityCentre.getProgressLayer());
+        getModel().setView(this);
     }
 
     @Override
     public void buildUi() {
-       manualEntityCentre.open();
+        manualEntityCentre.open();
     }
 
     @Override
     public String getInfo() {
-	return description;
+        return description;
     }
 
     public ManualCentreConfigurationView<T> getManualEntityCentre() {
-	return manualEntityCentre;
+        return manualEntityCentre;
     }
 
 }

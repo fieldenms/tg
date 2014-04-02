@@ -6,9 +6,9 @@ import java.util.Map;
 
 /**
  * Class for testing marshaling and unmarshaling of {@link AbstractEntity}s with property of this class (non-collection, non-AE-desccendant).
- *
+ * 
  * @author yura
- *
+ * 
  */
 public class ClassWithMap {
 
@@ -19,11 +19,11 @@ public class ClassWithMap {
     }
 
     public ClassWithMap(final Map<String, Integer> map) {
-	mapProp.putAll(map);
+        mapProp.putAll(map);
     }
 
     public Map<String, Integer> getMapProp() {
-	return Collections.unmodifiableMap(mapProp);
+        return Collections.unmodifiableMap(mapProp);
     }
 
 }

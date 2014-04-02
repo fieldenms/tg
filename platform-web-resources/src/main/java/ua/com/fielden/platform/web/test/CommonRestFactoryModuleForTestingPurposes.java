@@ -12,25 +12,25 @@ import com.google.inject.Scopes;
 
 /**
  * Module for REST test clients.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class CommonRestFactoryModuleForTestingPurposes extends CommonRestFactoryModule {
 
     private final ISerialisationClassProvider serialisationClassProvider;
 
     public CommonRestFactoryModuleForTestingPurposes(final RestClientUtil restUtil, final ISerialisationClassProvider serialisationClassProvider) {
-	super(restUtil);
-	this.serialisationClassProvider = serialisationClassProvider;
+        super(restUtil);
+        this.serialisationClassProvider = serialisationClassProvider;
     }
 
     @Override
     protected void configure() {
-	super.configure();
+        super.configure();
 
-	bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
-	bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
-	bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
+        bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
+        bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
+        bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
     }
 }

@@ -5,9 +5,9 @@ import ua.com.fielden.platform.migration.MigrationHistory;
 
 /**
  * DAO contract for {@link MigrationHistory}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IMigrationHistoryDao extends IEntityDao<MigrationHistory> {
 

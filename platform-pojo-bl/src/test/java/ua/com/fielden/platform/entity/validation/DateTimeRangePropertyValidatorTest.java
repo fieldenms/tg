@@ -18,9 +18,9 @@ import com.google.inject.Injector;
 
 /**
  * A test case for validation of range properties.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class DateTimeRangePropertyValidatorTest {
 
@@ -30,50 +30,50 @@ public class DateTimeRangePropertyValidatorTest {
 
     @Test
     public void test_date_range_validation_where_only_from_is_set() {
-	final EntityWithRangeProperties entity = factory.newByKey(EntityWithRangeProperties.class, "key");
-	entity.setFromDateTime(new DateTime(2000, 01, 01, 0, 0, 0, 0));
-	assertTrue("Should be valid", entity.getProperty("fromDateTime").isValid());
-	assertTrue("Should be valid", entity.getProperty("toDateTime").isValid());
-	assertEquals("Incorrect value", new DateTime(2000, 01, 01, 0, 0, 0, 0), entity.getFromDateTime());
+        final EntityWithRangeProperties entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+        entity.setFromDateTime(new DateTime(2000, 01, 01, 0, 0, 0, 0));
+        assertTrue("Should be valid", entity.getProperty("fromDateTime").isValid());
+        assertTrue("Should be valid", entity.getProperty("toDateTime").isValid());
+        assertEquals("Incorrect value", new DateTime(2000, 01, 01, 0, 0, 0, 0), entity.getFromDateTime());
     }
 
     @Test
     public void test_date_range_validation_where_only_to_is_set() {
-	final EntityWithRangeProperties entity = factory.newByKey(EntityWithRangeProperties.class, "key");
-	entity.setToDateTime(new DateTime(2000, 01, 01, 0, 0, 0, 0));
-	assertTrue("Should be valid", entity.getProperty("fromDateTime").isValid());
-	assertFalse("Should not be valid", entity.getProperty("toDateTime").isValid());
+        final EntityWithRangeProperties entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+        entity.setToDateTime(new DateTime(2000, 01, 01, 0, 0, 0, 0));
+        assertTrue("Should be valid", entity.getProperty("fromDateTime").isValid());
+        assertFalse("Should not be valid", entity.getProperty("toDateTime").isValid());
     }
 
     @Test
     public void test_date_range_validation_where_both_from_and_to_are_set_in_the_right_order() {
-	final EntityWithRangeProperties entity = factory.newByKey(EntityWithRangeProperties.class, "key");
-	entity.setFromDateTime(new DateTime(2000, 01, 01, 0, 0, 0, 0));
-	entity.setToDateTime(new DateTime(2000, 02, 01, 0, 0, 0, 0));
-	assertTrue("Should be valid", entity.getProperty("fromDateTime").isValid());
-	assertTrue("Should not be valid", entity.getProperty("toDateTime").isValid());
-	assertEquals("Incorrect value", new DateTime(2000, 01, 01, 0, 0, 0, 0), entity.getFromDateTime());
-	assertEquals("Incorrect value", new DateTime(2000, 02, 01, 0, 0, 0, 0), entity.getToDateTime());
+        final EntityWithRangeProperties entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+        entity.setFromDateTime(new DateTime(2000, 01, 01, 0, 0, 0, 0));
+        entity.setToDateTime(new DateTime(2000, 02, 01, 0, 0, 0, 0));
+        assertTrue("Should be valid", entity.getProperty("fromDateTime").isValid());
+        assertTrue("Should not be valid", entity.getProperty("toDateTime").isValid());
+        assertEquals("Incorrect value", new DateTime(2000, 01, 01, 0, 0, 0, 0), entity.getFromDateTime());
+        assertEquals("Incorrect value", new DateTime(2000, 02, 01, 0, 0, 0, 0), entity.getToDateTime());
     }
 
     @Test
     public void test_date_range_validation_where_range_is_set_incorrectly_with_error_recovery() {
-	final EntityWithRangeProperties entity = factory.newByKey(EntityWithRangeProperties.class, "key");
-	entity.setFromDateTime(new DateTime(2000, 02, 01, 0, 0, 0, 0));
-	entity.setToDateTime(new DateTime(2000, 01, 01, 0, 0, 0, 0));
+        final EntityWithRangeProperties entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+        entity.setFromDateTime(new DateTime(2000, 02, 01, 0, 0, 0, 0));
+        entity.setToDateTime(new DateTime(2000, 01, 01, 0, 0, 0, 0));
 
-	assertTrue("Should be valid", entity.getProperty("fromDateTime").isValid());
-	assertEquals("Incorrect value", new DateTime(2000, 02, 01, 0, 0, 0, 0), entity.getFromDateTime());
-	assertFalse("Should not be valid", entity.getProperty("toDateTime").isValid());
-	assertNull("Incorrect value", entity.getToDateTime());
+        assertTrue("Should be valid", entity.getProperty("fromDateTime").isValid());
+        assertEquals("Incorrect value", new DateTime(2000, 02, 01, 0, 0, 0, 0), entity.getFromDateTime());
+        assertFalse("Should not be valid", entity.getProperty("toDateTime").isValid());
+        assertNull("Incorrect value", entity.getToDateTime());
 
-	entity.setFromDateTime(new DateTime(1999, 01, 01, 0, 0, 0, 0));
+        entity.setFromDateTime(new DateTime(1999, 01, 01, 0, 0, 0, 0));
 
-	assertTrue("Should be valid", entity.getProperty("fromDateTime").isValid());
-	assertTrue("Should not be valid", entity.getProperty("toDateTime").isValid());
+        assertTrue("Should be valid", entity.getProperty("fromDateTime").isValid());
+        assertTrue("Should not be valid", entity.getProperty("toDateTime").isValid());
 
-	assertEquals("Incorrect value", new DateTime(1999, 01, 01, 0, 0, 0, 0), entity.getFromDateTime());
-	assertEquals("Incorrect value", new DateTime(2000, 01, 01, 0, 0, 0, 0), entity.getToDateTime());
+        assertEquals("Incorrect value", new DateTime(1999, 01, 01, 0, 0, 0, 0), entity.getFromDateTime());
+        assertEquals("Incorrect value", new DateTime(2000, 01, 01, 0, 0, 0, 0), entity.getToDateTime());
     }
 
 }

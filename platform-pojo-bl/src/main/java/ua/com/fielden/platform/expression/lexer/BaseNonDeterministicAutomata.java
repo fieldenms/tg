@@ -9,8 +9,8 @@ public abstract class BaseNonDeterministicAutomata extends NonDeterministicAutom
     public final ILexemeCategory lexemeCat;
 
     public BaseNonDeterministicAutomata(final ILexemeCategory tokenCat, final TEXT_POST_PROCESSING postProcessingAction, final AbstractState initState, final AbstractState... states) {
-	super(postProcessingAction, initState, states);
-	this.lexemeCat = tokenCat;
+        super(postProcessingAction, initState, states);
+        this.lexemeCat = tokenCat;
     }
 
 }

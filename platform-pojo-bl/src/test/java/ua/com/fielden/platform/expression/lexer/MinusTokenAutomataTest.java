@@ -14,39 +14,39 @@ public class MinusTokenAutomataTest {
 
     @Test
     public void test_full_recognition_of_correct_sequences() throws NoTransitionAvailable, SequenceRecognitionFailed {
-	assertEquals("Incorrect recognition result", "-", automata.recognisePartiallyFromStart("-", 0));
-	assertEquals("Incorrect recognition result", "-", automata.recognisePartiallyFromStart("    -", 0));
-	assertEquals("Incorrect recognition result", "-", automata.recognisePartiallyFromStart("\t\n-\t(", 0));
+        assertEquals("Incorrect recognition result", "-", automata.recognisePartiallyFromStart("-", 0));
+        assertEquals("Incorrect recognition result", "-", automata.recognisePartiallyFromStart("    -", 0));
+        assertEquals("Incorrect recognition result", "-", automata.recognisePartiallyFromStart("\t\n-\t(", 0));
     }
 
     @Test
     public void test_recognition_of_partially_correct_sequences() throws NoTransitionAvailable, SequenceRecognitionFailed {
-	assertEquals("Incorrect recognition result", "-", automata.recognisePartiallyFromStart(" - property )", 0));
-	assertEquals("Incorrect recognition result", "-", automata.recognisePartiallyFromStart("\t-\t +\"", 0));
+        assertEquals("Incorrect recognition result", "-", automata.recognisePartiallyFromStart(" - property )", 0));
+        assertEquals("Incorrect recognition result", "-", automata.recognisePartiallyFromStart("\t-\t +\"", 0));
     }
 
     @Test
     public void test_recognition_of_incorrect_sequences() {
-	try {
-	    automata.recognisePartiallyFromStart("", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("(-", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("_-", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("S UM-", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
+        try {
+            automata.recognisePartiallyFromStart("", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("(-", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("_-", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("S UM-", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
     }
 
 }

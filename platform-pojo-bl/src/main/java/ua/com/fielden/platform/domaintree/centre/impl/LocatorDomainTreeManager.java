@@ -17,15 +17,16 @@ import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
- * Locator domain tree manager. <br><br>
- *
+ * Locator domain tree manager. <br>
+ * <br>
+ * 
  * Includes implementation of "checking" logic, that contain: <br>
  * a) default mutable state management; <br>
  * a) manual state management; <br>
  * b) resolution of conflicts with excluded, disabled etc. properties; <br>
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class LocatorDomainTreeManager extends CentreDomainTreeManager implements ILocatorDomainTreeManager {
     private Boolean useForAutocompletion;
@@ -33,27 +34,27 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
 
     /**
      * A <i>manager</i> constructor for the first time instantiation.
-     *
+     * 
      * @param serialiser
      * @param rootTypes
      */
     public LocatorDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, new LocatorDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManagerForLocator(serialiser, rootTypes), new AddToResultTickManager(), null, null, SearchBy.KEY);
+        this(serialiser, new LocatorDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManagerForLocator(serialiser, rootTypes), new AddToResultTickManager(), null, null, SearchBy.KEY);
     }
 
     /**
      * A <i>manager</i> constructor.
-     *
+     * 
      * @param serialiser
      * @param dtr
      * @param firstTick
      * @param secondTick
      */
     public LocatorDomainTreeManager(final ISerialiser serialiser, final LocatorDomainTreeRepresentation dtr, final AddToCriteriaTickManagerForLocator firstTick, final AddToResultTickManager secondTick, final Boolean runAutomatically, final Boolean useForAutocompletion, final SearchBy searchBy) {
-	super(serialiser, dtr, firstTick, secondTick, runAutomatically);
+        super(serialiser, dtr, firstTick, secondTick, runAutomatically);
 
-	this.useForAutocompletion = useForAutocompletion;
-	this.searchBy = searchBy;
+        this.useForAutocompletion = useForAutocompletion;
+        this.searchBy = searchBy;
     }
 
     @Override
@@ -68,150 +69,152 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
 
     @Override
     public SearchBy getSearchBy() {
-	return searchBy;
+        return searchBy;
     }
 
     @Override
     public ILocatorDomainTreeManager setSearchBy(final SearchBy searchBy) {
-	this.searchBy = searchBy;
-	return this;
+        this.searchBy = searchBy;
+        return this;
     }
 
     @Override
     public boolean isRunAutomatically() {
-	return isRunAutomatically1() != null ? isRunAutomatically1() : true; // should be enabled by default
+        return isRunAutomatically1() != null ? isRunAutomatically1() : true; // should be enabled by default
     }
 
     @Override
     public boolean isUseForAutocompletion() {
-	return useForAutocompletion != null ? useForAutocompletion : false; // should be disabled by default
+        return useForAutocompletion != null ? useForAutocompletion : false; // should be disabled by default
     }
 
     @Override
     public ILocatorDomainTreeManager setUseForAutocompletion(final boolean useForAutocompletion) {
-	this.useForAutocompletion = useForAutocompletion;
-	return this;
+        this.useForAutocompletion = useForAutocompletion;
+        return this;
     }
 
     /**
-     * A first tick manager for entity locator specific. <br><br>
-     *
+     * A first tick manager for entity locator specific. <br>
+     * <br>
+     * 
      * @author TG Team
-     *
+     * 
      */
     public static class AddToCriteriaTickManagerForLocator extends AddToCriteriaTickManager implements IAddToCriteriaTickManager {
-	/**
-	 * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr", "tr" and "serialiser" fields.
-	 */
-	public AddToCriteriaTickManagerForLocator(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	    this(AbstractDomainTree.<List<String>>createRootsMap(), serialiser, AbstractDomainTree.<Object>createPropertiesMap(), AbstractDomainTree.<Object>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum>createPropertiesMap(), AbstractDomainTree.<MnemonicEnum>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), null, new LocatorManager(serialiser, rootTypes));
-	}
+        /**
+         * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr", "tr" and "serialiser"
+         * fields.
+         */
+        public AddToCriteriaTickManagerForLocator(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+            this(AbstractDomainTree.<List<String>> createRootsMap(), serialiser, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), null, new LocatorManager(serialiser, rootTypes));
+        }
 
-	/**
-	 * A tick <i>manager</i> constructor.
-	 *
-	 * @param serialiser
-	 */
-	public AddToCriteriaTickManagerForLocator(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager locatorManager) {
-	    super(checkedProperties, serialiser, propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
-	}
+        /**
+         * A tick <i>manager</i> constructor.
+         * 
+         * @param serialiser
+         */
+        public AddToCriteriaTickManagerForLocator(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager locatorManager) {
+            super(checkedProperties, serialiser, propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
+        }
 
-	@Override
-	public int getColumnsNumber() {
-	    return columnsNumber() == null ? 1 : columnsNumber();
-	}
+        @Override
+        public int getColumnsNumber() {
+            return columnsNumber() == null ? 1 : columnsNumber();
+        }
 
-	/**
-	 * A specific Kryo serialiser for {@link AddToCriteriaTickManagerForLocator}.
-	 *
-	 * @author TG Team
-	 *
-	 */
-	public static class AddToCriteriaTickManagerForLocatorSerialiser extends AddToCriteriaTickManagerSerialiser {
-	    public AddToCriteriaTickManagerForLocatorSerialiser(final ISerialiser kryo) {
-		super(kryo);
-	    }
+        /**
+         * A specific Kryo serialiser for {@link AddToCriteriaTickManagerForLocator}.
+         * 
+         * @author TG Team
+         * 
+         */
+        public static class AddToCriteriaTickManagerForLocatorSerialiser extends AddToCriteriaTickManagerSerialiser {
+            public AddToCriteriaTickManagerForLocatorSerialiser(final ISerialiser kryo) {
+                super(kryo);
+            }
 
-	    @Override
-	    public AddToCriteriaTickManagerForLocator read(final ByteBuffer buffer) {
-		final EnhancementRootsMap<List<String>> checkedProperties = readValue(buffer, EnhancementRootsMap.class);
-		final EnhancementPropertiesMap<Object> propertiesValues1 = readValue(buffer, EnhancementPropertiesMap.class);
-		final EnhancementPropertiesMap<Object> propertiesValues2 = readValue(buffer, EnhancementPropertiesMap.class);
-		final EnhancementPropertiesMap<Boolean> propertiesExclusive1 = readValue(buffer, EnhancementPropertiesMap.class);
-		final EnhancementPropertiesMap<Boolean> propertiesExclusive2 = readValue(buffer, EnhancementPropertiesMap.class);
-		final EnhancementPropertiesMap<DateRangePrefixEnum> propertiesDatePrefixes = readValue(buffer, EnhancementPropertiesMap.class);
-		final EnhancementPropertiesMap<MnemonicEnum> propertiesDateMnemonics = readValue(buffer, EnhancementPropertiesMap.class);
-		final EnhancementPropertiesMap<Boolean> propertiesAndBefore = readValue(buffer, EnhancementPropertiesMap.class);
-		final EnhancementPropertiesMap<Boolean> propertiesOrNulls = readValue(buffer, EnhancementPropertiesMap.class);
-		final EnhancementPropertiesMap<Boolean> propertiesNots = readValue(buffer, EnhancementPropertiesMap.class);
-		final Integer columnsNumber = readValue(buffer, Integer.class);
-		final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
-		return new AddToCriteriaTickManagerForLocator(checkedProperties, kryo(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
-	    }
-	}
+            @Override
+            public AddToCriteriaTickManagerForLocator read(final ByteBuffer buffer) {
+                final EnhancementRootsMap<List<String>> checkedProperties = readValue(buffer, EnhancementRootsMap.class);
+                final EnhancementPropertiesMap<Object> propertiesValues1 = readValue(buffer, EnhancementPropertiesMap.class);
+                final EnhancementPropertiesMap<Object> propertiesValues2 = readValue(buffer, EnhancementPropertiesMap.class);
+                final EnhancementPropertiesMap<Boolean> propertiesExclusive1 = readValue(buffer, EnhancementPropertiesMap.class);
+                final EnhancementPropertiesMap<Boolean> propertiesExclusive2 = readValue(buffer, EnhancementPropertiesMap.class);
+                final EnhancementPropertiesMap<DateRangePrefixEnum> propertiesDatePrefixes = readValue(buffer, EnhancementPropertiesMap.class);
+                final EnhancementPropertiesMap<MnemonicEnum> propertiesDateMnemonics = readValue(buffer, EnhancementPropertiesMap.class);
+                final EnhancementPropertiesMap<Boolean> propertiesAndBefore = readValue(buffer, EnhancementPropertiesMap.class);
+                final EnhancementPropertiesMap<Boolean> propertiesOrNulls = readValue(buffer, EnhancementPropertiesMap.class);
+                final EnhancementPropertiesMap<Boolean> propertiesNots = readValue(buffer, EnhancementPropertiesMap.class);
+                final Integer columnsNumber = readValue(buffer, Integer.class);
+                final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
+                return new AddToCriteriaTickManagerForLocator(checkedProperties, kryo(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
+            }
+        }
     }
 
     /**
      * A specific Kryo serialiser for {@link LocatorDomainTreeManager}.
-     *
+     * 
      * @author TG Team
-     *
+     * 
      */
     public static class LocatorDomainTreeManagerSerialiser extends AbstractDomainTreeManagerSerialiser<LocatorDomainTreeManager> {
-	public LocatorDomainTreeManagerSerialiser(final ISerialiser kryo) {
-	    super(kryo);
-	}
+        public LocatorDomainTreeManagerSerialiser(final ISerialiser kryo) {
+            super(kryo);
+        }
 
-	@Override
-	public LocatorDomainTreeManager read(final ByteBuffer buffer) {
-	    final LocatorDomainTreeRepresentation dtr = readValue(buffer, LocatorDomainTreeRepresentation.class);
-	    final AddToCriteriaTickManagerForLocator firstTick = readValue(buffer, AddToCriteriaTickManagerForLocator.class);
-	    final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
-	    final Boolean runAutomatically = readValue(buffer, Boolean.class);
-	    final Boolean useForAutocompletion = readValue(buffer, Boolean.class);
-	    final SearchBy searchBy = readValue(buffer, SearchBy.class);
-	    return new LocatorDomainTreeManager(kryo(), dtr, firstTick, secondTick, runAutomatically, useForAutocompletion, searchBy);
-	}
+        @Override
+        public LocatorDomainTreeManager read(final ByteBuffer buffer) {
+            final LocatorDomainTreeRepresentation dtr = readValue(buffer, LocatorDomainTreeRepresentation.class);
+            final AddToCriteriaTickManagerForLocator firstTick = readValue(buffer, AddToCriteriaTickManagerForLocator.class);
+            final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
+            final Boolean runAutomatically = readValue(buffer, Boolean.class);
+            final Boolean useForAutocompletion = readValue(buffer, Boolean.class);
+            final SearchBy searchBy = readValue(buffer, SearchBy.class);
+            return new LocatorDomainTreeManager(kryo(), dtr, firstTick, secondTick, runAutomatically, useForAutocompletion, searchBy);
+        }
 
-	@Override
-	public void write(final ByteBuffer buffer, final LocatorDomainTreeManager manager) {
-//	    super.write(buffer, manager);
-	    writeValue(buffer, manager.getRepresentation());
-	    writeValue(buffer, manager.getFirstTick());
-	    writeValue(buffer, manager.getSecondTick());
+        @Override
+        public void write(final ByteBuffer buffer, final LocatorDomainTreeManager manager) {
+            //	    super.write(buffer, manager);
+            writeValue(buffer, manager.getRepresentation());
+            writeValue(buffer, manager.getFirstTick());
+            writeValue(buffer, manager.getSecondTick());
 
-	    writeValue(buffer, manager.runAutomatically());
+            writeValue(buffer, manager.runAutomatically());
 
-	    writeValue(buffer, manager.useForAutocompletion);
-	    writeValue(buffer, manager.searchBy);
-	}
+            writeValue(buffer, manager.useForAutocompletion);
+            writeValue(buffer, manager.searchBy);
+        }
     }
 
     @Override
     public int hashCode() {
-	final int prime = 31;
-	int result = super.hashCode();
-	result = prime * result + ((searchBy == null) ? 0 : searchBy.hashCode());
-	result = prime * result + ((useForAutocompletion == null) ? 0 : useForAutocompletion.hashCode());
-	return result;
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((searchBy == null) ? 0 : searchBy.hashCode());
+        result = prime * result + ((useForAutocompletion == null) ? 0 : useForAutocompletion.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
-	    return true;
-	if (!super.equals(obj))
-	    return false;
-	if (getClass() != obj.getClass())
-	    return false;
-	final LocatorDomainTreeManager other = (LocatorDomainTreeManager) obj;
-	if (searchBy != other.searchBy)
-	    return false;
-	if (useForAutocompletion == null) {
-	    if (other.useForAutocompletion != null)
-		return false;
-	} else if (!useForAutocompletion.equals(other.useForAutocompletion))
-	    return false;
-	return true;
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        final LocatorDomainTreeManager other = (LocatorDomainTreeManager) obj;
+        if (searchBy != other.searchBy)
+            return false;
+        if (useForAutocompletion == null) {
+            if (other.useForAutocompletion != null)
+                return false;
+        } else if (!useForAutocompletion.equals(other.useForAutocompletion))
+            return false;
+        return true;
     }
 }

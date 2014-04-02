@@ -6,9 +6,9 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisVie
 
 /**
  * The grid analysis view customiser that would be used to customise analysis view if another analysis view customiser wasn't specified.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  * @param <CDTME>
  */

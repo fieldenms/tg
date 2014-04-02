@@ -34,14 +34,14 @@ public abstract class LoginScreenModel<VIEW extends JFrame> {
      * Constructs instance of {@link LoginScreenModel} and creates all its components. Should be provided {@link IAuthenticationModel} instance for authentication
      */
     public LoginScreenModel(final IAuthenticationModel userAuthenticator) {
-	this.userAuthenticator = userAuthenticator;
+        this.userAuthenticator = userAuthenticator;
 
-	this.usernameLabel = DummyBuilder.label("Username");
-	this.usernameField = new JTextField("");
+        this.usernameLabel = DummyBuilder.label("Username");
+        this.usernameField = new JTextField("");
 
-	this.passwordLabel = DummyBuilder.label("Password");
-	this.passwordField = new JPasswordField();
-	passwordField.setEchoChar('*');
+        this.passwordLabel = DummyBuilder.label("Password");
+        this.passwordField = new JPasswordField();
+        passwordField.setEchoChar('*');
     }
 
     /**
@@ -50,7 +50,7 @@ public abstract class LoginScreenModel<VIEW extends JFrame> {
      * @return
      */
     public JComponent getUsernameEditor() {
-	return usernameField;
+        return usernameField;
     }
 
     /**
@@ -59,7 +59,7 @@ public abstract class LoginScreenModel<VIEW extends JFrame> {
      * @return
      */
     public JComponent getPasswordEditor() {
-	return passwordField;
+        return passwordField;
     }
 
     /**
@@ -68,7 +68,7 @@ public abstract class LoginScreenModel<VIEW extends JFrame> {
      * @return
      */
     public JComponent getUsernameLabel() {
-	return usernameLabel;
+        return usernameLabel;
     }
 
     /**
@@ -77,7 +77,7 @@ public abstract class LoginScreenModel<VIEW extends JFrame> {
      * @return
      */
     public JComponent getPasswordLabel() {
-	return passwordLabel;
+        return passwordLabel;
     }
 
     /**
@@ -87,7 +87,7 @@ public abstract class LoginScreenModel<VIEW extends JFrame> {
      * @return
      */
     public Result getAuthenticationResult() {
-	return userAuthenticator.authenticate(getUsername(), getPassword());
+        return userAuthenticator.authenticate(getUsername(), getPassword());
     }
 
     /**
@@ -96,7 +96,7 @@ public abstract class LoginScreenModel<VIEW extends JFrame> {
      * @return
      */
     private String getUsername() {
-	return usernameField.getText();
+        return usernameField.getText();
     }
 
     /**
@@ -105,7 +105,7 @@ public abstract class LoginScreenModel<VIEW extends JFrame> {
      * @return
      */
     private String getPassword() {
-	return String.valueOf(passwordField.getPassword());
+        return String.valueOf(passwordField.getPassword());
     }
 
     /**

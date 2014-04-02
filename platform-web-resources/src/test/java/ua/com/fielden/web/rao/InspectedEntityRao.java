@@ -9,6 +9,6 @@ import ua.com.fielden.web.entities.InspectedEntity;
 @EntityType(InspectedEntity.class)
 public class InspectedEntityRao extends CommonEntityRao<InspectedEntity> implements IInspectedEntityDao {
     public InspectedEntityRao(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 }

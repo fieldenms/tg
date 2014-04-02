@@ -17,32 +17,32 @@ public class CypherTest {
     private final Cypher cypher;
 
     public CypherTest() throws Exception {
-	cypher = new Cypher();
+        cypher = new Cypher();
     }
 
     @Test
     public void test_that_short_text_is_encoded_and_decoded_correctely() throws Exception {
-	final String textToEncode = "short text"; // under 53 bytes
-	assertTrue("Text to encode is too long for this test.", textToEncode.getBytes().length <= 53);
-	final String encryptedText = cypher.encrypt(textToEncode, privateKey);
-	assertEquals("Incorrectly decrypted short text.", textToEncode, cypher.decrypt(encryptedText, publicKey));
+        final String textToEncode = "short text"; // under 53 bytes
+        assertTrue("Text to encode is too long for this test.", textToEncode.getBytes().length <= 53);
+        final String encryptedText = cypher.encrypt(textToEncode, privateKey);
+        assertEquals("Incorrectly decrypted short text.", textToEncode, cypher.decrypt(encryptedText, publicKey));
     }
 
     @Test
     public void test_that_long_text_is_encoded_and_decoded_correctely_using_default_separator() throws Exception {
-	final String textToEncode = "long text long text long text long text long text long text long text long text long text"; // over 53 bytes
-	assertTrue("Text to encode is too short for this test.", textToEncode.getBytes().length > 53);
-	final String encryptedText = cypher.encrypt(textToEncode, privateKey);
-	assertEquals("Incorrectly decrypted short text.", textToEncode, cypher.decrypt(encryptedText, publicKey));
+        final String textToEncode = "long text long text long text long text long text long text long text long text long text"; // over 53 bytes
+        assertTrue("Text to encode is too short for this test.", textToEncode.getBytes().length > 53);
+        final String encryptedText = cypher.encrypt(textToEncode, privateKey);
+        assertEquals("Incorrectly decrypted short text.", textToEncode, cypher.decrypt(encryptedText, publicKey));
     }
 
     @Test
     public void test_that_long_text_is_encoded_and_decoded_correctely_using_specified_separator() throws Exception {
-	final String textToEncode = "long text long text long text long text long text long text long text long text long text"; // over 53 bytes
-	assertTrue("Text to encode is too short for this test.", textToEncode.getBytes().length > 53);
-	final String separator = "=";
-	final String encryptedText = cypher.encrypt(textToEncode, privateKey, separator);
-	assertEquals("Incorrectly decrypted short text.", textToEncode, cypher.decrypt(encryptedText, publicKey, separator));
+        final String textToEncode = "long text long text long text long text long text long text long text long text long text"; // over 53 bytes
+        assertTrue("Text to encode is too short for this test.", textToEncode.getBytes().length > 53);
+        final String separator = "=";
+        final String encryptedText = cypher.encrypt(textToEncode, privateKey, separator);
+        assertEquals("Incorrectly decrypted short text.", textToEncode, cypher.decrypt(encryptedText, publicKey, separator));
     }
 
 }

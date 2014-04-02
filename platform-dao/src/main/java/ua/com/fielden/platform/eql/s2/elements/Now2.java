@@ -4,11 +4,11 @@ import org.joda.time.DateTime;
 
 public class Now2 extends ZeroOperandFunction2 {
     public Now2() {
-	super("now");
+        super("now");
     }
 
     @Override
     public Class type() {
-	return DateTime.class;
+        return DateTime.class;
     }
 }

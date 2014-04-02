@@ -20,7 +20,7 @@ public class AddTabDialogModel {
      * @param review
      */
     public AddTabDialogModel() {
-	this.returnValue = AddTabOptions.CANCEL;
+        this.returnValue = AddTabOptions.CANCEL;
     }
 
     /**
@@ -30,27 +30,27 @@ public class AddTabDialogModel {
      * @return
      */
     public Action getCancelAction(final AddTabDialog addTabDialog) {
-	return new Command<Void>("Cancel") {
-	    private static final long serialVersionUID = -2730860592583696528L;
+        return new Command<Void>("Cancel") {
+            private static final long serialVersionUID = -2730860592583696528L;
 
-	    {
-		putValue(Action.SHORT_DESCRIPTION, "Cancels adding tab sheet");
-		putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
-	    }
+            {
+                putValue(Action.SHORT_DESCRIPTION, "Cancels adding tab sheet");
+                putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		returnValue = AddTabOptions.CANCEL;
-		addTabDialog.closeDialog();
-	    }
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                returnValue = AddTabOptions.CANCEL;
+                addTabDialog.closeDialog();
+            }
 
-	};
+        };
     }
 
     /**
@@ -60,31 +60,31 @@ public class AddTabDialogModel {
      * @return
      */
     public Action getApproveAction(final AddTabDialog addTabDialog) {
-	return new Command<Void>("Ok") {
+        return new Command<Void>("Ok") {
 
-	    private static final long serialVersionUID = -7758200445145077970L;
+            private static final long serialVersionUID = -7758200445145077970L;
 
-	    {
-		putValue(Action.SHORT_DESCRIPTION, "Creates new tab sheet");
-		putValue(Action.MNEMONIC_KEY, KeyEvent.VK_O);
-	    }
+            {
+                putValue(Action.SHORT_DESCRIPTION, "Creates new tab sheet");
+                putValue(Action.MNEMONIC_KEY, KeyEvent.VK_O);
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		if (StringUtils.isEmpty(addTabDialog.getEnteredTabName())) {
-		    JOptionPane.showMessageDialog(addTabDialog, "Please choose valid name for new analysis report", "Information", JOptionPane.WARNING_MESSAGE);
-		    return;
-		}
-		returnValue = AddTabOptions.ADD_TAB;
-		addTabDialog.closeDialog();
-	    }
-	};
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                if (StringUtils.isEmpty(addTabDialog.getEnteredTabName())) {
+                    JOptionPane.showMessageDialog(addTabDialog, "Please choose valid name for new analysis report", "Information", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                returnValue = AddTabOptions.ADD_TAB;
+                addTabDialog.closeDialog();
+            }
+        };
     }
 
     /**
@@ -93,7 +93,7 @@ public class AddTabDialogModel {
      * @return
      */
     public AddTabOptions getReturnValue() {
-	return returnValue;
+        return returnValue;
     }
 
 }

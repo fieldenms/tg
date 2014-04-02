@@ -26,7 +26,7 @@ import ua.com.fielden.platform.error.Result;
  * <p>
  * If provided, user specific public key is used by the authentication mechanism to ensure authenticity of the request. This key cannot be used for decoding user password, because
  * a corresponding private key is not known at the application server end.
- *
+ * 
  * @author TG Team
  */
 @KeyTitle("Application User")
@@ -40,29 +40,29 @@ public class User extends AbstractEntity<String> {
      * This is an enumeration for listing all system in-built accounts.
      */
     public enum system_users {
-	SU;
+        SU;
 
-	public boolean matches(final User user) {
-	    if (user == null) {
-		return false;
-	    }
-	    return name().equalsIgnoreCase(user.getKey());
-	}
+        public boolean matches(final User user) {
+            if (user == null) {
+                return false;
+            }
+            return name().equalsIgnoreCase(user.getKey());
+        }
 
-	public boolean matches(final String username) {
-	    if (username == null) {
-		return false;
-	    }
-	    return name().equalsIgnoreCase(username);
-	}
+        public boolean matches(final String username) {
+            if (username == null) {
+                return false;
+            }
+            return name().equalsIgnoreCase(username);
+        }
 
-	public static boolean isOneOf(final User user) {
-	    return SU.matches(user);
-	}
+        public static boolean isOneOf(final User user) {
+            return SU.matches(user);
+        }
 
-	public static boolean isOneOf(final String username) {
-	    return SU.matches(username);
-	}
+        public static boolean isOneOf(final String username) {
+            return SU.matches(username);
+        }
     }
 
     @IsProperty
@@ -85,130 +85,130 @@ public class User extends AbstractEntity<String> {
     private User basedOnUser;
 
     protected User() {
-	this(null, null);
+        this(null, null);
     }
 
     /**
      * Principle constructor.
-     *
+     * 
      * @param name
      *            -- is user's key
      * @param desc
      */
     protected User(final String name, final String desc) {
-	super(null, name, desc);
+        super(null, name, desc);
     }
 
     @Observable
     @NotNull
     @Override
     public User setKey(final String value) {
-	if (isPersisted() && (system_users.SU.matches(getKey()) && !system_users.SU.matches(value))) {
-	    throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and cannot be renamed."));
-	}
+        if (isPersisted() && (system_users.SU.matches(getKey()) && !system_users.SU.matches(value))) {
+            throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and cannot be renamed."));
+        }
 
-	super.setKey(value);
+        super.setKey(value);
 
-	if (system_users.isOneOf(value)) {
-	    setBase(true);
-	}
+        if (system_users.isOneOf(value)) {
+            setBase(true);
+        }
 
-	return this;
+        return this;
     }
 
     public String getPassword() {
-	return password;
+        return password;
     }
 
     @Observable
     @NotNull
     public User setPassword(final String password) {
-	this.password = password;
-	return this;
+        this.password = password;
+        return this;
     }
 
     public Set<UserAndRoleAssociation> getRoles() {
-	return roles;
+        return roles;
     }
 
     /**
      * A convenient method for extracting {@link UserRole} instances from a set of {@link UserAndRoleAssociation}.
-     *
+     * 
      * @return
      */
     public Set<UserRole> roles() {
-	final Set<UserRole> result = new HashSet<UserRole>();
-	for (final UserAndRoleAssociation assoc : roles) {
-	    result.add(assoc.getUserRole());
-	}
-	return result;
+        final Set<UserRole> result = new HashSet<UserRole>();
+        for (final UserAndRoleAssociation assoc : roles) {
+            result.add(assoc.getUserRole());
+        }
+        return result;
     }
 
     @Observable
     public User setRoles(final Set<UserAndRoleAssociation> roles) {
-	this.roles = roles;
-	return this;
+        this.roles = roles;
+        return this;
     }
 
     public String getPublicKey() {
-	return publicKey;
+        return publicKey;
     }
 
     @Observable
     public User setPublicKey(final String publicKey) {
-	this.publicKey = publicKey;
-	return this;
+        this.publicKey = publicKey;
+        return this;
     }
 
     public boolean isBase() {
-	return base;
+        return base;
     }
 
     @Observable
     public User setBase(final boolean base) {
-	this.base = base;
-	if (base) {
-	    setBasedOnUser(null);
-	} else if (system_users.isOneOf(this)) {
-	    throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and should remain a base user."));
-	}
-	getProperty("basedOnUser").setRequired(!base);
-	return this;
+        this.base = base;
+        if (base) {
+            setBasedOnUser(null);
+        } else if (system_users.isOneOf(this)) {
+            throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and should remain a base user."));
+        }
+        getProperty("basedOnUser").setRequired(!base);
+        return this;
     }
 
     public User getBasedOnUser() {
-	return basedOnUser;
+        return basedOnUser;
     }
 
     @Observable
     @EntityExists(User.class)
     public User setBasedOnUser(final User basedOnUser) {
-	if (basedOnUser == this) {
-	    throw new Result(this, new IllegalArgumentException("Self reference is not permitted."));
-	}
+        if (basedOnUser == this) {
+            throw new Result(this, new IllegalArgumentException("Self reference is not permitted."));
+        }
 
-	if (basedOnUser != null && system_users.isOneOf(this)) {
-	    throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and cannot have a base user."));
-	}
+        if (basedOnUser != null && system_users.isOneOf(this)) {
+            throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and cannot have a base user."));
+        }
 
-	if (basedOnUser != null && !basedOnUser.isBase()) {
-	    throw new Result(this, new IllegalArgumentException("User " + basedOnUser.getKey() + " is not a base user and thus cannot be used for inheritance."));
-	}
+        if (basedOnUser != null && !basedOnUser.isBase()) {
+            throw new Result(this, new IllegalArgumentException("User " + basedOnUser.getKey() + " is not a base user and thus cannot be used for inheritance."));
+        }
 
-	this.basedOnUser = basedOnUser;
-	if (basedOnUser != null) {
-	    setBase(false);
-	}
-	return this;
+        this.basedOnUser = basedOnUser;
+        if (basedOnUser != null) {
+            setBase(false);
+        }
+        return this;
     }
 
     @Override
     protected Result validate() {
-	final Result superResult = super.validate();
-	if (!superResult.isSuccessful()) {
-	    return superResult;
-	}
+        final Result superResult = super.validate();
+        if (!superResult.isSuccessful()) {
+            return superResult;
+        }
 
-	return superResult;
+        return superResult;
     }
 }

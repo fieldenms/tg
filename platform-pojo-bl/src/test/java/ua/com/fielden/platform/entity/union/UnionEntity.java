@@ -16,20 +16,20 @@ public class UnionEntity extends AbstractUnionEntity {
     private EntityTwo propertyTwo;
 
     public EntityOne getPropertyOne() {
-	return propertyOne;
+        return propertyOne;
     }
 
     @Observable
     public void setPropertyOne(final EntityOne propertyOne) {
-	this.propertyOne = propertyOne;
+        this.propertyOne = propertyOne;
     }
 
     public EntityTwo getPropertyTwo() {
-	return propertyTwo;
+        return propertyTwo;
     }
 
     @Observable
     public void setPropertyTwo(final EntityTwo propertyTwo) {
-	this.propertyTwo = propertyTwo;
+        this.propertyTwo = propertyTwo;
     }
 }

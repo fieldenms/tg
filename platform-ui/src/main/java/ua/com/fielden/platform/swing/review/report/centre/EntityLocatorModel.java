@@ -13,18 +13,18 @@ public class EntityLocatorModel<T extends AbstractEntity<?>> extends AbstractEnt
     private final List<T> locatorSelectionModel;
 
     public EntityLocatorModel(//
-	    final EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> entityInspectorModel,//
-	    final List<T> locatorSelectionModel,//
-	    final String name) {
-	super(entityInspectorModel, null, name);
-	this.locatorSelectionModel = locatorSelectionModel;
+    final EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> entityInspectorModel,//
+            final List<T> locatorSelectionModel,//
+            final String name) {
+        super(entityInspectorModel, null, name);
+        this.locatorSelectionModel = locatorSelectionModel;
     }
 
     public List<T> getLocatorSelectionModel() {
-	return locatorSelectionModel;
+        return locatorSelectionModel;
     }
 
     public void resetLocatorSelectionModel() {
-	locatorSelectionModel.clear();
+        locatorSelectionModel.clear();
     }
 }

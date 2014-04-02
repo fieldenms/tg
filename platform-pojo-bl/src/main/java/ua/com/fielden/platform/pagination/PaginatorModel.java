@@ -9,11 +9,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * The model for the {@link Paginator}. This model supports multiple pagination.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
-public class PaginatorModel implements IPaginatorModel, IPageHolderManager{
+public class PaginatorModel implements IPaginatorModel, IPageHolderManager {
 
     private final Set<PageHolder> pageHolderSet = new HashSet<PageHolder>();
     private PageHolder currentPageHolder;
@@ -21,123 +21,122 @@ public class PaginatorModel implements IPaginatorModel, IPageHolderManager{
     private final EventListenerList listenerList = new EventListenerList();
 
     /**
-     * This is common {@link IPageChangedListener} for all page holders.
-     * This page changed listener calls paginator's model {@link #firePageChangedEvent(PageChangedEvent)}
-     * only if the event's holder is equal to the current page holder.
+     * This is common {@link IPageChangedListener} for all page holders. This page changed listener calls paginator's model {@link #firePageChangedEvent(PageChangedEvent)} only if
+     * the event's holder is equal to the current page holder.
      */
     private final IPageChangedListener commonPageChangedListener = new IPageChangedListener() {
 
-	@Override
-	public void pageChanged(final PageChangedEvent e) {
-	    if(e.getSource() == currentPageHolder){
-		firePageChangedEvent(e);
-	    }
-	}
+        @Override
+        public void pageChanged(final PageChangedEvent e) {
+            if (e.getSource() == currentPageHolder) {
+                firePageChangedEvent(e);
+            }
+        }
 
     };
 
     @Override
     public void selectPageHolder(final PageHolder pageHolder) {
-	if(pageHolderSet.contains(pageHolder) || pageHolder == null){
-	    currentPageHolder = pageHolder;
-	    firePageHolderChanged(new PageHolderChangedEvent(this, pageHolder));
-	} else {
-	    throw new IllegalArgumentException("The specified page holder must be added first in order to be selected.");
-	}
+        if (pageHolderSet.contains(pageHolder) || pageHolder == null) {
+            currentPageHolder = pageHolder;
+            firePageHolderChanged(new PageHolderChangedEvent(this, pageHolder));
+        } else {
+            throw new IllegalArgumentException("The specified page holder must be added first in order to be selected.");
+        }
     }
 
     @Override
     public IPage<? extends AbstractEntity<?>> getCurrentPage() {
-	return getCurrentPageHolder() == null ? null : getCurrentPageHolder().getPage();
+        return getCurrentPageHolder() == null ? null : getCurrentPageHolder().getPage();
     }
 
     @Override
     public void addPageHolder(final PageHolder pageHolder) {
-	if(pageHolder != null && pageHolderSet.add(pageHolder)){
-	    pageHolder.addPageChangedListener(commonPageChangedListener);
-	}
+        if (pageHolder != null && pageHolderSet.add(pageHolder)) {
+            pageHolder.addPageChangedListener(commonPageChangedListener);
+        }
     }
 
     @Override
     public void removePageHolder(final PageHolder pageHolder) {
-	if(pageHolder != null && pageHolderSet.remove(pageHolder)){
-	    pageHolder.removePageChangedListener(commonPageChangedListener);
-	    if(pageHolder == currentPageHolder){
-		selectPageHolder(null);
-	    }
-	}
+        if (pageHolder != null && pageHolderSet.remove(pageHolder)) {
+            pageHolder.removePageChangedListener(commonPageChangedListener);
+            if (pageHolder == currentPageHolder) {
+                selectPageHolder(null);
+            }
+        }
     }
 
     @Override
     public PageHolder getCurrentPageHolder() {
-	return currentPageHolder;
+        return currentPageHolder;
     }
 
     @Override
     public void firstPage() {
-	if (getCurrentPage() != null) {
-	    getCurrentPageHolder().newPage(getCurrentPage().first());
-	}
+        if (getCurrentPage() != null) {
+            getCurrentPageHolder().newPage(getCurrentPage().first());
+        }
     }
 
     @Override
     public void prevPage() {
-	if (getCurrentPage() != null) {
-	    getCurrentPageHolder().newPage(getCurrentPage().prev());
-	}
+        if (getCurrentPage() != null) {
+            getCurrentPageHolder().newPage(getCurrentPage().prev());
+        }
     }
 
     @Override
     public void nextPage() {
-	if (getCurrentPage() != null) {
-	    getCurrentPageHolder().newPage(getCurrentPage().next());
-	}
+        if (getCurrentPage() != null) {
+            getCurrentPageHolder().newPage(getCurrentPage().next());
+        }
     }
 
     @Override
     public void lastPage() {
-	if (getCurrentPage() != null) {
-	    getCurrentPageHolder().newPage(getCurrentPage().last());
-	}
+        if (getCurrentPage() != null) {
+            getCurrentPageHolder().newPage(getCurrentPage().last());
+        }
     }
 
     @Override
     public void addPageChangedListener(final IPageChangedListener l) {
-	listenerList.add(IPageChangedListener.class, l);
+        listenerList.add(IPageChangedListener.class, l);
     }
 
     @Override
     public void removePageChangedListener(final IPageChangedListener l) {
-	listenerList.remove(IPageChangedListener.class, l);
+        listenerList.remove(IPageChangedListener.class, l);
     }
 
     @Override
     public void addPageHolderChangedListener(final IPageHolderChangedListener l) {
-	listenerList.add(IPageHolderChangedListener.class, l);
+        listenerList.add(IPageHolderChangedListener.class, l);
     }
 
     @Override
     public void removePageHolderChangedListener(final IPageHolderChangedListener l) {
-	listenerList.remove(IPageHolderChangedListener.class, l);
+        listenerList.remove(IPageHolderChangedListener.class, l);
     }
 
     @Override
     public boolean pageNavigationPhases(final PageNavigationPhases pageNavigationPhases) {
-        if(getCurrentPageHolder() != null){
+        if (getCurrentPageHolder() != null) {
             return getCurrentPageHolder().pageNavigated(pageNavigationPhases);
         }
         return false;
     }
 
     private void firePageHolderChanged(final PageHolderChangedEvent pageHolderChangedEvent) {
-	for(final IPageHolderChangedListener l : listenerList.getListeners(IPageHolderChangedListener.class)){
-	    l.pageHolderChanged(pageHolderChangedEvent);
-	}
+        for (final IPageHolderChangedListener l : listenerList.getListeners(IPageHolderChangedListener.class)) {
+            l.pageHolderChanged(pageHolderChangedEvent);
+        }
     }
 
-    private void firePageChangedEvent(final PageChangedEvent pageChangedEvent){
-	for(final IPageChangedListener l : listenerList.getListeners(IPageChangedListener.class)){
-	    l.pageChanged(pageChangedEvent);
-	}
+    private void firePageChangedEvent(final PageChangedEvent pageChangedEvent) {
+        for (final IPageChangedListener l : listenerList.getListeners(IPageChangedListener.class)) {
+            l.pageChanged(pageChangedEvent);
+        }
     }
 }

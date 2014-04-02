@@ -15,12 +15,11 @@ import com.google.inject.Inject;
 
 /**
  * Master view for entity {@link TgPublishedYearly}.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 public class TgPublishedYearlyMasterView extends BaseNotifPanel<TgPublishedYearlyMasterModel> {
-
 
     @Inject
     public TgPublishedYearlyMasterView(final TgPublishedYearlyMasterModel model) {

@@ -22,79 +22,79 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
  * An instance of pre-configured {@link RestClientUtil} is provided for the use by descendants requiring instantiation of RAO classes.
  * <p>
  * Effectively each web-drive test case is a little web-application.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public abstract class WebBasedTestCase extends Application {
     protected static final Component component = new Component();
     static {
-	component.getServers().add(Protocol.HTTP, IWebDrivenTestCaseConfiguration.PORT);
-	try {
-	    component.start();
-	} catch (final Exception e) {
-	    System.out.println("Failed to start the test web component:");
-	    e.printStackTrace();
-	}
+        component.getServers().add(Protocol.HTTP, IWebDrivenTestCaseConfiguration.PORT);
+        try {
+            component.start();
+        } catch (final Exception e) {
+            System.out.println("Failed to start the test web component:");
+            e.printStackTrace();
+        }
     }
 
     protected DbDrivenTestCase dbDrivenTestCase = new DbDrivenTestCase() {
-	@Override
-	protected String[] getDataSetPathsForInsert() {
-	    return WebBasedTestCase.this.getDataSetPaths();
-	}
+        @Override
+        protected String[] getDataSetPathsForInsert() {
+            return WebBasedTestCase.this.getDataSetPaths();
+        }
     };
 
     protected final IWebDrivenTestCaseConfiguration config = createConfig();
 
     private static IWebDrivenTestCaseConfiguration createConfig() {
-	try {
-	    final Properties testProps = new Properties();
-	    final FileInputStream in = new FileInputStream("src/test/resources/test.properties");
-	    testProps.load(in);
-	    in.close();
-	    final String configClassName = testProps.getProperty("web-config");
-	    final Class<IWebDrivenTestCaseConfiguration> type = (Class<IWebDrivenTestCaseConfiguration>) Class.forName(configClassName);
-	    final IWebDrivenTestCaseConfiguration webConf = type.newInstance();
-	    webConf.setDbDrivenTestConfiguration(DbDrivenTestCase.config);
-	    return webConf;
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    throw new RuntimeException(e);
-	}
+        try {
+            final Properties testProps = new Properties();
+            final FileInputStream in = new FileInputStream("src/test/resources/test.properties");
+            testProps.load(in);
+            in.close();
+            final String configClassName = testProps.getProperty("web-config");
+            final Class<IWebDrivenTestCaseConfiguration> type = (Class<IWebDrivenTestCaseConfiguration>) Class.forName(configClassName);
+            final IWebDrivenTestCaseConfiguration webConf = type.newInstance();
+            webConf.setDbDrivenTestConfiguration(DbDrivenTestCase.config);
+            return webConf;
+        } catch (final Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     @Before
     public void setUp() {
-	try {
-	    component.getDefaultHost().attach("/v1", this); // needed for application versioned resources
-	    component.getDefaultHost().attach("/system", this); // needed for application unversioned resources such as authentication resource
-	    if (getDataSetPaths() != null && getDataSetPaths().length > 0) {
-		dbDrivenTestCase.setUp();
-	    }
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    System.exit(100);
-	}
+        try {
+            component.getDefaultHost().attach("/v1", this); // needed for application versioned resources
+            component.getDefaultHost().attach("/system", this); // needed for application unversioned resources such as authentication resource
+            if (getDataSetPaths() != null && getDataSetPaths().length > 0) {
+                dbDrivenTestCase.setUp();
+            }
+        } catch (final Exception e) {
+            e.printStackTrace();
+            System.exit(100);
+        }
     }
 
     @After
     public void tearDown() {
-	try {
-	    component.getDefaultHost().detach(this);
-	    if (getDataSetPaths() != null && getDataSetPaths().length > 0) {
-		dbDrivenTestCase.tearDown();
-	    }
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    System.exit(100);
-	}
+        try {
+            component.getDefaultHost().detach(this);
+            if (getDataSetPaths() != null && getDataSetPaths().length > 0) {
+                dbDrivenTestCase.tearDown();
+            }
+        } catch (final Exception e) {
+            e.printStackTrace();
+            System.exit(100);
+        }
     }
 
     /**
      * This method should be implemented in descendants in order to provide list of paths to datasets, which are to be used with the given test case (via invoking method
      * getDataSet()).
-     *
+     * 
      * @return
      */
     protected abstract String[] getDataSetPaths();

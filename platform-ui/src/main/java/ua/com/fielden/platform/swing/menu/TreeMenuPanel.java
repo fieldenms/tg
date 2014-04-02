@@ -25,31 +25,31 @@ public class TreeMenuPanel extends FilterableTreePanel {
     private static final long serialVersionUID = 1L;
 
     public TreeMenuPanel(final TreeMenu<?> treeMenu) {
-	this(treeMenu, 150);
+        this(treeMenu, 150);
     }
 
     public TreeMenuPanel(final TreeMenu<?> treeMenu, final int minWidth) {
-	super(treeMenu, "find menu...", minWidth);
+        super(treeMenu, "find menu...", minWidth);
 
-	// //////////////////////////////
-	// assign navigation hot keys //
-	// //////////////////////////////
-	// create CTRL+1 key stroke and a corresponding action to bring focus to the tree menu
-	final KeyStroke activateTreeMenu = KeyStroke.getKeyStroke(KeyEvent.VK_1, InputEvent.CTRL_DOWN_MASK);
-	final String ACTIVATE_TREE_MENU = "ACTIVATE_TREE_MENU";
-	treeMenu.getActionMap().put(ACTIVATE_TREE_MENU, createFocusTreeMenuAction(treeMenu));
-	treeMenu.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(activateTreeMenu, ACTIVATE_TREE_MENU);
-	// create CTRL+2 key stroke and a corresponding action to bring focus to the filter control
-	final KeyStroke activateFilterControl = KeyStroke.getKeyStroke(KeyEvent.VK_2, InputEvent.CTRL_DOWN_MASK);
-	final String ACTIVATE_FILTER_CONTROL = "ACTIVATE_FILTER_CONTROL";
-	getFilterControl().getActionMap().put(ACTIVATE_FILTER_CONTROL, createFocusFilterControlAction(getFilterControl()));
-	getFilterControl().getInputMap(WHEN_IN_FOCUSED_WINDOW).put(activateFilterControl, ACTIVATE_FILTER_CONTROL);
-	// create CTRL+3 key stroke and a corresponding action to bring focus to the holder panel
-	final KeyStroke focusHolder = KeyStroke.getKeyStroke(KeyEvent.VK_3, InputEvent.CTRL_DOWN_MASK);
-	final String FOCUS_HOLDER = "FOCUS_HOLDER";
-	getFilterControl().getActionMap().put(FOCUS_HOLDER, createFocusHolderAction(treeMenu));
-	getFilterControl().getInputMap(WHEN_IN_FOCUSED_WINDOW).put(focusHolder, FOCUS_HOLDER);
-	treeMenu.expandAll();
+        // //////////////////////////////
+        // assign navigation hot keys //
+        // //////////////////////////////
+        // create CTRL+1 key stroke and a corresponding action to bring focus to the tree menu
+        final KeyStroke activateTreeMenu = KeyStroke.getKeyStroke(KeyEvent.VK_1, InputEvent.CTRL_DOWN_MASK);
+        final String ACTIVATE_TREE_MENU = "ACTIVATE_TREE_MENU";
+        treeMenu.getActionMap().put(ACTIVATE_TREE_MENU, createFocusTreeMenuAction(treeMenu));
+        treeMenu.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(activateTreeMenu, ACTIVATE_TREE_MENU);
+        // create CTRL+2 key stroke and a corresponding action to bring focus to the filter control
+        final KeyStroke activateFilterControl = KeyStroke.getKeyStroke(KeyEvent.VK_2, InputEvent.CTRL_DOWN_MASK);
+        final String ACTIVATE_FILTER_CONTROL = "ACTIVATE_FILTER_CONTROL";
+        getFilterControl().getActionMap().put(ACTIVATE_FILTER_CONTROL, createFocusFilterControlAction(getFilterControl()));
+        getFilterControl().getInputMap(WHEN_IN_FOCUSED_WINDOW).put(activateFilterControl, ACTIVATE_FILTER_CONTROL);
+        // create CTRL+3 key stroke and a corresponding action to bring focus to the holder panel
+        final KeyStroke focusHolder = KeyStroke.getKeyStroke(KeyEvent.VK_3, InputEvent.CTRL_DOWN_MASK);
+        final String FOCUS_HOLDER = "FOCUS_HOLDER";
+        getFilterControl().getActionMap().put(FOCUS_HOLDER, createFocusHolderAction(treeMenu));
+        getFilterControl().getInputMap(WHEN_IN_FOCUSED_WINDOW).put(focusHolder, FOCUS_HOLDER);
+        treeMenu.expandAll();
     }
 
     /**
@@ -59,25 +59,25 @@ public class TreeMenuPanel extends FilterableTreePanel {
      * @return
      */
     private Action createFocusHolderAction(final TreeMenu<?> treeMenu) {
-	return new AbstractAction() {
-	    private static final long serialVersionUID = 1L;
+        return new AbstractAction() {
+            private static final long serialVersionUID = 1L;
 
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		treeMenu.getHolder().requestFocusInWindow();
-	    }
-	};
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                treeMenu.getHolder().requestFocusInWindow();
+            }
+        };
     }
 
     private Action createFocusFilterControlAction(final FilterControl filterControl) {
-	return new AbstractAction() {
-	    private static final long serialVersionUID = 1L;
+        return new AbstractAction() {
+            private static final long serialVersionUID = 1L;
 
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		filterControl.requestFocusInWindow();
-	    }
-	};
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                filterControl.requestFocusInWindow();
+            }
+        };
     }
 
     /**
@@ -87,14 +87,14 @@ public class TreeMenuPanel extends FilterableTreePanel {
      * @return
      */
     private Action createFocusTreeMenuAction(final TreeMenu<?> treeMenu) {
-	return new AbstractAction() {
-	    private static final long serialVersionUID = 1L;
+        return new AbstractAction() {
+            private static final long serialVersionUID = 1L;
 
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		treeMenu.requestFocusInWindow();
-	    }
-	};
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                treeMenu.requestFocusInWindow();
+            }
+        };
     }
 
     /**
@@ -103,14 +103,14 @@ public class TreeMenuPanel extends FilterableTreePanel {
      * @return
      */
     public static JPanel createContentHolder() {
-	final JPanel holder = new JPanel(new MigLayout("fill, insets 0", "[grow,fill]", "[grow,fill]"));
-	holder.setBorder(new LineBorder(new Color(140, 140, 140)));
-	return holder;
+        final JPanel holder = new JPanel(new MigLayout("fill, insets 0", "[grow,fill]", "[grow,fill]"));
+        holder.setBorder(new LineBorder(new Color(140, 140, 140)));
+        return holder;
     }
 
     @Override
     public TreeMenu<?> getTree() {
-	return (TreeMenu<?>) super.getTree();
+        return (TreeMenu<?>) super.getTree();
     }
 
 }

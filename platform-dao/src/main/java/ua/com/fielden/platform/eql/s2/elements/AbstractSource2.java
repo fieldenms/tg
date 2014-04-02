@@ -14,7 +14,7 @@ public abstract class AbstractSource2 implements ISource2 {
 
     @Override
     public void addProp(final EntProp2 prop) {
-	props.add(prop);
+        props.add(prop);
     }
 
     public List<EntProp2> props() {

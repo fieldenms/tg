@@ -13,6 +13,6 @@ public class TgWagonSlotDao extends CommonEntityDao<TgWagonSlot> implements ITgW
 
     @Inject
     protected TgWagonSlotDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

@@ -14,9 +14,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Type representing the detail side of One-to-One association.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(MasterEntityWithOneToOneAssociation.class)
 @KeyTitle(value = "Key")
@@ -24,21 +24,21 @@ import ua.com.fielden.platform.types.Money;
 public class DetailEntityForOneToOneAssociationWithOneToManyAssociation extends AbstractEntity<MasterEntityWithOneToOneAssociation> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty(DetailsEntityForOneToOneDetailTypeInOneToManyAssociation.class) // linkProperty = "key1" is omitted deliberately
+    @IsProperty(DetailsEntityForOneToOneDetailTypeInOneToManyAssociation.class)
+    // linkProperty = "key1" is omitted deliberately
     @MapTo
     @Title(value = "One 2 Many", desc = "Desc")
     private List<DetailsEntityForOneToOneDetailTypeInOneToManyAssociation> one2ManyAssociation;
 
     @Observable
     public DetailEntityForOneToOneAssociationWithOneToManyAssociation setOne2ManyAssociation(final List<DetailsEntityForOneToOneDetailTypeInOneToManyAssociation> one2ManyAssociation) {
-	this.one2ManyAssociation = one2ManyAssociation;
-	return this;
+        this.one2ManyAssociation = one2ManyAssociation;
+        return this;
     }
 
     public List<DetailsEntityForOneToOneDetailTypeInOneToManyAssociation> getOne2ManyAssociation() {
-	return one2ManyAssociation;
+        return one2ManyAssociation;
     }
-
 
     @IsProperty
     @MapTo
@@ -57,34 +57,32 @@ public class DetailEntityForOneToOneAssociationWithOneToManyAssociation extends 
 
     @Observable
     public DetailEntityForOneToOneAssociationWithOneToManyAssociation setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
-
 
     @Observable
     public DetailEntityForOneToOneAssociationWithOneToManyAssociation setIntProp(final Integer intProp) {
-	this.intProp = intProp;
-	return this;
+        this.intProp = intProp;
+        return this;
     }
 
     public Integer getIntProp() {
-	return intProp;
+        return intProp;
     }
-
 
     @Observable
     public DetailEntityForOneToOneAssociationWithOneToManyAssociation setStrProp(final String strProp) {
-	this.strProp = strProp;
-	return this;
+        this.strProp = strProp;
+        return this;
     }
 
     public String getStrProp() {
-	return strProp;
+        return strProp;
     }
 
 }

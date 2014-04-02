@@ -10,27 +10,27 @@ extends AbstractWhereWithoutNesting<T1, T2, ET> //
 implements IWhere<T1, T2, T3, ET> {
 
     AbstractWhere(final Tokens queryTokens) {
-	super(queryTokens);
+        super(queryTokens);
     }
 
     protected abstract T3 getParent3();
 
     private AbstractBeginCondition<T3> getBeginCondition() {
-	return new AbstractBeginCondition<T3>(getTokens()) {
-	    @Override
-	    T3 getParent() {
-		return getParent3();
-	    }
-	};
+        return new AbstractBeginCondition<T3>(getTokens()) {
+            @Override
+            T3 getParent() {
+                return getParent3();
+            }
+        };
     }
 
     @Override
     public T3 begin() {
-	return getBeginCondition().begin();
+        return getBeginCondition().begin();
     }
 
     @Override
     public T3 notBegin() {
-	return getBeginCondition().notBegin();
+        return getBeginCondition().notBegin();
     }
 }

@@ -16,21 +16,21 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * {@link NewProperty} test case to ensure correct instantiation.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class NewPropertyTest {
 
     @Test
     public void test_annotation_description_presence() {
-	final Calculated calculated = new CalculatedAnnotation().contextualExpression("some expression").newInstance();
-	final IsProperty isProperty = new IsPropertyAnnotation(Money.class).newInstance();
+        final Calculated calculated = new CalculatedAnnotation().contextualExpression("some expression").newInstance();
+        final IsProperty isProperty = new IsPropertyAnnotation(Money.class).newInstance();
 
-	final NewProperty pd = new NewProperty("prop_name", List.class, false, "title", "desc", calculated, isProperty);
-	assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(IsProperty.class));
-	assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(Calculated.class));
-	assertFalse("Should have not recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(CritOnly.class));
+        final NewProperty pd = new NewProperty("prop_name", List.class, false, "title", "desc", calculated, isProperty);
+        assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(IsProperty.class));
+        assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(Calculated.class));
+        assertFalse("Should have not recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(CritOnly.class));
     }
 
 }

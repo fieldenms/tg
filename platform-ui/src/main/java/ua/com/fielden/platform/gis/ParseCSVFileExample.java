@@ -1,4 +1,5 @@
 package ua.com.fielden.platform.gis;
+
 /*
 Parse CSV File using StringTokenizer example.
 This example shows how to parse comma separated file (CSV file) using
@@ -11,49 +12,41 @@ import java.util.StringTokenizer;
 
 public class ParseCSVFileExample {
 
-public static void main(final String[] args) {
-       
-        try
-        {
-               
-                //csv file containing data
-                final String strFile = "src/gis-data-sample.csv";
-               
-                //create BufferedReader to read csv file
-                final BufferedReader br = new BufferedReader( new FileReader(strFile));
-                String strLine = "";
-                StringTokenizer st = null;
-                int lineNumber = 0, tokenNumber = 0;
-               
-                //read comma separated file line by line
-                while( (strLine = br.readLine()) != null)
-                {
-                        lineNumber++;
-                       
-                        //break comma separated line using ","
-                        st = new StringTokenizer(strLine, ",");
-                       
-                        while(st.hasMoreTokens())
-                        {
-                                //display csv values
-                                tokenNumber++;
-                                System.out.println("Line # " + lineNumber +
-                                                ", Token # " + tokenNumber
-                                                + ", Token : "+ st.nextToken());
-                        }
-                       
-                        //reset token number
-                        tokenNumber = 0;
-                       
+    public static void main(final String[] args) {
+
+        try {
+
+            //csv file containing data
+            final String strFile = "src/gis-data-sample.csv";
+
+            //create BufferedReader to read csv file
+            final BufferedReader br = new BufferedReader(new FileReader(strFile));
+            String strLine = "";
+            StringTokenizer st = null;
+            int lineNumber = 0, tokenNumber = 0;
+
+            //read comma separated file line by line
+            while ((strLine = br.readLine()) != null) {
+                lineNumber++;
+
+                //break comma separated line using ","
+                st = new StringTokenizer(strLine, ",");
+
+                while (st.hasMoreTokens()) {
+                    //display csv values
+                    tokenNumber++;
+                    System.out.println("Line # " + lineNumber + ", Token # " + tokenNumber + ", Token : " + st.nextToken());
                 }
-               
-               
+
+                //reset token number
+                tokenNumber = 0;
+
+            }
+
+        } catch (final Exception e) {
+            System.out.println("Exception while reading csv file: " + e);
         }
-        catch(final Exception e)
-        {
-                System.out.println("Exception while reading csv file: " + e);                  
-        }
-}
+    }
 }
 
 /*

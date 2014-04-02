@@ -6,7 +6,7 @@ import java.util.EventListener;
  * An {@link EventListener} that listens property selection events.
  * 
  * @author TG Team
- *
+ * 
  */
 public interface IPropertySelectionListener extends EventListener {
 

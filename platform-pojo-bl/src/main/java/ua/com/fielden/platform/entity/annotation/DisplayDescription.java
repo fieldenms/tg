@@ -7,9 +7,9 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation that should be used for declaring to show values of this type with descriptions in property editors.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })

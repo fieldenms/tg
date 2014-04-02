@@ -23,7 +23,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  * Represents a web resource mapped to URI /query/EntityAggregates. It handles POST requests to entity aggregates.
  * <p>
  * Each request is handled by a new resource instance, thus the only thread-safety requirement is to have provided DAO and entity factory thread-safe.
- *
+ * 
  * @author TG Team
  */
 public class EntityAggregatesQueryResource extends ServerResource {
@@ -39,7 +39,6 @@ public class EntityAggregatesQueryResource extends ServerResource {
     /** Indicates whether response should return only first items (number limited by page capacity. */
     private final boolean shouldReturnFirst;
 
-
     private final IEntityAggregatesDao dao;
     private final RestServerUtil restUtil;
 
@@ -47,58 +46,58 @@ public class EntityAggregatesQueryResource extends ServerResource {
      * The main resource constructor accepting a DAO instance in addition to the standard {@link Resource} parameters.
      * <p>
      * DAO is required for DB interoperability, whereas entity factory is required for enhancement of entities provided in request envelopes.
-     *
+     * 
      * @param dao
      * @param context
      * @param request
      * @param response
      */
     public EntityAggregatesQueryResource(final IEntityAggregatesDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	setNegotiated(false);
-	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
-	this.dao = dao;
-	this.restUtil = restUtil;
+        init(context, request, response);
+        setNegotiated(false);
+        getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
+        this.dao = dao;
+        this.restUtil = restUtil;
 
-	final String pageCapacityParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
-	final String pageNoParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-no");
+        final String pageCapacityParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
+        final String pageNoParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-no");
 
-	pageCapacity = initPageCapacity(pageCapacityParam);
-	pageNo = initPageNoOrCount(pageNoParam);
-	pageCount = initPageNoOrCount(request.getResourceRef().getQueryAsForm().getFirstValue("page-count"));
+        pageCapacity = initPageCapacity(pageCapacityParam);
+        pageNo = initPageNoOrCount(pageNoParam);
+        pageCount = initPageNoOrCount(request.getResourceRef().getQueryAsForm().getFirstValue("page-count"));
 
-	shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(pageCapacityParam) && !FIRST.equalsIgnoreCase(pageNoParam);
-	shouldReturnAll = "all".equalsIgnoreCase(pageCapacityParam);
-	shouldReturnFirst = FIRST.equalsIgnoreCase(pageNoParam);
+        shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(pageCapacityParam) && !FIRST.equalsIgnoreCase(pageNoParam);
+        shouldReturnAll = "all".equalsIgnoreCase(pageCapacityParam);
+        shouldReturnFirst = FIRST.equalsIgnoreCase(pageNoParam);
     }
 
     /**
      * Initialisation of property <code>pageCapacity</code>.
-     *
+     * 
      * @param pageCapacityParamName
      * @return
      */
     private Integer initPageCapacity(final String pageCapacityParamName) {
-	try {
-	    return pageCapacityParamName != null ? Integer.parseInt(pageCapacityParamName) : null;
-	} catch (final Exception e) {
-	    return null;
-	}
+        try {
+            return pageCapacityParamName != null ? Integer.parseInt(pageCapacityParamName) : null;
+        } catch (final Exception e) {
+            return null;
+        }
     }
 
     /**
      * Initialisation of property <code>pageNo</code>.
-     *
+     * 
      * @param pageNoParamName
      * @return
      */
     private int initPageNoOrCount(final String pageNoParamName) {
-	try {
-	    return pageNoParamName != null && !pageNoParamName.equalsIgnoreCase(FIRST) ? Integer.parseInt(pageNoParamName) : 0;
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    return 0;
-	}
+        try {
+            return pageNoParamName != null && !pageNoParamName.equalsIgnoreCase(FIRST) ? Integer.parseInt(pageNoParamName) : 0;
+        } catch (final Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     /**
@@ -107,28 +106,28 @@ public class EntityAggregatesQueryResource extends ServerResource {
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-	try {
-	    final  QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = (QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>) restUtil.restoreQueryExecutionModel(envelope);
-	    if (shouldReturnCount) {
-		final int count = dao.count(qem.getQueryModel(), qem.getParamValues());
-		restUtil.setHeaderEntry(getResponse(), HttpHeaders.COUNT, count + "");
-		return new StringRepresentation("count");
-	    } else if (shouldReturnAll) {
-		//getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(queryAndFetch)));
-		return restUtil.listRepresentation(dao.getAllEntities(qem));
-	    } else if (shouldReturnFirst) {
-		return restUtil.listRepresentation(dao.getFirstEntities(qem, pageCapacity));
-	    } else {
-		final IPage<EntityAggregates> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
-		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
-		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
-		//getResponse().setEntity(restUtil.listRepresentation(page.data()));
-		return restUtil.listRepresentation(page.data());
-	    }
-	} catch (final Exception ex) {
-	    ex.printStackTrace();
-	    // getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
-	    return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
-	}
+        try {
+            final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = (QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>) restUtil.restoreQueryExecutionModel(envelope);
+            if (shouldReturnCount) {
+                final int count = dao.count(qem.getQueryModel(), qem.getParamValues());
+                restUtil.setHeaderEntry(getResponse(), HttpHeaders.COUNT, count + "");
+                return new StringRepresentation("count");
+            } else if (shouldReturnAll) {
+                //getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(queryAndFetch)));
+                return restUtil.listRepresentation(dao.getAllEntities(qem));
+            } else if (shouldReturnFirst) {
+                return restUtil.listRepresentation(dao.getFirstEntities(qem, pageCapacity));
+            } else {
+                final IPage<EntityAggregates> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
+                restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
+                restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
+                //getResponse().setEntity(restUtil.listRepresentation(page.data()));
+                return restUtil.listRepresentation(page.data());
+            }
+        } catch (final Exception ex) {
+            ex.printStackTrace();
+            // getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
+            return restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage());
+        }
     }
 }

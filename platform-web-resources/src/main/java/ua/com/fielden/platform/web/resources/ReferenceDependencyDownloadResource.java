@@ -16,7 +16,7 @@ import org.restlet.resource.ServerResource;
 
 /**
  * A web resource for downloading a file representing an application dependency (e.g. a jar file, or a .properties file).
- *
+ * 
  * @author TG Team
  */
 public class ReferenceDependencyDownloadResource extends ServerResource {
@@ -28,14 +28,14 @@ public class ReferenceDependencyDownloadResource extends ServerResource {
     private final String fileName;
 
     public ReferenceDependencyDownloadResource(final String location, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	setNegotiated(false);
-	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
+        init(context, request, response);
+        setNegotiated(false);
+        getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 
-	this.location = location;
-	this.restUtil = restUtil;
-	this.username = (String) request.getAttributes().get("username");
-	this.fileName = (String) request.getAttributes().get("file-name");
+        this.location = location;
+        this.restUtil = restUtil;
+        this.username = (String) request.getAttributes().get("username");
+        this.fileName = (String) request.getAttributes().get("file-name");
     }
 
     /**
@@ -44,18 +44,18 @@ public class ReferenceDependencyDownloadResource extends ServerResource {
     @Get
     @Override
     public Representation get() {
-	// process GET request
-	try {
-	    final File file = new File(location + "/" + fileName);
-	    if (file.canRead()) {
-		return new InputRepresentation(new FileInputStream(file), MediaType.APPLICATION_OCTET_STREAM);
-	    } else {
-		getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
-		return restUtil.errorRepresentation("Could not read file " + fileName);
-	    }
-	} catch (final Exception ex) {
-	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-	    return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
-	}
+        // process GET request
+        try {
+            final File file = new File(location + "/" + fileName);
+            if (file.canRead()) {
+                return new InputRepresentation(new FileInputStream(file), MediaType.APPLICATION_OCTET_STREAM);
+            } else {
+                getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+                return restUtil.errorRepresentation("Could not read file " + fileName);
+            }
+        } catch (final Exception ex) {
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            return restUtil.errorRepresentation("Could not process GET request:\n" + ex.getMessage());
+        }
     }
 }

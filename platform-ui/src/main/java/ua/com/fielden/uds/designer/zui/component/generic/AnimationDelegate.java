@@ -10,50 +10,50 @@ public abstract class AnimationDelegate implements PActivity.PActivityDelegate {
     private PDimension delta;
 
     public AnimationDelegate(PNode cloneNode, PNode draggedNode) {
-	setCloneNode(cloneNode);
-	setDragNode(draggedNode);
+        setCloneNode(cloneNode);
+        setDragNode(draggedNode);
     }
 
     public AnimationDelegate(PNode cloneNode, PNode draggedNode, PDimension delta) {
-	setCloneNode(cloneNode);
-	setDragNode(draggedNode);
-	setDelta(delta);
+        setCloneNode(cloneNode);
+        setDragNode(draggedNode);
+        setDelta(delta);
     }
 
     public PNode getCloneNode() {
-	return cloneNode;
+        return cloneNode;
     }
 
     private void setCloneNode(PNode cloneNode) {
-	this.cloneNode = cloneNode;
+        this.cloneNode = cloneNode;
     }
 
     public PNode getDragNode() {
-	return dragNode;
+        return dragNode;
     }
 
     private void setDragNode(PNode draggedNode) {
-	this.dragNode = draggedNode;
+        this.dragNode = draggedNode;
     }
 
     public void activityStarted(PActivity activity) {
-	// this is just a stub
+        // this is just a stub
     }
 
     public void activityStepped(PActivity activity) {
-	// this is just a stub
+        // this is just a stub
     }
 
     public void activityFinished(PActivity activity) {
-	// this is just a stub
+        // this is just a stub
     }
 
     public PDimension getDelta() {
-	return delta;
+        return delta;
     }
 
     protected void setDelta(PDimension delta) {
-	this.delta = delta;
+        this.delta = delta;
     }
 
 }

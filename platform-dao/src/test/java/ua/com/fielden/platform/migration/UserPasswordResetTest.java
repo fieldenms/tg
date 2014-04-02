@@ -9,9 +9,9 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
 
 /**
  * This is a test for user password reset utility.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class UserPasswordResetTest extends DbDrivenTestCase {
     private final IUserController controller = injector.getInstance(IUserController.class);
@@ -23,32 +23,32 @@ public class UserPasswordResetTest extends DbDrivenTestCase {
     private final Cypher cypher;
 
     public UserPasswordResetTest() throws Exception {
-	super();
-	cypher = new Cypher();
+        super();
+        cypher = new Cypher();
     }
 
     public void test_that_utility_resets_password_for_all_users() throws Exception {
-	passwordReset.resetAll(privateKey);
+        passwordReset.resetAll(privateKey);
 
-	hibernateUtil.getSessionFactory().getCurrentSession().close();
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
 
-	final List<User> users = controller.findAllUsers();
-	for (final User user : users) {
-	    assertEquals("Incorrect password.", user.getKey(), cypher.decrypt(user.getPassword(), publicKey));
-	}
+        final List<User> users = controller.findAllUsers();
+        for (final User user : users) {
+            assertEquals("Incorrect password.", user.getKey(), cypher.decrypt(user.getPassword(), publicKey));
+        }
     }
 
     public void test_that_utility_resets_password_for_an_individual_user() throws Exception {
-	passwordReset.reset("USER-1", privateKey);
+        passwordReset.reset("USER-1", privateKey);
 
-	hibernateUtil.getSessionFactory().getCurrentSession().close();
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
 
-	final User user = controller.findByKey("USER-1");
-	assertEquals("Incorrect password.", user.getKey(), cypher.decrypt(user.getPassword(), publicKey));
+        final User user = controller.findByKey("USER-1");
+        assertEquals("Incorrect password.", user.getKey(), cypher.decrypt(user.getPassword(), publicKey));
     }
 
     @Override
     protected String[] getDataSetPathsForInsert() {
-	return new String[] { "src/test/resources/data-files/user-password-reset-test-data.flat.xml" };
+        return new String[] { "src/test/resources/data-files/user-password-reset-test-data.flat.xml" };
     }
 }

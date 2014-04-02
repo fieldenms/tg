@@ -12,39 +12,39 @@ public class ConditionGeneratorTest extends BaseEntQueryTCase {
 
     @Test
     public void test1() {
-	final QueryModel expected = select(VEHICLE).where().prop("id").eq().extProp("vehicle").and(). //
-		exists(select(ORG5).where().prop("id").eq().extProp("station").and(). //
-			exists(select(ORG4).where().prop("id").eq().extProp("parent").and(). //
-				exists(select(ORG3).where().prop("id").eq().extProp("parent").and().exists(null).model()).model()).model()).model();
+        final QueryModel expected = select(VEHICLE).where().prop("id").eq().extProp("vehicle").and(). //
+        exists(select(ORG5).where().prop("id").eq().extProp("station").and(). //
+        exists(select(ORG4).where().prop("id").eq().extProp("parent").and(). //
+        exists(select(ORG3).where().prop("id").eq().extProp("parent").and().exists(null).model()).model()).model()).model();
 
-	assertEquals(expected, cg.generateSubquery(WORK_ORDER, "vehicle.station.parent.parent", null, null));
+        assertEquals(expected, cg.generateSubquery(WORK_ORDER, "vehicle.station.parent.parent", null, null));
     }
 
     @Test
     public void test2() {
-	final QueryModel expected = select(VEHICLE).where().prop("id").eq().extProp("alias.vehicle").and(). //
-		exists(select(ORG5).where().prop("id").eq().extProp("station").and(). //
-			exists(select(ORG4).where().prop("id").eq().extProp("parent").and(). //
-				exists(select(ORG3).where().prop("id").eq().extProp("parent").and().exists(null).model()).model()).model()).model();
+        final QueryModel expected = select(VEHICLE).where().prop("id").eq().extProp("alias.vehicle").and(). //
+        exists(select(ORG5).where().prop("id").eq().extProp("station").and(). //
+        exists(select(ORG4).where().prop("id").eq().extProp("parent").and(). //
+        exists(select(ORG3).where().prop("id").eq().extProp("parent").and().exists(null).model()).model()).model()).model();
 
-	assertEquals(expected, cg.generateSubquery(WORK_ORDER, "vehicle.station.parent.parent", "alias", null));
+        assertEquals(expected, cg.generateSubquery(WORK_ORDER, "vehicle.station.parent.parent", "alias", null));
     }
 
     @Test
     public void test3() {
-	final QueryModel expected = select(VEHICLE).where().prop("id").eq().extProp("alias.vehicle").and(). //
-		exists(select(ORG5).where().prop("id").eq().extProp("station").and(). //
-			exists(select(ORG4).where().prop("id").eq().extProp("parent").and(). //
-				exists(select(ORG3).where().prop("id").eq().extProp("parent").and().exists(select(WORKSHOP).where().prop("key").eq().val("AAA").model()).model()).model()).model()).model();
+        final QueryModel expected = select(VEHICLE).where().prop("id").eq().extProp("alias.vehicle").and(). //
+        exists(select(ORG5).where().prop("id").eq().extProp("station").and(). //
+        exists(select(ORG4).where().prop("id").eq().extProp("parent").and(). //
+        exists(select(ORG3).where().prop("id").eq().extProp("parent").and().exists(select(WORKSHOP).where().prop("key").eq().val("AAA").model()).model()).model()).model()).model();
 
-	assertEquals(expected, cg.generateSubquery(WORK_ORDER, "vehicle.station.parent.parent", "alias", select(WORKSHOP).where().prop("key").eq().val("AAA").model()));
+        assertEquals(expected, cg.generateSubquery(WORK_ORDER, "vehicle.station.parent.parent", "alias", select(WORKSHOP).where().prop("key").eq().val("AAA").model()));
     }
 
     @Test
     public void test4() {
-	final QueryModel expected = select(VEHICLE).where().prop("id").eq().extProp("vehicle").and().exists(null).model(); //
+        final QueryModel expected = select(VEHICLE).where().prop("id").eq().extProp("vehicle").and().exists(null).model(); //
 
-	assertEquals(expected, cg.generateSubquery(WORK_ORDER, "vehicle", null, null));
+        assertEquals(expected, cg.generateSubquery(WORK_ORDER, "vehicle", null, null));
     }
 
 }

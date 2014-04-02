@@ -15,7 +15,7 @@ public final class FrameTitleUpdater {
     private final JFrame frm;
 
     public FrameTitleUpdater(final JFrame frm) {
-	this.frm = frm;
+        this.frm = frm;
     }
 
     /**
@@ -24,12 +24,12 @@ public final class FrameTitleUpdater {
      * @param newTitle
      */
     public void update(final String newTitle) {
-	SwingUtilitiesEx.invokeLater(new Runnable() {
-	    @Override
-	    public void run() {
-		frm.setTitle(newTitle);
-	    }
-	});
+        SwingUtilitiesEx.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                frm.setTitle(newTitle);
+            }
+        });
 
     }
 }

@@ -6,14 +6,14 @@ import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;
 
 /**
  * NDA for recognising LPAREN token of the expression language.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class LparenTokenAutomata extends BaseNonDeterministicAutomata {
 
     public LparenTokenAutomata() {
-	super(EgTokenCategory.LPAREN, TEXT_POST_PROCESSING.TRIM, new State0(), new State1());
+        super(EgTokenCategory.LPAREN, TEXT_POST_PROCESSING.TRIM, new State0(), new State1());
     }
 
     @Override

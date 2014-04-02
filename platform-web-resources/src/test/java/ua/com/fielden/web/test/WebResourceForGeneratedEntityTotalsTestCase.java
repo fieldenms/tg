@@ -39,9 +39,9 @@ import com.google.inject.Module;
 
 /**
  * Provides a unit test to ensure correct operation of EQL with generated types when it comes to calculation of totals.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCase {
     private final IGeneratedEntityController rao = new GeneratedEntityRao(config.restClientUtil());
@@ -52,9 +52,9 @@ public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCas
 
     private final ISerialiser serialiser = new TgKryo(factory, new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class }));
     private final Set<Class<?>> rootTypes = new HashSet<Class<?>>() {
-	{
-	    add(InspectedEntity.class);
-	}
+        {
+            add(InspectedEntity.class);
+        }
     };
     private IDomainTreeManagerAndEnhancer dtm;
     private List<byte[]> binaryTypes;
@@ -62,58 +62,58 @@ public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCas
 
     @Override
     protected String[] getDataSetPaths() {
-	return new String[] { "src/test/resources/data-files/query-for-generated-type-web-resource-test-case.flat.xml" };
+        return new String[] { "src/test/resources/data-files/query-for-generated-type-web-resource-test-case.flat.xml" };
     }
 
     @Override
     public synchronized Restlet getInboundRoot() {
-	final Router router = new Router(getContext());
+        final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
-	helper.register(router, IInspectedEntityDao.class);
-	helper.registerAggregates(router);
-	helper.registerGeneratedTypeResources(router);
+        final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
+        helper.register(router, IInspectedEntityDao.class);
+        helper.registerAggregates(router);
+        helper.registerGeneratedTypeResources(router);
 
-	return router;
+        return router;
     }
 
     @Override
     public void setUp() {
-	super.setUp();
+        super.setUp();
 
-	dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
+        dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
 
-	// totalProperty1
-	dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "SUM(intProperty) * 2", "intProperty Sum", "desc", NO_ATTR, "intProperty");
-	// totalProperty2
-	dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "MAX(intProperty) - MIN(intProperty)", "minimaxDiff", "desc", NO_ATTR, "intProperty");
-	dtm.getEnhancer().apply();
-	final List<ByteArray> byteListOfTypes = dtm.getEnhancer().getManagedTypeArrays(InspectedEntity.class);
-	binaryTypes = toByteArray(byteListOfTypes);
-	type = (Class<? extends AbstractEntity<?>>) dtm.getEnhancer().getManagedType(InspectedEntity.class);
-	rao.setEntityType(type);
+        // totalProperty1
+        dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "SUM(intProperty) * 2", "intProperty Sum", "desc", NO_ATTR, "intProperty");
+        // totalProperty2
+        dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "MAX(intProperty) - MIN(intProperty)", "minimaxDiff", "desc", NO_ATTR, "intProperty");
+        dtm.getEnhancer().apply();
+        final List<ByteArray> byteListOfTypes = dtm.getEnhancer().getManagedTypeArrays(InspectedEntity.class);
+        binaryTypes = toByteArray(byteListOfTypes);
+        type = (Class<? extends AbstractEntity<?>>) dtm.getEnhancer().getManagedType(InspectedEntity.class);
+        rao.setEntityType(type);
 
     }
 
     private List<byte[]> toByteArray(final List<ByteArray> list) {
-	final List<byte[]> byteArray = new ArrayList<byte[]>(list.size());
-	for (final ByteArray array : list) {
-	    byteArray.add(array.getArray());
-	}
-	return byteArray;
+        final List<byte[]> byteArray = new ArrayList<byte[]>(list.size());
+        for (final ByteArray array : list) {
+            byteArray.add(array.getArray());
+        }
+        return byteArray;
     }
 
     @Test
     public void test_selection_of_totals() {
-	final EntityResultQueryModel model = select(type).where().prop("intProperty").lt().val(30).//
-		yield().prop("intPropertySum").as("intPropertySum").//
-		yield().prop("minimaxDiff").as("minimaxDiff").//
-		modelAsEntity(type);
-	final IPage firstPage = rao.firstPage(from(model).model(), 15, binaryTypes);
+        final EntityResultQueryModel model = select(type).where().prop("intProperty").lt().val(30).//
+        yield().prop("intPropertySum").as("intPropertySum").//
+        yield().prop("minimaxDiff").as("minimaxDiff").//
+        modelAsEntity(type);
+        final IPage firstPage = rao.firstPage(from(model).model(), 15, binaryTypes);
 
-	assertEquals("Incorrect value of returned items.", 1, firstPage.data().size());
-	final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);
-	assertEquals("Incorrect value.", 1020, instance.get("intPropertySum"));
-	assertEquals("Incorrect value.", 10, instance.get("minimaxDiff"));
+        assertEquals("Incorrect value of returned items.", 1, firstPage.data().size());
+        final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);
+        assertEquals("Incorrect value.", 1020, instance.get("intPropertySum"));
+        assertEquals("Incorrect value.", 10, instance.get("minimaxDiff"));
     }
 }

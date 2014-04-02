@@ -18,7 +18,7 @@ public class EntQuery2 implements ISingleOperand2 {
     }
 
     public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class resultType, final QueryCategory category, //
-	    final FetchModel fetchModel) {
+            final FetchModel fetchModel) {
         super();
         this.category = category;
         this.sources = queryBlocks.getSources();

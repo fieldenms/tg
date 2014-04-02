@@ -6,11 +6,11 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 abstract class AbstractExpRightSideConditionalOperand<T, ET extends AbstractEntity<?>> extends AbstractRightSideOperand<T, ET> implements IComparisonQuantifiedOperand<T, ET> {
     protected AbstractExpRightSideConditionalOperand(final Tokens queryTokens) {
-	super(queryTokens);
+        super(queryTokens);
     }
 
     @Override
     public IExprOperand0<T, ET> beginExpr() {
-	return new ExprOperand0<T, ET>(getTokens().beginExpression(), getParent());
+        return new ExprOperand0<T, ET>(getTokens().beginExpression(), getParent());
     }
 }

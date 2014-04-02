@@ -7,11 +7,11 @@ import java.lang.annotation.Target;
 
 /**
  * Should be used for annotating methods that require a database transaction.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ ElementType.METHOD })
 public @interface Transactional {
 }

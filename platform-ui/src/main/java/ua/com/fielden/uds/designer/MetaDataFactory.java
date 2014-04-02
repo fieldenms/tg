@@ -12,12 +12,12 @@ public class MetaDataFactory {
     /**
      * Parses an XML repository and produces a list of MetaData objects is successful.
      * 
-     * @param fileName --
-     *                an XML file name containing a repository of business objects' definitions.
+     * @param fileName
+     *            -- an XML file name containing a repository of business objects' definitions.
      * @return
      */
     public Set<MetaType> parse(String fileName) {
-	// TODO implement parsing using DOM
-	return null;
+        // TODO implement parsing using DOM
+        return null;
     }
 }

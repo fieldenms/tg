@@ -24,12 +24,12 @@ public class TgModelCount extends AbstractEntity<TgVehicleModel> {
 
     @Observable
     public TgModelCount setCount(final BigInteger count) {
-	this.count = count;
-	return this;
+        this.count = count;
+        return this;
     }
 
     public BigInteger getCount() {
-	return count;
+        return count;
     }
 
     /**

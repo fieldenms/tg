@@ -16,9 +16,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Type representing the details side of One-to-Many association with another details entity.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key")
@@ -45,24 +45,23 @@ public class DetailsEntityOfSecondLevelNestingWithOneToManyAssociation extends A
 
     @Observable
     public DetailsEntityOfSecondLevelNestingWithOneToManyAssociation setKey2(final Integer key2) {
-	this.key2 = key2;
-	return this;
+        this.key2 = key2;
+        return this;
     }
 
     public Integer getKey2() {
-	return key2;
+        return key2;
     }
 
     @Observable
     public DetailsEntityOfSecondLevelNestingWithOneToManyAssociation setKey1(final DetailsEntityForOneToManyAssociation key1) {
-	this.key1 = key1;
-	return this;
+        this.key1 = key1;
+        return this;
     }
 
     public DetailsEntityForOneToManyAssociation getKey1() {
-	return key1;
+        return key1;
     }
-
 
     @IsProperty
     @MapTo
@@ -81,44 +80,42 @@ public class DetailsEntityOfSecondLevelNestingWithOneToManyAssociation extends A
 
     @Observable
     public DetailsEntityOfSecondLevelNestingWithOneToManyAssociation setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
-
 
     @Observable
     public DetailsEntityOfSecondLevelNestingWithOneToManyAssociation setIntProp(final Integer intProp) {
-	this.intProp = intProp;
-	return this;
+        this.intProp = intProp;
+        return this;
     }
 
     public Integer getIntProp() {
-	return intProp;
+        return intProp;
     }
-
 
     @Observable
     public DetailsEntityOfSecondLevelNestingWithOneToManyAssociation setStrProp(final String strProp) {
-	this.strProp = strProp;
-	return this;
+        this.strProp = strProp;
+        return this;
     }
 
     public String getStrProp() {
-	return strProp;
+        return strProp;
     }
 
     @Observable
     public DetailsEntityOfSecondLevelNestingWithOneToManyAssociation setDateProp(final Date dateProp) {
-	this.dateProp = dateProp;
-	return this;
+        this.dateProp = dateProp;
+        return this;
     }
 
     public Date getDateProp() {
-	return dateProp;
+        return dateProp;
     }
 
 }

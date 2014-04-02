@@ -9,26 +9,26 @@ public class StubSerialiser implements ISerialiser {
 
     @Override
     public byte[] serialise(Object obj) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public <T> T deserialise(byte[] content, Class<T> type) throws Exception {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public <T> T deserialise(InputStream content, Class<T> type) throws Exception {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public EntityFactory factory() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

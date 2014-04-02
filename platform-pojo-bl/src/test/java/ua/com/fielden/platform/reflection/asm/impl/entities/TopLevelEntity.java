@@ -21,20 +21,20 @@ public class TopLevelEntity extends AbstractEntity<String> {
     private EntityBeingModified prop2;
 
     public EntityBeingModified getProp1() {
-	return prop1;
+        return prop1;
     }
 
     @Observable
     public void setProp1(final EntityBeingModified prop1) {
-	this.prop1 = prop1;
+        this.prop1 = prop1;
     }
 
     public EntityBeingModified getProp2() {
-	return prop2;
+        return prop2;
     }
 
     @Observable
     public void setProp2(final EntityBeingModified prop2) {
-	this.prop2 = prop2;
+        this.prop2 = prop2;
     }
 }

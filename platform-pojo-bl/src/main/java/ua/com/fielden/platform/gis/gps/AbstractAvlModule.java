@@ -14,9 +14,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
  * Master entity object.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "IMEI", desc = "Унікальний номер IMEI для ідентифікації пристрою в GSM та інших мережах")
@@ -33,11 +33,11 @@ public abstract class AbstractAvlModule extends AbstractEntity<String> {
     @Title(value = "Серійний Номер", desc = "Серійний Номер")
     private Integer serialNo;
 
-//    @IsProperty
-//    @Required
-//    @MapTo
-//    @Title(value = "Type", desc = "Module type")
-//    private ModuleType moduleType;
+    //    @IsProperty
+    //    @Required
+    //    @MapTo
+    //    @Title(value = "Type", desc = "Module type")
+    //    private ModuleType moduleType;
 
     @IsProperty
     @Required
@@ -70,75 +70,72 @@ public abstract class AbstractAvlModule extends AbstractEntity<String> {
 
     @Observable
     public AbstractAvlModule setPassword(final String password) {
-	this.password = password;
-	return this;
+        this.password = password;
+        return this;
     }
 
     public String getPassword() {
-	return password;
+        return password;
     }
-
 
     @Observable
     public AbstractAvlModule setIdentifier(final String identifier) {
-	this.identifier = identifier;
-	return this;
+        this.identifier = identifier;
+        return this;
     }
 
     public String getIdentifier() {
-	return identifier;
+        return identifier;
     }
-
 
     @Observable
     public AbstractAvlModule setImletVersion(final String imletVersion) {
-	this.imletVersion = imletVersion;
-	return this;
+        this.imletVersion = imletVersion;
+        return this;
     }
 
     public String getImletVersion() {
-	return imletVersion;
+        return imletVersion;
     }
-
 
     @Observable
     public AbstractAvlModule setHwVersion(final String hwVersion) {
-	this.hwVersion = hwVersion;
-	return this;
+        this.hwVersion = hwVersion;
+        return this;
     }
 
     public String getHwVersion() {
-	return hwVersion;
+        return hwVersion;
     }
 
     @Observable
     public AbstractAvlModule setGpsFirmware(final String gpsFirmware) {
-	this.gpsFirmware = gpsFirmware;
-	return this;
+        this.gpsFirmware = gpsFirmware;
+        return this;
     }
 
     public String getGpsFirmware() {
-	return gpsFirmware;
+        return gpsFirmware;
     }
 
     @Observable
     public AbstractAvlModule setSerialNo(final Integer serialNo) {
-	this.serialNo = serialNo;
-	return this;
+        this.serialNo = serialNo;
+        return this;
     }
 
     public Integer getSerialNo() {
-	return serialNo;
+        return serialNo;
     }
 
-//    @Observable
-//    public Module setModuleType(final ModuleType type) {
-//	this.moduleType = type;
-//	return this;
-//    }
-//
-//    public ModuleType getModuleType() {
-//	return moduleType;
-//    }
+    //    @Observable
+    //    public Module setModuleType(final ModuleType type) {
+    //	this.moduleType = type;
+    //	return this;
+    //    }
+    //
+    //    public ModuleType getModuleType() {
+    //	return moduleType;
+    //    }
 
 }

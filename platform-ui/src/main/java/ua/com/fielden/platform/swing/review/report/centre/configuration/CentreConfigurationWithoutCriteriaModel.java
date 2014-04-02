@@ -31,7 +31,7 @@ public class CentreConfigurationWithoutCriteriaModel<T extends AbstractEntity<?>
 
     /**
      * Initiates this {@link CentreConfigurationWithoutCriteriaModel} with default {@link IAnalysisBuilder}.
-     *
+     * 
      * @param entityType
      * @param name
      * @param entityFactory
@@ -40,12 +40,13 @@ public class CentreConfigurationWithoutCriteriaModel<T extends AbstractEntity<?>
      * @param cdtme
      */
     public CentreConfigurationWithoutCriteriaModel(final Class<T> entityType, final String name, final EntityFactory entityFactory, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final ICentreDomainTreeManagerAndEnhancer cdtme) {
-	this(entityType, name, null, entityFactory, criteriaGenerator, masterManager, cdtme);
+        this(entityType, name, null, entityFactory, criteriaGenerator, masterManager, cdtme);
     }
 
     /**
-     * Initiates this {@link CentreConfigurationWithoutCriteriaModel} with specified {@link IAnalysisBuilder}. If the specified {@link IAnalysisBuilder} is null then the default {@link IAnalysisBuilder} will be created.
-     *
+     * Initiates this {@link CentreConfigurationWithoutCriteriaModel} with specified {@link IAnalysisBuilder}. If the specified {@link IAnalysisBuilder} is null then the default
+     * {@link IAnalysisBuilder} will be created.
+     * 
      * @param entityType
      * @param name
      * @param analysisBuilder
@@ -55,38 +56,38 @@ public class CentreConfigurationWithoutCriteriaModel<T extends AbstractEntity<?>
      * @param cdtme
      */
     public CentreConfigurationWithoutCriteriaModel(final Class<T> entityType, final String name, final IAnalysisFactory<T, ?> defaultAnalysisFactory, final EntityFactory entityFactory, final ICriteriaGenerator criteriaGenerator, final IEntityMasterManager masterManager, final ICentreDomainTreeManagerAndEnhancer cdtme) {
-	super(entityType, name, entityFactory, masterManager, criteriaGenerator);
-	this.analysisBuilder = new DefaultAnalysisBuilder<>(defaultAnalysisFactory);
-	this.cdtme = cdtme;
+        super(entityType, name, entityFactory, masterManager, criteriaGenerator);
+        this.analysisBuilder = new DefaultAnalysisBuilder<>(defaultAnalysisFactory);
+        this.cdtme = cdtme;
     }
 
     @Override
     protected EntityCentreModel<T> createEntityCentreModel() {
-	return new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
+        return new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
     }
 
     @Override
     protected DomainTreeEditorModel<T> createDomainTreeEditorModel() {
-	throw new UnsupportedOperationException("The analysis details can not be configured!");
+        throw new UnsupportedOperationException("The analysis details can not be configured!");
     }
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
-	if(ReportMode.WIZARD.equals(mode)){
-	    return new Result(this, new IllegalArgumentException("The wizard mode can not be set for analysis details."));
-	}
-	return Result.successful(this);
+        if (ReportMode.WIZARD.equals(mode)) {
+            return new Result(this, new IllegalArgumentException("The wizard mode can not be set for analysis details."));
+        }
+        return Result.successful(this);
     }
 
     /**
      * Creates the {@link EntityInspectorModel} for the specified criteria
-     *
+     * 
      * @param criteria
      * @return
      */
     private EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria) {
-	return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>(criteria,//
-		CentrePropertyBinder.<T> createLocatorPropertyBinder());
+        return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>(criteria,//
+        CentrePropertyBinder.<T> createLocatorPropertyBinder());
     }
 
 }

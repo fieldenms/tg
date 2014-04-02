@@ -7,36 +7,36 @@ public class Multiplication extends AbstractOperator {
     }
 
     public String getExpression() {
-	return "*";
+        return "*";
     }
 
     public Object getDefaultValue() {
-	return "1";
+        return "1";
     }
 
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
-	IOperator mulOperator = new Multiplication();
-	IOperand operand = mulOperator.getOperands().get(0);
-	operand.setValue("100");
-	operand = mulOperator.getOperands().get(1);
-	operand.setValue("20");
+        IOperator mulOperator = new Multiplication();
+        IOperand operand = mulOperator.getOperands().get(0);
+        operand.setValue("100");
+        operand = mulOperator.getOperands().get(1);
+        operand.setValue("20");
 
-	System.out.println(mulOperator.getRepresentation());
+        System.out.println(mulOperator.getRepresentation());
 
-	mulOperator.append(new HybridOperand("12"));
+        mulOperator.append(new HybridOperand("12"));
 
-	System.out.println(mulOperator.getRepresentation());
+        System.out.println(mulOperator.getRepresentation());
 
-	IOperator minusOperator = new Minus();
-	operand = minusOperator.getOperands().get(0);
-	operand.setValue("100");
-	operand = minusOperator.getOperands().get(1);
-	operand.setValue("20");
+        IOperator minusOperator = new Minus();
+        operand = minusOperator.getOperands().get(0);
+        operand.setValue("100");
+        operand = minusOperator.getOperands().get(1);
+        operand.setValue("20");
 
-	mulOperator.append(new HybridOperand(new Abs(new HybridOperand(minusOperator))));
+        mulOperator.append(new HybridOperand(new Abs(new HybridOperand(minusOperator))));
 
-	System.out.println(mulOperator.getRepresentation());
+        System.out.println(mulOperator.getRepresentation());
     }
 
 }

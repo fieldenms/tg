@@ -8,12 +8,11 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
-
 @EntityType(TgWagon.class)
 public class TgWagonRao extends CommonEntityRao<TgWagon> implements ITgWagon {
 
     @Inject
     public TgWagonRao(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 }

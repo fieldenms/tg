@@ -59,100 +59,97 @@ import com.google.inject.name.Names;
 
 /**
  * Basic IoC module for client web applications, which should be enhanced by the application specific IoC module.
- *
+ * 
  * This IoC provides all the necessary bindings for:
  * <ul>
  * <li>Applications settings (refer {@link IApplicatonSettings});
  * <li>Serialisation mechanism;
- * <li>All essential RAO interfaces such as {@link IUserProvider}, {@link IReferenceDependancyController}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUserDao}, {@link IAuthorisationModel} and more;
+ * <li>All essential RAO interfaces such as {@link IUserProvider}, {@link IReferenceDependancyController}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUserDao},
+ * {@link IAuthorisationModel} and more;
  * <li>Provides workflow sensitive application main menu configuration related bindings.
  * </ul>
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class BasicWebClientModule extends CommonRestFactoryModule {
     protected final Properties props;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
     private final IApplicationDomainProvider applicationDomainProvider;
 
-    public BasicWebClientModule(
-	    final RestClientUtil restUtil,
-	    final IApplicationDomainProvider applicationDomainProvider,
-	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-	    final Properties props) {
-	super(restUtil);
-	this.applicationDomainProvider = applicationDomainProvider;
-	this.serialisationClassProviderType = serialisationClassProviderType;
-	this.props = props;
+    public BasicWebClientModule(final RestClientUtil restUtil, final IApplicationDomainProvider applicationDomainProvider, final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, final Properties props) {
+        super(restUtil);
+        this.applicationDomainProvider = applicationDomainProvider;
+        this.serialisationClassProviderType = serialisationClassProviderType;
+        this.props = props;
     }
 
     @Override
     protected void configure() {
-	super.configure();
-	// bind application specific constants
-	bindConstant().annotatedWith(Names.named("app.home")).to(props.getProperty("app.home"));
-	bindConstant().annotatedWith(Names.named("reports.path")).to(props.getProperty("reports.path"));
-	bindConstant().annotatedWith(Names.named("domain.path")).to(props.getProperty("domain.path"));
-	bindConstant().annotatedWith(Names.named("domain.package")).to(props.getProperty("domain.package"));
-	bindConstant().annotatedWith(Names.named("private-key")).to(props.getProperty("private-key"));
-	bindConstant().annotatedWith(Names.named("tokens.path")).to(props.getProperty("tokens.path"));
-	bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
-	bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
-	bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
-	bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
-	// bind user provider
-	bind(IUserProvider.class).to(RestClientUtil.class);
-	// bind reference dependency controller required for the application update mechanism
-	bind(IReferenceDependancyController.class).to(ReferenceDependancyController.class);
-	// serialisation related binding
-	bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON);
-	bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
-	bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
-	/////////////////////////////////////////////////////////////////////////
-	/////////////// bind some required platform specific RAOs ///////////////
-	/////////////////////////////////////////////////////////////////////////
-	bind(IEntityAggregatesDao.class).to(EntityAggregatesRao.class).in(Scopes.SINGLETON);
-	bind(IGeneratedEntityController.class).to(GeneratedEntityRao.class); // should not be a singleton
-	// bind value matcher factory to support autocompleters and entity master factory
-	bind(IDaoFactory.class).to(RaoFactory.class).in(Scopes.SINGLETON);
-	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
-	// security and user management
-	bind(IUserDao.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
-	bind(IUserRoleDao.class).to(UserRoleRao.class).in(Scopes.SINGLETON);
-	bind(IUserController.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
-	bind(ISecurityTokenController.class).to(SecurityTokenControllerRao.class).in(Scopes.SINGLETON);
-	bind(IAuthorisationModel.class).to(RestAuthorisationModel.class).in(Scopes.SINGLETON);
+        super.configure();
+        // bind application specific constants
+        bindConstant().annotatedWith(Names.named("app.home")).to(props.getProperty("app.home"));
+        bindConstant().annotatedWith(Names.named("reports.path")).to(props.getProperty("reports.path"));
+        bindConstant().annotatedWith(Names.named("domain.path")).to(props.getProperty("domain.path"));
+        bindConstant().annotatedWith(Names.named("domain.package")).to(props.getProperty("domain.package"));
+        bindConstant().annotatedWith(Names.named("private-key")).to(props.getProperty("private-key"));
+        bindConstant().annotatedWith(Names.named("tokens.path")).to(props.getProperty("tokens.path"));
+        bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
+        bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
+        bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
+        bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
+        // bind user provider
+        bind(IUserProvider.class).to(RestClientUtil.class);
+        // bind reference dependency controller required for the application update mechanism
+        bind(IReferenceDependancyController.class).to(ReferenceDependancyController.class);
+        // serialisation related binding
+        bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON);
+        bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
+        bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
+        /////////////////////////////////////////////////////////////////////////
+        /////////////// bind some required platform specific RAOs ///////////////
+        /////////////////////////////////////////////////////////////////////////
+        bind(IEntityAggregatesDao.class).to(EntityAggregatesRao.class).in(Scopes.SINGLETON);
+        bind(IGeneratedEntityController.class).to(GeneratedEntityRao.class); // should not be a singleton
+        // bind value matcher factory to support autocompleters and entity master factory
+        bind(IDaoFactory.class).to(RaoFactory.class).in(Scopes.SINGLETON);
+        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
+        // security and user management
+        bind(IUserDao.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
+        bind(IUserRoleDao.class).to(UserRoleRao.class).in(Scopes.SINGLETON);
+        bind(IUserController.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
+        bind(ISecurityTokenController.class).to(SecurityTokenControllerRao.class).in(Scopes.SINGLETON);
+        bind(IAuthorisationModel.class).to(RestAuthorisationModel.class).in(Scopes.SINGLETON);
 
-	////////////////////////////////////////////////////////////////////////
-	//////////////// bind domain tree configuration manager ////////////////
-	////////////////////////////////////////////////////////////////////////
-	bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
-	bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class).in(Scopes.SINGLETON);
+        ////////////////////////////////////////////////////////////////////////
+        //////////////// bind domain tree configuration manager ////////////////
+        ////////////////////////////////////////////////////////////////////////
+        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
+        bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class).in(Scopes.SINGLETON);
 
-	////////////////////////////////////////////////////////////////////////
-	//////////////// bind UI configuration controllers /////////////////////
-	////////////////////////////////////////////////////////////////////////
-	bind(IMainMenuItemController.class).to(MainMenuItemControllerRao.class).in(Scopes.SINGLETON);
-	bind(IMainMenu.class).to(MainMenuRao.class).in(Scopes.SINGLETON);
-	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
-	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
-	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
-	bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigRao.class).in(Scopes.SINGLETON);
-	bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
-	//////////////////////////////////////////////////////////////////////////////
-	bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
+        ////////////////////////////////////////////////////////////////////////
+        //////////////// bind UI configuration controllers /////////////////////
+        ////////////////////////////////////////////////////////////////////////
+        bind(IMainMenuItemController.class).to(MainMenuItemControllerRao.class).in(Scopes.SINGLETON);
+        bind(IMainMenu.class).to(MainMenuRao.class).in(Scopes.SINGLETON);
+        bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
+        bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
+        bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
+        bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigRao.class).in(Scopes.SINGLETON);
+        bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
+        //////////////////////////////////////////////////////////////////////////////
+        bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
     }
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * Additionally, initialises the REST utility instance with {@link ISerialiser} and {@link IUserController}.
      */
     @Override
     public void setInjector(final Injector injector) {
-	super.setInjector(injector);
-	restUtil.initSerialiser(injector.getInstance(ISerialiser.class));
-	restUtil.setUserController(injector.getInstance(IUserController.class));
+        super.setInjector(injector);
+        restUtil.initSerialiser(injector.getInstance(ISerialiser.class));
+        restUtil.setUserController(injector.getInstance(IUserController.class));
     }
 }

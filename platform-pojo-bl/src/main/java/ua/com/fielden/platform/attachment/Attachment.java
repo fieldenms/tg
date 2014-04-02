@@ -21,9 +21,9 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Class representing file attachment. The convention is to use the name of the attached file as entitie's key.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "File name", desc = "Unique name of the file attached.")
@@ -36,8 +36,9 @@ import ua.com.fielden.platform.error.Result;
 public class Attachment extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    /** Used purely to represent a new file being attached.
-     * Please note that this field is not a property. */
+    /**
+     * Used purely to represent a new file being attached. Please note that this field is not a property.
+     */
     private File file;
 
     @IsProperty
@@ -47,65 +48,65 @@ public class Attachment extends AbstractEntity<String> {
     @Override
     @Observable
     public Attachment setDesc(final String desc) {
-	super.setDesc(desc);
-	return this;
+        super.setDesc(desc);
+        return this;
     }
 
     @Override
     @NotNull
     @Observable
     public Attachment setKey(final String key) {
-	super.setKey(key);
-	return this;
+        super.setKey(key);
+        return this;
     }
 
     public String getFileExtension() {
-	final String key = getKey().toString();
-	final int pos = key.lastIndexOf(".");
+        final String key = getKey().toString();
+        final int pos = key.lastIndexOf(".");
 
-	return key.substring(pos + 1, key.length());
+        return key.substring(pos + 1, key.length());
     }
 
     public String getFileNameWithoutExtension() {
-	final String key = getKey().toString();
-	final int pos = key.lastIndexOf(".");
+        final String key = getKey().toString();
+        final int pos = key.lastIndexOf(".");
 
-	return key.substring(0, pos);
+        return key.substring(0, pos);
     }
 
     public File getFile() {
-	return file;
+        return file;
     }
 
     @Observable
     public Attachment setModified(final boolean modified) {
-	this.modified = modified;
-	return this;
+        this.modified = modified;
+        return this;
     }
 
     public boolean isModified() {
-	return modified;
+        return modified;
     }
 
     public Attachment setFile(final File file) {
-	this.file = file;
-	// let's assign attachment key equal to file's name if the key is empty
-	if (StringUtils.isEmpty(getKey())) {
-	    setKey(file.getName());
-	}
-	return this;
+        this.file = file;
+        // let's assign attachment key equal to file's name if the key is empty
+        if (StringUtils.isEmpty(getKey())) {
+            setKey(file.getName());
+        }
+        return this;
     }
 
     @Override
     protected Result validate() {
-	final Result result = super.validate();
-	if (!result.isSuccessful()) {
-	    return result;
-	} else if (file == null && !isPersisted()) {
-	    return new Result(this, new IllegalStateException("New attachment is missing a file."));
-	} else if (file == null && isModified()) {
-	    return new Result(this, new IllegalStateException("Modified attachment is missing a file."));
-	}
-	return result;
+        final Result result = super.validate();
+        if (!result.isSuccessful()) {
+            return result;
+        } else if (file == null && !isPersisted()) {
+            return new Result(this, new IllegalStateException("New attachment is missing a file."));
+        } else if (file == null && isModified()) {
+            return new Result(this, new IllegalStateException("Modified attachment is missing a file."));
+        }
+        return result;
     }
 }

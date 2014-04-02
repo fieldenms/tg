@@ -8,7 +8,7 @@ public class EditPostInitCallback<T extends AbstractEntity<?>, C extends IEntity
 
     @Override
     public <M extends UmMasterWithCrudAndUpdater<T, C>> void run(final M model) {
-	model.getEditAction().actionPerformed(null);
+        model.getEditAction().actionPerformed(null);
     }
 
 }

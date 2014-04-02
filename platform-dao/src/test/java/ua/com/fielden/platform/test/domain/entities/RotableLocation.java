@@ -9,7 +9,7 @@ public abstract class RotableLocation<T extends Comparable<T>> extends AbstractE
     protected RotableLocation() {
     }
 
-    public RotableLocation (final Long id, final T key, final String desc) {
-	super(id, key, desc);
+    public RotableLocation(final Long id, final T key, final String desc) {
+        super(id, key, desc);
     }
 }

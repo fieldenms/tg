@@ -12,18 +12,18 @@ public enum ConstraintType {
     private String representation;
 
     private ConstraintType(String representation) {
-	setRepresentation(representation);
+        setRepresentation(representation);
     }
 
     private String getRepresentation() {
-	return representation;
+        return representation;
     }
 
     private void setRepresentation(String representation) {
-	this.representation = representation;
+        this.representation = representation;
     }
 
     public String toString() {
-	return getRepresentation();
+        return getRepresentation();
     }
 }

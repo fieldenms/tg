@@ -16,11 +16,11 @@ import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 
 /**
- * A menu item type for representing save-as menu items with custom configurations of the corresponding principle menu item.
- * This class is for implementing {@link MiWithConfigurationSupport} as part of the logic to construct save-as child menu items.
- *
+ * A menu item type for representing save-as menu items with custom configurations of the corresponding principle menu item. This class is for implementing
+ * {@link MiWithConfigurationSupport} as part of the logic to construct save-as child menu items.
+ * 
  * @author TG Team
- *
+ * 
  */
 public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends TreeMenuItem<DynamicReportWrapper<T>> implements IItemSelector {
 
@@ -30,184 +30,183 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 
     /**
      * Creates menu item for Save As. To obtain analyses names, the parent centre will be loaded (if it was not loaded earlier).
-     *
+     * 
      * @param parentItem
      * @param name
      * @return
      */
     public static <T extends AbstractEntity<?>> MiSaveAsConfiguration<T> createAndLoadAnalyses(final MiWithConfigurationSupport<T> parentItem, final String name) {
-	final MiSaveAsConfiguration<T> item =  new MiSaveAsConfiguration<T>(parentItem, name);
-	item.addAnalysis();
-	return item;
+        final MiSaveAsConfiguration<T> item = new MiSaveAsConfiguration<T>(parentItem, name);
+        item.addAnalysis();
+        return item;
     }
 
     /**
      * Creates menu item for Save As. Analyses names should be passed explicitly as parameter.
-     *
+     * 
      * @param parentItem
      * @param name
      * @param analysisNames
      * @return
      */
     public static <T extends AbstractEntity<?>> MiSaveAsConfiguration<T> createWithProvidedAnalyses(final MiWithConfigurationSupport<T> parentItem, final String name, final List<String> analysisNames) {
-	final MiSaveAsConfiguration<T> item =  new MiSaveAsConfiguration<T>(parentItem, name);
-	// add menu items corresponding to analyses
-	for (final String analysisName : analysisNames) {
-	    item.addItem(new TreeMenuItemWrapper<T>(analysisName));
-	}
-	return item;
+        final MiSaveAsConfiguration<T> item = new MiSaveAsConfiguration<T>(parentItem, name);
+        // add menu items corresponding to analyses
+        for (final String analysisName : analysisNames) {
+            item.addItem(new TreeMenuItemWrapper<T>(analysisName));
+        }
+        return item;
     }
 
     private MiSaveAsConfiguration(//
-	    //Tree menu item related parameters
-	    final MiWithConfigurationSupport<T> parentItem,
-	    //Entity centre related parameters
-	    final String name) {
-	super(new DynamicReportWrapper<T>(//
-		//Tree menu item related parameters
-		name,//
-		parentItem.getView().getInfo(),//
-		parentItem.getView().getTreeMenu(),//
-		name,//
-		parentItem.getView().getMenuItemClass(),//
-		parentItem.getView().getCentreBuilder()));
+    //Tree menu item related parameters
+    final MiWithConfigurationSupport<T> parentItem,
+    //Entity centre related parameters
+    final String name) {
+        super(new DynamicReportWrapper<T>(//
+        //Tree menu item related parameters
+        name,//
+        parentItem.getView().getInfo(),//
+        parentItem.getView().getTreeMenu(),//
+        name,//
+        parentItem.getView().getMenuItemClass(),//
+        parentItem.getView().getCentreBuilder()));
 
-	this.analysisListener = createAnalysisListener(parentItem.getView().getTreeMenu());
-	getView().getCentreConfigurationView().getModel().addPropertyChangeListener(createCentreModeChangeListener());
-	getView().addCentreClosingListener(new CentreClosingListener() {
+        this.analysisListener = createAnalysisListener(parentItem.getView().getTreeMenu());
+        getView().getCentreConfigurationView().getModel().addPropertyChangeListener(createCentreModeChangeListener());
+        getView().addCentreClosingListener(new CentreClosingListener() {
 
-	    @Override
-	    public void centreClosing(final CentreClosingEvent event) {
-		synchronizeAnalysis(parentItem.getView().getTreeMenu());
-	    }
+            @Override
+            public void centreClosing(final CentreClosingEvent event) {
+                synchronizeAnalysis(parentItem.getView().getTreeMenu());
+            }
 
-	});
+        });
     }
 
     /**
      * Creates the centre's mode change listener that adds or removes analysis listener to the centre manager.
-     *
+     * 
      * @return
      */
     private PropertyChangeListener createCentreModeChangeListener() {
-	return new PropertyChangeListener() {
+        return new PropertyChangeListener() {
 
-	    @Override
-	    public void propertyChange(final PropertyChangeEvent evt) {
-		if("mode".equals(evt.getPropertyName())){
-		    if(ReportMode.REPORT.equals(evt.getNewValue())){
-			getView().getEntityCentreManager().addAnalysisListener(analysisListener);
-		    }else if(getView().getEntityCentreManager() != null){
-			getView().getEntityCentreManager().removeAnalysisListener(analysisListener);
-		    }
-		}
-	    }
-	};
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                if ("mode".equals(evt.getPropertyName())) {
+                    if (ReportMode.REPORT.equals(evt.getNewValue())) {
+                        getView().getEntityCentreManager().addAnalysisListener(analysisListener);
+                    } else if (getView().getEntityCentreManager() != null) {
+                        getView().getEntityCentreManager().removeAnalysisListener(analysisListener);
+                    }
+                }
+            }
+        };
     }
 
     /**
      * Creates the {@link IAnalysisListener} that listens the analysis add/remove actions and adds or remove tree menu item wrapper for analysis.
-     *
+     * 
      * @return
      */
     private IAnalysisListener createAnalysisListener(final TreeMenuWithTabs<?> treeMenu) {
-	return new IAnalysisListener(){
+        return new IAnalysisListener() {
 
-	    @Override
-	    public void propertyStateChanged(final Class<?> nothing, final String name, final Boolean hasBeenInitialised, final Boolean oldState) {
-		if(hasBeenInitialised){
-		    addChild(treeMenu, name);
-		}else{
-		    removeChild(treeMenu, name);
-		}
-	    }
+            @Override
+            public void propertyStateChanged(final Class<?> nothing, final String name, final Boolean hasBeenInitialised, final Boolean oldState) {
+                if (hasBeenInitialised) {
+                    addChild(treeMenu, name);
+                } else {
+                    removeChild(treeMenu, name);
+                }
+            }
 
-	};
+        };
     }
 
     /**
      * Removes the analysis tree node for the specified analysis name.
-     *
+     * 
      * @param treeMenu
      * @param name
      */
-    private void removeChild(final TreeMenuWithTabs<?> treeMenu, final String name){
-	for (int childIndex = 0; childIndex < getChildCount(); childIndex++) {
-	    if (name.equals(getChildAt(childIndex).toString())) {
-		treeMenu.getModel().getOriginModel().removeNodeFromParent((MutableTreeNode) getChildAt(childIndex));
-	    }
-	}
-	treeMenu.getModel().getOriginModel().reload(this);
+    private void removeChild(final TreeMenuWithTabs<?> treeMenu, final String name) {
+        for (int childIndex = 0; childIndex < getChildCount(); childIndex++) {
+            if (name.equals(getChildAt(childIndex).toString())) {
+                treeMenu.getModel().getOriginModel().removeNodeFromParent((MutableTreeNode) getChildAt(childIndex));
+            }
+        }
+        treeMenu.getModel().getOriginModel().reload(this);
     }
 
     /**
      * Adds new analysis tree node for the specified analysis name.
-     *
+     * 
      * @param treeMenu
      * @param name
      */
-    private void addChild(final TreeMenuWithTabs<?> treeMenu, final String name){
-	addItem(new TreeMenuItemWrapper<T>(name));
-	treeMenu.getModel().getOriginModel().reload(this);
+    private void addChild(final TreeMenuWithTabs<?> treeMenu, final String name) {
+        addItem(new TreeMenuItemWrapper<T>(name));
+        treeMenu.getModel().getOriginModel().reload(this);
     }
 
     /**
      * Synchronizes this tree node with centre model.
-     *
+     * 
      * @param treeMenu
      */
     private void synchronizeAnalysis(final TreeMenuWithTabs<?> treeMenu) {
-	if(getView().getEntityCentreManager() == null){
-	    return;
-	}
-	final List<String> analysis = getView().getEntityCentreManager().analysisKeys();
-	for (int childIndex = 0; childIndex < getChildCount(); childIndex++) {
-	    if (!analysis.contains(getChildAt(childIndex).toString())) {
-		treeMenu.getModel().getOriginModel().removeNodeFromParent((MutableTreeNode) getChildAt(childIndex));
-	    }
-	}
-	addAnalysis();
-	treeMenu.getModel().getOriginModel().reload(this);
+        if (getView().getEntityCentreManager() == null) {
+            return;
+        }
+        final List<String> analysis = getView().getEntityCentreManager().analysisKeys();
+        for (int childIndex = 0; childIndex < getChildCount(); childIndex++) {
+            if (!analysis.contains(getChildAt(childIndex).toString())) {
+                treeMenu.getModel().getOriginModel().removeNodeFromParent((MutableTreeNode) getChildAt(childIndex));
+            }
+        }
+        addAnalysis();
+        treeMenu.getModel().getOriginModel().reload(this);
     }
 
     /**
      * Adds the analysis tree menu item to the menu.
-     *
+     * 
      */
     private void addAnalysis() {
-	if(getView().getEntityCentreManager() == null){
-	    return;
-	}
-	for (final String analysisName : getView().getEntityCentreManager().analysisKeys()) {
-	    if (!containAnalysis(analysisName)) {
-		addItem(new TreeMenuItemWrapper<T>(analysisName));
-	    }
-	}
+        if (getView().getEntityCentreManager() == null) {
+            return;
+        }
+        for (final String analysisName : getView().getEntityCentreManager().analysisKeys()) {
+            if (!containAnalysis(analysisName)) {
+                addItem(new TreeMenuItemWrapper<T>(analysisName));
+            }
+        }
     }
 
     /**
      * Returns the value that indicates whether specified analysis name is between children of this tree node.
-     *
+     * 
      * @param analysisName
      * @return
      */
     private boolean containAnalysis(final String analysisName) {
-	for (int childIndex = 0; childIndex < getChildCount(); childIndex++) {
-	    if (getChildAt(childIndex).toString().equals(analysisName)) {
-		return true;
-	    }
-	}
-	return false;
+        for (int childIndex = 0; childIndex < getChildCount(); childIndex++) {
+            if (getChildAt(childIndex).toString().equals(analysisName)) {
+                return true;
+            }
+        }
+        return false;
     }
-
 
     @Override
     public void selectTreeMenuItem() {
-	getView().getCentreConfigurationView().selectAnalysis(GridConfigurationModel.gridAnalysisName);
+        getView().getCentreConfigurationView().selectAnalysis(GridConfigurationModel.gridAnalysisName);
     }
 
     @Override
     public Icon getIcon() {
-        return ((TreeMenuItem<?>)getParent()).getIcon();
+        return ((TreeMenuItem<?>) getParent()).getIcon();
     }
 }

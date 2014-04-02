@@ -40,52 +40,52 @@ public class DynamicKeyPartEntity extends AbstractEntity<DynamicEntityKey> {
     private String uncommonProperty;
 
     protected DynamicKeyPartEntity() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     @Observable
     public void setName(final String name) {
-	this.name = name;
+        this.name = name;
     }
 
     public SecondLevelEntity getSecondKeyMember() {
-	return secondKeyMember;
+        return secondKeyMember;
     }
 
     @Observable
     public void setSecondKeyMember(final SecondLevelEntity secondKeyMember) {
-	this.secondKeyMember = secondKeyMember;
+        this.secondKeyMember = secondKeyMember;
     }
 
     public String getCommonProperty() {
-	return commonProperty;
+        return commonProperty;
     }
 
     @Observable
     public void setCommonProperty(final String commonProperty) {
-	this.commonProperty = commonProperty;
+        this.commonProperty = commonProperty;
     }
 
     public SecondLevelEntity getLevelEntity() {
-	return levelEntity;
+        return levelEntity;
     }
 
     @Observable
     public void setLevelEntity(final SecondLevelEntity levelEntity) {
-	this.levelEntity = levelEntity;
+        this.levelEntity = levelEntity;
     }
 
     public String getUncommonProperty() {
-	return uncommonProperty;
+        return uncommonProperty;
     }
 
     @Observable
     public void setUncommonProperty(final String uncommonProperty) {
-	this.uncommonProperty = uncommonProperty;
+        this.uncommonProperty = uncommonProperty;
     }
 
 }

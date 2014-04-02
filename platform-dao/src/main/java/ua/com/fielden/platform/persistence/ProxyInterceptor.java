@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /**
  * This is a thread-safe implementation of the global Hibernate intercepter for correct handling of entities enhanced with Guice(CGLIB) method intercepter.
- *
+ * 
  * @author TG Team
  */
 public class ProxyInterceptor extends EmptyInterceptor {
@@ -26,7 +26,7 @@ public class ProxyInterceptor extends EmptyInterceptor {
     }
 
     public void setFactory(final EntityFactory factory) {
-	this.factory = factory;
+        this.factory = factory;
     }
 
     /**
@@ -34,10 +34,10 @@ public class ProxyInterceptor extends EmptyInterceptor {
      */
     @Override
     public String getEntityName(final Object object) {
-	if (object instanceof AbstractEntity) {
-	    return ((AbstractEntity<?>) object).getType().getName();
-	}
-	return super.getEntityName(object);
+        if (object instanceof AbstractEntity) {
+            return ((AbstractEntity<?>) object).getType().getName();
+        }
+        return super.getEntityName(object);
     }
 
     /**
@@ -45,17 +45,17 @@ public class ProxyInterceptor extends EmptyInterceptor {
      */
     @Override
     public Object instantiate(final String entityName, final EntityMode entityMode, final Serializable id) {
-	logger.info("instantiating: " + entityName + " for id = " +  id);
-	try {
-	    logger.info("instantiating using factory.newEntity(...)");
-	    return factory.newEntity((Class<AbstractEntity<?>>) Class.forName(entityName), (Long) id);
-	} catch (final RuntimeException e) {
-	    e.printStackTrace();
-	} catch (final ClassNotFoundException e) {
-	    e.printStackTrace();
-	}
-	logger.info("instantiating using super.instantiate(...)");
-	return super.instantiate(entityName, entityMode, id);
+        logger.info("instantiating: " + entityName + " for id = " + id);
+        try {
+            logger.info("instantiating using factory.newEntity(...)");
+            return factory.newEntity((Class<AbstractEntity<?>>) Class.forName(entityName), (Long) id);
+        } catch (final RuntimeException e) {
+            e.printStackTrace();
+        } catch (final ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        logger.info("instantiating using super.instantiate(...)");
+        return super.instantiate(entityName, entityMode, id);
     }
 
 }

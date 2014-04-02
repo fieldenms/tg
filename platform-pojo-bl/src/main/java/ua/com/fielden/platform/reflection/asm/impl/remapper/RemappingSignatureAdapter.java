@@ -4,7 +4,7 @@ import org.kohsuke.asm3.signature.SignatureVisitor;
 
 /**
  * A <code>SignatureVisitor</code> adapter for type mapping.
- *
+ * 
  * @author Eugene Kuleshov
  */
 public class RemappingSignatureAdapter implements SignatureVisitor {

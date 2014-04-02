@@ -6,9 +6,9 @@ import ua.com.fielden.platform.test.domain.entities.Advice;
 
 /**
  * Implements the rule that define properties for meta-property associated with property <code>dispatchedToWorkshop</code> of entity {@link Advice}.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 public class AdviceDispatchedToWorkshopMetaDefiner extends AbstractMetaPropertyDefiner {
 
@@ -18,15 +18,15 @@ public class AdviceDispatchedToWorkshopMetaDefiner extends AbstractMetaPropertyD
      */
     @Override
     public void handle(final MetaProperty property, final Object entityPropertyValue) {
-	final Advice advice = (Advice) property.getEntity();
-	final Boolean isDispatched = entityPropertyValue != null;
-	System.out.println("DEFINE RULE IS BEING EXECUTED ON PROPETY " + property.getName() + " FOR " + advice);
-	define(advice, isDispatched, advice.isRoad());
+        final Advice advice = (Advice) property.getEntity();
+        final Boolean isDispatched = entityPropertyValue != null;
+        System.out.println("DEFINE RULE IS BEING EXECUTED ON PROPETY " + property.getName() + " FOR " + advice);
+        define(advice, isDispatched, advice.isRoad());
     }
 
     private void define(final Advice advice, final boolean isDispatched, final boolean isRoad) {
-	advice.getProperty("carrier").setEditable(!isDispatched && !isRoad);
-	advice.getProperty("road").setEditable(!isDispatched);
+        advice.getProperty("carrier").setEditable(!isDispatched && !isRoad);
+        advice.getProperty("road").setEditable(!isDispatched);
     }
 
 }

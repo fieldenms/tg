@@ -28,30 +28,30 @@ public class SimplePartEntity extends AbstractEntity<String> {
     private String uncommonProperty;
 
     public String getCommonProperty() {
-	return commonProperty;
+        return commonProperty;
     }
 
     @Observable
     public void setCommonProperty(final String commonProperty) {
-	this.commonProperty = commonProperty;
+        this.commonProperty = commonProperty;
     }
 
     public SecondLevelEntity getLevelEntity() {
-	return levelEntity;
+        return levelEntity;
     }
 
     @Observable
     public void setLevelEntity(final SecondLevelEntity levelEntity) {
-	this.levelEntity = levelEntity;
+        this.levelEntity = levelEntity;
     }
 
     public String getUncommonProperty() {
-	return uncommonProperty;
+        return uncommonProperty;
     }
 
     @Observable
     public void setUncommonProperty(final String uncommonProperty) {
-	this.uncommonProperty = uncommonProperty;
+        this.uncommonProperty = uncommonProperty;
     }
 
 }

@@ -9,17 +9,17 @@ final class YieldExprItem0<T, ET extends AbstractEntity<?>> extends AbstractYiel
     T parent;
 
     YieldExprItem0(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     IYieldExprItem1<T, ET> getParent2() {
-	return new YieldExprItem1<T, ET>(getTokens(), parent);
+        return new YieldExprItem1<T, ET>(getTokens(), parent);
     }
 
     @Override
     IYieldExprOperationOrEnd0<T, ET> getParent() {
-	return new YieldExprOperationOrEnd0<T, ET>(getTokens(), parent);
+        return new YieldExprOperationOrEnd0<T, ET>(getTokens(), parent);
     }
 }

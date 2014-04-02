@@ -6,9 +6,9 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
 
 /**
  * The contract that enables analysis' query customisation.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  * @param <AM>
  */
@@ -16,7 +16,7 @@ public interface IAnalysisQueryCustomiser<T extends AbstractEntity<?>, AM extend
 
     /**
      * Returns the instance of {@link IReportQueryGenerator} provided by this analysis customiser.
-     *
+     * 
      * @param analysisModel
      * @return
      */

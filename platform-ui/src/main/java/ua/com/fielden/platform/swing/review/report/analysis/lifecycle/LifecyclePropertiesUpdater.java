@@ -68,17 +68,17 @@ public class LifecyclePropertiesUpdater extends AbstractEntity<String> {
         this.to = to;
     }
 
-    public ILifecycleDomainTreeManager getLdtm(){
-	return ldtm;
+    public ILifecycleDomainTreeManager getLdtm() {
+        return ldtm;
     }
 
-    public void setLdtm(final ILifecycleDomainTreeManager ldtm){
-	this.ldtm = ldtm;
-	if(ldtm.getFrom() != null){
-	    setFrom(ldtm.getFrom());
-	}
-	if(ldtm.getTo() != null){
-	    setTo(ldtm.getTo());
-	}
+    public void setLdtm(final ILifecycleDomainTreeManager ldtm) {
+        this.ldtm = ldtm;
+        if (ldtm.getFrom() != null) {
+            setFrom(ldtm.getFrom());
+        }
+        if (ldtm.getTo() != null) {
+            setTo(ldtm.getTo());
+        }
     }
 }

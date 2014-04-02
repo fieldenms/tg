@@ -18,14 +18,14 @@ public class SeparatorItem implements IActionItem {
      * Creates new {@link SeparatorItem} with default size of separator
      */
     public SeparatorItem() {
-	this(null);
+        this(null);
     }
 
     /**
      * Creates new {@link SeparatorItem} with specified size of separator
      */
     public SeparatorItem(final Dimension size) {
-	this.size = size;
+        this.size = size;
     }
 
     /**
@@ -33,11 +33,11 @@ public class SeparatorItem implements IActionItem {
      */
     @Override
     public void build(final JToolBar toolBar) {
-	if (size != null) {
-	    toolBar.addSeparator(size);
-	} else {
-	    toolBar.addSeparator();
-	}
+        if (size != null) {
+            toolBar.addSeparator(size);
+        } else {
+            toolBar.addSeparator();
+        }
     }
 
     /**
@@ -46,7 +46,7 @@ public class SeparatorItem implements IActionItem {
      * @return
      */
     public Dimension getSize() {
-	return size;
+        return size;
     }
 
 }

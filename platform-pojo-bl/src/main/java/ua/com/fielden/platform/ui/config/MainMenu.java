@@ -14,9 +14,9 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * An entity that holds all menu items.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Main Menu key", desc = "Main Menu key description")
@@ -28,12 +28,12 @@ public class MainMenu extends AbstractEntity<String> {
 
     @Observable
     public MainMenu setMenuItems(final List<String> menuItems) {
-	this.menuItems.clear();
-	this.menuItems.addAll(menuItems);
-	return this;
+        this.menuItems.clear();
+        this.menuItems.addAll(menuItems);
+        return this;
     }
 
     public List<String> getMenuItems() {
-	return Collections.unmodifiableList(menuItems);
+        return Collections.unmodifiableList(menuItems);
     }
 }

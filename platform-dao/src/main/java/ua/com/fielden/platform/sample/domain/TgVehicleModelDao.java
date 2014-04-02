@@ -13,6 +13,6 @@ public class TgVehicleModelDao extends CommonEntityDao<TgVehicleModel> implement
 
     @Inject
     protected TgVehicleModelDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

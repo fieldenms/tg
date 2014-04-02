@@ -8,7 +8,7 @@ import ua.com.fielden.platform.swing.review.report.centre.SingleAnalysisEntityLo
  * This represents the locator event that is generated when select or close action were performed.
  * 
  * @author TG Team
- *
+ * 
  */
 public class LocatorEvent extends EventObject {
 
@@ -20,23 +20,23 @@ public class LocatorEvent extends EventObject {
      * Represent two types of locator actions: CLOSE or SELECT.
      * 
      * @author TG Team
-     *
+     * 
      */
     public enum LocatorAction {
-	SELECT, CLOSE;
+        SELECT, CLOSE;
     }
 
     public LocatorEvent(final SingleAnalysisEntityLocator<?> locator, final LocatorAction locatorAction) {
-	super(locator);
-	this.locatorAction = locatorAction;
+        super(locator);
+        this.locatorAction = locatorAction;
     }
 
     @Override
     public SingleAnalysisEntityLocator<?> getSource() {
-	return (SingleAnalysisEntityLocator<?>)super.getSource();
+        return (SingleAnalysisEntityLocator<?>) super.getSource();
     }
 
     public LocatorAction getLocatorAction() {
-	return locatorAction;
+        return locatorAction;
     }
 }

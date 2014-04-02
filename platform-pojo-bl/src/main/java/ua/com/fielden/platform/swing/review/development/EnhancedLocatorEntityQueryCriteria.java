@@ -37,88 +37,88 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 
     @Inject
     public EnhancedLocatorEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider) {
-	super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
+        super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
     }
 
     @SuppressWarnings("unchecked")
     public final List<T> runLocatorQuery(final int resultSize, final Object kerOrDescValue, final fetch<?> fetch, final Pair<String, Object>... otherPropValues) {
-	final Class<?> root = getEntityClass();
-	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-	final SearchBy searchBy = getCentreDomainTreeMangerAndEnhancer().getSearchBy();
-	ICompoundCondition0<T> compondCondition = null;
+        final Class<?> root = getEntityClass();
+        final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+        final SearchBy searchBy = getCentreDomainTreeMangerAndEnhancer().getSearchBy();
+        ICompoundCondition0<T> compondCondition = null;
 
-	switch (searchBy) {
-	case KEY: {
-	    // Entity's key may have a composite nature.
-	    // In order to support more intuitive autocompletion for such entities, it is necessary to enhance matching query
-	    final Pair<Class<?>, String> pair = PropertyTypeDeterminator.transform(getManagedType(), AbstractEntity.KEY);
-	    if (DynamicEntityKey.class != AnnotationReflector.getKeyType(pair.getKey())) { // the key is not composite
-		compondCondition = where().//
-		prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).//
-		iLike().val(kerOrDescValue); // key matching
-	    } else { // the key is composite and thus it needs special handling
-		final List<Field> keyMembers = Finder.getKeyMembers(pair.getKey());
-		final String additionalSearchProp = keyMembers.get(keyMembers.size() - 1).getName();
-		compondCondition = where().//
-		begin().//
-		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).//
-		/*  */iLike().val(kerOrDescValue).or().// key matching
-		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), additionalSearchProp).getConditionBuildingName()).//
-		/*  */iLike().val(kerOrDescValue).// last key member matching
-		end();
-	    }
-	    break;
-	}
-	case DESC:
-	    compondCondition = where().prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.DESC).getConditionBuildingName()).iLike().val(kerOrDescValue);
-	    break;
-	case DESC_AND_KEY: {
-	    // Entity's key may have a composite nature.
-	    // In order to support more intuitive autocompletion for such entities, it is necessary to enhance matching query
-	    final Pair<Class<?>, String> pair = PropertyTypeDeterminator.transform(getManagedType(), AbstractEntity.KEY);
-	    if (DynamicEntityKey.class != AnnotationReflector.getKeyType(pair.getKey())) { // the key is not composite
-		compondCondition = where().begin().//
-		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).
-		/*  */iLike().val(kerOrDescValue).or().// key matching
-		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.DESC).getConditionBuildingName()).
-		/*  */iLike().val(kerOrDescValue).// desc matching
-		end();
-	    } else {
-		final List<Field> keyMembers = Finder.getKeyMembers(pair.getKey());
-		final String additionalSearchProp = keyMembers.get(keyMembers.size() - 1).getName();
-		compondCondition = where().//
-		begin().//
-		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).//
-		/*  */iLike().val(kerOrDescValue).or().// key matching
-		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), additionalSearchProp).getConditionBuildingName()).//
-		/*  */iLike().val(kerOrDescValue).or().// last key member matching
-		/*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.DESC).getConditionBuildingName()).//
-		/*  */iLike().val(kerOrDescValue).// desc matching
-		end();
-	    }
-	    break;
-	}
-	}
-	for (final Pair<String, Object> conditionPair : otherPropValues) {
-	    compondCondition = compondCondition.and().prop(DynamicQueryBuilder.createConditionProperty(conditionPair.getKey())	)//
-		    .eq().iVal(conditionPair.getValue());
-	}
-	final Builder<T, EntityResultQueryModel<T>> builderModel = from(compondCondition.model())//
-	.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)));
-	return getFirstEntities(fetch == null ? builderModel.model() : builderModel.with((fetch<T>) fetch).model(), resultSize);
+        switch (searchBy) {
+        case KEY: {
+            // Entity's key may have a composite nature.
+            // In order to support more intuitive autocompletion for such entities, it is necessary to enhance matching query
+            final Pair<Class<?>, String> pair = PropertyTypeDeterminator.transform(getManagedType(), AbstractEntity.KEY);
+            if (DynamicEntityKey.class != AnnotationReflector.getKeyType(pair.getKey())) { // the key is not composite
+                compondCondition = where().//
+                prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).//
+                iLike().val(kerOrDescValue); // key matching
+            } else { // the key is composite and thus it needs special handling
+                final List<Field> keyMembers = Finder.getKeyMembers(pair.getKey());
+                final String additionalSearchProp = keyMembers.get(keyMembers.size() - 1).getName();
+                compondCondition = where().//
+                begin().//
+                /*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).//
+                /*  */iLike().val(kerOrDescValue).or().// key matching
+                /*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), additionalSearchProp).getConditionBuildingName()).//
+                /*  */iLike().val(kerOrDescValue).// last key member matching
+                end();
+            }
+            break;
+        }
+        case DESC:
+            compondCondition = where().prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.DESC).getConditionBuildingName()).iLike().val(kerOrDescValue);
+            break;
+        case DESC_AND_KEY: {
+            // Entity's key may have a composite nature.
+            // In order to support more intuitive autocompletion for such entities, it is necessary to enhance matching query
+            final Pair<Class<?>, String> pair = PropertyTypeDeterminator.transform(getManagedType(), AbstractEntity.KEY);
+            if (DynamicEntityKey.class != AnnotationReflector.getKeyType(pair.getKey())) { // the key is not composite
+                compondCondition = where().begin().//
+                /*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).
+                /*  */iLike().val(kerOrDescValue).or().// key matching
+                /*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.DESC).getConditionBuildingName()).
+                /*  */iLike().val(kerOrDescValue).// desc matching
+                end();
+            } else {
+                final List<Field> keyMembers = Finder.getKeyMembers(pair.getKey());
+                final String additionalSearchProp = keyMembers.get(keyMembers.size() - 1).getName();
+                compondCondition = where().//
+                begin().//
+                /*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.KEY).getConditionBuildingName()).//
+                /*  */iLike().val(kerOrDescValue).or().// key matching
+                /*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), additionalSearchProp).getConditionBuildingName()).//
+                /*  */iLike().val(kerOrDescValue).or().// last key member matching
+                /*  */prop(EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), AbstractEntity.DESC).getConditionBuildingName()).//
+                /*  */iLike().val(kerOrDescValue).// desc matching
+                end();
+            }
+            break;
+        }
+        }
+        for (final Pair<String, Object> conditionPair : otherPropValues) {
+            compondCondition = compondCondition.and().prop(DynamicQueryBuilder.createConditionProperty(conditionPair.getKey()))//
+            .eq().iVal(conditionPair.getValue());
+        }
+        final Builder<T, EntityResultQueryModel<T>> builderModel = from(compondCondition.model())//
+        .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)));
+        return getFirstEntities(fetch == null ? builderModel.model() : builderModel.with((fetch<T>) fetch).model(), resultSize);
     }
 
     /**
      * Initialises the query for entity locator.
-     *
+     * 
      * @return
      */
     private IWhere0<T> where() {
-	final ICompleted<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties());
-	if (notOrderedQuery instanceof IJoin) {
-	    return ((IJoin<T>) notOrderedQuery).where();
-	} else {
-	    return ((ICompoundCondition0<T>) notOrderedQuery).and();
-	}
+        final ICompleted<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties());
+        if (notOrderedQuery instanceof IJoin) {
+            return ((IJoin<T>) notOrderedQuery).where();
+        } else {
+            return ((ICompoundCondition0<T>) notOrderedQuery).and();
+        }
     }
 }

@@ -32,9 +32,9 @@ import com.google.inject.Injector;
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityModule}, this module binds
  * {@link IMetaPropertyFactory}.
- *
+ * 
  * IMPORTANT: This module is applicable strictly for testing purposes! Left out in the main source (e.i. not test) due to the need to be visible in other projects.
- *
+ * 
  * @author TG Team
  */
 public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
@@ -50,19 +50,19 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
      * Invokes {@link EntityModuleWithDomainValidatorsForTesting#EntityModuleWithDomainValidatorsForTesting(boolean)} with its single parameter set to false
      */
     public EntityModuleWithDomainValidatorsForTesting() {
-	this(false);
+        this(false);
     }
 
     /**
      * If passed true value, then for {@link EntityExists} annotation would be created validator that always returns successful {@link Result}. Otherwise, {@link RuntimeException}
      * would be thrown each time {@link EntityExists} annotation would be encountered.
-     *
+     * 
      * @param ignoreEntityExistsAnnotation
      */
     public EntityModuleWithDomainValidatorsForTesting(final boolean ignoreEntityExistsAnnotation) {
-	this.ignoreEntityExistsAnnotation = ignoreEntityExistsAnnotation;
-	entityFactory = new EntityFactory() {
-	};
+        this.ignoreEntityExistsAnnotation = ignoreEntityExistsAnnotation;
+        entityFactory = new EntityFactory() {
+        };
     }
 
     /**
@@ -70,135 +70,134 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
      */
     @Override
     protected void configure() {
-	super.configure();
+        super.configure();
 
-	bind(EntityFactory.class).toInstance(entityFactory);
+        bind(EntityFactory.class).toInstance(entityFactory);
 
-	// ////////////////////////////////////////////
-	// ////////// bind property factory ///////////
-	// ////////////////////////////////////////////
+        // ////////////////////////////////////////////
+        // ////////// bind property factory ///////////
+        // ////////////////////////////////////////////
 
-	/**
-	 * Setting references to validators should be done after creation of this module using {@link #getDomainValidatorConfig()} method
-	 */
+        /**
+         * Setting references to validators should be done after creation of this module using {@link #getDomainValidatorConfig()} method
+         */
 
-	bind(DomainValidationConfig.class).toInstance(domainValidationConfig);
-	bind(DomainMetaPropertyConfig.class).toInstance(domainMetaPropertyConfig);
+        bind(DomainValidationConfig.class).toInstance(domainValidationConfig);
+        bind(DomainMetaPropertyConfig.class).toInstance(domainMetaPropertyConfig);
 
+        // TODO not yet complete
+        bind(IMetaPropertyFactory.class).toInstance(new IMetaPropertyFactory() {
+            @Override
+            public IBeforeChangeEventHandler[] create( //
+            final Annotation annotation,//
+                    final AbstractEntity<?> entity,//
+                    final String propertyName,//
+                    final Class<?> propertyType) throws Exception {
+                // identify the type of annotation
+                ValidationAnnotation value = null;
+                for (final ValidationAnnotation validationAnnotation : ValidationAnnotation.values()) {
+                    if (validationAnnotation.getType().equals(annotation.annotationType())) {
+                        value = validationAnnotation;
+                    }
+                }
+                // check whether it can be recognised as a valid annotation permitted for validation purpose
+                if (value == null) {
+                    throw new RuntimeException("Unrecognised validation annotation has been encountered.");
+                }
+                // try to instantiate validator
+                switch (value) {
+                case NOT_NULL:
+                    return new IBeforeChangeEventHandler[] { new NotNullValidator() };
+                case NOT_EMPTY:
+                    return new IBeforeChangeEventHandler[] { new NotEmptyValidator() };
+                case GREATER_OR_EQUAL:
+                    return new IBeforeChangeEventHandler[] { new GreaterOrEqualValidator(((GreaterOrEqual) annotation).value()) };
+                case MAX:
+                    if (Number.class.isAssignableFrom(propertyType) || double.class == propertyType || int.class == propertyType) {
+                        return new IBeforeChangeEventHandler[] { new MaxValueValidator(((Max) annotation).value()) };
+                    } else if (String.class == propertyType) {
+                        return new IBeforeChangeEventHandler[] { new MaxLengthValidator(((Max) annotation).value()) };
+                    }
+                case FINAL:
+                    return new IBeforeChangeEventHandler[] { new FinalValidator() };
+                case DOMAIN:
+                    final IBeforeChangeEventHandler domainValidator = getDomainValidationConfig().getValidator(entity.getType(), propertyName);
+                    return new IBeforeChangeEventHandler[] { domainValidator != null ? domainValidator : new HappyValidator() };
+                case ENTITY_EXISTS:
+                    if (ignoreEntityExistsAnnotation) {
+                        return new IBeforeChangeEventHandler[] { new IBeforeChangeEventHandler<Object>() {
+                            @Override
+                            public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+                                return new Result(null, "EntityExists annotation is ignored by " + EntityModuleWithDomainValidatorsForTesting.class.toString());
+                            }
+                        } };
+                    } else {
+                        return new IBeforeChangeEventHandler[] { new IBeforeChangeEventHandler<Object>() {
+                            @Override
+                            public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+                                return new Result(null, "EntityExists annotation passes correcly " + EntityModuleWithDomainValidatorsForTesting.class.toString());
+                            }
+                        } };
+                    }
+                default:
+                    // should most likely ignore
+                    new IllegalArgumentException("Unsupported validation annotation " + value + " has been encountered.").printStackTrace();
+                    return null;
+                }
+            }
 
-	// TODO not yet complete
-	bind(IMetaPropertyFactory.class).toInstance(new IMetaPropertyFactory() {
-	    @Override
-	    public IBeforeChangeEventHandler[] create( //
-	    final Annotation annotation,//
-	    final AbstractEntity<?> entity,//
-	    final String propertyName,//
-	    final Class<?> propertyType) throws Exception {
-		// identify the type of annotation
-		ValidationAnnotation value = null;
-		for (final ValidationAnnotation validationAnnotation : ValidationAnnotation.values()) {
-		    if (validationAnnotation.getType().equals(annotation.annotationType())) {
-			value = validationAnnotation;
-		    }
-		}
-		// check whether it can be recognised as a valid annotation permitted for validation purpose
-		if (value == null) {
-		    throw new RuntimeException("Unrecognised validation annotation has been encountered.");
-		}
-		// try to instantiate validator
-		switch (value) {
-		case NOT_NULL:
-		    return new IBeforeChangeEventHandler[]{new NotNullValidator()};
-		case NOT_EMPTY:
-		    return new IBeforeChangeEventHandler[]{new NotEmptyValidator()};
-		case GREATER_OR_EQUAL:
-		    return new IBeforeChangeEventHandler[]{new GreaterOrEqualValidator(((GreaterOrEqual) annotation).value())};
-		case MAX:
-		    if (Number.class.isAssignableFrom(propertyType) || double.class == propertyType || int.class == propertyType) {
-			return new IBeforeChangeEventHandler[]{new MaxValueValidator(((Max) annotation).value())};
-		    } else if (String.class == propertyType) {
-			return new IBeforeChangeEventHandler[]{new MaxLengthValidator(((Max) annotation).value())};
-		    }
-		case FINAL:
-		    return new IBeforeChangeEventHandler[]{new FinalValidator()};
-		case DOMAIN:
-		    final IBeforeChangeEventHandler domainValidator = getDomainValidationConfig().getValidator(entity.getType(), propertyName);
-		    return new IBeforeChangeEventHandler[]{domainValidator != null ? domainValidator : new HappyValidator()};
-		case ENTITY_EXISTS:
-		    if (ignoreEntityExistsAnnotation) {
-			return new IBeforeChangeEventHandler[]{new IBeforeChangeEventHandler<Object>() {
-			    @Override
-			    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-				return new Result(null, "EntityExists annotation is ignored by " + EntityModuleWithDomainValidatorsForTesting.class.toString());
-			    }
-			}};
-		    } else {
-			return new IBeforeChangeEventHandler[]{new IBeforeChangeEventHandler<Object>() {
-			    @Override
-			    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-				return new Result(null, "EntityExists annotation passes correcly " + EntityModuleWithDomainValidatorsForTesting.class.toString());
-			    }
-			}};
-		    }
-		default:
-		    // should most likely ignore
-		    new IllegalArgumentException("Unsupported validation annotation " + value + " has been encountered.").printStackTrace();
-		    return null;
-		}
-	    }
+            /**
+             * Returns definer, which always sets property <code>editable</code> to true.
+             */
+            @Override
+            public IAfterChangeEventHandler create(final AbstractEntity<?> entity, final Field propertyField) throws Exception {
+                if ("vehicle".equals(propertyField.getName())) {
+                    return new IAfterChangeEventHandler() {
+                        @Override
+                        public void handle(final MetaProperty property, final Object entityPropertyValue) {
+                            System.out.println("\tdefine...");
+                            try {
+                                Thread.sleep(10000);
+                            } catch (final InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            final DeadEntity de = (DeadEntity) property.getEntity();
+                            de.setOdometerReading(de.getOdometerReading() + 1);
+                            System.out.println("\tdefine...done");
+                        };
+                    };
+                } else {
+                    return new IAfterChangeEventHandler() {
+                        @Override
+                        public void handle(final MetaProperty property, final Object entityPropertyValue) {
+                            final MetaProperty metaProperty = entity.getProperty(propertyField.getName());
+                            if (metaProperty != null) {
+                                metaProperty.setEditable(true);
+                            }
+                        }
+                    };
+                }
+            }
 
-	    /**
-	     * Returns definer, which always sets property <code>editable</code> to true.
-	     */
-	    @Override
-	    public IAfterChangeEventHandler create(final AbstractEntity<?> entity, final Field propertyField) throws Exception {
-		if ("vehicle".equals(propertyField.getName())){
-		    return new IAfterChangeEventHandler() {
-			@Override
-			public void handle(final MetaProperty property, final Object entityPropertyValue) {
-			    System.out.println("\tdefine...");
-			    try {
-				Thread.sleep(10000);
-			    } catch (final InterruptedException e) {
-				e.printStackTrace();
-			    }
-			    final DeadEntity de = (DeadEntity) property.getEntity();
-			    de.setOdometerReading(de.getOdometerReading() + 1);
-			    System.out.println("\tdefine...done");
-			};
-		    };
-		} else {
-		    return new IAfterChangeEventHandler() {
-		        @Override
-		        public void handle(final MetaProperty property, final Object entityPropertyValue) {
-		    	final MetaProperty metaProperty = entity.getProperty(propertyField.getName());
-		    	if (metaProperty != null) {
-		    	    metaProperty.setEditable(true);
-		    	}
-		        }
-		    };
-		}
-	    }
-
-	    @Override
-	    public void setInjector(final Injector injector) {
-	    }
-	});
+            @Override
+            public void setInjector(final Injector injector) {
+            }
+        });
 
     }
 
     public DomainValidationConfig getDomainValidationConfig() {
-	return domainValidationConfig;
+        return domainValidationConfig;
     }
 
     public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-	return domainMetaPropertyConfig;
+        return domainMetaPropertyConfig;
     }
 
     @Override
     public void setInjector(final Injector injector) {
-	super.setInjector(injector);
-	entityFactory.setInjector(injector);
+        super.setInjector(injector);
+        entityFactory.setInjector(injector);
     }
 
 }

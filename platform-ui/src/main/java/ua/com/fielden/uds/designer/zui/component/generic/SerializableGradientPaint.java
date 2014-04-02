@@ -34,25 +34,25 @@ public class SerializableGradientPaint implements Paint, Serializable {
     }
 
     public SerializableGradientPaint(float x1, float y1, Color color1, float x2, float y2, Color color2) {
-	startPointX = x1;
-	startPointY = y1;
-	startColor = color1;
-	endPointX = x2;
-	endPointY = y2;
-	endColor = color2;
+        startPointX = x1;
+        startPointY = y1;
+        startColor = color1;
+        endPointX = x2;
+        endPointY = y2;
+        endColor = color2;
     }
 
     private Paint getGradientPaint() {
-	return new GradientPaint(startPointX, startPointY, startColor, endPointX, endPointY, endColor);
+        return new GradientPaint(startPointX, startPointY, startColor, endPointX, endPointY, endColor);
     }
 
     public PaintContext createContext(ColorModel cm, Rectangle deviceBounds, Rectangle2D userBounds, AffineTransform xform, RenderingHints hints) {
-	Paint paint = getGradientPaint();
-	return paint.createContext(cm, deviceBounds, userBounds, xform, hints);
+        Paint paint = getGradientPaint();
+        return paint.createContext(cm, deviceBounds, userBounds, xform, hints);
     }
 
     public int getTransparency() {
-	Paint paint = getGradientPaint();
-	return paint.getTransparency();
+        Paint paint = getGradientPaint();
+        return paint.getTransparency();
     }
 }

@@ -15,16 +15,16 @@ public class DefaultEntityCentreFactory<T extends AbstractEntity<?>> implements 
 
     @Override
     public CentreConfigurationView<T, ?> createEntityCentre(//
-	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType, //
-	    final String name, //
-	    final IAnalysisBuilder<T> analysisBuilder, //
-	    final IGlobalDomainTreeManager gdtm, //
-	    final EntityFactory entityFactory, //
-	    final IEntityMasterManager masterManager, //
-	    final ICriteriaGenerator criteriaGenerator, //
-	    final BlockingIndefiniteProgressLayer progressLayer) {
-	final CentreConfigurationModel<T> configModel = new CentreConfigurationModel<T>(menuItemType, name, analysisBuilder, gdtm, entityFactory, masterManager, criteriaGenerator);
-	return new MultipleAnalysisEntityCentreConfigurationView<T>(configModel, progressLayer);
+    final Class<? extends MiWithConfigurationSupport<T>> menuItemType, //
+            final String name, //
+            final IAnalysisBuilder<T> analysisBuilder, //
+            final IGlobalDomainTreeManager gdtm, //
+            final EntityFactory entityFactory, //
+            final IEntityMasterManager masterManager, //
+            final ICriteriaGenerator criteriaGenerator, //
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        final CentreConfigurationModel<T> configModel = new CentreConfigurationModel<T>(menuItemType, name, analysisBuilder, gdtm, entityFactory, masterManager, criteriaGenerator);
+        return new MultipleAnalysisEntityCentreConfigurationView<T>(configModel, progressLayer);
     }
 
 }

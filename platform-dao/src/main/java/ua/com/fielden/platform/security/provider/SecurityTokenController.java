@@ -16,9 +16,9 @@ import com.google.inject.Inject;
 
 /**
  * Provides the simplest controller for retrieving data for the {@link SecurityTreeTableModel}. Implemented for testing purpose
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class SecurityTokenController implements ISecurityTokenController {
 
@@ -28,7 +28,7 @@ public class SecurityTokenController implements ISecurityTokenController {
 
     @Override
     public Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations() {
-	return securityAssociationDao.findAllAssociations();
+        return securityAssociationDao.findAllAssociations();
     }
 
     /**
@@ -36,46 +36,46 @@ public class SecurityTokenController implements ISecurityTokenController {
      */
     @Inject
     public SecurityTokenController(final ISecurityRoleAssociationDao securityAssociationDao, final IUserRoleDao roleDao) {
-	this.securityAssociationDao = securityAssociationDao;
-	this.roleDao = roleDao;
+        this.securityAssociationDao = securityAssociationDao;
+        this.roleDao = roleDao;
     }
 
     @Override
     public List<UserRole> findUserRoles() {
-	return roleDao.findAll();
+        return roleDao.findAll();
     }
 
     @Override
     public List<UserRole> findUserRolesFor(final Class<? extends ISecurityToken> securityTokenClass) {
-	final List<UserRole> roles = new ArrayList<UserRole>();
-	for (final SecurityRoleAssociation association : securityAssociationDao.findAssociationsFor(securityTokenClass)) {
-	    roles.add(association.getRole());
-	}
-	return roles;
+        final List<UserRole> roles = new ArrayList<UserRole>();
+        for (final SecurityRoleAssociation association : securityAssociationDao.findAssociationsFor(securityTokenClass)) {
+            roles.add(association.getRole());
+        }
+        return roles;
     }
 
     @Transactional
     @Override
     public void saveSecurityToken(final Map<Class<? extends ISecurityToken>, Set<UserRole>> tokenToRoleAssociations) {
-	for (final Class<? extends ISecurityToken> token : tokenToRoleAssociations.keySet()) {
-	    securityAssociationDao.removeAssociationsFor(token);
-	    final Set<UserRole> roles = tokenToRoleAssociations.get(token);
-	    for (final UserRole role : roles) {
-		securityAssociationDao.save(role.getEntityFactory().newByKey(SecurityRoleAssociation.class, token, role));
-	    }
-	}
+        for (final Class<? extends ISecurityToken> token : tokenToRoleAssociations.keySet()) {
+            securityAssociationDao.removeAssociationsFor(token);
+            final Set<UserRole> roles = tokenToRoleAssociations.get(token);
+            for (final UserRole role : roles) {
+                securityAssociationDao.save(role.getEntityFactory().newByKey(SecurityRoleAssociation.class, token, role));
+            }
+        }
     }
 
     public IUserRoleDao getRoleDao() {
-	return roleDao;
+        return roleDao;
     }
 
     public ISecurityRoleAssociationDao getSecurityAssociationDao() {
-	return securityAssociationDao;
+        return securityAssociationDao;
     }
 
     @Override
     public boolean canAccess(final String username, final Class<? extends ISecurityToken> securityTokenClass) {
-	return securityAssociationDao.countAssociations(username, securityTokenClass) > 0;
+        return securityAssociationDao.countAssociations(username, securityTokenClass) > 0;
     }
 }

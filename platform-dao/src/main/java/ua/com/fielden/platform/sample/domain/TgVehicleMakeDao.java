@@ -8,10 +8,9 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
-
 /**
  * DAO for {@link TgVehicleMake} retrieval.
- *
+ * 
  * @author TG Team
  */
 
@@ -20,6 +19,6 @@ public class TgVehicleMakeDao extends CommonEntityDao<TgVehicleMake> implements 
 
     @Inject
     protected TgVehicleMakeDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

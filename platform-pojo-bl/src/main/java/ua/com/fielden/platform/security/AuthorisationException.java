@@ -12,15 +12,15 @@ public class AuthorisationException extends RuntimeException {
     private final Class<? extends ISecurityToken> violatedToken;
 
     public AuthorisationException(final Class<? extends ISecurityToken> violatedToken) {
-	this.violatedToken = violatedToken;
+        this.violatedToken = violatedToken;
     }
 
     public AuthorisationException(String message, final Class<? extends ISecurityToken> violatedToken) {
-	super(message);
-	this.violatedToken = violatedToken;
+        super(message);
+        this.violatedToken = violatedToken;
     }
 
     public final Class<? extends ISecurityToken> getViolatedToken() {
-	return violatedToken;
+        return violatedToken;
     }
 }

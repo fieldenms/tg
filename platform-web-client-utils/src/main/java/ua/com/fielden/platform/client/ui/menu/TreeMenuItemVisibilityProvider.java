@@ -12,25 +12,25 @@ public class TreeMenuItemVisibilityProvider implements ITreeMenuItemVisibilityPr
     private final IMainMenuItemInvisibilityController mmiController;
 
     public TreeMenuItemVisibilityProvider(final MainMenuItem menuItem, final User owner, final IMainMenuItemInvisibilityController mmiController) {
-	this.menuItem = menuItem;
-	this.owner = owner;
-	this.mmiController = mmiController;
+        this.menuItem = menuItem;
+        this.owner = owner;
+        this.mmiController = mmiController;
     }
 
     @Override
     public void setVisible(final boolean visible) {
-	if (owner.isBase()) {
-	    if (visible) {
-		mmiController.makeVisible(menuItem, owner);
-	    } else {
-		mmiController.makeInvisible(menuItem, owner);
-	    }
-	}
+        if (owner.isBase()) {
+            if (visible) {
+                mmiController.makeVisible(menuItem, owner);
+            } else {
+                mmiController.makeInvisible(menuItem, owner);
+            }
+        }
     }
 
     @Override
     public boolean isVisible() {
-	return menuItem.isVisible();
+        return menuItem.isVisible();
     }
 
 }

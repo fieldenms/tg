@@ -14,28 +14,28 @@ public class GridAnalysisModelForLocator<T extends AbstractEntity<?>> extends Gr
     private final List<T> locatorSelectionModel;
 
     public GridAnalysisModelForLocator(//
-	    final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria,//
-	    final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ILocatorDomainTreeManagerAndEnhancer>> queryCustomiser,//
-	    final List<T> locatorSelectionModel) {
-	super(criteria, queryCustomiser);
-	this.locatorSelectionModel = locatorSelectionModel;
+    final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria,//
+            final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ILocatorDomainTreeManagerAndEnhancer>> queryCustomiser,//
+            final List<T> locatorSelectionModel) {
+        super(criteria, queryCustomiser);
+        this.locatorSelectionModel = locatorSelectionModel;
     }
 
     @Override
     public Result executeAnalysisQuery() {
-	locatorSelectionModel.clear();
-	getAnalysisView().getEgiPanel().getEgi().getSelectionModel().clearSelection();
-	return super.executeAnalysisQuery();
+        locatorSelectionModel.clear();
+        getAnalysisView().getEgiPanel().getEgi().getSelectionModel().clearSelection();
+        return super.executeAnalysisQuery();
 
     }
 
     @Override
     protected GridAnalysisViewForLocator<T> getAnalysisView() {
-        return (GridAnalysisViewForLocator<T>)super.getAnalysisView();
+        return (GridAnalysisViewForLocator<T>) super.getAnalysisView();
     }
 
     public List<T> getLocatorSelectionModel() {
-	return locatorSelectionModel;
+        return locatorSelectionModel;
     }
 
 }

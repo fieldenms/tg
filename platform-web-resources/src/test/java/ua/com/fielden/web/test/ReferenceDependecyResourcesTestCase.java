@@ -23,9 +23,9 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 /**
  * Provides unit tests for {@link ReferenceDependencyDownloadResource} and {@link ReferenceDependencyListResource} web resources and {@link ReferenceDependancyController}
  * controller.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class ReferenceDependecyResourcesTestCase extends WebBasedTestCase {
     private final static String REFERENCE_DEPENDENCIES_LOCATION = "src/test/resources/data-files/dependencies";
@@ -43,51 +43,51 @@ public class ReferenceDependecyResourcesTestCase extends WebBasedTestCase {
 
     @Override
     public synchronized Restlet getInboundRoot() {
-	final Router router = new Router(getContext());
-	router.attach("/users/{username}/dependencies/{file-name}", new ReferenceDependencyDownloadResourceFactory(REFERENCE_DEPENDENCIES_LOCATION, DbDrivenTestCase.injector));
-	router.attach("/users/{username}/update", new ReferenceDependencyListResourceFactory(REFERENCE_DEPENDENCIES_LOCATION, DbDrivenTestCase.injector));
-	return router;
+        final Router router = new Router(getContext());
+        router.attach("/users/{username}/dependencies/{file-name}", new ReferenceDependencyDownloadResourceFactory(REFERENCE_DEPENDENCIES_LOCATION, DbDrivenTestCase.injector));
+        router.attach("/users/{username}/update", new ReferenceDependencyListResourceFactory(REFERENCE_DEPENDENCIES_LOCATION, DbDrivenTestCase.injector));
+        return router;
     }
 
     @Test
     public void test_dependency_info_retrieval() {
-	final Map<String, Pair<String, Long>> map = controller.dependencyInfo();
+        final Map<String, Pair<String, Long>> map = controller.dependencyInfo();
 
-	assertEquals("Incorrect number of dependencies.", 2, map.size());
+        assertEquals("Incorrect number of dependencies.", 2, map.size());
 
-	assertEquals("Incorrect dependency size.", DEPENDENCY_01_SIZE, map.get(DEPENDENCY_01_NAME).getValue());
-	assertEquals("Incorrect dependency checksum.", DEPENDENCY_01_CHECKSUM, map.get(DEPENDENCY_01_NAME).getKey());
+        assertEquals("Incorrect dependency size.", DEPENDENCY_01_SIZE, map.get(DEPENDENCY_01_NAME).getValue());
+        assertEquals("Incorrect dependency checksum.", DEPENDENCY_01_CHECKSUM, map.get(DEPENDENCY_01_NAME).getKey());
 
-	assertEquals("Incorrect dependency size.", DEPENDENCY_02_SIZE, map.get(DEPENDENCY_02_NAME).getValue());
-	assertEquals("Incorrect dependency checksum.", DEPENDENCY_02_CHECKSUM, map.get(DEPENDENCY_02_NAME).getKey());
+        assertEquals("Incorrect dependency size.", DEPENDENCY_02_SIZE, map.get(DEPENDENCY_02_NAME).getValue());
+        assertEquals("Incorrect dependency checksum.", DEPENDENCY_02_CHECKSUM, map.get(DEPENDENCY_02_NAME).getKey());
     }
 
     @Test
     public void test_dependency_download() {
-	final DependencyProgress dp = new DependencyProgress();
-	final byte[] dependency_content = controller.download(DEPENDENCY_01_NAME, DEPENDENCY_01_CHECKSUM, dp);
-	assertEquals("Incorrect dependency content.", DEPENDENCY_01_SIZE, Long.valueOf(dependency_content.length));
-	assertEquals("Incorrect update info for dependency.", DEPENDENCY_01_SIZE, dp.progress);
+        final DependencyProgress dp = new DependencyProgress();
+        final byte[] dependency_content = controller.download(DEPENDENCY_01_NAME, DEPENDENCY_01_CHECKSUM, dp);
+        assertEquals("Incorrect dependency content.", DEPENDENCY_01_SIZE, Long.valueOf(dependency_content.length));
+        assertEquals("Incorrect update info for dependency.", DEPENDENCY_01_SIZE, dp.progress);
     }
 
     @Test(expected = EChecksumMismatch.class)
     public void test_dependency_download_checksum_error_handling() {
-	final DependencyProgress dp = new DependencyProgress();
-	controller.download(DEPENDENCY_01_NAME, DEPENDENCY_01_INCORRECT_CHECKSUM, dp);
+        final DependencyProgress dp = new DependencyProgress();
+        controller.download(DEPENDENCY_01_NAME, DEPENDENCY_01_INCORRECT_CHECKSUM, dp);
     }
 
     @Override
     protected String[] getDataSetPaths() {
-	return new String[] {};
+        return new String[] {};
     }
 
     private static final class DependencyProgress implements IDownloadProgress {
-	private Long progress = 0L;
+        private Long progress = 0L;
 
-	@Override
-	public void update(final long incNumOfBytesRead) {
-	    progress = incNumOfBytesRead;
-	}
+        @Override
+        public void update(final long incNumOfBytesRead) {
+            progress = incNumOfBytesRead;
+        }
 
     }
 

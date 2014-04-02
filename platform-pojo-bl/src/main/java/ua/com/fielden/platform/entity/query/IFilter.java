@@ -10,9 +10,9 @@ import com.google.inject.ImplementedBy;
  * A contract to be implemented for the purpose of data filtering.
  * <p>
  * The original intension was to enhance an {@link EntityResultQueryModel} instance with user-driven filtering.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @ImplementedBy(DefaultFilter.class)
 public interface IFilter {

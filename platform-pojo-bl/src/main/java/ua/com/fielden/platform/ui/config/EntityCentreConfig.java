@@ -32,10 +32,10 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
  * together provide entity centre configuration uniqueness.<br>
  * However, due to the fact that non-base users use their and inherited configurations there can be a situation where there are two configurations with the same title under the
  * same menu -- one belonging to a base user, another -- to a derive user.<br>
- *
+ * 
  * This situation can either be restricted at the application level upon saving of a configuration instance, or allowed, which could potentially lead to a confusion by user seeing
  * two menu items with the same title.
- *
+ * 
  * @author TG Team
  */
 @KeyType(DynamicEntityKey.class)
@@ -69,51 +69,51 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     private boolean principal = false;
 
     protected EntityCentreConfig() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     public MainMenuItem getMenuItem() {
-	return menuItem;
+        return menuItem;
     }
 
     @Observable
     @EntityExists(MainMenuItem.class)
     public EntityCentreConfig setMenuItem(final MainMenuItem menuItem) {
-	this.menuItem = menuItem;
-	return this;
+        this.menuItem = menuItem;
+        return this;
     }
 
     public boolean isPrincipal() {
-	return principal;
+        return principal;
     }
 
     @Observable
     public EntityCentreConfig setPrincipal(final boolean flag) {
-	this.principal = flag;
-	return this;
+        this.principal = flag;
+        return this;
     }
 
     public User getOwner() {
-	return owner;
+        return owner;
     }
 
     @Observable
     @NotNull
     @EntityExists(User.class)
     public EntityCentreConfig setOwner(final User owner) {
-	this.owner = owner;
-	return this;
+        this.owner = owner;
+        return this;
     }
 
     public String getTitle() {
-	return title;
+        return title;
     }
 
     @Observable
     @NotNull
     public EntityCentreConfig setTitle(final String title) {
-	this.title = title;
-	return this;
+        this.title = title;
+        return this;
     }
 
 }

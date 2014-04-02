@@ -24,7 +24,7 @@ public class DateConverter implements Converter {
     private final ThreadSafeSimpleDateFormat[] acceptableFormats;
 
     public DateConverter() {
-	this(false);
+        this(false);
     }
 
     /**
@@ -34,43 +34,43 @@ public class DateConverter implements Converter {
      *            the lenient setting of {@link SimpleDateFormat#setLenient(boolean)}
      */
     public DateConverter(final boolean lenient) {
-	this("yyyy-MM-dd HH:mm:ss.S z", new String[] { "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.S", "yyyy-MM-dd HH:mm:ss.S a", "yyyy-MM-dd HH:mm:ssz", "yyyy-MM-dd HH:mm:ss z",
-		"yyyy-MM-dd HH:mm:ssa" }, lenient);
+        this("yyyy-MM-dd HH:mm:ss.S z", new String[] { "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.S", "yyyy-MM-dd HH:mm:ss.S a", "yyyy-MM-dd HH:mm:ssz", "yyyy-MM-dd HH:mm:ss z",
+                "yyyy-MM-dd HH:mm:ssa" }, lenient);
     }
 
     public DateConverter(final String defaultFormat, final String[] acceptableFormats, final boolean lenient) {
-	this.defaultFormat = new ThreadSafeSimpleDateFormat(defaultFormat, 4, 20, lenient);
-	this.acceptableFormats = new ThreadSafeSimpleDateFormat[acceptableFormats.length];
-	for (int i = 0; i < acceptableFormats.length; i++) {
-	    this.acceptableFormats[i] = new ThreadSafeSimpleDateFormat(acceptableFormats[i], 1, 20, lenient);
-	}
+        this.defaultFormat = new ThreadSafeSimpleDateFormat(defaultFormat, 4, 20, lenient);
+        this.acceptableFormats = new ThreadSafeSimpleDateFormat[acceptableFormats.length];
+        for (int i = 0; i < acceptableFormats.length; i++) {
+            this.acceptableFormats[i] = new ThreadSafeSimpleDateFormat(acceptableFormats[i], 1, 20, lenient);
+        }
     }
 
     @Override
     public void marshal(final Object obj, final HierarchicalStreamWriter writer, final MarshallingContext context) {
-	writer.setValue(defaultFormat.format((Date) obj));
+        writer.setValue(defaultFormat.format((Date) obj));
     }
 
     @Override
     public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
-	final String str = reader.getValue();
-	try {
-	    return defaultFormat.parse(str);
-	} catch (final ParseException e) {
-	    for (int i = 0; i < acceptableFormats.length; i++) {
-		try {
-		    return acceptableFormats[i].parse(str);
-		} catch (final ParseException e2) {
-		    // no worries, let's try the next format.
-		}
-	    }
-	    // no dateFormats left to try
-	    throw new ConversionException("Cannot parse date " + str);
-	}
+        final String str = reader.getValue();
+        try {
+            return defaultFormat.parse(str);
+        } catch (final ParseException e) {
+            for (int i = 0; i < acceptableFormats.length; i++) {
+                try {
+                    return acceptableFormats[i].parse(str);
+                } catch (final ParseException e2) {
+                    // no worries, let's try the next format.
+                }
+            }
+            // no dateFormats left to try
+            throw new ConversionException("Cannot parse date " + str);
+        }
     }
 
     @Override
     public boolean canConvert(final Class type) {
-	return Date.class.equals(type);
+        return Date.class.equals(type);
     }
 }

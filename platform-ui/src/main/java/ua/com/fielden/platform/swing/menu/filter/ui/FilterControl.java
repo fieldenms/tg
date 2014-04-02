@@ -43,110 +43,110 @@ public class FilterControl extends JXLayer<JTextField> {
      *            -- a short informative message, which is displayed on top of the textComponent if it is empty and not focused.
      */
     public FilterControl(//
-	    final JTextField textComponent,//
-	    final IFilterableModel model,//
-	    final String caption) { //
-	super(textComponent);
-	this.model = model;
-	model.addFilterBreakListener(new IFilterBreakListener() {
+    final JTextField textComponent,//
+            final IFilterableModel model,//
+            final String caption) { //
+        super(textComponent);
+        this.model = model;
+        model.addFilterBreakListener(new IFilterBreakListener() {
 
-	    @Override
-	    public void doAfterBreak(final IFilterableModel model) {
-		getView().setText(prevFilter);
-		refresh();
-	    }
+            @Override
+            public void doAfterBreak(final IFilterableModel model) {
+                getView().setText(prevFilter);
+                refresh();
+            }
 
-	});
+        });
 
-	getView().getDocument().addDocumentListener(documentListener);
-	getView().addKeyListener(new KeyListener() {
-	    public void keyTyped(final KeyEvent e) {
-	    }
+        getView().getDocument().addDocumentListener(documentListener);
+        getView().addKeyListener(new KeyListener() {
+            public void keyTyped(final KeyEvent e) {
+            }
 
-	    public void keyPressed(final KeyEvent e) {
-	    }
+            public void keyPressed(final KeyEvent e) {
+            }
 
-	    public void keyReleased(final KeyEvent e) {
-		if (KeyEvent.VK_ESCAPE != e.getKeyCode()) {
-		    setKeyTyped(true);
-		}
-	    }
-	});
+            public void keyReleased(final KeyEvent e) {
+                if (KeyEvent.VK_ESCAPE != e.getKeyCode()) {
+                    setKeyTyped(true);
+                }
+            }
+        });
 
-	// instantiates UI and assigns it to this layer
-	new FilterUi(this, caption);
+        // instantiates UI and assigns it to this layer
+        new FilterUi(this, caption);
 
-	addFocusListener(new FocusAdapter() {
-	    @Override
-	    public void focusGained(final FocusEvent e) {
-		getView().requestFocusInWindow();
-	    }
-	});
+        addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(final FocusEvent e) {
+                getView().requestFocusInWindow();
+            }
+        });
     }
 
     /**
      * A convenient method for filter clearing.
      */
     public void clear() {
-	getView().setText(""); // clear text and refresh filterable model
-	refresh();
+        getView().setText(""); // clear text and refresh filterable model
+        refresh();
     }
 
     /**
      * Refreshes filterable model.
      */
     public void refresh() {
-	model.filter(getView().getText());
-	prevFilter = getView().getText();
+        model.filter(getView().getText());
+        prevFilter = getView().getText();
     }
 
     FilterUi getUi() {
-	return (FilterUi) super.getUI();
+        return (FilterUi) super.getUI();
     }
 
     public void setEditable(final boolean flag) {
-	getView().setEditable(flag);
+        getView().setEditable(flag);
     }
 
     /**
      * This listener is responsible to triggering filter model refresh. The refresh happens by timer -- 200 millis are given for each key press before applying the filter.
      */
     private DocumentListener documentListener = new DocumentListener() {
-	private Timer timer = new Timer(200, new ActionListener() {
-	    public void actionPerformed(final ActionEvent e) {
-		if (isKeyTyped()) {
-		    refresh();
-		    setKeyTyped(false);
-		}
-	    }
-	});
+        private Timer timer = new Timer(200, new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                if (isKeyTyped()) {
+                    refresh();
+                    setKeyTyped(false);
+                }
+            }
+        });
 
-	public void insertUpdate(final DocumentEvent e) {
-	    startTimer();
-	}
+        public void insertUpdate(final DocumentEvent e) {
+            startTimer();
+        }
 
-	public void removeUpdate(final DocumentEvent e) {
-	    startTimer();
-	}
+        public void removeUpdate(final DocumentEvent e) {
+            startTimer();
+        }
 
-	public void changedUpdate(final DocumentEvent e) {
-	}
+        public void changedUpdate(final DocumentEvent e) {
+        }
 
-	void startTimer() {
-	    if (timer.isRunning()) {
-		timer.restart();
-	    } else {
-		timer.setRepeats(false);
-		timer.start();
-	    }
-	}
+        void startTimer() {
+            if (timer.isRunning()) {
+                timer.restart();
+            } else {
+                timer.setRepeats(false);
+                timer.start();
+            }
+        }
     };
 
     protected boolean isKeyTyped() {
-	return keyTyped;
+        return keyTyped;
     }
 
     private void setKeyTyped(final boolean keyTyped) {
-	this.keyTyped = keyTyped;
+        this.keyTyped = keyTyped;
     }
 }

@@ -32,11 +32,11 @@ public class TgBogie extends AbstractEntity<String> {
 
     @Observable
     public TgBogie setLocation(final TgBogieLocation location) {
-	this.location = location;
-	return this;
+        this.location = location;
+        return this;
     }
 
     public TgBogieLocation getLocation() {
-	return location;
+        return location;
     }
 }

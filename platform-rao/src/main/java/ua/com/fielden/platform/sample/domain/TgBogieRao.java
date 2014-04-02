@@ -8,12 +8,11 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
-
 @EntityType(TgBogie.class)
 public class TgBogieRao extends CommonEntityRao<TgBogie> implements ITgBogie {
 
     @Inject
     public TgBogieRao(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 }

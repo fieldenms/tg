@@ -9,9 +9,9 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Master entity object.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
@@ -19,6 +19,5 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 public class TgPersonName extends AbstractEntity<String> {
-
 
 }

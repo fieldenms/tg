@@ -29,9 +29,9 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 
 /**
  * Provides a unit test for security token/role management and user authorisation.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class SecurityTokenManagementTestCase extends WebBasedTestCase {
 
@@ -40,70 +40,73 @@ public class SecurityTokenManagementTestCase extends WebBasedTestCase {
 
     @Test
     public void test_that_all_user_roles_can_be_found() {
-	final List<? extends UserRole> roles = tokenControllerRao.findUserRoles();
-	assertEquals("Incorrect number of roles.", 8, roles.size());
+        final List<? extends UserRole> roles = tokenControllerRao.findUserRoles();
+        assertEquals("Incorrect number of roles.", 8, roles.size());
     }
 
     @Test
     public void test_can_find_roles_for_token() {
-	final List<? extends UserRole> roles = tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class);
-	assertEquals("Incorrect number of roles for token.", 2, roles.size());
+        final List<? extends UserRole> roles = tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class);
+        assertEquals("Incorrect number of roles for token.", 2, roles.size());
     }
 
     @SuppressWarnings("serial")
     @Test
     public void test_can_save_changes_to_token_role_association() {
-	final List<? extends UserRole> roles = new ArrayList<>(tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class));
-	assertEquals("Incorrect number of roles for token.", 2, roles.size());
+        final List<? extends UserRole> roles = new ArrayList<>(tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class));
+        assertEquals("Incorrect number of roles for token.", 2, roles.size());
 
-	final Map<Class<? extends ISecurityToken>, Set<UserRole>> newAssociations = new HashMap<Class<? extends ISecurityToken>, Set<UserRole>>();
-	newAssociations.put(FirstLevelSecurityToken1.class, new HashSet<UserRole>(){{add(roles.get(0));}});
-	tokenControllerRao.saveSecurityToken(newAssociations);
+        final Map<Class<? extends ISecurityToken>, Set<UserRole>> newAssociations = new HashMap<Class<? extends ISecurityToken>, Set<UserRole>>();
+        newAssociations.put(FirstLevelSecurityToken1.class, new HashSet<UserRole>() {
+            {
+                add(roles.get(0));
+            }
+        });
+        tokenControllerRao.saveSecurityToken(newAssociations);
 
-	assertEquals("Incorrect number of roles for token after update.", 1, tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class).size());
+        assertEquals("Incorrect number of roles for token after update.", 1, tokenControllerRao.findUserRolesFor(FirstLevelSecurityToken1.class).size());
     }
 
     @Test
     public void test_that_retreive_all_association_works() {
-	final Map<Class<? extends ISecurityToken>, Set<UserRole>> associations = tokenControllerRao.findAllAssociations();
-	assertEquals("Incorrect number of token roles aasociation.", 6, associations.size());
+        final Map<Class<? extends ISecurityToken>, Set<UserRole>> associations = tokenControllerRao.findAllAssociations();
+        assertEquals("Incorrect number of token roles aasociation.", 6, associations.size());
 
-	for (final Map.Entry<Class<? extends ISecurityToken>, Set<UserRole>> associationEntry : associations.entrySet()) {
-	    assertEquals("Incorrect number of roles aasociated with " + associationEntry.getKey().getSimpleName(), 2, associationEntry.getValue().size());
-	}
+        for (final Map.Entry<Class<? extends ISecurityToken>, Set<UserRole>> associationEntry : associations.entrySet()) {
+            assertEquals("Incorrect number of roles aasociated with " + associationEntry.getKey().getSimpleName(), 2, associationEntry.getValue().size());
+        }
     }
 
     @Test
     public void test_count_association_between_user_and_token() {
-	final String user = config.restClientUtil().getUsername();
-	config.restClientUtil().setUsername("USER-1");
-	assertTrue("Access should be authorised.", tokenControllerRao.canAccess("USER-1", FirstLevelSecurityToken1.class));
-	assertTrue("Access should be authorised.", tokenControllerRao.canAccess("USER-1", ThirdLevelSecurityToken1.class));
-	assertFalse("Access should not be authorised.", tokenControllerRao.canAccess("USER-1", ThirdLevelSecurityToken2.class));
-	config.restClientUtil().setUsername(user);
+        final String user = config.restClientUtil().getUsername();
+        config.restClientUtil().setUsername("USER-1");
+        assertTrue("Access should be authorised.", tokenControllerRao.canAccess("USER-1", FirstLevelSecurityToken1.class));
+        assertTrue("Access should be authorised.", tokenControllerRao.canAccess("USER-1", ThirdLevelSecurityToken1.class));
+        assertFalse("Access should not be authorised.", tokenControllerRao.canAccess("USER-1", ThirdLevelSecurityToken2.class));
+        config.restClientUtil().setUsername(user);
     }
-
 
     @Override
     public synchronized Restlet getInboundRoot() {
-	final Router router = new Router(getContext());
+        final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
-	helper.register(router, IUserRoleDao.class);
+        final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
+        helper.register(router, IUserRoleDao.class);
 
-	final Restlet securityTokenRestlet = new SecurityTokenResourceFactory(DbDrivenTestCase.injector);
-	router.attach("/users/{username}/securitytokens", securityTokenRestlet);
-	router.attach("/users/{username}/securitytokens/{token}", securityTokenRestlet); // authorisation resources
-	router.attach("/users/{username}/securitytokens/{token}/useroles", securityTokenRestlet);
-	final Restlet tokenRoleAssociationRestlet = new TokenRoleAssociationResourceFactory(DbDrivenTestCase.injector);
-	router.attach("/users/{username}/tokenroleassociation", tokenRoleAssociationRestlet);
+        final Restlet securityTokenRestlet = new SecurityTokenResourceFactory(DbDrivenTestCase.injector);
+        router.attach("/users/{username}/securitytokens", securityTokenRestlet);
+        router.attach("/users/{username}/securitytokens/{token}", securityTokenRestlet); // authorisation resources
+        router.attach("/users/{username}/securitytokens/{token}/useroles", securityTokenRestlet);
+        final Restlet tokenRoleAssociationRestlet = new TokenRoleAssociationResourceFactory(DbDrivenTestCase.injector);
+        router.attach("/users/{username}/tokenroleassociation", tokenRoleAssociationRestlet);
 
-	return router;
+        return router;
     }
 
     @Override
     protected String[] getDataSetPaths() {
-	return new String[] { "src/test/resources/data-files/user-role-test-case.flat.xml" };
+        return new String[] { "src/test/resources/data-files/user-role-test-case.flat.xml" };
     }
 
 }

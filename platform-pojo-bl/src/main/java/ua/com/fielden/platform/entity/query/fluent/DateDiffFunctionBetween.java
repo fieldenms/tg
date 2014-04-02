@@ -9,12 +9,12 @@ public class DateDiffFunctionBetween<T, ET extends AbstractEntity<?>> extends Ab
     T parent;
 
     DateDiffFunctionBetween(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     public IFunctionLastArgument<T, ET> and() {
-	return new FunctionLastArgument<T, ET>(getTokens(), parent);
+        return new FunctionLastArgument<T, ET>(getTokens(), parent);
     }
 }

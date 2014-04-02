@@ -5,14 +5,14 @@ import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;
 
 /**
  * NDA for recognising MULT token of the expression language.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class MultTokenAutomata extends BaseNonDeterministicAutomata {
 
     public MultTokenAutomata() {
-	super(EgTokenCategory.MULT, TEXT_POST_PROCESSING.TRIM, new State0(), new State1());
+        super(EgTokenCategory.MULT, TEXT_POST_PROCESSING.TRIM, new State0(), new State1());
     }
 
     @Override

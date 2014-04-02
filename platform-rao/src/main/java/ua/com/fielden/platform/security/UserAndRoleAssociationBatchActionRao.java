@@ -12,23 +12,22 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.security.mixin.UserAndRoleAssociationBatchActionMixin;
 import com.google.inject.Inject;
 
-/** 
+/**
  * RAO implementation for master object {@link IUserAndRoleAssociationBatchAction} based on a common with DAO mixin.
  * 
  * @author Developers
- *
+ * 
  */
 @EntityType(UserAndRoleAssociationBatchAction.class)
 public class UserAndRoleAssociationBatchActionRao extends CommonEntityRao<UserAndRoleAssociationBatchAction> implements IUserAndRoleAssociationBatchAction {
 
-    
     private final UserAndRoleAssociationBatchActionMixin mixin;
-    
+
     @Inject
     public UserAndRoleAssociationBatchActionRao(final RestClientUtil restUtil) {
         super(restUtil);
-        
+
         mixin = new UserAndRoleAssociationBatchActionMixin(this);
     }
-    
+
 }

@@ -18,27 +18,27 @@ import com.google.inject.Inject;
 
 /**
  * RAO implementation of the {@link IUserRoleDao}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(UserRole.class)
 public class UserRoleRao extends CommonEntityRao<UserRole> implements IUserRoleDao {
 
     @Inject
     public UserRoleRao(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 
     @Override
     public List<UserRole> findAll() {
-	final EntityResultQueryModel<UserRole> model = select(UserRole.class).model();
-	final OrderingModel orderBy = orderBy().prop("key").asc().model();
-	return getAllEntities(from(model).with(orderBy).model());
+        final EntityResultQueryModel<UserRole> model = select(UserRole.class).model();
+        final OrderingModel orderBy = orderBy().prop("key").asc().model();
+        return getAllEntities(from(model).with(orderBy).model());
     }
 
     @Override
     public List<UserRole> findByIds(final Long... ids) {
-	throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 }

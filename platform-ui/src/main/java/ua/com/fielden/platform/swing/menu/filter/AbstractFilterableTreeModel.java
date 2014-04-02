@@ -60,7 +60,7 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      *            -- tree model to wrap.
      */
     public AbstractFilterableTreeModel(final TreeModel model) {
-	this(model, true);
+        this(model, true);
     }
 
     /**
@@ -72,8 +72,8 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      *            -- specifies whether filters should be chained with <code>AND</code> condition
      */
     public AbstractFilterableTreeModel(final TreeModel model, final boolean andMode) {
-	this.model = model;
-	setAndMode(andMode);
+        this.model = model;
+        setAndMode(andMode);
     }
 
     /**
@@ -81,38 +81,38 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      */
     @Override
     public TreeNode getChild(final Object parent, final int index) {
-	int actualIndex = -1;
-	final TreeNode treeNode = (TreeNode) parent;
+        int actualIndex = -1;
+        final TreeNode treeNode = (TreeNode) parent;
 
-	for (int childCounter = 0; childCounter < treeNode.getChildCount(); childCounter++) {
-	    final TreeNode childNode = treeNode.getChildAt(childCounter);
-	    if (!visibilityMap.containsKey(childNode)) {
-		visibilityMap.put(childNode, true);
-	    }
-	    if (visibilityMap.get(childNode)) {
-		actualIndex++;
-		if (index == actualIndex) {
-		    return childNode;
-		}
-	    }
-	}
-	return null;
+        for (int childCounter = 0; childCounter < treeNode.getChildCount(); childCounter++) {
+            final TreeNode childNode = treeNode.getChildAt(childCounter);
+            if (!visibilityMap.containsKey(childNode)) {
+                visibilityMap.put(childNode, true);
+            }
+            if (visibilityMap.get(childNode)) {
+                actualIndex++;
+                if (index == actualIndex) {
+                    return childNode;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
     public int getChildCount(final Object parent) {
-	int counter = 0;
-	final TreeNode treeNode = (TreeNode) parent;
-	for (int childIndex = 0; childIndex < treeNode.getChildCount(); childIndex++) {
-	    final TreeNode childNode = treeNode.getChildAt(childIndex);
-	    if (!visibilityMap.containsKey(childNode)) {
-		visibilityMap.put(childNode, true);
-	    }
-	    if (visibilityMap.get(childNode)) {
-		counter++;
-	    }
-	}
-	return counter;
+        int counter = 0;
+        final TreeNode treeNode = (TreeNode) parent;
+        for (int childIndex = 0; childIndex < treeNode.getChildCount(); childIndex++) {
+            final TreeNode childNode = treeNode.getChildAt(childIndex);
+            if (!visibilityMap.containsKey(childNode)) {
+                visibilityMap.put(childNode, true);
+            }
+            if (visibilityMap.get(childNode)) {
+                counter++;
+            }
+        }
+        return counter;
     }
 
     /**
@@ -120,170 +120,170 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      */
     @Override
     public int getIndexOfChild(final Object parent, final Object child) {
-	int index = -1;
-	final TreeNode treeNode = (TreeNode) parent;
-	for (int childIndex = 0; childIndex < treeNode.getChildCount(); childIndex++) {
-	    final TreeNode childNode = treeNode.getChildAt(childIndex);
-	    if (!visibilityMap.containsKey(childNode)) {
-		visibilityMap.put(childNode, true);
-	    }
-	    if (visibilityMap.get(childNode)) {
-		index++;
-	    }
-	    if(childNode.equals(child)){
-		return index;
-	    }
-	}
-	return index;
+        int index = -1;
+        final TreeNode treeNode = (TreeNode) parent;
+        for (int childIndex = 0; childIndex < treeNode.getChildCount(); childIndex++) {
+            final TreeNode childNode = treeNode.getChildAt(childIndex);
+            if (!visibilityMap.containsKey(childNode)) {
+                visibilityMap.put(childNode, true);
+            }
+            if (visibilityMap.get(childNode)) {
+                index++;
+            }
+            if (childNode.equals(child)) {
+                return index;
+            }
+        }
+        return index;
     }
 
     @Override
     public TreeNode getRoot() {
-	return (TreeNode) getOriginModel().getRoot();
+        return (TreeNode) getOriginModel().getRoot();
     }
 
     @Override
     public void filter(final String value) {
-	lastFilter = value;
-	isBreak = false;
-	for (final IFilterListener listener : filterListeners) {
-	    listener.preFilter(this);
-	}
-	final TreeNode rootNode = getRoot();
-	// The root node should not really be filtered
-	// Thus, filtering should start the root's children
-	// perform filtering
-	for (int index = 0; index < rootNode.getChildCount(); index++) {
-	    filterTree(rootNode.getChildAt(index), value);
-	}
+        lastFilter = value;
+        isBreak = false;
+        for (final IFilterListener listener : filterListeners) {
+            listener.preFilter(this);
+        }
+        final TreeNode rootNode = getRoot();
+        // The root node should not really be filtered
+        // Thus, filtering should start the root's children
+        // perform filtering
+        for (int index = 0; index < rootNode.getChildCount(); index++) {
+            filterTree(rootNode.getChildAt(index), value);
+        }
 
-	reload(); // notifies tree of structural changes
-	// notify all filter listeners
+        reload(); // notifies tree of structural changes
+        // notify all filter listeners
 
-	for (final IFilterListener listener : filterListeners) {
-	    listener.postFilter(this);
-	}
+        for (final IFilterListener listener : filterListeners) {
+            listener.postFilter(this);
+        }
 
-	if (isBreak) {
-	    for (final IFilterBreakListener listener : filterBreakListener) {
-		listener.doAfterBreak(this);
-	    }
-	}
+        if (isBreak) {
+            for (final IFilterBreakListener listener : filterBreakListener) {
+                listener.doAfterBreak(this);
+            }
+        }
 
     }
 
     public boolean matches(final TreeNode node) {
-	return StringUtils.isEmpty(lastFilter) ? false : !applyFilter(node, lastFilter);
+        return StringUtils.isEmpty(lastFilter) ? false : !applyFilter(node, lastFilter);
     }
 
     private void filterTree(final TreeNode treeNode, final String value) {
-	if (isBreak) {
-	    return;
-	}
-	final boolean filterRes = applyFilter(treeNode, value);
-	if (!visibilityMap.containsKey(treeNode)) {
-	    visibilityMap.put(treeNode, true);
-	}
-	final boolean oldValue = visibilityMap.get(treeNode);
-	visibilityMap.put(treeNode, !filterRes);
+        if (isBreak) {
+            return;
+        }
+        final boolean filterRes = applyFilter(treeNode, value);
+        if (!visibilityMap.containsKey(treeNode)) {
+            visibilityMap.put(treeNode, true);
+        }
+        final boolean oldValue = visibilityMap.get(treeNode);
+        visibilityMap.put(treeNode, !filterRes);
 
-	// visibility of the parent node is driven by leaf nodes
-	if (isMatchesLeafNodeOnly() && !treeNode.isLeaf()) {
-	    visibilityMap.put(treeNode, true);
-	}
+        // visibility of the parent node is driven by leaf nodes
+        if (isMatchesLeafNodeOnly() && !treeNode.isLeaf()) {
+            visibilityMap.put(treeNode, true);
+        }
 
-	// if this node is visible then all its children should also be
-	// visible if model is configured to keep children and filtering is not only by leaf nodes
-	if (isKeepAllChildren() && !filterRes && !isMatchesLeafNodeOnly()) {
-	    setChildrenVisible(treeNode, true);
-	} else { // otherwise need to traverse all the children
-	    boolean atLeastOneChildIsVisible = false;
-	    for (int childIndex = 0; childIndex < treeNode.getChildCount(); childIndex++) {
-		final TreeNode childNode = treeNode.getChildAt(childIndex);
-		filterTree(childNode, value);
-		if (visibilityMap.get(childNode)) {
-		    atLeastOneChildIsVisible = true;
-		}
-	    }
-	    // a tree node, which is not a leaf, should be always visible if empty parents should not be hidden
-	    // and filtering is by leaf nodes only
-	    if (atLeastOneChildIsVisible) {
-		visibilityMap.put(treeNode, true);
-	    } else if (!atLeastOneChildIsVisible && isHideEmptyParentNode() && !treeNode.isLeaf() && isMatchesLeafNodeOnly()) {
-		// a tree node, which is not a leaf, under condition that empty parents should not be hidden,
-		// should be visible if one of its children is visible (atLeastOneChildIsVisible)
-		visibilityMap.put(treeNode, false);
-	    }
-	}
-	final boolean newValue = visibilityMap.get(treeNode);
-	for (final IFilterListener listener : filterListeners) {
-	    if (listener.nodeVisibilityChanged(treeNode, oldValue, newValue)) {
-		isBreak = true;
-	    }
-	}
+        // if this node is visible then all its children should also be
+        // visible if model is configured to keep children and filtering is not only by leaf nodes
+        if (isKeepAllChildren() && !filterRes && !isMatchesLeafNodeOnly()) {
+            setChildrenVisible(treeNode, true);
+        } else { // otherwise need to traverse all the children
+            boolean atLeastOneChildIsVisible = false;
+            for (int childIndex = 0; childIndex < treeNode.getChildCount(); childIndex++) {
+                final TreeNode childNode = treeNode.getChildAt(childIndex);
+                filterTree(childNode, value);
+                if (visibilityMap.get(childNode)) {
+                    atLeastOneChildIsVisible = true;
+                }
+            }
+            // a tree node, which is not a leaf, should be always visible if empty parents should not be hidden
+            // and filtering is by leaf nodes only
+            if (atLeastOneChildIsVisible) {
+                visibilityMap.put(treeNode, true);
+            } else if (!atLeastOneChildIsVisible && isHideEmptyParentNode() && !treeNode.isLeaf() && isMatchesLeafNodeOnly()) {
+                // a tree node, which is not a leaf, under condition that empty parents should not be hidden,
+                // should be visible if one of its children is visible (atLeastOneChildIsVisible)
+                visibilityMap.put(treeNode, false);
+            }
+        }
+        final boolean newValue = visibilityMap.get(treeNode);
+        for (final IFilterListener listener : filterListeners) {
+            if (listener.nodeVisibilityChanged(treeNode, oldValue, newValue)) {
+                isBreak = true;
+            }
+        }
     }
 
     // tests the tree node if it satisfies the filter
     private boolean applyFilter(final TreeNode treeNode, final String value) {
-	boolean result = isAndMode();
-	for (final IFilter filter : filters) {
-	    if (isAndMode()) {
-		result = result && filter.filter(treeNode, value);
-		if (!result) { // this just to avoid running through all filters
-		    return false;
-		}
-	    } else {
-		result = result || !filter.filter(treeNode, value);
-	    }
-	}
-	return result;
+        boolean result = isAndMode();
+        for (final IFilter filter : filters) {
+            if (isAndMode()) {
+                result = result && filter.filter(treeNode, value);
+                if (!result) { // this just to avoid running through all filters
+                    return false;
+                }
+            } else {
+                result = result || !filter.filter(treeNode, value);
+            }
+        }
+        return result;
     }
 
     private void setChildrenVisible(final TreeNode treeNode, final boolean filterRes) {
-	visibilityMap.put(treeNode, filterRes);
-	for (int childCounter = 0; childCounter < treeNode.getChildCount(); childCounter++) {
-	    setChildrenVisible(treeNode.getChildAt(childCounter), filterRes);
-	}
+        visibilityMap.put(treeNode, filterRes);
+        for (int childCounter = 0; childCounter < treeNode.getChildCount(); childCounter++) {
+            setChildrenVisible(treeNode.getChildAt(childCounter), filterRes);
+        }
     }
 
     @Override
     public void addFilterListener(final IFilterListener listener) {
-	filterListeners.add(listener);
+        filterListeners.add(listener);
     }
 
     @Override
     public void removeFilterListener(final IFilterListener listener) {
-	filterListeners.remove(listener);
+        filterListeners.remove(listener);
     }
 
     @Override
     public void addFilter(final IFilter filter) {
-	filters.add(filter);
+        filters.add(filter);
     }
 
     @Override
     public IFilter getFilter(final int index) {
-	return filters.get(index);
+        return filters.get(index);
     }
 
     @Override
     public boolean isAndMode() {
-	return this.andMode;
+        return this.andMode;
     }
 
     @Override
     public void removeFilter(final IFilter filter) {
-	filters.remove(filter);
+        filters.remove(filter);
     }
 
     @Override
     public IFilter removeFilter(final int index) {
-	return filters.remove(index);
+        return filters.remove(index);
     }
 
     @Override
     public void setAndMode(final boolean andMode) {
-	this.andMode = andMode;
+        this.andMode = andMode;
     }
 
     /**
@@ -292,7 +292,7 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      * @return
      */
     public boolean isKeepAllChildren() {
-	return keepAllChildren;
+        return keepAllChildren;
     }
 
     /**
@@ -301,7 +301,7 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      * @param keepAllChildren
      */
     public void setKeepAllChildren(final boolean keepAllChildren) {
-	this.keepAllChildren = keepAllChildren;
+        this.keepAllChildren = keepAllChildren;
     }
 
     /**
@@ -310,7 +310,7 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      * @return
      */
     public boolean isHideEmptyParentNode() {
-	return hideEmptyParentNode;
+        return hideEmptyParentNode;
     }
 
     /**
@@ -319,7 +319,7 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      * @param hideEmptyParentNode
      */
     public void setHideEmptyParentNode(final boolean hideEmptyParentNode) {
-	this.hideEmptyParentNode = hideEmptyParentNode;
+        this.hideEmptyParentNode = hideEmptyParentNode;
     }
 
     /**
@@ -328,7 +328,7 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      * @return
      */
     public boolean isMatchesLeafNodeOnly() {
-	return matchesLeafNodeOnly;
+        return matchesLeafNodeOnly;
     }
 
     /**
@@ -337,31 +337,31 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      * @param matchesLeafNodeOnly
      */
     public void setMatchesLeafNodeOnly(final boolean matchesLeafNodeOnly) {
-	this.matchesLeafNodeOnly = matchesLeafNodeOnly;
+        this.matchesLeafNodeOnly = matchesLeafNodeOnly;
     }
 
     @Override
     public void addTreeModelListener(final TreeModelListener l) {
-	getOriginModel().addTreeModelListener(l);
+        getOriginModel().addTreeModelListener(l);
     }
 
     @Override
     public boolean isLeaf(final Object node) {
-	return getOriginModel().isLeaf(node);
+        return getOriginModel().isLeaf(node);
     }
 
     @Override
     public void removeTreeModelListener(final TreeModelListener l) {
-	getOriginModel().removeTreeModelListener(l);
+        getOriginModel().removeTreeModelListener(l);
     }
 
     @Override
     public void valueForPathChanged(final TreePath path, final Object newValue) {
-	getOriginModel().valueForPathChanged(path, newValue);
+        getOriginModel().valueForPathChanged(path, newValue);
     }
 
     public String getLastFilter() {
-	return lastFilter;
+        return lastFilter;
     }
 
     /**
@@ -370,17 +370,17 @@ public abstract class AbstractFilterableTreeModel implements TreeModel, IFiltera
      * @return
      */
     public TreeModel getOriginModel() {
-	return model;
+        return model;
     }
 
     @Override
     public void addFilterBreakListener(final IFilterBreakListener listener) {
-	filterBreakListener.add(listener);
+        filterBreakListener.add(listener);
     }
 
     @Override
     public void removeFilterBreakListener(final IFilterBreakListener listener) {
-	filterBreakListener.remove(listener);
+        filterBreakListener.remove(listener);
     }
 
     /**

@@ -57,14 +57,13 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
-
 /**
  * Provides platform specific implementation of {@link IDbDrivenTestCaseConfiguration}, which is mainly related to the use of {@link DaoTestHibernateModule}.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @deprecated Use {@link PlatformDomainDrivenTestCaseConfiguration} instead.
- *
+ * 
  */
 @Deprecated
 public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseConfiguration {
@@ -79,104 +78,103 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
     static {
-	hibTypeDefaults.put(boolean.class, YesNoType.class);
-	hibTypeDefaults.put(Boolean.class, YesNoType.class);
-	hibTypeDefaults.put(Date.class, DateTimeType.class);
-	hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-	hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
-	testDomain.addAll(PlatformDomainTypes.types);
-	testDomain.add(CompositeEntity.class);
-	testDomain.add(CompositeEntityKey.class);
-	testDomain.add(ComplexKeyEntity.class);
-	testDomain.add(EntityWithMoney.class);
-	testDomain.add(EntityWithTaxMoney.class);
-	testDomain.add(EntityWithExTaxAndTaxMoney.class);
-	testDomain.add(EntityWithSimpleTaxMoney.class);
-	testDomain.add(EntityWithSimpleMoney.class);
-	testDomain.add(EntityWithDynamicCompositeKey.class);
-	testDomain.add(TgTimesheet.class);
-	testDomain.add(TgVehicleMake.class);
-	testDomain.add(TgVehicleModel.class);
-	testDomain.add(TgVehicle.class);
-	testDomain.add(TgFuelUsage.class);
-	testDomain.add(TgFuelType.class);
-	testDomain.add(TgOrgUnit1.class);
-	testDomain.add(TgOrgUnit2.class);
-	testDomain.add(TgOrgUnit3.class);
-	testDomain.add(TgOrgUnit4.class);
-	testDomain.add(TgOrgUnit5.class);
-	testDomain.add(TgWorkOrder.class);
+        hibTypeDefaults.put(boolean.class, YesNoType.class);
+        hibTypeDefaults.put(Boolean.class, YesNoType.class);
+        hibTypeDefaults.put(Date.class, DateTimeType.class);
+        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
+        testDomain.addAll(PlatformDomainTypes.types);
+        testDomain.add(CompositeEntity.class);
+        testDomain.add(CompositeEntityKey.class);
+        testDomain.add(ComplexKeyEntity.class);
+        testDomain.add(EntityWithMoney.class);
+        testDomain.add(EntityWithTaxMoney.class);
+        testDomain.add(EntityWithExTaxAndTaxMoney.class);
+        testDomain.add(EntityWithSimpleTaxMoney.class);
+        testDomain.add(EntityWithSimpleMoney.class);
+        testDomain.add(EntityWithDynamicCompositeKey.class);
+        testDomain.add(TgTimesheet.class);
+        testDomain.add(TgVehicleMake.class);
+        testDomain.add(TgVehicleModel.class);
+        testDomain.add(TgVehicle.class);
+        testDomain.add(TgFuelUsage.class);
+        testDomain.add(TgFuelType.class);
+        testDomain.add(TgOrgUnit1.class);
+        testDomain.add(TgOrgUnit2.class);
+        testDomain.add(TgOrgUnit3.class);
+        testDomain.add(TgOrgUnit4.class);
+        testDomain.add(TgOrgUnit5.class);
+        testDomain.add(TgWorkOrder.class);
     }
-
 
     /**
      * Required for dynamic instantiation by {@link DbDrivenTestCase}
      */
     public PlatformDbDrivenTestCaseConfiguration() {
-	// instantiate all the factories and Hibernate utility
-	DOMConfigurator.configure("src/test/resources/log4j.xml");
+        // instantiate all the factories and Hibernate utility
+        DOMConfigurator.configure("src/test/resources/log4j.xml");
 
-	final ProxyInterceptor interceptor = new ProxyInterceptor();
-	try {
-	    final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, DbVersion.H2);
-	    final Configuration cfg = new Configuration();
-	    cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
+        final ProxyInterceptor interceptor = new ProxyInterceptor();
+        try {
+            final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, DbVersion.H2);
+            final Configuration cfg = new Configuration();
+            cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
 
-	    hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
-	    hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata);
-	    injector = new ApplicationInjectorFactory().add(hibernateModule).add(new LegacyConnectionModule(new Provider() {
-		@Override
-		public Object get() {
-		    try {
-			final String connectionUrl = "jdbc:h2:mem:db;DB_CLOSE_DELAY=-1";
-			Class.forName("org.h2.Driver");
-			return DriverManager.getConnection(connectionUrl, "sa", "");
-		    } catch (final Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		    }
-		}
-	    })).getInjector();
-	    entityFactory = injector.getInstance(EntityFactory.class);
-	    interceptor.setFactory(entityFactory);
+            hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
+            hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata);
+            injector = new ApplicationInjectorFactory().add(hibernateModule).add(new LegacyConnectionModule(new Provider() {
+                @Override
+                public Object get() {
+                    try {
+                        final String connectionUrl = "jdbc:h2:mem:db;DB_CLOSE_DELAY=-1";
+                        Class.forName("org.h2.Driver");
+                        return DriverManager.getConnection(connectionUrl, "sa", "");
+                    } catch (final Exception e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
+                }
+            })).getInjector();
+            entityFactory = injector.getInstance(EntityFactory.class);
+            interceptor.setFactory(entityFactory);
 
-	    // bind domain specific validation classes
-//	    hibernateModule.getDomainValidationConfig().setValidator(Advice.class, "road", new AdviceRoadValidator()).setValidator(Advice.class, "carrier", injector.getInstance(AdviceCarrierValidator.class)).setValidator(AdvicePosition.class, "rotable", new AdvicePositionRotableValidator());
-	    // bind domain specific meta property configuration classes
-//	    hibernateModule.getDomainMetaPropertyConfig().setDefiner(Advice.class, "dispatchedToWorkshop", new AdviceDispatchedToWorkshopMetaDefiner()).setDefiner(Advice.class, "road", new AdviceRoadMetaDefiner());
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    throw new RuntimeException(e);
-	}
+            // bind domain specific validation classes
+            //	    hibernateModule.getDomainValidationConfig().setValidator(Advice.class, "road", new AdviceRoadValidator()).setValidator(Advice.class, "carrier", injector.getInstance(AdviceCarrierValidator.class)).setValidator(AdvicePosition.class, "rotable", new AdvicePositionRotableValidator());
+            // bind domain specific meta property configuration classes
+            //	    hibernateModule.getDomainMetaPropertyConfig().setDefiner(Advice.class, "dispatchedToWorkshop", new AdviceDispatchedToWorkshopMetaDefiner()).setDefiner(Advice.class, "road", new AdviceRoadMetaDefiner());
+        } catch (final Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public EntityFactory getEntityFactory() {
-	return entityFactory;
+        return entityFactory;
     }
 
     @Override
     public HibernateUtil getHibernateUtil() {
-	return hibernateUtil;
+        return hibernateUtil;
     }
 
     @Override
     public Injector getInjector() {
-	return injector;
+        return injector;
     }
 
     @Override
     public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-	return hibernateModule.getDomainMetaPropertyConfig();
+        return hibernateModule.getDomainMetaPropertyConfig();
     }
 
     @Override
     public DomainValidationConfig getDomainValidationConfig() {
-	return hibernateModule.getDomainValidationConfig();
+        return hibernateModule.getDomainValidationConfig();
     }
 
     @Override
     public List<String> getDdl() {
-	return null;
+        return null;
     }
 }

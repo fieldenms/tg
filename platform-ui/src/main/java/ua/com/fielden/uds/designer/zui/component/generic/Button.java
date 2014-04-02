@@ -32,70 +32,70 @@ public class Button extends AbstractNode {
     private PBasicInputEventHandler defaultEventHandler;
 
     public Button() {
-	super(new RoundRectangle2D.Double(0., 0., 10., 10., 4, 8));
-	setRounding(new BorderRounding(true, true, true, true));
-	setCurvaturePrc(10);
-	reshape(false);
+        super(new RoundRectangle2D.Double(0., 0., 10., 10., 4, 8));
+        setRounding(new BorderRounding(true, true, true, true));
+        setCurvaturePrc(10);
+        reshape(false);
     }
 
     public Button(String title) {
-	super(new RoundRectangle2D.Double(0., 0., 10., 10., 4, 8));
-	setUp(title);
+        super(new RoundRectangle2D.Double(0., 0., 10., 10., 4, 8));
+        setUp(title);
     }
 
     public Button(String title, Shape shape) {
-	super(shape);
-	setUp(title);
+        super(shape);
+        setUp(title);
     }
 
     public Button(String title, Button button) {
-	super(new RoundRectangle2D.Double(0., 0., 10., 10., 4, 8));
-	setUp(title);
+        super(new RoundRectangle2D.Double(0., 0., 10., 10., 4, 8));
+        setUp(title);
 
-	double horisontalPedding = button.getWidth() - this.title.getWidth();
-	double verticalPedding = button.getHeight() - this.title.getHeight();
-	setPedding(new AbstractNode.Pedding((int) (verticalPedding / 2. - 1), (int) (verticalPedding / 2. + 0.6), (int) (horisontalPedding / 2.), (int) (horisontalPedding / 2.)));
-	setMinConstraint(new PDimension(button.getWidth() + 1, button.getHeight() + 1));
-	reshape(false);
+        double horisontalPedding = button.getWidth() - this.title.getWidth();
+        double verticalPedding = button.getHeight() - this.title.getHeight();
+        setPedding(new AbstractNode.Pedding((int) (verticalPedding / 2. - 1), (int) (verticalPedding / 2. + 0.6), (int) (horisontalPedding / 2.), (int) (horisontalPedding / 2.)));
+        setMinConstraint(new PDimension(button.getWidth() + 1, button.getHeight() + 1));
+        reshape(false);
     }
 
     protected void setUp(String title) {
-	this.title.setPickable(false);
-	this.title.setTextPaint(Color.white);
-	setPedding(new AbstractNode.Pedding(2, 5, 2, 5));
-	setTitle(title);
-	addChild(this.title);
-	setRounding(new BorderRounding(true, true, true, true));
-	setCurvaturePrc(20);
-	reshape(false);
-	// fillWithGradient(new Color(17, 64, 111), new Color(148, 193, 239), true); // default color filling
-	fillWithGradient(new Color(0, 0, 0), new Color(255, 255, 255), true); // default color filling
+        this.title.setPickable(false);
+        this.title.setTextPaint(Color.white);
+        setPedding(new AbstractNode.Pedding(2, 5, 2, 5));
+        setTitle(title);
+        addChild(this.title);
+        setRounding(new BorderRounding(true, true, true, true));
+        setCurvaturePrc(20);
+        reshape(false);
+        // fillWithGradient(new Color(17, 64, 111), new Color(148, 193, 239), true); // default color filling
+        fillWithGradient(new Color(0, 0, 0), new Color(255, 255, 255), true); // default color filling
 
-	setDefaultEventHandler(new DefaultEventHandler(this));
+        setDefaultEventHandler(new DefaultEventHandler(this));
     }
 
     /**
      * Fills button with gradient color from the top to the bottom.
      * 
-     * @param fromColor --
-     *                the color from which filling starts
-     * @param toColor --
-     *                the color at which filling ends
-     * @param resetColor --
-     *                if true the background color property is changed, other wise onlt paint is changed.
+     * @param fromColor
+     *            -- the color from which filling starts
+     * @param toColor
+     *            -- the color at which filling ends
+     * @param resetColor
+     *            -- if true the background color property is changed, other wise onlt paint is changed.
      */
     public void fillWithGradient(Color fromColor, Color toColor, boolean resetColor) {
-	Paint paint = new SerializableGradientPaint((float) getX(), (float) getY(), fromColor, (float) (getX()), (float) (getY() + +getHeight()), toColor);
-	setStroke(new DefaultStroke(0));
-	setPaint(paint);
+        Paint paint = new SerializableGradientPaint((float) getX(), (float) getY(), fromColor, (float) (getX()), (float) (getY() + +getHeight()), toColor);
+        setStroke(new DefaultStroke(0));
+        setPaint(paint);
 
-	if (resetColor) {
-	    setBackgroundColor(paint);
-	}
+        if (resetColor) {
+            setBackgroundColor(paint);
+        }
     }
 
     private void setTitle(String title) {
-	this.title.setText(title);
+        this.title.setText(title);
     }
 
     /**
@@ -104,7 +104,7 @@ public class Button extends AbstractNode {
      * @param eventListener
      */
     public void addOnClickEventListener(IOnClickEventListener eventListener) {
-	onClickEvents.add(eventListener);
+        onClickEvents.add(eventListener);
     }
 
     /**
@@ -113,7 +113,7 @@ public class Button extends AbstractNode {
      * @param eventListener
      */
     public void removeOnClickEventListener(IOnClickEventListener eventListener) {
-	onClickEvents.remove(eventListener);
+        onClickEvents.remove(eventListener);
     }
 
     /**
@@ -123,102 +123,102 @@ public class Button extends AbstractNode {
      * 
      */
     protected static class DefaultEventHandler extends PBasicInputEventHandler implements Serializable {
-	private static final long serialVersionUID = 3762542608255322737L;
+        private static final long serialVersionUID = 3762542608255322737L;
 
-	protected Paint highPaint;
+        protected Paint highPaint;
 
-	protected Button button;
+        protected Button button;
 
-	public DefaultEventHandler(Button button) {
-	    this.button = button;
-	}
+        public DefaultEventHandler(Button button) {
+            this.button = button;
+        }
 
-	/**
-	 * Handles button highlighting.
-	 */
-	public void mouseEntered(PInputEvent event) {
-	    if (event.isLeftMouseButton()) {
-		return;
-	    }
+        /**
+         * Handles button highlighting.
+         */
+        public void mouseEntered(PInputEvent event) {
+            if (event.isLeftMouseButton()) {
+                return;
+            }
 
-	    if (highPaint == null) {
-		/*
-		 * highPaint = new SerializableGradientPaint((float) button.getX(), (float) button.getY(), new Color(185, 223, 244), (float) (button.getX() ),
-		 * (float) (button.getY() + + button.getHeight()), new Color(61, 168, 226));
-		 */
-		highPaint = new SerializableGradientPaint((float) button.getX(), (float) button.getY(), new Color(255, 255, 255), (float) (button.getX()), (float) (button.getY() + +button.getHeight()), new Color(0, 0, 0));
-	    }
+            if (highPaint == null) {
+                /*
+                 * highPaint = new SerializableGradientPaint((float) button.getX(), (float) button.getY(), new Color(185, 223, 244), (float) (button.getX() ),
+                 * (float) (button.getY() + + button.getHeight()), new Color(61, 168, 226));
+                 */
+                highPaint = new SerializableGradientPaint((float) button.getX(), (float) button.getY(), new Color(255, 255, 255), (float) (button.getX()), (float) (button.getY() + +button.getHeight()), new Color(0, 0, 0));
+            }
 
-	    button.setPaint(highPaint);
-	}
+            button.setPaint(highPaint);
+        }
 
-	/**
-	 * Handles button highlighting.
-	 */
-	public void mouseExited(PInputEvent event) {
-	    if (event.isLeftMouseButton()) {
-		return;
-	    }
+        /**
+         * Handles button highlighting.
+         */
+        public void mouseExited(PInputEvent event) {
+            if (event.isLeftMouseButton()) {
+                return;
+            }
 
-	    // Button button = (Button) event.getPickedNode();
-	    button.setPaint(button.getBackgroundColor());
-	}
+            // Button button = (Button) event.getPickedNode();
+            button.setPaint(button.getBackgroundColor());
+        }
 
-	/**
-	 * Sequentially invokes all registered on_click_event_listeners.
-	 */
-	public void mouseClicked(PInputEvent event) {
-	    // Button button = (Button) event.getPickedNode();
-	    for (IOnClickEventListener listener : button.onClickEvents) {
-		listener.click(event);
-	    }
-	}
+        /**
+         * Sequentially invokes all registered on_click_event_listeners.
+         */
+        public void mouseClicked(PInputEvent event) {
+            // Button button = (Button) event.getPickedNode();
+            for (IOnClickEventListener listener : button.onClickEvents) {
+                listener.click(event);
+            }
+        }
 
-	/**
-	 * Handles button highlighting.
-	 */
-	public void mousePressed(PInputEvent event) {
-	    button.fillWithGradient(new Color(12, 118, 17), new Color(182, 248, 185), false);
-	}
+        /**
+         * Handles button highlighting.
+         */
+        public void mousePressed(PInputEvent event) {
+            button.fillWithGradient(new Color(12, 118, 17), new Color(182, 248, 185), false);
+        }
 
-	/**
-	 * Handles button highlighting.
-	 */
-	public void mouseReleased(PInputEvent event) {
-	    Rectangle2D bounds = new Rectangle2D.Double(event.getPosition().getX(), event.getPosition().getY(), 1, 1);
-	    bounds = button.globalToLocal(bounds);
+        /**
+         * Handles button highlighting.
+         */
+        public void mouseReleased(PInputEvent event) {
+            Rectangle2D bounds = new Rectangle2D.Double(event.getPosition().getX(), event.getPosition().getY(), 1, 1);
+            bounds = button.globalToLocal(bounds);
 
-	    if (button.intersects(bounds)) {
-		button.setPaint(highPaint);
-	    } else {
-		button.setPaint(button.getBackgroundColor());
-	    }
-	}
+            if (button.intersects(bounds)) {
+                button.setPaint(highPaint);
+            } else {
+                button.setPaint(button.getBackgroundColor());
+            }
+        }
     }
 
     public TitleBar getParentBar() {
-	return parentBar;
+        return parentBar;
     }
 
     private void setParentBar(TitleBar parentBar) {
-	this.parentBar = parentBar;
+        this.parentBar = parentBar;
     }
 
     public void addToTitleBar(TitleBar bar) {
-	setParentBar(bar);
-	bar.addButton(this);
+        setParentBar(bar);
+        bar.addButton(this);
     }
 
     public PBasicInputEventHandler getDefaultEventHandler() {
-	return defaultEventHandler;
+        return defaultEventHandler;
     }
 
     protected void setDefaultEventHandler(PBasicInputEventHandler defaultEventHandler) {
-	if (this.defaultEventHandler != null) {
-	    removeInputEventListener(this.defaultEventHandler);
-	}
-	this.defaultEventHandler = defaultEventHandler;
-	addInputEventListener(defaultEventHandler);
+        if (this.defaultEventHandler != null) {
+            removeInputEventListener(this.defaultEventHandler);
+        }
+        this.defaultEventHandler = defaultEventHandler;
+        addInputEventListener(defaultEventHandler);
     }
 
     /**
@@ -234,6 +234,6 @@ public class Button extends AbstractNode {
     }
 
     public String toString() {
-	return title.getText();
+        return title.getText();
     }
 }

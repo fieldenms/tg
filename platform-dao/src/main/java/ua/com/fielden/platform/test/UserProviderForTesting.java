@@ -6,22 +6,24 @@ import ua.com.fielden.platform.security.user.User;
 
 /**
  * Provider for testing purposes.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class UserProviderForTesting implements IUserProvider {
 
-    private User user = new User("TEST-USER", "test user"){};
+    private User user = new User("TEST-USER", "test user") {
+    };
 
     @Override
     public User getUser() {
-	return user;
+        return user;
     }
 
     @Override
     public void setUsername(final String username, final IUserController controller) {
-	user = new User(username, "test user"){};
+        user = new User(username, "test user") {
+        };
     }
 
 }

@@ -4,7 +4,7 @@ package ua.com.fielden.platform.dashboard;
 public interface IDashboardItemResult {
 
     public enum StateColour {
-	RED, YELLOW, GREEN
+        RED, YELLOW, GREEN
     }
 
 }

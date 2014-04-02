@@ -18,9 +18,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct {@link Attachment} resource instantiation. *
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class AttachmentTypeResourceFactory extends Restlet {
     private final Injector injector;
@@ -30,28 +30,28 @@ public class AttachmentTypeResourceFactory extends Restlet {
 
     /**
      * Instances of DAO and factory should be thread-safe as they are used by multiple instances of resources serving concurrent requests.
-     *
+     * 
      * @param dao
      * @param factory
      */
     public AttachmentTypeResourceFactory(final String location, final Injector injector, final EntityFactory factory) {
-	this.injector = injector;
-	this.factory = factory;
-	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
-	this.location = location;
+        this.injector = injector;
+        this.factory = factory;
+        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.location = location;
     }
 
     @Override
     public void handle(final Request request, final Response response) {
-	super.handle(request, response);
+        super.handle(request, response);
 
-	final IAttachment dao = injector.getInstance(IAttachment.class);
+        final IAttachment dao = injector.getInstance(IAttachment.class);
 
-	final String username = (String) request.getAttributes().get("username");
-	injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
-	// Method.GET.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod()) ||
-	if (Method.PUT.equals(request.getMethod())) {
-	    new AttachmentTypeResource(location, dao, factory, restUtil, getContext(), request, response).handle();
-	}
+        final String username = (String) request.getAttributes().get("username");
+        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+        // Method.GET.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod()) ||
+        if (Method.PUT.equals(request.getMethod())) {
+            new AttachmentTypeResource(location, dao, factory, restUtil, getContext(), request, response).handle();
+        }
     }
 }

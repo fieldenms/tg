@@ -8,7 +8,7 @@ import ua.com.fielden.platform.test.domain.entities.Wagon;
 
 /**
  * @author nc
- *
+ * 
  */
 public interface IWagonDao extends IEntityDao<Wagon> {
 }

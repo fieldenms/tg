@@ -21,16 +21,16 @@ public class WheelRatoteZoomEventHandler extends PBasicInputEventHandler {
      * Default constructor.
      */
     public WheelRatoteZoomEventHandler() {
-	super();
-	camera = null;
+        super();
+        camera = null;
     }
 
     /**
      * Constructor, which accepts camera that will be used for zooming. By default PInputEvent.getCamera() is used.
      */
     public WheelRatoteZoomEventHandler(final PCamera camera) {
-	super();
-	this.camera = camera;
+        super();
+        this.camera = camera;
     }
 
     /**
@@ -40,9 +40,9 @@ public class WheelRatoteZoomEventHandler extends PBasicInputEventHandler {
      * @param maxScale
      */
     public WheelRatoteZoomEventHandler(final double minScale, final double maxScale) {
-	this();
-	setMinScale(minScale);
-	setMaxScale(maxScale);
+        this();
+        setMinScale(minScale);
+        setMaxScale(maxScale);
     }
 
     /**
@@ -52,16 +52,16 @@ public class WheelRatoteZoomEventHandler extends PBasicInputEventHandler {
      * @param maxScale
      */
     public WheelRatoteZoomEventHandler(final double minScale, final double maxScale, final PCamera camera) {
-	this(camera);
-	setMinScale(minScale);
-	setMaxScale(maxScale);
+        this(camera);
+        setMinScale(minScale);
+        setMaxScale(maxScale);
     }
 
     /**
      * Used to accept only mouse wheel event.
      */
     public boolean acceptsEvent(final PInputEvent event, final int type) {
-	return event.isMouseWheelEvent();
+        return event.isMouseWheelEvent();
     }
 
     /**
@@ -71,49 +71,49 @@ public class WheelRatoteZoomEventHandler extends PBasicInputEventHandler {
      * @return
      */
     protected boolean startZoom(final PInputEvent event) {
-	return true;
+        return true;
     }
 
     /**
      * The event.getWheelRotation() (aka notches) value is either -1 when rotating down, which corresponds to zoom-in, or 1 when rotating up, which corresponds to zoom-up.
      */
     public void mouseWheelRotated(final PInputEvent event) {
-	if (!startZoom(event)) {
-	    return;
-	}
+        if (!startZoom(event)) {
+            return;
+        }
 
-	final Point2D viewZoomPoint = event.getPosition();
-	final PCamera camera = this.camera != null ? this.camera : event.getCamera();
+        final Point2D viewZoomPoint = event.getPosition();
+        final PCamera camera = this.camera != null ? this.camera : event.getCamera();
 
-	final double SCALE_FACTOR = 0.125;
-	double scaleDelta = 1 - (event.getWheelRotation() * SCALE_FACTOR);
+        final double SCALE_FACTOR = 0.125;
+        double scaleDelta = 1 - (event.getWheelRotation() * SCALE_FACTOR);
 
-	final double currentScale = camera.getViewScale();
-	final double newScale = currentScale * scaleDelta;
+        final double currentScale = camera.getViewScale();
+        final double newScale = currentScale * scaleDelta;
 
-	if (newScale < getMinScale()) {
-	    scaleDelta = getMinScale() / currentScale;
-	}
-	if ((getMaxScale() > 0) && (newScale > getMaxScale())) {
-	    scaleDelta = getMaxScale() / currentScale;
-	}
+        if (newScale < getMinScale()) {
+            scaleDelta = getMinScale() / currentScale;
+        }
+        if ((getMaxScale() > 0) && (newScale > getMaxScale())) {
+            scaleDelta = getMaxScale() / currentScale;
+        }
 
-	camera.scaleViewAboutPoint(scaleDelta, viewZoomPoint.getX(), viewZoomPoint.getY());
+        camera.scaleViewAboutPoint(scaleDelta, viewZoomPoint.getX(), viewZoomPoint.getY());
     }
 
     public double getMinScale() {
-	return minScale;
+        return minScale;
     }
 
     public void setMinScale(final double minScale) {
-	this.minScale = minScale;
+        this.minScale = minScale;
     }
 
     public double getMaxScale() {
-	return maxScale;
+        return maxScale;
     }
 
     public void setMaxScale(final double maxScale) {
-	this.maxScale = maxScale;
+        this.maxScale = maxScale;
     }
 }

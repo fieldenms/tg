@@ -18,32 +18,32 @@ public class EntityUtilsTest {
     @Test
     @Ignore
     public void testSplitPropByFirstDot() {
-	fail("Not yet implemented");
+        fail("Not yet implemented");
     }
 
     @Test
     @Ignore
     public void testIsPropertyPartOfKey() {
-	fail("Not yet implemented");
+        fail("Not yet implemented");
     }
 
     @Test
     @Ignore
     public void testIsPropertyRequired() {
-	fail("Not yet implemented");
+        fail("Not yet implemented");
     }
 
     @Test
     @Ignore
     public void testGetPersistedProperties() {
-	fail("Not yet implemented");
+        fail("Not yet implemented");
     }
 
     @Test
     public void testGetCollectionalProperties() {
-	final Field userRolesField = EntityUtils.getCollectionalProperties(User.class).get(0);
-	assertEquals("Incorrect field name", "roles", userRolesField.getName());
-	assertEquals("Incorrect collectional entity class", UserAndRoleAssociation.class, AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).value());
-	assertEquals("Incorrect collectional entity link property", "user", AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).linkProperty());
+        final Field userRolesField = EntityUtils.getCollectionalProperties(User.class).get(0);
+        assertEquals("Incorrect field name", "roles", userRolesField.getName());
+        assertEquals("Incorrect collectional entity class", UserAndRoleAssociation.class, AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).value());
+        assertEquals("Incorrect collectional entity link property", "user", AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).linkProperty());
     }
 }

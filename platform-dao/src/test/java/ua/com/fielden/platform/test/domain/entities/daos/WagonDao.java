@@ -9,16 +9,16 @@ import com.google.inject.Inject;
 
 /**
  * DAO for retrieving wagon related data: wagon itself, wagon with its rotables.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(Wagon.class)
 public class WagonDao extends CommonEntityDao<Wagon> implements IWagonDao {
 
     @Inject
     protected WagonDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
 }

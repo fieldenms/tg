@@ -8,73 +8,73 @@ import ua.com.fielden.platform.pagination.IPage;
 
 /**
  * An abstraction of the list of entities as a single page.
- *
- *@author TG Team
+ * 
+ * @author TG Team
  */
 public class SinglePage<T extends AbstractEntity<?>> implements IPage<T> {
     private final List<T> data;
 
     public SinglePage(final List<T> data) {
-	this.data = new ArrayList<T>(data);
+        this.data = new ArrayList<T>(data);
     }
 
     @Override
     public T summary() {
-	return null;
+        return null;
     }
 
     @Override
     public int capacity() {
-	return data.size();
+        return data.size();
     }
 
     @Override
     public List<T> data() {
-	return data;
+        return data;
     }
 
     @Override
     public boolean hasNext() {
-	return false;
+        return false;
     }
 
     @Override
     public boolean hasPrev() {
-	return false;
+        return false;
     }
 
     @Override
     public IPage<T> next() {
-	return this;
+        return this;
     }
 
     @Override
     public IPage<T> prev() {
-	return this;
+        return this;
     }
 
     @Override
     public IPage<T> first() {
-	return this;
+        return this;
     }
 
     @Override
     public IPage<T> last() {
-	return this;
+        return this;
     }
 
     @Override
     public int numberOfPages() {
-	return 1;
+        return 1;
     }
 
     @Override
     public String toString() {
-	return "Single page";
+        return "Single page";
     }
 
     @Override
     public int no() {
-	return 0;
+        return 0;
     }
 }

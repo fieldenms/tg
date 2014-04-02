@@ -9,9 +9,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Test class, which represent an entity derived directly from AbstractEntity with collection properties.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(String.class)
 public class EntityWithCollection extends AbstractEntity<String> {
@@ -28,19 +28,19 @@ public class EntityWithCollection extends AbstractEntity<String> {
 
     @Observable
     public void setCollection(final List<Double> collection) {
-	this.collection = collection;
+        this.collection = collection;
     }
 
     public List<Double> getCollection() {
-	return collection;
+        return collection;
     }
 
     @Observable
     public void setCollection2(final List<CollectionalEntity> collection2) {
-	this.collection2 = collection2;
+        this.collection2 = collection2;
     }
 
     public List<CollectionalEntity> getCollection2() {
-	return collection2;
+        return collection2;
     }
 }

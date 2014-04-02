@@ -10,56 +10,56 @@ public abstract class AbstractCompositeUserType implements CompositeUserType {
 
     @Override
     public boolean isMutable() {
-	return false;
+        return false;
     }
 
     @Override
     public Object deepCopy(final Object value) {
-	return value;
+        return value;
     }
 
     @Override
     public Serializable disassemble(final Object value, final SessionImplementor session) {
-	return (Serializable) value;
+        return (Serializable) value;
     }
 
     @Override
     public Object assemble(final Serializable cached, final SessionImplementor session, final Object owner) {
-	return cached;
+        return cached;
     }
 
     @Override
     public Object replace(final Object original, final Object target, final SessionImplementor session, final Object owner) {
-	return original;
+        return original;
     }
 
     @Override
     public boolean equals(final Object x, final Object y) {
-	if (x == y) {
-	    return true;
-	}
-	if (x == null || y == null) {
-	    return false;
-	}
-	return x.equals(y);
+        if (x == y) {
+            return true;
+        }
+        if (x == null || y == null) {
+            return false;
+        }
+        return x.equals(y);
     }
 
     @Override
     public int hashCode(final Object x) {
-	return x.hashCode();
+        return x.hashCode();
     }
 
     @Override
     public void setPropertyValue(final Object component, final int property, final Object value) {
-	throw new UnsupportedOperationException("This type is immutable");
+        throw new UnsupportedOperationException("This type is immutable");
     }
 
     protected boolean allArgumentsAreNull(final Map<String, Object> arguments) {
-	for (final Object argumentValue : arguments.values()) {
-	    if (argumentValue != null) {
-		return false;
-	    }
-	}
-	return true;
+        for (final Object argumentValue : arguments.values()) {
+            if (argumentValue != null) {
+                return false;
+            }
+        }
+        return true;
     }
 }

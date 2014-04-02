@@ -15,9 +15,9 @@ import com.google.inject.Inject;
 
 /**
  * RAO implementation of {@link IMainMenuItemInvisibilityController}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(MainMenuItemInvisibility.class)
 public class MainMenuItemInvisibilityControllerRao extends CommonEntityRao<MainMenuItemInvisibility> implements IMainMenuItemInvisibilityController {
@@ -26,26 +26,26 @@ public class MainMenuItemInvisibilityControllerRao extends CommonEntityRao<MainM
 
     @Inject
     public MainMenuItemInvisibilityControllerRao(final RestClientUtil restUtil, final EntityFactory factory) {
-	super(restUtil);
-	this.factory = factory;
+        super(restUtil);
+        this.factory = factory;
     }
 
     protected WebResourceType getDefaultWebResourceType() {
-	return WebResourceType.SYSTEM;
+        return WebResourceType.SYSTEM;
     }
 
     @Override
     public void makeInvisible(final MainMenuItem menuItem, final User user) {
-	final MainMenuItemInvisibility invisibility = factory.newByKey(MainMenuItemInvisibility.class, user, menuItem);
-	save(invisibility);
+        final MainMenuItemInvisibility invisibility = factory.newByKey(MainMenuItemInvisibility.class, user, menuItem);
+        save(invisibility);
     }
 
     @Override
     public void makeVisible(final MainMenuItem menuItem, final User user) {
-	final EntityResultQueryModel<MainMenuItemInvisibility> model = select(MainMenuItemInvisibility.class).where()//
-	.prop("owner").eq().val(user).and()//
-	.prop("menuItem").eq().val(menuItem).model();
+        final EntityResultQueryModel<MainMenuItemInvisibility> model = select(MainMenuItemInvisibility.class).where()//
+        .prop("owner").eq().val(user).and()//
+        .prop("menuItem").eq().val(menuItem).model();
 
-	delete(model);
+        delete(model);
     }
 }

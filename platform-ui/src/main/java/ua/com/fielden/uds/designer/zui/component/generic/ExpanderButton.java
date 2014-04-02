@@ -25,8 +25,8 @@ public class ExpanderButton extends Button {
      * @param expander
      */
     public ExpanderButton(ExpanderNode expander) {
-	setPedding(new AbstractNode.Pedding(8, 8, 17, 15));
-	init(expander);
+        setPedding(new AbstractNode.Pedding(8, 8, 17, 15));
+        init(expander);
     }
 
     /**
@@ -36,12 +36,12 @@ public class ExpanderButton extends Button {
      * @param pedding
      */
     public ExpanderButton(ExpanderNode expander, Pedding pedding) {
-	if (pedding == null) {
-	    setPedding(new AbstractNode.Pedding(8, 8, 17, 15));
-	} else {
-	    setPedding(pedding);
-	}
-	init(expander);
+        if (pedding == null) {
+            setPedding(new AbstractNode.Pedding(8, 8, 17, 15));
+        } else {
+            setPedding(pedding);
+        }
+        init(expander);
     }
 
     /**
@@ -49,44 +49,44 @@ public class ExpanderButton extends Button {
      * centre of the constructed button. This constructor if very useful where a set of buttons is created for the same tool bar in order to make them sized evenly.
      * 
      * @param expander
-     * @param button --
-     *                button to be used as a model for the creation of an expander button
+     * @param button
+     *            -- button to be used as a model for the creation of an expander button
      */
     public ExpanderButton(ExpanderNode expander, Button button) {
-	double horisontalPedding = button.getWidth() - expander.getWidth();
-	double verticalPedding = button.getHeight() - expander.getHeight();
-	// FIXME there is a rounding issue here, which needs to be fixed somehow...
-	setPedding(new AbstractNode.Pedding((int) (verticalPedding / 2. + 1), (int) (verticalPedding / 2. + 0.6), (int) (horisontalPedding / 2. + 2), (int) (horisontalPedding / 2.)));
-	setMinConstraint(new PDimension(button.getWidth() + 1, button.getHeight() + 1));
-	init(expander);
+        double horisontalPedding = button.getWidth() - expander.getWidth();
+        double verticalPedding = button.getHeight() - expander.getHeight();
+        // FIXME there is a rounding issue here, which needs to be fixed somehow...
+        setPedding(new AbstractNode.Pedding((int) (verticalPedding / 2. + 1), (int) (verticalPedding / 2. + 0.6), (int) (horisontalPedding / 2. + 2), (int) (horisontalPedding / 2.)));
+        setMinConstraint(new PDimension(button.getWidth() + 1, button.getHeight() + 1));
+        init(expander);
     }
 
     private void init(ExpanderNode expander) {
-	this.expander = expander;
-	setCurvaturePrc(20);
-	setUp(null);
-	reshape(false);
+        this.expander = expander;
+        setCurvaturePrc(20);
+        setUp(null);
+        reshape(false);
     }
 
     protected void setUp(String title) {
-	expander.setPickable(false); // the on click behaviour is redirected to the parent button
-	addChild(expander);
-	reshape(false);
-	fillWithGradient(new Color(17, 64, 111), new Color(148, 193, 239), true); // default color filling
+        expander.setPickable(false); // the on click behaviour is redirected to the parent button
+        addChild(expander);
+        reshape(false);
+        fillWithGradient(new Color(17, 64, 111), new Color(148, 193, 239), true); // default color filling
 
-	setDefaultEventHandler(new ExpanderDefaultEventHandler(this));
+        setDefaultEventHandler(new ExpanderDefaultEventHandler(this));
 
-	addOnClickEventListener(new IOnClickEventListener() {
-	    private static final long serialVersionUID = -7732080335350183919L;
+        addOnClickEventListener(new IOnClickEventListener() {
+            private static final long serialVersionUID = -7732080335350183919L;
 
-	    public void click(PInputEvent event) {
-		expander.getDefaultEventHandler().mouseClicked(event);
-	    }
-	});
+            public void click(PInputEvent event) {
+                expander.getDefaultEventHandler().mouseClicked(event);
+            }
+        });
     }
 
     public String toString() {
-	return "";
+        return "";
     }
 
     /**
@@ -96,26 +96,26 @@ public class ExpanderButton extends Button {
      * 
      */
     protected static class ExpanderDefaultEventHandler extends DefaultEventHandler {
-	private static final long serialVersionUID = -4900315528622765955L;
+        private static final long serialVersionUID = -4900315528622765955L;
 
-	public ExpanderDefaultEventHandler(Button button) {
-	    super(button);
-	}
+        public ExpanderDefaultEventHandler(Button button) {
+            super(button);
+        }
 
-	/**
-	 * Handles button highlighting.
-	 */
-	public void mouseEntered(PInputEvent event) {
-	    if (event.isLeftMouseButton()) {
-		return;
-	    }
+        /**
+         * Handles button highlighting.
+         */
+        public void mouseEntered(PInputEvent event) {
+            if (event.isLeftMouseButton()) {
+                return;
+            }
 
-	    if (highPaint == null) {
-		highPaint = new SerializableGradientPaint((float) button.getX(), (float) button.getY(), new Color(185, 223, 244), (float) (button.getX()), (float) (button.getY() + +button.getHeight()), new Color(61, 168, 226));
-	    }
+            if (highPaint == null) {
+                highPaint = new SerializableGradientPaint((float) button.getX(), (float) button.getY(), new Color(185, 223, 244), (float) (button.getX()), (float) (button.getY() + +button.getHeight()), new Color(61, 168, 226));
+            }
 
-	    button.setPaint(highPaint);
-	}
+            button.setPaint(highPaint);
+        }
     }
 
 }

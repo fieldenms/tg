@@ -5,9 +5,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 
 /**
  * Represents rotable class entity.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(String.class)
 public class RotableClass extends AbstractEntity<String> {
@@ -23,7 +23,7 @@ public class RotableClass extends AbstractEntity<String> {
     }
 
     public RotableClass(final String code, final String desc) {
-	super(null, code, desc);
+        super(null, code, desc);
     }
 
     public Integer getTonnage() {

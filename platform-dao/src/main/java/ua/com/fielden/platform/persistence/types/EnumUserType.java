@@ -18,77 +18,77 @@ import org.hibernate.usertype.UserType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 
-public class EnumUserType<E extends Enum<E>> implements UserType, IUserTypeInstantiate  {
+public class EnumUserType<E extends Enum<E>> implements UserType, IUserTypeInstantiate {
     private Class<E> clazz = null;
 
     protected EnumUserType(final Class<E> c) {
-	this.clazz = c;
+        this.clazz = c;
     }
 
     private static final int[] SQL_TYPES = { Types.VARCHAR };
 
     public int[] sqlTypes() {
-	return SQL_TYPES;
+        return SQL_TYPES;
     }
 
     @SuppressWarnings("unchecked")
     public Class returnedClass() {
-	return clazz;
+        return clazz;
     }
 
     public Object nullSafeGet(final ResultSet resultSet, final String[] names, final Object owner) throws HibernateException, SQLException {
-	final String name = resultSet.getString(names[0]);
-	E result = null;
-	if (!resultSet.wasNull()) {
-	    result = Enum.valueOf(clazz, name);
-	}
-	return result;
+        final String name = resultSet.getString(names[0]);
+        E result = null;
+        if (!resultSet.wasNull()) {
+            result = Enum.valueOf(clazz, name);
+        }
+        return result;
     }
 
     public Object instantiate(final Object argument, final EntityFactory factory) {
-	return argument == null ? null : Enum.valueOf(clazz, argument.toString() /*(String) argument*/);
+        return argument == null ? null : Enum.valueOf(clazz, argument.toString() /*(String) argument*/);
     }
 
     @SuppressWarnings("unchecked")
     public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index) throws HibernateException, SQLException {
-	if (null == value) {
-	    preparedStatement.setNull(index, Types.VARCHAR);
-	} else {
-	    preparedStatement.setString(index, ((Enum) value).name());
-	}
+        if (null == value) {
+            preparedStatement.setNull(index, Types.VARCHAR);
+        } else {
+            preparedStatement.setString(index, ((Enum) value).name());
+        }
     }
 
     public Object deepCopy(final Object value) throws HibernateException {
-	return value;
+        return value;
     }
 
     public boolean isMutable() {
-	return false;
+        return false;
     }
 
     public Object assemble(final Serializable cached, final Object owner) throws HibernateException {
-	return cached;
+        return cached;
     }
 
     public Serializable disassemble(final Object value) throws HibernateException {
-	return (Serializable) value;
+        return (Serializable) value;
     }
 
     public Object replace(final Object original, final Object target, final Object owner) throws HibernateException {
-	return original;
+        return original;
     }
 
     public int hashCode(final Object x) throws HibernateException {
-	return x.hashCode();
+        return x.hashCode();
     }
 
     public boolean equals(final Object x, final Object y) throws HibernateException {
-	if (x == y) {
-	    return true;
-	}
-	if (null == x || null == y) {
-	    return false;
-	}
-	return x.equals(y);
+        if (x == y) {
+            return true;
+        }
+        if (null == x || null == y) {
+            return false;
+        }
+        return x.equals(y);
     }
 }

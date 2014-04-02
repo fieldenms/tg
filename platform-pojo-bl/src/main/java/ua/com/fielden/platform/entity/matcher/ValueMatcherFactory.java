@@ -24,9 +24,9 @@ import com.google.inject.Inject;
 
 /**
  * Provides a generic implementation based on IDaoFactory (thus supporting DAO and RAO) for instantiation of value matchers based on the type of concrete properties.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class ValueMatcherFactory implements IValueMatcherFactory {
     private final Map<Class, Map<String, IValueMatcher>> map = new HashMap<Class, Map<String, IValueMatcher>>();
@@ -35,27 +35,27 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 
     @Inject
     public ValueMatcherFactory(final IDaoFactory daoFactory, final EntityFactory entityFactory) {
-	this.daoFactory = daoFactory;
-	this.entityFactory = entityFactory;
+        this.daoFactory = daoFactory;
+        this.entityFactory = entityFactory;
     }
 
     @Override
     public IValueMatcher<?> getValueMatcher(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName) {
-	if (propertyOwnerEntityType == null) {
-	    throw new IllegalArgumentException("A valid entity type is expected.");
-	}
-	final Map<String, IValueMatcher> entityEntry = getEntityMap(propertyOwnerEntityType);
-	final IValueMatcher matcher = entityEntry.get(propertyName);
-	return matcher != null ? matcher : createMatcher(propertyOwnerEntityType, propertyName, entityEntry);
+        if (propertyOwnerEntityType == null) {
+            throw new IllegalArgumentException("A valid entity type is expected.");
+        }
+        final Map<String, IValueMatcher> entityEntry = getEntityMap(propertyOwnerEntityType);
+        final IValueMatcher matcher = entityEntry.get(propertyName);
+        return matcher != null ? matcher : createMatcher(propertyOwnerEntityType, propertyName, entityEntry);
     }
 
     public EntityFactory getEntityFactory() {
-	return entityFactory;
+        return entityFactory;
     }
 
     /**
      * Instantiates a value matcher based on the passed parameters, caches it and return is method's result.
-     *
+     * 
      * @param propertyOwnerEntityType
      * @param propertyName
      * @param entityEntry
@@ -63,135 +63,135 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
      * @return
      */
     private IValueMatcher createMatcher(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry) {
-	if (entityEntry.get(propertyName) == null) {
-	    final Field propField = Finder.findFieldByName(propertyOwnerEntityType, propertyName);
-	    final Class<?> propType = getPropertyType(propertyOwnerEntityType, propField);
-	    // instantiate value matcher based on the entity type
-	    if (isOwnerACriteria(propertyOwnerEntityType)) { // criteria entity
-		createMatcherForCriteriaEntity(propertyOwnerEntityType, propertyName, entityEntry, propField, propType);
-	    } else { // ordinary domain entity
-		createMatcherForDomainEntity(propertyOwnerEntityType, propertyName, entityEntry, propType);
-	    }
+        if (entityEntry.get(propertyName) == null) {
+            final Field propField = Finder.findFieldByName(propertyOwnerEntityType, propertyName);
+            final Class<?> propType = getPropertyType(propertyOwnerEntityType, propField);
+            // instantiate value matcher based on the entity type
+            if (isOwnerACriteria(propertyOwnerEntityType)) { // criteria entity
+                createMatcherForCriteriaEntity(propertyOwnerEntityType, propertyName, entityEntry, propField, propType);
+            } else { // ordinary domain entity
+                createMatcherForDomainEntity(propertyOwnerEntityType, propertyName, entityEntry, propType);
+            }
 
-	}
-	return entityEntry.get(propertyName);
+        }
+        return entityEntry.get(propertyName);
     }
 
     /** Instantiates a matcher for a property of an entity representing criteria. */
     private void createMatcherForCriteriaEntity(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry, final Field propField, final Class<?> propType) {
-	if (isPropertyAnEntity(propType)) { // this is an unusual case since most criteria are multi-valued
-	    if (PropertyDescriptor.class.isAssignableFrom(propType)) {
-		createPropertyDescriptorMatcher(propertyOwnerEntityType, propertyName, entityEntry);
-	    } else {
-		entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao((Class<AbstractEntity<?>>) propType)));
-	    }
-	} else if (AnnotationReflector.isAnnotationPresent(propField, EntityType.class)) {
-	    final EntityType elType = AnnotationReflector.getAnnotation(propField, EntityType.class);
-	    if (elType.value().isEnum()) {
-		entityEntry.put(propertyName, new EnumValueMatcher(elType.value()));
-	    } else if (!isPropertyAnEntity(elType.value())) {
-		throw new IllegalArgumentException("Criteria " + propertyOwnerEntityType.getName() + ": element " + elType.value().getName()
-			+ " is not a valid property type and thus cannot have a value matcher.");
-	    }
+        if (isPropertyAnEntity(propType)) { // this is an unusual case since most criteria are multi-valued
+            if (PropertyDescriptor.class.isAssignableFrom(propType)) {
+                createPropertyDescriptorMatcher(propertyOwnerEntityType, propertyName, entityEntry);
+            } else {
+                entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao((Class<AbstractEntity<?>>) propType)));
+            }
+        } else if (AnnotationReflector.isAnnotationPresent(propField, EntityType.class)) {
+            final EntityType elType = AnnotationReflector.getAnnotation(propField, EntityType.class);
+            if (elType.value().isEnum()) {
+                entityEntry.put(propertyName, new EnumValueMatcher(elType.value()));
+            } else if (!isPropertyAnEntity(elType.value())) {
+                throw new IllegalArgumentException("Criteria " + propertyOwnerEntityType.getName() + ": element " + elType.value().getName()
+                        + " is not a valid property type and thus cannot have a value matcher.");
+            }
 
-	    if (PropertyDescriptor.class.isAssignableFrom(AnnotationReflector.getAnnotation(propField, IsProperty.class).value())) {
-		createPropertyDescriptorMatcherForCollection(propertyOwnerEntityType, propertyName, entityEntry);
-	    } else {
-		final Class<?> keyType = AnnotationReflector.getKeyType(elType.value());
-		final Class<? extends AbstractEntity<?>> notEnhancedElType = DynamicEntityClassLoader.getOriginalType(elType.value());
-		if (keyType != null && AbstractEntity.class.isAssignableFrom(keyType)) {
-		    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao(notEnhancedElType), "key.key", "key.key"));
-		} else {
-		    entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao(notEnhancedElType)));
-		}
-	    }
-	} else if (propType.isEnum()) {
-	    entityEntry.put(propertyName, new EnumValueMatcher(propType));
-	} else {
-	    throw new IllegalArgumentException("Criteria " + propertyOwnerEntityType.getName() + ": " + propType.getName()
-		    + " is not a valid property type and thus cannot have a value matcher.");
-	}
+            if (PropertyDescriptor.class.isAssignableFrom(AnnotationReflector.getAnnotation(propField, IsProperty.class).value())) {
+                createPropertyDescriptorMatcherForCollection(propertyOwnerEntityType, propertyName, entityEntry);
+            } else {
+                final Class<?> keyType = AnnotationReflector.getKeyType(elType.value());
+                final Class<? extends AbstractEntity<?>> notEnhancedElType = DynamicEntityClassLoader.getOriginalType(elType.value());
+                if (keyType != null && AbstractEntity.class.isAssignableFrom(keyType)) {
+                    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao(notEnhancedElType), "key.key", "key.key"));
+                } else {
+                    entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao(notEnhancedElType)));
+                }
+            }
+        } else if (propType.isEnum()) {
+            entityEntry.put(propertyName, new EnumValueMatcher(propType));
+        } else {
+            throw new IllegalArgumentException("Criteria " + propertyOwnerEntityType.getName() + ": " + propType.getName()
+                    + " is not a valid property type and thus cannot have a value matcher.");
+        }
     }
 
     /** Instantiates a matcher for a property of an ordinary domain entity. */
     private void createMatcherForDomainEntity(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry, final Class<?> propType) {
-	if (propType.isEnum()) {
-	    entityEntry.put(propertyName, new EnumValueMatcher(propType));
-	} else if (!isPropertyAnEntity(propType)) {
-	    throw new IllegalArgumentException("Entity " + propertyOwnerEntityType.getName() + ": property " + propertyName + " of type " + propType.getName()
-		    + " is not a valid property type and thus cannot have a value matcher.");
-	}
+        if (propType.isEnum()) {
+            entityEntry.put(propertyName, new EnumValueMatcher(propType));
+        } else if (!isPropertyAnEntity(propType)) {
+            throw new IllegalArgumentException("Entity " + propertyOwnerEntityType.getName() + ": property " + propertyName + " of type " + propType.getName()
+                    + " is not a valid property type and thus cannot have a value matcher.");
+        }
 
-	final Class<?> keyType = AnnotationReflector.getKeyType(propType);
-	if (keyType != null && AbstractEntity.class.isAssignableFrom(keyType)) {
-	    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao((Class<? extends AbstractEntity<?>>) propType), "key.key", "key.key"));
-	} else if (PropertyDescriptor.class.isAssignableFrom(propType)) {
-	    createPropertyDescriptorMatcher(propertyOwnerEntityType, propertyName, entityEntry);
-	} else {
-	    entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao((Class<? extends AbstractEntity<?>>) propType)));
-	}
+        final Class<?> keyType = AnnotationReflector.getKeyType(propType);
+        if (keyType != null && AbstractEntity.class.isAssignableFrom(keyType)) {
+            entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao((Class<? extends AbstractEntity<?>>) propType), "key.key", "key.key"));
+        } else if (PropertyDescriptor.class.isAssignableFrom(propType)) {
+            createPropertyDescriptorMatcher(propertyOwnerEntityType, propertyName, entityEntry);
+        } else {
+            entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao((Class<? extends AbstractEntity<?>>) propType)));
+        }
     }
 
     private void createPropertyDescriptorMatcher(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry) {
-	final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, propertyOwnerEntityType, propertyName).value();
-	final List<?> values = entityFactory != null ? Finder.getPropertyDescriptors(type, entityFactory) : Finder.getPropertyDescriptors(type);
-	entityEntry.put(propertyName, new PojoValueMatcher(values, "key", values.size())); // instead of a key there could be propertyName
+        final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, propertyOwnerEntityType, propertyName).value();
+        final List<?> values = entityFactory != null ? Finder.getPropertyDescriptors(type, entityFactory) : Finder.getPropertyDescriptors(type);
+        entityEntry.put(propertyName, new PojoValueMatcher(values, "key", values.size())); // instead of a key there could be propertyName
     }
 
     /** Creates value matcher for a collection of property descriptors. Usually used for building criteria. */
     private void createPropertyDescriptorMatcherForCollection(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry) {
-	final Class<? extends AbstractEntity> type = AnnotationReflector.getPropertyAnnotation(EntityType.class, propertyOwnerEntityType, propertyName).value();
-	final List<?> values = entityFactory != null ? Finder.getPropertyDescriptors(type, entityFactory) : Finder.getPropertyDescriptors(type);
-	entityEntry.put(propertyName, new PojoValueMatcher(values, "key", values.size())); // instead of a key there could be propertyName
+        final Class<? extends AbstractEntity> type = AnnotationReflector.getPropertyAnnotation(EntityType.class, propertyOwnerEntityType, propertyName).value();
+        final List<?> values = entityFactory != null ? Finder.getPropertyDescriptors(type, entityFactory) : Finder.getPropertyDescriptors(type);
+        entityEntry.put(propertyName, new PojoValueMatcher(values, "key", values.size())); // instead of a key there could be propertyName
     }
 
     private Map<String, IValueMatcher> getEntityMap(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType) {
-	Map<String, IValueMatcher> entityEntry = map.get(isOwnerACriteria(propertyOwnerEntityType) ? EntityQueryCriteria.class : propertyOwnerEntityType);
-	if (entityEntry == null) {
-	    entityEntry = new HashMap<String, IValueMatcher>();
-	    map.put(propertyOwnerEntityType, entityEntry);
-	}
-	return entityEntry;
+        Map<String, IValueMatcher> entityEntry = map.get(isOwnerACriteria(propertyOwnerEntityType) ? EntityQueryCriteria.class : propertyOwnerEntityType);
+        if (entityEntry == null) {
+            entityEntry = new HashMap<String, IValueMatcher>();
+            map.put(propertyOwnerEntityType, entityEntry);
+        }
+        return entityEntry;
     }
 
     /**
      * Determines whether specified class is criteria class or not.
-     *
+     * 
      * @param propertyOwnerEntityType
      * @return
      */
     private boolean isOwnerACriteria(final Class<? extends AbstractEntity> propertyOwnerEntityType) {
-	return EntityQueryCriteria.class.isAssignableFrom(propertyOwnerEntityType);
+        return EntityQueryCriteria.class.isAssignableFrom(propertyOwnerEntityType);
     }
 
     /**
      * Determines whether specified class is entity class or not.
-     *
+     * 
      * @param propertyOwnerEntityType
      * @return
      */
     private boolean isPropertyAnEntity(final Class<?> propertyType) {
-	return AbstractEntity.class.isAssignableFrom(propertyType);
+        return AbstractEntity.class.isAssignableFrom(propertyType);
     }
 
     /**
      * Returns the type of specified property in the propertOwnerEntityType class.
-     *
+     * 
      * @param propertyOwnerEntityType
      * @param propertyField
      * @return
      */
     private Class<?> getPropertyType(final Class<? extends AbstractEntity> propertyOwnerEntityType, final Field propertyField) {
-	if (propertyField == null) {
-	    return null;
-	}
-	if ("key".equals(propertyField.getName())) {
-	    System.out.println("VALUE MATCHER: " + propertyOwnerEntityType.getName());
-	    System.out.println("\t\tKEY TYPE: " + AnnotationReflector.getKeyType(propertyOwnerEntityType));
-	}
-	return "key".equals(propertyField.getName()) ? //
-		AnnotationReflector.getKeyType(propertyOwnerEntityType)
-		: //
-		    propertyField.getType();
+        if (propertyField == null) {
+            return null;
+        }
+        if ("key".equals(propertyField.getName())) {
+            System.out.println("VALUE MATCHER: " + propertyOwnerEntityType.getName());
+            System.out.println("\t\tKEY TYPE: " + AnnotationReflector.getKeyType(propertyOwnerEntityType));
+        }
+        return "key".equals(propertyField.getName()) ? //
+        AnnotationReflector.getKeyType(propertyOwnerEntityType)
+                : //
+                propertyField.getType();
     }
 }

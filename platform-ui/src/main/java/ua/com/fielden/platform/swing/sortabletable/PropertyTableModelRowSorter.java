@@ -43,9 +43,9 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
      * @param model
      */
     public PropertyTableModelRowSorter(final PropertyTableModel<T> model) {
-	this.model = model;
-	this.isSortable = null;
-	sortKeys = new ArrayList<SortKey>();
+        this.model = model;
+        this.isSortable = null;
+        sortKeys = new ArrayList<SortKey>();
     }
 
     @Override
@@ -54,38 +54,38 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
 
     @Override
     public int convertRowIndexToModel(final int index) {
-	return index;
+        return index;
     }
 
     @Override
     public int convertRowIndexToView(final int index) {
-	return index;
+        return index;
     }
 
     @Override
     public PropertyTableModel<T> getModel() {
-	return model;
+        return model;
     }
 
     @Override
     public int getModelRowCount() {
-	return model.getRowCount();
+        return model.getRowCount();
     }
 
     @Override
     public List<? extends SortKey> getSortKeys() {
-	return new ArrayList<SortKey>(sortKeys);
+        return new ArrayList<SortKey>(sortKeys);
     }
 
     @Override
     public int getViewRowCount() {
-	return model.getRowCount();
+        return model.getRowCount();
     }
 
     @Override
     public void modelStructureChanged() {
-	isSortable = null;
-	sortKeys.clear();
+        isSortable = null;
+        sortKeys.clear();
     }
 
     @Override
@@ -110,23 +110,23 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
 
     @Override
     public void setSortKeys(final List<? extends SortKey> keys) {
-	final List<SortKey> old = this.sortKeys;
-	if (keys != null && keys.size() > 0) {
-	    final int max = model.getColumnCount();
-	    final Iterator<? extends SortKey> iterator = keys.iterator();
-	    while (iterator.hasNext()) {
-		final SortKey key = iterator.next();
-		if (key == null || key.getColumn() < 0 || key.getColumn() >= max || key.getSortOrder().equals(SortOrder.UNSORTED) || !isSortable(key.getColumn())) {
-		    iterator.remove();
-		}
-	    }
-	    this.sortKeys = Collections.unmodifiableList(new ArrayList<SortKey>(keys));
-	} else {
-	    this.sortKeys = Collections.emptyList();
-	}
-	if (!this.sortKeys.equals(old)) {
-	    fireSortOrderChanged();
-	}
+        final List<SortKey> old = this.sortKeys;
+        if (keys != null && keys.size() > 0) {
+            final int max = model.getColumnCount();
+            final Iterator<? extends SortKey> iterator = keys.iterator();
+            while (iterator.hasNext()) {
+                final SortKey key = iterator.next();
+                if (key == null || key.getColumn() < 0 || key.getColumn() >= max || key.getSortOrder().equals(SortOrder.UNSORTED) || !isSortable(key.getColumn())) {
+                    iterator.remove();
+                }
+            }
+            this.sortKeys = Collections.unmodifiableList(new ArrayList<SortKey>(keys));
+        } else {
+            this.sortKeys = Collections.emptyList();
+        }
+        if (!this.sortKeys.equals(old)) {
+            fireSortOrderChanged();
+        }
     }
 
     @Override
@@ -140,36 +140,36 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
      * @param discardPrevious
      */
     public void toggleSortOrder(final int column, final boolean discardPrevious) {
-	checkColumn(column);
-	if (isSortable(column)) {
-	    final List<SortKey> keys = new ArrayList<SortKey>(getSortKeys());
-	    SortKey sortKey;
-	    final int sortIndex = getSortOrderForColumnIndex(column);
-	    if (discardPrevious) {
-		if (sortIndex < 0) {
-		    keys.clear();
-		    keys.add(new SortKey(column, SortOrder.ASCENDING));
-		} else {
-		    sortKey = toggle(keys.get(sortIndex));
-		    keys.clear();
-		    if (sortKey != null) {
-			keys.add(sortKey);
-		    }
-		}
-	    } else {
-		if (sortIndex < 0) {
-		    keys.add(new SortKey(column, SortOrder.ASCENDING));
-		} else {
-		    sortKey = toggle(keys.get(sortIndex));
-		    if (sortKey == null) {
-			keys.remove(sortIndex);
-		    } else {
-			keys.set(sortIndex, sortKey);
-		    }
-		}
-	    }
-	    setSortKeys(keys);
-	}
+        checkColumn(column);
+        if (isSortable(column)) {
+            final List<SortKey> keys = new ArrayList<SortKey>(getSortKeys());
+            SortKey sortKey;
+            final int sortIndex = getSortOrderForColumnIndex(column);
+            if (discardPrevious) {
+                if (sortIndex < 0) {
+                    keys.clear();
+                    keys.add(new SortKey(column, SortOrder.ASCENDING));
+                } else {
+                    sortKey = toggle(keys.get(sortIndex));
+                    keys.clear();
+                    if (sortKey != null) {
+                        keys.add(sortKey);
+                    }
+                }
+            } else {
+                if (sortIndex < 0) {
+                    keys.add(new SortKey(column, SortOrder.ASCENDING));
+                } else {
+                    sortKey = toggle(keys.get(sortIndex));
+                    if (sortKey == null) {
+                        keys.remove(sortIndex);
+                    } else {
+                        keys.set(sortIndex, sortKey);
+                    }
+                }
+            }
+            setSortKeys(keys);
+        }
     }
 
     /**
@@ -179,10 +179,10 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
      * @return
      */
     private SortKey toggle(final SortKey sortKey) {
-	if (sortKey.getSortOrder() == SortOrder.ASCENDING) {
-	    return new SortKey(sortKey.getColumn(), SortOrder.DESCENDING);
-	}
-	return null;
+        if (sortKey.getSortOrder() == SortOrder.ASCENDING) {
+            return new SortKey(sortKey.getColumn(), SortOrder.DESCENDING);
+        }
+        return null;
     }
 
     /**
@@ -192,31 +192,31 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
      * @param sortable
      */
     public void setSortable(final int column, final boolean sortable) {
-	checkColumn(column);
-	if (isSortable == null) {
-	    isSortable = new boolean[model.getColumnCount()];
-	    for (int i = isSortable.length - 1; i >= 0; i--) {
-		isSortable[i] = true;
-	    }
-	}
-	isSortable[column] = sortable;
-	if (!sortable) {
-	    setSortKeys(new ArrayList<SortKey>(sortKeys));
-	}
+        checkColumn(column);
+        if (isSortable == null) {
+            isSortable = new boolean[model.getColumnCount()];
+            for (int i = isSortable.length - 1; i >= 0; i--) {
+                isSortable[i] = true;
+            }
+        }
+        isSortable[column] = sortable;
+        if (!sortable) {
+            setSortKeys(new ArrayList<SortKey>(sortKeys));
+        }
     }
 
     public void setSortable(final String columnKey, final boolean sortable) {
-	final int columnIndex = model.getColumnForName(columnKey);
-	if (columnIndex < 0) {
-	    return;
-	}
-	setSortable(columnIndex, sortable);
+        final int columnIndex = model.getColumnForName(columnKey);
+        if (columnIndex < 0) {
+            return;
+        }
+        setSortable(columnIndex, sortable);
     }
 
     private void checkColumn(final int column) {
-	if (column < 0 || column >= model.getColumnCount()) {
-	    throw new IndexOutOfBoundsException("column beyond range of TableModel");
-	}
+        if (column < 0 || column >= model.getColumnCount()) {
+            throw new IndexOutOfBoundsException("column beyond range of TableModel");
+        }
     }
 
     /**
@@ -225,8 +225,8 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
      * @return
      */
     public boolean isSortable(final int column) {
-	checkColumn(column);
-	return (isSortable == null) ? true : isSortable[column];
+        checkColumn(column);
+        return (isSortable == null) ? true : isSortable[column];
     }
 
     /**
@@ -247,40 +247,40 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
      * @param discardPrevious
      */
     public void setOrder(final SortOrder sortOrder, final String key, final boolean discardPrevious) {
-	final int columnIndex = model.getColumnForName(key);
-	if (columnIndex < 0 || !isSortable(columnIndex)) {
-	    return;
-	}
-	final List<SortKey> keys = new ArrayList<SortKey>(sortKeys);
-	if (discardPrevious) {
-	    keys.clear();
-	    if (!sortOrder.equals(SortOrder.UNSORTED)) {
-		keys.add(new SortKey(columnIndex, sortOrder));
-	    }
-	} else {
-	    final int sortIndex = getSortOrderForColumnIndex(columnIndex);
-	    if (sortIndex < 0) {
-		if (!sortOrder.equals(SortOrder.UNSORTED)) {
-		    keys.add(new SortKey(columnIndex, sortOrder));
-		}
-	    } else {
-		if (!sortOrder.equals(SortOrder.UNSORTED)) {
-		    keys.set(sortIndex, new SortKey(columnIndex, sortOrder));
-		} else {
-		    keys.remove(sortIndex);
-		}
-	    }
-	}
-	setSortKeys(keys);
+        final int columnIndex = model.getColumnForName(key);
+        if (columnIndex < 0 || !isSortable(columnIndex)) {
+            return;
+        }
+        final List<SortKey> keys = new ArrayList<SortKey>(sortKeys);
+        if (discardPrevious) {
+            keys.clear();
+            if (!sortOrder.equals(SortOrder.UNSORTED)) {
+                keys.add(new SortKey(columnIndex, sortOrder));
+            }
+        } else {
+            final int sortIndex = getSortOrderForColumnIndex(columnIndex);
+            if (sortIndex < 0) {
+                if (!sortOrder.equals(SortOrder.UNSORTED)) {
+                    keys.add(new SortKey(columnIndex, sortOrder));
+                }
+            } else {
+                if (!sortOrder.equals(SortOrder.UNSORTED)) {
+                    keys.set(sortIndex, new SortKey(columnIndex, sortOrder));
+                } else {
+                    keys.remove(sortIndex);
+                }
+            }
+        }
+        setSortKeys(keys);
     }
 
     private int getSortOrderForColumnIndex(final int columnIndex) {
-	for (int sortIndex = sortKeys.size() - 1; sortIndex >= 0; sortIndex--) {
-	    if (sortKeys.get(sortIndex).getColumn() == columnIndex) {
-		return sortIndex;
-	    }
-	}
-	return -1;
+        for (int sortIndex = sortKeys.size() - 1; sortIndex >= 0; sortIndex--) {
+            if (sortKeys.get(sortIndex).getColumn() == columnIndex) {
+                return sortIndex;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -290,14 +290,14 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
      * @return
      */
     public boolean isSortable(final String key) {
-	final int columnIndex = model.getColumnForName(key);
-	if (columnIndex < 0) {
-	    return false;
-	}
-	if (isSortable(columnIndex)) {
-	    return true;
-	}
-	return false;
+        final int columnIndex = model.getColumnForName(key);
+        if (columnIndex < 0) {
+            return false;
+        }
+        if (isSortable(columnIndex)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -308,41 +308,41 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
      * @param sortable
      */
     public void initOrderingWith(final List<? extends AbstractPropertyColumnMapping<T>> mappings, final List<SortKey> sortKeys, final boolean[] sortable) {
-	if (mappings == null) {
-	    return;
-	}
-	if (sortable != null) {
-	    for (int counter = 0; counter < sortable.length; counter++) {
-		final boolean sortableItem = sortable[counter];
-		final String key = mappings.get(counter).getPropertyName();
-		setSortable(key, sortableItem);
-	    }
-	}
-	if (sortKeys != null) {
-	    final List<SortKey> keys = new ArrayList<SortKey>();
-	    setSortKeys(keys);
-	    for (final SortKey key : sortKeys) {
-		final String itemKey = mappings.get(key.getColumn()).getPropertyName();
-		setOrder(key.getSortOrder(), itemKey, false);
-	    }
-	}
+        if (mappings == null) {
+            return;
+        }
+        if (sortable != null) {
+            for (int counter = 0; counter < sortable.length; counter++) {
+                final boolean sortableItem = sortable[counter];
+                final String key = mappings.get(counter).getPropertyName();
+                setSortable(key, sortableItem);
+            }
+        }
+        if (sortKeys != null) {
+            final List<SortKey> keys = new ArrayList<SortKey>();
+            setSortKeys(keys);
+            for (final SortKey key : sortKeys) {
+                final String itemKey = mappings.get(key.getColumn()).getPropertyName();
+                setOrder(key.getSortOrder(), itemKey, false);
+            }
+        }
     }
 
     public SortOrder getSortOrder(final String key) {
-	final int columnIndex = model.getColumnForName(key);
-	if (columnIndex < 0) {
-	    return null;
-	}
-	final int sortIndex = getSortOrderForColumnIndex(columnIndex);
-	return isSortable(columnIndex) ? (sortIndex < 0 ? SortOrder.UNSORTED : getSortKeys().get(sortIndex).getSortOrder()) : null;
+        final int columnIndex = model.getColumnForName(key);
+        if (columnIndex < 0) {
+            return null;
+        }
+        final int sortIndex = getSortOrderForColumnIndex(columnIndex);
+        return isSortable(columnIndex) ? (sortIndex < 0 ? SortOrder.UNSORTED : getSortKeys().get(sortIndex).getSortOrder()) : null;
     }
 
     public int getOrder(final String key) {
-	final int columnIndex = model.getColumnForName(key);
-	if (columnIndex < 0) {
-	    return -1;
-	}
-	return getSortOrderForColumnIndex(columnIndex);
+        final int columnIndex = model.getColumnForName(key);
+        if (columnIndex < 0) {
+            return -1;
+        }
+        return getSortOrderForColumnIndex(columnIndex);
     }
 
     /**
@@ -351,9 +351,9 @@ public class PropertyTableModelRowSorter<T extends AbstractEntity> extends RowSo
      * @return
      */
     public boolean[] getIsSortable() {
-	if (isSortable == null) {
-	    return null;
-	}
-	return Arrays.copyOf(isSortable, isSortable.length);
+        if (isSortable == null) {
+            return null;
+        }
+        return Arrays.copyOf(isSortable, isSortable.length);
     }
 }

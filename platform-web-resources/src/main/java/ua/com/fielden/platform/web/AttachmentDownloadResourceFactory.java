@@ -16,9 +16,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation for instantiating {@link AttachmentDownloadResource}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class AttachmentDownloadResourceFactory extends Restlet {
     private final Injector injector;
@@ -27,22 +27,22 @@ public class AttachmentDownloadResourceFactory extends Restlet {
 
     /**
      * Instances of DAO and factory should be thread-safe as they are used by multiple instances of resources serving concurrent requests.
-     *
+     * 
      */
     public AttachmentDownloadResourceFactory(final String location, final Injector injector) {
-	this.injector = injector;
-	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
-	this.location = location;
+        this.injector = injector;
+        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.location = location;
     }
 
     @Override
     public void handle(final Request request, final Response response) {
-	super.handle(request, response);
+        super.handle(request, response);
 
-	if (Method.GET == request.getMethod()) {
-	    final String username = (String) request.getAttributes().get("username");
-	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
-	    new AttachmentDownloadResource(location, injector.getInstance(IAttachment.class), restUtil, getContext(), request, response).handle();
-	}
+        if (Method.GET == request.getMethod()) {
+            final String username = (String) request.getAttributes().get("username");
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+            new AttachmentDownloadResource(location, injector.getInstance(IAttachment.class), restUtil, getContext(), request, response).handle();
+        }
     }
 }

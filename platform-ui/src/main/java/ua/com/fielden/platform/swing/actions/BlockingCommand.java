@@ -30,8 +30,8 @@ public abstract class BlockingCommand<T> extends Command<T> {
     private final BlockingIndefiniteProgressPane pane;
 
     public BlockingCommand(final String name, final BlockingIndefiniteProgressPane pane) {
-	super(name);
-	this.pane = pane;
+        super(name);
+        this.pane = pane;
     }
 
     /**
@@ -42,12 +42,12 @@ public abstract class BlockingCommand<T> extends Command<T> {
      */
     @Override
     public void setEnabled(final boolean enable) {
-	super.setEnabled(enable);
-	if (enable) {
-	    pane.unlock();
-	} else {
-	    pane.lock();
-	}
+        super.setEnabled(enable);
+        if (enable) {
+            pane.unlock();
+        } else {
+            pane.lock();
+        }
     }
 
     /**
@@ -64,12 +64,12 @@ public abstract class BlockingCommand<T> extends Command<T> {
      *            -- controls blocking pane locking/unlocking.
      */
     public void setEnabled(final boolean enable, final boolean lock) {
-	super.setEnabled(enable);
-	if (lock) {
-	    pane.lock();
-	} else {
-	    pane.unlock();
-	}
+        super.setEnabled(enable);
+        if (lock) {
+            pane.lock();
+        } else {
+            pane.unlock();
+        }
 
     }
 
@@ -79,40 +79,40 @@ public abstract class BlockingCommand<T> extends Command<T> {
      * @param value
      */
     public void setMessage(final String value) {
-	SwingUtilitiesEx.invokeLater(new Runnable() {
-	    public void run() {
-		pane.setText(value);
-	    }
-	});
+        SwingUtilitiesEx.invokeLater(new Runnable() {
+            public void run() {
+                pane.setText(value);
+            }
+        });
     }
 
     public static void main(final String[] args) {
-	SwingUtilities.invokeLater(new Runnable() {
-	    public void run() {
-		final JFrame frame = new JFrame();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setPreferredSize(new Dimension(600, 400));
-		final BlockingIndefiniteProgressPane blockingPane = new BlockingIndefiniteProgressPane("blocking...", frame.getRootPane());
-		frame.add(new JPanel(), BorderLayout.CENTER);
-		final JPanel panel = new JPanel();
-		final JButton button = new JButton(new BlockingCommand<String>("Start blocking", blockingPane) {
-		    private static final long serialVersionUID = 1L;
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                final JFrame frame = new JFrame();
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setPreferredSize(new Dimension(600, 400));
+                final BlockingIndefiniteProgressPane blockingPane = new BlockingIndefiniteProgressPane("blocking...", frame.getRootPane());
+                frame.add(new JPanel(), BorderLayout.CENTER);
+                final JPanel panel = new JPanel();
+                final JButton button = new JButton(new BlockingCommand<String>("Start blocking", blockingPane) {
+                    private static final long serialVersionUID = 1L;
 
-		    @Override
-		    protected String action(final ActionEvent e) throws Exception {
-			setMessage("some message...");
-			Thread.sleep(1000);
-			setMessage("message...");
-			Thread.sleep(1000);
-			return "Finished";
-		    }
-		});
-		panel.add(button);
-		frame.add(panel, BorderLayout.SOUTH);
-		frame.pack();
-		RefineryUtilities.centerFrameOnScreen(frame);
-		frame.setVisible(true);
-	    }
-	});
+                    @Override
+                    protected String action(final ActionEvent e) throws Exception {
+                        setMessage("some message...");
+                        Thread.sleep(1000);
+                        setMessage("message...");
+                        Thread.sleep(1000);
+                        return "Finished";
+                    }
+                });
+                panel.add(button);
+                frame.add(panel, BorderLayout.SOUTH);
+                frame.pack();
+                RefineryUtilities.centerFrameOnScreen(frame);
+                frame.setVisible(true);
+            }
+        });
     }
 }

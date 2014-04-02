@@ -18,12 +18,12 @@ public class StubCriteriaPanel extends JPanel implements ICriteriaPanel {
      * @param layoutManager
      */
     public StubCriteriaPanel(final LayoutManager layoutManager) {
-	super(layoutManager);
+        super(layoutManager);
     }
 
     @Override
     public boolean canConfigure() {
-	return true;
+        return true;
     }
 
     /**
@@ -31,25 +31,26 @@ public class StubCriteriaPanel extends JPanel implements ICriteriaPanel {
      * 
      * @return
      */
-    public void updateModel(){
+    public void updateModel() {
     }
 
     @Override
     public Action getSwitchAction() {
-	return new AbstractAction() {
+        return new AbstractAction() {
 
-	    private static final long serialVersionUID = -8861824249867165117L;
+            private static final long serialVersionUID = -8861824249867165117L;
 
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		final boolean selected = ((JToggleButton) e.getSource()).isSelected();
-		if (selected) {
-		    System.out.println("edit criteria panel");
-		} else {
-		    System.out.println("view criteria panel");;
-		}
-	    }
-	};
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                final boolean selected = ((JToggleButton) e.getSource()).isSelected();
+                if (selected) {
+                    System.out.println("edit criteria panel");
+                } else {
+                    System.out.println("view criteria panel");
+                    ;
+                }
+            }
+        };
     }
 
 }

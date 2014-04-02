@@ -21,11 +21,11 @@ public final class CollectionUtil {
      * No precaution is taken if toString representation of an element already contains a symbol equal to a separator.
      */
     public static <T> String toString(final Collection<T> collection, final String separator) {
-	final StringBuffer buffer = new StringBuffer();
-	for (final Iterator<T> iter = collection.iterator(); iter.hasNext();) {
-	    buffer.append(iter.next() + (iter.hasNext() ? separator : ""));
-	}
-	return buffer.toString();
+        final StringBuffer buffer = new StringBuffer();
+        for (final Iterator<T> iter = collection.iterator(); iter.hasNext();) {
+            buffer.append(iter.next() + (iter.hasNext() ? separator : ""));
+        }
+        return buffer.toString();
     }
 
     /**
@@ -34,13 +34,13 @@ public final class CollectionUtil {
      * No precaution is taken if toString representation of property's value already contains a symbol equal to a separator.
      */
     public static String toString(final Collection<? extends AbstractEntity> collection, final String propertyName, final String separator) {
-	final StringBuffer buffer = new StringBuffer();
-	for (final Iterator<? extends AbstractEntity> iter = collection.iterator(); iter.hasNext();) {
-	    final AbstractEntity entity = iter.next();
-	    final Object value = entity != null ? entity.get(propertyName) : null;
-	    buffer.append(value + (iter.hasNext() ? separator : ""));
-	}
-	return buffer.toString();
+        final StringBuffer buffer = new StringBuffer();
+        for (final Iterator<? extends AbstractEntity> iter = collection.iterator(); iter.hasNext();) {
+            final AbstractEntity entity = iter.next();
+            final Object value = entity != null ? entity.get(propertyName) : null;
+            buffer.append(value + (iter.hasNext() ? separator : ""));
+        }
+        return buffer.toString();
     }
 
 }

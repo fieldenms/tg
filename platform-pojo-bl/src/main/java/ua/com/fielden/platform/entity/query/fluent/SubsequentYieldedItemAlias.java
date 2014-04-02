@@ -8,17 +8,17 @@ public class SubsequentYieldedItemAlias<T, ET extends AbstractEntity<?>> extends
     T parent;
 
     SubsequentYieldedItemAlias(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     public ISubsequentCompletedAndYielded<ET> as(final String alias) {
-	return new SubsequentCompletedAndYielded<ET>(getTokens().as(alias));
+        return new SubsequentCompletedAndYielded<ET>(getTokens().as(alias));
     }
 
     @Override
     public ISubsequentCompletedAndYielded<ET> asRequired(final String alias) {
-	return new SubsequentCompletedAndYielded<ET>(getTokens().asRequired(alias));
+        return new SubsequentCompletedAndYielded<ET>(getTokens().asRequired(alias));
     }
 }

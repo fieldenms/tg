@@ -37,9 +37,9 @@ import com.google.inject.Inject;
 
 /**
  * RAO implementation of the {@link IUserController}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 
 @EntityType(User.class)
@@ -50,74 +50,74 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUserCon
 
     @Inject
     public UserControllerRao(final IUserRoleDao userRoleDao, final RestClientUtil restUtil) {
-	super(restUtil);
-	this.userRoleDao = userRoleDao;
+        super(restUtil);
+        this.userRoleDao = userRoleDao;
     }
 
     @Override
     public List<? extends UserRole> findAllUserRoles() {
-	return userRoleDao.findAll();
+        return userRoleDao.findAll();
     }
 
     @Override
     public List<User> findAllUsers() {
-	return findAllUsersWithRoles();
+        return findAllUsersWithRoles();
     }
 
     @Override
     public IPage<? extends User> firstPageOfUsersWithRoles(final int capacity) {
-	final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
-	final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
-	return firstPage(from(model).with(fetchModel).with(orderBy).model(), capacity);
+        final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
+        return firstPage(from(model).with(fetchModel).with(orderBy).model(), capacity);
     }
 
     @Override
     public void updateUsers(final Map<User, Set<UserRole>> userRoleMap) {
-	// prepare an envelope
-	final Map<Long, List<Long>> envelopeContent = convert(userRoleMap);
-	final Representation envelope = restUtil.represent(envelopeContent);
-	// prepare a request
-	final Request request = restUtil.newRequest(Method.POST, restUtil.getBaseUri(getDefaultWebResourceType()) + "/useroles");
-	request.setEntity(envelope);
-	// process request
-	final Pair<Response, Result> result = restUtil.process(request);
-	if (!result.getValue().isSuccessful()) {
-	    throw result.getValue();
-	}
+        // prepare an envelope
+        final Map<Long, List<Long>> envelopeContent = convert(userRoleMap);
+        final Representation envelope = restUtil.represent(envelopeContent);
+        // prepare a request
+        final Request request = restUtil.newRequest(Method.POST, restUtil.getBaseUri(getDefaultWebResourceType()) + "/useroles");
+        request.setEntity(envelope);
+        // process request
+        final Pair<Response, Result> result = restUtil.process(request);
+        if (!result.getValue().isSuccessful()) {
+            throw result.getValue();
+        }
     }
 
     private Map<Long, List<Long>> convert(final Map<User, Set<UserRole>> userRoleMap) {
-	final Map<Long, List<Long>> result = new HashMap<>();
-	for (final User user : userRoleMap.keySet()) {
-	    final List<Long> roleIds = new ArrayList<Long>();
-	    for (final UserRole role : userRoleMap.get(user)) {
-		roleIds.add(role.getId());
-	    }
-	    result.put(user.getId(), roleIds);
-	}
-	return result;
+        final Map<Long, List<Long>> result = new HashMap<>();
+        for (final User user : userRoleMap.keySet()) {
+            final List<Long> roleIds = new ArrayList<Long>();
+            for (final UserRole role : userRoleMap.get(user)) {
+                roleIds.add(role.getId());
+            }
+            result.put(user.getId(), roleIds);
+        }
+        return result;
     }
 
     @Override
     public User findUserByIdWithRoles(final Long id) {
-	return findById(id, fetchModel);
+        return findById(id, fetchModel);
     }
 
     @Override
     public User findUserByKeyWithRoles(final String key) {
-	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").eq().val(key).model();
-	return getEntity(from(model).with(fetchModel).model());
+        final EntityResultQueryModel<User> model = select(User.class).where().prop("key").eq().val(key).model();
+        return getEntity(from(model).with(fetchModel).model());
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
-	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").isNotNull().model();
-	final OrderingModel orderBy = orderBy().prop("key").asc().model();
-	return getAllEntities(from(model).with(fetchModel).with(orderBy).model());
+        final EntityResultQueryModel<User> model = select(User.class).where().prop("key").isNotNull().model();
+        final OrderingModel orderBy = orderBy().prop("key").asc().model();
+        return getAllEntities(from(model).with(fetchModel).with(orderBy).model());
     }
 
     @Override
     public User findUser(final String username) {
-	return findByKeyAndFetch(fetchAll(User.class), username);
+        return findByKeyAndFetch(fetchAll(User.class), username);
     }
 }

@@ -19,36 +19,35 @@ import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 
 /**
  * Master model for entity {@link TgPublishedYearly}.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 public class TgPublishedYearlyMasterModel extends UmMasterWithCrudAndUpdater<TgPublishedYearly, ITgPublishedYearly> {
-
 
     private final static fetch<TgPublishedYearly> qm = fetchAll(TgPublishedYearly.class);
 
     public TgPublishedYearlyMasterModel(//
-    	final IEntityProducer<TgPublishedYearly> entityProducer,//
-    	final IEntityMasterCache cache,//
-    	final TgPublishedYearly entity,//
-    	final ITgPublishedYearly controller,//
-    	final IValueMatcherFactory valueMatcherFactory,//
-    	final IUmViewOwner owner,//
-    	final FrameTitleUpdater titleUpdater,//
-    	final IMasterDomainTreeManager masterManager,//
-    	final ICriteriaGenerator criteriaGenerator,//
-    	final IPostInitCallback<TgPublishedYearly, ITgPublishedYearly> postInitCallback) {
+    final IEntityProducer<TgPublishedYearly> entityProducer,//
+            final IEntityMasterCache cache,//
+            final TgPublishedYearly entity,//
+            final ITgPublishedYearly controller,//
+            final IValueMatcherFactory valueMatcherFactory,//
+            final IUmViewOwner owner,//
+            final FrameTitleUpdater titleUpdater,//
+            final IMasterDomainTreeManager masterManager,//
+            final ICriteriaGenerator criteriaGenerator,//
+            final IPostInitCallback<TgPublishedYearly, ITgPublishedYearly> postInitCallback) {
         super(entityProducer, cache, entity, controller, //
-              MasterPropertyBinder.<TgPublishedYearly> createPropertyBinderWithLocatorSupport(//
-     			valueMatcherFactory, //
-     			masterManager, //
-     			criteriaGenerator),//
-     	     qm, titleUpdater, owner, false);
+        MasterPropertyBinder.<TgPublishedYearly> createPropertyBinderWithLocatorSupport(//
+        valueMatcherFactory, //
+                masterManager, //
+                criteriaGenerator),//
+        qm, titleUpdater, owner, false);
         setState(UmState.VIEW);
         if (postInitCallback != null) {
-	    postInitCallback.run(this);
-	}
+            postInitCallback.run(this);
+        }
     }
 
     @Override
@@ -57,15 +56,15 @@ public class TgPublishedYearlyMasterModel extends UmMasterWithCrudAndUpdater<TgP
         if (actionState == ActionStage.NEW_POST_ACTION) {
             // a designated property can be focused upon creaton of a new entity instance
             //getEditors().get("key").getEditor().requestFocusInWindow();
-         } else if (actionState == ActionStage.EDIT_POST_ACTION) {
+        } else if (actionState == ActionStage.EDIT_POST_ACTION) {
             // a designated property can be focused upon editing of the entity
             //getEditors().get("desc").getEditor().requestFocusInWindow();
-         }
+        }
     }
 
     @Override
     public String toString() {
-        return  TitlesDescsGetter.getEntityTitleAndDesc(TgPublishedYearly.class).getKey() + " Master";
+        return TitlesDescsGetter.getEntityTitleAndDesc(TgPublishedYearly.class).getKey() + " Master";
     }
 
     @Override

@@ -22,9 +22,9 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
  * base user.
  * <p>
  * Instances of this type can be deleted only by base users controlling the main menu configuration for the derived users.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(IMainMenuItemInvisibilityController.class)
@@ -33,7 +33,7 @@ public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
     protected MainMenuItemInvisibility() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     @IsProperty
@@ -49,27 +49,27 @@ public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
     private MainMenuItem menuItem;
 
     public MainMenuItem getMenuItem() {
-	return menuItem;
+        return menuItem;
     }
 
     @Observable
     @EntityExists(MainMenuItem.class)
     public void setMenuItem(final MainMenuItem menuItem) {
-	this.menuItem = menuItem;
+        this.menuItem = menuItem;
     }
 
     public User getOwner() {
-	return owner;
+        return owner;
     }
 
     @Observable
     @NotNull
     @EntityExists(User.class)
     public void setOwner(final User owner) {
-	if (owner != null && !owner.isBase()) {
-	    throw new Result(this, new IllegalArgumentException("Only base users are allowed to be used for a base configuration."));
-	}
-	this.owner = owner;
+        if (owner != null && !owner.isBase()) {
+            throw new Result(this, new IllegalArgumentException("Only base users are allowed to be used for a base configuration."));
+        }
+        this.owner = owner;
     }
 
 }

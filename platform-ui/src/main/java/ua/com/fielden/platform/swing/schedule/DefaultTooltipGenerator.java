@@ -9,8 +9,8 @@ public class DefaultTooltipGenerator<T extends AbstractEntity<?>> implements ITo
 
     @Override
     public String getTooltip(final T entity, final ScheduleSeries<T> series) {
-	return entity.getKey() +
-		ValuedInterval.periodLengthStr(new Period(series.getScheduleEntity().getFrom(entity).getTime(), series.getScheduleEntity().getTo(entity).getTime()), true);
+        return entity.getKey()
+                + ValuedInterval.periodLengthStr(new Period(series.getScheduleEntity().getFrom(entity).getTime(), series.getScheduleEntity().getTo(entity).getTime()), true);
     }
 
 }

@@ -17,6 +17,6 @@ public class LocatorEntityQueryCriteriaToEnhance<T extends AbstractEntity<?>, DA
     @SuppressWarnings("rawtypes")
     @Inject
     public LocatorEntityQueryCriteriaToEnhance(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider) {
-	super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
+        super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
     }
 }

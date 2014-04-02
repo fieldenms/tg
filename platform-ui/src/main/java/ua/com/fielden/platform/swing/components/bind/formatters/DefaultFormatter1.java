@@ -15,7 +15,6 @@ import javax.swing.text.Position;
 
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.SpecialFormattedField;
 
-
 /**
  * <code>DefaultFormatter</code> formats aribtrary objects. Formatting is done by invoking the <code>toString</code> method. In order to convert the value back to a String, your
  * class must provide a constructor that takes a String argument. If no single argument constructor that takes a String is found, the returned value will be the String passed into
@@ -27,9 +26,9 @@ import ua.com.fielden.platform.swing.components.bind.development.ComponentFactor
  * <strong>Warning:</strong> Serialized objects of this class will not be compatible with future Swing releases. The current serialization support is appropriate for short term
  * storage or RMI between applications running the same version of Swing. As of 1.4, support for long term storage of all JavaBeans<sup><font size="-2">TM</font></sup> has been
  * added to the <code>java.beans</code> package. Please see {@link java.beans.XMLEncoder}.
- *
+ * 
  * @see javax.swing.JFormattedTextField.AbstractFormatter
- *
+ * 
  * @version 1.14 11/17/05
  * @since 1.4
  */
@@ -59,8 +58,8 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * Creates a DefaultFormatter.
      */
     public DefaultFormatter1() {
-	overwriteMode = true;
-	allowsInvalid = true;
+        overwriteMode = true;
+        allowsInvalid = true;
     }
 
     /**
@@ -75,14 +74,14 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * <p>
      * While this is a public method, this is typically only useful for subclassers of <code>JFormattedTextField</code>. <code>JFormattedTextField</code> will invoke this method at
      * the appropriate times when the value changes, or its internal state changes.
-     *
+     * 
      * @param ftf
      *            JFormattedTextField to format for, may be null indicating uninstall from current JFormattedTextField.
      */
     @Override
     public void install(final JFormattedTextField ftf) {
-	super.install(ftf);
-	positionCursorAtInitialLocation();
+        super.install(ftf);
+        positionCursorAtInitialLocation();
     }
 
     /**
@@ -90,86 +89,86 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * On the other hand, if this is false than the <code>DefaultFormatter</code> does not publish edits back to the <code>JFormattedTextField</code>. As such, the only time the
      * value of the <code>JFormattedTextField</code> will change is when <code>commitEdit</code> is invoked on <code>JFormattedTextField</code>, typically when enter is pressed or
      * focus leaves the <code>JFormattedTextField</code>.
-     *
+     * 
      * @param commit
      *            Used to indicate when edits are commited back to the JTextComponent
      */
     public void setCommitsOnValidEdit(final boolean commit) {
-	commitOnEdit = commit;
+        commitOnEdit = commit;
     }
 
     /**
      * Returns when edits are published back to the <code>JFormattedTextField</code>.
-     *
+     * 
      * @return true if edits are commited after evey valid edit
      */
     public boolean getCommitsOnValidEdit() {
-	return commitOnEdit;
+        return commitOnEdit;
     }
 
     /**
      * Configures the behavior when inserting characters. If <code>overwriteMode</code> is true (the default), new characters overwrite existing characters in the model.
-     *
+     * 
      * @param overwriteMode
      *            Indicates if overwrite or overstrike mode is used
      */
     public void setOverwriteMode(final boolean overwriteMode) {
-	this.overwriteMode = overwriteMode;
+        this.overwriteMode = overwriteMode;
     }
 
     /**
      * Returns the behavior when inserting characters.
-     *
+     * 
      * @return true if newly inserted characters overwrite existing characters
      */
     public boolean getOverwriteMode() {
-	return overwriteMode;
+        return overwriteMode;
     }
 
     /**
      * Sets whether or not the value being edited is allowed to be invalid for a length of time (that is, <code>stringToValue</code> throws a <code>ParseException</code>). It is
      * often convenient to allow the user to temporarily input an invalid value.
-     *
+     * 
      * @param allowsInvalid
      *            Used to indicate if the edited value must always be valid
      */
     public void setAllowsInvalid(final boolean allowsInvalid) {
-	this.allowsInvalid = allowsInvalid;
+        this.allowsInvalid = allowsInvalid;
     }
 
     /**
      * Returns whether or not the value being edited is allowed to be invalid for a length of time.
-     *
+     * 
      * @return false if the edited value must always be valid
      */
     public boolean getAllowsInvalid() {
-	return allowsInvalid;
+        return allowsInvalid;
     }
 
     /**
      * Sets that class that is used to create new Objects. If the passed in class does not have a single argument constructor that takes a String, String values will be used.
-     *
+     * 
      * @param valueClass
      *            Class used to construct return value from stringToValue
      */
     public void setValueClass(final Class<?> valueClass) {
-	this.valueClass = valueClass;
+        this.valueClass = valueClass;
     }
 
     /**
      * Returns that class that is used to create new Objects.
-     *
+     * 
      * @return Class used to constuct return value from stringToValue
      */
     public Class<?> getValueClass() {
-	return valueClass;
+        return valueClass;
     }
 
     /**
      * Converts the passed in String into an instance of <code>getValueClass</code> by way of the constructor that takes a String argument. If <code>getValueClass</code> returns
      * null, the Class of the current value in the <code>JFormattedTextField</code> will be used. If this is null, a String will be returned. If the constructor thows an exception,
      * a <code>ParseException</code> will be thrown. If there is no single argument String constructor, <code>string</code> will be returned.
-     *
+     * 
      * @throws ParseException
      *             if there is an error in the conversion
      * @param string
@@ -178,40 +177,40 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      */
     @Override
     public Object stringToValue(final String string) throws ParseException {
-	Class vc = getValueClass();
-	final JFormattedTextField ftf = getFormattedTextField();
+        Class vc = getValueClass();
+        final JFormattedTextField ftf = getFormattedTextField();
 
-	if (vc == null && ftf != null) {
-	    final Object value = ftf.getValue();
+        if (vc == null && ftf != null) {
+            final Object value = ftf.getValue();
 
-	    if (value != null) {
-		vc = value.getClass();
-	    }
-	}
-	if (vc != null) {
-	    Constructor cons;
+            if (value != null) {
+                vc = value.getClass();
+            }
+        }
+        if (vc != null) {
+            Constructor cons;
 
-	    try {
-		cons = vc.getConstructor(new Class[] { String.class });
+            try {
+                cons = vc.getConstructor(new Class[] { String.class });
 
-	    } catch (final NoSuchMethodException nsme) {
-		cons = null;
-	    }
+            } catch (final NoSuchMethodException nsme) {
+                cons = null;
+            }
 
-	    if (cons != null) {
-		try {
-		    return cons.newInstance(new Object[] { string });
-		} catch (final Throwable ex) {
-		    throw new ParseException("Error creating instance", 0);
-		}
-	    }
-	}
-	return string;
+            if (cons != null) {
+                try {
+                    return cons.newInstance(new Object[] { string });
+                } catch (final Throwable ex) {
+                    throw new ParseException("Error creating instance", 0);
+                }
+            }
+        }
+        return string;
     }
 
     /**
      * Converts the passed in Object into a String by way of the <code>toString</code> method.
-     *
+     * 
      * @throws ParseException
      *             if there is an error in the conversion
      * @param value
@@ -220,68 +219,68 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      */
     @Override
     public String valueToString(final Object value) throws ParseException {
-	if (value == null) {
-	    return "";
-	}
-	return value.toString();
+        if (value == null) {
+            return "";
+        }
+        return value.toString();
     }
 
     /**
      * Returns the <code>DocumentFilter</code> used to restrict the characters that can be input into the <code>JFormattedTextField</code>.
-     *
+     * 
      * @return DocumentFilter to restrict edits
      */
     @Override
     protected DocumentFilter getDocumentFilter() {
-	if (documentFilter == null) {
-	    documentFilter = new DefaultDocumentFilter();
-	}
-	return documentFilter;
+        if (documentFilter == null) {
+            documentFilter = new DefaultDocumentFilter();
+        }
+        return documentFilter;
     }
 
     /**
      * Returns the <code>NavigationFilter</code> used to restrict where the cursor can be placed.
-     *
+     * 
      * @return NavigationFilter to restrict navigation
      */
     @Override
     protected NavigationFilter getNavigationFilter() {
-	if (navigationFilter == null) {
-	    navigationFilter = new DefaultNavigationFilter();
-	}
-	return navigationFilter;
+        if (navigationFilter == null) {
+            navigationFilter = new DefaultNavigationFilter();
+        }
+        return navigationFilter;
     }
 
     /**
      * Creates a copy of the DefaultFormatter.
-     *
+     * 
      * @return copy of the DefaultFormatter
      */
     @Override
     public Object clone() throws CloneNotSupportedException {
-	final DefaultFormatter1 formatter = (DefaultFormatter1) super.clone();
+        final DefaultFormatter1 formatter = (DefaultFormatter1) super.clone();
 
-	formatter.navigationFilter = null;
-	formatter.documentFilter = null;
-	formatter.replaceHolder = null;
-	return formatter;
+        formatter.navigationFilter = null;
+        formatter.documentFilter = null;
+        formatter.replaceHolder = null;
+        return formatter;
     }
 
     /**
      * Positions the cursor at the initial location.
      */
     void positionCursorAtInitialLocation() {
-	final JFormattedTextField ftf = getFormattedTextField();
-	if (ftf != null) {
-	    ftf.setCaretPosition(getInitialVisualPosition());
-	}
+        final JFormattedTextField ftf = getFormattedTextField();
+        if (ftf != null) {
+            ftf.setCaretPosition(getInitialVisualPosition());
+        }
     }
 
     /**
      * Returns the initial location to position the cursor at. This forwards the call to <code>getNextNavigatableChar</code>.
      */
     int getInitialVisualPosition() {
-	return getNextNavigatableChar(0, 1);
+        return getNextNavigatableChar(0, 1);
     }
 
     /**
@@ -289,7 +288,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * skipped when navigating throught the field.
      */
     boolean isNavigatable(final int offset) {
-	return true;
+        return true;
     }
 
     /**
@@ -297,22 +296,22 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * characters.
      */
     boolean isLegalInsertText(final String text) {
-	return true;
+        return true;
     }
 
     /**
      * Returns the next editable character starting at offset incrementing the offset by <code>direction</code>.
      */
     private int getNextNavigatableChar(int offset, final int direction) {
-	final int max = getFormattedTextField().getDocument().getLength();
+        final int max = getFormattedTextField().getDocument().getLength();
 
-	while (offset >= 0 && offset < max) {
-	    if (isNavigatable(offset)) {
-		return offset;
-	    }
-	    offset += direction;
-	}
-	return offset;
+        while (offset >= 0 && offset < max) {
+            if (isNavigatable(offset)) {
+                return offset;
+            }
+            offset += direction;
+        }
+        return offset;
     }
 
     /**
@@ -320,17 +319,17 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * <code>offset</code> in the current text field.
      */
     String getReplaceString(final int offset, final int deleteLength, final String replaceString) {
-	final String string = getFormattedTextField().getText();
-	String result;
+        final String string = getFormattedTextField().getText();
+        String result;
 
-	result = string.substring(0, offset);
-	if (replaceString != null) {
-	    result += replaceString;
-	}
-	if (offset + deleteLength < string.length()) {
-	    result += string.substring(offset + deleteLength);
-	}
-	return result;
+        result = string.substring(0, offset);
+        if (replaceString != null) {
+            result += replaceString;
+        }
+        if (offset + deleteLength < string.length()) {
+            result += string.substring(offset + deleteLength);
+        }
+        return result;
     }
 
     /*
@@ -339,56 +338,56 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * field of <code>rh</code>.
      */
     boolean isValidEdit(final ReplaceHolder rh) {
-	if (!getAllowsInvalid()) {
-	    final String newString = getReplaceString(rh.offset, rh.length, rh.text);
+        if (!getAllowsInvalid()) {
+            final String newString = getReplaceString(rh.offset, rh.length, rh.text);
 
-	    try {
-		rh.value = stringToValue(newString);
+            try {
+                rh.value = stringToValue(newString);
 
-		return true;
-	    } catch (final ParseException pe) {
-		return false;
-	    }
-	}
-	return true;
+                return true;
+            } catch (final ParseException pe) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
      * Invokes <code>commitEdit</code> on the JFormattedTextField.
      */
     void commitEdit() throws ParseException {
-	final JFormattedTextField ftf = getFormattedTextField();
+        final JFormattedTextField ftf = getFormattedTextField();
 
-	if (ftf != null) {
-	    ftf.commitEdit();
-	}
+        if (ftf != null) {
+            ftf.commitEdit();
+        }
     }
 
     /**
      * Pushes the value to the JFormattedTextField if the current value is valid and invokes <code>setEditValid</code> based on the validity of the value.
      */
     void updateValue() {
-	updateValue(null);
+        updateValue(null);
     }
 
     /**
      * Pushes the <code>value</code> to the editor if we are to commit on edits. If <code>value</code> is null, the current value will be obtained from the text component.
      */
     void updateValue(Object value) {
-	try {
-	    if (value == null) {
-		final String string = getFormattedTextField().getText();
+        try {
+            if (value == null) {
+                final String string = getFormattedTextField().getText();
 
-		value = stringToValue(string);
-	    }
+                value = stringToValue(string);
+            }
 
-	    if (getCommitsOnValidEdit()) {
-		commitEdit();
-	    }
-	    setEditValid(true);
-	} catch (final ParseException pe) {
-	    setEditValid(false);
-	}
+            if (getCommitsOnValidEdit()) {
+                commitEdit();
+            }
+            setEditValid(true);
+        } catch (final ParseException pe) {
+            setEditValid(false);
+        }
     }
 
     /**
@@ -396,82 +395,82 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * the max position.
      */
     int getNextCursorPosition(final int offset, final int direction) {
-	int newOffset = getNextNavigatableChar(offset, direction);
-	final int max = getFormattedTextField().getDocument().getLength();
+        int newOffset = getNextNavigatableChar(offset, direction);
+        final int max = getFormattedTextField().getDocument().getLength();
 
-	if (!getAllowsInvalid()) {
-	    if (direction == -1 && offset == newOffset) {
-		// Case where hit backspace and only characters before
-		// offset are fixed.
-		newOffset = getNextNavigatableChar(newOffset, 1);
-		if (newOffset >= max) {
-		    newOffset = offset;
-		}
-	    } else if (direction == 1 && newOffset >= max) {
-		// Don't go beyond last editable character.
-		newOffset = getNextNavigatableChar(max - 1, -1);
-		if (newOffset < max) {
-		    newOffset++;
-		}
-	    }
-	}
-	return newOffset;
+        if (!getAllowsInvalid()) {
+            if (direction == -1 && offset == newOffset) {
+                // Case where hit backspace and only characters before
+                // offset are fixed.
+                newOffset = getNextNavigatableChar(newOffset, 1);
+                if (newOffset >= max) {
+                    newOffset = offset;
+                }
+            } else if (direction == 1 && newOffset >= max) {
+                // Don't go beyond last editable character.
+                newOffset = getNextNavigatableChar(max - 1, -1);
+                if (newOffset < max) {
+                    newOffset++;
+                }
+            }
+        }
+        return newOffset;
     }
 
     /**
      * Resets the cursor by using getNextCursorPosition.
      */
     void repositionCursor(final int offset, final int direction) {
-	getFormattedTextField().getCaret().setDot(getNextCursorPosition(offset, direction));
+        getFormattedTextField().getCaret().setDot(getNextCursorPosition(offset, direction));
     }
 
     /**
      * Finds the next navigatable character.
      */
     int getNextVisualPositionFrom(final JTextComponent text, final int pos, final Position.Bias bias, final int direction, final Position.Bias[] biasRet)
-	    throws BadLocationException {
-	int value = text.getUI().getNextVisualPositionFrom(text, pos, bias, direction, biasRet);
+            throws BadLocationException {
+        int value = text.getUI().getNextVisualPositionFrom(text, pos, bias, direction, biasRet);
 
-	if (value == -1) {
-	    return -1;
-	}
-	if (!getAllowsInvalid() && (direction == SwingConstants.EAST || direction == SwingConstants.WEST)) {
-	    int last = -1;
+        if (value == -1) {
+            return -1;
+        }
+        if (!getAllowsInvalid() && (direction == SwingConstants.EAST || direction == SwingConstants.WEST)) {
+            int last = -1;
 
-	    while (!isNavigatable(value) && value != last) {
-		last = value;
-		value = text.getUI().getNextVisualPositionFrom(text, value, bias, direction, biasRet);
-	    }
-	    final int max = getFormattedTextField().getDocument().getLength();
-	    if (last == value || value == max) {
-		if (value == 0) {
-		    biasRet[0] = Position.Bias.Forward;
-		    value = getInitialVisualPosition();
-		}
-		if (value >= max && max > 0) {
-		    // Pending: should not assume forward!
-		    biasRet[0] = Position.Bias.Forward;
-		    value = getNextNavigatableChar(max - 1, -1) + 1;
-		}
-	    }
-	}
-	return value;
+            while (!isNavigatable(value) && value != last) {
+                last = value;
+                value = text.getUI().getNextVisualPositionFrom(text, value, bias, direction, biasRet);
+            }
+            final int max = getFormattedTextField().getDocument().getLength();
+            if (last == value || value == max) {
+                if (value == 0) {
+                    biasRet[0] = Position.Bias.Forward;
+                    value = getInitialVisualPosition();
+                }
+                if (value >= max && max > 0) {
+                    // Pending: should not assume forward!
+                    biasRet[0] = Position.Bias.Forward;
+                    value = getNextNavigatableChar(max - 1, -1) + 1;
+                }
+            }
+        }
+        return value;
     }
 
     /**
      * Returns true if the edit described by <code>rh</code> will result in a legal value.
      */
     boolean canReplace(final ReplaceHolder rh) {
-	return isValidEdit(rh);
+        return isValidEdit(rh);
     }
 
     /**
      * DocumentFilter method, funnels into <code>replace</code>.
      */
     void replace(final DocumentFilter.FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attrs) throws BadLocationException {
-	final ReplaceHolder rh = getReplaceHolder(fb, offset, length, text, attrs);
+        final ReplaceHolder rh = getReplaceHolder(fb, offset, length, text, attrs);
 
-	replace(rh);
+        replace(rh);
     }
 
     /**
@@ -481,170 +480,170 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * All of the DocumentFilter methods funnel into here, you should generally only have to override this.
      */
     boolean replace(final ReplaceHolder rh) throws BadLocationException {
-	boolean valid = true;
-	int direction = 1;
+        boolean valid = true;
+        int direction = 1;
 
-	if (rh.length > 0 && (rh.text == null || rh.text.length() == 0) && (getFormattedTextField().getSelectionStart() != rh.offset || rh.length > 1)) {
-	    direction = -1;
-	}
+        if (rh.length > 0 && (rh.text == null || rh.text.length() == 0) && (getFormattedTextField().getSelectionStart() != rh.offset || rh.length > 1)) {
+            direction = -1;
+        }
 
-	if (getOverwriteMode() && rh.text != null) {
-	    rh.length = Math.min(Math.max(rh.length, rh.text.length()), rh.fb.getDocument().getLength() - rh.offset);
-	}
-	if ((rh.text != null && !isLegalInsertText(rh.text)) || !canReplace(rh) || (rh.length == 0 && (rh.text == null || rh.text.length() == 0))) {
-	    valid = false;
-	}
-	if (valid) {
-	    int cursor = rh.cursorPosition;
+        if (getOverwriteMode() && rh.text != null) {
+            rh.length = Math.min(Math.max(rh.length, rh.text.length()), rh.fb.getDocument().getLength() - rh.offset);
+        }
+        if ((rh.text != null && !isLegalInsertText(rh.text)) || !canReplace(rh) || (rh.length == 0 && (rh.text == null || rh.text.length() == 0))) {
+            valid = false;
+        }
+        if (valid) {
+            int cursor = rh.cursorPosition;
 
-	    rh.fb.replace(rh.offset, rh.length, rh.text, rh.attrs);
-	    if (cursor == -1) {
-		cursor = rh.offset;
-		if (direction == 1 && rh.text != null) {
-		    cursor = rh.offset + rh.text.length();
-		}
-	    }
-	    updateValue(rh.value);
-	    repositionCursor(cursor, direction);
-	    return true;
-	} else {
-	    invalidEdit();
-	}
-	return false;
+            rh.fb.replace(rh.offset, rh.length, rh.text, rh.attrs);
+            if (cursor == -1) {
+                cursor = rh.offset;
+                if (direction == 1 && rh.text != null) {
+                    cursor = rh.offset + rh.text.length();
+                }
+            }
+            updateValue(rh.value);
+            repositionCursor(cursor, direction);
+            return true;
+        } else {
+            invalidEdit();
+        }
+        return false;
     }
 
     /**
      * NavigationFilter method, subclasses that wish finer control should override this.
      */
     void setDot(final NavigationFilter.FilterBypass fb, final int dot, final Position.Bias bias) {
-	fb.setDot(dot, bias);
+        fb.setDot(dot, bias);
     }
 
     /**
      * NavigationFilter method, subclasses that wish finer control should override this.
      */
     void moveDot(final NavigationFilter.FilterBypass fb, final int dot, final Position.Bias bias) {
-	fb.moveDot(dot, bias);
+        fb.moveDot(dot, bias);
     }
 
     /**
      * Returns the ReplaceHolder to track the replace of the specified text.
      */
     ReplaceHolder getReplaceHolder(final DocumentFilter.FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attrs) {
-	if (replaceHolder == null) {
-	    replaceHolder = new ReplaceHolder();
-	}
-	replaceHolder.reset(fb, offset, length, text, attrs);
-	return replaceHolder;
+        if (replaceHolder == null) {
+            replaceHolder = new ReplaceHolder();
+        }
+        replaceHolder.reset(fb, offset, length, text, attrs);
+        return replaceHolder;
     }
 
     /**
      * ReplaceHolder is used to track where insert/remove/replace is going to happen.
      */
     static class ReplaceHolder {
-	/** The FilterBypass that was passed to the DocumentFilter method. */
-	DocumentFilter.FilterBypass fb;
-	/** Offset where the remove/insert is going to occur. */
-	int offset;
-	/** Length of text to remove. */
-	int length;
-	/** The text to insert, may be null. */
-	String text;
-	/** AttributeSet to attach to text, may be null. */
-	AttributeSet attrs;
-	/** The resulting value, this may never be set. */
-	Object value;
-	/**
-	 * Position the cursor should be adjusted from. If this is -1 the cursor position will be adjusted based on the direction of the replace (-1: offset, 1: offset +
-	 * text.length()), otherwise the cursor position is adusted from this position.
-	 */
-	int cursorPosition;
+        /** The FilterBypass that was passed to the DocumentFilter method. */
+        DocumentFilter.FilterBypass fb;
+        /** Offset where the remove/insert is going to occur. */
+        int offset;
+        /** Length of text to remove. */
+        int length;
+        /** The text to insert, may be null. */
+        String text;
+        /** AttributeSet to attach to text, may be null. */
+        AttributeSet attrs;
+        /** The resulting value, this may never be set. */
+        Object value;
+        /**
+         * Position the cursor should be adjusted from. If this is -1 the cursor position will be adjusted based on the direction of the replace (-1: offset, 1: offset +
+         * text.length()), otherwise the cursor position is adusted from this position.
+         */
+        int cursorPosition;
 
-	void reset(final DocumentFilter.FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attrs) {
-	    this.fb = fb;
-	    this.offset = offset;
-	    this.length = length;
-	    this.text = text;
-	    this.attrs = attrs;
-	    this.value = null;
-	    cursorPosition = -1;
-	}
+        void reset(final DocumentFilter.FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attrs) {
+            this.fb = fb;
+            this.offset = offset;
+            this.length = length;
+            this.text = text;
+            this.attrs = attrs;
+            this.value = null;
+            cursorPosition = -1;
+        }
     }
 
     /**
      * NavigationFilter implementation that calls back to methods with same name in DefaultFormatter.
      */
     private class DefaultNavigationFilter extends NavigationFilter implements Serializable {
-	@Override
-	public void setDot(final FilterBypass fb, final int dot, final Position.Bias bias) {
-	    final SpecialFormattedField tc = (SpecialFormattedField) DefaultFormatter1.this.getFormattedTextField();
-	    if (tc.composedTextExists1()) {
-		// bypass the filter
-		fb.setDot(dot, bias);
-	    } else {
-		DefaultFormatter1.this.setDot(fb, dot, bias);
-	    }
-	}
+        @Override
+        public void setDot(final FilterBypass fb, final int dot, final Position.Bias bias) {
+            final SpecialFormattedField tc = (SpecialFormattedField) DefaultFormatter1.this.getFormattedTextField();
+            if (tc.composedTextExists1()) {
+                // bypass the filter
+                fb.setDot(dot, bias);
+            } else {
+                DefaultFormatter1.this.setDot(fb, dot, bias);
+            }
+        }
 
-	@Override
-	public void moveDot(final FilterBypass fb, final int dot, final Position.Bias bias) {
-	    final SpecialFormattedField tc = (SpecialFormattedField) DefaultFormatter1.this.getFormattedTextField();
-	    if (tc.composedTextExists1()) {
-		// bypass the filter
-		fb.moveDot(dot, bias);
-	    } else {
-		DefaultFormatter1.this.moveDot(fb, dot, bias);
-	    }
-	}
+        @Override
+        public void moveDot(final FilterBypass fb, final int dot, final Position.Bias bias) {
+            final SpecialFormattedField tc = (SpecialFormattedField) DefaultFormatter1.this.getFormattedTextField();
+            if (tc.composedTextExists1()) {
+                // bypass the filter
+                fb.moveDot(dot, bias);
+            } else {
+                DefaultFormatter1.this.moveDot(fb, dot, bias);
+            }
+        }
 
-	@Override
-	public int getNextVisualPositionFrom(final JTextComponent text, final int pos, final Position.Bias bias, final int direction, final Position.Bias[] biasRet)
-		throws BadLocationException {
-	    final SpecialFormattedField specialText = (SpecialFormattedField) text;
-	    if (specialText.composedTextExists1()) {
-		// forward the call to the UI directly
-		return text.getUI().getNextVisualPositionFrom(text, pos, bias, direction, biasRet);
-	    } else {
-		return DefaultFormatter1.this.getNextVisualPositionFrom(text, pos, bias, direction, biasRet);
-	    }
-	}
+        @Override
+        public int getNextVisualPositionFrom(final JTextComponent text, final int pos, final Position.Bias bias, final int direction, final Position.Bias[] biasRet)
+                throws BadLocationException {
+            final SpecialFormattedField specialText = (SpecialFormattedField) text;
+            if (specialText.composedTextExists1()) {
+                // forward the call to the UI directly
+                return text.getUI().getNextVisualPositionFrom(text, pos, bias, direction, biasRet);
+            } else {
+                return DefaultFormatter1.this.getNextVisualPositionFrom(text, pos, bias, direction, biasRet);
+            }
+        }
     }
 
     /**
      * DocumentFilter implementation that calls back to the replace method of DefaultFormatter.
      */
     private class DefaultDocumentFilter extends DocumentFilter implements Serializable {
-	@Override
-	public void remove(final FilterBypass fb, final int offset, final int length) throws BadLocationException {
-	    final SpecialFormattedField tc = (SpecialFormattedField) DefaultFormatter1.this.getFormattedTextField();
-	    if (tc.composedTextExists1()) {
-		// bypass the filter
-		fb.remove(offset, length);
-	    } else {
-		DefaultFormatter1.this.replace(fb, offset, length, null, null);
-	    }
-	}
+        @Override
+        public void remove(final FilterBypass fb, final int offset, final int length) throws BadLocationException {
+            final SpecialFormattedField tc = (SpecialFormattedField) DefaultFormatter1.this.getFormattedTextField();
+            if (tc.composedTextExists1()) {
+                // bypass the filter
+                fb.remove(offset, length);
+            } else {
+                DefaultFormatter1.this.replace(fb, offset, length, null, null);
+            }
+        }
 
-	@Override
-	public void insertString(final FilterBypass fb, final int offset, final String string, final AttributeSet attr) throws BadLocationException {
-	    final SpecialFormattedField tc = (SpecialFormattedField) DefaultFormatter1.this.getFormattedTextField();
-	    if (tc.composedTextExists1() || Utilities.isComposedTextAttributeDefined(attr)) {
-		// bypass the filter
-		fb.insertString(offset, string, attr);
-	    } else {
-		DefaultFormatter1.this.replace(fb, offset, 0, string, attr);
-	    }
-	}
+        @Override
+        public void insertString(final FilterBypass fb, final int offset, final String string, final AttributeSet attr) throws BadLocationException {
+            final SpecialFormattedField tc = (SpecialFormattedField) DefaultFormatter1.this.getFormattedTextField();
+            if (tc.composedTextExists1() || Utilities.isComposedTextAttributeDefined(attr)) {
+                // bypass the filter
+                fb.insertString(offset, string, attr);
+            } else {
+                DefaultFormatter1.this.replace(fb, offset, 0, string, attr);
+            }
+        }
 
-	@Override
-	public void replace(final FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attr) throws BadLocationException {
-	    final SpecialFormattedField tc = (SpecialFormattedField) DefaultFormatter1.this.getFormattedTextField();
-	    if (tc.composedTextExists1() || Utilities.isComposedTextAttributeDefined(attr)) {
-		// bypass the filter
-		fb.replace(offset, length, text, attr);
-	    } else {
-		DefaultFormatter1.this.replace(fb, offset, length, text, attr);
-	    }
-	}
+        @Override
+        public void replace(final FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attr) throws BadLocationException {
+            final SpecialFormattedField tc = (SpecialFormattedField) DefaultFormatter1.this.getFormattedTextField();
+            if (tc.composedTextExists1() || Utilities.isComposedTextAttributeDefined(attr)) {
+                // bypass the filter
+                fb.replace(offset, length, text, attr);
+            } else {
+                DefaultFormatter1.this.replace(fb, offset, length, text, attr);
+            }
+        }
     }
 }

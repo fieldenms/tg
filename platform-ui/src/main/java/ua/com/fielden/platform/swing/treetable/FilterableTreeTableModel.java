@@ -24,7 +24,7 @@ public class FilterableTreeTableModel extends AbstractFilterableTreeModel implem
      * @param model
      */
     public FilterableTreeTableModel(final DynamicTreeTableModel model) {
-	super(model);
+        super(model);
     }
 
     /**
@@ -34,66 +34,66 @@ public class FilterableTreeTableModel extends AbstractFilterableTreeModel implem
      * @param andMode
      */
     public FilterableTreeTableModel(final DynamicTreeTableModel model, final boolean andMode) {
-	super(model, andMode);
+        super(model, andMode);
     }
 
     @Override
     public void reload() {
-	reloading = true;
-	getOriginModel().reload();
-	SwingUtilities.invokeLater(new Runnable() {
+        reloading = true;
+        getOriginModel().reload();
+        SwingUtilities.invokeLater(new Runnable() {
 
-	    @Override
-	    public void run() {
-		reloading = false;
-	    }
+            @Override
+            public void run() {
+                reloading = false;
+            }
 
-	});
+        });
     }
 
     @Override
     public Class<?> getColumnClass(final int arg0) {
-	return getOriginModel().getColumnClass(arg0);
+        return getOriginModel().getColumnClass(arg0);
     }
 
     @Override
     public int getColumnCount() {
-	return getOriginModel().getColumnCount();
+        return getOriginModel().getColumnCount();
     }
 
     @Override
     public String getColumnName(final int arg0) {
-	return getOriginModel().getColumnName(arg0);
+        return getOriginModel().getColumnName(arg0);
     }
 
     @Override
     public int getHierarchicalColumn() {
-	return getOriginModel().getHierarchicalColumn();
+        return getOriginModel().getHierarchicalColumn();
     }
 
     @Override
     public Object getValueAt(final Object arg0, final int arg1) {
-	return getOriginModel().getValueAt(arg0, arg1);
+        return getOriginModel().getValueAt(arg0, arg1);
     }
 
     @Override
     public boolean isCellEditable(final Object arg0, final int arg1) {
-	return getOriginModel().isCellEditable(arg0, arg1);
+        return getOriginModel().isCellEditable(arg0, arg1);
     }
 
     @Override
     public void setValueAt(final Object arg0, final Object arg1, final int arg2) {
-	final TreeTableNode ttn = (TreeTableNode) arg1;
+        final TreeTableNode ttn = (TreeTableNode) arg1;
 
-	if (arg2 < ttn.getColumnCount()) {
-	    ttn.setValueAt(arg0, arg2);
-	}
+        if (arg2 < ttn.getColumnCount()) {
+            ttn.setValueAt(arg0, arg2);
+        }
 
     }
 
     @Override
     public DynamicTreeTableModel getOriginModel() {
-	return (DynamicTreeTableModel) super.getOriginModel();
+        return (DynamicTreeTableModel) super.getOriginModel();
     }
 
     /**
@@ -102,6 +102,6 @@ public class FilterableTreeTableModel extends AbstractFilterableTreeModel implem
      * @return
      */
     public boolean isReloading() {
-	return reloading;
+        return reloading;
     }
 }

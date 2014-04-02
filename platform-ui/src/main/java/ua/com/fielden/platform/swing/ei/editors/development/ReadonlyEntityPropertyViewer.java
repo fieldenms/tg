@@ -18,7 +18,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This a {@link IPropertyEditor} wrapper for read only entity properties, which can be used for binding <i>far-bound</i> properties that require a display only functionality.
- *
+ * 
  * @author TG Team
  */
 public class ReadonlyEntityPropertyViewer implements IPropertyEditor {
@@ -30,51 +30,51 @@ public class ReadonlyEntityPropertyViewer implements IPropertyEditor {
     private final BoundedValidationLayer<ReadOnlyLabel> editor;
 
     public ReadonlyEntityPropertyViewer(final AbstractEntity<?> entity, final String propertyName) {
-	this.entity = entity;
-	this.propertyName = propertyName;
+        this.entity = entity;
+        this.propertyName = propertyName;
 
-	final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
+        final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
 
-	label = DummyBuilder.label(titleAndDesc.getKey());
-	label.setToolTipText(titleAndDesc.getValue());
-	editor = ComponentFactory.createLabel(entity, propertyName, titleAndDesc.getValue(), ShowingStrategy.KEY_ONLY);
+        label = DummyBuilder.label(titleAndDesc.getKey());
+        label.setToolTipText(titleAndDesc.getValue());
+        editor = ComponentFactory.createLabel(entity, propertyName, titleAndDesc.getValue(), ShowingStrategy.KEY_ONLY);
     }
 
     @Override
     public BoundedValidationLayer<ReadOnlyLabel> getEditor() {
-	return editor;
+        return editor;
     }
 
     @Override
     public void bind(final AbstractEntity<?> entity) {
-	this.entity = entity;
-	getEditor().rebindTo(entity);
+        this.entity = entity;
+        getEditor().rebindTo(entity);
     }
 
     @Override
     public AbstractEntity<?> getEntity() {
-	return entity;
+        return entity;
     }
 
     @Override
     public String getPropertyName() {
-	return propertyName;
+        return propertyName;
     }
 
     public JLabel getLabel() {
-	return label;
+        return label;
     }
 
     @Override
     public JPanel getDefaultLayout() {
-	final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
-	panel.add(label);
-	panel.add(getEditor(), "growx");
-	return panel;
+        final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
+        panel.add(label);
+        panel.add(getEditor(), "growx");
+        return panel;
     }
 
     @Override
     public IValueMatcher<?> getValueMatcher() {
-	throw new UnsupportedOperationException("Value matcher are not applicable for readonly editors.");
+        throw new UnsupportedOperationException("Value matcher are not applicable for readonly editors.");
     }
 }

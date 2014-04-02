@@ -4,9 +4,9 @@ import ua.com.fielden.platform.security.Authorise;
 
 /**
  * This class models a controller with fake business logic located in methods with and without authorisation annotation.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class ControlledMock {
 
@@ -20,26 +20,26 @@ public class ControlledMock {
 
     @Authorise(AccessToken.class)
     public void methodWithAccessAndUnauthorisedSubCalls() {
-	// need to call twice to ensure that the first call does not rest the authentication process in progress
-	methodWithNoAccess();
-	methodWithNoAccess(); // critical second call
+        // need to call twice to ensure that the first call does not rest the authentication process in progress
+        methodWithNoAccess();
+        methodWithNoAccess(); // critical second call
     }
 
     public void methodWithoutAuthCheck() {
     }
 
     public void methodWithUnauthorisedSubCall() {
-	methodWithNoAccess();
+        methodWithNoAccess();
     }
 
     @Authorise(AccessToken.class)
     public void authorisedMethodWithUnauthorisedSubCall() {
-	methodWithNoAccess();
+        methodWithNoAccess();
     }
 
     @Authorise(NoAccessToken.class)
     public void unauthorisedMethodWithAuthorisedSubCall() {
-	methodWithAccess();
+        methodWithAccess();
     }
 
 }

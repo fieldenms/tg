@@ -19,13 +19,13 @@ public class SecurityTokenInfo {
      * @return
      */
     public static String shortDesc(final Class<? extends ISecurityToken> token) {
-	if (token == null) {
-	    throw new IllegalArgumentException("Token cannot be null.");
-	} else if (!token.isAnnotationPresent(KeyTitle.class)) {
-	    throw new IllegalStateException("Security token " + token.getName() + " is malformed: missing KeyTitle annotation.");
-	}
+        if (token == null) {
+            throw new IllegalArgumentException("Token cannot be null.");
+        } else if (!token.isAnnotationPresent(KeyTitle.class)) {
+            throw new IllegalStateException("Security token " + token.getName() + " is malformed: missing KeyTitle annotation.");
+        }
 
-	return token.getAnnotation(KeyTitle.class).value();
+        return token.getAnnotation(KeyTitle.class).value();
     }
 
     /**
@@ -35,13 +35,13 @@ public class SecurityTokenInfo {
      * @return
      */
     public static String longDesc(final Class<? extends ISecurityToken> token) {
-	if (token == null) {
-	    throw new IllegalArgumentException("Token cannot be null.");
-	} else if (!token.isAnnotationPresent(KeyTitle.class)) {
-	    throw new IllegalStateException("Security token " + token.getName() + " is malformed: missing KeyTitle annotation.");
-	}
+        if (token == null) {
+            throw new IllegalArgumentException("Token cannot be null.");
+        } else if (!token.isAnnotationPresent(KeyTitle.class)) {
+            throw new IllegalStateException("Security token " + token.getName() + " is malformed: missing KeyTitle annotation.");
+        }
 
-	return token.getAnnotation(KeyTitle.class).desc();
+        return token.getAnnotation(KeyTitle.class).desc();
     }
 
     /**
@@ -51,13 +51,13 @@ public class SecurityTokenInfo {
      * @return
      */
     public static boolean isTopLevel(final Class<? extends ISecurityToken> token) {
-	if (token == null) {
-	    throw new IllegalArgumentException("Token cannot be null.");
-	} else if (!token.isAnnotationPresent(KeyTitle.class)) {
-	    throw new IllegalStateException("Security token " + token.getName() + " is malformed: missing KeyTitle annotation.");
-	}
+        if (token == null) {
+            throw new IllegalArgumentException("Token cannot be null.");
+        } else if (!token.isAnnotationPresent(KeyTitle.class)) {
+            throw new IllegalStateException("Security token " + token.getName() + " is malformed: missing KeyTitle annotation.");
+        }
 
-	return Arrays.asList(token.getInterfaces()).contains(ISecurityToken.class);
+        return Arrays.asList(token.getInterfaces()).contains(ISecurityToken.class);
     }
 
     /**
@@ -70,13 +70,13 @@ public class SecurityTokenInfo {
      */
     @SuppressWarnings("unchecked")
     public static Class<? extends ISecurityToken> superToken(final Class<? extends ISecurityToken> token) {
-	if (token == null) {
-	    throw new IllegalArgumentException("Token cannot be null.");
-	} else if (!token.isAnnotationPresent(KeyTitle.class)) {
-	    throw new IllegalStateException("Security token " + token.getName() + " is malformed: missing KeyTitle annotation.");
-	}
+        if (token == null) {
+            throw new IllegalArgumentException("Token cannot be null.");
+        } else if (!token.isAnnotationPresent(KeyTitle.class)) {
+            throw new IllegalStateException("Security token " + token.getName() + " is malformed: missing KeyTitle annotation.");
+        }
 
-	return isTopLevel(token) ? ISecurityToken.class : (Class<? extends ISecurityToken>) token.getSuperclass();
+        return isTopLevel(token) ? ISecurityToken.class : (Class<? extends ISecurityToken>) token.getSuperclass();
     }
 
     /**
@@ -87,7 +87,7 @@ public class SecurityTokenInfo {
      * @return
      */
     public static boolean isSuperTokenOf(final Class<? extends ISecurityToken> supertToken, final Class<? extends ISecurityToken> token) {
-	return superToken(token).equals(supertToken);
+        return superToken(token).equals(supertToken);
     }
 
 }

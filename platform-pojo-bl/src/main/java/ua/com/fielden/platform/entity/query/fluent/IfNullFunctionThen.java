@@ -8,12 +8,12 @@ final class IfNullFunctionThen<T, ET extends AbstractEntity<?>> extends Abstract
     T parent;
 
     IfNullFunctionThen(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     public IFunctionLastArgument<T, ET> then() {
-	return new FunctionLastArgument<T, ET>(this.getTokens(), parent);
+        return new FunctionLastArgument<T, ET>(this.getTokens(), parent);
     }
 }

@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * Marks criteria properties.
  * 
  * @author TG Team
- *
+ * 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })

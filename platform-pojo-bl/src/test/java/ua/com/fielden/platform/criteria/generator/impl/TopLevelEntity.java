@@ -16,9 +16,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for testing purposes.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 
 @KeyType(String.class)
@@ -81,103 +81,103 @@ public class TopLevelEntity extends AbstractEntity<String> {
     private String critSRangeProperty;
 
     public Integer getIntegerProp() {
-	return integerProp;
+        return integerProp;
     }
 
     @Observable
     public void setIntegerProp(final Integer integerProp) {
-	this.integerProp = integerProp;
+        this.integerProp = integerProp;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
 
     @Observable
     public void setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
+        this.moneyProp = moneyProp;
     }
 
     public boolean isBooleanProp() {
-	return booleanProp;
+        return booleanProp;
     }
 
     @Observable
     public void setBooleanProp(final boolean booleanProp) {
-	this.booleanProp = booleanProp;
+        this.booleanProp = booleanProp;
     }
 
     public String getStringProp() {
-	return stringProp;
+        return stringProp;
     }
 
     @Observable
     public void setStringProp(final String stringProp) {
-	this.stringProp = stringProp;
+        this.stringProp = stringProp;
     }
 
     public SecondLevelEntity getEntityProp() {
-	return entityProp;
+        return entityProp;
     }
 
     @Observable
     @EntityExists(SecondLevelEntity.class)
     public void setEntityProp(final SecondLevelEntity entityProp) {
-	this.entityProp = entityProp;
+        this.entityProp = entityProp;
     }
 
     public LastLevelEntity getCritSingleEntity() {
-	return critSingleEntity;
+        return critSingleEntity;
     }
 
     @Observable
     @EntityExists(LastLevelEntity.class)
     public void setCritSingleEntity(final LastLevelEntity critSingleEntity) {
-	this.critSingleEntity = critSingleEntity;
+        this.critSingleEntity = critSingleEntity;
     }
 
     public LastLevelEntity getCritRangeEntity() {
-	return critRangeEntity;
+        return critRangeEntity;
     }
 
     @Observable
     public void setCritRangeEntity(final LastLevelEntity critRangeEntity) {
-	this.critRangeEntity = critRangeEntity;
+        this.critRangeEntity = critRangeEntity;
     }
 
     public Integer getCritISingleProperty() {
-	return critISingleProperty;
+        return critISingleProperty;
     }
 
     @Observable
     public void setCritISingleProperty(final Integer critISingleProperty) {
-	this.critISingleProperty = critISingleProperty;
+        this.critISingleProperty = critISingleProperty;
     }
 
     public Integer getCritIRangeProperty() {
-	return critIRangeProperty;
+        return critIRangeProperty;
     }
 
     @Observable
     public void setCritIRangeProperty(final Integer critIRangeProperty) {
-	this.critIRangeProperty = critIRangeProperty;
+        this.critIRangeProperty = critIRangeProperty;
     }
 
     public String getCritSSingleProperty() {
-	return critSSingleProperty;
+        return critSSingleProperty;
     }
 
     @Observable
     public void setCritSSingleProperty(final String critSSingleProperty) {
-	this.critSSingleProperty = critSSingleProperty;
+        this.critSSingleProperty = critSSingleProperty;
     }
 
     public String getCritSRangeProperty() {
-	return critSRangeProperty;
+        return critSRangeProperty;
     }
 
     @Observable
     public void setCritSRangeProperty(final String critSRangeProperty) {
-	this.critSRangeProperty = critSRangeProperty;
+        this.critSRangeProperty = critSRangeProperty;
     }
 }

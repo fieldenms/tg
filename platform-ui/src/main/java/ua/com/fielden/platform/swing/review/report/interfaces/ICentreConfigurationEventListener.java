@@ -8,7 +8,7 @@ import ua.com.fielden.platform.swing.review.report.events.CentreConfigurationEve
  * An {@link EventListener} that listens centre configuration related events.
  * 
  * @author TG Team
- *
+ * 
  */
 public interface ICentreConfigurationEventListener extends EventListener {
 

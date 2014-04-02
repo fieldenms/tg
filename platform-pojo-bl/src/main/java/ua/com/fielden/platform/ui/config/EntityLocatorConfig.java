@@ -22,9 +22,9 @@ import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
  * <p>
  * Property <code>key</code> should contain a string representation of a corresponding locator configuration class. The Class type could not be used as a key type because it is not
  * Comparable.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity locator configuration")
@@ -46,53 +46,53 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
     private String locatorType;
 
     protected EntityLocatorConfig() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     /**
      * A helper setter to convert entity locator to the string value.
-     *
+     * 
      * @param masterModelType
      */
     public void setLocatorModelType(final Class<?> masterModelType) {
-	setLocatorType(PropertyTypeDeterminator.stripIfNeeded(masterModelType).getName());
+        setLocatorType(PropertyTypeDeterminator.stripIfNeeded(masterModelType).getName());
     }
 
     /**
      * A helper getter to obtain entity locator type from string value.
-     *
+     * 
      * @return
      */
     public Class<?> getLocatorModelType() {
-	try {
-	    return Class.forName(getLocatorType());
-	} catch (final ClassNotFoundException e) {
-	    throw new IllegalStateException("Entity locator type '" + getLocatorType() + "' is not a valid class name.");
-	}
+        try {
+            return Class.forName(getLocatorType());
+        } catch (final ClassNotFoundException e) {
+            throw new IllegalStateException("Entity locator type '" + getLocatorType() + "' is not a valid class name.");
+        }
     }
 
     public User getOwner() {
-	return owner;
+        return owner;
     }
 
     @Observable
     @NotNull
     @EntityExists(User.class)
     public void setOwner(final User owner) {
-	if (owner != null && !owner.isBase()) {
-	    throw new Result(this, new IllegalArgumentException("Only base users are allowed to be used for a base configuration."));
-	}
-	this.owner = owner;
+        if (owner != null && !owner.isBase()) {
+            throw new Result(this, new IllegalArgumentException("Only base users are allowed to be used for a base configuration."));
+        }
+        this.owner = owner;
     }
 
     public String getLocatorType() {
-	return locatorType;
+        return locatorType;
     }
 
     @Observable
     @NotNull
     public void setLocatorType(final String locatorType) {
-	this.locatorType = locatorType;
+        this.locatorType = locatorType;
     }
 
 }

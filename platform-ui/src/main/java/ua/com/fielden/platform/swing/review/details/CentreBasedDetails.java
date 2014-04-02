@@ -20,9 +20,9 @@ import ua.com.fielden.platform.swing.view.ICloseHook;
 
 /**
  * The detail that is based on the the entity centre.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  * @param <ET>
  */
@@ -34,56 +34,56 @@ public abstract class CentreBasedDetails<T extends AbstractAnalysisDetailsData<E
 
     /**
      * Creates an empty centre based details.
-     *
+     * 
      * @param entityFactory
      * @param criteriaGenerator
      * @param masterManager
      */
     public CentreBasedDetails(//
-	    final EntityFactory entityFactory, //
-	    final ICriteriaGenerator criteriaGenerator, //
-	    final IEntityMasterManager masterManager){
-	this.entityFactory = entityFactory;
-	this.criteriaGenerator = criteriaGenerator;
-	this.masterManager = masterManager;
+    final EntityFactory entityFactory, //
+            final ICriteriaGenerator criteriaGenerator, //
+            final IEntityMasterManager masterManager) {
+        this.entityFactory = entityFactory;
+        this.criteriaGenerator = criteriaGenerator;
+        this.masterManager = masterManager;
     }
 
     @Override
     public DetailsFrame createDetailsView(final T detailsParam, final ICloseHook<DetailsFrame> closeHook) {
-	final CentreConfigurationWithoutCriteriaModel<ET> detailsModel = new CentreConfigurationWithoutCriteriaModel<>(//
-		detailsParam.root, //
-		null, createDefaultAnalysisFactory(detailsParam),//
-		entityFactory, criteriaGenerator, masterManager, getCdtme(detailsParam));
-	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "Loading");
-	final CentreConfigurationWithoutCriteriaView<ET> detailsConfigView = new CentreConfigurationWithoutCriteriaView<>(detailsModel, progressLayer);
-	progressLayer.setView(detailsConfigView);
-	final DetailsFrame detailsFrame = new DetailsFrame(detailsParam, detailsParam.getFrameTitle(), progressLayer, closeHook);
-	detailsConfigView.open();
-	return detailsFrame;
+        final CentreConfigurationWithoutCriteriaModel<ET> detailsModel = new CentreConfigurationWithoutCriteriaModel<>(//
+        detailsParam.root, //
+        null, createDefaultAnalysisFactory(detailsParam),//
+        entityFactory, criteriaGenerator, masterManager, getCdtme(detailsParam));
+        final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "Loading");
+        final CentreConfigurationWithoutCriteriaView<ET> detailsConfigView = new CentreConfigurationWithoutCriteriaView<>(detailsModel, progressLayer);
+        progressLayer.setView(detailsConfigView);
+        final DetailsFrame detailsFrame = new DetailsFrame(detailsParam, detailsParam.getFrameTitle(), progressLayer, closeHook);
+        detailsConfigView.open();
+        return detailsFrame;
     }
 
     /**
      * Creates the details' analysis factory with empty tool bar.
-     *
+     * 
      * @param detailsParam
      * @return
      */
     protected IAnalysisFactory<ET, ?> createDefaultAnalysisFactory(final T detailsParam) {
-	final DefaultGridAnalysisFactory<ET> analysisFactory = new DefaultGridAnalysisFactory<>();
-	analysisFactory.setToolbarCustomiser(new IToolbarCustomiser<GridAnalysisView<ET, ICentreDomainTreeManagerAndEnhancer>>() {
+        final DefaultGridAnalysisFactory<ET> analysisFactory = new DefaultGridAnalysisFactory<>();
+        analysisFactory.setToolbarCustomiser(new IToolbarCustomiser<GridAnalysisView<ET, ICentreDomainTreeManagerAndEnhancer>>() {
 
-	    @Override
-	    public ActionPanelBuilder createToolbar(final GridAnalysisView<ET, ICentreDomainTreeManagerAndEnhancer> analysisView) {
-		return new ActionPanelBuilder();
-	    }
-	});
-	analysisFactory.setQueryCustomiser(new PlainQueryCustomiser<>(createQueryGenerator(detailsParam)));
-	return analysisFactory;
+            @Override
+            public ActionPanelBuilder createToolbar(final GridAnalysisView<ET, ICentreDomainTreeManagerAndEnhancer> analysisView) {
+                return new ActionPanelBuilder();
+            }
+        });
+        analysisFactory.setQueryCustomiser(new PlainQueryCustomiser<>(createQueryGenerator(detailsParam)));
+        return analysisFactory;
     }
 
     /**
      * Creates the query report generator for this details.
-     *
+     * 
      * @param detailsParam
      * @return
      */
@@ -91,7 +91,7 @@ public abstract class CentreBasedDetails<T extends AbstractAnalysisDetailsData<E
 
     /**
      * Returns the instance of {@link ICentreDomainTreeManagerAndEnhancer} on which this details is based on.
-     *
+     * 
      * @return
      */
     protected abstract ICentreDomainTreeManagerAndEnhancer getCdtme(final T detailsParam);

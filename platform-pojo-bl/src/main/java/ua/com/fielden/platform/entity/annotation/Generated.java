@@ -7,9 +7,9 @@ import java.lang.annotation.Target;
 
 /**
  * An annotation which should strictly be used to annotate dynamically added properties by means of runtime bytecode manipulation.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 
 @Retention(RetentionPolicy.RUNTIME)

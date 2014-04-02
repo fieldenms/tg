@@ -17,23 +17,23 @@ public class AbstractEntityToJsonSerialiser extends JsonSerializer<AbstractEntit
     @SuppressWarnings("unchecked")
     @Override
     public void serialize(final AbstractEntity entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
-	generator.writeStartObject();
-	for (final Field propertyField : Finder.findRealProperties(entity.getType())) {
-	    generator.writeFieldName(propertyField.getName());
+        generator.writeStartObject();
+        for (final Field propertyField : Finder.findRealProperties(entity.getType())) {
+            generator.writeFieldName(propertyField.getName());
 
-	    propertyField.setAccessible(true);
-	    Object value = null;
-	    try {
-		value = propertyField.get(entity);
-	    } catch (IllegalArgumentException | IllegalAccessException e) {
-		e.printStackTrace();
-	    }
-	    propertyField.setAccessible(false);
+            propertyField.setAccessible(true);
+            Object value = null;
+            try {
+                value = propertyField.get(entity);
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            propertyField.setAccessible(false);
 
-	    generator.writeObject(value);
+            generator.writeObject(value);
 
-	}
-	generator.writeEndObject();
+        }
+        generator.writeEndObject();
     }
 
 }

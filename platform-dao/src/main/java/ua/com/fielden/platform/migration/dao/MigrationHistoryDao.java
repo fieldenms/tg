@@ -8,10 +8,9 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
-
 /**
  * DAO for {@link MigrationHistory}.
- *
+ * 
  * @author TG Team
  */
 @EntityType(MigrationHistory.class)
@@ -19,7 +18,7 @@ public class MigrationHistoryDao extends CommonEntityDao<MigrationHistory> imple
 
     @Inject
     protected MigrationHistoryDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
 }

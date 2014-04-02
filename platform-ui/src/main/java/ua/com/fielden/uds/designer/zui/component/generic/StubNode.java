@@ -14,9 +14,9 @@ public class StubNode extends PImage {
     private static final long serialVersionUID = 1L;
 
     public StubNode(final PNode node) {
-	super(node.toImage());
-	setPickable(false);
-	// full bounds are used for setting the offset because they are utilised by toImage() method
-	setOffset(node.getFullBounds().getX(), node.getFullBounds().getY());
+        super(node.toImage());
+        setPickable(false);
+        // full bounds are used for setting the offset because they are utilised by toImage() method
+        setOffset(node.getFullBounds().getX(), node.getFullBounds().getY());
     }
 }

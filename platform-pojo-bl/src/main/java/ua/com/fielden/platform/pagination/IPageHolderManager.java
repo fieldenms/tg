@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.pagination;
 
-
 /**
  * A contract for anything that manages {@link PageHolder} set.
  * 

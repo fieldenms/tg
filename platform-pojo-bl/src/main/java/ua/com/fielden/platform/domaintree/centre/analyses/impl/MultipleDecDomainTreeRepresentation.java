@@ -15,57 +15,57 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A domain tree representation for multiple dec analysis.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class MultipleDecDomainTreeRepresentation extends AbstractAnalysisDomainTreeRepresentation implements IMultipleDecDomainTreeRepresentation {
 
     /**
      * A <i>representation</i> constructor for the first time instantiation.
-     *
+     * 
      * @param serialiser
      * @param rootTypes
      */
     public MultipleDecDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, rootTypes, createSet(), new AnalysisAddToDistributionTickRepresentation(), new AnalysisAddToAggregationTickRepresentation());
+        this(serialiser, rootTypes, createSet(), new AnalysisAddToDistributionTickRepresentation(), new AnalysisAddToAggregationTickRepresentation());
     }
 
     /**
      * A <i>representation</i> constructor. Needed for 'restoring from the cloud' process. Initialises also children references on itself.
      */
     protected MultipleDecDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AnalysisAddToDistributionTickRepresentation firstTick, final AnalysisAddToAggregationTickRepresentation secondTick) {
-	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+        super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override
     public IAnalysisAddToDistributionTickRepresentation getFirstTick() {
-	return (IAnalysisAddToDistributionTickRepresentation) super.getFirstTick();
+        return (IAnalysisAddToDistributionTickRepresentation) super.getFirstTick();
     }
 
     @Override
     public IAnalysisAddToAggregationTickRepresentation getSecondTick() {
-	return (IAnalysisAddToAggregationTickRepresentation) super.getSecondTick();
+        return (IAnalysisAddToAggregationTickRepresentation) super.getSecondTick();
     }
 
     /**
      * A specific Kryo serialiser for {@link MultipleDecDomainTreeRepresentation}.
-     *
+     * 
      * @author TG Team
-     *
+     * 
      */
     public static class MultipleDecDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<MultipleDecDomainTreeRepresentation> {
-	public MultipleDecDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
-	    super(kryo);
-	}
+        public MultipleDecDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
+            super(kryo);
+        }
 
-	@Override
-	public MultipleDecDomainTreeRepresentation read(final ByteBuffer buffer) {
-	    final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
-	    final AnalysisAddToDistributionTickRepresentation firstTick = readValue(buffer, AnalysisAddToDistributionTickRepresentation.class);
-	    final AnalysisAddToAggregationTickRepresentation secondTick = readValue(buffer, AnalysisAddToAggregationTickRepresentation.class);
-	    return new MultipleDecDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
-	}
+        @Override
+        public MultipleDecDomainTreeRepresentation read(final ByteBuffer buffer) {
+            final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
+            final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
+            final AnalysisAddToDistributionTickRepresentation firstTick = readValue(buffer, AnalysisAddToDistributionTickRepresentation.class);
+            final AnalysisAddToAggregationTickRepresentation secondTick = readValue(buffer, AnalysisAddToAggregationTickRepresentation.class);
+            return new MultipleDecDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+        }
     }
 }

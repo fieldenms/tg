@@ -7,9 +7,9 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 
 /**
  * The {@link EventObject} that represents the "lifecycle model update" event.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  */
 public class LifecycleModelUpdateEvent<T extends AbstractEntity<?>> extends EventObject {
@@ -19,23 +19,23 @@ public class LifecycleModelUpdateEvent<T extends AbstractEntity<?>> extends Even
     private final LifecycleModel<T> lifecycleModel;
 
     /**
-     * Initiates this event with {@link LifecycleAnalysisModel} and  {@link LifecycleModel} instances.
-     *
+     * Initiates this event with {@link LifecycleAnalysisModel} and {@link LifecycleModel} instances.
+     * 
      * @param source
      * @param lifecycleModel
      */
     public LifecycleModelUpdateEvent(final LifecycleAnalysisModel<T> source, final LifecycleModel<T> lifecycleModel) {
-	super(source);
-	this.lifecycleModel = lifecycleModel;
+        super(source);
+        this.lifecycleModel = lifecycleModel;
     }
 
     public LifecycleModel<T> getLifecycleModel() {
-	return lifecycleModel;
+        return lifecycleModel;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public LifecycleAnalysisModel<T> getSource() {
-        return (LifecycleAnalysisModel<T>)super.getSource();
+        return (LifecycleAnalysisModel<T>) super.getSource();
     }
 }

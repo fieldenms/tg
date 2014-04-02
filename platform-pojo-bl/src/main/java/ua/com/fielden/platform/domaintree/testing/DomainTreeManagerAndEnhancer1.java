@@ -18,36 +18,36 @@ public class DomainTreeManagerAndEnhancer1 extends AbstractDomainTreeManagerAndE
      * A <i>manager with enhancer</i> constructor for the first time instantiation.
      */
     public DomainTreeManagerAndEnhancer1(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new DomainTreeManager1(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)));
+        this(new DomainTreeManager1(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)));
     }
 
     protected DomainTreeManagerAndEnhancer1(final AbstractDomainTreeManager base, final DomainTreeEnhancer enhancer) {
-	super(base, enhancer);
+        super(base, enhancer);
     }
 
     /**
      * A specific Kryo serialiser for {@link DomainTreeManagerAndEnhancer1}.
-     *
+     * 
      * @author TG Team
-     *
+     * 
      */
     public static class DomainTreeManagerAndEnhancerForTestSerialiser extends TgSimpleSerializer<DomainTreeManagerAndEnhancer1> {
-	public DomainTreeManagerAndEnhancerForTestSerialiser(final ISerialiser kryo) {
-	    super((Kryo) kryo);
-	}
+        public DomainTreeManagerAndEnhancerForTestSerialiser(final ISerialiser kryo) {
+            super((Kryo) kryo);
+        }
 
-	@Override
-	public DomainTreeManagerAndEnhancer1 read(final ByteBuffer buffer) {
-	    // abstract nature?
-	    final DomainTreeManager1 base = readValue(buffer, DomainTreeManager1.class);
-	    final DomainTreeEnhancer enhancer = readValue(buffer, DomainTreeEnhancer.class);
-	    return new DomainTreeManagerAndEnhancer1(base, enhancer);
-	}
+        @Override
+        public DomainTreeManagerAndEnhancer1 read(final ByteBuffer buffer) {
+            // abstract nature?
+            final DomainTreeManager1 base = readValue(buffer, DomainTreeManager1.class);
+            final DomainTreeEnhancer enhancer = readValue(buffer, DomainTreeEnhancer.class);
+            return new DomainTreeManagerAndEnhancer1(base, enhancer);
+        }
 
-	@Override
-	public void write(final ByteBuffer buffer, final DomainTreeManagerAndEnhancer1 manager) {
-	    writeValue(buffer, manager.base());
-	    writeValue(buffer, manager.enhancer());
-	}
+        @Override
+        public void write(final ByteBuffer buffer, final DomainTreeManagerAndEnhancer1 manager) {
+            writeValue(buffer, manager.base());
+            writeValue(buffer, manager.enhancer());
+        }
     }
 }

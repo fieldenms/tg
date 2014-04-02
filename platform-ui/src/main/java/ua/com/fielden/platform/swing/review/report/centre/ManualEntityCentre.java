@@ -16,33 +16,33 @@ public class ManualEntityCentre<T extends AbstractEntity<?>> extends AbstractSin
     private static final long serialVersionUID = 6117616238278637453L;
 
     public ManualEntityCentre(final EntityCentreModel<T> model, final ManualCentreConfigurationView<T> owner) {
-	super(model, owner);
-	layoutComponents();
+        super(model, owner);
+        layoutComponents();
     }
 
     @Override
     public EntityCentreModel<T> getModel() {
-	return (EntityCentreModel<T>) super.getModel();
+        return (EntityCentreModel<T>) super.getModel();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public ManualCentreConfigurationView<T> getOwner() {
-	return (ManualCentreConfigurationView<T>) super.getOwner();
+        return (ManualCentreConfigurationView<T>) super.getOwner();
     }
 
     @Override
     protected List<Action> createCustomActionList() {
-	return null;
+        return null;
     }
 
     @Override
     protected ConfigureAction createConfigureAction() {
-	return null;
+        return null;
     }
 
     @Override
     protected AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?> createDefaultAnalysis() {
-	return getModel().getAnalysisBuilder().createAnalysis(null, null, null, this, getModel().getCriteria(), getReviewProgressLayer());
+        return getModel().getAnalysisBuilder().createAnalysis(null, null, null, this, getModel().getCriteria(), getReviewProgressLayer());
     }
 }

@@ -11,30 +11,26 @@ import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.before_change_event_handling.BeforeChangeEventHandler;
 
 /**
- * Entity for the purpose of BCE handling tests.
- * It has a setter annotated with invalid BCE handler, thus causing exceptional situation during instantiation.
- *
+ * Entity for the purpose of BCE handling tests. It has a setter annotated with invalid BCE handler, thus causing exceptional situation during instantiation.
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 public class EntityWithInvalidAceHandler extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Property 1", desc = "Description")
-    @AfterChange(
-	value = InvalidAfterChangeEventHandler.class,
-	non_ordinary={@ClassParam(name = "invalidParam", value = BeforeChangeEventHandler.class)}
-    )
+    @AfterChange(value = InvalidAfterChangeEventHandler.class, non_ordinary = { @ClassParam(name = "invalidParam", value = BeforeChangeEventHandler.class) })
     private String property1;
 
     @Observable
     public EntityWithInvalidAceHandler setProperty1(final String property) {
-	this.property1 = property;
-	return this;
+        this.property1 = property;
+        return this;
     }
 
     public String getProperty1() {
-	return property1;
+        return property1;
     }
 }

@@ -17,9 +17,9 @@ import com.google.inject.Inject;
 
 /**
  * Implementation of {@link IReport} interface, which uses a set of registered {@link IReportFactory}s associated with report type to provide reports.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class ReportDao implements IReport {
 
@@ -32,41 +32,42 @@ public class ReportDao implements IReport {
 
     @Inject
     public ReportDao(final IEntityAggregatesDao aggregatesDao) {
-	this.aggregatesDao = aggregatesDao;
+        this.aggregatesDao = aggregatesDao;
     }
 
     /**
      * Registers {@link IReportFactory} for reports with the specified report type.
-     *
+     * 
      * @param reportType
      * @param reportFactory
      * @return
      */
     public <ReportParams extends AbstractEntity> ReportDao addReportFactory(final String reportType, final IReportFactory reportFactory) {
-	reportFactories.put(reportType, reportFactory);
-	return this;
+        reportFactories.put(reportType, reportFactory);
+        return this;
     }
 
     @Override
     public final String getUsername() {
-	return up.getUser().getKey();
+        return up.getUser().getKey();
     }
 
     @Override
-    public byte[] getReport(final String reportType, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final Map<String, Object> allParams) throws Exception {
-	final IReportFactory reportFactory = reportFactories.get(reportType);
-	if (reportFactory == null) {
-	    return null;
-	} else {
-	    // zipping pdf report
-	    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	    final GZipOutputStreamEx zipperStream = new GZipOutputStreamEx(outputStream, Deflater.BEST_COMPRESSION);
-	    final byte[] pdfData = reportFactory.createReport(query, aggregatesDao, allParams);
-	    zipperStream.write(pdfData);
-	    zipperStream.close();
+    public byte[] getReport(final String reportType, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final Map<String, Object> allParams)
+            throws Exception {
+        final IReportFactory reportFactory = reportFactories.get(reportType);
+        if (reportFactory == null) {
+            return null;
+        } else {
+            // zipping pdf report
+            final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            final GZipOutputStreamEx zipperStream = new GZipOutputStreamEx(outputStream, Deflater.BEST_COMPRESSION);
+            final byte[] pdfData = reportFactory.createReport(query, aggregatesDao, allParams);
+            zipperStream.write(pdfData);
+            zipperStream.close();
 
-	    return outputStream.toByteArray();
-	}
+            return outputStream.toByteArray();
+        }
 
     }
 }

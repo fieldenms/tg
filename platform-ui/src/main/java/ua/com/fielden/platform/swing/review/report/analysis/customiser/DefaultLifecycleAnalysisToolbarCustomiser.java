@@ -8,14 +8,14 @@ public class DefaultLifecycleAnalysisToolbarCustomiser<T extends AbstractEntity<
 
     @Override
     public ActionPanelBuilder createToolbar(final LifecycleAnalysisView<T> analysisView) {
-	return new ActionPanelBuilder()//
-		.addButton(analysisView.getConfigureAction())//
-		.addSeparator()//
-		.addComponent(analysisView.getBarChartButton())//
-		.addComponent(analysisView.getStackedChartButton())//
-		.addComponent(analysisView.getLineChartButton())//
-		.addSeparator()//
-		.addComponent(analysisView.getPeriodPanel());
+        return new ActionPanelBuilder()//
+        .addButton(analysisView.getConfigureAction())//
+        .addSeparator()//
+        .addComponent(analysisView.getBarChartButton())//
+        .addComponent(analysisView.getStackedChartButton())//
+        .addComponent(analysisView.getLineChartButton())//
+        .addSeparator()//
+        .addComponent(analysisView.getPeriodPanel());
     }
 
 }

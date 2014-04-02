@@ -20,44 +20,44 @@ import ua.com.fielden.platform.dao.annotations.Transactional;
  * <p>
  * Mixing annotations {@link Transactional} and {@link SessionRequired} is possible, but meaningless since intercepter for these annotated methods start a transaction if there no
  * active one.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 public class TransactionalInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
 
     public TransactionalInterceptor(final SessionFactory sessionFactory) {
-	this.sessionFactory = sessionFactory;
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
     public Object invoke(final MethodInvocation invocation) throws Throwable {
-	final Session session = sessionFactory.getCurrentSession();
-	final Transaction tr = session.getTransaction();
-	/*
-	 * this variable indicates whether transaction should be handled in this method;
-	 * basically, if transaction is activated in this method then it should be committed only in this method.
-	 * therefore, shouldCommit is assigned true only when transaction is activated here.
-	 */
-	final boolean shouldCommit = !tr.isActive();
-	// activate transaction if it not active
-	if (!tr.isActive()) {
-	    session.setFlushMode(FlushMode.COMMIT);
-	    tr.begin();
-	}
-	try {
-	    final Object result = invocation.proceed(); // this invocation could also be captured by TransactionalInterceptor
-	    if (shouldCommit && tr.isActive()) { // if this is the invocation that activated the current transaction then we should commit it
-		tr.commit();
-	    }
-	    return result;
-	} catch (final RuntimeException e) {
-	    if (tr.isActive()) { // if transaction is active and there was an exception then it should be rolled back
-		tr.rollback();
-	    }
-	    e.printStackTrace();
-	    throw e;
-	}
+        final Session session = sessionFactory.getCurrentSession();
+        final Transaction tr = session.getTransaction();
+        /*
+         * this variable indicates whether transaction should be handled in this method;
+         * basically, if transaction is activated in this method then it should be committed only in this method.
+         * therefore, shouldCommit is assigned true only when transaction is activated here.
+         */
+        final boolean shouldCommit = !tr.isActive();
+        // activate transaction if it not active
+        if (!tr.isActive()) {
+            session.setFlushMode(FlushMode.COMMIT);
+            tr.begin();
+        }
+        try {
+            final Object result = invocation.proceed(); // this invocation could also be captured by TransactionalInterceptor
+            if (shouldCommit && tr.isActive()) { // if this is the invocation that activated the current transaction then we should commit it
+                tr.commit();
+            }
+            return result;
+        } catch (final RuntimeException e) {
+            if (tr.isActive()) { // if transaction is active and there was an exception then it should be rolled back
+                tr.rollback();
+            }
+            e.printStackTrace();
+            throw e;
+        }
     }
 }

@@ -17,11 +17,11 @@ import ua.com.fielden.platform.branding.SplashController;
 public abstract class AbstractUiApplication extends AbstractApplication {
 
     public AbstractUiApplication() {
-	super();
+        super();
     }
 
     public AbstractUiApplication(final Logger logger) {
-	super(logger);
+        super(logger);
     }
 
     /**
@@ -31,8 +31,8 @@ public abstract class AbstractUiApplication extends AbstractApplication {
      * @see UncaughtExceptionHandler
      */
     private void setUncaughtExceptionHandler() {
-	UncaughtExceptionHandler.setCurrentApplication(this);
-	System.setProperty("sun.awt.exception.handler", UncaughtExceptionHandler.class.getName());
+        UncaughtExceptionHandler.setCurrentApplication(this);
+        System.setProperty("sun.awt.exception.handler", UncaughtExceptionHandler.class.getName());
     }
 
     /**
@@ -81,37 +81,37 @@ public abstract class AbstractUiApplication extends AbstractApplication {
      */
     @Override
     public void launch(final String... args) {
-	setUncaughtExceptionHandler();
+        setUncaughtExceptionHandler();
 
-	try {
-	    final SplashController splashController = new SplashController();
-	    beforeUiExposure(args, splashController);
+        try {
+            final SplashController splashController = new SplashController();
+            beforeUiExposure(args, splashController);
 
-	    // waiting for EDT to finish exposing UI
-	    final Runnable exposeUiRunner = new Runnable() {
-		@Override
-		public void run() {
-		    try {
-			exposeUi(args, splashController);
-		    } catch (final Throwable e) {
-			throwException(e);
-		    }
-		}
-	    };
-	    if (SwingUtilities.isEventDispatchThread()) {
-		exposeUiRunner.run();
-	    } else {
-		try {
-		    SwingUtilities.invokeLater(exposeUiRunner);
-		} catch (final Exception e) {
-		    throwException(e);
-		}
-	    }
+            // waiting for EDT to finish exposing UI
+            final Runnable exposeUiRunner = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        exposeUi(args, splashController);
+                    } catch (final Throwable e) {
+                        throwException(e);
+                    }
+                }
+            };
+            if (SwingUtilities.isEventDispatchThread()) {
+                exposeUiRunner.run();
+            } else {
+                try {
+                    SwingUtilities.invokeLater(exposeUiRunner);
+                } catch (final Exception e) {
+                    throwException(e);
+                }
+            }
 
-	    afterUiExposure(args, splashController);
-	} catch (final Throwable e) {
-	    throwException(e);
-	}
+            afterUiExposure(args, splashController);
+        } catch (final Throwable e) {
+            throwException(e);
+        }
     }
 
 }

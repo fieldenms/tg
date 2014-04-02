@@ -36,33 +36,33 @@ public class EntityWithCompositeKey extends AbstractEntity<DynamicEntityKey> {
     private KeyEntity keyEntityMember;
 
     protected EntityWithCompositeKey() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     public String getFirstKeyMember() {
-	return firstKeyMember;
+        return firstKeyMember;
     }
 
     public String getSecondKeyMember() {
-	return secondKeyMember;
+        return secondKeyMember;
     }
 
     public KeyEntity getKeyEntityMember() {
-	return keyEntityMember;
+        return keyEntityMember;
     }
 
     @Observable
     public void setFirstKeyMember(final String firstKeyMember) {
-	this.firstKeyMember = firstKeyMember;
+        this.firstKeyMember = firstKeyMember;
     }
 
     @Observable
     public void setSecondKeyMember(final String secondKeyMember) {
-	this.secondKeyMember = secondKeyMember;
+        this.secondKeyMember = secondKeyMember;
     }
 
     @Observable
     public void setKeyEntityMember(final KeyEntity keyEntityMember) {
-	this.keyEntityMember = keyEntityMember;
+        this.keyEntityMember = keyEntityMember;
     }
 }

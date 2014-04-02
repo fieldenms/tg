@@ -73,80 +73,77 @@ import ua.com.fielden.platform.test.UserProviderForTesting;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 
-
 /**
  * Serve IoC module for platform related testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class PlatformTestServerModule extends BasicWebServerModule {
 
-    public PlatformTestServerModule(
-	    final Map<Class, Class> defaultHibernateTypes, //
-	    final IApplicationDomainProvider applicationDomainProvider,//
-	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-	    final Class<? extends IFilter> automaticDataFilterType, //
-	    final SecurityTokenProvider tokenProvider,//
-	    final Properties props) throws Exception {
-	super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProvider, props);
+    public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes, //
+            final IApplicationDomainProvider applicationDomainProvider,//
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
+            final Class<? extends IFilter> automaticDataFilterType, //
+            final SecurityTokenProvider tokenProvider,//
+            final Properties props) throws Exception {
+        super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProvider, props);
     }
 
-    public PlatformTestServerModule(
-	    final Map<Class, Class> defaultHibernateTypes, //
-	    final IApplicationDomainProvider applicationDomainProvider,//
-	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-	    final Class<? extends IFilter> automaticDataFilterType, //
-	    final Properties props) throws Exception {
-	super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
+    public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes, //
+            final IApplicationDomainProvider applicationDomainProvider,//
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
+            final Class<? extends IFilter> automaticDataFilterType, //
+            final Properties props) throws Exception {
+        super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
     }
 
     @Override
     protected void configure() {
-	super.configure();
+        super.configure();
 
-	bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
+        bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
 
-	// bind DAO
-//	bind(IWheelsetDao.class).to(WheelsetDao.class);
-//	bind(IWorkshopDao2.class).to(WorkshopDao2.class);
-//	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);
-//	bind(IWorkorderDao.class).to(WorkorderDao.class);
-//	bind(IWorkorderableDao.class).to(WorkorderableDao.class);
-//	bind(IAdviceDao.class).to(AdviceDao.class);
+        // bind DAO
+        //	bind(IWheelsetDao.class).to(WheelsetDao.class);
+        //	bind(IWorkshopDao2.class).to(WorkshopDao2.class);
+        //	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);
+        //	bind(IWorkorderDao.class).to(WorkorderDao.class);
+        //	bind(IWorkorderableDao.class).to(WorkorderableDao.class);
+        //	bind(IAdviceDao.class).to(AdviceDao.class);
 
-	bind(ITgOrgUnit1.class).to(TgOrgUnit1Dao.class);
-	bind(ITgOrgUnit2.class).to(TgOrgUnit2Dao.class);
-	bind(ITgOrgUnit3.class).to(TgOrgUnit3Dao.class);
-	bind(ITgOrgUnit4.class).to(TgOrgUnit4Dao.class);
-	bind(ITgOrgUnit5.class).to(TgOrgUnit5Dao.class);
+        bind(ITgOrgUnit1.class).to(TgOrgUnit1Dao.class);
+        bind(ITgOrgUnit2.class).to(TgOrgUnit2Dao.class);
+        bind(ITgOrgUnit3.class).to(TgOrgUnit3Dao.class);
+        bind(ITgOrgUnit4.class).to(TgOrgUnit4Dao.class);
+        bind(ITgOrgUnit5.class).to(TgOrgUnit5Dao.class);
 
-	bind(ITgBogieLocation.class).to(TgBogieLocationDao.class);
-	bind(ITgBogie.class).to(TgBogieDao.class);
-	bind(ITgBogieClass.class).to(TgBogieClassDao.class);
-	bind(ITgWagon.class).to(TgWagonDao.class);
-	bind(ITgWagonSlot.class).to(TgWagonSlotDao.class);
-	bind(ITgWagonClass.class).to(TgWagonClassDao.class);
-	bind(ITgWagonClassCompatibility.class).to(TgWagonClassCompatibilityDao.class);
-	bind(ITgWorkshop.class).to(TgWorkshopDao.class);
-	bind(ITgTimesheet.class).to(TgTimesheetDao.class);
-	bind(ITgVehicle.class).to(TgVehicleDao.class);
-	bind(ITgVehicleFinDetails.class).to(TgVehicleFinDetailsDao.class);
-	bind(ITgPersonName.class).to(TgPersonNameDao.class);
-	bind(ITgAuthor.class).to(TgAuthorDao.class);
-	bind(ITgFuelUsage.class).to(TgFuelUsageDao.class);
-	bind(ITgFuelType.class).to(TgFuelTypeDao.class);
-	bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
-	bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
-	bind(ITgMeterReading.class).to(TgMeterReadingDao.class);
-	bind(IMigrationErrorDao.class).to(MigrationErrorDao.class);
-	bind(IMigrationRunDao.class).to(MigrationRunDao.class);
-	bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);
+        bind(ITgBogieLocation.class).to(TgBogieLocationDao.class);
+        bind(ITgBogie.class).to(TgBogieDao.class);
+        bind(ITgBogieClass.class).to(TgBogieClassDao.class);
+        bind(ITgWagon.class).to(TgWagonDao.class);
+        bind(ITgWagonSlot.class).to(TgWagonSlotDao.class);
+        bind(ITgWagonClass.class).to(TgWagonClassDao.class);
+        bind(ITgWagonClassCompatibility.class).to(TgWagonClassCompatibilityDao.class);
+        bind(ITgWorkshop.class).to(TgWorkshopDao.class);
+        bind(ITgTimesheet.class).to(TgTimesheetDao.class);
+        bind(ITgVehicle.class).to(TgVehicleDao.class);
+        bind(ITgVehicleFinDetails.class).to(TgVehicleFinDetailsDao.class);
+        bind(ITgPersonName.class).to(TgPersonNameDao.class);
+        bind(ITgAuthor.class).to(TgAuthorDao.class);
+        bind(ITgFuelUsage.class).to(TgFuelUsageDao.class);
+        bind(ITgFuelType.class).to(TgFuelTypeDao.class);
+        bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
+        bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
+        bind(ITgMeterReading.class).to(TgMeterReadingDao.class);
+        bind(IMigrationErrorDao.class).to(MigrationErrorDao.class);
+        bind(IMigrationRunDao.class).to(MigrationRunDao.class);
+        bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);
 
-	bind(ITgMakeCount.class).to(TgMakeCountDao.class);
-	bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
+        bind(ITgMakeCount.class).to(TgMakeCountDao.class);
+        bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
 
-	bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
-	}).to(EntityWithMoneyDao.class);
+        bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
+        }).to(EntityWithMoneyDao.class);
     }
 }

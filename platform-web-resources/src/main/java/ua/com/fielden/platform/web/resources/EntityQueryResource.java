@@ -31,7 +31,7 @@ import com.google.inject.Injector;
  * Represents a web resource mapped to URI /query/entity-alias-type. It handles POST requests provided with {@link QueryExecutionModel}
  * <p>
  * Each request is handled by a new resource instance, thus the only thread-safety requirement is to have provided DAO and entity factory thread-safe.
- *
+ * 
  * @author TG Team
  */
 public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerResource implements IComputationMonitor {
@@ -61,65 +61,65 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
      * The main resource constructor accepting a DAO instance in addition to the standard {@link Resource} parameters.
      * <p>
      * DAO is required for DB interoperability, whereas entity factory is required for enhancement of entities provided in request envelopes.
-     *
+     * 
      * @param dao
      * @param context
      * @param request
      * @param response
      */
     public EntityQueryResource(final Router router, final Injector injector, final IEntityDao<T> dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	setNegotiated(false);
-	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
-	this.dao = dao;
-	this.restUtil = restUtil;
+        init(context, request, response);
+        setNegotiated(false);
+        getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
+        this.dao = dao;
+        this.restUtil = restUtil;
 
-	final String pageCapacityParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
-	final String pageNoParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-no");
+        final String pageCapacityParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-capacity");
+        final String pageNoParam = request.getResourceRef().getQueryAsForm().getFirstValue("page-no");
 
-	pageCapacity = initPageCapacity(pageCapacityParam);
-	pageNo = initPageNoOrCount(pageNoParam);
-	pageCount = initPageNoOrCount(request.getResourceRef().getQueryAsForm().getFirstValue("page-count"));
+        pageCapacity = initPageCapacity(pageCapacityParam);
+        pageNo = initPageNoOrCount(pageNoParam);
+        pageCount = initPageNoOrCount(request.getResourceRef().getQueryAsForm().getFirstValue("page-count"));
 
-	shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(pageCapacityParam) && !FIRST.equalsIgnoreCase(pageNoParam);
-	shouldReturnAll = "all".equalsIgnoreCase(pageCapacityParam);
-	shouldReturnFirst = FIRST.equalsIgnoreCase(pageNoParam);
-	shouldDelete = request.getResourceRef().getQueryAsForm().getFirstValue("deletion") != null;
+        shouldReturnCount = (pageCapacity == null) && !"all".equalsIgnoreCase(pageCapacityParam) && !FIRST.equalsIgnoreCase(pageNoParam);
+        shouldReturnAll = "all".equalsIgnoreCase(pageCapacityParam);
+        shouldReturnFirst = FIRST.equalsIgnoreCase(pageNoParam);
+        shouldDelete = request.getResourceRef().getQueryAsForm().getFirstValue("deletion") != null;
 
-	// let's now create and route a companion resource factory
-	this.router = router;
-	final String companionToken = request.getResourceRef().getQueryAsForm().getFirstValue("co-token");
-	coResourceFactory = new CompanionResourceFactory(this, injector);
-	router.attach("/users/{username}/companions/" + companionToken, coResourceFactory);
+        // let's now create and route a companion resource factory
+        this.router = router;
+        final String companionToken = request.getResourceRef().getQueryAsForm().getFirstValue("co-token");
+        coResourceFactory = new CompanionResourceFactory(this, injector);
+        router.attach("/users/{username}/companions/" + companionToken, coResourceFactory);
     }
 
     /**
      * Initialisation of property <code>pageCapacity</code>.
-     *
+     * 
      * @param pageCapacityParamName
      * @return
      */
     private Integer initPageCapacity(final String pageCapacityParamName) {
-	try {
-	    return pageCapacityParamName != null ? Integer.parseInt(pageCapacityParamName) : null;
-	} catch (final Exception e) {
-	    return null;
-	}
+        try {
+            return pageCapacityParamName != null ? Integer.parseInt(pageCapacityParamName) : null;
+        } catch (final Exception e) {
+            return null;
+        }
     }
 
     /**
      * Initialisation of property <code>pageNo</code>.
-     *
+     * 
      * @param pageNoParamName
      * @return
      */
     private int initPageNoOrCount(final String pageNoParamName) {
-	try {
-	    return pageNoParamName != null && !pageNoParamName.equalsIgnoreCase(FIRST) ? Integer.parseInt(pageNoParamName) : 0;
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    return 0;
-	}
+        try {
+            return pageNoParamName != null && !pageNoParamName.equalsIgnoreCase(FIRST) ? Integer.parseInt(pageNoParamName) : 0;
+        } catch (final Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     // /////////////////////////////////////////////////////////////////
@@ -132,52 +132,52 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends ServerReso
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-	try {
-	    @SuppressWarnings("unchecked")
-	    final QueryExecutionModel<T, EntityResultQueryModel<T>> qem = (QueryExecutionModel<T, EntityResultQueryModel<T>>) restUtil.restoreQueryExecutionModel(envelope);
-	    if (shouldDelete) {
-		dao.delete(qem.getQueryModel(), qem.getParamValues());
-		return restUtil.resultRepresentation(Result.successful(null));
-	    } else if (shouldReturnCount) {
-		final int count = dao.count(qem.getQueryModel(), qem.getParamValues());
-		restUtil.setHeaderEntry(getResponse(), HttpHeaders.COUNT, count + "");
-		return new StringRepresentation("count");
-	    } else if (shouldReturnAll) {
-		return restUtil.listRepresentation(dao.getAllEntities(qem));
-	    } else if (shouldReturnFirst) {
-		return restUtil.listRepresentation(dao.getFirstEntities(qem, pageCapacity));
-	    } else {
-		final IPage<T> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
-		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
-		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
-		return restUtil.listRepresentation(page.data());
-	    }
-	} catch (final Exception ex) {
-	    ex.printStackTrace();
-	    if (stopped.get()) {
-		return restUtil.errorRepresentation("Request was cancelled.");
-	    } else {
-		return restUtil.errorRepresentation(ex);
-	    }
-	} finally {
-	    // need to detach companion resource
-	    router.detach(coResourceFactory);
-	}
+        try {
+            @SuppressWarnings("unchecked")
+            final QueryExecutionModel<T, EntityResultQueryModel<T>> qem = (QueryExecutionModel<T, EntityResultQueryModel<T>>) restUtil.restoreQueryExecutionModel(envelope);
+            if (shouldDelete) {
+                dao.delete(qem.getQueryModel(), qem.getParamValues());
+                return restUtil.resultRepresentation(Result.successful(null));
+            } else if (shouldReturnCount) {
+                final int count = dao.count(qem.getQueryModel(), qem.getParamValues());
+                restUtil.setHeaderEntry(getResponse(), HttpHeaders.COUNT, count + "");
+                return new StringRepresentation("count");
+            } else if (shouldReturnAll) {
+                return restUtil.listRepresentation(dao.getAllEntities(qem));
+            } else if (shouldReturnFirst) {
+                return restUtil.listRepresentation(dao.getFirstEntities(qem, pageCapacity));
+            } else {
+                final IPage<T> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
+                restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
+                restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
+                return restUtil.listRepresentation(page.data());
+            }
+        } catch (final Exception ex) {
+            ex.printStackTrace();
+            if (stopped.get()) {
+                return restUtil.errorRepresentation("Request was cancelled.");
+            } else {
+                return restUtil.errorRepresentation(ex);
+            }
+        } finally {
+            // need to detach companion resource
+            router.detach(coResourceFactory);
+        }
     }
 
     @Override
     public boolean stop() {
-	try {
-	    stopped.set(dao.stop());
-	    return stopped.get();
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    return false;
-	}
+        try {
+            stopped.set(dao.stop());
+            return stopped.get();
+        } catch (final Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
     public Integer progress() {
-	return null;
+        return null;
     }
 }

@@ -15,41 +15,42 @@ import ua.com.fielden.platform.utils.Pair;
 public class StandAloneExpressionBuilder1 extends AbstractTokensBuilder1 {
 
     public StandAloneExpressionBuilder1(final EntQueryGenerator1 queryBuilder, final ExpressionModel exprModel) {
-	super(null, queryBuilder);
+        super(null, queryBuilder);
 
-	for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
-	    add(tokenPair.getKey(), tokenPair.getValue());
-	}
+        for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
+            add(tokenPair.getKey(), tokenPair.getValue());
+        }
 
     }
 
     @Override
     public boolean isClosing() {
-	return false;
+        return false;
     }
 
     @Override
     public boolean canBeClosed() {
-	return getChild() == null;
+        return getChild() == null;
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-	if (getChild() != null) {
-	    throw new RuntimeException("Unable to produce result - unfinished model state!");
-	}
+        if (getChild() != null) {
+            throw new RuntimeException("Unable to produce result - unfinished model state!");
+        }
 
-	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-	final Pair<TokenCategory, Object> firstOperandPair = iterator.next();
-	final ISingleOperand1 firstOperand = getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue());
-	final List<CompoundSingleOperand1> items = new ArrayList<CompoundSingleOperand1>();
-	for (; iterator.hasNext();) {
-	    final ArithmeticalOperator operator = (ArithmeticalOperator) iterator.next().getValue();
-	    final Pair<TokenCategory, Object> subsequentOperandPair = iterator.next();
-	    final ISingleOperand1 subsequentOperand = getModelForSingleOperand(subsequentOperandPair.getKey(), subsequentOperandPair.getValue());
+        final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
+        final Pair<TokenCategory, Object> firstOperandPair = iterator.next();
+        final ISingleOperand1 firstOperand = getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue());
+        final List<CompoundSingleOperand1> items = new ArrayList<CompoundSingleOperand1>();
+        for (; iterator.hasNext();) {
+            final ArithmeticalOperator operator = (ArithmeticalOperator) iterator.next().getValue();
+            final Pair<TokenCategory, Object> subsequentOperandPair = iterator.next();
+            final ISingleOperand1 subsequentOperand = getModelForSingleOperand(subsequentOperandPair.getKey(), subsequentOperandPair.getValue());
 
-	    items.add(new CompoundSingleOperand1(subsequentOperand, operator));
-	}
+            items.add(new CompoundSingleOperand1(subsequentOperand, operator));
+        }
 
-	return new Pair<TokenCategory, Object>(TokenCategory.EXPR, new Expression1(firstOperand, items));    }
+        return new Pair<TokenCategory, Object>(TokenCategory.EXPR, new Expression1(firstOperand, items));
+    }
 }

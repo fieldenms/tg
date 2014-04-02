@@ -31,12 +31,12 @@ public class TgVehicleMake extends AbstractEntity<String> {
 
     @Observable
     public TgVehicleMake setNpProp(final String npProp) {
-	this.npProp = npProp;
-	return this;
+        this.npProp = npProp;
+        return this;
     }
 
     public String getNpProp() {
-	return npProp;
+        return npProp;
     }
 
     @IsProperty
@@ -45,11 +45,11 @@ public class TgVehicleMake extends AbstractEntity<String> {
 
     @Observable
     public TgVehicleMake setCompetitor(final TgVehicleMake competitor) {
-	this.competitor = competitor;
-	return this;
+        this.competitor = competitor;
+        return this;
     }
 
     public TgVehicleMake getCompetitor() {
-	return competitor;
+        return competitor;
     }
 }

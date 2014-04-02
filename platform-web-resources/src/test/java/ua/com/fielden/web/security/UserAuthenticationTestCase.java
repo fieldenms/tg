@@ -21,9 +21,9 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 
 /**
  * Provides a unit test for user authentication process.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class UserAuthenticationTestCase extends WebBasedTestCase {
     private static final String authenticationUri = "/login";
@@ -34,79 +34,78 @@ public class UserAuthenticationTestCase extends WebBasedTestCase {
 
     @Test
     public void test_user_athentication_with_correct_cedentials() {
-	final IAuthenticationModel auth = new ClientAuthenticationModel(authenticationUri, 512, config.restClientUtil(), appWidePrivateKey);
-	final Result result = auth.authenticate(UserControllerForTestPurposes.USER_NAME, UserControllerForTestPurposes.PASSWORD);
-	assertNotNull("User authentication result should be present.", result);
-	assertTrue("A successful user authentication result is expected.", result.isSuccessful());
-	assertNotNull("User specific private key should have been associated with client REST util.", config.restClientUtil().getPrivateKey());
-	assertEquals("Username should have been associated with client REST util.", UserControllerForTestPurposes.USER_NAME, config.restClientUtil().getUsername());
-	assertNotNull("User should have been associated with REST client utility.", config.restClientUtil().getUser());
-	assertEquals("A correct user should have been associated with client REST utility.", UserControllerForTestPurposes.USER_NAME, config.restClientUtil().getUser().getKey());
+        final IAuthenticationModel auth = new ClientAuthenticationModel(authenticationUri, 512, config.restClientUtil(), appWidePrivateKey);
+        final Result result = auth.authenticate(UserControllerForTestPurposes.USER_NAME, UserControllerForTestPurposes.PASSWORD);
+        assertNotNull("User authentication result should be present.", result);
+        assertTrue("A successful user authentication result is expected.", result.isSuccessful());
+        assertNotNull("User specific private key should have been associated with client REST util.", config.restClientUtil().getPrivateKey());
+        assertEquals("Username should have been associated with client REST util.", UserControllerForTestPurposes.USER_NAME, config.restClientUtil().getUsername());
+        assertNotNull("User should have been associated with REST client utility.", config.restClientUtil().getUser());
+        assertEquals("A correct user should have been associated with client REST utility.", UserControllerForTestPurposes.USER_NAME, config.restClientUtil().getUser().getKey());
 
-	final User user = (User) result.getInstance();
-	assertNotNull("User was not provided.", user);
-	assertEquals("Incorrect username in the returned user entity instance.", "user", user.getKey());
-	assertNotNull("User must have a public key.", user.getPublicKey());
+        final User user = (User) result.getInstance();
+        assertNotNull("User was not provided.", user);
+        assertEquals("Incorrect username in the returned user entity instance.", "user", user.getKey());
+        assertNotNull("User must have a public key.", user.getPublicKey());
     }
 
     @Test
     public void test_user_athentication_with_incorrect_username() {
-	final IAuthenticationModel auth = new ClientAuthenticationModel(authenticationUri, 512, config.restClientUtil(), appWidePrivateKey);
+        final IAuthenticationModel auth = new ClientAuthenticationModel(authenticationUri, 512, config.restClientUtil(), appWidePrivateKey);
 
-	final Result result = auth.authenticate("incorrect user", UserControllerForTestPurposes.PASSWORD);
-	assertNotNull("User authentication result should be present.", result);
-	assertFalse("An unsuccessful user authentication result is expected.", result.isSuccessful());
-	assertNull("User should have been associated with REST client utility.", config.restClientUtil().getUser());
+        final Result result = auth.authenticate("incorrect user", UserControllerForTestPurposes.PASSWORD);
+        assertNotNull("User authentication result should be present.", result);
+        assertFalse("An unsuccessful user authentication result is expected.", result.isSuccessful());
+        assertNull("User should have been associated with REST client utility.", config.restClientUtil().getUser());
 
-	final User user = (User) result.getInstance();
-	assertNull("User instance should not be provided.", user);
+        final User user = (User) result.getInstance();
+        assertNull("User instance should not be provided.", user);
     }
 
     @Test
     public void test_user_athentication_with_incorrect_password() {
-	final IAuthenticationModel auth = new ClientAuthenticationModel(authenticationUri, 512, config.restClientUtil(), appWidePrivateKey);
+        final IAuthenticationModel auth = new ClientAuthenticationModel(authenticationUri, 512, config.restClientUtil(), appWidePrivateKey);
 
-	final Result result = auth.authenticate(UserControllerForTestPurposes.USER_NAME, "incorrect password");
-	assertNotNull("User authentication result should be present.", result);
-	assertFalse("An unsuccessful user authentication result is expected.", result.isSuccessful());
-	assertNull("User should not have been associated with REST client utility.", config.restClientUtil().getUser());
+        final Result result = auth.authenticate(UserControllerForTestPurposes.USER_NAME, "incorrect password");
+        assertNotNull("User authentication result should be present.", result);
+        assertFalse("An unsuccessful user authentication result is expected.", result.isSuccessful());
+        assertNull("User should not have been associated with REST client utility.", config.restClientUtil().getUser());
 
-
-	final User user = (User) result.getInstance();
-	assertNull("User instance should not be provided.", user);
+        final User user = (User) result.getInstance();
+        assertNull("User instance should not be provided.", user);
     }
 
     @Override
     public synchronized Restlet getInboundRoot() {
-	final Router router = new Router(getContext());
+        final Router router = new Router(getContext());
 
-	config.restServerUtil().setAppWidePrivateKey(appWidePrivateKey);
-	config.restServerUtil().setAppWidePublicKey(appWidePublicKey);
-	router.attach(authenticationUri, new UserAuthResourceFactory(DbDrivenTestCase.injector, config.restServerUtil()) {
-	    @Override
-	    protected IUserController getController() {
-		return controller;
-	    }
-	});
-	return router;
+        config.restServerUtil().setAppWidePrivateKey(appWidePrivateKey);
+        config.restServerUtil().setAppWidePublicKey(appWidePublicKey);
+        router.attach(authenticationUri, new UserAuthResourceFactory(DbDrivenTestCase.injector, config.restServerUtil()) {
+            @Override
+            protected IUserController getController() {
+                return controller;
+            }
+        });
+        return router;
     }
 
     @Override
     public void setUp() {
-	super.setUp();
-	try {
-	    controller.initUser(config.entityFactory());
-	    config.restClientUtil().setUserController(controller);
-	    config.restClientUtil().setUsername(UserControllerForTestPurposes.USER_NAME);
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    throw new IllegalStateException("Setup failed -- cannot proceed with the test.");
-	}
+        super.setUp();
+        try {
+            controller.initUser(config.entityFactory());
+            config.restClientUtil().setUserController(controller);
+            config.restClientUtil().setUsername(UserControllerForTestPurposes.USER_NAME);
+        } catch (final Exception e) {
+            e.printStackTrace();
+            throw new IllegalStateException("Setup failed -- cannot proceed with the test.");
+        }
     }
 
     @Override
     protected String[] getDataSetPaths() {
-	return new String[] { "src/test/resources/data-files/web-test-case.flat.xml" };
+        return new String[] { "src/test/resources/data-files/web-test-case.flat.xml" };
     }
 
 }

@@ -71,41 +71,43 @@ public abstract class AbstractSource implements ISource {
 
     @Override
     public void addReferencingProp(final PropResolutionInfo prop) {
-	if (prop.entProp.isPreliminaryResolved() || prop.entProp.isGenerated()) {
-	    if (!this.equals(prop.entProp.getSource())) {
-		referencingProps.add(prop);
-		prop.entProp.setSource(this);
-	    }
-	} else {
-	    if (!generated()) {
-		referencingProps.add(prop);
-		prop.entProp.setSource(this);
-	    } else {
-		throw new IllegalStateException("Prop [" + prop + "] should be first preliminary resolved to non-generated source! This source " + getAlias() + " can't be it first source");
-	    }
-	}
+        if (prop.entProp.isPreliminaryResolved() || prop.entProp.isGenerated()) {
+            if (!this.equals(prop.entProp.getSource())) {
+                referencingProps.add(prop);
+                prop.entProp.setSource(this);
+            }
+        } else {
+            if (!generated()) {
+                referencingProps.add(prop);
+                prop.entProp.setSource(this);
+            } else {
+                throw new IllegalStateException("Prop [" + prop + "] should be first preliminary resolved to non-generated source! This source " + getAlias()
+                        + " can't be it first source");
+            }
+        }
 
-	if (prop.allExplicit() && prop.getProp().expressionModel == null) {
-	    // TODO implement more transparently
-	    prop.entProp.setSql(sourceItems.get((prop.prop.name.endsWith(".id") ? prop.prop.name.substring(0, prop.prop.name.length() - 3) : prop.prop.name)).getColumn());
-	}
+        if (prop.allExplicit() && prop.getProp().expressionModel == null) {
+            // TODO implement more transparently
+            prop.entProp.setSql(sourceItems.get((prop.prop.name.endsWith(".id") ? prop.prop.name.substring(0, prop.prop.name.length() - 3) : prop.prop.name)).getColumn());
+        }
     }
 
     @Override
     public List<PropResolutionInfo> getReferencingProps() {
-	final List<PropResolutionInfo> result = new ArrayList<PropResolutionInfo>();
+        final List<PropResolutionInfo> result = new ArrayList<PropResolutionInfo>();
 
-	for (final PropResolutionInfo propResolutionInfo : referencingProps) {
-	    if (propResolutionInfo.entProp.getSource().equals(this)) {
-		result.add(propResolutionInfo);
-	    }
-	}
+        for (final PropResolutionInfo propResolutionInfo : referencingProps) {
+            if (propResolutionInfo.entProp.getSource().equals(this)) {
+                result.add(propResolutionInfo);
+            }
+        }
 
         return result;
     }
 
     /**
      * If there is alias and property is prepended with this alias, then return property with alias removed, otherwise return null
+     * 
      * @param dotNotatedPropName
      * @param sourceAlias
      * @return
@@ -118,7 +120,7 @@ public abstract class AbstractSource implements ISource {
 
     protected PropResolutionInfo propAsIs(final EntProp prop) {
         final Pair<PurePropInfo, PurePropInfo> propAsIsSearchResult = lookForProp(prop.getName());
-        if (propAsIsSearchResult != null/* && alias == null*/) {        // this condition will prevent usage of not-aliased properties if their source has alias
+        if (propAsIsSearchResult != null/* && alias == null*/) { // this condition will prevent usage of not-aliased properties if their source has alias
             return new PropResolutionInfo(prop, null, propAsIsSearchResult.getValue(), propAsIsSearchResult.getKey());
         }
         return null;
@@ -286,27 +288,27 @@ public abstract class AbstractSource implements ISource {
     }
 
     protected SortedMap<PurePropInfo, List<EntProp>> determineGroups(final List<PropResolutionInfo> refProps) {
-	final SortedMap<PurePropInfo, List<EntProp>> result = new TreeMap<PurePropInfo, List<EntProp>>();
+        final SortedMap<PurePropInfo, List<EntProp>> result = new TreeMap<PurePropInfo, List<EntProp>>();
 
-	for (final PropResolutionInfo propResolutionInfo : refProps) {
-	    if (!propResolutionInfo.entProp.isFinallyResolved()) {
-		if (!propResolutionInfo.allExplicit() && EntityUtils.isPersistedEntityType(propResolutionInfo.explicitProp.type)) {
-		    if (!result.containsKey(propResolutionInfo.explicitProp)) {
-			result.put(propResolutionInfo.explicitProp, new ArrayList<EntProp>());
-		    }
-		    result.get(propResolutionInfo.explicitProp).add(propResolutionInfo.entProp);
-		}
-	    }
-	}
+        for (final PropResolutionInfo propResolutionInfo : refProps) {
+            if (!propResolutionInfo.entProp.isFinallyResolved()) {
+                if (!propResolutionInfo.allExplicit() && EntityUtils.isPersistedEntityType(propResolutionInfo.explicitProp.type)) {
+                    if (!result.containsKey(propResolutionInfo.explicitProp)) {
+                        result.put(propResolutionInfo.explicitProp, new ArrayList<EntProp>());
+                    }
+                    result.get(propResolutionInfo.explicitProp).add(propResolutionInfo.entProp);
+                }
+            }
+        }
 
-	return result;
+        return result;
     }
 
     protected Conditions joinCondition(final String leftProp, final String rightProp, final TypeBasedSource source) {
-	//System.out.println("                      joining " + leftProp + " with " + rightProp);
-	final EntProp leftEntProp = new EntProp(leftProp, false, true);
-	final EntProp rightEntProp = new EntProp(rightProp, false, true);
-	rightEntProp.setSource(source);
+        //System.out.println("                      joining " + leftProp + " with " + rightProp);
+        final EntProp leftEntProp = new EntProp(leftProp, false, true);
+        final EntProp rightEntProp = new EntProp(rightProp, false, true);
+        rightEntProp.setSource(source);
         return new Conditions(new ComparisonTest(leftEntProp, ComparisonOperator.EQ, rightEntProp));
     }
 
@@ -321,7 +323,7 @@ public abstract class AbstractSource implements ISource {
         final SortedMap<PurePropInfo, List<EntProp>> groups = determineGroups(getReferencingProps());
 
         for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
-//            final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, domainMetadataAnalyser);
+            //            final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, domainMetadataAnalyser);
             final TypeBasedSource qrySource = new TypeBasedSource(domainMetadataAnalyser.getEntityMetadata(groupEntry.getKey().type), composeAlias(groupEntry.getKey().name), true, domainMetadataAnalyser);
             //System.out.println("                           adding new source: " + qrySource.getAlias() + " to existing source: " + getAlias());
             qrySource.populateSourceItems(groupEntry.getKey().nullable);
@@ -338,8 +340,9 @@ public abstract class AbstractSource implements ISource {
 
     /**
      * Represent data structure to hold information about potential prop resolution against some query source.
+     * 
      * @author TG Team
-     *
+     * 
      */
     public static class PropResolutionInfo {
 
@@ -357,16 +360,17 @@ public abstract class AbstractSource implements ISource {
          */
         private PurePropInfo prop;
         /**
-         * Part of property part, that is explicitly present in given query source. For case of source-from-type it will always be just one-part property, which is equal to propPart; in case of source-from-model it can be several parts property, depending on actual yields of the source model behind.
+         * Part of property part, that is explicitly present in given query source. For case of source-from-type it will always be just one-part property, which is equal to
+         * propPart; in case of source-from-model it can be several parts property, depending on actual yields of the source model behind.
          */
         private PurePropInfo explicitProp;
 
         public PropResolutionInfo(final EntProp entProp, final String aliasPart, final PurePropInfo prop, final PurePropInfo explicitProp, final boolean implicitId) {
             this.entProp = entProp;
-            if(entProp.getPropType() == null && prop.type != null) {
+            if (entProp.getPropType() == null && prop.type != null) {
                 entProp.setPropType(prop.type);
             }
-            if(entProp.getHibType() == null && prop.hibType != null) {
+            if (entProp.getHibType() == null && prop.hibType != null) {
                 entProp.setHibType(prop.hibType);
             }
 
@@ -384,7 +388,7 @@ public abstract class AbstractSource implements ISource {
 
         public boolean allExplicit() {
             return implicitId || //
-            	entProp.isExpression() || //
+                    entProp.isExpression() || //
                     explicitProp.name.equals(prop.name) || //
                     (explicitProp.name + ".id").equals(prop.name);
         }
@@ -471,7 +475,7 @@ public abstract class AbstractSource implements ISource {
             }
             return true;
         }
-  }
+    }
 
     public boolean isNullable() {
         return nullable;
@@ -483,31 +487,31 @@ public abstract class AbstractSource implements ISource {
 
     @Override
     public int hashCode() {
-	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((alias == null) ? 0 : alias.hashCode());
-	return result;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((alias == null) ? 0 : alias.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj == null) {
-	    return false;
-	}
-	if (!(obj instanceof AbstractSource)) {
-	    return false;
-	}
-	final AbstractSource other = (AbstractSource) obj;
-	if (alias == null) {
-	    if (other.alias != null) {
-		return false;
-	    }
-	} else if (!alias.equals(other.alias)) {
-	    return false;
-	}
-	return true;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof AbstractSource)) {
+            return false;
+        }
+        final AbstractSource other = (AbstractSource) obj;
+        if (alias == null) {
+            if (other.alias != null) {
+                return false;
+            }
+        } else if (!alias.equals(other.alias)) {
+            return false;
+        }
+        return true;
     }
 }

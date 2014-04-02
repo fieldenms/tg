@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing assocaitons.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key")
@@ -27,6 +27,7 @@ public class MasterEntity6 extends AbstractEntity<String> {
     public DetailsEntity6 getIllegalOne2oneAssociation() {
         return illegalOne2oneAssociation;
     }
+
     @Observable
     public void setIllegalOne2oneAssociation(final DetailsEntity6 illegalOne2oneAssociation) {
         this.illegalOne2oneAssociation = illegalOne2oneAssociation;

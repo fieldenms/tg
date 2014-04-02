@@ -25,183 +25,181 @@ public class TypeEnforcementForMaxFunctionTest {
 
     @Test
     public void test_max_with_literals_case_1() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(2)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final TypeCompatibilityException ex) {
-	    assertEquals("Incorrect error message.", "Constant value is not applicable to aggregation functions.", ex.getMessage());
-	}
+        final Token[] tokens = new ExpressionLexer("MAX(2)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final TypeCompatibilityException ex) {
+            assertEquals("Incorrect error message.", "Constant value is not applicable to aggregation functions.", ex.getMessage());
+        }
     }
 
     @Test
     public void test_max_with_literals_case_2() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(2.6)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final TypeCompatibilityException ex) {
-	    assertEquals("Incorrect error message.", "Constant value is not applicable to aggregation functions.", ex.getMessage());
-	}
+        final Token[] tokens = new ExpressionLexer("MAX(2.6)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final TypeCompatibilityException ex) {
+            assertEquals("Incorrect error message.", "Constant value is not applicable to aggregation functions.", ex.getMessage());
+        }
     }
 
     @Test
     public void test_max_with_literals_case_3() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(\"hello\")").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final TypeCompatibilityException ex) {
-	    assertEquals("Incorrect error message.", "Constant value is not applicable to aggregation functions.", ex.getMessage());
-	}
+        final Token[] tokens = new ExpressionLexer("MAX(\"hello\")").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final TypeCompatibilityException ex) {
+            assertEquals("Incorrect error message.", "Constant value is not applicable to aggregation functions.", ex.getMessage());
+        }
     }
 
     @Test
     public void test_max_with_literals_case_4() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(1d)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Type ua.com.fielden.platform.expression.type.Day is not supported here.", ex.getMessage());
-	}
+        final Token[] tokens = new ExpressionLexer("MAX(1d)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect error message.", "Type ua.com.fielden.platform.expression.type.Day is not supported here.", ex.getMessage());
+        }
     }
 
     @Test
     public void test_max_with_literals_case_5() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(3m)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Type ua.com.fielden.platform.expression.type.Month is not supported here.", ex.getMessage());
-	}
+        final Token[] tokens = new ExpressionLexer("MAX(3m)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect error message.", "Type ua.com.fielden.platform.expression.type.Month is not supported here.", ex.getMessage());
+        }
     }
 
     @Test
     public void test_max_with_literals_case_6() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(3y)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Type ua.com.fielden.platform.expression.type.Year is not supported here.", ex.getMessage());
-	}
+        final Token[] tokens = new ExpressionLexer("MAX(3y)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final UnsupportedTypeException ex) {
+            assertEquals("Incorrect error message.", "Type ua.com.fielden.platform.expression.type.Year is not supported here.", ex.getMessage());
+        }
     }
 
     @Test
     public void test_max_with_constant_expression() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(2.6 + 6 / 2 - 4 * 7)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	try {
-	    new AstWalker(ast, visitor).walk();
-	} catch (final TypeCompatibilityException ex) {
-	    assertEquals("Incorrect error message.", "Constant value is not applicable to aggregation functions.", ex.getMessage());
-	}
+        final Token[] tokens = new ExpressionLexer("MAX(2.6 + 6 / 2 - 4 * 7)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        try {
+            new AstWalker(ast, visitor).walk();
+        } catch (final TypeCompatibilityException ex) {
+            assertEquals("Incorrect error message.", "Constant value is not applicable to aggregation functions.", ex.getMessage());
+        }
     }
-
 
     @Test
     public void test_max_int_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(intProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Integer.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("MAX(intProperty)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Integer.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
     @Test
     public void test_max_decimal_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(decimalProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", BigDecimal.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("MAX(decimalProperty)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", BigDecimal.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
     @Test
     public void test_max_money_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(moneyProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Money.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("MAX(moneyProperty)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Money.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
     @Test
     public void test_max_string_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(strProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", String.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("MAX(strProperty)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", String.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
     @Test
     public void test_max_date_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(dateProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Date.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("MAX(dateProperty)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Date.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
-
 
     @Test
     public void test_complex_expression_with_multple_parties_1() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("MAX(2 / (moneyProperty / decimalProperty) / 3.5)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Money.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("MAX(2 / (moneyProperty / decimalProperty) / 3.5)").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Money.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
     @Test
     public void test_complex_expression_with_multple_parties_2() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("2.5 / (intProperty / MAX(decimalProperty)) / 35").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", BigDecimal.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("2.5 / (intProperty / MAX(decimalProperty)) / 35").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", BigDecimal.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
     @Test
     public void test_complex_expression_with_multple_parties_3() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("2.5 / MAX(intProperty / moneyProperty) / 35").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-	new AstWalker(ast, visitor).walk();
-	assertEquals("Incorrect type.", Money.class, ast.getType());
-	assertNull("Incorrect value.", ast.getValue());
+        final Token[] tokens = new ExpressionLexer("2.5 / MAX(intProperty / moneyProperty) / 35").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+        new AstWalker(ast, visitor).walk();
+        assertEquals("Incorrect type.", Money.class, ast.getType());
+        assertNull("Incorrect value.", ast.getValue());
     }
 
 }

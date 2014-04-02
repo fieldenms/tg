@@ -46,9 +46,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Editor for an entity property of ordinary types (i.e. not entity and non-collectional).
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class OrdinaryPropertyEditor implements IPropertyEditor {
 
@@ -60,196 +60,200 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
     private RadioButtonPanel radioEditor;
     private final JComponent editor;
 
-
     /**
      * Creates {@link OrdinaryPropertyEditor} for the entity centre and binds it to the specified property.
-     *
+     * 
      * @param criteria
      * @param propertyName
      * @return
      */
-    public static OrdinaryPropertyEditor createOrdinaryPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName){
-	final Class<?> type = PropertyTypeDeterminator.determinePropertyType(criteria.getType(), propertyName);
-	final Long defaultTimePortionMillis = (Date.class.isAssignableFrom(type) && CriteriaReflector.isSecondParam(criteria.getType(), propertyName)) ? DatePickerLayer.defaultTimePortionMillisForTheEndOfDay() : 0L;
-	return new OrdinaryPropertyEditor(criteria, propertyName, defaultTimePortionMillis);
+    public static OrdinaryPropertyEditor createOrdinaryPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName) {
+        final Class<?> type = PropertyTypeDeterminator.determinePropertyType(criteria.getType(), propertyName);
+        final Long defaultTimePortionMillis = (Date.class.isAssignableFrom(type) && CriteriaReflector.isSecondParam(criteria.getType(), propertyName)) ? DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()
+                : 0L;
+        return new OrdinaryPropertyEditor(criteria, propertyName, defaultTimePortionMillis);
     }
 
     /**
      * Creates {@link OrdinaryPropertyEditor} and binds it to the specified property.
-     *
+     * 
      * @param entity
      * @param propertyName
      * @return
      */
-    public static OrdinaryPropertyEditor createOrdinaryPropertyEditorForMaster(final AbstractEntity<?> entity, final String propertyName){
-	final MetaProperty metaProp = entity.getProperty(propertyName);
-	final Long defaultTimePortionMillis = (Date.class.isAssignableFrom(metaProp.getType()) && CriteriaReflector.isSecondParam(entity.getType(), propertyName)) ? DatePickerLayer.defaultTimePortionMillisForTheEndOfDay() : 0L;
-	return new OrdinaryPropertyEditor(entity, propertyName, defaultTimePortionMillis);
+    public static OrdinaryPropertyEditor createOrdinaryPropertyEditorForMaster(final AbstractEntity<?> entity, final String propertyName) {
+        final MetaProperty metaProp = entity.getProperty(propertyName);
+        final Long defaultTimePortionMillis = (Date.class.isAssignableFrom(metaProp.getType()) && CriteriaReflector.isSecondParam(entity.getType(), propertyName)) ? DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()
+                : 0L;
+        return new OrdinaryPropertyEditor(entity, propertyName, defaultTimePortionMillis);
     }
 
     /**
      * Creates {@link OrdinaryPropertyEditor} and binds it to the specified property in the given entity.
-     *
+     * 
      * @param entity
      * @param propertyName
-     * @param defaultTimePortionMillis - this param is used for date properties: <code>null</code> in case when no time portion is needed in editor,
-     * zero or non-zero for default time portion after picking some date from date picker.
-     * See {@link ComponentFactory#createDatePickerLayer(ua.com.fielden.platform.entity.IBindingEntity, String, String, String, boolean, Long, ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction...)} for more details.
+     * @param defaultTimePortionMillis
+     *            - this param is used for date properties: <code>null</code> in case when no time portion is needed in editor, zero or non-zero for default time portion after
+     *            picking some date from date picker. See
+     *            {@link ComponentFactory#createDatePickerLayer(ua.com.fielden.platform.entity.IBindingEntity, String, String, String, boolean, Long, ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction...)}
+     *            for more details.
      */
     public OrdinaryPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final Long defaultTimePortionMillis) {
 
-	this.entity = entity;
-	this.propertyName = propertyName;
+        this.entity = entity;
+        this.propertyName = propertyName;
 
-	final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
+        final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
 
-	label = DummyBuilder.label(titleAndDesc.getKey());
-	label.setToolTipText(titleAndDesc.getValue());
-	final MetaProperty metaProperty = entity.getProperty(propertyName);
-	editor = createEditor(entity, propertyName, metaProperty.getType(), metaProperty.getTitle(), metaProperty.getDesc(), metaProperty.isUpperCase(), defaultTimePortionMillis);
+        label = DummyBuilder.label(titleAndDesc.getKey());
+        label.setToolTipText(titleAndDesc.getValue());
+        final MetaProperty metaProperty = entity.getProperty(propertyName);
+        editor = createEditor(entity, propertyName, metaProperty.getType(), metaProperty.getTitle(), metaProperty.getDesc(), metaProperty.isUpperCase(), defaultTimePortionMillis);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private JComponent createEditor(final AbstractEntity<?> entity, final String bindingPropertyName, final Class type, final String title, final String desc, final boolean upperCase, final Long defaultTimePortionMillis) {
-	final JComponent editor;
-	if (Integer.class == type || int.class == type) {
-	    // final BoundedValidationLayer<JFormattedTextField> component = ComponentFactory.createIntegerTextField(entity, propertyName, true, desc);
-	    final BoundedValidationLayer<JSpinner> component = ComponentFactory.createNumberSpinner(entity, bindingPropertyName, true, desc, 1);
-	    rebindableEditor = component;
-	    radioEditor = null;
-	    editor = component;
-	} else if (Money.class.isAssignableFrom(type) || BigDecimal.class == type || Double.class == type || double.class == type) {
-	    final BoundedValidationLayer<JFormattedTextField> component = ComponentFactory.createBigDecimalOrMoneyOrDoubleField(entity, bindingPropertyName, true, desc);
-	    rebindableEditor = component;
-	    radioEditor = null;
-	    editor = component;
-	} else if (Date.class == type) {
-	    // final BoundedValidationLayer<BoundedJXDatePicker> component = ComponentFactory.createBoundedJXDatePicker(entity, propertyName, desc, true);
-	    final BoundedValidationLayer<DatePickerLayer> component = ComponentFactory.createDatePickerLayer(entity, bindingPropertyName, desc, "", defaultTimePortionMillis != null, defaultTimePortionMillis != null ? defaultTimePortionMillis : 0L);
-	    rebindableEditor = component;
-	    radioEditor = null;
-	    editor = component;
-	} else if (String.class == type) {
-	    // The appropriate editor for string property is determined based on the Max annotation indicating the maximum value length
-	    int length = 0;
-	    try {
-		final Method setter = Reflector.getMethod(entity/* .getType() */, Mutator.SETTER.getName(bindingPropertyName), String.class);
-		if (AnnotationReflector.isAnnotationPresent(setter, Max.class)) {
-		    length = AnnotationReflector.getAnnotation(setter, Max.class).value();
-		}
-	    } catch (final Throwable ex) {
-		// TODO log exception... usually it should be a harmless situation where a property was not provided with a setter, which is a legitimate case
-	    }
+        final JComponent editor;
+        if (Integer.class == type || int.class == type) {
+            // final BoundedValidationLayer<JFormattedTextField> component = ComponentFactory.createIntegerTextField(entity, propertyName, true, desc);
+            final BoundedValidationLayer<JSpinner> component = ComponentFactory.createNumberSpinner(entity, bindingPropertyName, true, desc, 1);
+            rebindableEditor = component;
+            radioEditor = null;
+            editor = component;
+        } else if (Money.class.isAssignableFrom(type) || BigDecimal.class == type || Double.class == type || double.class == type) {
+            final BoundedValidationLayer<JFormattedTextField> component = ComponentFactory.createBigDecimalOrMoneyOrDoubleField(entity, bindingPropertyName, true, desc);
+            rebindableEditor = component;
+            radioEditor = null;
+            editor = component;
+        } else if (Date.class == type) {
+            // final BoundedValidationLayer<BoundedJXDatePicker> component = ComponentFactory.createBoundedJXDatePicker(entity, propertyName, desc, true);
+            final BoundedValidationLayer<DatePickerLayer> component = ComponentFactory.createDatePickerLayer(entity, bindingPropertyName, desc, "", defaultTimePortionMillis != null, defaultTimePortionMillis != null ? defaultTimePortionMillis
+                    : 0L);
+            rebindableEditor = component;
+            radioEditor = null;
+            editor = component;
+        } else if (String.class == type) {
+            // The appropriate editor for string property is determined based on the Max annotation indicating the maximum value length
+            int length = 0;
+            try {
+                final Method setter = Reflector.getMethod(entity/* .getType() */, Mutator.SETTER.getName(bindingPropertyName), String.class);
+                if (AnnotationReflector.isAnnotationPresent(setter, Max.class)) {
+                    length = AnnotationReflector.getAnnotation(setter, Max.class).value();
+                }
+            } catch (final Throwable ex) {
+                // TODO log exception... usually it should be a harmless situation where a property was not provided with a setter, which is a legitimate case
+            }
 
-	    if (length > 50) {
-		final BoundedValidationLayer<JTextArea> component = ComponentFactory.createStringTextArea(entity, bindingPropertyName, true, true, desc);
-		// let's now handle TAB and shift TAB key press to enforce focus traversal instead of \t character insertion
-		final JTextArea area = component.getView();
-		area.setLineWrap(true);
-		area.setWrapStyleWord(true);
-		final InputMap im = area.getInputMap();
-		final KeyStroke tab = KeyStroke.getKeyStroke("TAB");
-		area.getActionMap().put(im.get(tab), new TabAction(true));
-		final KeyStroke shiftTab = KeyStroke.getKeyStroke("shift TAB");
-		im.put(shiftTab, shiftTab);
-		area.getActionMap().put(im.get(shiftTab), new TabAction(false));
+            if (length > 50) {
+                final BoundedValidationLayer<JTextArea> component = ComponentFactory.createStringTextArea(entity, bindingPropertyName, true, true, desc);
+                // let's now handle TAB and shift TAB key press to enforce focus traversal instead of \t character insertion
+                final JTextArea area = component.getView();
+                area.setLineWrap(true);
+                area.setWrapStyleWord(true);
+                final InputMap im = area.getInputMap();
+                final KeyStroke tab = KeyStroke.getKeyStroke("TAB");
+                area.getActionMap().put(im.get(tab), new TabAction(true));
+                final KeyStroke shiftTab = KeyStroke.getKeyStroke("shift TAB");
+                im.put(shiftTab, shiftTab);
+                area.getActionMap().put(im.get(shiftTab), new TabAction(false));
 
-		component.getView().getDocument().addDocumentListener(DummyBuilder.createInputLimiter(length));
-		rebindableEditor = component;
-		radioEditor = null;
-		final JScrollPane scrollPane = new JScrollPane(rebindableEditor) {
-		    private static final long serialVersionUID = -5987466954900293008L;
+                component.getView().getDocument().addDocumentListener(DummyBuilder.createInputLimiter(length));
+                rebindableEditor = component;
+                radioEditor = null;
+                final JScrollPane scrollPane = new JScrollPane(rebindableEditor) {
+                    private static final long serialVersionUID = -5987466954900293008L;
 
-		    @Override
-		    public boolean requestFocusInWindow() {
-			return getViewport().getView().requestFocusInWindow(); // should be overridden to provide automatic refocusing from scroll pane to its wrapped component
-		    }
-		};
-		editor = scrollPane;
-	    } else {
-		boolean isSecrete = false;
-		try {
-		    isSecrete = AnnotationReflector.getPropertyAnnotation(Secrete.class, entity.getType(), bindingPropertyName) != null;
-		} catch (final Exception ex) {
-		    // in most cases this exception will be thrown when entity is the DynamicEntityQueryCriteria
-		}
-		if (!isSecrete) {
-		    final BoundedValidationLayer<JTextField> component = ComponentFactory.createStringTextField(entity, bindingPropertyName, true, desc, upperCase ? UPPER_CASE
-			    : MIXED_CASE);
-		    rebindableEditor = component;
-		    radioEditor = null;
-		    editor = component;
-		} else {
-		    final BoundedValidationLayer<JPasswordField> component = ComponentFactory.createPasswordField(entity, bindingPropertyName, true, desc, '*');
-		    rebindableEditor = component;
-		    radioEditor = null;
-		    editor = component;
-		}
-	    }
-	} else if (Boolean.class == type || boolean.class == type) {
-	    final BoundedValidationLayer<JCheckBox> component = ComponentFactory.createCheckBox(entity, bindingPropertyName, title, desc);
-	    rebindableEditor = component;
-	    radioEditor = null;
-	    editor = component;
-	} else if (type.isEnum()) {
-	    final EnumSet values = EnumSet.allOf(type.asSubclass(Enum.class));
-	    final RadioButtonPanel radioPanel = new RadioButtonPanel();
-	    for (final Object value : values) {
-		if (value instanceof IPropertyEnum) {
-		    radioPanel.addEditor((Enum) value, ComponentFactory.createRadioButton(entity, bindingPropertyName, value, ((IPropertyEnum) value).getTitle(), ((IPropertyEnum) value).getTooltip()));
-		}
-	    }
-	    rebindableEditor = null;
-	    radioEditor = radioPanel;
-	    editor = radioPanel;
-	} else {
-	    editor = null;
-	}
+                    @Override
+                    public boolean requestFocusInWindow() {
+                        return getViewport().getView().requestFocusInWindow(); // should be overridden to provide automatic refocusing from scroll pane to its wrapped component
+                    }
+                };
+                editor = scrollPane;
+            } else {
+                boolean isSecrete = false;
+                try {
+                    isSecrete = AnnotationReflector.getPropertyAnnotation(Secrete.class, entity.getType(), bindingPropertyName) != null;
+                } catch (final Exception ex) {
+                    // in most cases this exception will be thrown when entity is the DynamicEntityQueryCriteria
+                }
+                if (!isSecrete) {
+                    final BoundedValidationLayer<JTextField> component = ComponentFactory.createStringTextField(entity, bindingPropertyName, true, desc, upperCase ? UPPER_CASE
+                            : MIXED_CASE);
+                    rebindableEditor = component;
+                    radioEditor = null;
+                    editor = component;
+                } else {
+                    final BoundedValidationLayer<JPasswordField> component = ComponentFactory.createPasswordField(entity, bindingPropertyName, true, desc, '*');
+                    rebindableEditor = component;
+                    radioEditor = null;
+                    editor = component;
+                }
+            }
+        } else if (Boolean.class == type || boolean.class == type) {
+            final BoundedValidationLayer<JCheckBox> component = ComponentFactory.createCheckBox(entity, bindingPropertyName, title, desc);
+            rebindableEditor = component;
+            radioEditor = null;
+            editor = component;
+        } else if (type.isEnum()) {
+            final EnumSet values = EnumSet.allOf(type.asSubclass(Enum.class));
+            final RadioButtonPanel radioPanel = new RadioButtonPanel();
+            for (final Object value : values) {
+                if (value instanceof IPropertyEnum) {
+                    radioPanel.addEditor((Enum) value, ComponentFactory.createRadioButton(entity, bindingPropertyName, value, ((IPropertyEnum) value).getTitle(), ((IPropertyEnum) value).getTooltip()));
+                }
+            }
+            rebindableEditor = null;
+            radioEditor = radioPanel;
+            editor = radioPanel;
+        } else {
+            editor = null;
+        }
 
-	return editor;
+        return editor;
     }
 
     @Override
     public void bind(final AbstractEntity<?> entity) {
-	this.entity = entity;
-	if (rebindableEditor != null) {
-	    rebindableEditor.rebindTo(entity);
-	}
-	if (radioEditor != null) {
-	    for (final BoundedValidationLayer<JRadioButton> validationLayer : radioEditor.getEditors()) {
-		validationLayer.rebindTo(entity);
-	    }
-	}
+        this.entity = entity;
+        if (rebindableEditor != null) {
+            rebindableEditor.rebindTo(entity);
+        }
+        if (radioEditor != null) {
+            for (final BoundedValidationLayer<JRadioButton> validationLayer : radioEditor.getEditors()) {
+                validationLayer.rebindTo(entity);
+            }
+        }
     }
 
     @Override
     public AbstractEntity<?> getEntity() {
-	return entity;
+        return entity;
     }
 
     @Override
     public String getPropertyName() {
-	return propertyName;
+        return propertyName;
     }
 
     public JLabel getLabel() {
-	return label;
+        return label;
     }
 
     public JComponent getEditor() {
-	return editor;
+        return editor;
     }
 
     @Override
     public JPanel getDefaultLayout() {
-	final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
-	panel.add(label);
-	panel.add(editor, "growx");
-	return panel;
+        final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
+        panel.add(label);
+        panel.add(editor, "growx");
+        return panel;
     }
 
     @Override
     public IValueMatcher<?> getValueMatcher() {
-	throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
+        throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
     }
 }

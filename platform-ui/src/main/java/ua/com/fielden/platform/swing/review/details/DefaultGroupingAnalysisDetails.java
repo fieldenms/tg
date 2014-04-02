@@ -11,20 +11,20 @@ import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 public class DefaultGroupingAnalysisDetails<T extends AbstractEntity<?>> extends CentreBasedDetails<AnalysisDetailsData<T>, T> {
 
     public DefaultGroupingAnalysisDetails(//
-	    final EntityFactory entityFactory, //
-	    final ICriteriaGenerator criteriaGenerator, //
-	    final IEntityMasterManager masterManager){
-	super(entityFactory, criteriaGenerator, masterManager);
+    final EntityFactory entityFactory, //
+            final ICriteriaGenerator criteriaGenerator, //
+            final IEntityMasterManager masterManager) {
+        super(entityFactory, criteriaGenerator, masterManager);
     }
 
     @Override
     protected IReportQueryGenerator<T> createQueryGenerator(final AnalysisDetailsData<T> detailsParam) {
-	return new DetailsQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(detailsParam.root, detailsParam.getBaseCdtme(), detailsParam.getLinkPropValuePairs());
+        return new DetailsQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(detailsParam.root, detailsParam.getBaseCdtme(), detailsParam.getLinkPropValuePairs());
     }
 
     @Override
     protected ICentreDomainTreeManagerAndEnhancer getCdtme(final AnalysisDetailsData<T> detailsParam) {
-	return detailsParam.getBaseCdtme();
+        return detailsParam.getBaseCdtme();
     }
 
 }

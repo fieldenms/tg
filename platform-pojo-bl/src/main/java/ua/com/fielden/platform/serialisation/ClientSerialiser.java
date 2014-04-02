@@ -6,23 +6,23 @@ import com.google.inject.Inject;
 
 /**
  * Client side XML serialisation implementation.
- *
- *
+ * 
+ * 
  * @author TG Team
- *
+ * 
  */
 public class ClientSerialiser extends XStreamSerialiser {
     private final EntityFactory factory;
 
     public ClientSerialiser(final EntityFactory factory, final boolean compact) {
-	super(compact);
-	this.factory = factory;
-	registerConverter(new ClientEntityConverter(this.factory));
+        super(compact);
+        this.factory = factory;
+        registerConverter(new ClientEntityConverter(this.factory));
     }
 
     @Inject
     public ClientSerialiser(final EntityFactory factory) {
-	this(factory, true);
+        this(factory, true);
     }
 
     @Override

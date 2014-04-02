@@ -10,14 +10,14 @@ import javax.swing.JTextField;
  */
 public enum Options {
     READONLY() {
-	public void set(final JTextField field) {
-	    field.setEditable(false);
-	}
+        public void set(final JTextField field) {
+            field.setEditable(false);
+        }
     },
     DISABLED() {
-	public void set(final JTextField field) {
-	    field.setEnabled(false);
-	}
+        public void set(final JTextField field) {
+            field.setEnabled(false);
+        }
     };
 
     public abstract void set(final JTextField field);

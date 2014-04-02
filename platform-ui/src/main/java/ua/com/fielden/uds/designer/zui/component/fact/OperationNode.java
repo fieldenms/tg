@@ -18,61 +18,61 @@ public class OperationNode extends TextNode implements IDraggable {
     private Operation operation;
 
     public OperationNode(Operation operation) {
-	super(GlobalObjects.canvas, operation.toString(), null);
-	setBackgroundColor(Color.white);
-	setOperation(operation);
-	setEditable(false);
-	setCurvaturePrc(20);
-	setRounding(new BorderRounding(true, true, true, true));
-	setPedding(new Pedding(10, 10, 10, 10));
+        super(GlobalObjects.canvas, operation.toString(), null);
+        setBackgroundColor(Color.white);
+        setOperation(operation);
+        setEditable(false);
+        setCurvaturePrc(20);
+        setRounding(new BorderRounding(true, true, true, true));
+        setPedding(new Pedding(10, 10, 10, 10));
     }
 
     public Operation getOperation() {
-	return operation;
+        return operation;
     }
 
     private void setOperation(Operation operation) {
-	this.operation = operation;
+        this.operation = operation;
     }
 
     public boolean canBeDetached() {
-	return true;
+        return true;
     }
 
     public boolean canDrag() {
-	return true;
+        return true;
     }
 
     private boolean removeAfterDrop = false;
 
     public boolean getRemoveAfterDrop() {
-	return removeAfterDrop;
+        return removeAfterDrop;
     }
 
     public void setRemoveAfterDrop(boolean flag) {
-	removeAfterDrop = flag;
+        removeAfterDrop = flag;
     }
 
     public String toString() {
-	return getOperation().toString();
+        return getOperation().toString();
     }
 
     @Override
     public boolean equals(Object obj) {
-	if (!(obj instanceof OperationNode)) {
-	    return false;
-	}
+        if (!(obj instanceof OperationNode)) {
+            return false;
+        }
 
-	if (obj == this) {
-	    return true;
-	}
+        if (obj == this) {
+            return true;
+        }
 
-	return operation.equals(((OperationNode) obj).getOperation());
+        return operation.equals(((OperationNode) obj).getOperation());
     }
 
     public Object clone() {
-	setDummyCloning(true);
-	return super.clone();
+        setDummyCloning(true);
+        return super.clone();
     }
 
 }

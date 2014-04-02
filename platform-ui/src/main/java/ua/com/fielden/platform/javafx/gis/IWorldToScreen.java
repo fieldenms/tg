@@ -9,10 +9,10 @@ import java.awt.geom.Point2D;
  */
 public interface IWorldToScreen {
     Point2D world2pixelXY(final Point2D p);
-    
+
     Point2D world2pixelXY(final double x, final double y);
 
     Point2D pixel2worldXY(final Point2D p);
-    
+
     Point2D pixel2worldXY(final double x, final double y);
 }

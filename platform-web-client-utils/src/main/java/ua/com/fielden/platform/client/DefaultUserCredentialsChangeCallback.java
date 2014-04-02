@@ -11,21 +11,21 @@ public class DefaultUserCredentialsChangeCallback implements IUserCredentialsCha
     private final AppSessionController config;
 
     public DefaultUserCredentialsChangeCallback(final RestClientUtil util, final AppSessionController config) {
-	this.util = util;
-	this.config = config;
+        this.util = util;
+        this.config = config;
     }
 
     @Override
     public void changed(final String username, final String privateKey) {
-	util.setUsername(username);
-	util.setPrivateKey(privateKey);
-	config.setUsername(username);
-	config.setPrivateKey(privateKey);
-	try {
-	    config.persist(username, privateKey);
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    throw new Result(new IllegalStateException("Could not persist user changes locally."));
-	}
+        util.setUsername(username);
+        util.setPrivateKey(privateKey);
+        config.setUsername(username);
+        config.setPrivateKey(privateKey);
+        try {
+            config.persist(username, privateKey);
+        } catch (final Exception e) {
+            e.printStackTrace();
+            throw new Result(new IllegalStateException("Could not persist user changes locally."));
+        }
     }
 }

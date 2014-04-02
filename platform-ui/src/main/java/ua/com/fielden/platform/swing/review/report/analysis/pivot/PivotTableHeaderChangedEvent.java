@@ -11,21 +11,21 @@ public class PivotTableHeaderChangedEvent extends EventObject {
     private final boolean isChecked;
 
     public PivotTableHeaderChangedEvent(final PivotTreeTableModel source, final String property, final boolean isChecked) {
-	super(source);
-	this.property = property;
-	this.isChecked = isChecked;
+        super(source);
+        this.property = property;
+        this.isChecked = isChecked;
     }
 
     @Override
     public PivotTreeTableModel getSource() {
-        return (PivotTreeTableModel)super.getSource();
+        return (PivotTreeTableModel) super.getSource();
     }
 
     public boolean isChecked() {
-	return isChecked;
+        return isChecked;
     }
 
     public String getProperty() {
-	return property;
+        return property;
     }
 }

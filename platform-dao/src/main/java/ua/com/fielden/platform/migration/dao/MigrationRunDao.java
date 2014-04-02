@@ -8,17 +8,16 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
-
 /**
  * DAO for {@link MigrationRun}.
- *
+ * 
  * @author TG Team
  */
 @EntityType(MigrationRun.class)
-public class MigrationRunDao extends CommonEntityDao<MigrationRun> implements IMigrationRunDao{
+public class MigrationRunDao extends CommonEntityDao<MigrationRun> implements IMigrationRunDao {
 
     @Inject
     protected MigrationRunDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

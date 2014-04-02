@@ -26,21 +26,21 @@ public class FirstReferencedClass extends AbstractEntity<String> {
     private Reference<String> firstProperty;
 
     public Reference<String> getReferenceProperty() {
-	return referenceProperty;
+        return referenceProperty;
     }
 
     @Observable
     public void setReferenceProperty(final Reference<String> referenceProperty) {
-	this.referenceProperty = referenceProperty;
+        this.referenceProperty = referenceProperty;
     }
 
     public Reference<String> getFirstProperty() {
-	return firstProperty;
+        return firstProperty;
     }
 
     @Observable
     public void setFirstProperty(final Reference<String> firstProperty) {
-	this.firstProperty = firstProperty;
+        this.firstProperty = firstProperty;
     }
 
 }

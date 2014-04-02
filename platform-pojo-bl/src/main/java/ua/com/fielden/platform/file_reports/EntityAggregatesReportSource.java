@@ -15,31 +15,31 @@ public class EntityAggregatesReportSource implements JRRewindableDataSource {
     private final Map<String, Class> props;
 
     public EntityAggregatesReportSource(final EntityAggregates[] data, final Map<String, Class> props) {
-	this.data = data;
-	this.props = props;
+        this.data = data;
+        this.props = props;
     }
 
     @Override
     public void moveFirst() throws JRException {
-	index = 0;
+        index = 0;
     }
 
     @Override
     public boolean next() throws JRException {
-	index++;
-	boolean returnVal = true;
-	if (index >= data.length) {
-	    returnVal = false;
-	}
-	return returnVal;
+        index++;
+        boolean returnVal = true;
+        if (index >= data.length) {
+            returnVal = false;
+        }
+        return returnVal;
     }
 
     @Override
     public Object getFieldValue(final JRField jrField) throws JRException {
-	if (!props.containsKey(jrField.getName())) {
-	    throw new JRException("Invalid field: " + jrField.getName());
-	}
+        if (!props.containsKey(jrField.getName())) {
+            throw new JRException("Invalid field: " + jrField.getName());
+        }
 
-	return EntityUtils.toString(data[index].get(jrField.getName()), props.get(jrField.getName()));
+        return EntityUtils.toString(data[index].get(jrField.getName()), props.get(jrField.getName()));
     }
 }

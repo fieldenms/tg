@@ -25,62 +25,61 @@ public abstract class HierarchicalEgiPanel<T extends AbstractEntity<?>> extends 
     private final Map<Object, Component> subComponents = new HashMap<>();
 
     public HierarchicalEgiPanel(final Class<T> rootType, final ICentreDomainTreeManagerAndEnhancer cdtme) {
-	this(rootType, cdtme, null);
+        this(rootType, cdtme, null);
     }
 
     public HierarchicalEgiPanel(final Class<T> rootType, final ICentreDomainTreeManagerAndEnhancer cdtme, final IColouringScheme<T> egiColouringScheme) {
-	super(rootType, cdtme, egiColouringScheme);
+        super(rootType, cdtme, egiColouringScheme);
     }
 
     protected abstract SubEgiPanel<T, ?> createSubGridPanel(final HierarchicalTable table, final Object value, final int row);
 
-
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected PropertyTableModel<?> createGridModelWithColouringScheme(final Class<?> managedType, final List<Pair<String, Integer>> gridDataModel, final IColouringScheme egiColouringScheme) {
-	return createTableModelBuilder(managedType, gridDataModel).//
-		setRowColoringScheme(egiColouringScheme).//
-		build(new ArrayList());
+        return createTableModelBuilder(managedType, gridDataModel).//
+        setRowColoringScheme(egiColouringScheme).//
+        build(new ArrayList());
     }
 
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected PropertyTableModel<?> createGridModel(final Class<?> managedType, final List<Pair<String, Integer>> gridDataModel) {
-	return createTableModelBuilder(managedType, gridDataModel).build(new ArrayList());
+        return createTableModelBuilder(managedType, gridDataModel).build(new ArrayList());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private HierarchicalPropertyTableModelBuilder<?> createTableModelBuilder(final Class<?> managedType, final List<Pair<String, Integer>> gridDataModel) {
-	final HierarchicalPropertyTableModelBuilder<?> tableModelBuilder = new HierarchicalPropertyTableModelBuilder(managedType, new IHierarchyProvider() {
+        final HierarchicalPropertyTableModelBuilder<?> tableModelBuilder = new HierarchicalPropertyTableModelBuilder(managedType, new IHierarchyProvider() {
 
-	    @Override
-	    public boolean hasChildren(final Object parentEntity) {
-		return true;
-	    }
-	}, createSubEgiFacotry());
-	for(final Pair<String, Integer> property : gridDataModel){
-	    tableModelBuilder.addReadonly(property.getKey(), property.getValue());
-	}
-	return tableModelBuilder;
+            @Override
+            public boolean hasChildren(final Object parentEntity) {
+                return true;
+            }
+        }, createSubEgiFacotry());
+        for (final Pair<String, Integer> property : gridDataModel) {
+            tableModelBuilder.addReadonly(property.getKey(), property.getValue());
+        }
+        return tableModelBuilder;
     }
 
     private HierarchicalTableComponentFactory createSubEgiFacotry() {
-	return new HierarchicalTableComponentFactory() {
+        return new HierarchicalTableComponentFactory() {
 
-	    @Override
-	    public void destroyChildComponent(final HierarchicalTable table, final Component value, final int row) {
-	    }
+            @Override
+            public void destroyChildComponent(final HierarchicalTable table, final Component value, final int row) {
+            }
 
-	    @Override
-	    public Component createChildComponent(final HierarchicalTable table, final Object value, final int row) {
-		Component subComponent = subComponents.get(value);
-		if (subComponent == null) {
-		    subComponent = createSubGridPanel(table, value, row);
-		    subComponents.put(value, subComponent);
-		}
-		return subComponent;
-	    }
-	};
+            @Override
+            public Component createChildComponent(final HierarchicalTable table, final Object value, final int row) {
+                Component subComponent = subComponents.get(value);
+                if (subComponent == null) {
+                    subComponent = createSubGridPanel(table, value, row);
+                    subComponents.put(value, subComponent);
+                }
+                return subComponent;
+            }
+        };
     }
 
     @Override

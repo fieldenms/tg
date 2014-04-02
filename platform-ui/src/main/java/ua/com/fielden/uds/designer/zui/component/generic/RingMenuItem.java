@@ -24,66 +24,66 @@ public class RingMenuItem extends PPath {
     private IOnClickEventListener listener;
 
     public RingMenuItem(Shape shape, IOnClickEventListener listener) {
-	super(shape);
-	this.listener = listener;
+        super(shape);
+        this.listener = listener;
 
-	Stroke stroke = null; // new DefaultStroke(0.5f, DefaultStroke.CAP_BUTT, DefaultStroke.JOIN_ROUND);
-	setStroke(stroke);
+        Stroke stroke = null; // new DefaultStroke(0.5f, DefaultStroke.CAP_BUTT, DefaultStroke.JOIN_ROUND);
+        setStroke(stroke);
 
-	setBackgroundColor(new Color(46, 91, 124));
-	highlightColor = getBackgroundColor().brighter();
+        setBackgroundColor(new Color(46, 91, 124));
+        highlightColor = getBackgroundColor().brighter();
     }
 
     public RingMenuItem(Shape shape, Color color, IOnClickEventListener listener) {
-	this(shape, listener);
-	setBackgroundColor(color);
-	highlightColor = getBackgroundColor().brighter();
+        this(shape, listener);
+        setBackgroundColor(color);
+        highlightColor = getBackgroundColor().brighter();
     }
 
     public Color getBackgroundColor() {
-	return backgroundColor;
+        return backgroundColor;
     }
 
     public void setBackgroundColor(Color color) {
-	backgroundColor = color;
-	setPaint(color);
-	setStrokePaint(color);
-	highlightColor = color.brighter();
+        backgroundColor = color;
+        setPaint(color);
+        setStrokePaint(color);
+        highlightColor = color.brighter();
     }
 
     public void doClick(PInputEvent event) {
-	if (listener == null) {
-	    throw new IllegalArgumentException("Listener is not specified");
-	}
+        if (listener == null) {
+            throw new IllegalArgumentException("Listener is not specified");
+        }
 
-	listener.click(event);
-	((RingMenu) getParent()).hide();
+        listener.click(event);
+        ((RingMenu) getParent()).hide();
     }
 
     public void highlight() {
-	animateToColor(highlightColor, 200);
+        animateToColor(highlightColor, 200);
     }
 
     public void dehighlight() {
-	animateToColor((Color) getBackgroundColor(), 200);
+        animateToColor((Color) getBackgroundColor(), 200);
     }
 
     public void animateClick() {
-	PActivity activity = animateToColor(Color.white, 200);
-	activity.setDelegate(new PActivityDelegate() {
-	    Color paint;
+        PActivity activity = animateToColor(Color.white, 200);
+        activity.setDelegate(new PActivityDelegate() {
+            Color paint;
 
-	    public void activityFinished(PActivity arg0) {
-		// TODO Auto-generated method stub
-		animateToColor(paint, 200);
-	    }
+            public void activityFinished(PActivity arg0) {
+                // TODO Auto-generated method stub
+                animateToColor(paint, 200);
+            }
 
-	    public void activityStarted(PActivity arg0) {
-		paint = (Color) getPaint();
-	    }
+            public void activityStarted(PActivity arg0) {
+                paint = (Color) getPaint();
+            }
 
-	    public void activityStepped(PActivity arg0) {
-	    }
-	});
+            public void activityStepped(PActivity arg0) {
+            }
+        });
     }
 }

@@ -31,58 +31,58 @@ public class MultipleDecConfigurationView<T extends AbstractEntity<?>> extends A
     private final IMultipleDecManualConfigurator<T> decConfigurator;
 
     public MultipleDecConfigurationView(final MultipleDecConfigurationModel<T> model, final IDecModelProvider<T> modelProvider, final IMultipleDecManualConfigurator<T> decConfigurator, final Map<Object, DetailsFrame> detailsCache, final IDetailsCustomiser detailsCustomiser, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, detailsCache, detailsCustomiser, owner, progressLayer);
-	this.modelProvider = modelProvider;
-	this.decConfigurator = decConfigurator;
-	addConfigurationEventListener(createOpenAnalysisEventListener());
+        super(model, detailsCache, detailsCustomiser, owner, progressLayer);
+        this.modelProvider = modelProvider;
+        this.decConfigurator = decConfigurator;
+        addConfigurationEventListener(createOpenAnalysisEventListener());
     }
 
     @Override
     public MultipleDecConfigurationModel<T> getModel() {
-        return (MultipleDecConfigurationModel<T>)super.getModel();
+        return (MultipleDecConfigurationModel<T>) super.getModel();
     }
 
     /**
      * Returns the multiple dec model for specified {@link ICategoryAnalysisDataProvider} instance
-     *
+     * 
      * @param chartModel
      * @return
      */
-    public NDecPanelModel<T> getMultipleDecModel(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel){
-	return modelProvider.getMultipleDecModel(getModel().getAnalysisManager().getSecondTick().usedProperties(getModel().getCriteria().getEntityClass()), chartModel);
+    public NDecPanelModel<T> getMultipleDecModel(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> chartModel) {
+        return modelProvider.getMultipleDecModel(getModel().getAnalysisManager().getSecondTick().usedProperties(getModel().getCriteria().getEntityClass()), chartModel);
     }
 
     @Override
     protected MultipleDecView<T> createConfigurableView() {
-	return new MultipleDecView<>(getModel().createMultipleDecModel(), this);
+        return new MultipleDecView<>(getModel().createMultipleDecModel(), this);
     }
 
     private IAbstractConfigurationViewEventListener createOpenAnalysisEventListener() {
-   	return new IAbstractConfigurationViewEventListener() {
+        return new IAbstractConfigurationViewEventListener() {
 
-   	    @Override
-   	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
-   		switch (event.getEventAction()) {
-   		case OPEN:
-   		    IMultipleDecDomainTreeManager mddtme = (IMultipleDecDomainTreeManager)getModel().getAnalysisManager();
-   		    if(mddtme == null){
-   			getModel().initAnalysisManager(AnalysisType.MULTIPLEDEC);
-   			getModel().save();
-   			mddtme = (IMultipleDecDomainTreeManager)getModel().getAnalysisManager();
-   		    }
-   		    if(mddtme == null){
-   			return new Result(MultipleDecConfigurationView.this, new IllegalStateException("The multiple dec analysis can not be initialized!"));
-   		    }
-   		    getModel().setAnalysisVisible(true);
-   		    decConfigurator.configureMultipleDecAnalysis(getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer(),//
-   			    mddtme, getModel().getCriteria().getEntityClass());
-   		    return getModel().canSetMode(ReportMode.REPORT);
+            @Override
+            public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
+                switch (event.getEventAction()) {
+                case OPEN:
+                    IMultipleDecDomainTreeManager mddtme = (IMultipleDecDomainTreeManager) getModel().getAnalysisManager();
+                    if (mddtme == null) {
+                        getModel().initAnalysisManager(AnalysisType.MULTIPLEDEC);
+                        getModel().save();
+                        mddtme = (IMultipleDecDomainTreeManager) getModel().getAnalysisManager();
+                    }
+                    if (mddtme == null) {
+                        return new Result(MultipleDecConfigurationView.this, new IllegalStateException("The multiple dec analysis can not be initialized!"));
+                    }
+                    getModel().setAnalysisVisible(true);
+                    decConfigurator.configureMultipleDecAnalysis(getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer(),//
+                            mddtme, getModel().getCriteria().getEntityClass());
+                    return getModel().canSetMode(ReportMode.REPORT);
 
-   		default:
-   		    return Result.successful(MultipleDecConfigurationView.this);
-   		}
-   	    }
-   	};
-       }
+                default:
+                    return Result.successful(MultipleDecConfigurationView.this);
+                }
+            }
+        };
+    }
 
 }

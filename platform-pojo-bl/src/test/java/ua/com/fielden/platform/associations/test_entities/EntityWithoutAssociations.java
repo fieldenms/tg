@@ -12,9 +12,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Contains only Many-to-One associations
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key")
@@ -39,34 +39,32 @@ public class EntityWithoutAssociations extends AbstractEntity<String> {
 
     @Observable
     public EntityWithoutAssociations setMoneyProp(final Money moneyProp) {
-	this.moneyProp = moneyProp;
-	return this;
+        this.moneyProp = moneyProp;
+        return this;
     }
 
     public Money getMoneyProp() {
-	return moneyProp;
+        return moneyProp;
     }
-
 
     @Observable
     public EntityWithoutAssociations setIntProp(final Integer intProp) {
-	this.intProp = intProp;
-	return this;
+        this.intProp = intProp;
+        return this;
     }
 
     public Integer getIntProp() {
-	return intProp;
+        return intProp;
     }
-
 
     @Observable
     public EntityWithoutAssociations setStrProp(final String strProp) {
-	this.strProp = strProp;
-	return this;
+        this.strProp = strProp;
+        return this;
     }
 
     public String getStrProp() {
-	return strProp;
+        return strProp;
     }
 
 }

@@ -14,11 +14,11 @@ import ua.com.fielden.platform.swing.review.report.analysis.chart.ICategoryAnaly
 public class MultipleDecAggregationDragToSupport<T extends AbstractEntity<?>> extends ChartAnalysisAggregationListDragToSupport<T> {
 
     public MultipleDecAggregationDragToSupport(final Class<T> root, final IAbstractAnalysisAddToAggregationTickManager tickManager, final JList<String> list, final IChartPositioner multipleChartPanel, final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> categoryDataProvider) {
-	super(root, tickManager, list, multipleChartPanel, categoryDataProvider);
+        super(root, tickManager, list, multipleChartPanel, categoryDataProvider);
     }
 
     @Override
     protected List<String> getSelectedOrderedProperties() {
-        return ((IUsageManager)tickManager).usedProperties(root);
+        return ((IUsageManager) tickManager).usedProperties(root);
     }
 }

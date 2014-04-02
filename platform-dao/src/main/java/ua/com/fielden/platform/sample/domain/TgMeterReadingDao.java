@@ -8,10 +8,9 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
-
 /**
  * DAO for {@link TgMeterReading} retrieval.
- *
+ * 
  * @author TG Team
  */
 
@@ -20,6 +19,6 @@ public class TgMeterReadingDao extends CommonEntityDao<TgMeterReading> implement
 
     @Inject
     protected TgMeterReadingDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

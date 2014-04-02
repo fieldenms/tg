@@ -39,25 +39,25 @@ public class HierarchicalPropertyTableModel<ParentType extends AbstractEntity> e
      * @param instances
      */
     public HierarchicalPropertyTableModel(final HierarchicalPropertyTableModelBuilder<ParentType> builder, final List<ParentType> instances) {
-	super(builder, instances);
+        super(builder, instances);
 
-	this.provider = builder.getHierarchyProvider();
-	this.componentFactory = builder.getComponentFactory();
+        this.provider = builder.getHierarchyProvider();
+        this.componentFactory = builder.getComponentFactory();
     }
 
     @Override
     public Object getChildValueAt(final int row) {
-	return instance(row);
+        return instance(row);
     }
 
     @Override
     public boolean hasChild(final int row) {
-	return isDataRow(row) && (isAlwaysExpandable() || provider.hasChildren(instance(row)));
+        return isDataRow(row) && (isAlwaysExpandable() || provider.hasChildren(instance(row)));
     }
 
     @Override
     public boolean isExpandable(final int row) {
-	return isDataRow(row) && (isAlwaysExpandable() || hasChild(row));
+        return isDataRow(row) && (isAlwaysExpandable() || hasChild(row));
     }
 
     /**
@@ -65,11 +65,11 @@ public class HierarchicalPropertyTableModel<ParentType extends AbstractEntity> e
      */
     @Override
     public boolean isHierarchical(final int row) {
-	return isDataRow(row) && isHierarchical();
+        return isDataRow(row) && isHierarchical();
     }
 
     public boolean isHierarchical() {
-	return hierarchical;
+        return hierarchical;
     }
 
     /**
@@ -78,11 +78,11 @@ public class HierarchicalPropertyTableModel<ParentType extends AbstractEntity> e
      * @param hierarchical
      */
     public void setHierarchical(final boolean hierarchical) {
-	this.hierarchical = hierarchical;
+        this.hierarchical = hierarchical;
     }
 
     public boolean isAlwaysExpandable() {
-	return alwaysExpandable;
+        return alwaysExpandable;
     }
 
     /**
@@ -93,17 +93,17 @@ public class HierarchicalPropertyTableModel<ParentType extends AbstractEntity> e
      * @param alwaysExpandable
      */
     public void setAlwaysExpandable(final boolean alwaysExpandable) {
-	this.alwaysExpandable = alwaysExpandable;
+        this.alwaysExpandable = alwaysExpandable;
     }
 
     @Override
     public Component createChildComponent(final HierarchicalTable table, final Object value, final int row) {
-	return componentFactory.createChildComponent(table, value, row);
+        return componentFactory.createChildComponent(table, value, row);
     }
 
     @Override
     public void destroyChildComponent(final HierarchicalTable table, final Component component, final int row) {
-	componentFactory.destroyChildComponent(table, component, row);
+        componentFactory.destroyChildComponent(table, component, row);
     }
 
 }

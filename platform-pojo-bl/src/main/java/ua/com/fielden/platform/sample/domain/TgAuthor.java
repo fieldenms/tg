@@ -25,11 +25,15 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo @Title("Name")
+    @IsProperty
+    @MapTo
+    @Title("Name")
     @CompositeKeyMember(1)
     private TgPersonName name;
 
-    @IsProperty @MapTo @Title("Surname")
+    @IsProperty
+    @MapTo
+    @Title("Surname")
     @CompositeKeyMember(2)
     private String surname;
 
@@ -39,7 +43,7 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     @Title("Has more than 1 publication")
     private boolean hasMultiplePublications;
     private static ExpressionModel hasMultiplePublications_ = expr().caseWhen().model(select(TgAuthorship.class).where().prop("author").eq().extProp("id").yield().countAll().modelAsPrimitive()). //
-	    gt().val(1).then().val(true).otherwise().val(false).endAsBool().model();
+    gt().val(1).then().val(true).otherwise().val(false).endAsBool().model();
 
     @IsProperty
     @Readonly
@@ -48,25 +52,24 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     private TgAuthorRoyalty lastRoyalty;
     private static ExpressionModel lastRoyalty_ = expr().model(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("id").model()).model();
 
-
     @Observable
     protected TgAuthor setHasMultiplePublications(final boolean hasMultiplePublications) {
-	this.hasMultiplePublications = hasMultiplePublications;
-	return this;
+        this.hasMultiplePublications = hasMultiplePublications;
+        return this;
     }
 
     public boolean getHasMultiplePublications() {
-	return hasMultiplePublications;
+        return hasMultiplePublications;
     }
 
     @Observable
     private TgAuthor setLastRoyalty(final TgAuthorRoyalty lastRoyalty) {
-	this.lastRoyalty = lastRoyalty;
-	return this;
+        this.lastRoyalty = lastRoyalty;
+        return this;
     }
 
     public TgAuthorRoyalty getLastRoyalty() {
-	return lastRoyalty;
+        return lastRoyalty;
     }
 
     public TgPersonName getName() {

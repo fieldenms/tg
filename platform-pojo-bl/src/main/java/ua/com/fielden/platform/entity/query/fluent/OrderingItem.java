@@ -8,21 +8,21 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 class OrderingItem extends AbstractExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> implements IOrderingItem {
 
     OrderingItem(final Tokens queryTokens) {
-	super(queryTokens);
+        super(queryTokens);
     }
 
     @Override
     ISingleOperandOrderable getParent() {
-	return new SingleOperandOrderable(getTokens());
+        return new SingleOperandOrderable(getTokens());
     }
 
     @Override
     IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> getParent2() {
-	return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>(getTokens(), getParent());
+        return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>(getTokens(), getParent());
     }
 
     @Override
     public ISingleOperandOrderable yield(final String yieldAlias) {
-	return new SingleOperandOrderable(getTokens().yield(yieldAlias));
+        return new SingleOperandOrderable(getTokens().yield(yieldAlias));
     }
 }

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * Entity for testing purposes.
  * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle("key")
@@ -32,22 +32,21 @@ public class ThirdLevelEntity extends AbstractEntity<String> {
     private LastLevelEntity simpleEntityProp;
 
     public Date getDateProp() {
-	return dateProp;
+        return dateProp;
     }
 
     @Observable
     public void setDateProp(final Date dateProp) {
-	this.dateProp = dateProp;
+        this.dateProp = dateProp;
     }
 
     public LastLevelEntity getSimpleEntityProp() {
-	return simpleEntityProp;
+        return simpleEntityProp;
     }
 
     @Observable
     public void setSimpleEntityProp(final LastLevelEntity simpleEntityProp) {
-	this.simpleEntityProp = simpleEntityProp;
+        this.simpleEntityProp = simpleEntityProp;
     }
-
 
 }

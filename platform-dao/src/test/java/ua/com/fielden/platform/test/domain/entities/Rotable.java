@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Rotable business entity.
- *
+ * 
  * @author 01es
  */
 @KeyType(String.class)
@@ -20,7 +20,7 @@ public abstract class Rotable extends Equipment<String> {
     private RotableClass rotableClass;
     /**
      * This property can point to any descendant of RotableLocation with any type parameter.
-     *
+     * 
      * Using RotableLocation<?> upsets javac when trying to use instanceof or explicit type casting. Thus, the need to suppress warning unchecked.
      */
     @SuppressWarnings("unchecked")
@@ -31,39 +31,39 @@ public abstract class Rotable extends Equipment<String> {
     }
 
     public Rotable(final String name, final String desc) {
-	super(null, name, desc);
+        super(null, name, desc);
     }
 
     public RotableStatus getStatus() {
-	return status;
+        return status;
     }
 
     @NotNull
     @Observable
     public Rotable setStatus(final RotableStatus status) {
-	this.status = status;
-	return this;
+        this.status = status;
+        return this;
     }
 
     public RotableClass getRotableClass() {
-	return rotableClass;
+        return rotableClass;
     }
 
     public Rotable setRotableClass(final RotableClass klass) {
-	this.rotableClass = klass;
-	return this;
+        this.rotableClass = klass;
+        return this;
     }
 
     @Observable
     @NotNull
     @SuppressWarnings("unchecked")
     public Rotable setLocation(final RotableLocation location) {
-	this.location = location;
-	return this;
+        this.location = location;
+        return this;
     }
 
     @SuppressWarnings("unchecked")
     public RotableLocation getLocation() {
-	return location;
+        return location;
     }
 }

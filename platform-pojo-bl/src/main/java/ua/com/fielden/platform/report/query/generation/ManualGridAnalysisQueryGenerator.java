@@ -10,14 +10,14 @@ public class ManualGridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME
     private final Object linkPropertyValue;
 
     public ManualGridAnalysisQueryGenerator(final Class<T> root, final CDTME cdtme, final String linkProperty, final Object linkPropertyValue) {
-	super(root, cdtme);
-	this.linkProperty = linkProperty;
-	this.linkPropertyValue = linkPropertyValue;
+        super(root, cdtme);
+        this.linkProperty = linkProperty;
+        this.linkPropertyValue = linkPropertyValue;
     }
 
     @Override
     public ICompleted<T> createQuery() {
-	return where(super.createQuery()).prop(property(linkProperty)).//
+        return where(super.createQuery()).prop(property(linkProperty)).//
         /*  */eq().val(linkPropertyValue);
     }
 }

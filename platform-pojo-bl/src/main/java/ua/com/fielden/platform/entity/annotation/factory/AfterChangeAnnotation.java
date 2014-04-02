@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 public class AfterChangeAnnotation {
 
     private final Class<? extends IAfterChangeEventHandler> value;
+
     //    private StrParam[] str;
     //    private ClassParam[] non_ordinary;
     //    private MoneyParam[] money;
@@ -24,63 +25,63 @@ public class AfterChangeAnnotation {
     //    private DateParam[] date;
     //    private ClassParam[] clazz;
 
-    public AfterChangeAnnotation(final Class<? extends IAfterChangeEventHandler> value){
-	this.value = value;
+    public AfterChangeAnnotation(final Class<? extends IAfterChangeEventHandler> value) {
+        this.value = value;
     }
 
-    public AfterChange newInstance(){
-	return new AfterChange() {
+    public AfterChange newInstance() {
+        return new AfterChange() {
 
-	    @Override
-	    public Class<? extends Annotation> annotationType() {
-		return AfterChange.class;
-	    }
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return AfterChange.class;
+            }
 
-	    @Override
-	    public Class<? extends IAfterChangeEventHandler> value() {
-		return value;
-	    }
+            @Override
+            public Class<? extends IAfterChangeEventHandler> value() {
+                return value;
+            }
 
-	    @Override
-	    public StrParam[] str(){
-		return new StrParam[0];
-	    }
+            @Override
+            public StrParam[] str() {
+                return new StrParam[0];
+            }
 
-	    @Override
-	    public ClassParam[] non_ordinary() {
-		return new ClassParam[0];
-	    }
+            @Override
+            public ClassParam[] non_ordinary() {
+                return new ClassParam[0];
+            }
 
-	    @Override
-	    public MoneyParam[] money() {
-		return new MoneyParam[0];
-	    }
+            @Override
+            public MoneyParam[] money() {
+                return new MoneyParam[0];
+            }
 
-	    @Override
-	    public IntParam[] integer() {
-		return new IntParam[0];
-	    }
+            @Override
+            public IntParam[] integer() {
+                return new IntParam[0];
+            }
 
-	    @Override
-	    public DblParam[] dbl() {
-		return new DblParam[0];
-	    }
+            @Override
+            public DblParam[] dbl() {
+                return new DblParam[0];
+            }
 
-	    @Override
-	    public DateTimeParam[] date_time() {
-		return new DateTimeParam[0];
-	    }
+            @Override
+            public DateTimeParam[] date_time() {
+                return new DateTimeParam[0];
+            }
 
-	    @Override
-	    public DateParam[] date() {
-		return new DateParam[0];
-	    }
+            @Override
+            public DateParam[] date() {
+                return new DateParam[0];
+            }
 
-	    @Override
-	    public ClassParam[] clazz() {
-		return new ClassParam[0];
-	    }
-	};
+            @Override
+            public ClassParam[] clazz() {
+                return new ClassParam[0];
+            }
+        };
     }
 
 }

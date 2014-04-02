@@ -55,39 +55,39 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     }
 
     private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
-	    final String username, final ISource1<? extends ISource2> mainSource, final EntQueryGenerator1 generator) {
-	if (mainSource instanceof TypeBasedSource1 && filter != null) {
-	    final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
-	    if (filteringCondition == null) {
-		return originalConditions;
-	    }
-	    //logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
-	    final List<CompoundCondition1> others = new ArrayList<>();
-	    others.add(new CompoundCondition1(LogicalOperator.AND, originalConditions));
-	    final Conditions1 filteringConditions = new StandAloneConditionBuilder1(generator, filteringCondition, false).getModel();
-	    return originalConditions.isEmpty() ? filteringConditions : new Conditions1(false, filteringConditions, others);
-	} else {
-	    return originalConditions;
-	}
+            final String username, final ISource1<? extends ISource2> mainSource, final EntQueryGenerator1 generator) {
+        if (mainSource instanceof TypeBasedSource1 && filter != null) {
+            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
+            if (filteringCondition == null) {
+                return originalConditions;
+            }
+            //logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
+            final List<CompoundCondition1> others = new ArrayList<>();
+            others.add(new CompoundCondition1(LogicalOperator.AND, originalConditions));
+            final Conditions1 filteringConditions = new StandAloneConditionBuilder1(generator, filteringCondition, false).getModel();
+            return originalConditions.isEmpty() ? filteringConditions : new Conditions1(false, filteringConditions, others);
+        } else {
+            return originalConditions;
+        }
     }
 
     @Override
     public EntQuery2 transform(final TransformatorToS2 resolver) {
-	final TransformatorToS2 localResolver = resolver.produceBasedOn();
+        final TransformatorToS2 localResolver = resolver.produceBasedOn();
 
-	for (final ISource1<? extends ISource2> source : sources.getAllSources()) {
-	    localResolver.addSource(source);
-	}
+        for (final ISource1<? extends ISource2> source : sources.getAllSources()) {
+            localResolver.addSource(source);
+        }
 
-	final Conditions1 enhancedConditions = enhanceConditions(conditions, resolver.getFilter(), resolver.getUsername(), sources.getMain(), resolver.getEntQueryGenerator1());
-	final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), enhancedConditions.transform(localResolver), //
-		yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
+        final Conditions1 enhancedConditions = enhanceConditions(conditions, resolver.getFilter(), resolver.getUsername(), sources.getMain(), resolver.getEntQueryGenerator1());
+        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), enhancedConditions.transform(localResolver), //
+        yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
 
-	return new EntQuery2(entQueryBlocks, resultType, category, fetchModel);
+        return new EntQuery2(entQueryBlocks, resultType, category, fetchModel);
     }
 
     public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class resultType, final QueryCategory category, //
-	    final FetchModel fetchModel, final boolean filterable) {
+            final FetchModel fetchModel, final boolean filterable) {
         super();
         this.filterable = filterable;
         this.category = category;
@@ -125,83 +125,83 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     @Override
     public int hashCode() {
-	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((category == null) ? 0 : category.hashCode());
-	result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
-	result = prime * result + ((fetchModel == null) ? 0 : fetchModel.hashCode());
-	result = prime * result + ((groups == null) ? 0 : groups.hashCode());
-	result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
-	result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-	result = prime * result + ((sources == null) ? 0 : sources.hashCode());
-	result = prime * result + ((yields == null) ? 0 : yields.hashCode());
-	return result;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((category == null) ? 0 : category.hashCode());
+        result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
+        result = prime * result + ((fetchModel == null) ? 0 : fetchModel.hashCode());
+        result = prime * result + ((groups == null) ? 0 : groups.hashCode());
+        result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
+        result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
+        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
+        result = prime * result + ((yields == null) ? 0 : yields.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj == null) {
-	    return false;
-	}
-	if (!(obj instanceof EntQuery1)) {
-	    return false;
-	}
-	final EntQuery1 other = (EntQuery1) obj;
-	if (category != other.category) {
-	    return false;
-	}
-	if (conditions == null) {
-	    if (other.conditions != null) {
-		return false;
-	    }
-	} else if (!conditions.equals(other.conditions)) {
-	    return false;
-	}
-	if (fetchModel == null) {
-	    if (other.fetchModel != null) {
-		return false;
-	    }
-	} else if (!fetchModel.equals(other.fetchModel)) {
-	    return false;
-	}
-	if (groups == null) {
-	    if (other.groups != null) {
-		return false;
-	    }
-	} else if (!groups.equals(other.groups)) {
-	    return false;
-	}
-	if (orderings == null) {
-	    if (other.orderings != null) {
-		return false;
-	    }
-	} else if (!orderings.equals(other.orderings)) {
-	    return false;
-	}
-	if (resultType == null) {
-	    if (other.resultType != null) {
-		return false;
-	    }
-	} else if (!resultType.equals(other.resultType)) {
-	    return false;
-	}
-	if (sources == null) {
-	    if (other.sources != null) {
-		return false;
-	    }
-	} else if (!sources.equals(other.sources)) {
-	    return false;
-	}
-	if (yields == null) {
-	    if (other.yields != null) {
-		return false;
-	    }
-	} else if (!yields.equals(other.yields)) {
-	    return false;
-	}
-	return true;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof EntQuery1)) {
+            return false;
+        }
+        final EntQuery1 other = (EntQuery1) obj;
+        if (category != other.category) {
+            return false;
+        }
+        if (conditions == null) {
+            if (other.conditions != null) {
+                return false;
+            }
+        } else if (!conditions.equals(other.conditions)) {
+            return false;
+        }
+        if (fetchModel == null) {
+            if (other.fetchModel != null) {
+                return false;
+            }
+        } else if (!fetchModel.equals(other.fetchModel)) {
+            return false;
+        }
+        if (groups == null) {
+            if (other.groups != null) {
+                return false;
+            }
+        } else if (!groups.equals(other.groups)) {
+            return false;
+        }
+        if (orderings == null) {
+            if (other.orderings != null) {
+                return false;
+            }
+        } else if (!orderings.equals(other.orderings)) {
+            return false;
+        }
+        if (resultType == null) {
+            if (other.resultType != null) {
+                return false;
+            }
+        } else if (!resultType.equals(other.resultType)) {
+            return false;
+        }
+        if (sources == null) {
+            if (other.sources != null) {
+                return false;
+            }
+        } else if (!sources.equals(other.sources)) {
+            return false;
+        }
+        if (yields == null) {
+            if (other.yields != null) {
+                return false;
+            }
+        } else if (!yields.equals(other.yields)) {
+            return false;
+        }
+        return true;
     }
 }

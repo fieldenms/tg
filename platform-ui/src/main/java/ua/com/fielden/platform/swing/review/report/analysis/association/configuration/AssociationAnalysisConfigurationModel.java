@@ -12,20 +12,19 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 public class AssociationAnalysisConfigurationModel<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     public AssociationAnalysisConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final String name) {
-	super(criteria, name);
+        super(criteria, name);
     }
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
-	if(ReportMode.WIZARD.equals(mode)){
-	    return new Result(new UnsupportedOperationException("The WIZARD mode is not supported for this type of analysis"));
-	}
-	return Result.successful(this);
+        if (ReportMode.WIZARD.equals(mode)) {
+            return new Result(new UnsupportedOperationException("The WIZARD mode is not supported for this type of analysis"));
+        }
+        return Result.successful(this);
     }
 
     public AssociationAnalysisModel<T> createAssociationAnalysisModel() {
-	return new AssociationAnalysisModel<>(getCriteria());
+        return new AssociationAnalysisModel<>(getCriteria());
     }
-
 
 }

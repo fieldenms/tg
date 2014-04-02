@@ -31,34 +31,34 @@ public class TgObjectMapper extends ObjectMapper {
     private final TgModule module;
 
     public TgObjectMapper() {
-	super();
-	module = new TgModule();
+        super();
+        module = new TgModule();
 
-	//Configuring type specific parameters.
-	setDateFormat(dateFormat);
-	enable(SerializationFeature.INDENT_OUTPUT);
-	enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+        //Configuring type specific parameters.
+        setDateFormat(dateFormat);
+        enable(SerializationFeature.INDENT_OUTPUT);
+        enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
 
-	//Configuring serialiser.
-	addSerialiser(ICentreDomainTreeManagerAndEnhancer.class, new CentreMangerToJsonSerialiser());
-	addSerialiser(IPage.class, new PageToJsonSerialiser());
-	addSerialiser(AbstractEntity.class, new AbstractEntityToJsonSerialiser());
+        //Configuring serialiser.
+        addSerialiser(ICentreDomainTreeManagerAndEnhancer.class, new CentreMangerToJsonSerialiser());
+        addSerialiser(IPage.class, new PageToJsonSerialiser());
+        addSerialiser(AbstractEntity.class, new AbstractEntityToJsonSerialiser());
 
-	//Configuring deserialiser.
-	addDeserialiser(LightweightCentre.class, new JsonToCentreConfigDeserialiser(this));
-	addDeserialiser(CritProp.class, new JsonToCriteriaDeserialiser(this));
-	addDeserialiser(ResultProperty.class, new JsonToResultDeserialiser(this));
+        //Configuring deserialiser.
+        addDeserialiser(LightweightCentre.class, new JsonToCentreConfigDeserialiser(this));
+        addDeserialiser(CritProp.class, new JsonToCriteriaDeserialiser(this));
+        addDeserialiser(ResultProperty.class, new JsonToResultDeserialiser(this));
 
-	//Registering module.
-	registerModule(module);
+        //Registering module.
+        registerModule(module);
     }
 
     public <T> void addSerialiser(final Class<? extends T> clazz, final JsonSerializer<T> serializer) {
-	module.addSerializer(clazz, serializer);
+        module.addSerializer(clazz, serializer);
     }
 
     public <T> void addDeserialiser(final Class<T> clazz, final JsonDeserializer<? extends T> deserializer) {
-	module.addDeserializer(clazz, deserializer);
+        module.addDeserializer(clazz, deserializer);
     }
 
 }

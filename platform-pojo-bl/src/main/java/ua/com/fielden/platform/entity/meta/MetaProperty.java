@@ -53,10 +53,10 @@ import ua.com.fielden.platform.reflection.Reflector;
  * Implemented support for restoring to original value with validation error cancellation.<br>
  * <b>Date: 2011-09-26</b><br>
  * Significant modification due to introduction of BCE and ACE event lifecycle.
- *
- *
+ * 
+ * 
  * @author TG Team
- *
+ * 
  */
 public final class MetaProperty implements Comparable<MetaProperty> {
     private final AbstractEntity<?> entity;
@@ -87,7 +87,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * setter invocation, and should be a deliberate act enforced as part of the application logic. Enforcing validation for default values is not technically difficult, but would
      * introduce a maintenance hurdle for application developers, where during an evolution of the system the validation logic might change, but default values not updated
      * accordingly. This would lead to entity instantiation failure.
-     *
+     * 
      * A much preferred approach is to provide a custom entity constructor or instantiation factories in case default property values support is required, where property values
      * should be set via setters. The use of factories would provide additional flexibility, where default values could be governed by business logic and a place of entity
      * instantiation.
@@ -130,37 +130,37 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     /**
      * Property supports specification of the precise type. For example, property <code>key</code> in entity classes is recognised by reflection API as Comparable. Therefore, it
      * might be desirable to specify type more accurately.
-     *
+     * 
      * @param field
      * @param type
      * @param validators
      */
     public MetaProperty(final AbstractEntity<?> entity, final Field field, final Class<?> type, //
-	    final boolean isKey, final boolean isCollectional, final Class<?> propertyAnnotationType, final boolean calculated, final boolean upperCase,//
-	    final Set<Annotation> validationAnnotations,//
-	    final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators, final IAfterChangeEventHandler aceHandler, final String[] dependentPropertyNames) {
-	this.entity = entity;
-	this.name = field.getName();
-	this.type = type;
-	this.key = isKey;
-	this.validationAnnotations.addAll(validationAnnotations);
-	this.validators = validators;
-	this.aceHandler = aceHandler;
-	this.collectional = isCollectional;
-	this.propertyAnnotationType = propertyAnnotationType;
-	this.calculated = calculated;
-	this.upperCase = upperCase;
-	this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : new String[] {};
+            final boolean isKey, final boolean isCollectional, final Class<?> propertyAnnotationType, final boolean calculated, final boolean upperCase,//
+            final Set<Annotation> validationAnnotations,//
+            final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators, final IAfterChangeEventHandler aceHandler, final String[] dependentPropertyNames) {
+        this.entity = entity;
+        this.name = field.getName();
+        this.type = type;
+        this.key = isKey;
+        this.validationAnnotations.addAll(validationAnnotations);
+        this.validators = validators;
+        this.aceHandler = aceHandler;
+        this.collectional = isCollectional;
+        this.propertyAnnotationType = propertyAnnotationType;
+        this.calculated = calculated;
+        this.upperCase = upperCase;
+        this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : new String[] {};
     }
 
     /**
      * Perform sequential validation.
-     *
+     * 
      * Stops validation at the first violation. This is preferred since subsequent validators may depend on success of preceding ones.
-     *
+     * 
      * Please note that collectional properties may have up to three mutators having different annotations. Thus, a special logic is used to ensure that only validators associated
      * with the mutator being processed are applied.
-     *
+     * 
      * @param property
      * @param value
      * @param entity
@@ -170,51 +170,50 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @return
      */
     public synchronized final Result validate(final Object newValue, final Object oldValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
-	setLastInvalidValue(null);
-	if (!ignoreRequiredness && isRequired() && NotNullValidator.isNull(newValue, oldValue)) {
-	    final Map<IBeforeChangeEventHandler, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
-	    if (requiredHandler == null || requiredHandler.size() > 1) {
-		throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
-	    }
+        setLastInvalidValue(null);
+        if (!ignoreRequiredness && isRequired() && NotNullValidator.isNull(newValue, oldValue)) {
+            final Map<IBeforeChangeEventHandler, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
+            if (requiredHandler == null || requiredHandler.size() > 1) {
+                throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
+            }
 
-	    final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
+            final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
 
-	    final Result result = new Result(getEntity(), new IllegalArgumentException(StringUtils.isEmpty(reqErrorMsg) ? "Required property "
-		    + (StringUtils.isEmpty(getTitle()) ? name : getTitle()) + " is not specified for entity "
-		    + getEntityTitleAndDesc(getEntity().getType()).getKey() : reqErrorMsg));
-	    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), result);
-	    return result;
-	} else {
-	    // refresh REQUIRED validation result if REQUIRED validation annotation pair exists
-	    final Map<IBeforeChangeEventHandler, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
-	    if (requiredHandler != null && requiredHandler.size() == 1) {
-		setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), new Result(getEntity(), "Requiredness updated by successful result."));
-	    }
-	    // process all registered validators (that have its own annotations)
-	    return processValidators(newValue, oldValue, applicableValidationAnnotations);
-	}
+            final Result result = new Result(getEntity(), new IllegalArgumentException(StringUtils.isEmpty(reqErrorMsg) ? "Required property "
+                    + (StringUtils.isEmpty(getTitle()) ? name : getTitle()) + " is not specified for entity " + getEntityTitleAndDesc(getEntity().getType()).getKey() : reqErrorMsg));
+            setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), result);
+            return result;
+        } else {
+            // refresh REQUIRED validation result if REQUIRED validation annotation pair exists
+            final Map<IBeforeChangeEventHandler, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
+            if (requiredHandler != null && requiredHandler.size() == 1) {
+                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), new Result(getEntity(), "Requiredness updated by successful result."));
+            }
+            // process all registered validators (that have its own annotations)
+            return processValidators(newValue, oldValue, applicableValidationAnnotations);
+        }
     }
 
     /**
      * Revalidates this property using {@link #getLastAttemptedValue()} value as the input for the property. Revalidation occurs only if this property has an assigned value (null
      * could also be an assigned value).
-     *
+     * 
      * @param ignoreRequiredness
      *            when true then isRequired value is ignored during revalidation, this is currently used for re-validating dependent properties where there is no need to mark
      *            properties as invalid only because they are empty.
      * @return revalidation result
      */
     public synchronized final Result revalidate(final boolean ignoreRequiredness) {
-	// revalidation is required only is there is an assigned value
-	if (assigned) {
-	    return validate(getLastAttemptedValue(), null, validationAnnotations, ignoreRequiredness);
-	}
-	return Result.successful(this);
+        // revalidation is required only is there is an assigned value
+        if (assigned) {
+            return validate(getLastAttemptedValue(), null, validationAnnotations, ignoreRequiredness);
+        }
+        return Result.successful(this);
     }
 
     /**
      * Processes all registered validators (that have its own annotations) by iterating over validators associated with corresponding validation annotations (va).
-     *
+     * 
      * @param newValue
      * @param oldValue
      * @param applicableValidationAnnotations
@@ -222,569 +221,568 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @return
      */
     private Result processValidators(final Object newValue, final Object oldValue, final Set<Annotation> applicableValidationAnnotations) {
-	// iterate over registered validations
-	for (final ValidationAnnotation va : validators.keySet()) {
-	    final Set<Entry<IBeforeChangeEventHandler, Result>> pairs = validators.get(va).entrySet();
-	    for (final Entry<IBeforeChangeEventHandler, Result> pair : pairs) {
-		// if validator exists ...and it should... then validated and set validation result
-		final IBeforeChangeEventHandler handler = pair.getKey();
-		if (handler != null && isValidatorApplicable(applicableValidationAnnotations, va.getType())) {
-		    final Result result = pair.getKey().handle(this, newValue, oldValue, applicableValidationAnnotations);
-		    setValidationResultNoSynch(va, handler, result); // important to call setValidationResult as it fires property change event listeners
-		    if (!result.isSuccessful()) {
-			// 1. isCollectional() && newValue instance of Collection : previously the size of "newValue" collection was set as LastInvalidValue, but now,
-			//    if we need to update bounded component by the lastInvalidValue then we set it as a collectional value
-			// 2. if the property is not collectional then simply set LastInvalidValue as newValue
-			setLastInvalidValue(newValue);
-			return result;
-		    }
-		} else {
-		    pair.setValue(null);
-		}
-	    }
-	}
-	return new Result(this, "Validated successfully.");
+        // iterate over registered validations
+        for (final ValidationAnnotation va : validators.keySet()) {
+            final Set<Entry<IBeforeChangeEventHandler, Result>> pairs = validators.get(va).entrySet();
+            for (final Entry<IBeforeChangeEventHandler, Result> pair : pairs) {
+                // if validator exists ...and it should... then validated and set validation result
+                final IBeforeChangeEventHandler handler = pair.getKey();
+                if (handler != null && isValidatorApplicable(applicableValidationAnnotations, va.getType())) {
+                    final Result result = pair.getKey().handle(this, newValue, oldValue, applicableValidationAnnotations);
+                    setValidationResultNoSynch(va, handler, result); // important to call setValidationResult as it fires property change event listeners
+                    if (!result.isSuccessful()) {
+                        // 1. isCollectional() && newValue instance of Collection : previously the size of "newValue" collection was set as LastInvalidValue, but now,
+                        //    if we need to update bounded component by the lastInvalidValue then we set it as a collectional value
+                        // 2. if the property is not collectional then simply set LastInvalidValue as newValue
+                        setLastInvalidValue(newValue);
+                        return result;
+                    }
+                } else {
+                    pair.setValue(null);
+                }
+            }
+        }
+        return new Result(this, "Validated successfully.");
     }
 
     /**
      * Checks whether annotation identified by parameter <code>key</code> is amongst applicable validation annotations.
-     *
+     * 
      * @param applicableValidationAnnotations
      * @param validationAnnotationEnumValue
      * @return
      */
     private boolean isValidatorApplicable(final Set<Annotation> applicableValidationAnnotations, final Class<? extends Annotation> validationAnnotationType) {
-	for (final Annotation annotation : applicableValidationAnnotations) {
-	    if (annotation.annotationType() == validationAnnotationType) {
-		return true;
-	    }
-	}
-	return false;
+        for (final Annotation annotation : applicableValidationAnnotations) {
+            if (annotation.annotationType() == validationAnnotationType) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> getValidators() {
-	return validators;
+        return validators;
     }
 
     public final String getName() {
-	return name;
+        return name;
     }
 
     /**
      * Indicates the type of the entity property represented by this meta-property.
-     *
+     * 
      * @return
      */
     public final Class<?> getType() {
-	return type;
+        return type;
     }
 
     /**
      * This setter was introduces specifically to set property type in cases where it is not possible to determine during the creation of meta-property. The specific case is the
      * <code>key</code> property in {@link AbstractEntity}, where the type can be determined only when the actual value is assigned.
-     *
+     * 
      * This setter should be used extremely judiciously.
-     *
+     * 
      * @param type
      */
     public final void setType(final Class<?> type) {
-	this.type = type;
+        this.type = type;
     }
 
     @Override
     public final String toString() {
-	return "Property for field " + getName() + " with validators " + validators;
+        return "Property for field " + getName() + " with validators " + validators;
     }
 
     /**
      * Sets the result for validator with index.
-     *
+     * 
      * @param key
      *            -- annotation representing validator
      * @param validationResult
      */
     private void setValidationResultNoSynch(final ValidationAnnotation key, final IBeforeChangeEventHandler handler, final Result validationResult) {
-	// fire validationResults change event!!
-	if (validators.get(key) != null) {
-	    final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(key);
-	    final Result oldValue = annotationHandlers.get(handler);// getValue();
-	    annotationHandlers.put(handler, validationResult);
-	    final Result firstFailure = getFirstFailure();
-	    if (firstFailure != null) {
-		changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, firstFailure);
-	    } else {
-		changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, validationResult);
-	    }
-	}
+        // fire validationResults change event!!
+        if (validators.get(key) != null) {
+            final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(key);
+            final Result oldValue = annotationHandlers.get(handler);// getValue();
+            annotationHandlers.put(handler, validationResult);
+            final Result firstFailure = getFirstFailure();
+            if (firstFailure != null) {
+                changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, firstFailure);
+            } else {
+                changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, validationResult);
+            }
+        }
     }
 
     /**
      * Same as {@link #setValidationResultNoSynch(Annotation, IBeforeChangeEventHandler, Result)}, but with synchronization block.
-     *
+     * 
      * @param key
      * @param handler
      * @param validationResult
      */
     public synchronized final void setValidationResult(final ValidationAnnotation key, final IBeforeChangeEventHandler handler, final Result validationResult) {
-	setValidationResultNoSynch(key, handler, validationResult);
+        setValidationResultNoSynch(key, handler, validationResult);
     }
 
     /**
      * Sets validation result specifically for {@link ValidationAnnotation.REQUIRED};
-     *
+     * 
      * @param validationResult
      */
     public synchronized final void setRequiredValidationResult(final Result validationResult) {
-	setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.REQUIRED);
+        setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.REQUIRED);
     }
 
     /**
      * Sets validation result specifically for {@link ValidationAnnotation.ENTITY_EXISTS};
-     *
+     * 
      * @param validationResult
      */
     public synchronized final void setEntityExistsValidationResult(final Result validationResult) {
-	setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.ENTITY_EXISTS);
+        setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.ENTITY_EXISTS);
     }
 
     /**
      * Sets validation result specifically for {@link ValidationAnnotation.REQUIRED};
-     *
+     * 
      * @param validationResult
      */
     public synchronized final void setDomainValidationResult(final Result validationResult) {
-	setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.DOMAIN);
+        setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.DOMAIN);
     }
 
     /**
      * Sets validation result for the first of the annotation handlers designated by the validation annotation value.
-     *
+     * 
      * @param validationResult
      * @param annotationHandlers
      */
     private void setValidationResultForFirtsValidator(final Result validationResult, final ValidationAnnotation va) {
-	Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
+        Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
 
-	if (annotationHandlers == null) {
-	    annotationHandlers = new HashMap<IBeforeChangeEventHandler, Result>();
-	    annotationHandlers.put(StubValidator.singleton, null);
-	    validators.put(va, annotationHandlers);
-	}
+        if (annotationHandlers == null) {
+            annotationHandlers = new HashMap<IBeforeChangeEventHandler, Result>();
+            annotationHandlers.put(StubValidator.singleton, null);
+            validators.put(va, annotationHandlers);
+        }
 
-	final IBeforeChangeEventHandler handler = annotationHandlers.keySet().iterator().next();
-	final Result oldValue = annotationHandlers.get(handler);
-	annotationHandlers.put(handler, validationResult);
-	final Result firstFailure = getFirstFailure();
-	if (firstFailure != null) {
-	    changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, firstFailure);
-	} else {
-	    changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, validationResult);
-	}
+        final IBeforeChangeEventHandler handler = annotationHandlers.keySet().iterator().next();
+        final Result oldValue = annotationHandlers.get(handler);
+        annotationHandlers.put(handler, validationResult);
+        final Result firstFailure = getFirstFailure();
+        if (firstFailure != null) {
+            changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, firstFailure);
+        } else {
+            changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, validationResult);
+        }
     }
 
     /**
      * Returns the last result of the first validator associated with {@link ValidationAnnotation} value in a synchronised manner if all validators for this annotation succeeded,
      * or the last result of the first failed validator. Most validation annotations are associated with a single validator. But some, such as
      * {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
-     *
+     * 
      * @param va
      *            -- validation annotation.
      * @return
      */
     public synchronized final Result getValidationResult(final ValidationAnnotation va) {
-	final Result failure = getFirstFailureFor(va);
-	return failure != null ? failure : validators.get(va).values().iterator().next();
+        final Result failure = getFirstFailureFor(va);
+        return failure != null ? failure : validators.get(va).values().iterator().next();
     }
 
     /**
      * Returns false if there is at least one unsuccessful result. Evaluation of the validation results happens in a synchronised manner.
-     *
+     * 
      * @return
      */
     public synchronized final boolean isValid() {
-	final Result failure = getFirstFailure();
-	return failure == null;
+        final Result failure = getFirstFailure();
+        return failure == null;
     }
 
     public synchronized final boolean hasWarnings() {
-	final Result failure = getFirstWarning();
-	return failure != null;
+        final Result failure = getFirstWarning();
+        return failure != null;
     }
 
     /**
      * Returns the first warning associated with property validators.
-     *
+     * 
      * @return
      */
     public synchronized final Result getFirstWarning() {
-	for (final ValidationAnnotation va : validators.keySet()) {
-	    final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
-	    for (final Result result : annotationHandlers.values()) {
-		if (result != null && result.isWarning()) {
-		    return result;
-		}
-	    }
-	}
-	return null;
+        for (final ValidationAnnotation va : validators.keySet()) {
+            final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
+            for (final Result result : annotationHandlers.values()) {
+                if (result != null && result.isWarning()) {
+                    return result;
+                }
+            }
+        }
+        return null;
     }
 
     /**
      * This method invokes {@link #isValid()} and if its result is <code>true</code> (i.e. valid) then additional check kicks in to ensure requiredness validation.
-     *
+     * 
      * @return
      */
     public synchronized final boolean isValidWithRequiredCheck() {
-	final boolean result = isValid();
-	if (result) {
-	    // if valid check whether it's requiredness sound
-	    final Object value = ((AbstractEntity<?>) getEntity()).get(getName());
-	    if (isRequired() && (value == null || isEmpty(value))) {
-		if (!getValidators().containsKey(ValidationAnnotation.REQUIRED)) {
-		    throw new IllegalArgumentException("There are no REQUIRED validation annotation pair for required property!");
-		}
+        final boolean result = isValid();
+        if (result) {
+            // if valid check whether it's requiredness sound
+            final Object value = ((AbstractEntity<?>) getEntity()).get(getName());
+            if (isRequired() && (value == null || isEmpty(value))) {
+                if (!getValidators().containsKey(ValidationAnnotation.REQUIRED)) {
+                    throw new IllegalArgumentException("There are no REQUIRED validation annotation pair for required property!");
+                }
 
-		final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
+                final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
 
-		setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(getEntity(),
-			new IllegalArgumentException(StringUtils.isEmpty(reqErrorMsg) ? "Required property "
-			+ (StringUtils.isEmpty(getTitle()) ? name : getTitle()) + " is not specified for entity "
-			+ getEntityTitleAndDesc(getEntity().getType()).getKey() : reqErrorMsg)));
-		return false;
-	    }
-	}
-	return result;
+                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(getEntity(), new IllegalArgumentException(StringUtils.isEmpty(reqErrorMsg) ? "Required property "
+                        + (StringUtils.isEmpty(getTitle()) ? name : getTitle()) + " is not specified for entity " + getEntityTitleAndDesc(getEntity().getType()).getKey()
+                        : reqErrorMsg)));
+                return false;
+            }
+        }
+        return result;
     }
 
     /**
      * A convenient method, which ensures that only string values are tested for empty when required. This prevents accidental and redundant lazy loading when invoking
      * values.toString() on entity instances.
-     *
+     * 
      * @param value
      * @return
      */
     private boolean isEmpty(final Object value) {
-	return value instanceof String ? StringUtils.isEmpty(value.toString()) : false;
+        return value instanceof String ? StringUtils.isEmpty(value.toString()) : false;
     }
 
     /**
      * Return the first failed validation result. If there is no failure then returns null.
-     *
+     * 
      * @return
      */
     public synchronized final Result getFirstFailure() {
-	for (final ValidationAnnotation va : validators.keySet()) {
-	    final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
-	    for (final Result result : annotationHandlers.values()) {
-		if (result != null && !result.isSuccessful()) {
-		    return result;
-		}
-	    }
-	}
-	return null;
+        for (final ValidationAnnotation va : validators.keySet()) {
+            final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
+            for (final Result result : annotationHandlers.values()) {
+                if (result != null && !result.isSuccessful()) {
+                    return result;
+                }
+            }
+        }
+        return null;
     }
 
     /**
      * Returns the first failure associated with <code>annotation</code> value.
-     *
+     * 
      * @param annotation
      * @return
      */
     private final Result getFirstFailureFor(final ValidationAnnotation annotation) {
-	final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(annotation);
-	for (final Result result : annotationHandlers.values()) {
-	    if (result != null && !result.isSuccessful()) {
-		return result;
-	    }
-	}
-	return null;
+        final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(annotation);
+        for (final Result result : annotationHandlers.values()) {
+            if (result != null && !result.isSuccessful()) {
+                return result;
+            }
+        }
+        return null;
     }
 
     /**
      * Returns the number of property validators. Can be zero.
-     *
+     * 
      * @return
      */
     public final int numberOfValidators() {
-	return validators.size();
+        return validators.size();
     }
 
     /**
      * Registers property change listener to validationResults. This listener fires when setValidationResult(..) method invokes.
-     *
+     * 
      * @param propertyName
      * @param listener
      */
     public final synchronized void addValidationResultsChangeListener(final PropertyChangeListener listener) {
-	if (listener == null) {
-	    throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
-	}
-	changeSupport.addPropertyChangeListener(VALIDATION_RESULTS_PROPERTY_NAME, listener);
+        if (listener == null) {
+            throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
+        }
+        changeSupport.addPropertyChangeListener(VALIDATION_RESULTS_PROPERTY_NAME, listener);
     }
 
     /**
      * Removes validationResults change listener.
      */
     public synchronized final void removeValidationResultsChangeListener(final PropertyChangeListener listener) {
-	changeSupport.removePropertyChangeListener(VALIDATION_RESULTS_PROPERTY_NAME, listener);
+        changeSupport.removePropertyChangeListener(VALIDATION_RESULTS_PROPERTY_NAME, listener);
     }
 
     /**
      * Registers property change listener for property <code>editable</code>.
-     *
+     * 
      * @param propertyName
      * @param listener
      */
     public final synchronized void addEditableChangeListener(final PropertyChangeListener listener) {
-	if (listener == null) {
-	    throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
-	}
-	changeSupport.addPropertyChangeListener(EDITABLE_PROPERTY_NAME, listener);
+        if (listener == null) {
+            throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
+        }
+        changeSupport.addPropertyChangeListener(EDITABLE_PROPERTY_NAME, listener);
     }
 
     /**
      * Removes change listener for property <code>editable</code>.
      */
     public final synchronized void removeEditableChangeListener(final PropertyChangeListener listener) {
-	changeSupport.removePropertyChangeListener(EDITABLE_PROPERTY_NAME, listener);
+        changeSupport.removePropertyChangeListener(EDITABLE_PROPERTY_NAME, listener);
     }
 
     /**
      * Registers property change listener for property <code>required</code>.
-     *
+     * 
      * @param propertyName
      * @param listener
      */
     public final synchronized void addRequiredChangeListener(final PropertyChangeListener listener) {
-	if (listener == null) {
-	    throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
-	}
-	changeSupport.addPropertyChangeListener(REQUIRED_PROPERTY_NAME, listener);
+        if (listener == null) {
+            throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
+        }
+        changeSupport.addPropertyChangeListener(REQUIRED_PROPERTY_NAME, listener);
     }
 
     /**
      * Removes change listener for property <code>required</code>.
      */
     public final synchronized void removeRequiredChangeListener(final PropertyChangeListener listener) {
-	changeSupport.removePropertyChangeListener(REQUIRED_PROPERTY_NAME, listener);
+        changeSupport.removePropertyChangeListener(REQUIRED_PROPERTY_NAME, listener);
     }
 
     public final PropertyChangeSupport getChangeSupport() {
-	return changeSupport;
+        return changeSupport;
     }
 
     public final Object getOriginalValue() {
-	return originalValue;
+        return originalValue;
     }
 
     public final void setCollectionOriginalValue(final Number size) {
-	if (isCollectional()) {
-	    this.originalValue = size;
-	}
+        if (isCollectional()) {
+            this.originalValue = size;
+        }
     }
 
     /**
      * Sets the original value.
-     *
+     * 
      * <p>
      * VERY IMPORTANT : the method should not cause proxy initialisation!!!
-     *
+     * 
      * @param value
      */
     public final MetaProperty setOriginalValue(final Object value) {
-	if (value != null) {
-	    if (isCollectional() && value instanceof Collection) {
-		// possibly at this stage the "value" is the Hibernate proxy.
-		originalValue = MetaProperty.ORIGINAL_VALUE_NOT_INIT_COLL;
-	    } else { // The single property (proxied or not!!!)
-		originalValue = value;
-	    }
-	} else { // value == null;
-	    originalValue = isCollectional() ? 0 : null;
-	}
-	// when original property value is set then the previous value should be the same
-	// the previous value setter is not used deliberately since it has some logic not needed here
-	prevValue = originalValue;
-	// reset value change counter
-	resetValueChageCount();
-	//
-	assigned = true;
-	return this;
+        if (value != null) {
+            if (isCollectional() && value instanceof Collection) {
+                // possibly at this stage the "value" is the Hibernate proxy.
+                originalValue = MetaProperty.ORIGINAL_VALUE_NOT_INIT_COLL;
+            } else { // The single property (proxied or not!!!)
+                originalValue = value;
+            }
+        } else { // value == null;
+            originalValue = isCollectional() ? 0 : null;
+        }
+        // when original property value is set then the previous value should be the same
+        // the previous value setter is not used deliberately since it has some logic not needed here
+        prevValue = originalValue;
+        // reset value change counter
+        resetValueChageCount();
+        //
+        assigned = true;
+        return this;
     }
 
     public final int getValueChangeCount() {
-	return valueChangeCount;
+        return valueChangeCount;
     }
 
     private void incValueChangeCount() {
-	valueChangeCount++;
+        valueChangeCount++;
     }
 
     private void resetValueChageCount() {
-	valueChangeCount = 0;
+        valueChangeCount = 0;
     }
 
     public final Object getPrevValue() {
-	return prevValue;
+        return prevValue;
     }
 
     /**
      * Returns the current (last successful) value of the property.
-     *
+     * 
      * @return
      */
     public final Object getValue() {
-	return entity.get(name);
+        return entity.get(name);
     }
 
     /**
      * Updates the previous value for the entity property. Increments the update counter and check if the original value should be updated as well.
-     *
+     * 
      * Please note that for collectional properties their size is used as previous and original values.
-     *
+     * 
      * @param prevValue
      * @return
      */
     public final MetaProperty setPrevValue(final Object prevValue) {
-	incValueChangeCount();
-	// just in case cater for correct processing of collection properties
-	if (isCollectional() && prevValue instanceof Collection) {
-	    this.prevValue = ((Collection<?>) prevValue).size();
-	} else if (isCollectional() && prevValue == null) { // very unlikely, but let's be defensive
-	    this.prevValue = 0;
-	} else {
-	    this.prevValue = prevValue;
-	}
-	return this;
+        incValueChangeCount();
+        // just in case cater for correct processing of collection properties
+        if (isCollectional() && prevValue instanceof Collection) {
+            this.prevValue = ((Collection<?>) prevValue).size();
+        } else if (isCollectional() && prevValue == null) { // very unlikely, but let's be defensive
+            this.prevValue = 0;
+        } else {
+            this.prevValue = prevValue;
+        }
+        return this;
     }
 
     /**
      * Checks if the current value is changed from the original one.
-     *
+     * 
      * @return
      */
     public final boolean isChangedFromOriginal() {
-	try {
-	    final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
-	    final Object currValue = isCollectional() ? ((Collection<?>) getter.invoke(entity)).size() : getter.invoke(entity);
-	    if (getOriginalValue() == null) {
-		return currValue != null;
-	    } else {
-		return currValue == null || !currValue.equals(getOriginalValue());
-	    }
-	} catch (final Exception e) {
-	    // TODO change to logging
-	}
-	return false;
+        try {
+            final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
+            final Object currValue = isCollectional() ? ((Collection<?>) getter.invoke(entity)).size() : getter.invoke(entity);
+            if (getOriginalValue() == null) {
+                return currValue != null;
+            } else {
+                return currValue == null || !currValue.equals(getOriginalValue());
+            }
+        } catch (final Exception e) {
+            // TODO change to logging
+        }
+        return false;
     }
 
     /**
      * Checks if the current value is changed from the previous one
-     *
+     * 
      * @return
      */
     public final boolean isChangedFromPrevious() {
-	try {
-	    final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
-	    final Object currValue = isCollectional() ? ((Collection<?>) getter.invoke(entity)).size() : getter.invoke(entity);
-	    if (getPrevValue() == null) {
-		return currValue != null;
-	    } else {
-		return currValue == null || !currValue.equals(getPrevValue());
-	    }
-	} catch (final Exception e) {
-	    // TODO change to logging
-	}
-	return false;
+        try {
+            final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
+            final Object currValue = isCollectional() ? ((Collection<?>) getter.invoke(entity)).size() : getter.invoke(entity);
+            if (getPrevValue() == null) {
+                return currValue != null;
+            } else {
+                return currValue == null || !currValue.equals(getPrevValue());
+            }
+        } catch (final Exception e) {
+            // TODO change to logging
+        }
+        return false;
     }
 
     public final boolean isEditable() {
-	return editable;
+        return editable;
     }
 
     public final void setEditable(final boolean editable) {
-	final boolean oldValue = this.editable;
-	this.editable = editable;
-	changeSupport.firePropertyChange(EDITABLE_PROPERTY_NAME, oldValue, editable);
+        final boolean oldValue = this.editable;
+        this.editable = editable;
+        changeSupport.firePropertyChange(EDITABLE_PROPERTY_NAME, oldValue, editable);
     }
 
     /**
      * Invokes {@link IAfterChangeEventHandler#handle(MetaProperty, Object)} if it has been provided.
-     *
+     * 
      * @param entityPropertyValue
      * @return
      */
     public final MetaProperty define(final Object entityPropertyValue) {
-	if (aceHandler != null) {
-	    aceHandler.handle(this, entityPropertyValue);
-	}
-	return this;
+        if (aceHandler != null) {
+            aceHandler.handle(this, entityPropertyValue);
+        }
+        return this;
     }
 
     /** Returns the owning entity instance. */
     public final AbstractEntity<?> getEntity() {
-	return entity;
+        return entity;
     }
 
     /**
      * Returns true if MetaProperty represents a collectional property.
-     *
+     * 
      * @return
      */
     public final boolean isCollectional() {
-	return collectional;
+        return collectional;
     }
 
     /**
      * Returns a type provided as part of the annotation {@link IsProperty} when defining property. It is provided, for example, in cases where meta-property represents a
      * collection property -- the provided type indicates the type collection elements.
-     *
+     * 
      * @return
      */
     public final Class<?> getPropertyAnnotationType() {
-	return propertyAnnotationType;
+        return propertyAnnotationType;
     }
 
     /**
      * Meta-property comparison gives preference to properties, which represent a key member. In case where both meta-properties are key members or both are non-key members the
      * property names are used for comparison.
-     *
+     * 
      * Comparison between key and non-key properties happens in reverse order to ensure that key properties are at the top.
      */
     @Override
     public final int compareTo(final MetaProperty mp) {
-	if (isKey() && mp.isKey() || !isKey() && !mp.isKey()) {
-	    return getName().compareTo(mp.getName());
-	}
-	return isKey() ? -1 : 1;
+        if (isKey() && mp.isKey() || !isKey() && !mp.isKey()) {
+            return getName().compareTo(mp.getName());
+        }
+        return isKey() ? -1 : 1;
     }
 
     public final boolean isKey() {
-	return key;
+        return key;
     }
 
     public final boolean isVisible() {
-	return visible;
+        return visible;
     }
 
     public final void setVisible(final boolean visible) {
-	this.visible = visible;
+        this.visible = visible;
     }
 
     public final Object getLastInvalidValue() {
-	return lastInvalidValue;
+        return lastInvalidValue;
     }
 
     public final void setLastInvalidValue(final Object lastInvalidValue) {
-	this.lastInvalidValue = lastInvalidValue;
+        this.lastInvalidValue = lastInvalidValue;
     }
 
     /**
      * A convenient method for determining whether there are validators associated a the corresponding property.
-     *
+     * 
      * @return
      */
     public final boolean hasValidators() {
-	return getValidators().size() > 0;
+        return getValidators().size() > 0;
     }
 
     /**
@@ -792,87 +790,87 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * <p>
      * A special care is taken for properties with default values assigned at the field level. This method returns <code>original value</code> for properties that are valid and not
      * assigned.
-     *
+     * 
      * @return
      */
     public final Object getLastAttemptedValue() {
-	return isValid() ? (isAssigned() ? getValue() : getOriginalValue()) : getLastInvalidValue();
+        return isValid() ? (isAssigned() ? getValue() : getOriginalValue()) : getLastInvalidValue();
     }
 
     public final String getTitle() {
-	return title;
+        return title;
     }
 
     public final void setTitle(final String title) {
-	this.title = title;
+        this.title = title;
     }
 
     public final String getDesc() {
-	return desc;
+        return desc;
     }
 
     public final void setDesc(final String desc) {
-	this.desc = desc;
+        this.desc = desc;
     }
 
     public final boolean isRequired() {
-	return required;
+        return required;
     }
 
     /**
      * This setter change the 'required' state for metaProperty. Also it puts RequiredValidator to the list of validators if it does not exist. And if 'required' became false -> it
      * clears REQUIRED validation result by successful result.
-     *
+     * 
      * @param required
      */
     public final void setRequired(final boolean required) {
-	final boolean oldRequired = this.required;
-	this.required = required;
+        final boolean oldRequired = this.required;
+        this.required = required;
 
-	// if requirement changed from false to true, and REQUIRED validator does not exist in the list of validators -> then put REQUIRED validator to the list of validators
-	if (required && !oldRequired && !containsRequiredValidator()) {
-	    putRequiredValidator();
-	}
-	// if requirement changed from true to false, then update REQUIRED validation result to be successful
-	if (!required && oldRequired) {
-	    if (containsRequiredValidator()) {
-		setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
-	    } else {
-		throw new IllegalStateException("The metaProperty was required but RequiredValidator didn't exist.");
-	    }
-	}
-	changeSupport.firePropertyChange(REQUIRED_PROPERTY_NAME, oldRequired, required);
+        // if requirement changed from false to true, and REQUIRED validator does not exist in the list of validators -> then put REQUIRED validator to the list of validators
+        if (required && !oldRequired && !containsRequiredValidator()) {
+            putRequiredValidator();
+        }
+        // if requirement changed from true to false, then update REQUIRED validation result to be successful
+        if (!required && oldRequired) {
+            if (containsRequiredValidator()) {
+                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
+            } else {
+                throw new IllegalStateException("The metaProperty was required but RequiredValidator didn't exist.");
+            }
+        }
+        changeSupport.firePropertyChange(REQUIRED_PROPERTY_NAME, oldRequired, required);
     }
 
     public final void resetState() {
-	setOriginalValue(entity.get(name));
-	setDirty(false);
+        setOriginalValue(entity.get(name));
+        setDirty(false);
     }
 
     public final void resetValues() {
-	setOriginalValue(entity.get(name));
+        setOriginalValue(entity.get(name));
     }
 
     public final boolean isCalculated() {
-	return calculated;
+        return calculated;
     }
 
     /**
      * Checks if REQUIRED validator were ever put to the list of validators.
-     *
+     * 
      * @return
      */
     public final boolean containsRequiredValidator() {
-	return getValidators().containsKey(ValidationAnnotation.REQUIRED);
+        return getValidators().containsKey(ValidationAnnotation.REQUIRED);
     }
 
     /**
      * Checks if DYNAMIC validator were ever put to the list of validators.
-     *
+     * 
      * @return
      */
     public final boolean containsDynamicValidator() {
-	return getValidators().containsKey(ValidationAnnotation.DYNAMIC);
+        return getValidators().containsKey(ValidationAnnotation.DYNAMIC);
     }
 
     /**
@@ -880,7 +878,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * method MetaProperty.setValidationResult().
      */
     public final void putDynamicValidator() {
-	putValidator(ValidationAnnotation.DYNAMIC);
+        putValidator(ValidationAnnotation.DYNAMIC);
     }
 
     /**
@@ -888,171 +886,171 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * method MetaProperty.setValidationResult().
      */
     public final void putRequiredValidator() {
-	putValidator(ValidationAnnotation.REQUIRED);
+        putValidator(ValidationAnnotation.REQUIRED);
     }
 
     /**
      * Used to create and put new validator (without any validation logic!) to validators list related to <code>valAnnotation</code>.
-     *
+     * 
      * This method should be used ONLY for DYNAMIC, REQUIRED and all validators that cannot change its result from its own "validate" method, but only from the outside method
      * MetaProperty.setValidationResult().
-     *
+     * 
      * @param valAnnotation
      */
     private void putValidator(final ValidationAnnotation valAnnotation) {
-	final Map<IBeforeChangeEventHandler, Result> map = new HashMap<IBeforeChangeEventHandler, Result>(2); // optimised with 2 as default value for this map -- not to create map with unnecessary 16 elements
-	map.put(StubValidator.singleton, null);
-	getValidators().put(valAnnotation, map);
+        final Map<IBeforeChangeEventHandler, Result> map = new HashMap<IBeforeChangeEventHandler, Result>(2); // optimised with 2 as default value for this map -- not to create map with unnecessary 16 elements
+        map.put(StubValidator.singleton, null);
+        getValidators().put(valAnnotation, map);
     }
 
     /**
      * Returns the array of "dependent property names".
-     *
+     * 
      * @return
      */
     public final String[] getDependentPropertyNames() {
-	return dependentPropertyNames;
+        return dependentPropertyNames;
     }
 
     /**
      * Returns true if there is at least one correct dependent property related to this one, false otherwise.
-     *
+     * 
      * @return
      */
     public final boolean hasDependentProperties() {
-	return dependentPropertyNames != null && dependentPropertyNames.length > 0;
+        return dependentPropertyNames != null && dependentPropertyNames.length > 0;
     }
 
     public boolean isDirty() {
-	return dirty || !entity.isPersisted();
+        return dirty || !entity.isPersisted();
     }
 
     public MetaProperty setDirty(final boolean dirty) {
-	this.dirty = dirty;
-	return this;
+        this.dirty = dirty;
+        return this;
     }
 
     public boolean isUpperCase() {
-	return upperCase;
+        return upperCase;
     }
 
     /**
      * Restores property state to original if possible, which includes setting the original value and removal of all validation errors.
      */
     public final void restoreToOriginal() {
-	resetValidationResult();
-	// need to ignore composite key instance resetting
-	if (!DynamicEntityKey.class.isAssignableFrom(type)) {
-	    try {
-		entity.set(name, getOriginalValue());
-	    } catch (final Exception ex) {
-		logger.debug("Could not restore to original property " + name + "#" + entity.getType().getName() + ".");
-	    }
-	}
-	resetState();
+        resetValidationResult();
+        // need to ignore composite key instance resetting
+        if (!DynamicEntityKey.class.isAssignableFrom(type)) {
+            try {
+                entity.set(name, getOriginalValue());
+            } catch (final Exception ex) {
+                logger.debug("Could not restore to original property " + name + "#" + entity.getType().getName() + ".");
+            }
+        }
+        resetState();
     }
 
     /**
      * Resets validation results for all validators by setting their value to <code>null</code>.
      */
     public synchronized final void resetValidationResult() {
-	for (final ValidationAnnotation va : validators.keySet()) {
-	    final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
-	    for (final IBeforeChangeEventHandler handler : annotationHandlers.keySet()) {
-		annotationHandlers.put(handler, null);
-	    }
-	}
+        for (final ValidationAnnotation va : validators.keySet()) {
+            final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
+            for (final IBeforeChangeEventHandler handler : annotationHandlers.keySet()) {
+                annotationHandlers.put(handler, null);
+            }
+        }
     }
 
     public boolean isEnforceMutator() {
-	return enforceMutator;
+        return enforceMutator;
     }
 
     public void setEnforceMutator(final boolean enforceMutator) {
-	this.enforceMutator = enforceMutator;
+        this.enforceMutator = enforceMutator;
     }
 
     private MetaProperty parentMetaPropertyOnDependencyPath;
 
     public boolean onDependencyPath(final MetaProperty dependentMetaProperty) {
-	if (parentMetaPropertyOnDependencyPath == null) {
-	    return false;
-	}
+        if (parentMetaPropertyOnDependencyPath == null) {
+            return false;
+        }
 
-	if (parentMetaPropertyOnDependencyPath == dependentMetaProperty) {
-	    return true;
-	} else {
-	    return parentMetaPropertyOnDependencyPath.onDependencyPath(dependentMetaProperty);
-	}
+        if (parentMetaPropertyOnDependencyPath == dependentMetaProperty) {
+            return true;
+        } else {
+            return parentMetaPropertyOnDependencyPath.onDependencyPath(dependentMetaProperty);
+        }
     }
 
     public void addToDependencyPath(final MetaProperty metaProperty) {
-	if (parentMetaPropertyOnDependencyPath != null) {
-	    final String msg = "Parent meta-property " + parentMetaPropertyOnDependencyPath.getName() + " for dependency path is already assigned.";
-	    logger.error(msg);
-	    throw new IllegalStateException(msg);
-	}
-	if (metaProperty == null) {
-	    final String msg = "Parent meta-property for dependency path cannot be null.";
-	    logger.error(msg);
-	    throw new IllegalStateException(msg);
-	}
+        if (parentMetaPropertyOnDependencyPath != null) {
+            final String msg = "Parent meta-property " + parentMetaPropertyOnDependencyPath.getName() + " for dependency path is already assigned.";
+            logger.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        if (metaProperty == null) {
+            final String msg = "Parent meta-property for dependency path cannot be null.";
+            logger.error(msg);
+            throw new IllegalStateException(msg);
+        }
 
-	boolean contains = false;
-	for (final String name : metaProperty.dependentPropertyNames) {
-	    if (getName().equals(name)) {
-		contains = true;
-		break;
-	    }
-	}
-	if (!contains) {
-	    final String msg = "Meta-property " + metaProperty.getName() + " is not on dependency list.";
-	    logger.error(msg);
-	    throw new IllegalStateException(msg);
-	}
+        boolean contains = false;
+        for (final String name : metaProperty.dependentPropertyNames) {
+            if (getName().equals(name)) {
+                contains = true;
+                break;
+            }
+        }
+        if (!contains) {
+            final String msg = "Meta-property " + metaProperty.getName() + " is not on dependency list.";
+            logger.error(msg);
+            throw new IllegalStateException(msg);
+        }
 
-	parentMetaPropertyOnDependencyPath = metaProperty;
+        parentMetaPropertyOnDependencyPath = metaProperty;
     }
 
     public void removeFromDependencyPath(final MetaProperty metaProperty) {
-	if (metaProperty == null) {
-	    final String msg = "Meta-property to be removed should not be null.";
-	    logger.error(msg);
-	    throw new IllegalStateException(msg);
-	}
+        if (metaProperty == null) {
+            final String msg = "Meta-property to be removed should not be null.";
+            logger.error(msg);
+            throw new IllegalStateException(msg);
+        }
 
-	if (parentMetaPropertyOnDependencyPath != metaProperty) {
-	    final String msg = "Parent meta-property " + parentMetaPropertyOnDependencyPath.getName() + " is different to " + metaProperty.getName() + ".";
-	    logger.error(msg);
-	    throw new IllegalStateException(msg);
-	}
+        if (parentMetaPropertyOnDependencyPath != metaProperty) {
+            final String msg = "Parent meta-property " + parentMetaPropertyOnDependencyPath.getName() + " is different to " + metaProperty.getName() + ".";
+            logger.error(msg);
+            throw new IllegalStateException(msg);
+        }
 
-	parentMetaPropertyOnDependencyPath = null;
+        parentMetaPropertyOnDependencyPath = null;
     }
 
     public boolean isAssigned() {
-	return assigned;
+        return assigned;
     }
 
     public void setAssigned(final boolean hasAssignedValue) {
-	this.assigned = hasAssignedValue;
+        this.assigned = hasAssignedValue;
     }
 
     /**
      * Returns a list of validation annotations associated with this property.
-     *
+     * 
      * @return
      */
     public Set<Annotation> getValidationAnnotations() {
-	return Collections.unmodifiableSet(validationAnnotations);
+        return Collections.unmodifiableSet(validationAnnotations);
     }
 
     /**
      * Returns property ACE handler.
-     *
+     * 
      * @return
      */
     public IAfterChangeEventHandler getAceHandler() {
-	return aceHandler;
+        return aceHandler;
     }
 }

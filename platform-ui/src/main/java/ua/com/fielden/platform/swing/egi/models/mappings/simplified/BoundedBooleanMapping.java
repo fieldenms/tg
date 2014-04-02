@@ -24,9 +24,9 @@ import ua.com.fielden.platform.swing.egi.models.mappings.ReadonlyPropertyColumnM
  * AbstractEntity} class to {@link EntityGridInspector}'s column. Uses
  * {@link ComponentFactory#createCheckBox(AbstractEntity, String, String, String, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)} method to
  * create bounded {@link JCheckBox}. Methods could be overridden to provide custom functionality.
- *
+ * 
  * @author Yura
- *
+ * 
  * @param <T>
  * @param <K>
  */
@@ -37,7 +37,7 @@ public class BoundedBooleanMapping<T extends AbstractEntity> extends ReadonlyPro
 
     /**
      * Creates instance of mapping, that automatically bounds editors to specified properties of entities in related {@link EntityGridInspector}
-     *
+     * 
      * @param columnName
      * @param prefSize
      * @param headerTooltip
@@ -46,9 +46,9 @@ public class BoundedBooleanMapping<T extends AbstractEntity> extends ReadonlyPro
      *            - name of property (property should be of boolean type)
      */
     public BoundedBooleanMapping(final Class<T> entityClass, final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final IOnCommitAction<T>... onCommitActions) {
-	super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction, true);
+        super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction, true);
 
-	this.onCommitActions = onCommitActions;
+        this.onCommitActions = onCommitActions;
     }
 
     /**
@@ -57,10 +57,10 @@ public class BoundedBooleanMapping<T extends AbstractEntity> extends ReadonlyPro
      */
     @Override
     public EditorComponent<BoundedValidationLayer<JCheckBox>, JCheckBox> createBoundedEditorFor(final T entity) {
-	final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
-	final BoundedValidationLayer<JCheckBox> layer = ComponentFactory.createCheckBox(entity, getPropertyName(), "", "", onCommitActionWrappers);
-	layer.getView().setHorizontalAlignment(SwingConstants.CENTER);
-	return new EditorComponent<BoundedValidationLayer<JCheckBox>, JCheckBox>(layer, layer.getView());
+        final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
+        final BoundedValidationLayer<JCheckBox> layer = ComponentFactory.createCheckBox(entity, getPropertyName(), "", "", onCommitActionWrappers);
+        layer.getView().setHorizontalAlignment(SwingConstants.CENTER);
+        return new EditorComponent<BoundedValidationLayer<JCheckBox>, JCheckBox>(layer, layer.getView());
     }
 
     /**
@@ -68,7 +68,7 @@ public class BoundedBooleanMapping<T extends AbstractEntity> extends ReadonlyPro
      */
     @Override
     public boolean isPropertyEditable(final T entity) {
-	return true;
+        return true;
     }
 
     /**
@@ -76,20 +76,20 @@ public class BoundedBooleanMapping<T extends AbstractEntity> extends ReadonlyPro
      */
     @Override
     public boolean isNavigableTo(final T entity) {
-	return true;
+        return true;
     }
 
     /**
      * Should select check box on the first click
-     *
+     * 
      * @param e
      * @return
      */
     @Override
     public boolean startCellEditingOn(final EventObject e) {
-	if (e instanceof MouseEvent) {
-	    return ((MouseEvent) e).getClickCount() >= 1;
-	}
-	return true;
+        if (e instanceof MouseEvent) {
+            return ((MouseEvent) e).getClickCount() >= 1;
+        }
+        return true;
     }
 }

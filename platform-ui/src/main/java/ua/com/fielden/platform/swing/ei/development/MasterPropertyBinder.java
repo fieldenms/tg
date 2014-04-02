@@ -27,9 +27,9 @@ import ua.com.fielden.platform.swing.review.report.centre.binder.PropertyBinderE
 
 /**
  * Property binder which can bind external editors.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class MasterPropertyBinder<T extends AbstractEntity> implements ILightweightPropertyBinder<T> {
 
@@ -43,21 +43,21 @@ public class MasterPropertyBinder<T extends AbstractEntity> implements ILightwei
 
     private final Logger logger = Logger.getLogger(getClass());
 
-    public static <T extends AbstractEntity> MasterPropertyBinder<T> createPropertyBinderWithLocatorSupport(final IValueMatcherFactory valueMatcherFactory, final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, final String... propetiesToIgnor){
-	return new MasterPropertyBinder<T>(PropertyBinderType.WITH_LOCATOR, valueMatcherFactory, masterManager, criteriaGenerator, propetiesToIgnor);
+    public static <T extends AbstractEntity> MasterPropertyBinder<T> createPropertyBinderWithLocatorSupport(final IValueMatcherFactory valueMatcherFactory, final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, final String... propetiesToIgnor) {
+        return new MasterPropertyBinder<T>(PropertyBinderType.WITH_LOCATOR, valueMatcherFactory, masterManager, criteriaGenerator, propetiesToIgnor);
     }
 
-    public static <T extends AbstractEntity> MasterPropertyBinder<T> createPropertyBinderWithoutLocatorSupport(final IValueMatcherFactory valueMatcherFactory, final String... propetiesToIgnor){
-	return new MasterPropertyBinder<T>(PropertyBinderType.WITHOUT_LOCATOR, valueMatcherFactory, null, null, propetiesToIgnor);
+    public static <T extends AbstractEntity> MasterPropertyBinder<T> createPropertyBinderWithoutLocatorSupport(final IValueMatcherFactory valueMatcherFactory, final String... propetiesToIgnor) {
+        return new MasterPropertyBinder<T>(PropertyBinderType.WITHOUT_LOCATOR, valueMatcherFactory, null, null, propetiesToIgnor);
     }
 
-    private MasterPropertyBinder(final PropertyBinderType propertyBinderType, final IValueMatcherFactory valueMatcherFactory, final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, /*final IEntityMasterManager entityMasterFactory,*/ final String... propetiesToIgnor) {
-	this.propertyBinderType = propertyBinderType;
-	this.valueMatcherFactory = valueMatcherFactory;
-	this.masterManager = masterManager;
-	this.criteriaGenerator = criteriaGenerator;
-	this.propertiesToIgnor.addAll(Arrays.asList(propetiesToIgnor));
-	//this.entityMasterFactory = entityMasterFactory;
+    private MasterPropertyBinder(final PropertyBinderType propertyBinderType, final IValueMatcherFactory valueMatcherFactory, final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, /*final IEntityMasterManager entityMasterFactory,*/final String... propetiesToIgnor) {
+        this.propertyBinderType = propertyBinderType;
+        this.valueMatcherFactory = valueMatcherFactory;
+        this.masterManager = masterManager;
+        this.criteriaGenerator = criteriaGenerator;
+        this.propertiesToIgnor.addAll(Arrays.asList(propetiesToIgnor));
+        //this.entityMasterFactory = entityMasterFactory;
     }
 
     /**
@@ -65,67 +65,67 @@ public class MasterPropertyBinder<T extends AbstractEntity> implements ILightwei
      */
     @Override
     public Map<String, IPropertyEditor> bind(final T entity) {
-	final Date curr = new Date();
-	final Map<String, IPropertyEditor> newPropertyEditors = new HashMap<String, IPropertyEditor>();
-	final SortedSet<MetaProperty> metaProps = Finder.getMetaProperties(entity);
-	// iterate through the meta-properties and create appropriate editors
-	for (final MetaProperty metaProp : metaProps) {
-	    if (metaProp.isVisible() && !propertiesToIgnor.contains(metaProp.getName())) { // should include only visible properties
-		if (AbstractEntity.class.isAssignableFrom(metaProp.getType())) { // property is of entity type
-		    final IPropertyEditor editor = createEntityPropertyEditor(entity, metaProp.getName(), valueMatcherFactory.getValueMatcher(entity.getType(), metaProp.getName()));
-		    newPropertyEditors.put(metaProp.getName(), editor);
-		} else if (metaProp.isCollectional()) {
-		    // TODO implement support for collectional properties
-		    final IPropertyEditor editor = createCollectionalPropertyEditor(entity, metaProp.getName());
-		    newPropertyEditors.put(metaProp.getName(), editor);
-		} else { // the only possible case is property of an ordinary type
-		    final IPropertyEditor editor = createOrdinaryPropertyEditor(entity, metaProp.getName());
+        final Date curr = new Date();
+        final Map<String, IPropertyEditor> newPropertyEditors = new HashMap<String, IPropertyEditor>();
+        final SortedSet<MetaProperty> metaProps = Finder.getMetaProperties(entity);
+        // iterate through the meta-properties and create appropriate editors
+        for (final MetaProperty metaProp : metaProps) {
+            if (metaProp.isVisible() && !propertiesToIgnor.contains(metaProp.getName())) { // should include only visible properties
+                if (AbstractEntity.class.isAssignableFrom(metaProp.getType())) { // property is of entity type
+                    final IPropertyEditor editor = createEntityPropertyEditor(entity, metaProp.getName(), valueMatcherFactory.getValueMatcher(entity.getType(), metaProp.getName()));
+                    newPropertyEditors.put(metaProp.getName(), editor);
+                } else if (metaProp.isCollectional()) {
+                    // TODO implement support for collectional properties
+                    final IPropertyEditor editor = createCollectionalPropertyEditor(entity, metaProp.getName());
+                    newPropertyEditors.put(metaProp.getName(), editor);
+                } else { // the only possible case is property of an ordinary type
+                    final IPropertyEditor editor = createOrdinaryPropertyEditor(entity, metaProp.getName());
 
-		    newPropertyEditors.put(metaProp.getName(), editor);
-		}
-	    }
-	}
+                    newPropertyEditors.put(metaProp.getName(), editor);
+                }
+            }
+        }
 
-	// enhance titles and descriptions by unified TG way :
-	PropertyBinderEnhancer.enhancePropertyEditors((Class<T>)entity.getType(), newPropertyEditors, true);
-	logger.debug("Bind in..." + (new Date().getTime() - curr.getTime()) + "ms");
-	return newPropertyEditors;
+        // enhance titles and descriptions by unified TG way :
+        PropertyBinderEnhancer.enhancePropertyEditors((Class<T>) entity.getType(), newPropertyEditors, true);
+        logger.debug("Bind in..." + (new Date().getTime() - curr.getTime()) + "ms");
+        return newPropertyEditors;
     }
 
     protected IPropertyEditor createOrdinaryPropertyEditor(final T entity, final String name) {
-	return OrdinaryPropertyEditor.createOrdinaryPropertyEditorForMaster(entity, name);
+        return OrdinaryPropertyEditor.createOrdinaryPropertyEditorForMaster(entity, name);
     }
 
     protected IPropertyEditor createCollectionalPropertyEditor(final T entity, final String name) {
-	return new CollectionalPropertyEditor(entity, name);
+        return new CollectionalPropertyEditor(entity, name);
     }
 
     protected IPropertyEditor createEntityPropertyEditor(final T entity, final String name, final IValueMatcher<?> valueMatcher) {
-	if(PropertyBinderType.WITH_LOCATOR == propertyBinderType){
-	    return EntityPropertyEditorWithLocator.createEntityPropertyEditorWithLocatorForMaster(entity, name, masterManager, criteriaGenerator, valueMatcherFactory.getValueMatcher(entity.getType(), name));
-	}else if(PropertyBinderType.WITHOUT_LOCATOR == propertyBinderType)
-	    return EntityPropertyEditor.createEntityPropertyEditorForMaster(entity, name, valueMatcherFactory.getValueMatcher(entity.getType(), name));
-	return null;
+        if (PropertyBinderType.WITH_LOCATOR == propertyBinderType) {
+            return EntityPropertyEditorWithLocator.createEntityPropertyEditorWithLocatorForMaster(entity, name, masterManager, criteriaGenerator, valueMatcherFactory.getValueMatcher(entity.getType(), name));
+        } else if (PropertyBinderType.WITHOUT_LOCATOR == propertyBinderType)
+            return EntityPropertyEditor.createEntityPropertyEditorForMaster(entity, name, valueMatcherFactory.getValueMatcher(entity.getType(), name));
+        return null;
     }
 
     @Override
     public void rebind(final Map<String, IPropertyEditor> editors, final T entity) {
-	final Date curr = new Date();
-	if (editors.isEmpty()) {
-	    // create new editors :
-	    final Map<String, IPropertyEditor> newPropertyEditors = bind(entity);
-	    // put them into "editors"
-	    editors.putAll(newPropertyEditors);
-	} else {
-	    // rebind every editor
-	    for (final IPropertyEditor editor : editors.values()) {
-		editor.bind(entity);
-	    }
-	}
+        final Date curr = new Date();
+        if (editors.isEmpty()) {
+            // create new editors :
+            final Map<String, IPropertyEditor> newPropertyEditors = bind(entity);
+            // put them into "editors"
+            editors.putAll(newPropertyEditors);
+        } else {
+            // rebind every editor
+            for (final IPropertyEditor editor : editors.values()) {
+                editor.bind(entity);
+            }
+        }
 
-	// enhance titles and descriptions by unified TG way :
-	PropertyBinderEnhancer.enhancePropertyEditors((Class<T>)entity.getType(), editors, true);
-	logger.debug("Rebind in..." + (new Date().getTime() - curr.getTime()) + "ms");
+        // enhance titles and descriptions by unified TG way :
+        PropertyBinderEnhancer.enhancePropertyEditors((Class<T>) entity.getType(), editors, true);
+        logger.debug("Rebind in..." + (new Date().getTime() - curr.getTime()) + "ms");
     }
 
     //    protected IValueMatcherFactory getValueMatcherFactory() {
@@ -136,8 +136,8 @@ public class MasterPropertyBinder<T extends AbstractEntity> implements ILightwei
     //	return entityMasterFactory;
     //    }
 
-    private enum PropertyBinderType{
-	WITH_LOCATOR, WITHOUT_LOCATOR;
+    private enum PropertyBinderType {
+        WITH_LOCATOR, WITHOUT_LOCATOR;
     }
 
 }

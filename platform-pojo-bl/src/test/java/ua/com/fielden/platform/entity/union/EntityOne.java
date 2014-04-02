@@ -17,21 +17,21 @@ public class EntityOne extends AbstractEntity<String> {
     private Double doubleProperty;
 
     public String getStringProperty() {
-	return stringProperty;
+        return stringProperty;
     }
 
     @Observable
     public void setStringProperty(final String stringProperty) {
-	this.stringProperty = stringProperty;
+        this.stringProperty = stringProperty;
     }
 
     public Double getDoubleProperty() {
-	return doubleProperty;
+        return doubleProperty;
     }
 
     @Observable
     public void setDoubleProperty(final Double doubleProperty) {
-	this.doubleProperty = doubleProperty;
+        this.doubleProperty = doubleProperty;
     }
 
 }

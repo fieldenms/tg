@@ -10,17 +10,17 @@ import ua.com.fielden.platform.utils.Pair;
 public class GroupBuilder extends AbstractTokensBuilder {
 
     protected GroupBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-	super(parent, queryBuilder, paramValues);
+        super(parent, queryBuilder, paramValues);
     }
 
     @Override
     public boolean isClosing() {
-	return getSize() == 1;
+        return getSize() == 1;
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-	final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_GROUP, new GroupBy(operand));
+        final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
+        return new Pair<TokenCategory, Object>(TokenCategory.QRY_GROUP, new GroupBy(operand));
     }
 }

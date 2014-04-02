@@ -21,17 +21,21 @@ public class TgWagonClass extends AbstractEntity<String> {
 
     @IsProperty(value = TgWagonClassCompatibility.class, linkProperty = "wagonClass")
     private Set<TgWagonClassCompatibility> compatibles = new HashSet<TgWagonClassCompatibility>();
-    @IsProperty @MapTo
+    @IsProperty
+    @MapTo
     private Integer numberOfBogies;
-    @IsProperty @MapTo
+    @IsProperty
+    @MapTo
     private Integer numberOfWheelsets;
-    @IsProperty @MapTo
+    @IsProperty
+    @MapTo
     private Integer tonnage;
 
-    protected TgWagonClass() {}
+    protected TgWagonClass() {
+    }
 
     public TgWagonClass(final String code, final String desc) {
-	super(null, code, desc);
+        super(null, code, desc);
     }
 
     public Integer getTonnage() {
@@ -65,7 +69,7 @@ public class TgWagonClass extends AbstractEntity<String> {
     }
 
     public Set<TgWagonClassCompatibility> getCompatibles() {
-	return this.compatibles;
+        return this.compatibles;
     }
 
     @Observable

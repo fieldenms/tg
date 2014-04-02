@@ -8,9 +8,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity for "included properties logic" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @DescTitle(value = "Desc title", desc = "Desc desc")
@@ -29,6 +29,7 @@ public class UnionEntityForIncludedPropertiesLogic extends AbstractUnionEntity {
     public Union1ForIncludedPropertiesLogic getUnionProp1() {
         return unionProp1;
     }
+
     @Observable
     public void setUnionProp1(final Union1ForIncludedPropertiesLogic unionProp1) {
         this.unionProp1 = unionProp1;
@@ -37,6 +38,7 @@ public class UnionEntityForIncludedPropertiesLogic extends AbstractUnionEntity {
     public Union2ForIncludedPropertiesLogic getUnionProp2() {
         return unionProp2;
     }
+
     @Observable
     public void setUnionProp2(final Union2ForIncludedPropertiesLogic unionProp2) {
         this.unionProp2 = unionProp2;

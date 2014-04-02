@@ -2,9 +2,9 @@ package ua.com.fielden.platform.error;
 
 /**
  * This class represents warning.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class Warning extends Result {
 
@@ -18,10 +18,10 @@ public class Warning extends Result {
     }
 
     public Warning(final String message) {
-	this(null, message);
+        this(null, message);
     }
 
     public Warning(final Object instance, final String message) {
-	super(instance, message);
+        super(instance, message);
     }
 }

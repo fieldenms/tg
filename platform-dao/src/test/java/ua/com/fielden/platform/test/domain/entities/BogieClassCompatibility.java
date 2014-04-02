@@ -8,8 +8,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 
 /**
  * Represents the compatibility between certain bogie and wheelset classes.
+ * 
  * @author nc
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 public class BogieClassCompatibility extends AbstractEntity<DynamicEntityKey> {
@@ -26,30 +27,30 @@ public class BogieClassCompatibility extends AbstractEntity<DynamicEntityKey> {
     private String status;
 
     public BogieClassCompatibility() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     public BogieClass getBogieClass() {
-	return bogieClass;
+        return bogieClass;
     }
 
     public void setBogieClass(final BogieClass bogieClass) {
-	this.bogieClass = bogieClass;
+        this.bogieClass = bogieClass;
     }
 
     public WheelsetClass getWheelsetClass() {
-	return wheelsetClass;
+        return wheelsetClass;
     }
 
     public void setWheelsetClass(final WheelsetClass wheelsetClass) {
-	this.wheelsetClass = wheelsetClass;
+        this.wheelsetClass = wheelsetClass;
     }
 
     public String getStatus() {
-	return status;
+        return status;
     }
 
     public void setStatus(final String status) {
-	this.status = status;
+        this.status = status;
     }
 }

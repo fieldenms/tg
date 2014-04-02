@@ -8,14 +8,14 @@ public class Or extends AbstractOperator {
     }
 
     public String getExpression() {
-	return "OR";
+        return "OR";
     }
 
     public Object getDefaultValue() {
-	return "T";
+        return "T";
     }
 
     public OperatorType type() {
-	return OperatorType.BOOLEAN;
+        return OperatorType.BOOLEAN;
     }
 }

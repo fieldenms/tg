@@ -5,9 +5,9 @@ import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
  * A base class to be used for implementing wizard pages.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public abstract class AbstractWizPage<T extends AbstractEntity<?>> extends BasePanel {
 
@@ -15,7 +15,7 @@ public abstract class AbstractWizPage<T extends AbstractEntity<?>> extends BaseP
 
     /**
      * Should be implemented by subtypes in order to provide custom page UI.
-     *
+     * 
      * @param editors
      */
     public abstract void buildUi(final Wizard<T> wizard);

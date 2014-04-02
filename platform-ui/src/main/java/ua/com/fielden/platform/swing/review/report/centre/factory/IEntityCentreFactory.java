@@ -11,33 +11,33 @@ import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreCo
 
 /**
  * Factory for entity centre.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  * @param <C>
  */
 public interface IEntityCentreFactory<T extends AbstractEntity<?>> {
 
-   /**
-    * Creates new entity centre.
-    *
-    * @param menuItemType
-    * @param name
-    * @param analysisBuilder
-    * @param gdtm
-    * @param entityFactory
-    * @param masterManager
-    * @param criteriaGenerator
-    * @param progressLayer
-    * @return
-    */
+    /**
+     * Creates new entity centre.
+     * 
+     * @param menuItemType
+     * @param name
+     * @param analysisBuilder
+     * @param gdtm
+     * @param entityFactory
+     * @param masterManager
+     * @param criteriaGenerator
+     * @param progressLayer
+     * @return
+     */
     CentreConfigurationView<T, ?> createEntityCentre(final Class<? extends MiWithConfigurationSupport<T>> menuItemType,//
-	    final String name,//
-	    final IAnalysisBuilder<T> analysisBuilder,//
-	    final IGlobalDomainTreeManager gdtm,//
-	    final EntityFactory entityFactory,//
-	    final IEntityMasterManager masterManager,//
-	    final ICriteriaGenerator criteriaGenerator,//
-	    final BlockingIndefiniteProgressLayer progressLayer);
+            final String name,//
+            final IAnalysisBuilder<T> analysisBuilder,//
+            final IGlobalDomainTreeManager gdtm,//
+            final EntityFactory entityFactory,//
+            final IEntityMasterManager masterManager,//
+            final ICriteriaGenerator criteriaGenerator,//
+            final BlockingIndefiniteProgressLayer progressLayer);
 }

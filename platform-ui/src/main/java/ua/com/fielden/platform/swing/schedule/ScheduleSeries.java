@@ -11,41 +11,41 @@ public class ScheduleSeries<T extends AbstractEntity<?>> {
     private String name = "";
 
     public ScheduleSeries(final IScheduleEntity<T> scheduleEntity) {
-	this.scheduleEntity = scheduleEntity;
+        this.scheduleEntity = scheduleEntity;
     }
 
     public ScheduleSeries<T> setCutOfFactor(final double cutOfFactor) {
-	this.cutOfFactor = cutOfFactor;
-	return this;
+        this.cutOfFactor = cutOfFactor;
+        return this;
     }
 
     public ScheduleSeries<T> setPainter(final ISchedulePainter<T> painter) {
-	this.painter = painter;
-	return this;
+        this.painter = painter;
+        return this;
     }
 
     public ScheduleSeries<T> setName(final String name) {
-	this.name = name;
-	return this;
+        this.name = name;
+        return this;
     }
 
     public ISchedulePainter<T> getPainter() {
-	return painter;
+        return painter;
     }
 
     public double getCutOfFactor() {
-	return cutOfFactor;
+        return cutOfFactor;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public boolean isTaskVisible(final T entity) {
-	return scheduleEntity.getFrom(entity) != null && scheduleEntity.getTo(entity) != null;
+        return scheduleEntity.getFrom(entity) != null && scheduleEntity.getTo(entity) != null;
     }
 
     public IScheduleEntity<T> getScheduleEntity() {
-	return scheduleEntity;
+        return scheduleEntity;
     }
 }

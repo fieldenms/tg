@@ -13,11 +13,11 @@ public class StringDocumentFilter extends AbstractDocumentFilter {
     private static final long serialVersionUID = 6684954556153897458L;
 
     public boolean allowInput(String value) {
-	if ("".equals(value)) {
-	    return true;
-	}
-	Pattern p = Pattern.compile("[^\n\r]*");
-	Matcher m = p.matcher(value);
-	return m.matches();
+        if ("".equals(value)) {
+            return true;
+        }
+        Pattern p = Pattern.compile("[^\n\r]*");
+        Matcher m = p.matcher(value);
+        return m.matches();
     }
 }

@@ -19,62 +19,62 @@ import ua.com.fielden.platform.swing.view.ICloseHook;
  */
 public class SimpleLauncher {
     public static void show(final String caption, final LayoutManager manager, final JComponent... list) {
-	SwingUtilitiesEx.invokeLater(new Runnable() {
-	    @Override
-	    public void run() {
-		SwingUtilitiesEx.installNimbusLnFifPossible();
+        SwingUtilitiesEx.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                SwingUtilitiesEx.installNimbusLnFifPossible();
 
-		JFrame.setDefaultLookAndFeelDecorated(true);
-		JDialog.setDefaultLookAndFeelDecorated(true);
+                JFrame.setDefaultLookAndFeelDecorated(true);
+                JDialog.setDefaultLookAndFeelDecorated(true);
 
-		final JFrame frame = new BaseFrame(caption, new ICloseHook<BaseFrame>() {
-		    @Override
-		    public void closed(final BaseFrame frame) {
-			System.exit(0);
-		    }
-		});
-		if (manager != null) {
-		    frame.setLayout(manager);
-		}
-		for (final JComponent component : list) {
-		    frame.add(component);
-		}
-		frame.pack();
-		RefineryUtilities.centerFrameOnScreen(frame);
-		frame.setVisible(true);
-	    }
+                final JFrame frame = new BaseFrame(caption, new ICloseHook<BaseFrame>() {
+                    @Override
+                    public void closed(final BaseFrame frame) {
+                        System.exit(0);
+                    }
+                });
+                if (manager != null) {
+                    frame.setLayout(manager);
+                }
+                for (final JComponent component : list) {
+                    frame.add(component);
+                }
+                frame.pack();
+                RefineryUtilities.centerFrameOnScreen(frame);
+                frame.setVisible(true);
+            }
 
-	});
+        });
     }
 
     public static void show(final String caption, final JFrame jframe, final LayoutManager manager, final JComponent... list) {
-	SwingUtilitiesEx.invokeLater(new Runnable() {
-	    @Override
-	    public void run() {
-		SwingUtilitiesEx.installNimbusLnFifPossible();
+        SwingUtilitiesEx.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                SwingUtilitiesEx.installNimbusLnFifPossible();
 
-		JFrame.setDefaultLookAndFeelDecorated(true);
-		JDialog.setDefaultLookAndFeelDecorated(true);
+                JFrame.setDefaultLookAndFeelDecorated(true);
+                JDialog.setDefaultLookAndFeelDecorated(true);
 
-		if (jframe != null) {
-		    jframe.setTitle(caption);
-		}
-		final JFrame frame = jframe != null ? jframe : new BaseFrame(caption);
-		if (manager != null) {
-		    frame.setLayout(manager);
-		}
-		for (final JComponent component : list) {
-		    frame.add(component);
-		}
-		frame.pack();
-		RefineryUtilities.centerFrameOnScreen(frame);
-		frame.setVisible(true);
-	    }
+                if (jframe != null) {
+                    jframe.setTitle(caption);
+                }
+                final JFrame frame = jframe != null ? jframe : new BaseFrame(caption);
+                if (manager != null) {
+                    frame.setLayout(manager);
+                }
+                for (final JComponent component : list) {
+                    frame.add(component);
+                }
+                frame.pack();
+                RefineryUtilities.centerFrameOnScreen(frame);
+                frame.setVisible(true);
+            }
 
-	});
+        });
     }
 
     public static void show(final String caption, final JComponent... list) {
-	show(caption, null, list);
+        show(caption, null, list);
     }
 }

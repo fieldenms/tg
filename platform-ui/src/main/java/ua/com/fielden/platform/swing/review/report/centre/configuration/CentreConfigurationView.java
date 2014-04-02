@@ -40,22 +40,22 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
     /**
      * Initialises this {@link CentreConfigurationView} instance with specified model and progress layer.
-     *
+     * 
      * @param model
      * @param progressLayer
      */
     public CentreConfigurationView(final CentreConfigurationModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, progressLayer);
-	addConfigurationEventListener(createCentreOpenEventListener());
-	this.analysisToSelect = GridConfigurationModel.gridAnalysisName;
-	this.save = createSaveAction();
-	this.saveAs = createSaveAsAction();
-	this.remove = createRemoveAction();
+        super(model, progressLayer);
+        addConfigurationEventListener(createCentreOpenEventListener());
+        this.analysisToSelect = GridConfigurationModel.gridAnalysisName;
+        this.save = createSaveAction();
+        this.saveAs = createSaveAsAction();
+        this.remove = createRemoveAction();
     }
 
     @Override
     public String getInfo() {
-	return "Centre configuration panel.";
+        return "Centre configuration panel.";
     }
 
     @Override
@@ -66,393 +66,392 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
     @SuppressWarnings("unchecked")
     @Override
     public final CentreConfigurationModel<T> getModel() {
-	return (CentreConfigurationModel<T>)super.getModel();
+        return (CentreConfigurationModel<T>) super.getModel();
     }
 
     @Override
     public ICloseGuard canClose() {
-	if(getModel().getEntityCentreManager() == null){
-	    return null;
-	}
-	final ICloseGuard closeGuard = super.canClose();
-	if(closeGuard != null){
-	    return closeGuard;
-	}
-	//See whether centre can be close
-	if (getPreviousView() != null && getModel().getMode() != ReportMode.REPORT) {
-	    final ICloseGuard unclosable = getPreviousView().canClose();
-	    if(unclosable != null){
-		return unclosable;
-	    }
-	}
-	//Save analysis.
-	getModel().saveAnalysis();
+        if (getModel().getEntityCentreManager() == null) {
+            return null;
+        }
+        final ICloseGuard closeGuard = super.canClose();
+        if (closeGuard != null) {
+            return closeGuard;
+        }
+        //See whether centre can be close
+        if (getPreviousView() != null && getModel().getMode() != ReportMode.REPORT) {
+            final ICloseGuard unclosable = getPreviousView().canClose();
+            if (unclosable != null) {
+                return unclosable;
+            }
+        }
+        //Save analysis.
+        getModel().saveAnalysis();
 
-	//See whether centre model changed.
-	final String title = StringUtils.isEmpty(getModel().getName()) ? TitlesDescsGetter.getEntityTitleAndDesc(getModel().getEntityType()).getKey() : getModel().getName();
-	boolean isChanged = getModel().isChanged();
-	final boolean isOwner = getModel().isEntityCentreOwner();
-	final boolean wasFreezed = getModel().isFreezed();
-	boolean isFreezed = wasFreezed;
-	if(!isChanged && wasFreezed){
-	    getModel().discard();
-	    isFreezed = false;
-	    isChanged = getModel().isChanged();
-	}
-	// Need to bring in default values unconditionally.
-	if (isChanged) {
-	    switch (JOptionPane.showConfirmDialog(null, "Would you like to save " + (isOwner ? "" : "as ") + "changes" + (!StringUtils.isEmpty(title) ? " for the " + title : "") + " before closing?", "Save report", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)) {
-	    case JOptionPane.YES_OPTION:
-		if(isOwner) {
-		    closeSave();
-		} else {
-		    closeSaveAs();
-		}
-		return null;
-	    case JOptionPane.NO_OPTION:
-		closeDiscard();
-		return null;
-	    case JOptionPane.CANCEL_OPTION:
-		if (!isFreezed && wasFreezed) {
-		    createCloseCancelAction().actionPerformed(null);
-		}
-		return this;
-	    }
-	}
-	if(isFreezed){
-	    getModel().discard();
-	}
-	return null;
+        //See whether centre model changed.
+        final String title = StringUtils.isEmpty(getModel().getName()) ? TitlesDescsGetter.getEntityTitleAndDesc(getModel().getEntityType()).getKey() : getModel().getName();
+        boolean isChanged = getModel().isChanged();
+        final boolean isOwner = getModel().isEntityCentreOwner();
+        final boolean wasFreezed = getModel().isFreezed();
+        boolean isFreezed = wasFreezed;
+        if (!isChanged && wasFreezed) {
+            getModel().discard();
+            isFreezed = false;
+            isChanged = getModel().isChanged();
+        }
+        // Need to bring in default values unconditionally.
+        if (isChanged) {
+            switch (JOptionPane.showConfirmDialog(null, "Would you like to save " + (isOwner ? "" : "as ") + "changes" + (!StringUtils.isEmpty(title) ? " for the " + title : "")
+                    + " before closing?", "Save report", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)) {
+            case JOptionPane.YES_OPTION:
+                if (isOwner) {
+                    closeSave();
+                } else {
+                    closeSaveAs();
+                }
+                return null;
+            case JOptionPane.NO_OPTION:
+                closeDiscard();
+                return null;
+            case JOptionPane.CANCEL_OPTION:
+                if (!isFreezed && wasFreezed) {
+                    createCloseCancelAction().actionPerformed(null);
+                }
+                return this;
+            }
+        }
+        if (isFreezed) {
+            getModel().discard();
+        }
+        return null;
     }
 
     /**
      * Save this report as before closing.
      */
     private void closeSaveAs() {
-	String saveAsName = null;
-	try {
-	    final SaveReportDialog saveReportDialog = new SaveReportDialog(new SaveReportDialogModel<T>(getModel()));
-	    final boolean shouldSave = SaveReportOptions.APPROVE.equals(saveReportDialog.showDialog());
-	    if (shouldSave) {
-		saveAsName = saveReportDialog.getEnteredFileName();
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, true, CentreConfigurationAction.PRE_SAVE_AS));
-		if (getModel().isFreezed()) {
-		    getModel().save();
-		}
-		getModel().saveAs(saveAsName);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, true, CentreConfigurationAction.SAVE_AS));
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, true, CentreConfigurationAction.POST_SAVE_AS));
-	    }
-	} catch (final Exception ex) {
-	    fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, ex, true, CentreConfigurationAction.SAVE_AS_FAILED));
-	    new DialogWithDetails(null, "Exception in action", ex).setVisible(true);
-	}
+        String saveAsName = null;
+        try {
+            final SaveReportDialog saveReportDialog = new SaveReportDialog(new SaveReportDialogModel<T>(getModel()));
+            final boolean shouldSave = SaveReportOptions.APPROVE.equals(saveReportDialog.showDialog());
+            if (shouldSave) {
+                saveAsName = saveReportDialog.getEnteredFileName();
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, true, CentreConfigurationAction.PRE_SAVE_AS));
+                if (getModel().isFreezed()) {
+                    getModel().save();
+                }
+                getModel().saveAs(saveAsName);
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, true, CentreConfigurationAction.SAVE_AS));
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, true, CentreConfigurationAction.POST_SAVE_AS));
+            }
+        } catch (final Exception ex) {
+            fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, ex, true, CentreConfigurationAction.SAVE_AS_FAILED));
+            new DialogWithDetails(null, "Exception in action", ex).setVisible(true);
+        }
     }
 
     /**
      * Selects the specified analysis.
-     *
+     * 
      * @param analysisToSelect
      */
-    public void selectAnalysis(final String analysisToSelect){
-	if(ReportMode.REPORT == getModel().getMode() && getPreviousView() != null
-		&& getPreviousView().isVisible() && getPreviousView().isLoaded()){
-	    getPreviousView().selectAnalysis(analysisToSelect);
-	}
-	this.analysisToSelect = analysisToSelect;
+    public void selectAnalysis(final String analysisToSelect) {
+        if (ReportMode.REPORT == getModel().getMode() && getPreviousView() != null && getPreviousView().isVisible() && getPreviousView().isLoaded()) {
+            getPreviousView().selectAnalysis(analysisToSelect);
+        }
+        this.analysisToSelect = analysisToSelect;
     }
 
     /**
      * Returns the analysis to select.
-     *
+     * 
      * @return
      */
     public String getAnalysisToSelect() {
-	return analysisToSelect;
+        return analysisToSelect;
     }
 
     /**
      * Returns the save action.
-     *
+     * 
      * @return
      */
     public Action getSave() {
-	return save;
+        return save;
     }
 
     /**
      * Returns the save as action.
-     *
+     * 
      * @return
      */
     public Action getSaveAs() {
-	return saveAs;
+        return saveAs;
     }
 
     /**
      * Returns the remove action.
-     *
+     * 
      * @return
      */
     public Action getRemove() {
-	return remove;
+        return remove;
     }
 
     /**
      * Registers the {@link ICentreConfigurationEventListener} to listen the centre configuration event.
-     *
+     * 
      * @param l
      */
-    public void addCentreConfigurationEventListener(final ICentreConfigurationEventListener l){
-	listenerList.add(ICentreConfigurationEventListener.class, l);
+    public void addCentreConfigurationEventListener(final ICentreConfigurationEventListener l) {
+        listenerList.add(ICentreConfigurationEventListener.class, l);
     }
 
     /**
      * Removes the specified {@link ICentreConfigurationEventListener} from the list of registered listeners.
-     *
+     * 
      * @param l
      */
-    public void removeCentreConfigurationEventListener(final ICentreConfigurationEventListener l){
-	listenerList.remove(ICentreConfigurationEventListener.class, l);
+    public void removeCentreConfigurationEventListener(final ICentreConfigurationEventListener l) {
+        listenerList.remove(ICentreConfigurationEventListener.class, l);
     }
 
     @Override
     protected EntityCentreWizard<T, C> createWizardView() {
-	return new EntityCentreWizard<T, C>(this, getModel().createDomainTreeEditorModel());
+        return new EntityCentreWizard<T, C>(this, getModel().createDomainTreeEditorModel());
     }
 
     /**
      * Saves the entity centre configuration when closing.
-     *
+     * 
      * @return
      */
     private void closeSave() {
-	if(getModel().isFreezed()){
-	    getModel().save();
-	}
-	getModel().save();
+        if (getModel().isFreezed()) {
+            getModel().save();
+        }
+        getModel().save();
     }
 
     /**
      * Discards the entity centre's changes when closing.
-     *
+     * 
      * @return
      */
-    private void closeDiscard(){
-	if(getModel().isFreezed()){
-	    getModel().discard();
-	}
-	getModel().discard();
+    private void closeDiscard() {
+        if (getModel().isFreezed()) {
+            getModel().discard();
+        }
+        getModel().discard();
     }
 
     /**
      * This action cancels the closing operation.
-     *
+     * 
      * @param shouldFreez
      * @return
      */
     private Action createCloseCancelAction() {
-	return new BlockingLayerCommand<Void>("Cancel", getProgressLayer()) {
+        return new BlockingLayerCommand<Void>("Cancel", getProgressLayer()) {
 
-	    private static final long serialVersionUID = 6219947950780861547L;
+            private static final long serialVersionUID = 6219947950780861547L;
 
-	    @Override
-	    protected boolean preAction() {
-		setMessage("Cancel...");
-		return super.preAction();
-	    }
+            @Override
+            protected boolean preAction() {
+                setMessage("Cancel...");
+                return super.preAction();
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		getModel().freez();
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                getModel().freez();
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		getModel().setMode(ReportMode.WIZARD);
-	    }
-	};
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                getModel().setMode(ReportMode.WIZARD);
+            }
+        };
     }
 
     private Action createRemoveAction() {
-	return new BlockingLayerCommand<Void>("Remove", getProgressLayer()) {
+        return new BlockingLayerCommand<Void>("Remove", getProgressLayer()) {
 
-	    private static final long serialVersionUID = -1316746113497694217L;
+            private static final long serialVersionUID = -1316746113497694217L;
 
-	    @Override
-	    protected boolean preAction() {
-		setMessage("Removing centre...");
-		final boolean result = super.preAction();
-		if(!result){
-		    return false;
-		}
-		return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.PRE_REMOVE));
-	    }
+            @Override
+            protected boolean preAction() {
+                setMessage("Removing centre...");
+                final boolean result = super.preAction();
+                if (!result) {
+                    return false;
+                }
+                return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.PRE_REMOVE));
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		getModel().remove();
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.REMOVE));
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                getModel().remove();
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.REMOVE));
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.POST_REMOVE));
-	    }
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.POST_REMOVE));
+            }
 
-	    @Override
-	    protected void handlePreAndPostActionException(final Throwable ex) {
-		super.handlePreAndPostActionException(ex);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, ex, false, CentreConfigurationAction.REMOVE_FAILED));
-	    }
-	};
+            @Override
+            protected void handlePreAndPostActionException(final Throwable ex) {
+                super.handlePreAndPostActionException(ex);
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, ex, false, CentreConfigurationAction.REMOVE_FAILED));
+            }
+        };
     }
 
     private Action createSaveAsAction() {
-	return new BlockingLayerCommand<Void>("Save As", getProgressLayer()) {
+        return new BlockingLayerCommand<Void>("Save As", getProgressLayer()) {
 
-	    private static final long serialVersionUID = -1316746113497694217L;
+            private static final long serialVersionUID = -1316746113497694217L;
 
-	    private String saveAsName = null;
+            private String saveAsName = null;
 
-	    @Override
-	    protected boolean preAction() {
-		setMessage("Saving centre as...");
-		if(!super.preAction() || !canCloseCentre()){
-		    return false;
-		}
-		final SaveReportDialog saveReportDialog = new SaveReportDialog(new SaveReportDialogModel<T>(getModel()));
-		final boolean shouldSave = SaveReportOptions.APPROVE.equals(saveReportDialog.showDialog());
-		if(shouldSave){
-		    saveAsName = saveReportDialog.getEnteredFileName();
-		    return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, false, CentreConfigurationAction.PRE_SAVE_AS));
-		} else {
-		    saveAsName = null;
-		    return false;
-		}
-	    }
+            @Override
+            protected boolean preAction() {
+                setMessage("Saving centre as...");
+                if (!super.preAction() || !canCloseCentre()) {
+                    return false;
+                }
+                final SaveReportDialog saveReportDialog = new SaveReportDialog(new SaveReportDialogModel<T>(getModel()));
+                final boolean shouldSave = SaveReportOptions.APPROVE.equals(saveReportDialog.showDialog());
+                if (shouldSave) {
+                    saveAsName = saveReportDialog.getEnteredFileName();
+                    return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, false, CentreConfigurationAction.PRE_SAVE_AS));
+                } else {
+                    saveAsName = null;
+                    return false;
+                }
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		getModel().saveAnalysis();
-		getModel().saveAs(saveAsName);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, false ,CentreConfigurationAction.SAVE_AS));
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                getModel().saveAnalysis();
+                getModel().saveAs(saveAsName);
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, false, CentreConfigurationAction.SAVE_AS));
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, false, CentreConfigurationAction.POST_SAVE_AS));
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, null, false, CentreConfigurationAction.POST_SAVE_AS));
 
-	    }
+            }
 
-	    @Override
-	    protected void handlePreAndPostActionException(final Throwable ex) {
-		super.handlePreAndPostActionException(ex);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, ex, false, CentreConfigurationAction.SAVE_AS_FAILED));
-	    }
+            @Override
+            protected void handlePreAndPostActionException(final Throwable ex) {
+                super.handlePreAndPostActionException(ex);
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, saveAsName, ex, false, CentreConfigurationAction.SAVE_AS_FAILED));
+            }
 
-	};
+        };
     }
 
     private Action createSaveAction() {
-	return new BlockingLayerCommand<Void>("Save", getProgressLayer()) {
+        return new BlockingLayerCommand<Void>("Save", getProgressLayer()) {
 
-	    private static final long serialVersionUID = 7912294028797678105L;
+            private static final long serialVersionUID = 7912294028797678105L;
 
-	    @Override
-	    protected boolean preAction() {
-		setMessage("Saving centre...");
-		return super.preAction() //
-			&& canCloseCentre() //
-			&& fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.PRE_SAVE));
-	    }
+            @Override
+            protected boolean preAction() {
+                setMessage("Saving centre...");
+                return super.preAction() //
+                        && canCloseCentre() //
+                        && fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.PRE_SAVE));
+            }
 
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		getModel().saveAnalysis();
-		getModel().save();
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.SAVE));
-		return null;
-	    }
+            @Override
+            protected Void action(final ActionEvent e) throws Exception {
+                getModel().saveAnalysis();
+                getModel().save();
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.SAVE));
+                return null;
+            }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.POST_SAVE));
-	    }
+            @Override
+            protected void postAction(final Void value) {
+                super.postAction(value);
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, null, false, CentreConfigurationAction.POST_SAVE));
+            }
 
-	    @Override
-	    protected void handlePreAndPostActionException(final Throwable ex) {
-		super.handlePreAndPostActionException(ex);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, ex, false, CentreConfigurationAction.SAVE_FAILED));
-	    }
-	};
+            @Override
+            protected void handlePreAndPostActionException(final Throwable ex) {
+                super.handlePreAndPostActionException(ex);
+                fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationView.this, null, ex, false, CentreConfigurationAction.SAVE_FAILED));
+            }
+        };
     }
-
 
     /**
      * Creates the open event listener that determines whether centre can be opened in report mode or not
-     *
+     * 
      * @return
      */
     private IAbstractConfigurationViewEventListener createCentreOpenEventListener() {
-	return new IAbstractConfigurationViewEventListener() {
+        return new IAbstractConfigurationViewEventListener() {
 
-	    @Override
-	    public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
-		switch (event.getEventAction()) {
-		case OPEN:
-		    ICentreDomainTreeManager cdtm = getModel().getEntityCentreManager();
-		    if(cdtm == null){
-			getModel().initEntityCentreManager();
-			cdtm = getModel().getEntityCentreManager();
-		    }
-		    if(cdtm == null){
-			return new Result(CentreConfigurationView.this, new IllegalStateException("The centre can not be initialized!"));
-		    }
-		    return getModel().canSetMode(ReportMode.REPORT);
+            @Override
+            public Result abstractConfigurationViewEventPerformed(final AbstractConfigurationViewEvent event) {
+                switch (event.getEventAction()) {
+                case OPEN:
+                    ICentreDomainTreeManager cdtm = getModel().getEntityCentreManager();
+                    if (cdtm == null) {
+                        getModel().initEntityCentreManager();
+                        cdtm = getModel().getEntityCentreManager();
+                    }
+                    if (cdtm == null) {
+                        return new Result(CentreConfigurationView.this, new IllegalStateException("The centre can not be initialized!"));
+                    }
+                    return getModel().canSetMode(ReportMode.REPORT);
 
-		default:
-		    return Result.successful(CentreConfigurationView.this);
-		}
-	    }
-	};
+                default:
+                    return Result.successful(CentreConfigurationView.this);
+                }
+            }
+        };
     }
 
     /**
      * Determines whether the previous centre view can be closed or not.
-     *
+     * 
      * @return
      */
-    private boolean canCloseCentre(){
-	if (getPreviousView() != null) {
-	    final ICloseGuard closeGuard = getPreviousView().canClose();
-	    if (closeGuard != null) {
-		JOptionPane.showMessageDialog(this, closeGuard.whyCannotClose(), "Warning", JOptionPane.WARNING_MESSAGE);
-		return false;
-	    }
-	}
-	return true;
+    private boolean canCloseCentre() {
+        if (getPreviousView() != null) {
+            final ICloseGuard closeGuard = getPreviousView().canClose();
+            if (closeGuard != null) {
+                JOptionPane.showMessageDialog(this, closeGuard.whyCannotClose(), "Warning", JOptionPane.WARNING_MESSAGE);
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
      * Iterates through the list of {@link ICentreConfigurationEventListener} listeners and delegates the event to every listener.
-     *
+     * 
      * @param event
-     *
+     * 
      * @return
      */
-    private boolean fireCentreConfigurationEvent(final CentreConfigurationEvent event){
-	boolean result = true;
-	for(final ICentreConfigurationEventListener listener : listenerList.getListeners(ICentreConfigurationEventListener.class)){
-	    result &= listener.centerConfigurationEventPerformed(event);
-	}
-	return result;
+    private boolean fireCentreConfigurationEvent(final CentreConfigurationEvent event) {
+        boolean result = true;
+        for (final ICentreConfigurationEventListener listener : listenerList.getListeners(ICentreConfigurationEventListener.class)) {
+            result &= listener.centerConfigurationEventPerformed(event);
+        }
+        return result;
     }
 }

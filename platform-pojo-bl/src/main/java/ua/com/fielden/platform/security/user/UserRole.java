@@ -12,9 +12,9 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
  * Represents a concept of a user role. Multiple users may have the same role. At this stage user role has only key and description.
  * <p>
  * It is also envisaged that multiple roles can be associated with one user. This would provide a flexible facility for configuring user permissions.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle("Role Title")
@@ -28,6 +28,6 @@ public class UserRole extends AbstractEntity<String> {
     }
 
     public UserRole(final String key, final String desc) {
-	super(null, key, desc);
+        super(null, key, desc);
     }
 }

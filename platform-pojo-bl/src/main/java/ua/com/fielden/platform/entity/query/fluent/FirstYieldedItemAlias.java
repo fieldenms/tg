@@ -7,28 +7,29 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 
 public class FirstYieldedItemAlias<T> extends AbstractQueryLink implements IFirstYieldedItemAlias<T> {
     T parent;
+
     protected FirstYieldedItemAlias(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     public T as(final String alias) {
-	return copy(parent, getTokens().as(alias));
+        return copy(parent, getTokens().as(alias));
     }
 
     @Override
     public T asRequired(final String alias) {
-	return copy(parent, getTokens().asRequired(alias));
+        return copy(parent, getTokens().asRequired(alias));
     }
 
     @Override
     public <ET extends AbstractEntity<?>> EntityResultQueryModel<ET> modelAsEntity(final Class<ET> entityType) {
-	return new EntityResultQueryModel<ET>(getTokens().getValues(), entityType);
+        return new EntityResultQueryModel<ET>(getTokens().getValues(), entityType);
     }
 
     @Override
     public PrimitiveResultQueryModel modelAsPrimitive() {
-	return new PrimitiveResultQueryModel(getTokens().getValues());
+        return new PrimitiveResultQueryModel(getTokens().getValues());
     }
 }

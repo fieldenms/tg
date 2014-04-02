@@ -6,11 +6,11 @@ import java.util.List;
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 
 /**
- *
+ * 
  * Tree node for testing purposes.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class TreeNode implements ITreeNode<String> {
 
@@ -20,49 +20,49 @@ public class TreeNode implements ITreeNode<String> {
     private int visits = 0;
 
     public TreeNode(final String content) {
-	this.state = content;
+        this.state = content;
     }
 
     public TreeNode addChild(final TreeNode child) {
-	children.add(child);
-	return this;
+        children.add(child);
+        return this;
     }
 
     @Override
     public List<TreeNode> daughters() {
-	return children;
+        return children;
     }
 
     @Override
     public String state() {
-	return state;
+        return state;
     }
 
     public void incVisitCount() {
-	visits++;
+        visits++;
     }
 
     @Override
     public int hashCode() {
-	return state.hashCode() * 29;
+        return state.hashCode() * 29;
     }
 
     @Override
     public boolean equals(final Object obj) {
-	return state.equals(obj);
+        return state.equals(obj);
     }
 
     public int visits() {
-	return visits;
+        return visits;
     }
 
     public void reset() {
-	visits = 0;
+        visits = 0;
     }
 
     @Override
     public String toString() {
-	return "State: " + state + "; " + "# of visits " + visits + "; # of children " + children.size();
+        return "State: " + state + "; " + "# of visits " + visits + "; # of children " + children.size();
     }
 
 }

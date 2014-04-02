@@ -22,7 +22,7 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
     }
 
     public EntProp2 transform(final TransformatorToS2 resolver) {
-	return resolver.getTransformedProp(this);
+        return resolver.getTransformedProp(this);
     }
 
     public String getName() {

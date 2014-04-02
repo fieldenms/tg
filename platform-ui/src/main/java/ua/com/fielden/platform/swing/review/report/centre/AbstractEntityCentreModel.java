@@ -14,38 +14,37 @@ public class AbstractEntityCentreModel<T extends AbstractEntity<?>, CDTME extend
     private final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityInspectorModel;
     private final IEntityMasterManager masterManager;
 
-
     public AbstractEntityCentreModel(final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityInspectorModel, final IEntityMasterManager masterManager, final String name) {
-	super(entityInspectorModel.getEntity());
-	this.entityInspectorModel = entityInspectorModel;
-	this.masterManager = masterManager;
-	this.name = name;
+        super(entityInspectorModel.getEntity());
+        this.entityInspectorModel = entityInspectorModel;
+        this.masterManager = masterManager;
+        this.name = name;
     }
 
     /**
      * Returns the name of the entity centre. If the name is null then entity centre is principle, otherwise it is non principle entity centre.
-     *
+     * 
      * @return
      */
     public String getName() {
-	return name;
+        return name;
     }
 
     /**
      * Returns the {@link EntityInspectorModel} for this entity centre.
-     *
+     * 
      * @return
      */
     public EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> getEntityInspectorModel() {
-	return entityInspectorModel;
+        return entityInspectorModel;
     }
 
     /**
      * Returns the {@link IEntityMasterManager} for this centre model.
-     *
+     * 
      * @return
      */
     public IEntityMasterManager getMasterManager() {
-	return masterManager;
+        return masterManager;
     }
 }

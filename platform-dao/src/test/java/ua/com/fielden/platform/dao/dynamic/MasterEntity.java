@@ -15,9 +15,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "dynamic query" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @MapEntityTo("MASTER_ENTITY")
@@ -67,6 +67,7 @@ public class MasterEntity extends AbstractEntity<String> {
     public Integer getIntegerProp() {
         return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
@@ -75,6 +76,7 @@ public class MasterEntity extends AbstractEntity<String> {
     public Double getDoubleProp() {
         return doubleProp;
     }
+
     @Observable
     public void setDoubleProp(final Double doubleProp) {
         this.doubleProp = doubleProp;
@@ -83,6 +85,7 @@ public class MasterEntity extends AbstractEntity<String> {
     public BigDecimal getBigDecimalProp() {
         return bigDecimalProp;
     }
+
     @Observable
     public void setBigDecimalProp(final BigDecimal bigDecimalProp) {
         this.bigDecimalProp = bigDecimalProp;
@@ -91,6 +94,7 @@ public class MasterEntity extends AbstractEntity<String> {
     public Money getMoneyProp() {
         return moneyProp;
     }
+
     @Observable
     public void setMoneyProp(final Money moneyProp) {
         this.moneyProp = moneyProp;
@@ -99,6 +103,7 @@ public class MasterEntity extends AbstractEntity<String> {
     public Date getDateProp() {
         return dateProp;
     }
+
     @Observable
     public void setDateProp(final Date dateProp) {
         this.dateProp = dateProp;
@@ -107,6 +112,7 @@ public class MasterEntity extends AbstractEntity<String> {
     public boolean isBooleanProp() {
         return booleanProp;
     }
+
     @Observable
     public void setBooleanProp(final boolean booleanProp) {
         this.booleanProp = booleanProp;
@@ -115,6 +121,7 @@ public class MasterEntity extends AbstractEntity<String> {
     public String getStringProp() {
         return stringProp;
     }
+
     @Observable
     public void setStringProp(final String stringProp) {
         this.stringProp = stringProp;
@@ -123,6 +130,7 @@ public class MasterEntity extends AbstractEntity<String> {
     public SlaveEntity getEntityProp() {
         return entityProp;
     }
+
     @Observable
     public void setEntityProp(final SlaveEntity entityProp) {
         this.entityProp = entityProp;
@@ -131,6 +139,7 @@ public class MasterEntity extends AbstractEntity<String> {
     public List<SlaveEntity> getCollection() {
         return collection;
     }
+
     @Observable
     public void setCollection(final List<SlaveEntity> collection) {
         this.collection.clear();

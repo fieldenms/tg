@@ -16,9 +16,9 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Position within an advice that may or may no contain a rotable.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
@@ -49,35 +49,35 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
      * Default constructor for instantiation by Hibernate.
      */
     protected AdvicePosition() {
-	super(null, null, "");
-	setKey(new DynamicEntityKey(this));
+        super(null, null, "");
+        setKey(new DynamicEntityKey(this));
     }
 
     /**
      * The main constructor.
-     *
+     * 
      * @param advice
      */
     public AdvicePosition(final Advice advice, final Integer position) {
-	this();
-	setKey(new DynamicEntityKey(this));
-	setAdvice(advice);
-	setPosition(position);
+        this();
+        setKey(new DynamicEntityKey(this));
+        setAdvice(advice);
+        setPosition(position);
     }
 
     public Advice getAdvice() {
-	return advice;
+        return advice;
     }
 
     @NotNull
     @Final
     @Observable
     protected void setAdvice(final Advice advice) {
-	this.advice = advice;
+        this.advice = advice;
     }
 
     public Integer getPosition() {
-	return position;
+        return position;
     }
 
     @NotNull
@@ -85,11 +85,11 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
     @GreaterOrEqual(1)
     @Observable
     protected void setPosition(final Integer position) {
-	this.position = position;
+        this.position = position;
     }
 
     public Rotable getRotable() {
-	return rotable;
+        return rotable;
     }
 
     @NotNull
@@ -98,12 +98,12 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
     @DomainValidation
     @Observable
     public AdvicePosition setRotable(final Rotable rotable) {
-	this.rotable = rotable;
-	return this;
+        this.rotable = rotable;
+        return this;
     }
 
     public Workshop getSendingWorkshop() {
-	return sendingWorkshop;
+        return sendingWorkshop;
     }
 
     @NotNull
@@ -111,128 +111,127 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
     @EntityExists(Workshop.class)
     @Observable
     public AdvicePosition setSendingWorkshop(final Workshop sendingWorkshop) {
-	this.sendingWorkshop = sendingWorkshop;
-	return this;
+        this.sendingWorkshop = sendingWorkshop;
+        return this;
     }
 
     public Workshop getReceivingWorkshop() {
-	return receivingWorkshop;
+        return receivingWorkshop;
     }
 
     @NotNull
     @EntityExists(Workshop.class)
     @Observable
     public AdvicePosition setReceivingWorkshop(final Workshop receivingWorkshop) throws Result {
-	// TODO the isReceived() should be moved to a domain validator
-	if (isReceived()) {
-	    throw new Result(this, "Receiving workshop cannot be changed once position is received.", new IllegalStateException(
-		    "Receiving workshop cannot be changed once position is received."));
-	}
-	this.receivingWorkshop = receivingWorkshop;
-	return this;
+        // TODO the isReceived() should be moved to a domain validator
+        if (isReceived()) {
+            throw new Result(this, "Receiving workshop cannot be changed once position is received.", new IllegalStateException("Receiving workshop cannot be changed once position is received."));
+        }
+        this.receivingWorkshop = receivingWorkshop;
+        return this;
     }
 
     public Date getPlacementDate() {
-	return placementDate;
+        return placementDate;
     }
 
     @NotNull
     @Final
     @Observable
     public AdvicePosition setPlacementDate(final Date placementDate) {
-	this.placementDate = placementDate;
-	return this;
+        this.placementDate = placementDate;
+        return this;
     }
 
     public boolean hasRotable() {
-	return getRotable() != null;
+        return getRotable() != null;
     }
 
     public boolean isReceived() {
-	return received;
+        return received;
     }
 
     @Observable
     public AdvicePosition setReceived(final boolean received) {
-	this.received = received;
-	return this;
+        this.received = received;
+        return this;
     }
 
     /**
      * Returns true if the rotable is assigned, but not received -- this means receiving is pending.
-     *
+     * 
      * @return
      */
     public boolean isPending() {
-	return hasRotable() && !isReceived();
+        return hasRotable() && !isReceived();
     }
 
     /**
      * Switches position to the very original state.
      */
     public void clear() {
-	rotable = null;
-	sendingWorkshop = null;
-	receivingWorkshop = null;
-	placementDate = null;
-	received = false;
-	receivedDate = null;
-	removeBearing = false;
+        rotable = null;
+        sendingWorkshop = null;
+        receivingWorkshop = null;
+        placementDate = null;
+        received = false;
+        receivedDate = null;
+        removeBearing = false;
     }
 
     /**
      * Determines if this position can have anything placed on it.
-     *
+     * 
      * @return
      */
     public boolean isVacant() {
-	return getRotable() == null;
+        return getRotable() == null;
     }
 
     @Override
     public Result validate() {
-	final Result superResult = super.validate();
-	if (!superResult.isSuccessful()) {
-	    return superResult;
-	} else if (rotable == null) {
-	    String errorMessage = null;
-	    if (sendingWorkshop != null) {
-		errorMessage = "Position " + getPosition() + " contains no rotable but 'Sending workshop' is set to " + sendingWorkshop.getKey();
-	    } else if (receivingWorkshop != null) {
-		errorMessage = "Position " + getPosition() + " contains no rotable but 'Receiving workshop' is set to " + receivingWorkshop.getKey();
-	    } else if (placementDate != null) {
-		errorMessage = "Position " + getPosition() + " contains no rotable but 'Placement date' is set";
-	    } else if (received) {
-		errorMessage = "Position " + getPosition() + " contains no rotable but it is marked as 'received'";
-	    } else if (receivedDate != null) {
-		errorMessage = "Position " + getPosition() + " contains no rotable but 'Received date' is set";
-	    } else if (removeBearing) {
-		errorMessage = "Position " + getPosition() + " contains no rotable but 'Remove bearings' flag is set";
-	    }
-	    if(errorMessage != null) {
-		return new Result(this, errorMessage, new Exception(errorMessage));
-	    }
-	}
-	return superResult;
+        final Result superResult = super.validate();
+        if (!superResult.isSuccessful()) {
+            return superResult;
+        } else if (rotable == null) {
+            String errorMessage = null;
+            if (sendingWorkshop != null) {
+                errorMessage = "Position " + getPosition() + " contains no rotable but 'Sending workshop' is set to " + sendingWorkshop.getKey();
+            } else if (receivingWorkshop != null) {
+                errorMessage = "Position " + getPosition() + " contains no rotable but 'Receiving workshop' is set to " + receivingWorkshop.getKey();
+            } else if (placementDate != null) {
+                errorMessage = "Position " + getPosition() + " contains no rotable but 'Placement date' is set";
+            } else if (received) {
+                errorMessage = "Position " + getPosition() + " contains no rotable but it is marked as 'received'";
+            } else if (receivedDate != null) {
+                errorMessage = "Position " + getPosition() + " contains no rotable but 'Received date' is set";
+            } else if (removeBearing) {
+                errorMessage = "Position " + getPosition() + " contains no rotable but 'Remove bearings' flag is set";
+            }
+            if (errorMessage != null) {
+                return new Result(this, errorMessage, new Exception(errorMessage));
+            }
+        }
+        return superResult;
     }
 
     public Date getReceivedDate() {
-	return receivedDate;
+        return receivedDate;
     }
 
     @Observable
     public AdvicePosition setReceivedDate(final Date receivedDate) {
-	this.receivedDate = receivedDate;
-	return this;
+        this.receivedDate = receivedDate;
+        return this;
     }
 
     public boolean isRemoveBearing() {
-	return removeBearing;
+        return removeBearing;
     }
 
     @Observable
     public void setRemoveBearing(final boolean removeBearing) {
-	System.out.println("setRemoveBearing : " + removeBearing);
-	this.removeBearing = removeBearing;
+        System.out.println("setRemoveBearing : " + removeBearing);
+        this.removeBearing = removeBearing;
     }
 }

@@ -13,16 +13,16 @@ public class PivotSorterChangeEvent extends EventObject {
     private final List<Pair<String, Ordering>> orderingList;
 
     public PivotSorterChangeEvent(final PivotTreeTableModel source, final List<Pair<String, Ordering>> orderingList) {
-	super(source);
-	this.orderingList = orderingList;
+        super(source);
+        this.orderingList = orderingList;
     }
 
     @Override
     public PivotTreeTableModel getSource() {
-        return (PivotTreeTableModel)super.getSource();
+        return (PivotTreeTableModel) super.getSource();
     }
 
     public List<Pair<String, Ordering>> getOrderingList() {
-	return orderingList;
+        return orderingList;
     }
 }

@@ -20,20 +20,20 @@ public class CorrectEntityWithDynamicEntityKey extends AbstractEntity<DynamicEnt
     protected Long property2;
 
     public Long getProperty1() {
-	return property1;
+        return property1;
     }
 
     @Observable
     public void setProperty1(final Long property1) {
-	this.property1 = property1;
+        this.property1 = property1;
     }
 
     public Long getProperty2() {
-	return property2;
+        return property2;
     }
 
     @Observable
     public void setProperty2(final Long property2) {
-	this.property2 = property2;
+        this.property2 = property2;
     }
 }

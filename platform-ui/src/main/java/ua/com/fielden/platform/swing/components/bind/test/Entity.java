@@ -25,9 +25,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity class used for binding testing.
- *
+ * 
  * @author Jhou
- *
+ * 
  */
 @KeyType(String.class)
 @DisplayDescription
@@ -75,23 +75,23 @@ public class Entity extends AbstractEntity<String> {
 
     /**
      * Enum for radioButton property Strategy
-     *
+     * 
      * @author jhou
-     *
+     * 
      */
     public enum Strategy {
-	COMMIT("commit"), REVERT("revert"), REVERT_ON_INVALID("revert on invalid"), COMMIT_ON_VALID("commit on valid");
+        COMMIT("commit"), REVERT("revert"), REVERT_ON_INVALID("revert on invalid"), COMMIT_ON_VALID("commit on valid");
 
-	@Override
-	public String toString() {
-	    return this.s;
-	}
+        @Override
+        public String toString() {
+            return this.s;
+        }
 
-	private String s;
+        private String s;
 
-	Strategy(final String s) {
-	    this.s = s;
-	}
+        Strategy(final String s) {
+            this.s = s;
+        }
 
     }
 
@@ -119,34 +119,34 @@ public class Entity extends AbstractEntity<String> {
 
     // Getters and setters. Can be non-javaBean-conventional, setters HAVE TO BE @Observable
     public String getString() {
-	return string;
+        return string;
     }
 
     @Observable
     @NotNull
     @DomainValidation
     public Entity setString(final String string) {
-	this.string = string;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setString: " + string);
-	return this;
+        this.string = string;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setString: " + string);
+        return this;
     }
 
     public String getPassword() {
-	return password;
+        return password;
     }
 
     @Observable
     @NotNull
     public Entity setPassword(final String password) {
-	this.password = password;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setPassword: " + password);
-	return this;
+        this.password = password;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setPassword: " + password);
+        return this;
     }
 
     public Integer getNumber() {
-	return number;
+        return number;
     }
 
     @Observable
@@ -155,20 +155,20 @@ public class Entity extends AbstractEntity<String> {
     //    @Max(200)
     @DomainValidation
     public Entity setNumber(final Integer number) throws Result {
-	if (number != null && number > 1000) {
-	    throw new Result(this, new Exception("The value " + number + " is > 1000."));
-	}
-	this.number = number;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setNumber: " + number);
-	if (new Integer(777).equals(number)) {
-	    throw new Warning(this, "Dynamic validation warning : The value " + number + " is dangerous.");
-	}
-	return this;
+        if (number != null && number > 1000) {
+            throw new Result(this, new Exception("The value " + number + " is > 1000."));
+        }
+        this.number = number;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setNumber: " + number);
+        if (new Integer(777).equals(number)) {
+            throw new Warning(this, "Dynamic validation warning : The value " + number + " is dangerous.");
+        }
+        return this;
     }
 
     public BigDecimal getBigDecimal() {
-	return bigDecimal;
+        return bigDecimal;
     }
 
     @Observable
@@ -177,14 +177,14 @@ public class Entity extends AbstractEntity<String> {
     @Max(2000)
     @DomainValidation
     public Entity setBigDecimal(final BigDecimal bigDecimal) {
-	this.bigDecimal = bigDecimal;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setBigDecimal: " + bigDecimal);
-	return this;
+        this.bigDecimal = bigDecimal;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setBigDecimal: " + bigDecimal);
+        return this;
     }
 
     public Double getDoubleProperty() {
-	return doubleProperty;
+        return doubleProperty;
     }
 
     @Observable
@@ -193,14 +193,14 @@ public class Entity extends AbstractEntity<String> {
     @Max(2000)
     @DomainValidation
     public Entity setDoubleProperty(final Double doubleProperty) {
-	this.doubleProperty = doubleProperty;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setDoubleProperty: " + doubleProperty);
-	return this;
+        this.doubleProperty = doubleProperty;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setDoubleProperty: " + doubleProperty);
+        return this;
     }
 
     public Money getMoney() {
-	return money;
+        return money;
     }
 
     @Observable
@@ -209,42 +209,42 @@ public class Entity extends AbstractEntity<String> {
     @Max(2000)
     @DomainValidation
     public Entity setMoney(final Money money) {
-	this.money = money;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setMoney: " + money);
-	return this;
+        this.money = money;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setMoney: " + money);
+        return this;
     }
 
     public Boolean getBool() {
-	return bool;
+        return bool;
     }
 
     @Observable
     @NotNull
     @DomainValidation
     public Entity setBool(final Boolean bool) {
-	this.bool = bool;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setBool: " + bool);
-	return this;
+        this.bool = bool;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setBool: " + bool);
+        return this;
     }
 
     public Strategy getStrategy() {
-	return strategy;
+        return strategy;
     }
 
     @Observable
     @NotNull
     @DomainValidation
     public Entity setStrategy(final Strategy strategy) {
-	this.strategy = strategy;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setStrategy: " + strategy);
-	return this;
+        this.strategy = strategy;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setStrategy: " + strategy);
+        return this;
     }
 
     public ArrayList<DemoAbstractEntity> getList() {
-	return list;
+        return list;
     }
 
     @Observable
@@ -255,18 +255,18 @@ public class Entity extends AbstractEntity<String> {
     // IMPORTANT : EntityExists annotation should be defined! to get appropriate autocompleter behaviour
     //@EntityExists(entityType = DemoEntity.class, keyType = String.class)
     public Entity setList(final ArrayList<DemoAbstractEntity> list) throws Result {
-	//list.get(10).set("fgyegf", null); // throws unhandled exception
-	if (list.size() == 3) {
-	    throw new Result(this, new Exception("you cannot set the list with 3 elements:)"));
-	}
-	this.list = list;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setList: " + list);
-	return this;
+        //list.get(10).set("fgyegf", null); // throws unhandled exception
+        if (list.size() == 3) {
+            throw new Result(this, new Exception("you cannot set the list with 3 elements:)"));
+        }
+        this.list = list;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setList: " + list);
+        return this;
     }
 
     public DemoAbstractEntity getDemoEntity() {
-	return demoEntity;
+        return demoEntity;
     }
 
     @Observable
@@ -276,14 +276,14 @@ public class Entity extends AbstractEntity<String> {
     //@EntityExists(entityType = DemoEntity.class, keyType = String.class)
     @EntityExists(DemoAbstractEntity.class)
     public Entity setDemoEntity(final DemoAbstractEntity demoEntity) {
-	this.demoEntity = demoEntity;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setDemoEntity : " + demoEntity);
-	return this;
+        this.demoEntity = demoEntity;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setDemoEntity : " + demoEntity);
+        return this;
     }
 
     public List<Bicycle> getBicycles() {
-	return bicycles;
+        return bicycles;
     }
 
     @Observable
@@ -294,82 +294,82 @@ public class Entity extends AbstractEntity<String> {
     // IMPORTANT : EntityExists annotation should be defined! to get appropriate autocompleter behaviour
     //@EntityExists(entityType = DemoEntity.class, keyType = String.class)
     public Entity setBicycles(final List<Bicycle> bicycles) {
-	this.bicycles.clear();
-	this.bicycles.addAll(bicycles);
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setBicycles : " + this.bicycles);
-	return this;
+        this.bicycles.clear();
+        this.bicycles.addAll(bicycles);
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setBicycles : " + this.bicycles);
+        return this;
     }
 
     @Observable
     @NotNull
     public Entity addToBicycles(final Bicycle value) {
-	bicycles.add(value);
-	return this;
+        bicycles.add(value);
+        return this;
     }
 
     @Observable
     @DomainValidation
     public Entity removeFromBicycles(final Bicycle value) {
-	bicycles.remove(value);
-	return this;
+        bicycles.remove(value);
+        return this;
     }
 
     public DateTime getDateTime() {
-	return dateTime;
+        return dateTime;
     }
 
     @Observable
     public Entity setDateTime(final DateTime dateTime) {
-	this.dateTime = dateTime;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setDateTime : " + dateTime);
-	return this;
+        this.dateTime = dateTime;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setDateTime : " + dateTime);
+        return this;
     }
 
     public Date getDate() {
-	return date;
+        return date;
     }
 
     public Long getDateMilliSeconds() {
-	return date.getTime();
+        return date.getTime();
     }
 
     @Observable
     //    @NotNull
     @DomainValidation
     public Entity setDate(final Date date) {
-	this.date = date;
-	System.err.print("entity = " + getString() + " ");
-	System.err.println("setDate : " + date);
-	return this;
+        this.date = date;
+        System.err.print("entity = " + getString() + " ");
+        System.err.println("setDate : " + date);
+        return this;
     }
 
     public ArrayList<String> getStringList() {
-	return stringList;
+        return stringList;
     }
 
     @Observable
     // need not any validation! because cannot set null, only can set empty list!
     @NotNull
     public Entity setStringList(final ArrayList<String> stringList) {
-	this.stringList = stringList;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setStringList : " + stringList);
-	return this;
+        this.stringList = stringList;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setStringList : " + stringList);
+        return this;
     }
 
     public String getStringDemoEntity() {
-	return stringDemoEntity;
+        return stringDemoEntity;
     }
 
     @Observable
     @NotNull
     //@EntityExists(entityType = DemoAbstractEntity.class, keyType = String.class)
     public Entity setStringDemoEntity(final String stringDemoEntity) {
-	this.stringDemoEntity = stringDemoEntity;
-	System.out.print("entity = " + getString() + " ");
-	System.out.println("setStringDemoEntity : " + stringDemoEntity);
-	return this;
+        this.stringDemoEntity = stringDemoEntity;
+        System.out.print("entity = " + getString() + " ");
+        System.out.println("setStringDemoEntity : " + stringDemoEntity);
+        return this;
     }
 }

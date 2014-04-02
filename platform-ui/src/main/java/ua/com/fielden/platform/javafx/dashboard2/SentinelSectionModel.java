@@ -16,41 +16,41 @@ public class SentinelSectionModel {
     private final IDescGetter descGetter;
 
     public SentinelSectionModel(final IDescGetter descGetter) {
-	this.descGetter = descGetter;
+        this.descGetter = descGetter;
     }
 
     public boolean isLighting() {
-	return count.longValue() > 0; // TODO narrowing conversion!
+        return count.longValue() > 0; // TODO narrowing conversion!
     }
 
     public void addAfterChangeAction(final Runnable action) {
-	afterChangeActions.add(action);
+        afterChangeActions.add(action);
     }
 
     public SentinelSectionModel setCountAndMoneyAndDecimal(final BigInteger count, final Money money, final BigDecimal decimal) {
-	this.count = count;
-	this.money = money;
-	this.decimal = decimal;
+        this.count = count;
+        this.money = money;
+        this.decimal = decimal;
 
-	for (final Runnable afterChange : afterChangeActions) {
-	    afterChange.run();
-	}
-	return this;
+        for (final Runnable afterChange : afterChangeActions) {
+            afterChange.run();
+        }
+        return this;
     }
 
     public BigInteger getCount() {
-	return count;
+        return count;
     }
 
     public Money getMoney() {
-	return money;
+        return money;
     }
 
     public String getDesc() {
-	return descGetter.desc();
+        return descGetter.desc();
     }
 
     public BigDecimal getDecimal() {
-	return decimal;
+        return decimal;
     }
 }

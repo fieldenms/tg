@@ -12,17 +12,17 @@ public class ComponentInfo implements IResolvable {
     private final SortedMap<String, AbstractPropInfo> props = new TreeMap<>();
 
     public ComponentInfo(final Class<? extends AbstractEntity<?>> javaType) {
-	this.javaType = javaType;
+        this.javaType = javaType;
     }
 
     public AbstractPropInfo resolve(final String dotNotatedPropName) {
-	final Pair<String, String> parts = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
-	final AbstractPropInfo foundPart = props.get(parts.getKey());
-	return foundPart == null ? null : foundPart.resolve(parts.getValue());
+        final Pair<String, String> parts = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
+        final AbstractPropInfo foundPart = props.get(parts.getKey());
+        return foundPart == null ? null : foundPart.resolve(parts.getValue());
     }
 
     protected SortedMap<String, AbstractPropInfo> getProps() {
-	return props;
+        return props;
     }
 
     protected Class<?> getJavaType() {
@@ -31,11 +31,11 @@ public class ComponentInfo implements IResolvable {
 
     @Override
     public String toString() {
-	return javaType.getSimpleName();
+        return javaType.getSimpleName();
     }
 
     @Override
     public Class javaType() {
-	return javaType;
+        return javaType;
     }
 }

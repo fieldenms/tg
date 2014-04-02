@@ -19,12 +19,12 @@ public abstract class SwingWorkerCatcher<T, V> extends SwingWorker<T, V> {
      */
     @Override
     protected final T doInBackground() {
-	try {
-	    return tryToDoInBackground();
-	} catch (final Exception e) {
-	    handleException(e);
-	    return null;
-	}
+        try {
+            return tryToDoInBackground();
+        } catch (final Exception e) {
+            handleException(e);
+            return null;
+        }
     }
 
     /**
@@ -32,12 +32,12 @@ public abstract class SwingWorkerCatcher<T, V> extends SwingWorker<T, V> {
      */
     @Override
     protected final void done() {
-	try {
-	    tryToDone();
-	    super.done();
-	} catch (final Exception e) {
-	    handleException(e);
-	}
+        try {
+            tryToDone();
+            super.done();
+        } catch (final Exception e) {
+            handleException(e);
+        }
     }
 
     /**
@@ -51,7 +51,7 @@ public abstract class SwingWorkerCatcher<T, V> extends SwingWorker<T, V> {
      * override this method to do some "after-party" logic on EDT and handle the exceptions throwed in that logic
      */
     protected void tryToDone() {
-	// default implementation - do nothing
+        // default implementation - do nothing
     }
 
     /**
@@ -60,6 +60,6 @@ public abstract class SwingWorkerCatcher<T, V> extends SwingWorker<T, V> {
      * @param e
      */
     protected void handleException(final Exception e) {
-	e.printStackTrace();
+        e.printStackTrace();
     }
 }

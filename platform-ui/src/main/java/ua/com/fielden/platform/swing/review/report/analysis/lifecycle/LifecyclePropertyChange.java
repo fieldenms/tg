@@ -9,11 +9,11 @@ public class LifecyclePropertyChange implements IAfterChangeEventHandler<Date> {
 
     @Override
     public void handle(final MetaProperty property, final Date entityPropertyValue) {
-	if("from".equals(property.getName())){
-	    ((LifecyclePropertiesUpdater)property.getEntity()).getLdtm().setFrom(entityPropertyValue);
-	}else if("to".equals(property.getName())){
-	    ((LifecyclePropertiesUpdater)property.getEntity()).getLdtm().setTo(entityPropertyValue);
-	}
+        if ("from".equals(property.getName())) {
+            ((LifecyclePropertiesUpdater) property.getEntity()).getLdtm().setFrom(entityPropertyValue);
+        } else if ("to".equals(property.getName())) {
+            ((LifecyclePropertiesUpdater) property.getEntity()).getLdtm().setTo(entityPropertyValue);
+        }
     }
 
 }

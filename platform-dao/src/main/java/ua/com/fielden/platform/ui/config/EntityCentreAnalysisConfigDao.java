@@ -18,9 +18,9 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link IEntityCentreAnalysisConfig}.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 @EntityType(EntityCentreAnalysisConfig.class)
 public class EntityCentreAnalysisConfigDao extends CommonEntityDao<EntityCentreAnalysisConfig> implements IEntityCentreAnalysisConfig {

@@ -7,11 +7,11 @@ import java.io.InputStream;
 import org.junit.Test;
 
 /**
- *
+ * 
  * Test case for miscellaneous utilities.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class MiscUtilitiesTest {
 
@@ -20,14 +20,14 @@ public class MiscUtilitiesTest {
 
     @Test
     public void test_single_line_string_to_input_stream_conversion() throws Exception {
-	final InputStream ins = MiscUtilities.convertToInputStream(SINGLE_LINE);
-	assertEquals("Incorrect value of the converted string.", SINGLE_LINE, MiscUtilities.convertToString(ins));
+        final InputStream ins = MiscUtilities.convertToInputStream(SINGLE_LINE);
+        assertEquals("Incorrect value of the converted string.", SINGLE_LINE, MiscUtilities.convertToString(ins));
     }
 
     @Test
     public void test_multi_line_string_to_input_stream_conversion() throws Exception {
-	final InputStream ins = MiscUtilities.convertToInputStream(MULTI_LINE);
-	assertEquals("Incorrect value of the converted string.", MULTI_LINE, MiscUtilities.convertToString(ins));
+        final InputStream ins = MiscUtilities.convertToInputStream(MULTI_LINE);
+        assertEquals("Incorrect value of the converted string.", MULTI_LINE, MiscUtilities.convertToString(ins));
     }
 
 }

@@ -23,58 +23,60 @@ public class EntityMetadata<ET extends AbstractEntity<?>> {
     private final SortedMap<String, PropertyMetadata> props;
 
     public EntityMetadata(final String table, final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
-	this(table, null, type, props);
+        this(table, null, type, props);
     }
 
     public EntityMetadata(final List<EntityResultQueryModel<ET>> models, final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
-	this(null, models, type, props);
+        this(null, models, type, props);
     }
 
     public EntityMetadata(final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
-	this(null, null, type, props);
+        this(null, null, type, props);
     }
 
     private EntityMetadata(final String table, final List<EntityResultQueryModel<ET>> models, final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
-	super();
-	this.table = table;
-	this.type = type;
-	if (type == null) {
-	    throw new IllegalArgumentException("Missing entity type!");
-	}
-	this.props = props;
-	if (models != null) {
-	    this.models.addAll(models);
-	}
+        super();
+        this.table = table;
+        this.type = type;
+        if (type == null) {
+            throw new IllegalArgumentException("Missing entity type!");
+        }
+        this.props = props;
+        if (models != null) {
+            this.models.addAll(models);
+        }
     }
 
     public boolean isPersisted() {
-	return !StringUtils.isEmpty(table);
+        return !StringUtils.isEmpty(table);
     }
 
     public String ddl() {
-	final StringBuffer sb = new StringBuffer();
-	sb.append("CREATE TABLE " + table + "(\n");
-	for (final Iterator<Map.Entry<String, PropertyMetadata>> iterator = props.entrySet().iterator(); iterator.hasNext();) {
-	    final Map.Entry<String, PropertyMetadata> entry = iterator.next();
-	    if (entry.getValue().affectsMapping()) {
-		sb.append(entry.getValue().ddl() + (iterator.hasNext() ? ",\n" : ""));
-	    }
-	}
-	sb.append(")");
+        final StringBuffer sb = new StringBuffer();
+        sb.append("CREATE TABLE " + table + "(\n");
+        for (final Iterator<Map.Entry<String, PropertyMetadata>> iterator = props.entrySet().iterator(); iterator.hasNext();) {
+            final Map.Entry<String, PropertyMetadata> entry = iterator.next();
+            if (entry.getValue().affectsMapping()) {
+                sb.append(entry.getValue().ddl() + (iterator.hasNext() ? ",\n" : ""));
+            }
+        }
+        sb.append(")");
 
-	return sb.toString();
+        return sb.toString();
     }
 
     public boolean isOneToOne() {
-	return isPersistedEntityType(getKeyType(type));
+        return isPersistedEntityType(getKeyType(type));
     }
 
     public String getTable() {
         return table;
     }
+
     public Class<? extends AbstractEntity<?>> getType() {
         return type;
     }
+
     public SortedMap<String, PropertyMetadata> getProps() {
         return props;
     }
@@ -84,73 +86,73 @@ public class EntityMetadata<ET extends AbstractEntity<?>> {
     }
 
     public static enum EntityCategory {
-	PERSISTED, //
-	QUERY_BASED, //
-	UNION, //
-	PURE;
+        PERSISTED, //
+        QUERY_BASED, //
+        UNION, //
+        PURE;
     }
 
     @Override
     public int hashCode() {
-	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((models == null) ? 0 : models.hashCode());
-	result = prime * result + ((props == null) ? 0 : props.hashCode());
-	result = prime * result + ((table == null) ? 0 : table.hashCode());
-	result = prime * result + ((type == null) ? 0 : type.hashCode());
-	return result;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((models == null) ? 0 : models.hashCode());
+        result = prime * result + ((props == null) ? 0 : props.hashCode());
+        result = prime * result + ((table == null) ? 0 : table.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
     }
 
     public Set<String> getNotNullableProps() {
-	final Set<String> result = new HashSet<String>();
-	for (final Entry<String, PropertyMetadata> entry : props.entrySet()) {
-	    if (!entry.getValue().isNullable()) {
-		result.add(entry.getKey());
-	    }
-	}
-	return result;
+        final Set<String> result = new HashSet<String>();
+        for (final Entry<String, PropertyMetadata> entry : props.entrySet()) {
+            if (!entry.getValue().isNullable()) {
+                result.add(entry.getKey());
+            }
+        }
+        return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj == null) {
-	    return false;
-	}
-	if (!(obj instanceof EntityMetadata)) {
-	    return false;
-	}
-	final EntityMetadata other = (EntityMetadata) obj;
-	if (models == null) {
-	    if (other.models != null) {
-		return false;
-	    }
-	} else if (!models.equals(other.models)) {
-	    return false;
-	}
-	if (props == null) {
-	    if (other.props != null) {
-		return false;
-	    }
-	} else if (!props.equals(other.props)) {
-	    return false;
-	}
-	if (table == null) {
-	    if (other.table != null) {
-		return false;
-	    }
-	} else if (!table.equals(other.table)) {
-	    return false;
-	}
-	if (type == null) {
-	    if (other.type != null) {
-		return false;
-	    }
-	} else if (!type.equals(other.type)) {
-	    return false;
-	}
-	return true;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof EntityMetadata)) {
+            return false;
+        }
+        final EntityMetadata other = (EntityMetadata) obj;
+        if (models == null) {
+            if (other.models != null) {
+                return false;
+            }
+        } else if (!models.equals(other.models)) {
+            return false;
+        }
+        if (props == null) {
+            if (other.props != null) {
+                return false;
+            }
+        } else if (!props.equals(other.props)) {
+            return false;
+        }
+        if (table == null) {
+            if (other.table != null) {
+                return false;
+            }
+        } else if (!table.equals(other.table)) {
+            return false;
+        }
+        if (type == null) {
+            if (other.type != null) {
+                return false;
+            }
+        } else if (!type.equals(other.type)) {
+            return false;
+        }
+        return true;
     }
 }

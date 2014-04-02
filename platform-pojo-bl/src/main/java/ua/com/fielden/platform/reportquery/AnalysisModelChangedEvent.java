@@ -9,12 +9,12 @@ public class AnalysisModelChangedEvent extends EventObject {
     private final boolean isSorted;
 
     public AnalysisModelChangedEvent(final Object source, final boolean isSorted) {
-	super(source);
-	this.isSorted = isSorted;
+        super(source);
+        this.isSorted = isSorted;
     }
 
     public boolean isSorted() {
-	return isSorted;
+        return isSorted;
     }
 
 }

@@ -10,9 +10,9 @@ import com.google.inject.Inject;
 
 /**
  * RAO for {@link MigrationHistory}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(MigrationHistory.class)
 public class MigrationHistoryRao extends CommonEntityRao<MigrationHistory> implements IMigrationHistoryDao {
@@ -20,6 +20,6 @@ public class MigrationHistoryRao extends CommonEntityRao<MigrationHistory> imple
 
     @Inject
     public MigrationHistoryRao(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 }

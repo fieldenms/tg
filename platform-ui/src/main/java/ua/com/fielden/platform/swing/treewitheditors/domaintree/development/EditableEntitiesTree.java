@@ -6,9 +6,9 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 
 /**
  * The {@link EntitiesTree2} with ability to add/edit/copy/remove calculated property.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class EditableEntitiesTree extends EntitiesTree2<ICentreDomainTreeManagerAndEnhancer> {
 
@@ -16,7 +16,7 @@ public class EditableEntitiesTree extends EntitiesTree2<ICentreDomainTreeManager
 
     /**
      * Initialises this {@link EditableEntitiesTree} with appropriate {@link EntitiesTreeModel2} instance and new/edit/copy/remove actions for cell editor.
-     *
+     * 
      * @param entitiesTreeModel2
      * @param newAction
      * @param editAction
@@ -24,22 +24,22 @@ public class EditableEntitiesTree extends EntitiesTree2<ICentreDomainTreeManager
      * @param removeAction
      */
     public EditableEntitiesTree(//
-	    final EntitiesTreeModel2<ICentreDomainTreeManagerAndEnhancer> entitiesTreeModel2,//
-	    final Action newAction,//
-	    final Action editAction,//
-	    final Action copyAction,//
-	    final Action removeAction) {
-	super(entitiesTreeModel2);
+    final EntitiesTreeModel2<ICentreDomainTreeManagerAndEnhancer> entitiesTreeModel2,//
+            final Action newAction,//
+            final Action editAction,//
+            final Action copyAction,//
+            final Action removeAction) {
+        super(entitiesTreeModel2);
 
-	final EntitiesTreeCellRenderer cellRenderer1, cellRenderer2;
+        final EntitiesTreeCellRenderer cellRenderer1, cellRenderer2;
 
-	cellRenderer1 = new EntitiesTreeCellRenderer(entitiesTreeModel2, //
-	newAction, editAction, copyAction, removeAction);
-	cellRenderer2 = new EntitiesTreeCellRenderer(entitiesTreeModel2, //
-	newAction, editAction, copyAction, removeAction);
+        cellRenderer1 = new EntitiesTreeCellRenderer(entitiesTreeModel2, //
+        newAction, editAction, copyAction, removeAction);
+        cellRenderer2 = new EntitiesTreeCellRenderer(entitiesTreeModel2, //
+        newAction, editAction, copyAction, removeAction);
 
-	setCellRenderer(cellRenderer1);
-	setCellEditor(new EntitiesTreeCellEditor(this, cellRenderer2));
+        setCellRenderer(cellRenderer1);
+        setCellEditor(new EntitiesTreeCellEditor(this, cellRenderer2));
     }
 
 }

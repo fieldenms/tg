@@ -6,9 +6,9 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /**
  * API for serialising and deserialising entities and entity queries.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface ISerialiser {
 

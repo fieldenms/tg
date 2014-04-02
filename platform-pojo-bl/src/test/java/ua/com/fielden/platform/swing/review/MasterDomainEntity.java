@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Needed for testing chart analysis query generation.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(String.class)
@@ -34,26 +34,29 @@ public class MasterDomainEntity extends AbstractEntity<String> {
     private SlaveDomainEntity entityProp;
 
     public Integer getIntegerProp() {
-	return integerProp;
+        return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
-	this.integerProp = integerProp;
+        this.integerProp = integerProp;
     }
 
     public Date getDateProp() {
-	return dateProp;
+        return dateProp;
     }
+
     @Observable
     public void setDateProp(final Date dateProp) {
-	this.dateProp = dateProp;
+        this.dateProp = dateProp;
     }
 
     public SlaveDomainEntity getEntityProp() {
-	return entityProp;
+        return entityProp;
     }
+
     @Observable
     public void setEntityProp(final SlaveDomainEntity entityProp) {
-	this.entityProp = entityProp;
+        this.entityProp = entityProp;
     }
 }

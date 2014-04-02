@@ -18,9 +18,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * One-2-Many entity object.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key", desc = "Some key description")
@@ -47,22 +47,22 @@ public class TgAuthorRoyalty extends AbstractEntity<DynamicEntityKey> {
 
     @Observable
     public TgAuthorRoyalty setPayment(final Money payment) {
-	this.payment = payment;
-	return this;
+        this.payment = payment;
+        return this;
     }
 
     public Money getPayment() {
-	return payment;
+        return payment;
     }
 
     @Observable
     public TgAuthorRoyalty setPaymentDate(final Date paymentDate) {
-	this.paymentDate = paymentDate;
-	return this;
+        this.paymentDate = paymentDate;
+        return this;
     }
 
     public Date getPaymentDate() {
-	return paymentDate;
+        return paymentDate;
     }
 
     @Observable

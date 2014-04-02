@@ -48,53 +48,53 @@ public class DummyEntity2 extends AbstractEntity<Long> {
     }
 
     public DummyEntity2(final Long key, final String desc) {
-	super(null, key, desc);
+        super(null, key, desc);
     }
 
     public Money getMoneyField() {
-	return moneyField;
+        return moneyField;
     }
 
     @Observable
     public DummyEntity2 setMoneyField(final Money moneyField) {
-	this.moneyField = moneyField;
-	return this;
+        this.moneyField = moneyField;
+        return this;
     }
 
     public boolean isBoolField() {
-	return boolField;
+        return boolField;
     }
 
     @Observable
     @DomainValidation
     public DummyEntity2 setBoolField(final boolean boolField) {
-	this.boolField = boolField;
-	return this;
+        this.boolField = boolField;
+        return this;
     }
 
     public Date getDateField() {
-	return dateField;
+        return dateField;
     }
 
     @Observable
     public DummyEntity2 setDateField(final Date dateField) {
-	this.dateField = dateField;
-	return this;
+        this.dateField = dateField;
+        return this;
     }
 
     public Integer getIntField() {
-	return intField;
+        return intField;
     }
 
     @Observable
     @DomainValidation
     public DummyEntity2 setIntField(final Integer intField) {
-	this.intField = intField;
-	return this;
+        this.intField = intField;
+        return this;
     }
 
     public List<DummyEntity> getDummyEntities() {
-	return dummyEntities;
+        return dummyEntities;
     }
 
     /**
@@ -103,6 +103,6 @@ public class DummyEntity2 extends AbstractEntity<Long> {
      * @return
      */
     public Integer getDummyEntitiesCount() {
-	return dummyEntities.size();
+        return dummyEntities.size();
     }
 }

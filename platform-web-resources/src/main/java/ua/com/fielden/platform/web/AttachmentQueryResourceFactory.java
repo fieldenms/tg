@@ -18,9 +18,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct {@link Attachment} query resource instantiation.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class AttachmentQueryResourceFactory extends Restlet {
     private final Injector injector;
@@ -31,19 +31,19 @@ public class AttachmentQueryResourceFactory extends Restlet {
      * Instances of DAO and factory should be thread-safe as they are used by multiple instances of resources serving concurrent requests.
      */
     public AttachmentQueryResourceFactory(final Injector injector, final Router router) {
-	this.injector = injector;
-	this.router = router;
-	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.injector = injector;
+        this.router = router;
+        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
     }
 
     @Override
     public void handle(final Request request, final Response response) {
-	super.handle(request, response);
-	if (Method.POST.equals(request.getMethod())) {
-	    final String username = (String) request.getAttributes().get("username");
-	    injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+        super.handle(request, response);
+        if (Method.POST.equals(request.getMethod())) {
+            final String username = (String) request.getAttributes().get("username");
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
-	    new EntityQueryResource<Attachment>(router, injector, injector.getInstance(IAttachment.class), restUtil, getContext(), request, response).handle();
-	}
+            new EntityQueryResource<Attachment>(router, injector, injector.getInstance(IAttachment.class), restUtil, getContext(), request, response).handle();
+        }
     }
 }

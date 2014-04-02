@@ -5,15 +5,15 @@ public enum LogicalOperator {
     private final String value;
 
     LogicalOperator(final String value) {
-	this.value = value;
+        this.value = value;
     }
 
     public String getValue() {
-	return value;
+        return value;
     }
 
     @Override
     public String toString() {
-	return value;
+        return value;
     }
 }

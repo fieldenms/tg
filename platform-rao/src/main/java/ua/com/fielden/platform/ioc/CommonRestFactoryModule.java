@@ -6,21 +6,21 @@ import ua.com.fielden.platform.rao.RestClientUtil;
 
 /**
  * Module for REST clients, which provides all essential binding such as lazy loading proxy intercepter and meta-property factory.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class CommonRestFactoryModule extends RestPropertyFactoryModule {
 
     public CommonRestFactoryModule(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 
     @Override
     protected void configure() {
-	super.configure();
+        super.configure();
 
-	bind(IReport.class).toInstance(new ReportRao(restUtil));
+        bind(IReport.class).toInstance(new ReportRao(restUtil));
     }
 
 }

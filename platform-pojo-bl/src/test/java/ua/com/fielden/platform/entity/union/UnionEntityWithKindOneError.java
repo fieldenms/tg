@@ -15,21 +15,21 @@ public class UnionEntityWithKindOneError extends AbstractUnionEntity {
     private String string;
 
     public EntityOne getEntity() {
-	return entity;
+        return entity;
     }
 
     @Observable
     public void setEntity(final EntityOne entity) {
-	this.entity = entity;
+        this.entity = entity;
     }
 
     public String getString() {
-	return string;
+        return string;
     }
 
     @Observable
     public void setString(final String string) {
-	this.string = string;
+        this.string = string;
     }
 
 }

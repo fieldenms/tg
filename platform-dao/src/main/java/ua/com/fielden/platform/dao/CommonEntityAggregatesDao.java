@@ -12,23 +12,24 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation for EntityAggregates class used purely for internals of the EntityAggregatesDao.
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(EntityAggregates.class)
 public class CommonEntityAggregatesDao extends CommonEntityDao<EntityAggregates> implements IEntityDao<EntityAggregates> {
 
     @Inject
     protected CommonEntityAggregatesDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
     public int count(final AggregatedResultQueryModel model, final Map<String, Object> paramValues) {
-	return evalNumOfPages(model, paramValues, 1);
+        return evalNumOfPages(model, paramValues, 1);
     }
 
     public int count(final AggregatedResultQueryModel model) {
-	return count(model, Collections.<String, Object> emptyMap());
+        return count(model, Collections.<String, Object> emptyMap());
     }
 
 }

@@ -9,11 +9,11 @@ public class NewEditPostinitCallback<T extends AbstractEntity<?>, C extends IEnt
 
     @Override
     public <M extends UmMasterWithCrudAndUpdater<T, C>> void run(final M model) {
-	if (model.getEntity().isPersisted()) {
-	    model.getEditAction().actionPerformed(null);
-	} else {
-	    model.getNewAction().actionPerformed(null);
-	}
+        if (model.getEntity().isPersisted()) {
+            model.getEditAction().actionPerformed(null);
+        } else {
+            model.getNewAction().actionPerformed(null);
+        }
     }
 
 }

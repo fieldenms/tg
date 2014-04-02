@@ -40,34 +40,34 @@ public interface AggregationFunction<T extends AbstractEntity> {
      */
     public static class Sum<T extends AbstractEntity> implements AggregationFunction<T> {
 
-	private final String propertyName;
+        private final String propertyName;
 
-	public Sum(final String propertyName) {
-	    this.propertyName = propertyName;
-	}
+        public Sum(final String propertyName) {
+            this.propertyName = propertyName;
+        }
 
-	@Override
-	public String calc(final List<T> elements) {
-	    // sum will be calculated either in bdTotal or in mTotal variable
-	    BigDecimal bdTotal = ZERO;
-	    Money mTotal = zero;
+        @Override
+        public String calc(final List<T> elements) {
+            // sum will be calculated either in bdTotal or in mTotal variable
+            BigDecimal bdTotal = ZERO;
+            Money mTotal = zero;
 
-	    boolean moneyType = false;
-	    for (final T elem : elements) {
-		final Object propValue = elem.get(propertyName);
-		// passing by null values
-		if (propValue != null) {
-		    moneyType = propValue instanceof Money;
-		    if (moneyType) {
-			mTotal = mTotal.plus((Money) propValue);
-		    } else {
-			bdTotal = bdTotal.add(new BigDecimal(((Number) propValue).doubleValue()));
-		    }
-		}
-	    }
-	    final Object result = moneyType ? mTotal : bdTotal;
-	    return EntityUtils.toString(result, result.getClass());
-	}
+            boolean moneyType = false;
+            for (final T elem : elements) {
+                final Object propValue = elem.get(propertyName);
+                // passing by null values
+                if (propValue != null) {
+                    moneyType = propValue instanceof Money;
+                    if (moneyType) {
+                        mTotal = mTotal.plus((Money) propValue);
+                    } else {
+                        bdTotal = bdTotal.add(new BigDecimal(((Number) propValue).doubleValue()));
+                    }
+                }
+            }
+            final Object result = moneyType ? mTotal : bdTotal;
+            return EntityUtils.toString(result, result.getClass());
+        }
 
     }
 

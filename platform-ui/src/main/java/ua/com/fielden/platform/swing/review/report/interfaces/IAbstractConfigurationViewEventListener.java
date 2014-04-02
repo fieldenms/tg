@@ -10,7 +10,7 @@ import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationV
  * An {@link EventListener} that listens the open event of the abstract configuration view.
  * 
  * @author TG Team
- *
+ * 
  */
 public interface IAbstractConfigurationViewEventListener extends EventListener {
 

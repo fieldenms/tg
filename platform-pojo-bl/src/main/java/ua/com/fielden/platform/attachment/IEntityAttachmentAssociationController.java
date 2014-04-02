@@ -6,9 +6,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * A controller for managing DAO related operations with {@link EntityAttachmentAssociation}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IEntityAttachmentAssociationController extends IEntityDao<EntityAttachmentAssociation>, IMasterDetailsDao<AbstractEntity<?>, EntityAttachmentAssociation> {
     IAttachment getAttachmentController();

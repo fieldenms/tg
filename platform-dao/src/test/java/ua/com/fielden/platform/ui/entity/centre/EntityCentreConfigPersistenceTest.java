@@ -23,9 +23,9 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class EntityCentreConfigPersistenceTest extends AbstractDomainDrivenTestCase {
     private final IEntityCentreConfigController dao = getInstance(EntityCentreConfigControllerDao.class);
@@ -34,40 +34,40 @@ public class EntityCentreConfigPersistenceTest extends AbstractDomainDrivenTestC
 
     @Test
     public void test_insertion_and_retrieval_of_binary_data() {
-	final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
-	config.setConfigBody(new byte[]{1,2,3});
-	dao.save(config);
+        final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
+        config.setConfigBody(new byte[] { 1, 2, 3 });
+        dao.save(config);
 
-	final List<EntityCentreConfig> result = dao.getPage(0, 25).data();
-	assertEquals("Incorrect number of retrieved configurations.", 1, result.size());
-	assertTrue("Incorrectly saved binary property.", Arrays.equals(new byte[]{1, 2, 3}, result.get(0).getConfigBody()));
+        final List<EntityCentreConfig> result = dao.getPage(0, 25).data();
+        assertEquals("Incorrect number of retrieved configurations.", 1, result.size());
+        assertTrue("Incorrectly saved binary property.", Arrays.equals(new byte[] { 1, 2, 3 }, result.get(0).getConfigBody()));
     }
 
     @Test
     public void test_update_of_binary_data() {
-	final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
-	config.setConfigBody(new byte[]{1,2,3});
-	dao.save(config);
+        final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
+        config.setConfigBody(new byte[] { 1, 2, 3 });
+        dao.save(config);
 
-	assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
-	config.setConfigBody(new byte[]{1,2,3, 4});
-	dao.save(config);
-	assertEquals("Incorrect version.", Long.valueOf("1"), config.getVersion());
+        assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
+        config.setConfigBody(new byte[] { 1, 2, 3, 4 });
+        dao.save(config);
+        assertEquals("Incorrect version.", Long.valueOf("1"), config.getVersion());
 
-	final EntityCentreConfig fromDb = dao.findById(config.getId());
+        final EntityCentreConfig fromDb = dao.findById(config.getId());
 
-	assertNotNull("Configuration entity should exist.", fromDb);
-	assertTrue("Incorrectly updated binary property.", Arrays.equals(new byte[]{1, 2, 3, 4}, fromDb.getConfigBody()));
+        assertNotNull("Configuration entity should exist.", fromDb);
+        assertTrue("Incorrectly updated binary property.", Arrays.equals(new byte[] { 1, 2, 3, 4 }, fromDb.getConfigBody()));
     }
 
     @Override
     protected void populateDomain() {
-	save(new_(User.class, "USER", "DESC").setBase(true).setPassword("PASSWD"));
-	save(new_(MainMenuItem.class, "type", "desc").setOrder(1));
+        save(new_(User.class, "USER", "DESC").setBase(true).setPassword("PASSWD"));
+        save(new_(MainMenuItem.class, "type", "desc").setOrder(1));
     }
 
     @Override
     protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-	return PlatformTestDomainTypes.entityTypes;
+        return PlatformTestDomainTypes.entityTypes;
     }
 }

@@ -24,12 +24,12 @@ import com.google.inject.Inject;
 
 /**
  * Convenient entity centre and analysis factory binder
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  */
-public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> implements IEntityCentreBuilder<T>, IAnalysisBuilder<T>{
+public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> implements IEntityCentreBuilder<T>, IAnalysisBuilder<T> {
 
     //Entity centre related properties.
     private final IGlobalDomainTreeManager gdtm;
@@ -45,125 +45,123 @@ public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> implements I
     /**
      * Represents the analysis factories, mapped to the analysis type.
      */
-    private final Map<AnalysisType, IAnalysisFactory<T, ?>> analysisFactoryMap = new HashMap<AnalysisType, IAnalysisFactory<T,?>>();
-
+    private final Map<AnalysisType, IAnalysisFactory<T, ?>> analysisFactoryMap = new HashMap<AnalysisType, IAnalysisFactory<T, ?>>();
 
     /**
      * Initialises {@link EntityCentreFactoryBinder} with default entity centre and analysis factories.
      */
     @Inject
     public EntityCentreFactoryBinder(//
-	    final IGlobalDomainTreeManager gdtm,//
-	    final EntityFactory entityFactory,//
-	    final IEntityMasterManager masterManager,
-	    final ICriteriaGenerator criteriaGenerator){
-	this.gdtm = gdtm;
-	this.entityFactory = entityFactory;
-	this.masterManager = masterManager;
-	this.criteriaGenerator = criteriaGenerator;
-	bindEntityCentreTo(new DefaultEntityCentreFactory<T>());
-	bindDefaultAnalysisTo(new DefaultGridAnalysisFactory<T>());
-	bindAnalysisTo(AnalysisType.SIMPLE, new DefaultChartAnalysisFactory<T>(entityFactory, criteriaGenerator, masterManager));
-	bindAnalysisTo(AnalysisType.LIFECYCLE, new DefaultLifecycleAnalysisFactory<T>());
-	bindAnalysisTo(AnalysisType.PIVOT, new DefaultPivotAnalysisFactory<T>(entityFactory, criteriaGenerator, masterManager));
-	bindAnalysisTo(AnalysisType.SENTINEL, new SentinelChartAnalysisFactory<T>(entityFactory, criteriaGenerator, masterManager));
+    final IGlobalDomainTreeManager gdtm,//
+            final EntityFactory entityFactory,//
+            final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator) {
+        this.gdtm = gdtm;
+        this.entityFactory = entityFactory;
+        this.masterManager = masterManager;
+        this.criteriaGenerator = criteriaGenerator;
+        bindEntityCentreTo(new DefaultEntityCentreFactory<T>());
+        bindDefaultAnalysisTo(new DefaultGridAnalysisFactory<T>());
+        bindAnalysisTo(AnalysisType.SIMPLE, new DefaultChartAnalysisFactory<T>(entityFactory, criteriaGenerator, masterManager));
+        bindAnalysisTo(AnalysisType.LIFECYCLE, new DefaultLifecycleAnalysisFactory<T>());
+        bindAnalysisTo(AnalysisType.PIVOT, new DefaultPivotAnalysisFactory<T>(entityFactory, criteriaGenerator, masterManager));
+        bindAnalysisTo(AnalysisType.SENTINEL, new SentinelChartAnalysisFactory<T>(entityFactory, criteriaGenerator, masterManager));
     }
 
     /**
      * Specifies the entity centre factory.
-     *
+     * 
      * @param entityCentreFactory
      */
-    public EntityCentreFactoryBinder<T> bindEntityCentreTo(final IEntityCentreFactory<T> entityCentreFactory){
-	if(entityCentreFactory == null){
-	    throw new NullPointerException("Entity centre fctory can not be null!");
-	}
-	this.entityCentreFactory = entityCentreFactory;
-	return this;
+    public EntityCentreFactoryBinder<T> bindEntityCentreTo(final IEntityCentreFactory<T> entityCentreFactory) {
+        if (entityCentreFactory == null) {
+            throw new NullPointerException("Entity centre fctory can not be null!");
+        }
+        this.entityCentreFactory = entityCentreFactory;
+        return this;
     }
 
     /**
      * Returns the entity centre factory. If the entity centre factory wasn't specified
-     *
+     * 
      * @return
      */
-    public IEntityCentreFactory<T> getEntityCentreFactory(){
-	return entityCentreFactory;
+    public IEntityCentreFactory<T> getEntityCentreFactory() {
+        return entityCentreFactory;
     }
 
     /**
      * Binds analysis type to the specified {@link IAnalysisFactory} instance.
-     *
+     * 
      * @param analysisType
      * @param analysisFactory
      * @return
      */
-    public EntityCentreFactoryBinder<T> bindAnalysisTo(final AnalysisType analysisType, final IAnalysisFactory<T, ?> analysisFactory){
-	if(analysisFactory == null){
-	    throw new NullPointerException("The analysis factory can not be null!");
-	}
-	analysisFactoryMap.put(analysisType, analysisFactory);
-	return this;
+    public EntityCentreFactoryBinder<T> bindAnalysisTo(final AnalysisType analysisType, final IAnalysisFactory<T, ?> analysisFactory) {
+        if (analysisFactory == null) {
+            throw new NullPointerException("The analysis factory can not be null!");
+        }
+        analysisFactoryMap.put(analysisType, analysisFactory);
+        return this;
     }
 
     /**
-     * Binds the default analysis to the specified {@link IAnalysisFactory} instance.
-     * (Default analysis - it's an analysis that will be open when the one opens entity centre. Also this analysis can not be closed or removed.)
-     *
+     * Binds the default analysis to the specified {@link IAnalysisFactory} instance. (Default analysis - it's an analysis that will be open when the one opens entity centre. Also
+     * this analysis can not be closed or removed.)
+     * 
      * @param analysisFactory
      * @return
      */
-    public EntityCentreFactoryBinder<T> bindDefaultAnalysisTo(final IAnalysisFactory<T, ?> analysisFactory){
-	bindAnalysisTo(null, analysisFactory);
-	return this;
+    public EntityCentreFactoryBinder<T> bindDefaultAnalysisTo(final IAnalysisFactory<T, ?> analysisFactory) {
+        bindAnalysisTo(null, analysisFactory);
+        return this;
     }
 
     /**
      * Returns the {@link IAnalysisFactory} instance associated with specified analysis type.
-     *
+     * 
      * @param analysisType
      * @return
      */
-    public IAnalysisFactory<T, ?> getAnalysisFactoryFor(final AnalysisType analysisType){
-	return analysisFactoryMap.get(analysisType);
+    public IAnalysisFactory<T, ?> getAnalysisFactoryFor(final AnalysisType analysisType) {
+        return analysisFactoryMap.get(analysisType);
     }
 
     /**
-     * Returns the default analysis factory.
-     * (Default analysis - it's an analysis that will be open when the one opens entity centre. Also this analysis can not be closed or removed.)
-     *
+     * Returns the default analysis factory. (Default analysis - it's an analysis that will be open when the one opens entity centre. Also this analysis can not be closed or
+     * removed.)
+     * 
      * @return
      */
-    public IAnalysisFactory<T, ?> getDefaultAnalysisFactory(){
-	return getAnalysisFactoryFor(null);
+    public IAnalysisFactory<T, ?> getDefaultAnalysisFactory() {
+        return getAnalysisFactoryFor(null);
     }
 
     @Override
     public AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManager, ?> createAnalysis(//
-	    final AnalysisType analysisType, //
-	    final String name, //
-	    final Map<Object, DetailsFrame> detailsCache,//
-	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
-	    final BlockingIndefiniteProgressLayer progressLayer) {
-	return getAnalysisFactoryFor(analysisType).createAnalysis(owner, criteria, name, detailsCache, progressLayer);
+    final AnalysisType analysisType, //
+            final String name, //
+            final Map<Object, DetailsFrame> detailsCache,//
+            final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+            final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        return getAnalysisFactoryFor(analysisType).createAnalysis(owner, criteria, name, detailsCache, progressLayer);
     }
 
     @Override
     public CentreConfigurationView<T, ?> createEntityCentre(//
-	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType, //
-		    final String name, //
-		    final BlockingIndefiniteProgressLayer progressLayer) {
-	return getEntityCentreFactory().createEntityCentre(//
-		menuItemType, //
-		name, //
-		this, //
-		gdtm, entityFactory, masterManager, criteriaGenerator,//
-		progressLayer);
+    final Class<? extends MiWithConfigurationSupport<T>> menuItemType, //
+            final String name, //
+            final BlockingIndefiniteProgressLayer progressLayer) {
+        return getEntityCentreFactory().createEntityCentre(//
+        menuItemType, //
+        name, //
+        this, //
+        gdtm, entityFactory, masterManager, criteriaGenerator,//
+        progressLayer);
     }
 
     @Override
     public boolean isSupported(final AnalysisType analysisType) {
-	return analysisFactoryMap.containsKey(analysisType);
+        return analysisFactoryMap.containsKey(analysisType);
     }
 }

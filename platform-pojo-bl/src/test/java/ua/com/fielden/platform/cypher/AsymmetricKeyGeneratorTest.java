@@ -23,29 +23,29 @@ public class AsymmetricKeyGeneratorTest {
      */
     @Test
     public void test_that_public_and_private_key_restorations_work_correctly() {
-	AsymmetricKeyGenerator gen = null;
-	try {
-	    gen = new AsymmetricKeyGenerator(1024);
-	} catch (final NoSuchAlgorithmException e) {
-	    fail("AsymmetricKeyGenerator failed to be created");
-	}
+        AsymmetricKeyGenerator gen = null;
+        try {
+            gen = new AsymmetricKeyGenerator(1024);
+        } catch (final NoSuchAlgorithmException e) {
+            fail("AsymmetricKeyGenerator failed to be created");
+        }
 
-	try {
-	    final PrivateKey privateKey = AsymmetricKeyGenerator.restorePrivateKey(gen.getStrPrivateKey());
-	    assertEquals("Private key was not restored correctly.", gen.getStrPrivateKey(), HexString.bufferToHex(privateKey.getEncoded()));
-	} catch (final NoSuchAlgorithmException e) {
-	    fail("AsymmetricKeyGenerator.restorePrivateKey did not recognise the algorithm.");
-	} catch (final InvalidKeySpecException e) {
-	    fail("AsymmetricKeyGenerator.restorePrivateKey did not recognise the key spec.");
-	}
+        try {
+            final PrivateKey privateKey = AsymmetricKeyGenerator.restorePrivateKey(gen.getStrPrivateKey());
+            assertEquals("Private key was not restored correctly.", gen.getStrPrivateKey(), HexString.bufferToHex(privateKey.getEncoded()));
+        } catch (final NoSuchAlgorithmException e) {
+            fail("AsymmetricKeyGenerator.restorePrivateKey did not recognise the algorithm.");
+        } catch (final InvalidKeySpecException e) {
+            fail("AsymmetricKeyGenerator.restorePrivateKey did not recognise the key spec.");
+        }
 
-	try {
-	    final PublicKey publicKey = AsymmetricKeyGenerator.restorePublicKey(gen.getStrPublicKey());
-	    assertEquals("Public key was not restored correctly.", gen.getStrPublicKey(), HexString.bufferToHex(publicKey.getEncoded()));
-	} catch (final NoSuchAlgorithmException e) {
-	    fail("AsymmetricKeyGenerator.restorePublicKey did not recognise the algorithm.");
-	} catch (final InvalidKeySpecException e) {
-	    fail("AsymmetricKeyGenerator.restorePublicKey did not recognise the key spec.");
-	}
+        try {
+            final PublicKey publicKey = AsymmetricKeyGenerator.restorePublicKey(gen.getStrPublicKey());
+            assertEquals("Public key was not restored correctly.", gen.getStrPublicKey(), HexString.bufferToHex(publicKey.getEncoded()));
+        } catch (final NoSuchAlgorithmException e) {
+            fail("AsymmetricKeyGenerator.restorePublicKey did not recognise the algorithm.");
+        } catch (final InvalidKeySpecException e) {
+            fail("AsymmetricKeyGenerator.restorePublicKey did not recognise the key spec.");
+        }
     }
 }

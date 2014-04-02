@@ -15,8 +15,8 @@ public interface ILink {
     /**
      * This method should provide link's behaviour where it is important to know what is being changed (e.g. which node is being dragged).
      * 
-     * @param activeNode --
-     *                node that is being modified
+     * @param activeNode
+     *            -- node that is being modified
      */
     void reset(PNode activeNode, PDimension delta, Set<PNode> processedNodes);
 

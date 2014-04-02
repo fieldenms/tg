@@ -42,7 +42,7 @@ public class EmptyDateFormatter1 extends DateFormatter1 {
      * Constructs an EmptyDateFormatter that converts {@code null} to the empty string and vice versa.
      */
     public EmptyDateFormatter1() {
-	this((Date) null);
+        this((Date) null);
     }
 
     /**
@@ -52,7 +52,7 @@ public class EmptyDateFormatter1 extends DateFormatter1 {
      *            Format used to dictate legal values
      */
     public EmptyDateFormatter1(final DateFormat format) {
-	this(format, null);
+        this(format, null);
     }
 
     /**
@@ -62,7 +62,7 @@ public class EmptyDateFormatter1 extends DateFormatter1 {
      *            the representation of the empty string
      */
     public EmptyDateFormatter1(final Date emptyValue) {
-	this.emptyValue = emptyValue == null ? null : new Date(emptyValue.getTime());
+        this.emptyValue = emptyValue == null ? null : new Date(emptyValue.getTime());
     }
 
     /**
@@ -74,8 +74,8 @@ public class EmptyDateFormatter1 extends DateFormatter1 {
      *            the representation of the empty string
      */
     public EmptyDateFormatter1(final DateFormat format, final Date emptyValue) {
-	super(format);
-	this.emptyValue = emptyValue == null ? null : new Date(emptyValue.getTime());
+        super(format);
+        this.emptyValue = emptyValue == null ? null : new Date(emptyValue.getTime());
     }
 
     // Overriding Superclass Behavior *****************************************
@@ -94,7 +94,7 @@ public class EmptyDateFormatter1 extends DateFormatter1 {
      */
     @Override
     public Object stringToValue(final String text) throws ParseException {
-	return BindingUtils.isBlank(text) ? emptyValue : super.stringToValue(text);
+        return BindingUtils.isBlank(text) ? emptyValue : super.stringToValue(text);
     }
 
     /**
@@ -111,7 +111,7 @@ public class EmptyDateFormatter1 extends DateFormatter1 {
      */
     @Override
     public String valueToString(final Object value) throws ParseException {
-	return BindingUtils.equals(value, emptyValue) ? "" : super.valueToString(value);
+        return BindingUtils.equals(value, emptyValue) ? "" : super.valueToString(value);
     }
 
 }

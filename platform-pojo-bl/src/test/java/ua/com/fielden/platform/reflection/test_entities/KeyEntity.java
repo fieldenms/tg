@@ -20,11 +20,11 @@ public class KeyEntity extends AbstractEntity<String> {
     private SimpleEntity simpleEntity;
 
     public SimpleEntity getSimpleEntity() {
-	return simpleEntity;
+        return simpleEntity;
     }
 
     @Observable
     public void setSimpleEntity(final SimpleEntity simpleEntity) {
-	this.simpleEntity = simpleEntity;
+        this.simpleEntity = simpleEntity;
     }
 }

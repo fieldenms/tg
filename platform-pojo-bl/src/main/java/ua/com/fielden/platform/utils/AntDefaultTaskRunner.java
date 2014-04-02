@@ -21,27 +21,27 @@ public class AntDefaultTaskRunner {
     }
 
     public static void run(final String antScriptFileName) {
-	final File buildFile = new File(antScriptFileName);
-	final Project p = new Project();
-	p.setUserProperty("ant.file", buildFile.getAbsolutePath());
-	p.setProperty("name", "TG Fleet");
+        final File buildFile = new File(antScriptFileName);
+        final Project p = new Project();
+        p.setUserProperty("ant.file", buildFile.getAbsolutePath());
+        p.setProperty("name", "TG Fleet");
 
-	final DefaultLogger consoleLogger = new DefaultLogger();
-	consoleLogger.setErrorPrintStream(System.err);
-	consoleLogger.setOutputPrintStream(System.out);
-	consoleLogger.setMessageOutputLevel(Project.MSG_INFO);
-	p.addBuildListener(consoleLogger);
+        final DefaultLogger consoleLogger = new DefaultLogger();
+        consoleLogger.setErrorPrintStream(System.err);
+        consoleLogger.setOutputPrintStream(System.out);
+        consoleLogger.setMessageOutputLevel(Project.MSG_INFO);
+        p.addBuildListener(consoleLogger);
 
-	try {
-	    p.fireBuildStarted();
-	    p.init();
-	    final ProjectHelper helper = ProjectHelper.getProjectHelper();
-	    p.addReference("ant.projectHelper", helper);
-	    helper.parse(p, buildFile);
-	    p.executeTarget(p.getDefaultTarget());
-	    p.fireBuildFinished(null);
-	} catch (final BuildException e) {
-	    p.fireBuildFinished(e);
-	}
+        try {
+            p.fireBuildStarted();
+            p.init();
+            final ProjectHelper helper = ProjectHelper.getProjectHelper();
+            p.addReference("ant.projectHelper", helper);
+            helper.parse(p, buildFile);
+            p.executeTarget(p.getDefaultTarget());
+            p.fireBuildFinished(null);
+        } catch (final BuildException e) {
+            p.fireBuildFinished(e);
+        }
     }
 }

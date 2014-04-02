@@ -12,7 +12,7 @@ public class NoAuthorisation extends AbstractAuthorisationModel {
 
     @Override
     public Result authorise(final Class<? extends ISecurityToken> token) {
-	return new Result(token, "no authorisation required");
+        return new Result(token, "no authorisation required");
     }
 
 }

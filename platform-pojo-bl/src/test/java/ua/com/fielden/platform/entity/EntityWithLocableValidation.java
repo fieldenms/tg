@@ -13,9 +13,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity with arbitrarily long validation process, which makes its instance locked as long as desired.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
@@ -37,50 +37,49 @@ public class EntityWithLocableValidation extends AbstractEntity<String> {
     @IsProperty
     private Money money;
 
-
     public Integer getFirstProperty() {
-	return firstProperty;
+        return firstProperty;
     }
 
     @NotNull
     @Observable
     public EntityWithLocableValidation setFirstProperty(final Integer property) {
-	this.firstProperty = property;
-	return this;
+        this.firstProperty = property;
+        return this;
     }
 
     public Double getObservableProperty() {
-	return observableProperty;
+        return observableProperty;
     }
 
     @Observable
     public EntityWithLocableValidation setObservableProperty(final Double observableProperty) {
-	this.observableProperty = observableProperty;
-	return this;
+        this.observableProperty = observableProperty;
+        return this;
     }
 
     public Money getMoney() {
-	return money;
+        return money;
     }
 
     @Observable
     public void setMoney(final Money money) {
-	this.money = money;
+        this.money = money;
     }
 
     @Override
     protected Result validate() {
-	while (lockEntityValidation) {
+        while (lockEntityValidation) {
             try {
-		Thread.sleep(10);
-	    } catch (final InterruptedException e) {
-	    }
+                Thread.sleep(10);
+            } catch (final InterruptedException e) {
+            }
         }
 
         return Result.successful(this);
     }
 
-     public boolean isLockEntityValidation() {
+    public boolean isLockEntityValidation() {
         return lockEntityValidation;
     }
 

@@ -13,9 +13,9 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Entity that represents the association between {@link User} and {@link UserRole} entities.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("USER_ROLE_ASSOCIATION")
@@ -38,38 +38,38 @@ public class UserAndRoleAssociation extends AbstractEntity<DynamicEntityKey> {
      * Hibernate constructor
      */
     protected UserAndRoleAssociation() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     /**
      * Custom constructor
-     *
+     * 
      * @param user
      * @param userRole
      */
     public UserAndRoleAssociation(final User user, final UserRole userRole) {
-	setUser(user);
-	setUserRole(userRole);
-	setKey(new DynamicEntityKey(this));
+        setUser(user);
+        setUserRole(userRole);
+        setKey(new DynamicEntityKey(this));
     }
 
     public User getUser() {
-	return user;
+        return user;
     }
 
     public UserRole getUserRole() {
-	return userRole;
+        return userRole;
     }
 
     @Observable
     public UserAndRoleAssociation setUser(final User user) {
-	this.user = user;
-	return this;
+        this.user = user;
+        return this;
     }
 
     @Observable
     public UserAndRoleAssociation setUserRole(final UserRole userRole) {
-	this.userRole = userRole;
-	return this;
+        this.userRole = userRole;
+        return this;
     }
 }

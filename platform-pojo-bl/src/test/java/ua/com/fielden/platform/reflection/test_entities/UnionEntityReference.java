@@ -18,21 +18,21 @@ public class UnionEntityReference extends AbstractUnionEntity {
     private SecondReferencedClass secondReference;
 
     public FirstReferencedClass getFirstReference() {
-	return firstReference;
+        return firstReference;
     }
 
     @Observable
     public void setFirstReference(final FirstReferencedClass firstReference) {
-	this.firstReference = firstReference;
+        this.firstReference = firstReference;
     }
 
     public SecondReferencedClass getSecondReference() {
-	return secondReference;
+        return secondReference;
     }
 
     @Observable
     public void setSecondReference(final SecondReferencedClass secondReference) {
-	this.secondReference = secondReference;
+        this.secondReference = secondReference;
     }
 
 }

@@ -12,7 +12,7 @@ public class TgPublishedYearly_AuthorValidator implements IBeforeChangeEventHand
 
     @Override
     public Result handle(final MetaProperty property, final TgAuthor newValue, final TgAuthor oldValue, final Set<Annotation> mutatorAnnotations) {
-	System.out.println("              IT WORKS!!!");
-	return Result.successful(newValue);
+        System.out.println("              IT WORKS!!!");
+        return Result.successful(newValue);
     }
 }

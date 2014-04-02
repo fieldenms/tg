@@ -28,18 +28,18 @@ public class Checksum {
      * @throws Exception
      */
     public static Pair<String, Long> sha1(final InputStream is) throws Exception {
-	final MessageDigest md = MessageDigest.getInstance("SHA1");
-	final byte[] dataBytes = new byte[1024];
-	int nread = 0;
-	long size = 0;
-	while ((nread = is.read(dataBytes)) != -1) {
-	    md.update(dataBytes, 0, nread);
-	    size += nread;
-	}
+        final MessageDigest md = MessageDigest.getInstance("SHA1");
+        final byte[] dataBytes = new byte[1024];
+        int nread = 0;
+        long size = 0;
+        while ((nread = is.read(dataBytes)) != -1) {
+            md.update(dataBytes, 0, nread);
+            size += nread;
+        }
 
-	final byte[] mdbytes = md.digest();
+        final byte[] mdbytes = md.digest();
 
-	return new Pair<String, Long>(HexString.bufferToHex(mdbytes, 0, mdbytes.length), size);
+        return new Pair<String, Long>(HexString.bufferToHex(mdbytes, 0, mdbytes.length), size);
     }
 
     /**
@@ -50,10 +50,10 @@ public class Checksum {
      * @throws Exception
      */
     public static String sha1(final byte[] dataBytes) throws Exception {
-	final MessageDigest md = MessageDigest.getInstance("SHA1");
-	md.update(dataBytes);
-	final byte[] mdbytes = md.digest();
-	return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
+        final MessageDigest md = MessageDigest.getInstance("SHA1");
+        md.update(dataBytes);
+        final byte[] mdbytes = md.digest();
+        return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
     }
 
     /**
@@ -65,22 +65,22 @@ public class Checksum {
      * @throws Exception
      */
     public static Map<String, Pair<String, Long>> sha1(final File fileOrDirectory) throws Exception {
-	if (!fileOrDirectory.exists()) {
-	    throw new IllegalArgumentException("File or directory should exist.");
-	}
+        if (!fileOrDirectory.exists()) {
+            throw new IllegalArgumentException("File or directory should exist.");
+        }
 
-	final Map<String, Pair<String, Long>> result = new HashMap<String, Pair<String, Long>>();
-	if (fileOrDirectory.isDirectory()) {
-	    for (final File file : fileOrDirectory.listFiles()) {
-		if (file.isFile()) {
-		    result.put(file.getName(), Checksum.sha1(new FileInputStream(file)));
-		}
-	    }
-	} else {
-	    result.put(fileOrDirectory.getName(), Checksum.sha1(new FileInputStream(fileOrDirectory)));
-	}
+        final Map<String, Pair<String, Long>> result = new HashMap<String, Pair<String, Long>>();
+        if (fileOrDirectory.isDirectory()) {
+            for (final File file : fileOrDirectory.listFiles()) {
+                if (file.isFile()) {
+                    result.put(file.getName(), Checksum.sha1(new FileInputStream(file)));
+                }
+            }
+        } else {
+            result.put(fileOrDirectory.getName(), Checksum.sha1(new FileInputStream(fileOrDirectory)));
+        }
 
-	return result;
+        return result;
     }
 
     /**
@@ -91,12 +91,12 @@ public class Checksum {
      * @throws Exception
      */
     public static String sha1(final String value) throws Exception {
-	final MessageDigest md = MessageDigest.getInstance("SHA1");
-	final byte[] data = value.getBytes();
-	md.update(data, 0, data.length);
+        final MessageDigest md = MessageDigest.getInstance("SHA1");
+        final byte[] data = value.getBytes();
+        md.update(data, 0, data.length);
 
-	final byte[] mdbytes = md.digest();
+        final byte[] mdbytes = md.digest();
 
-	return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
+        return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
     }
 }

@@ -21,36 +21,36 @@ public class ExpressionBuilderFrame extends PFrame {
     @Override
     @SuppressWarnings("unchecked")
     public void initialize() {
-	super.initialize();
-	// rendering settings
-	getCanvas().setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-	getCanvas().setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-	getCanvas().setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        super.initialize();
+        // rendering settings
+        getCanvas().setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        getCanvas().setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        getCanvas().setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 
-	getCanvas().getLayer().setPickable(false);
-	getCanvas().getLayer().setChildrenPickable(true);
+        getCanvas().getLayer().setPickable(false);
+        getCanvas().getLayer().setChildrenPickable(true);
 
-	final PLayer nodeLayer = getCanvas().getLayer();
-	final PLayer linkLayer = nodeLayer;
-	// need to initialize global objects, which can (and are) be referenced from different part of an application
-	GlobalObjects.canvas = getCanvas();
-	GlobalObjects.nodeLayer = linkLayer;
-	GlobalObjects.linkLayer = linkLayer;
-	GlobalObjects.frame = this;
+        final PLayer nodeLayer = getCanvas().getLayer();
+        final PLayer linkLayer = nodeLayer;
+        // need to initialize global objects, which can (and are) be referenced from different part of an application
+        GlobalObjects.canvas = getCanvas();
+        GlobalObjects.nodeLayer = linkLayer;
+        GlobalObjects.linkLayer = linkLayer;
+        GlobalObjects.frame = this;
 
-	final PDragEventHandler handler = new DragEventHandler(nodeLayer);
-	nodeLayer.addInputEventListener(handler);
+        final PDragEventHandler handler = new DragEventHandler(nodeLayer);
+        nodeLayer.addInputEventListener(handler);
 
-	// expression builder
-	final OperatorPanelNode opContainer = new OperatorPanelNode();
-	opContainer.translate(5, 5);
-	nodeLayer.addChild(opContainer);
+        // expression builder
+        final OperatorPanelNode opContainer = new OperatorPanelNode();
+        opContainer.translate(5, 5);
+        nodeLayer.addChild(opContainer);
     }
 
     public static void main(final String[] args) {
-	final PFrame frame = new ExpressionBuilderFrame();
-	frame.setTitle("UDS Designer: Components");
-	frame.setSize(800, 600);
-	frame.setVisible(true);
+        final PFrame frame = new ExpressionBuilderFrame();
+        frame.setTitle("UDS Designer: Components");
+        frame.setSize(800, 600);
+        frame.setVisible(true);
     }
 }

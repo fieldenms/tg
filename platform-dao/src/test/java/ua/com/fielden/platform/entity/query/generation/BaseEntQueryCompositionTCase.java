@@ -35,46 +35,46 @@ public class BaseEntQueryCompositionTCase extends BaseEntQueryTCase {
     protected final static ArithmeticalOperator _sub = ArithmeticalOperator.SUB;
 
     protected static GroupedConditions group(final boolean negation, final ICondition firstCondition, final CompoundCondition... otherConditions) {
-	return new GroupedConditions(negation, firstCondition, Arrays.asList(otherConditions));
+        return new GroupedConditions(negation, firstCondition, Arrays.asList(otherConditions));
     }
 
     protected static CompoundCondition compound(final LogicalOperator operator, final ICondition condition) {
-	return new CompoundCondition(operator, condition);
+        return new CompoundCondition(operator, condition);
     }
 
     protected static void assertModelsEquals(final Conditions exp, final Conditions act) {
-	assertEquals(("Condition models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+        assertEquals(("Condition models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
     }
 
     protected static void assertModelsEquals(final Yields exp, final Yields act) {
-	assertEquals(("Yields models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+        assertEquals(("Yields models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
     }
 
     protected static void assertModelsEquals(final Sources exp, final Sources act) {
-	assertEquals(("Sources models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+        assertEquals(("Sources models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
     }
 
     protected static void assertModelsEquals(final GroupBys exp, final GroupBys act) {
-	assertEquals(("Groups models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+        assertEquals(("Groups models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
     }
 
     protected static Conditions conditions(final ICompoundCondition0 condition) {
-	return entResultQry(condition.model()).getConditions();
+        return entResultQry(condition.model()).getConditions();
     }
 
     protected static Conditions conditions(final ICompoundCondition0 condition, final Map<String, Object> paramValues) {
-	return entResultQry(condition.model(), paramValues).getConditions();
+        return entResultQry(condition.model(), paramValues).getConditions();
     }
 
     protected static Conditions conditions(final ICondition firstCondition, final CompoundCondition... otherConditions) {
-	return new Conditions(firstCondition, Arrays.asList(otherConditions));
+        return new Conditions(firstCondition, Arrays.asList(otherConditions));
     }
 
-    protected static Expression expression(final ISingleOperand first, final CompoundSingleOperand ... others) {
-	return new Expression(first, Arrays.asList(others));
+    protected static Expression expression(final ISingleOperand first, final CompoundSingleOperand... others) {
+        return new Expression(first, Arrays.asList(others));
     }
 
     protected static CompoundSingleOperand compound(final ArithmeticalOperator operator, final ISingleOperand operand) {
-	return new CompoundSingleOperand(operand, operator);
+        return new CompoundSingleOperand(operand, operator);
     }
 }

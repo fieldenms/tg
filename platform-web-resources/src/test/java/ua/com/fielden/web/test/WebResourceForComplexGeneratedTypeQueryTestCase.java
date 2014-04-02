@@ -42,9 +42,9 @@ import com.google.inject.Module;
 
 /**
  * Provides a unit test to ensure correct operation of EQL with generated types.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class WebResourceForComplexGeneratedTypeQueryTestCase extends WebBasedTestCase {
     private final IGeneratedEntityController rao = new GeneratedEntityRao(config.restClientUtil());
@@ -56,9 +56,9 @@ public class WebResourceForComplexGeneratedTypeQueryTestCase extends WebBasedTes
 
     private final ISerialiser serialiser = new TgKryo(factory, new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class }));
     private final Set<Class<?>> rootTypes = new HashSet<Class<?>>() {
-	{
-	    add(InspectedEntity.class);
-	}
+        {
+            add(InspectedEntity.class);
+        }
     };
     private IDomainTreeManagerAndEnhancer dtm;
     private List<byte[]> binaryTypes;
@@ -66,65 +66,65 @@ public class WebResourceForComplexGeneratedTypeQueryTestCase extends WebBasedTes
 
     @Override
     protected String[] getDataSetPaths() {
-	return new String[] { "src/test/resources/data-files/query-for-generated-type-web-resource-test-case.flat.xml" };
+        return new String[] { "src/test/resources/data-files/query-for-generated-type-web-resource-test-case.flat.xml" };
     }
 
     @Override
     public synchronized Restlet getInboundRoot() {
-	final Router router = new Router(getContext());
+        final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
-	helper.register(router, IInspectedEntityDao.class);
-	helper.registerAggregates(router);
-	helper.registerGeneratedTypeResources(router);
+        final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
+        helper.register(router, IInspectedEntityDao.class);
+        helper.registerAggregates(router);
+        helper.registerGeneratedTypeResources(router);
 
-	return router;
+        return router;
     }
 
     @Override
     public void setUp() {
-	super.setUp();
+        super.setUp();
 
-	dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
-	// secondLevelLocalCalculatedProperty
-	dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "entityPropertyOne", "intProperty * 2", "Calculated property", "desc", NO_ATTR, "intProperty");
-	dtm.getEnhancer().apply();
-	final List<ByteArray> byteListOfTypes = dtm.getEnhancer().getManagedTypeArrays(InspectedEntity.class);
-	binaryTypes = toByteArray(byteListOfTypes);
-	type = (Class<? extends AbstractEntity<?>>) dtm.getEnhancer().getManagedType(InspectedEntity.class);
-	rao.setEntityType(type);
+        dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
+        // secondLevelLocalCalculatedProperty
+        dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "entityPropertyOne", "intProperty * 2", "Calculated property", "desc", NO_ATTR, "intProperty");
+        dtm.getEnhancer().apply();
+        final List<ByteArray> byteListOfTypes = dtm.getEnhancer().getManagedTypeArrays(InspectedEntity.class);
+        binaryTypes = toByteArray(byteListOfTypes);
+        type = (Class<? extends AbstractEntity<?>>) dtm.getEnhancer().getManagedType(InspectedEntity.class);
+        rao.setEntityType(type);
 
     }
 
     private List<byte[]> toByteArray(final List<ByteArray> list) {
-	final List<byte[]> byteArray = new ArrayList<byte[]>(list.size());
-	for (final ByteArray array : list) {
-	    byteArray.add(array.getArray());
-	}
-	return byteArray;
+        final List<byte[]> byteArray = new ArrayList<byte[]>(list.size());
+        for (final ByteArray array : list) {
+            byteArray.add(array.getArray());
+        }
+        return byteArray;
     }
 
     @Test
     @Ignore
     public void test_query_with_condition_on_one_level_deep_calcualted_property() {
-	final EntityResultQueryModel model = select(type).where().prop("entityPropertyOne.calculatedProperty").eq().val(20).model();
-	final IPage firstPage = rao.firstPage(from(model).model(), 15, binaryTypes);
+        final EntityResultQueryModel model = select(type).where().prop("entityPropertyOne.calculatedProperty").eq().val(20).model();
+        final IPage firstPage = rao.firstPage(from(model).model(), 15, binaryTypes);
 
-	assertEquals("Incorrect value of returned items.", 1, firstPage.data().size());
-	final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);
-	assertNull("Property should not have been fetched.", instance.get("entityPropertyOne"));
+        assertEquals("Incorrect value of returned items.", 1, firstPage.data().size());
+        final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);
+        assertNull("Property should not have been fetched.", instance.get("entityPropertyOne"));
     }
 
     @Test
     @Ignore
     public void test_query_with_fetch_model_with_one_level_deep_calcualted_property() {
-	final Class<? extends AbstractEntity<?>> propertyType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(type, "entityPropertyOne");
+        final Class<? extends AbstractEntity<?>> propertyType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(type, "entityPropertyOne");
 
-	final EntityResultQueryModel model1 = select(propertyType).where().prop("id").eq().val(2).model();
-	rao.setEntityType(propertyType);
-	final IPage firstPage1 = rao.firstPage(from(model1).model(), 15, binaryTypes); //
-	final AbstractEntity instance1 = (AbstractEntity) firstPage1.data().get(0);
-	assertEquals("Incorrect value.", 20, instance1.get("calculatedProperty"));
+        final EntityResultQueryModel model1 = select(propertyType).where().prop("id").eq().val(2).model();
+        rao.setEntityType(propertyType);
+        final IPage firstPage1 = rao.firstPage(from(model1).model(), 15, binaryTypes); //
+        final AbstractEntity instance1 = (AbstractEntity) firstPage1.data().get(0);
+        assertEquals("Incorrect value.", 20, instance1.get("calculatedProperty"));
     }
 
 }

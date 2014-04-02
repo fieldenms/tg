@@ -7,9 +7,9 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisMod
 
 /**
  * {@link IAnalysisQueryCustomiser} that always returns the same given instance of {@link IReportQueryGenerator}.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  * @param <CDTME>
  */
@@ -19,16 +19,16 @@ public class PlainQueryCustomiser<T extends AbstractEntity<?>, CDTME extends ICe
 
     /**
      * Creates {@link PlainQueryCustomiser} with specified {@link IReportQueryGenerator}
-     *
+     * 
      * @param queryGenerator
      */
-    public PlainQueryCustomiser(final IReportQueryGenerator<T> queryGenerator){
-	this.queryGenerator = queryGenerator;
+    public PlainQueryCustomiser(final IReportQueryGenerator<T> queryGenerator) {
+        this.queryGenerator = queryGenerator;
     }
 
     @Override
     public IReportQueryGenerator<T> getQueryGenerator(final GridAnalysisModel<T, CDTME> analysisModel) {
-	return queryGenerator;
+        return queryGenerator;
     }
 
 }

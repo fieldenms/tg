@@ -8,9 +8,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This interface is just a wrapper for {@link IDomainTreeRepresentation} with accessor to mutable "included properties".
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IDomainTreeRepresentationWithMutability extends IDomainTreeRepresentation {
     /**
@@ -18,7 +18,7 @@ public interface IDomainTreeRepresentationWithMutability extends IDomainTreeRepr
      * <p>
      * These properties are fully lazy. If some "root" has not been used -- it will not be loaded. This partly initialised stuff could be even persisted. After deserialisation lazy
      * mechanism can simply load missing stuff well.
-     *
+     * 
      * @param root
      * @return
      */
@@ -29,7 +29,7 @@ public interface IDomainTreeRepresentationWithMutability extends IDomainTreeRepr
      * <p>
      * These properties are fully lazy. If some "root" has not been used -- it will not be loaded. This partly initialised stuff could be even persisted. After deserialisation lazy
      * mechanism can simply load missing stuff well.
-     *
+     * 
      * @param root
      * @return
      */

@@ -14,59 +14,59 @@ public class DayTokenAutomataTest {
 
     @Test
     public void test_full_recognition_of_correct_sequences() throws NoTransitionAvailable, SequenceRecognitionFailed {
-	assertEquals("Incorrect recognition result", "DAY", automata.recognisePartiallyFromStart("DAY(", 0));
-	assertEquals("Incorrect recognition result", "DAY", automata.recognisePartiallyFromStart("   DaY (", 0));
-	assertEquals("Incorrect recognition result", "DAY", automata.recognisePartiallyFromStart("\t\ndAy\t(", 0));
+        assertEquals("Incorrect recognition result", "DAY", automata.recognisePartiallyFromStart("DAY(", 0));
+        assertEquals("Incorrect recognition result", "DAY", automata.recognisePartiallyFromStart("   DaY (", 0));
+        assertEquals("Incorrect recognition result", "DAY", automata.recognisePartiallyFromStart("\t\ndAy\t(", 0));
     }
 
     @Test
     public void test_recognition_of_partially_correct_sequences() throws NoTransitionAvailable, SequenceRecognitionFailed {
-	assertEquals("Incorrect recognition result", "DAY", automata.recognisePartiallyFromStart(" day ( property )", 0));
-	assertEquals("Incorrect recognition result", "DAY", automata.recognisePartiallyFromStart("\tDAY\t (\"", 0));
+        assertEquals("Incorrect recognition result", "DAY", automata.recognisePartiallyFromStart(" day ( property )", 0));
+        assertEquals("Incorrect recognition result", "DAY", automata.recognisePartiallyFromStart("\tDAY\t (\"", 0));
     }
 
     @Test
     public void test_recognition_of_incorrect_sequences() {
-	try {
-	    automata.recognisePartiallyFromStart("", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("+DAY(", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("DAY_(", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("DA Y(", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("D AY(", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("DAY  ", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("DAY  d(", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
-	try {
-	    automata.recognisePartiallyFromStart("DAY)", 0);
-	    fail("Should have failed");
-	} catch (final SequenceRecognitionFailed e) {
-	}
+        try {
+            automata.recognisePartiallyFromStart("", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("+DAY(", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("DAY_(", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("DA Y(", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("D AY(", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("DAY  ", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("DAY  d(", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
+            automata.recognisePartiallyFromStart("DAY)", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
     }
 
 }

@@ -67,12 +67,11 @@ public class MigrationHistory extends AbstractEntity<DynamicEntityKey> {
     @Title("Finished")
     private Date finished;
 
-
     /**
      * Constructor for the entity factory from TG.
      */
     protected MigrationHistory() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     public Integer getRetrievedCount() {
@@ -123,42 +122,52 @@ public class MigrationHistory extends AbstractEntity<DynamicEntityKey> {
     public void setRetrievedCount(final Integer retrievedCount) {
         this.retrievedCount = retrievedCount;
     }
+
     @Observable
     public void setInsertedCount(final Integer insertedCount) {
         this.insertedCount = insertedCount;
     }
+
     @Observable
     public void setEntityTypeName(final String entityTypeName) {
         this.entityTypeName = entityTypeName;
     }
+
     @Observable
     public void setUpdatedCount(final Integer updatedCount) {
         this.updatedCount = updatedCount;
     }
+
     @Observable
     public void setMigrationRun(final MigrationRun migrationRun) {
         this.migrationRun = migrationRun;
     }
+
     @Observable
     public void setRetrieverTypeName(final String retrieverTypeName) {
         this.retrieverTypeName = retrieverTypeName;
     }
+
     @Observable
     public void setFailedCount(final Integer failedCount) {
         this.failedCount = failedCount;
     }
+
     @Observable
     public void setStarted(final Date started) {
         this.started = started;
     }
+
     @Observable
     public void setFinished(final Date finished) {
         this.finished = finished;
     }
+
     @Observable
     public void setThreadName(final String threadName) {
         this.threadName = threadName;
     }
+
     @Observable
     public void setSkippedCount(final Integer skippedCount) {
         this.skippedCount = skippedCount;
@@ -166,33 +175,33 @@ public class MigrationHistory extends AbstractEntity<DynamicEntityKey> {
 
     @Override
     public String toString() {
-	final StringBuffer sb = new StringBuffer();
-	sb.append(getRetrieverTypeName());
-	sb.append(":\n   entityType = ");
-	sb.append(getEntityTypeName());
-	sb.append(":\n   duration = ");
-	sb.append(getFinished() != null && getStarted() != null ? getDurationFromMilliseconds(getFinished().getTime() - getStarted().getTime()) : " ?");
-	sb.append(":\n   retrieved = ");
-	sb.append(retrievedCount);
-	sb.append(" inserted = ");
-	sb.append(insertedCount);
-	sb.append(" updated = ");
-	sb.append(updatedCount);
-	sb.append(" failed = ");
-	sb.append(failedCount);
-	return sb.toString();
+        final StringBuffer sb = new StringBuffer();
+        sb.append(getRetrieverTypeName());
+        sb.append(":\n   entityType = ");
+        sb.append(getEntityTypeName());
+        sb.append(":\n   duration = ");
+        sb.append(getFinished() != null && getStarted() != null ? getDurationFromMilliseconds(getFinished().getTime() - getStarted().getTime()) : " ?");
+        sb.append(":\n   retrieved = ");
+        sb.append(retrievedCount);
+        sb.append(" inserted = ");
+        sb.append(insertedCount);
+        sb.append(" updated = ");
+        sb.append(updatedCount);
+        sb.append(" failed = ");
+        sb.append(failedCount);
+        return sb.toString();
     }
 
     String getDurationFromMilliseconds(final Long durationInMilliseconds) {
-	final Long millisecsInSecond = 1000l;
-	final Long millisecsInMinute = 60 * millisecsInSecond;
-	final Long millisecsInHour = 60 * millisecsInMinute;
+        final Long millisecsInSecond = 1000l;
+        final Long millisecsInMinute = 60 * millisecsInSecond;
+        final Long millisecsInHour = 60 * millisecsInMinute;
 
-	final Long hours = durationInMilliseconds / millisecsInHour;
-	final Long minutes = (durationInMilliseconds - (hours * millisecsInHour)) / millisecsInMinute;
-	final Long seconds = (durationInMilliseconds - (hours * millisecsInHour) - (minutes * millisecsInMinute)) / millisecsInSecond;
-	final Long mseconds = durationInMilliseconds - hours * millisecsInHour - minutes * millisecsInMinute - seconds * millisecsInSecond;
+        final Long hours = durationInMilliseconds / millisecsInHour;
+        final Long minutes = (durationInMilliseconds - (hours * millisecsInHour)) / millisecsInMinute;
+        final Long seconds = (durationInMilliseconds - (hours * millisecsInHour) - (minutes * millisecsInMinute)) / millisecsInSecond;
+        final Long mseconds = durationInMilliseconds - hours * millisecsInHour - minutes * millisecsInMinute - seconds * millisecsInSecond;
 
-	return hours + " h " + minutes + " m " + seconds + " s " + mseconds + " ms";
+        return hours + " h " + minutes + " m " + seconds + " s " + mseconds + " ms";
     }
 }

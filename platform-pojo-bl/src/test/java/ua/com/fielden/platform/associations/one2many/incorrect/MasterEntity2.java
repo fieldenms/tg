@@ -12,9 +12,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing assocaitons.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key")
@@ -28,11 +28,11 @@ public class MasterEntity2 extends AbstractEntity<String> {
 
     @Observable
     public MasterEntity2 setOne2manyAssociationCollectional(final List<DetailsEntity2> one2manyAssociationCollectional) {
-	this.one2manyAssociationCollectional = one2manyAssociationCollectional;
-	return this;
+        this.one2manyAssociationCollectional = one2manyAssociationCollectional;
+        return this;
     }
 
     public List<DetailsEntity2> getOne2manyAssociationCollectional() {
-	return one2manyAssociationCollectional;
+        return one2manyAssociationCollectional;
     }
 }

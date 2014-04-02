@@ -18,25 +18,25 @@ public class AutocompleterUiWithEntityLocator<T extends AbstractEntity<?>> exten
     private final EntityLocatorDialog<T, ?> entityLocatorDialog;
 
     public AutocompleterUiWithEntityLocator(final EntityLocatorDialog<T, ?> entityLocatorDialog,//
-	    final AutocompleterTextFieldLayerWithEntityLocator<T> layer, //
-	    final String caption) {
-	super(layer, caption);
-	this.entityLocatorDialog = entityLocatorDialog;
+            final AutocompleterTextFieldLayerWithEntityLocator<T> layer, //
+            final String caption) {
+        super(layer, caption);
+        this.entityLocatorDialog = entityLocatorDialog;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public AutocompleterTextFieldLayerWithEntityLocator<T> getLayer() {
-	return (AutocompleterTextFieldLayerWithEntityLocator<T>) super.getLayer();
+        return (AutocompleterTextFieldLayerWithEntityLocator<T>) super.getLayer();
     }
 
     @Override
     protected void processMouseEvent(final MouseEvent event, final JXLayer<JTextField> layer) {
-	if (event.getID() == MouseEvent.MOUSE_CLICKED && (event.getModifiers() & InputEvent.CTRL_MASK) != 0) {
-	    getState().ctrlAction(this);
-	} else {
-	    super.processMouseEvent(event, layer);
-	}
+        if (event.getID() == MouseEvent.MOUSE_CLICKED && (event.getModifiers() & InputEvent.CTRL_MASK) != 0) {
+            getState().ctrlAction(this);
+        } else {
+            super.processMouseEvent(event, layer);
+        }
     }
 
     /**
@@ -45,6 +45,6 @@ public class AutocompleterUiWithEntityLocator<T extends AbstractEntity<?>> exten
      * @return
      */
     public EntityLocatorDialog<T, ?> getEntityLocatorDialog() {
-	return entityLocatorDialog;
+        return entityLocatorDialog;
     }
 }

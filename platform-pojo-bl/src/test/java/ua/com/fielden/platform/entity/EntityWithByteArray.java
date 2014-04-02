@@ -12,9 +12,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
  * Entity class used for testing byte array property behaviour.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
@@ -35,7 +35,5 @@ public class EntityWithByteArray extends AbstractEntity<String> {
     public void setByteArray(final byte[] byteArray) {
         this.byteArray = byteArray;
     }
-
-
 
 }

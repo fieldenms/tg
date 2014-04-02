@@ -22,9 +22,9 @@ import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 
 /**
  * A common base entity for GPS message used for GPS GIS systems server and UI logic.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityTitle(value = "GPS повідомлення", desc = "Повідомлення з GPS модуля")
 @KeyTitle(value = "GPS повідомлення", desc = "Повідомлення з GPS модуля")
@@ -93,7 +93,8 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     private boolean gpsPower;
 
     @IsProperty
-    @MapTo("distance_") // TODO
+    @MapTo("distance_")
+    // TODO
     @Readonly
     @Required
     @Title(value = "Відстань", desc = "Відстань в метрах, яку було пройдено машиною з моменту отримання попереднього повідомлення.")
@@ -113,144 +114,141 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
 
     @Observable
     public AbstractAvlMessage setStatus(final Integer status) {
-	this.status = status;
-	return this;
+        this.status = status;
+        return this;
     }
 
     public Integer getStatus() {
-	return status;
+        return status;
     }
 
     @Observable
     public AbstractAvlMessage setPacketReceived(final Date packetReceived) {
-	this.packetReceived = packetReceived;
-	return this;
+        this.packetReceived = packetReceived;
+        return this;
     }
 
     public Date getPacketReceived() {
-	return packetReceived;
+        return packetReceived;
     }
 
     @Observable
     public AbstractAvlMessage setTravelledDistance(final BigDecimal travelledDistance) {
-	this.travelledDistance = travelledDistance;
-	return this;
+        this.travelledDistance = travelledDistance;
+        return this;
     }
 
     public BigDecimal getTravelledDistance() {
-	return travelledDistance;
+        return travelledDistance;
     }
 
     @Observable
     public AbstractAvlMessage setGpsPower(final boolean gpsPower) {
-	this.gpsPower = gpsPower;
-	return this;
+        this.gpsPower = gpsPower;
+        return this;
     }
 
     public boolean getGpsPower() {
-	return gpsPower;
+        return gpsPower;
     }
 
     @Observable
     public AbstractAvlMessage setBatteryVoltage(final BigDecimal batteryVoltage) {
-	this.batteryVoltage = batteryVoltage;
-	return this;
+        this.batteryVoltage = batteryVoltage;
+        return this;
     }
 
     public BigDecimal getBatteryVoltage() {
-	return batteryVoltage;
+        return batteryVoltage;
     }
 
     @Observable
     public AbstractAvlMessage setPowerSupplyVoltage(final BigDecimal powerSupplyVoltage) {
-	this.powerSupplyVoltage = powerSupplyVoltage;
-	return this;
+        this.powerSupplyVoltage = powerSupplyVoltage;
+        return this;
     }
 
     public BigDecimal getPowerSupplyVoltage() {
-	return powerSupplyVoltage;
+        return powerSupplyVoltage;
     }
 
     @Observable
     public AbstractAvlMessage setDin1(final boolean din1) {
-	this.din1 = din1;
-	return this;
+        this.din1 = din1;
+        return this;
     }
 
     public boolean getDin1() {
-	return din1;
+        return din1;
     }
 
     @Observable
     public AbstractAvlMessage setVisibleSattelites(final Integer visibleSattelites) {
-	this.visibleSattelites = visibleSattelites;
-	return this;
+        this.visibleSattelites = visibleSattelites;
+        return this;
     }
 
     public Integer getVisibleSattelites() {
-	return visibleSattelites;
+        return visibleSattelites;
     }
-
 
     @Observable
     public AbstractAvlMessage setAltitude(final Integer altitude) {
-	this.altitude = altitude;
-	return this;
+        this.altitude = altitude;
+        return this;
     }
 
     public Integer getAltitude() {
-	return altitude;
+        return altitude;
     }
-
 
     @Observable
     public AbstractAvlMessage setVectorSpeed(final Integer vectorSpeed) {
-	this.vectorSpeed = vectorSpeed;
-	return this;
+        this.vectorSpeed = vectorSpeed;
+        return this;
     }
 
     public Integer getVectorSpeed() {
-	return vectorSpeed;
+        return vectorSpeed;
     }
-
 
     @Observable
     public AbstractAvlMessage setVectorAngle(final Integer vectorAngle) {
-	this.vectorAngle = vectorAngle;
-	return this;
+        this.vectorAngle = vectorAngle;
+        return this;
     }
 
     public Integer getVectorAngle() {
-	return vectorAngle;
+        return vectorAngle;
     }
 
     @Observable
     public AbstractAvlMessage setGpsTime(final Date gpsTime) {
-	this.gpsTime = gpsTime;
-	return this;
+        this.gpsTime = gpsTime;
+        return this;
     }
 
     public Date getGpsTime() {
-	return gpsTime;
+        return gpsTime;
     }
 
     @Observable
     public AbstractAvlMessage setY(final BigDecimal y) {
-	this.y = y;
-	return this;
+        this.y = y;
+        return this;
     }
 
     public BigDecimal getY() {
-	return y;
+        return y;
     }
 
     @Observable
     public AbstractAvlMessage setX(final BigDecimal x) {
-	this.x = x;
-	return this;
+        this.x = x;
+        return this;
     }
 
     public BigDecimal getX() {
-	return x;
+        return x;
     }
 }

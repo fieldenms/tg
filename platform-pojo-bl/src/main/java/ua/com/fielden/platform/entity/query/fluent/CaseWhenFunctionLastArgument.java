@@ -10,17 +10,17 @@ final class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> extend
     T parent;
 
     CaseWhenFunctionLastArgument(final Tokens queryTokens, final T parent) {
-	super(queryTokens);
-	this.parent = parent;
+        super(queryTokens);
+        this.parent = parent;
     }
 
     @Override
     IExprOperand0<ICaseWhenFunctionEnd<T>, ET> getParent2() {
-	return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(getTokens(), new CaseWhenFunctionEnd<T>(getTokens(), parent));
+        return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(getTokens(), new CaseWhenFunctionEnd<T>(getTokens(), parent));
     }
 
     @Override
     ICaseWhenFunctionWhen<T, ET> getParent() {
-	return new CaseWhenFunctionWhen<T, ET>(getTokens(), parent);
+        return new CaseWhenFunctionWhen<T, ET>(getTokens(), parent);
     }
 }

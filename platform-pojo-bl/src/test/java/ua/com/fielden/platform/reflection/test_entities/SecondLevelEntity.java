@@ -27,45 +27,45 @@ public class SecondLevelEntity extends FirstLevelEntity {
     private Reference<SecondLevelEntity> dummyReferenceProperty;
 
     public SecondLevelEntity() {
-	super(null, null, "");
-	setKey(new DynamicEntityKey(this));
+        super(null, null, "");
+        setKey(new DynamicEntityKey(this));
     }
 
     public Long getAnotherProperty() {
-	return anotherProperty;
+        return anotherProperty;
     }
 
     @Observable
     public void setAnotherProperty(final Long anotherProperty) {
-	this.anotherProperty = anotherProperty;
+        this.anotherProperty = anotherProperty;
     }
 
     public SecondLevelEntity getPropertyOfSelfType() {
-	return propertyOfSelfType;
+        return propertyOfSelfType;
     }
 
     @Observable
     public void setPropertyOfSelfType(final SecondLevelEntity itself) {
-	this.propertyOfSelfType = itself;
+        this.propertyOfSelfType = itself;
     }
 
     public Reference<SecondLevelEntity> getDummyReferenceProperty() {
-	return dummyReferenceProperty;
+        return dummyReferenceProperty;
     }
 
     @Observable
     public void setListProperty(final Reference<SecondLevelEntity> dummyReferenceProperty) {
-	this.dummyReferenceProperty = dummyReferenceProperty;
+        this.dummyReferenceProperty = dummyReferenceProperty;
     }
 
     public boolean methodSecondLevel() {
-	return true;
+        return true;
     }
 
     @Override
     @Observable
     public void setProperty(final String property) {
-	super.setProperty(property);
+        super.setProperty(property);
     }
 
 }

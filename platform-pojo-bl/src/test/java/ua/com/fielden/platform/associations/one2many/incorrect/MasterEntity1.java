@@ -11,9 +11,9 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing assocaitons.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key")
@@ -21,17 +21,18 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 public class MasterEntity1 extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty // missing value()
+    @IsProperty
+    // missing value()
     @MapTo
     private PropertyDescriptor<DetailsEntity1> propertyDescriptorProperty;
 
     @Observable
     public MasterEntity1 setPropertyDescriptorProperty(final PropertyDescriptor<DetailsEntity1> propertyDescriptorProperty) {
-	this.propertyDescriptorProperty = propertyDescriptorProperty;
-	return this;
+        this.propertyDescriptorProperty = propertyDescriptorProperty;
+        return this;
     }
 
     public PropertyDescriptor<DetailsEntity1> getPropertyDescriptorProperty() {
-	return propertyDescriptorProperty;
+        return propertyDescriptorProperty;
     }
 }

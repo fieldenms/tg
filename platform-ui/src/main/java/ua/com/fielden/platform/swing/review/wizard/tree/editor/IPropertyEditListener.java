@@ -6,7 +6,7 @@ import java.util.EventListener;
  * {@link EventListener} that listens the start/finish edit events.
  * 
  * @author TG Team
- *
+ * 
  */
 public interface IPropertyEditListener extends EventListener {
 

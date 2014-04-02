@@ -12,9 +12,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
  * Represents a wagon business entity.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Wagon No", desc = "Wagon number")
@@ -40,82 +40,83 @@ public class Wagon extends Equipment<String> {
 
     /**
      * The main constructor.
-     *
+     * 
      * @param number
      * @param desc
      */
     public Wagon(final String number, final String desc) {
-	super(null, number, desc);
+        super(null, number, desc);
     }
 
     public String getSerialNo() {
-	return serialNo;
+        return serialNo;
     }
 
     @Observable
     public void setSerialNo(final String serialNo) {
-	this.serialNo = serialNo;
+        this.serialNo = serialNo;
     }
 
     public WagonClass getWagonClass() {
-	return wagonClass;
+        return wagonClass;
     }
 
     @Observable
     public void setWagonClass(final WagonClass wagonClass) {
-	this.wagonClass = wagonClass;
+        this.wagonClass = wagonClass;
     }
 
     public List<WagonSlot> getSlots() {
-	return slots;
+        return slots;
     }
 
     @Observable
     protected void setSlots(final List<WagonSlot> slots) {
-	this.slots = slots;
+        this.slots = slots;
     }
 
     /**
      * Gets slot by slot position.
+     * 
      * @param slotPosition
      * @return
      * @throws Exception
      */
     public WagonSlot getSlot(final Integer slotPosition) {
-	System.out.println("slotPosition = " + slotPosition + " slots.size() = " + slots.size());
-	if (slotPosition > 0 && slotPosition <= slots.size()) {
-	    return slots.get(slotPosition - 1);
-	} else {
-	    throw new RuntimeException("Invalid slot position.");
-	}
+        System.out.println("slotPosition = " + slotPosition + " slots.size() = " + slots.size());
+        if (slotPosition > 0 && slotPosition <= slots.size()) {
+            return slots.get(slotPosition - 1);
+        } else {
+            throw new RuntimeException("Invalid slot position.");
+        }
     }
 
     /**
      * Tests compatibility of the given bogie with this wagon.
-     *
+     * 
      * @param rotable
      * @return
      */
     public boolean isClassCompatible(final Bogie rotable) {
-	return getWagonClass().isBogieClassCompatible(rotable.getRotableClass());
+        return getWagonClass().isBogieClassCompatible(rotable.getRotableClass());
     };
 
     public Bogie getBogieInSlotPosition(final Integer slotPosition) {
-	return getSlot(slotPosition).getBogie();
+        return getSlot(slotPosition).getBogie();
     }
 
     public void defitBogie(final Bogie bogie) {
-	for (final WagonSlot wagonSlot : slots) {
-	    if (wagonSlot.getBogie() != null && wagonSlot.getBogie().equals(bogie)) {
-		wagonSlot.setBogie(null);
-		break;
-	    }
-	}
+        for (final WagonSlot wagonSlot : slots) {
+            if (wagonSlot.getBogie() != null && wagonSlot.getBogie().equals(bogie)) {
+                wagonSlot.setBogie(null);
+                break;
+            }
+        }
     }
 
-//    @Override
-//    public String toString() {
-//        // TODO Auto-generated method stub
-//        return super.toString() + " --:-- " + slots.get(0).getBogie();
-//    }
+    //    @Override
+    //    public String toString() {
+    //        // TODO Auto-generated method stub
+    //        return super.toString() + " --:-- " + slots.get(0).getBogie();
+    //    }
 }

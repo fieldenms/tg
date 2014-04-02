@@ -8,11 +8,11 @@ import ua.com.fielden.platform.entity.query.generation.elements.CountDateInterva
 public class CountDateIntervalBuilder extends ThreeArgumentsFunctionBuilder {
 
     protected CountDateIntervalBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-	super(parent, queryBuilder, paramValues);
+        super(parent, queryBuilder, paramValues);
     }
 
     @Override
     Object getModel() {
-	return new CountDateInterval((DateIntervalUnit) firstValue(), getModelForSingleOperand(secondCat(), secondValue()), getModelForSingleOperand(thirdCat(), thirdValue()), getDbVersion());
+        return new CountDateInterval((DateIntervalUnit) firstValue(), getModelForSingleOperand(secondCat(), secondValue()), getModelForSingleOperand(thirdCat(), thirdValue()), getDbVersion());
     }
 }

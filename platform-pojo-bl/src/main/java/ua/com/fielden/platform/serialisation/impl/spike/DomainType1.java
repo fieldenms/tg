@@ -29,47 +29,47 @@ public class DomainType1 extends AbstractEntity<String> {
     }
 
     public Money getMoney() {
-	return money;
+        return money;
     }
 
     @Observable
     public void setMoney(final Money money) {
-	this.money = money;
+        this.money = money;
     }
 
     public BigDecimal getBigDecimal() {
-	return bigDecimal;
+        return bigDecimal;
     }
 
     @Observable
     public void setBigDecimal(final BigDecimal bigDecimal) {
-	this.bigDecimal = bigDecimal;
+        this.bigDecimal = bigDecimal;
     }
 
     public Integer getInteger() {
-	return integer;
+        return integer;
     }
 
     @Observable
     public void setInteger(final Integer integer) {
-	this.integer = integer;
+        this.integer = integer;
     }
 
     public Date getDate() {
-	return date;
+        return date;
     }
 
     @Observable
     public void setDate(final Date date) {
-	this.date = date;
+        this.date = date;
     }
 
     public DomainType1 getItself() {
-	return itself;
+        return itself;
     }
 
     @Observable
     public void setItself(final DomainType1 itself) {
-	this.itself = itself;
+        this.itself = itself;
     }
 }

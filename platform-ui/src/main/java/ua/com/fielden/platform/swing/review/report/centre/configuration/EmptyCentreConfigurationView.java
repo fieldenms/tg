@@ -9,11 +9,11 @@ public class EmptyCentreConfigurationView<T extends AbstractEntity<?>> extends C
     private static final long serialVersionUID = -2270752656663420832L;
 
     public EmptyCentreConfigurationView(final CentreConfigurationWithoutCriteriaModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, progressLayer);
+        super(model, progressLayer);
     }
 
     @Override
     protected EmptyEntityCentre<T> createConfigurableView() {
-	return new EmptyEntityCentre<>(getModel().createEntityCentreModel(), this);
+        return new EmptyEntityCentre<>(getModel().createEntityCentreModel(), this);
     }
 }

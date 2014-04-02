@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
  * The entity that collects data for batch save.
- *
+ * 
  * @author TG Team
- *
+ * 
  * @param <T>
  */
 public abstract class AbstractBatchAction<T extends AbstractEntity<?>> extends AbstractEntity<T> {
@@ -33,115 +33,115 @@ public abstract class AbstractBatchAction<T extends AbstractEntity<?>> extends A
 
     /**
      * Set the dirty persistent entities to update.
-     *
+     * 
      * @param updateEntities
      * @return
      */
     @Observable
     public AbstractBatchAction<T> setUpdateEntities(final Set<T> updateEntities) {
-	this.updateEntities.clear();
-	this.updateEntities.addAll(updateEntities);
-	return this;
+        this.updateEntities.clear();
+        this.updateEntities.addAll(updateEntities);
+        return this;
     }
 
     /**
      * Returns the set of dirty persistent entities. These entities must be saved.
-     *
+     * 
      * @return
      */
     public Set<T> getUpdateEntities() {
-	return Collections.unmodifiableSet(updateEntities);
+        return Collections.unmodifiableSet(updateEntities);
     }
 
     /**
      * Set the entities those must be removed.
-     *
+     * 
      * @param removeEntities
      * @return
      */
     @Observable
     public AbstractBatchAction<T> setRemoveEntities(final Set<T> removeEntities) {
-	this.removeEntities.clear();
-	this.removeEntities.addAll(removeEntities);
-	return this;
+        this.removeEntities.clear();
+        this.removeEntities.addAll(removeEntities);
+        return this;
     }
 
     /**
      * Adds new entity that must be removed.
-     *
+     * 
      * @param entity
      * @return
      */
     @Observable
     public AbstractBatchAction<T> addToRemoveEntities(final T entity) {
-	this.removeEntities.add(entity);
-	return this;
+        this.removeEntities.add(entity);
+        return this;
     }
 
     /**
      * Removes the entity from the set of remove entities.
-     *
+     * 
      * @param entity
      * @return
      */
     @Observable
     public AbstractBatchAction<T> removeFromRemoveEntities(final T entity) {
-	this.removeEntities.remove(entity);
-	return this;
+        this.removeEntities.remove(entity);
+        return this;
     }
 
     /**
      * Returns the set of entities those must be removed.
-     *
+     * 
      * @return
      */
     public Set<T> getRemoveEntities() {
-	return Collections.unmodifiableSet(removeEntities);
+        return Collections.unmodifiableSet(removeEntities);
     }
 
     /**
      * Set entities that must be created and saved.
-     *
+     * 
      * @param saveEntities
      * @return
      */
     @Observable
     public AbstractBatchAction<T> setSaveEntities(final Set<T> saveEntities) {
-	this.saveEntities.clear();
-	this.saveEntities.addAll(saveEntities);
-	return this;
+        this.saveEntities.clear();
+        this.saveEntities.addAll(saveEntities);
+        return this;
     }
 
     /**
      * Adds new entity that must be saved.
-     *
+     * 
      * @param entity
      * @return
      */
     @Observable
     public AbstractBatchAction<T> addToSaveEntities(final T entity) {
-	this.saveEntities.add(entity);
-	return this;
+        this.saveEntities.add(entity);
+        return this;
     }
 
     /**
      * Removes the specified entity from remove set.
-     *
+     * 
      * @param entity
      * @return
      */
     @Observable
     public AbstractBatchAction<T> removeFromSaveEntities(final T entity) {
-	this.saveEntities.remove(entity);
-	return this;
+        this.saveEntities.remove(entity);
+        return this;
     }
 
     /**
      * Returns the save entities list.
-     *
+     * 
      * @return
      */
     public Set<T> getSaveEntities() {
-	return Collections.unmodifiableSet(saveEntities);
+        return Collections.unmodifiableSet(saveEntities);
     }
 }

@@ -14,13 +14,13 @@ public class ConditionGenerator {
     private final DomainMetadataAnalyser domainMetadataAnalyser;
 
     public ConditionGenerator(final DomainMetadata domainMetadata) {
-	super();
-	this.domainMetadataAnalyser = new DomainMetadataAnalyser(domainMetadata);
+        super();
+        this.domainMetadataAnalyser = new DomainMetadataAnalyser(domainMetadata);
     }
 
     /**
      * Genereates subquery with nested subqueries for given dot.notated property of given type with final query model containing filtering condition.
-     *
+     * 
      * @param entityType
      * @param propString
      * @param mainTypeAlias
@@ -28,11 +28,11 @@ public class ConditionGenerator {
      * @return
      */
     public <T extends AbstractEntity<?>> EntityResultQueryModel generateSubquery(final Class<T> entityType, final String propString, final String mainTypeAlias, final QueryModel finalModel) {
-	final Pair<String, String> firstPropAndItsSubprop = EntityUtils.splitPropByFirstDot(propString);
-	final PropertyMetadata info = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(entityType, firstPropAndItsSubprop.getKey());
-	final String bindingPropName = (mainTypeAlias == null ? "" : mainTypeAlias + ".") + firstPropAndItsSubprop.getKey();
-	final Class<? extends AbstractEntity<?>> propType = info.getJavaType();
-	final QueryModel subQuery = firstPropAndItsSubprop.getValue() == null ? finalModel : generateSubquery(propType, firstPropAndItsSubprop.getValue(), null, finalModel);
-	return select(propType).where().prop("id").eq().extProp(bindingPropName).and().exists(subQuery).model();
+        final Pair<String, String> firstPropAndItsSubprop = EntityUtils.splitPropByFirstDot(propString);
+        final PropertyMetadata info = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(entityType, firstPropAndItsSubprop.getKey());
+        final String bindingPropName = (mainTypeAlias == null ? "" : mainTypeAlias + ".") + firstPropAndItsSubprop.getKey();
+        final Class<? extends AbstractEntity<?>> propType = info.getJavaType();
+        final QueryModel subQuery = firstPropAndItsSubprop.getValue() == null ? finalModel : generateSubquery(propType, firstPropAndItsSubprop.getValue(), null, finalModel);
+        return select(propType).where().prop("id").eq().extProp(bindingPropName).and().exists(subQuery).model();
     }
 }

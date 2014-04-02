@@ -15,9 +15,9 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Entity designed to emulate deadlocks.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 public class DeadEntity extends AbstractEntity<String> {
@@ -37,7 +37,7 @@ public class DeadEntity extends AbstractEntity<String> {
     private Integer odometerReading = 20;
 
     @IsProperty
-    @Dependent({"actualFinish", "odometerReading"})
+    @Dependent({ "actualFinish", "odometerReading" })
     private Date actualStart;
 
     @IsProperty
@@ -67,32 +67,32 @@ public class DeadEntity extends AbstractEntity<String> {
     @NotNull
     @DomainValidation
     public void setVehicle(final String vehicle) {
-	this.vehicle = vehicle;
-	System.out.println("vehicle := " + vehicle);
+        this.vehicle = vehicle;
+        System.out.println("vehicle := " + vehicle);
     }
 
     @Observable
     @NotNull
     @DomainValidation
     public DeadEntity setOdometerReading(final Integer odometerReading) {
-	this.odometerReading = odometerReading;
-	System.out.println("odometerReading := " + odometerReading);
-	return this;
+        this.odometerReading = odometerReading;
+        System.out.println("odometerReading := " + odometerReading);
+        return this;
     }
 
     @Observable
     @DomainValidation
     @LeProperty("actualFinish")
     public void setActualStart(final Date actualStart) throws Result {
-	this.actualStart = actualStart;
-	System.out.println("actualStart := " + actualStart);
+        this.actualStart = actualStart;
+        System.out.println("actualStart := " + actualStart);
     }
 
     @Observable
     @GeProperty("actualStart")
     public void setActualFinish(final Date actualFinish) throws Result {
-	this.actualFinish = actualFinish;
-	System.out.println("actualFinish := " + actualFinish);
+        this.actualFinish = actualFinish;
+        System.out.println("actualFinish := " + actualFinish);
     }
 
 }

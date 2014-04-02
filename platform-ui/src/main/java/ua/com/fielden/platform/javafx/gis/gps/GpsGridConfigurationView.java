@@ -10,16 +10,16 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 /**
  * {@link GridConfigurationView} for Message main details.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public abstract class GpsGridConfigurationView<T extends AbstractEntity<?>> extends GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> {
     private static final long serialVersionUID = 1507085016131840748L;
 
     public GpsGridConfigurationView(final GpsGridConfigurationModel<T> model, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, final BlockingIndefiniteProgressLayer progressLayer, final IToolbarCustomiser<GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer>> toolbarCustomiser) {
-	//TODO the details customiser might be set for this type of analysis.
-	super(model, owner, toolbarCustomiser, null, progressLayer);
+        //TODO the details customiser might be set for this type of analysis.
+        super(model, owner, toolbarCustomiser, null, progressLayer);
     }
 
     @Override
@@ -27,6 +27,6 @@ public abstract class GpsGridConfigurationView<T extends AbstractEntity<?>> exte
 
     @Override
     public GpsGridConfigurationModel<T> getModel() {
-	return (GpsGridConfigurationModel<T>) super.getModel();
+        return (GpsGridConfigurationModel<T>) super.getModel();
     }
 }

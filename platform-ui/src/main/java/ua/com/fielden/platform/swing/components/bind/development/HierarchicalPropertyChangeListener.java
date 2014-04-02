@@ -39,10 +39,10 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @param validationResultsChangeListener
      */
     private HierarchicalPropertyChangeListener(final IBindingEntity entity, final List<String> propertyNames, final PropertyChangeListener propertyChangeListener, final PropertyChangeListener validationResultsChangeListener) {
-	this.entity = entity;
-	this.propertyNames = propertyNames;
-	this.propertyChangeListener = propertyChangeListener;
-	this.validationResultsChangeListener = validationResultsChangeListener;
+        this.entity = entity;
+        this.propertyNames = propertyNames;
+        this.propertyChangeListener = propertyChangeListener;
+        this.validationResultsChangeListener = validationResultsChangeListener;
     }
 
     /**
@@ -52,7 +52,7 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @return
      */
     private HierarchicalPropertyChangeListener getNextListener() {
-	return nextListener;
+        return nextListener;
     }
 
     /**
@@ -62,7 +62,7 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @param nextListener
      */
     private void setNextListener(final HierarchicalPropertyChangeListener nextListener) {
-	this.nextListener = nextListener;
+        this.nextListener = nextListener;
     }
 
     /**
@@ -71,7 +71,7 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @return
      */
     private IBindingEntity getEntity() {
-	return entity;
+        return entity;
     }
 
     /**
@@ -80,7 +80,7 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @return
      */
     private List<String> getPropertyNames() {
-	return propertyNames;
+        return propertyNames;
     }
 
     /**
@@ -89,7 +89,7 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @return
      */
     private PropertyChangeListener getPropertyChangeListener() {
-	return propertyChangeListener;
+        return propertyChangeListener;
     }
 
     /**
@@ -99,58 +99,58 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @return
      */
     private PropertyChangeListener getValidationResultsChangeListener() {
-	return validationResultsChangeListener;
+        return validationResultsChangeListener;
     }
 
     @Override
     public void propertyChange(final PropertyChangeEvent evt) {
-	if (evt.getOldValue() != null && getNextListener() != null) {
-	    // if old hierarchy existed (was not null, and this is not the last property in hierarchy)
-	    // then detaching listeners from old hierarchy
-	    getNextListener().removeFromHierarchy();
-	    nextListener = null;
-	}
-	if (evt.getNewValue() != null && getPropertyNames().size() > 1) {
-	    // if new hierarchy exists (is not null), and this is not the last property in hierarchy)
-	    // then attaching listeners to new hierarchy
-	    final AbstractEntity<?> newEntity = (AbstractEntity<?>) evt.getNewValue();
-	    nextListener = addListenersToHierarchy(newEntity, removeFromHead(getPropertyNames()), getPropertyChangeListener(), getValidationResultsChangeListener());
-	}
+        if (evt.getOldValue() != null && getNextListener() != null) {
+            // if old hierarchy existed (was not null, and this is not the last property in hierarchy)
+            // then detaching listeners from old hierarchy
+            getNextListener().removeFromHierarchy();
+            nextListener = null;
+        }
+        if (evt.getNewValue() != null && getPropertyNames().size() > 1) {
+            // if new hierarchy exists (is not null), and this is not the last property in hierarchy)
+            // then attaching listeners to new hierarchy
+            final AbstractEntity<?> newEntity = (AbstractEntity<?>) evt.getNewValue();
+            nextListener = addListenersToHierarchy(newEntity, removeFromHead(getPropertyNames()), getPropertyChangeListener(), getValidationResultsChangeListener());
+        }
 
-	if (getPropertyChangeListener() != null) {
-	    // if there is some property-change listener associated with this listener
-	    // then we should get old and new values and fire PropertyChangeEvent on it
-	    Object oldBottomValue, newBottomValue;
-	    if (getPropertyNames().size() == 1) {
-		// if this is the last property in hierarchy, then
-		oldBottomValue = evt.getOldValue();
-		newBottomValue = evt.getNewValue();
-	    } else {
-		// getting dot-notated property string
-		String dotNotatedPropertyName = "";
-		for (int i = 1; i < getPropertyNames().size(); i++) {
-		    dotNotatedPropertyName += getPropertyNames().get(i) + ".";
-		}
-		dotNotatedPropertyName = dotNotatedPropertyName.substring(0, dotNotatedPropertyName.length() - 1);
+        if (getPropertyChangeListener() != null) {
+            // if there is some property-change listener associated with this listener
+            // then we should get old and new values and fire PropertyChangeEvent on it
+            Object oldBottomValue, newBottomValue;
+            if (getPropertyNames().size() == 1) {
+                // if this is the last property in hierarchy, then
+                oldBottomValue = evt.getOldValue();
+                newBottomValue = evt.getNewValue();
+            } else {
+                // getting dot-notated property string
+                String dotNotatedPropertyName = "";
+                for (int i = 1; i < getPropertyNames().size(); i++) {
+                    dotNotatedPropertyName += getPropertyNames().get(i) + ".";
+                }
+                dotNotatedPropertyName = dotNotatedPropertyName.substring(0, dotNotatedPropertyName.length() - 1);
 
-		oldBottomValue = evt.getOldValue() == null ? null : ((AbstractEntity<?>) evt.getOldValue()).get(dotNotatedPropertyName);
-		newBottomValue = evt.getNewValue() == null ? null : ((AbstractEntity<?>) evt.getNewValue()).get(dotNotatedPropertyName);
-	    }
-	    getPropertyChangeListener().propertyChange(new PropertyChangeEvent(evt.getSource(), evt.getPropertyName(), oldBottomValue, newBottomValue));
-	}
+                oldBottomValue = evt.getOldValue() == null ? null : ((AbstractEntity<?>) evt.getOldValue()).get(dotNotatedPropertyName);
+                newBottomValue = evt.getNewValue() == null ? null : ((AbstractEntity<?>) evt.getNewValue()).get(dotNotatedPropertyName);
+            }
+            getPropertyChangeListener().propertyChange(new PropertyChangeEvent(evt.getSource(), evt.getPropertyName(), oldBottomValue, newBottomValue));
+        }
     }
 
     /**
      * Recursively removes this listener and following listeners from entities they were added to. Also removes all validation results change listeners.
      */
     private void removeFromHierarchy() {
-	getEntity().removePropertyChangeListener(getPropertyNames().get(0), this);
-	if (getValidationResultsChangeListener() != null && getEntity().getProperty(getPropertyNames().get(0)) != null) {
-	    getEntity().getProperty(getPropertyNames().get(0)).removeValidationResultsChangeListener(validationResultsChangeListener);
-	}
-	if (getNextListener() != null) {
-	    getNextListener().removeFromHierarchy();
-	}
+        getEntity().removePropertyChangeListener(getPropertyNames().get(0), this);
+        if (getValidationResultsChangeListener() != null && getEntity().getProperty(getPropertyNames().get(0)) != null) {
+            getEntity().getProperty(getPropertyNames().get(0)).removeValidationResultsChangeListener(validationResultsChangeListener);
+        }
+        if (getNextListener() != null) {
+            getNextListener().removeFromHierarchy();
+        }
     }
 
     /**
@@ -168,7 +168,7 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @return
      */
     public static HierarchicalPropertyChangeListener addListenersToPropertyHierarchy(final IBindingEntity entity, final String dotNotation, final PropertyChangeListener propertyChangeListener, final PropertyChangeListener validationResultsChangeListener) {
-	return addListenersToHierarchy(entity, Arrays.asList(dotNotation.split("\\.")), propertyChangeListener, validationResultsChangeListener);
+        return addListenersToHierarchy(entity, Arrays.asList(dotNotation.split("\\.")), propertyChangeListener, validationResultsChangeListener);
     }
 
     /**
@@ -179,7 +179,7 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @return
      */
     public static HierarchicalPropertyChangeListener addPropertyListenerToPropertyHierarchy(final IBindingEntity entity, final String dotNotation, final PropertyChangeListener propertyChangeListener) {
-	return addListenersToHierarchy(entity, Arrays.asList(dotNotation.split("\\.")), propertyChangeListener, null);
+        return addListenersToHierarchy(entity, Arrays.asList(dotNotation.split("\\.")), propertyChangeListener, null);
     }
 
     /**
@@ -190,7 +190,7 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @return
      */
     public static HierarchicalPropertyChangeListener addValidationListenerToPropertyHierarchy(final IBindingEntity entity, final String dotNotation, final PropertyChangeListener validationResultsChangeListener) {
-	return addListenersToHierarchy(entity, Arrays.asList(dotNotation.split("\\.")), null, validationResultsChangeListener);
+        return addListenersToHierarchy(entity, Arrays.asList(dotNotation.split("\\.")), null, validationResultsChangeListener);
     }
 
     /**
@@ -202,35 +202,35 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @return
      */
     private static HierarchicalPropertyChangeListener addListenersToHierarchy(final IBindingEntity entity, final List<String> propertyNames, final PropertyChangeListener propertyChangeListener, final PropertyChangeListener validationResultsChangeListener) {
-	IBindingEntity nextEntity = entity;
-	HierarchicalPropertyChangeListener previousListener = null, topListener = null;
-	// iterating over property names, creating listeners and adding them to hierarchy
-	for (int i = 0; i < propertyNames.size(); i++) {
-	    if (nextEntity != null) {
-		// getting list of property names to correctly initialize HierarchicalPropertyChangeListener (actually removing first element from list)
-		final List<String> trimmedPropertyNames = previousListener == null ? propertyNames : removeFromHead(previousListener.getPropertyNames());
-		final HierarchicalPropertyChangeListener newListener = new HierarchicalPropertyChangeListener(nextEntity, trimmedPropertyNames, propertyChangeListener, validationResultsChangeListener);
-		// adding created listener to part of property hierarchy
-		nextEntity.addPropertyChangeListener(propertyNames.get(i), newListener);
-		if (validationResultsChangeListener != null && nextEntity.getProperty(trimmedPropertyNames.get(0)) != null) {
-		    nextEntity.getProperty(trimmedPropertyNames.get(0)).addValidationResultsChangeListener(validationResultsChangeListener);
-		}
+        IBindingEntity nextEntity = entity;
+        HierarchicalPropertyChangeListener previousListener = null, topListener = null;
+        // iterating over property names, creating listeners and adding them to hierarchy
+        for (int i = 0; i < propertyNames.size(); i++) {
+            if (nextEntity != null) {
+                // getting list of property names to correctly initialize HierarchicalPropertyChangeListener (actually removing first element from list)
+                final List<String> trimmedPropertyNames = previousListener == null ? propertyNames : removeFromHead(previousListener.getPropertyNames());
+                final HierarchicalPropertyChangeListener newListener = new HierarchicalPropertyChangeListener(nextEntity, trimmedPropertyNames, propertyChangeListener, validationResultsChangeListener);
+                // adding created listener to part of property hierarchy
+                nextEntity.addPropertyChangeListener(propertyNames.get(i), newListener);
+                if (validationResultsChangeListener != null && nextEntity.getProperty(trimmedPropertyNames.get(0)) != null) {
+                    nextEntity.getProperty(trimmedPropertyNames.get(0)).addValidationResultsChangeListener(validationResultsChangeListener);
+                }
 
-		if (previousListener == null) {
-		    // storing top listener to return it later
-		    topListener = newListener;
-		} else {
-		    // initializing reference from previous listener to this one
-		    previousListener.setNextListener(newListener);
-		}
-		previousListener = newListener;
+                if (previousListener == null) {
+                    // storing top listener to return it later
+                    topListener = newListener;
+                } else {
+                    // initializing reference from previous listener to this one
+                    previousListener.setNextListener(newListener);
+                }
+                previousListener = newListener;
 
-		if (i != propertyNames.size() - 1) {
-		    nextEntity = (IBindingEntity) nextEntity.get(propertyNames.get(i));
-		}
-	    }
-	}
-	return topListener;
+                if (i != propertyNames.size() - 1) {
+                    nextEntity = (IBindingEntity) nextEntity.get(propertyNames.get(i));
+                }
+            }
+        }
+        return topListener;
     }
 
     /**
@@ -239,13 +239,13 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @param topListener
      */
     public static void removeListenersFromHierarchy(final HierarchicalPropertyChangeListener topListener) {
-	// removing all listeners from hierarchy
-	topListener.removeFromHierarchy();
+        // removing all listeners from hierarchy
+        topListener.removeFromHierarchy();
 
-	// removing passed listener from its entity
-	final IBindingEntity entity = topListener.getEntity();
-	final String propertyName = topListener.getPropertyNames().get(topListener.getPropertyNames().size() - 1);
-	entity.removePropertyChangeListener(propertyName, topListener);
+        // removing passed listener from its entity
+        final IBindingEntity entity = topListener.getEntity();
+        final String propertyName = topListener.getPropertyNames().get(topListener.getPropertyNames().size() - 1);
+        entity.removePropertyChangeListener(propertyName, topListener);
     }
 
     /**
@@ -256,11 +256,11 @@ public class HierarchicalPropertyChangeListener implements PropertyChangeOrIncor
      * @return
      */
     public static <T> List<T> removeFromHead(final List<T> list) {
-	final List<T> newList = new ArrayList<T>(list.size());
-	newList.addAll(list);
+        final List<T> newList = new ArrayList<T>(list.size());
+        newList.addAll(list);
 
-	newList.remove(0);
-	return newList;
+        newList.remove(0);
+        return newList;
     }
 
 }

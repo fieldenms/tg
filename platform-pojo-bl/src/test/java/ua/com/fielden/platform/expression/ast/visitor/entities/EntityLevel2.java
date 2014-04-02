@@ -31,12 +31,12 @@ public class EntityLevel2 extends AbstractEntity<String> {
 
     @Observable
     public EntityLevel2 setSelfProperty(final EntityLevel2 selfProperty) {
-	this.selfProperty = selfProperty;
-	return this;
+        this.selfProperty = selfProperty;
+        return this;
     }
 
     public EntityLevel2 getSelfProperty() {
-	return selfProperty;
+        return selfProperty;
     }
 
     @IsProperty
@@ -44,34 +44,33 @@ public class EntityLevel2 extends AbstractEntity<String> {
     @Title(value = "Date Property", desc = "Property to test date functions in expression language.")
     private Date dateProperty;
 
-
     @Observable
     public EntityLevel2 setStrProperty(final String strProperty) {
-	this.strProperty = strProperty;
-	return this;
+        this.strProperty = strProperty;
+        return this;
     }
 
     public String getStrProperty() {
-	return strProperty;
+        return strProperty;
     }
 
     @Observable
     public EntityLevel2 setDateProperty(final Date dateProperty) {
-	this.dateProperty = dateProperty;
-	return this;
+        this.dateProperty = dateProperty;
+        return this;
     }
 
     public Date getDateProperty() {
-	return dateProperty;
+        return dateProperty;
     }
 
     public Integer getIntProperty() {
-	return intProperty;
+        return intProperty;
     }
 
     @Observable
     public void setIntProperty(final Integer strProperty) {
-	this.intProperty = strProperty;
+        this.intProperty = strProperty;
     }
 
     public List<EntityLevel3> getCollectional() {

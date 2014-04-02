@@ -7,15 +7,15 @@ import com.esotericsoftware.kryo.serialize.SimpleSerializer;
 
 /**
  * A serialiser for {@link Class} instances, which relies on the fact that all classes are registered with Kryo. So, it simply writes and reads a generated class ID.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class ClassSerialiser extends SimpleSerializer<Class<?>> {
 
     private final Kryo kryo;
 
-    public ClassSerialiser( final Kryo kryo ) {
+    public ClassSerialiser(final Kryo kryo) {
         this.kryo = kryo;
     }
 

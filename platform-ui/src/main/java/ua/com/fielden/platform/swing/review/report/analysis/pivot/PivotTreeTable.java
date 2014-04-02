@@ -37,70 +37,70 @@ public class PivotTreeTable extends FilterableTreeTable {
     private static final long serialVersionUID = -731155079399567971L;
 
     public PivotTreeTable(final FilterableTreeTableModel treeTableModel) {
-	super(treeTableModel, true);
+        super(treeTableModel, true);
 
-	getTableHeader().setReorderingAllowed(false);
-	addToolTipSuportForTableHeader();
-	setShowGrid(true, true);
-	setGridColor(new Color(214, 217, 223));
-	setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	setAutoResizeMode(JXTable.AUTO_RESIZE_OFF);
-	setColumnFactory(createPivotColumnFactory());
+        getTableHeader().setReorderingAllowed(false);
+        addToolTipSuportForTableHeader();
+        setShowGrid(true, true);
+        setGridColor(new Color(214, 217, 223));
+        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        setAutoResizeMode(JXTable.AUTO_RESIZE_OFF);
+        setColumnFactory(createPivotColumnFactory());
 
-	final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-	getColumnModel().addColumnModelListener(createColumnModelListener(pivotModel, createColumnWidthChangeListener(pivotModel)));
+        final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
+        getColumnModel().addColumnModelListener(createColumnModelListener(pivotModel, createColumnWidthChangeListener(pivotModel)));
 
-	pivotModel.addTableHeaderChangedListener(new PivotTableHeaderChanged() {
+        pivotModel.addTableHeaderChangedListener(new PivotTableHeaderChanged() {
 
-	    @Override
-	    public void tableHeaderChanged(final PivotTableHeaderChangedEvent event) {
-		refreshPivotTable();
-	    }
+            @Override
+            public void tableHeaderChanged(final PivotTableHeaderChangedEvent event) {
+                refreshPivotTable();
+            }
 
-	    @Override
-	    public void columnOrderChanged(final PivotColumnOrderChangedEvent event) {
-		//This is stub implementation.
-	    }
-	});
+            @Override
+            public void columnOrderChanged(final PivotColumnOrderChangedEvent event) {
+                //This is stub implementation.
+            }
+        });
 
-	pivotModel.addSorterChangeListener(new PivotTableSorterListener() {
+        pivotModel.addSorterChangeListener(new PivotTableSorterListener() {
 
-	    @Override
-	    public void sorterChanged(final PivotSorterChangeEvent event) {
-		reloadWithoutCollapsing();
-	    }
-	});
+            @Override
+            public void sorterChanged(final PivotSorterChangeEvent event) {
+                reloadWithoutCollapsing();
+            }
+        });
 
-	getColumnModel().addColumnModelListener(new TableColumnModelListener() {
+        getColumnModel().addColumnModelListener(new TableColumnModelListener() {
 
-	    @Override
-	    public void columnAdded(final TableColumnModelEvent e) {
-		final TableColumn column = getColumnModel().getColumn(e.getToIndex());
-		final Class<?>[] columnTypes = pivotModel.getColumnTypes(e.getToIndex());
-		column.setCellRenderer(createCellRenderer(columnTypes));
-	    }
+            @Override
+            public void columnAdded(final TableColumnModelEvent e) {
+                final TableColumn column = getColumnModel().getColumn(e.getToIndex());
+                final Class<?>[] columnTypes = pivotModel.getColumnTypes(e.getToIndex());
+                column.setCellRenderer(createCellRenderer(columnTypes));
+            }
 
-	    @Override
-	    public void columnMarginChanged(final ChangeEvent e) {
+            @Override
+            public void columnMarginChanged(final ChangeEvent e) {
 
-	    }
+            }
 
-	    @Override
-	    public void columnMoved(final TableColumnModelEvent e) {
+            @Override
+            public void columnMoved(final TableColumnModelEvent e) {
 
-	    }
+            }
 
-	    @Override
-	    public void columnRemoved(final TableColumnModelEvent e) {
+            @Override
+            public void columnRemoved(final TableColumnModelEvent e) {
 
-	    }
+            }
 
-	    @Override
-	    public void columnSelectionChanged(final ListSelectionEvent e) {
+            @Override
+            public void columnSelectionChanged(final ListSelectionEvent e) {
 
-	    }
+            }
 
-	});
+        });
     }
 
     @Override
@@ -116,171 +116,175 @@ public class PivotTreeTable extends FilterableTreeTable {
 
     /**
      * Returns the path for row at the point specified with x and y coordinates.
-     *
+     * 
      * @param x
      * @param y
      * @return
      */
-    public TreePath getRowPathForLocation(final int x, final int y){
-	return getPathForLocation(x, y);
+    public TreePath getRowPathForLocation(final int x, final int y) {
+        return getPathForLocation(x, y);
     }
 
     /**
      * Returns the path for column at the point specified with x and y coordinates.
-     *
+     * 
      * @param x
      * @param y
      * @return
      */
-    public TreePath getColumnPathForLocation(final int x, final int y){
-	final int column = columnAtPoint(new Point(x, y));
-	if(column < 0){
-	    return null;
-	} else {
-	    final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-	    return pivotModel.getPathForColumn(column);
-	}
+    public TreePath getColumnPathForLocation(final int x, final int y) {
+        final int column = columnAtPoint(new Point(x, y));
+        if (column < 0) {
+            return null;
+        } else {
+            final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
+            return pivotModel.getPathForColumn(column);
+        }
     }
 
     /**
      * Creates the table column listener for the tree table model that updates the column's width.
-     *
+     * 
      * @param columnWidthChangeListener
      * @return
      */
     private TableColumnModelListener createColumnModelListener(final PivotTreeTableModel pivotTableModel, final PropertyChangeListener columnWidthChangeListener) {
-	return new TableColumnModelListener() {
+        return new TableColumnModelListener() {
 
-	    @Override
-	    public void columnSelectionChanged(final ListSelectionEvent e) {}
+            @Override
+            public void columnSelectionChanged(final ListSelectionEvent e) {
+            }
 
-	    @Override
-	    public void columnRemoved(final TableColumnModelEvent e) {}
+            @Override
+            public void columnRemoved(final TableColumnModelEvent e) {
+            }
 
-	    @Override
-	    public void columnMoved(final TableColumnModelEvent e) {}
+            @Override
+            public void columnMoved(final TableColumnModelEvent e) {
+            }
 
-	    @Override
-	    public void columnMarginChanged(final ChangeEvent e) {}
+            @Override
+            public void columnMarginChanged(final ChangeEvent e) {
+            }
 
-	    @Override
-	    public void columnAdded(final TableColumnModelEvent e) {
-		final int columnIndex = e.getToIndex();
-		final TableColumn column = getColumnModel().getColumn(columnIndex);
-		final int width = pivotTableModel.getColumnWidth(columnIndex);
-		if(width > 0){
-		    column.setPreferredWidth(width);
-		}
-		column.addPropertyChangeListener(columnWidthChangeListener);
-	    }
-	};
+            @Override
+            public void columnAdded(final TableColumnModelEvent e) {
+                final int columnIndex = e.getToIndex();
+                final TableColumn column = getColumnModel().getColumn(columnIndex);
+                final int width = pivotTableModel.getColumnWidth(columnIndex);
+                if (width > 0) {
+                    column.setPreferredWidth(width);
+                }
+                column.addPropertyChangeListener(columnWidthChangeListener);
+            }
+        };
     }
 
     /**
      * Creates the column's width property change listener. Updates model property's width.
-     *
+     * 
      * @param pivotTable
      * @return
      */
     private PropertyChangeListener createColumnWidthChangeListener(final PivotTreeTableModel pivotTableModel) {
-	return new PropertyChangeListener() {
+        return new PropertyChangeListener() {
 
-	    @Override
-	    public void propertyChange(final PropertyChangeEvent evt) {
-		if (evt.getPropertyName().equals("width")) {
-		    final int columnIndex = getColumnModel().getColumnIndex(((TableColumn)evt.getSource()).getIdentifier());
-		    pivotTableModel.setColumnWidth(columnIndex, ((Integer) evt.getNewValue()).intValue());
-		}
-	    }
-	};
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                if (evt.getPropertyName().equals("width")) {
+                    final int columnIndex = getColumnModel().getColumnIndex(((TableColumn) evt.getSource()).getIdentifier());
+                    pivotTableModel.setColumnWidth(columnIndex, ((Integer) evt.getNewValue()).intValue());
+                }
+            }
+        };
     }
 
     /**
-     *
-     *
+     * 
+     * 
      * @param columnTypes
      * @return
      */
     private TableCellRenderer createCellRenderer(final Class<?>[] columnTypes) {
-	return new PivotTableCellRenderer(1, new Color(214, 217, 223), columnTypes);
+        return new PivotTableCellRenderer(1, new Color(214, 217, 223), columnTypes);
     }
-
 
     /**
      * Returns the column factory for this {@link PivotTreeTable} instance.
-     *
+     * 
      * @return
      */
     private ColumnFactory createPivotColumnFactory() {
-	return new ColumnFactory() {
-	    @Override
-	    public void configureColumnWidths(final JXTable table, final TableColumnExt columnExt) {
-		final int index = table.getColumnModel().getColumnIndex(columnExt.getIdentifier());
-		final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-		final int width = pivotModel.getColumnWidth(index);
-		if (width == 0) {
-		    superConfigureColumnWidths(table, columnExt);
-		} else {
-		    columnExt.setPreferredWidth(width);
-		}
-	    }
+        return new ColumnFactory() {
+            @Override
+            public void configureColumnWidths(final JXTable table, final TableColumnExt columnExt) {
+                final int index = table.getColumnModel().getColumnIndex(columnExt.getIdentifier());
+                final PivotTreeTableModel pivotModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
+                final int width = pivotModel.getColumnWidth(index);
+                if (width == 0) {
+                    superConfigureColumnWidths(table, columnExt);
+                } else {
+                    columnExt.setPreferredWidth(width);
+                }
+            }
 
-	    private void superConfigureColumnWidths(final JXTable table, final TableColumnExt columnExt) {
-		int prefWidth = 0 - table.getColumnMargin();
-	        final int prototypeWidth = calcPrototypeWidth(table, columnExt);
-	        if (prototypeWidth > 0) {
-	            prefWidth = prototypeWidth;
-	        }
-	        final int headerWidth = calcHeaderWidth(table, columnExt);
-	        prefWidth = Math.max(prefWidth, headerWidth);
-	        prefWidth += table.getColumnModel().getColumnMargin();
-	        columnExt.setPreferredWidth(prefWidth);
-	    }
-	};
+            private void superConfigureColumnWidths(final JXTable table, final TableColumnExt columnExt) {
+                int prefWidth = 0 - table.getColumnMargin();
+                final int prototypeWidth = calcPrototypeWidth(table, columnExt);
+                if (prototypeWidth > 0) {
+                    prefWidth = prototypeWidth;
+                }
+                final int headerWidth = calcHeaderWidth(table, columnExt);
+                prefWidth = Math.max(prefWidth, headerWidth);
+                prefWidth += table.getColumnModel().getColumnMargin();
+                columnExt.setPreferredWidth(prefWidth);
+            }
+        };
     }
 
     /**
      * Adds the tool tips to the table headers.
      */
     private void addToolTipSuportForTableHeader() {
-	getTableHeader().addMouseMotionListener(new MouseMotionAdapter() {
-	    @Override
-	    public void mouseMoved(final MouseEvent e) {
-		final int vColIndex = columnAtPoint(e.getPoint());
-		final JTableHeader header = getTableHeader();
+        getTableHeader().addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(final MouseEvent e) {
+                final int vColIndex = columnAtPoint(e.getPoint());
+                final JTableHeader header = getTableHeader();
 
-		if (vColIndex >= 0) {
-		    final PivotTreeTableModel treeTableModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
-		    header.setToolTipText(treeTableModel.getColumnTooltipAt(convertColumnIndexToModel(vColIndex)));
+                if (vColIndex >= 0) {
+                    final PivotTreeTableModel treeTableModel = (PivotTreeTableModel) ((FilterableTreeTableModel) getTreeTableModel()).getOriginModel();
+                    header.setToolTipText(treeTableModel.getColumnTooltipAt(convertColumnIndexToModel(vColIndex)));
 
-		}
-	    }
-	});
+                }
+            }
+        });
     }
 
     /**
      * Refreshes the pivot tree table.
+     * 
      * @param treeTable
      */
-    private void refreshPivotTable(){
-	final TreePath selectedPath = getPathForRow(getSelectedRow());
-	((AbstractTableModel) getModel()).fireTableStructureChanged();
-	getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
+    private void refreshPivotTable() {
+        final TreePath selectedPath = getPathForRow(getSelectedRow());
+        ((AbstractTableModel) getModel()).fireTableStructureChanged();
+        getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
     }
 
     private void reloadWithoutCollapsing() {
-	final FilterableTreeTableModel filterableModel = getFilterableModel();
-	final TreeTableNode rootNode = filterableModel.getOriginModel().getRoot();
-	final TreePath selectedPath = getPathForRow(getSelectedRow());
-	if (rootNode != null) {
-	    final Enumeration<?> expandedPaths = getExpandedDescendants(new TreePath(rootNode));
-	    filterableModel.reload();
-	    while (expandedPaths != null && expandedPaths.hasMoreElements()) {
-		final TreePath path = (TreePath) expandedPaths.nextElement();
-		expandPath(path);
-	    }
-	}
-	scrollPathToVisible(selectedPath);
-	getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
+        final FilterableTreeTableModel filterableModel = getFilterableModel();
+        final TreeTableNode rootNode = filterableModel.getOriginModel().getRoot();
+        final TreePath selectedPath = getPathForRow(getSelectedRow());
+        if (rootNode != null) {
+            final Enumeration<?> expandedPaths = getExpandedDescendants(new TreePath(rootNode));
+            filterableModel.reload();
+            while (expandedPaths != null && expandedPaths.hasMoreElements()) {
+                final TreePath path = (TreePath) expandedPaths.nextElement();
+                expandPath(path);
+            }
+        }
+        scrollPathToVisible(selectedPath);
+        getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
     }
 }

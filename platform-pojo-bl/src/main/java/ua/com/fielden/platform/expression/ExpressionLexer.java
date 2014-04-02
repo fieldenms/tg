@@ -57,7 +57,6 @@ import ua.com.fielden.platform.expression.lexer.plus.PlusTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.rparen.RparenTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.string.StringTokenAutomata;
 
-
 /**
  * A lexer to scan input for expression language tokens.
  */
@@ -70,104 +69,101 @@ public class ExpressionLexer {
     protected char currChar; // current character
 
     private final BaseNonDeterministicAutomata[] tokenLexers = {//
-	new LparenTokenAutomata(), new RparenTokenAutomata(), new CommaTokenAutomata(), //
-	new PlusTokenAutomata(), new MinusTokenAutomata(), new MultTokenAutomata(), new DivTokenAutomata(), //
-	///////////////////// functions ////////////////////
-	new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), new MaxTokenAutomata(),//
-	new DaysTokenAutomata(), new MonthsTokenAutomata(), new YearsTokenAutomata(), //
-	new CountTokenAutomata(), new DayTokenAutomata(), new MonthTokenAutomata(), new YearTokenAutomata(), //
-	new HoursTokenAutomata(), new MinutesTokenAutomata(), new SecondsTokenAutomata(), //
-	new HourTokenAutomata(), new MinuteTokenAutomata(), new SecondTokenAutomata(), //
-	new UpperTokenAutomata(), new LowerTokenAutomata(), new DayDiffTokenAutomata(), //
-	////////////////////////////////////////////////////
-	new CaseTokenAutomata(), // this block of lexers should go begore the name lexer
-	new WhenTokenAutomata(),
-	new ThenTokenAutomata(),
-	new ElseTokenAutomata(),
-	new EndTokenAutomata(),
-	////////////////////////////////////////////////////
-	new NullTokenAutomata(), // should go before the name token
-	new NowTokenAutomata(), // should go before the name token
-	new SelfTokenAutomata(), // should go before the name token
-	new NameTokenAutomata(),//
-	new StringTokenAutomata(),//
-	new DateConstantTokenAutomata(), //
-	new DecimalTokenAutomata(), //
-	new IntegerTokenAutomata(),//
-	new DateTokenAutomata(),//
-	/////////////////////////////////////////////////////
-	new NotEqualTokenAutomata(), // should go before the less token
-	new EqualTokenAutomata(),//
-	new LessOrEqualTokenAutomata(),// should go before the less token
-	new GreaterOrEqualTokenAutomata(), // should go before the greater token
-	new LessTokenAutomata(), //
-	new GreaterTokenAutomata(),//
-	//////////////////////////////////////////////////////
-	new AndTokenAutomata(), //
-	new OrTokenAutomata()//
+    new LparenTokenAutomata(), new RparenTokenAutomata(), new CommaTokenAutomata(), //
+            new PlusTokenAutomata(), new MinusTokenAutomata(), new MultTokenAutomata(), new DivTokenAutomata(), //
+            ///////////////////// functions ////////////////////
+            new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), new MaxTokenAutomata(),//
+            new DaysTokenAutomata(), new MonthsTokenAutomata(), new YearsTokenAutomata(), //
+            new CountTokenAutomata(), new DayTokenAutomata(), new MonthTokenAutomata(), new YearTokenAutomata(), //
+            new HoursTokenAutomata(), new MinutesTokenAutomata(), new SecondsTokenAutomata(), //
+            new HourTokenAutomata(), new MinuteTokenAutomata(), new SecondTokenAutomata(), //
+            new UpperTokenAutomata(), new LowerTokenAutomata(), new DayDiffTokenAutomata(), //
+            ////////////////////////////////////////////////////
+            new CaseTokenAutomata(), // this block of lexers should go begore the name lexer
+            new WhenTokenAutomata(), new ThenTokenAutomata(), new ElseTokenAutomata(), new EndTokenAutomata(),
+            ////////////////////////////////////////////////////
+            new NullTokenAutomata(), // should go before the name token
+            new NowTokenAutomata(), // should go before the name token
+            new SelfTokenAutomata(), // should go before the name token
+            new NameTokenAutomata(),//
+            new StringTokenAutomata(),//
+            new DateConstantTokenAutomata(), //
+            new DecimalTokenAutomata(), //
+            new IntegerTokenAutomata(),//
+            new DateTokenAutomata(),//
+            /////////////////////////////////////////////////////
+            new NotEqualTokenAutomata(), // should go before the less token
+            new EqualTokenAutomata(),//
+            new LessOrEqualTokenAutomata(),// should go before the less token
+            new GreaterOrEqualTokenAutomata(), // should go before the greater token
+            new LessTokenAutomata(), //
+            new GreaterTokenAutomata(),//
+            //////////////////////////////////////////////////////
+            new AndTokenAutomata(), //
+            new OrTokenAutomata() //
     };
 
     public ExpressionLexer(final String input) {
-	if (StringUtils.isEmpty(input)) {
-	    throw new IllegalArgumentException("Empty string is an illegal input.");
-	}
-	this.input = input;
+        if (StringUtils.isEmpty(input)) {
+            throw new IllegalArgumentException("Empty string is an illegal input.");
+        }
+        this.input = input;
     }
 
     /**
      * Produces the next in the input text token.
-     *
+     * 
      * @return
      * @throws SequenceRecognitionFailed
      */
     public Token nextToken() throws SequenceRecognitionFailed {
-	while (currChar != EOF) {
-	    return predict(input.substring(curPosition));
-	}
-	return new Token(EgTokenCategory.EOF, "<EOF>", input.length(), input.length());
+        while (currChar != EOF) {
+            return predict(input.substring(curPosition));
+        }
+        return new Token(EgTokenCategory.EOF, "<EOF>", input.length(), input.length());
     }
 
     /**
      * Tokenizes the input into tokens (lexemes). Does not include the EOF token indicating the end of the input.
-     *
+     * 
      * @return
      * @throws SequenceRecognitionFailed
      */
     public Token[] tokenize() throws SequenceRecognitionFailed {
-	final List<Token> tokens = new ArrayList<Token>();
-	Token token = nextToken();
-	while (token.category.getIndex() != EgTokenCategory.EOF.index) {
-	    tokens.add(token);
-	    token = nextToken();
-	}
-	return tokens.toArray(new Token[]{});
+        final List<Token> tokens = new ArrayList<Token>();
+        Token token = nextToken();
+        while (token.category.getIndex() != EgTokenCategory.EOF.index) {
+            tokens.add(token);
+            token = nextToken();
+        }
+        return tokens.toArray(new Token[] {});
     }
 
     private Token predict(final String substring) throws SequenceRecognitionFailed {
-	SequenceRecognitionFailed error = null;
-	String lastPretendant = "";
+        SequenceRecognitionFailed error = null;
+        String lastPretendant = "";
 
-	BaseNonDeterministicAutomata tokenLexer = null;
-	int index = 0;
-	while (index < tokenLexers.length) {
-	    try {
-		tokenLexer = tokenLexers[index];
-		final String tokenText = tokenLexer.recognisePartiallyFromStart(substring, curPosition);
-		final int prevPosition = curPosition;
-		curPosition += tokenLexer.getCharsRecognised();
-		if (curPosition >= input.length()) {
-		    currChar = EOF;
-		}
-		return new Token(tokenLexer.lexemeCat, tokenText, prevPosition, curPosition); // prevPosition + tokenLexer.getCharsRecognised()
-	    } catch (final SequenceRecognitionFailed e) {
-		if (tokenLexer.getPretendantSequence().toString().length() > lastPretendant.length()) {
-		    lastPretendant = tokenLexer.getPretendantSequence().toString();
-		    error = e;
-		}
-	    } finally {
-		index++;
-	    }
-	}
-	throw error != null ? error : new SequenceRecognitionFailed("Unrecognisable symbol at position " + curPosition, curPosition);
+        BaseNonDeterministicAutomata tokenLexer = null;
+        int index = 0;
+        while (index < tokenLexers.length) {
+            try {
+                tokenLexer = tokenLexers[index];
+                final String tokenText = tokenLexer.recognisePartiallyFromStart(substring, curPosition);
+                final int prevPosition = curPosition;
+                curPosition += tokenLexer.getCharsRecognised();
+                if (curPosition >= input.length()) {
+                    currChar = EOF;
+                }
+                return new Token(tokenLexer.lexemeCat, tokenText, prevPosition, curPosition); // prevPosition + tokenLexer.getCharsRecognised()
+            } catch (final SequenceRecognitionFailed e) {
+                if (tokenLexer.getPretendantSequence().toString().length() > lastPretendant.length()) {
+                    lastPretendant = tokenLexer.getPretendantSequence().toString();
+                    error = e;
+                }
+            } finally {
+                index++;
+            }
+        }
+        throw error != null ? error : new SequenceRecognitionFailed("Unrecognisable symbol at position " + curPosition, curPosition);
     }
 }

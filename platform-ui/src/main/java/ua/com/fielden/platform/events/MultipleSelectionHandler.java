@@ -25,8 +25,8 @@ public class MultipleSelectionHandler extends PSelectionEventHandler {
      *            - specified PNode instance which children might be selected
      */
     public MultipleSelectionHandler(final PNode marqueeParent, final PNode selectableParent) {
-	super(marqueeParent, selectableParent);
-	setEventFilter(new PInputEventFilter(InputEvent.BUTTON1_MASK));
+        super(marqueeParent, selectableParent);
+        setEventFilter(new PInputEventFilter(InputEvent.BUTTON1_MASK));
     }
 
     /**
@@ -38,7 +38,7 @@ public class MultipleSelectionHandler extends PSelectionEventHandler {
      *            - specified list of PNode elements which children might be selected
      */
     public MultipleSelectionHandler(final PNode marqueeParent, final List<PNode> selectableParents) {
-	super(marqueeParent, selectableParents);
+        super(marqueeParent, selectableParents);
     }
 
     /**
@@ -46,9 +46,9 @@ public class MultipleSelectionHandler extends PSelectionEventHandler {
      */
     @Override
     public void decorateSelectedNode(final PNode node) {
-	if (node instanceof IDecorable) {
-	    ((IDecorable) node).Decorate();
-	}
+        if (node instanceof IDecorable) {
+            ((IDecorable) node).Decorate();
+        }
     }
 
     /**
@@ -56,7 +56,7 @@ public class MultipleSelectionHandler extends PSelectionEventHandler {
      */
     @Override
     public boolean isOptionSelection(final PInputEvent pie) {
-	return pie.isControlDown();
+        return pie.isControlDown();
     }
 
     /**
@@ -64,9 +64,9 @@ public class MultipleSelectionHandler extends PSelectionEventHandler {
      */
     @Override
     public void undecorateSelectedNode(final PNode node) {
-	if (node instanceof IDecorable) {
-	    ((IDecorable) node).Undecorate();
-	}
+        if (node instanceof IDecorable) {
+            ((IDecorable) node).Undecorate();
+        }
     }
 
     /**
@@ -78,7 +78,7 @@ public class MultipleSelectionHandler extends PSelectionEventHandler {
     }
 
     public boolean isSelecting(final PInputEvent pie) {
-	return isMarqueeSelection(pie);
+        return isMarqueeSelection(pie);
     }
 
 }

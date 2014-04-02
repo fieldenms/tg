@@ -9,22 +9,22 @@ import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import com.google.inject.Inject;
 
 /**
- *
+ * 
  * RAO implementation of {@link IEntityMasterConfigController}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(EntityMasterConfig.class)
 public class EntityMasterConfigControllerRao extends CommonEntityRao<EntityMasterConfig> implements IEntityMasterConfigController {
 
     @Inject
     public EntityMasterConfigControllerRao(final RestClientUtil restUtil) {
-	super(restUtil);
+        super(restUtil);
     }
 
     protected WebResourceType getDefaultWebResourceType() {
-	return WebResourceType.SYSTEM;
+        return WebResourceType.SYSTEM;
     }
 
 }

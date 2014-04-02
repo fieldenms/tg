@@ -8,7 +8,7 @@ import ua.com.fielden.uds.designer.zui.interfaces.IValue;
  * @author 01es
  * 
  * @param <T>
- *                Operand's type (e.g. String, Double, IOperator etc.)
+ *            Operand's type (e.g. String, Double, IOperator etc.)
  */
 public interface IOperand<T> extends IValue<T> {
     /**

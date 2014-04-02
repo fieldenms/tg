@@ -25,9 +25,9 @@ import ua.com.fielden.platform.security.user.User;
 
 /**
  * One-2-Many entity object.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Прив'язка машини з модулем", desc = "Прив'язка машини з модулем")
@@ -35,20 +35,20 @@ import ua.com.fielden.platform.security.user.User;
 @EntityTitle(value = "Прив'язка машини з модулем", desc = "Прив'язка машини з модулем")
 // TODO do not forget to provide companion object in its descendants -- @CompanionObject(IMachineModuleAssociation.class)
 @MapEntityTo
-public abstract class AbstractAvlMachineModuleTemporalAssociation <MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>, MODULE extends AbstractAvlModule> extends AbstractEntity<DynamicEntityKey> {
+public abstract class AbstractAvlMachineModuleTemporalAssociation<MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>, MODULE extends AbstractAvlModule> extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 6689517578526230679L;
 
-//    @IsProperty
-//    @Title(value = "Machine", desc = "Machine")
-//    @MapTo
-//    @CompositeKeyMember(1)
-//    private MACHINE machine;
-//
-//    @IsProperty
-//    @MapTo
-//    @Title(value = "Module", desc = "Module associated with a machine")
-//    @CompositeKeyMember(2)
-//    private MODULE module;
+    //    @IsProperty
+    //    @Title(value = "Machine", desc = "Machine")
+    //    @MapTo
+    //    @CompositeKeyMember(1)
+    //    private MACHINE machine;
+    //
+    //    @IsProperty
+    //    @MapTo
+    //    @Title(value = "Module", desc = "Module associated with a machine")
+    //    @CompositeKeyMember(2)
+    //    private MODULE module;
 
     @IsProperty
     @MapTo
@@ -92,65 +92,65 @@ public abstract class AbstractAvlMachineModuleTemporalAssociation <MESSAGE exten
     @Observable
     @EntityExists(User.class)
     public AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> setChangedBy(final User changedBy) {
-	this.changedBy = changedBy;
-	return this;
+        this.changedBy = changedBy;
+        return this;
     }
 
     public User getChangedBy() {
-	return createdBy;
+        return createdBy;
     }
 
     @Observable
     @EntityExists(User.class)
     public AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> setCreatedBy(final User createdBy) {
-	this.createdBy = createdBy;
-	return this;
+        this.createdBy = createdBy;
+        return this;
     }
 
     public User getCreatedBy() {
-	return createdBy;
+        return createdBy;
     }
 
     @Observable
     public AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> setChanged(final Date changed) {
-	this.changed = changed;
-	return this;
+        this.changed = changed;
+        return this;
     }
 
     public Date getChanged() {
-	return changed;
+        return changed;
     }
 
     @Observable
     public AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> setCreated(final Date created) {
-	this.created = created;
-	return this;
+        this.created = created;
+        return this;
     }
 
     public Date getCreated() {
-	return created;
+        return created;
     }
 
     @Observable
     @LeProperty("to")
     public AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> setFrom(final Date from) {
-	this.from = from;
-	return this;
+        this.from = from;
+        return this;
     }
 
     public Date getFrom() {
-	return from;
+        return from;
     }
 
     @Observable
     @GeProperty("from")
     public AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> setTo(final Date to) {
-	this.to = to;
-	return this;
+        this.to = to;
+        return this;
     }
 
     public Date getTo() {
-	return to;
+        return to;
     }
 
     protected abstract AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> setMachine(final MACHINE value);

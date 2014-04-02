@@ -9,9 +9,9 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Some useful methods to work with {@link IFunction}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class FunctionUtils {
 
@@ -24,7 +24,7 @@ public class FunctionUtils {
 
     /**
      * Returns a set of applicable functions for concrete <code>argumentType</code>.
-     *
+     * 
      * @param argumentType
      * @return
      */
@@ -33,11 +33,12 @@ public class FunctionUtils {
         for (final Function function : EnumSet.allOf(Function.class)) {
             final Class<?> normalised = EntityUtils.isEntityType(argumentType) ? AbstractEntity.class : (Number.class.isAssignableFrom(argumentType) ? Number.class : argumentType);
             if (function.argumentTypes().contains(argumentType) || function.argumentTypes().contains(normalised)) { // argument type is applicable to function, so add:
-        	functions.add(function);
+                functions.add(function);
             }
         }
         if (functions.isEmpty()) {
-            throw new IllegalArgumentException("Argument type [" + argumentType.getSimpleName() + "] is not applicable to any " + Function.class.getSimpleName() + " function. Please do not use this type.");
+            throw new IllegalArgumentException("Argument type [" + argumentType.getSimpleName() + "] is not applicable to any " + Function.class.getSimpleName()
+                    + " function. Please do not use this type.");
         }
         return functions;
     }

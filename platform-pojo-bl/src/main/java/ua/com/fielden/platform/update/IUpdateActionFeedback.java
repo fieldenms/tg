@@ -4,9 +4,9 @@ import java.util.Map;
 
 /**
  * A contract used by the {@link Updater} to provide a feedback about currently performed update action.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public interface IUpdateActionFeedback extends IDownloadProgress {
 
@@ -17,7 +17,7 @@ public interface IUpdateActionFeedback extends IDownloadProgress {
 
     /**
      * Should be used to specify what dependency actions are going to be performed.
-     *
+     * 
      * @param map
      */
     void dependencyActions(Map<String, DependencyAction> map);
@@ -34,7 +34,7 @@ public interface IUpdateActionFeedback extends IDownloadProgress {
 
     /**
      * When invoked indicates a start of the specified action applied to the provided dependency file.
-     *
+     * 
      * @param dependencyFileName
      * @param fileSize
      * @param action
@@ -43,7 +43,7 @@ public interface IUpdateActionFeedback extends IDownloadProgress {
 
     /**
      * When invoked indicates the end of the specified action on the provided dependency file. The <code>result</code> indicates the result of the action.
-     *
+     * 
      * @param dependencyFileName
      * @param action
      * @param result
@@ -52,14 +52,14 @@ public interface IUpdateActionFeedback extends IDownloadProgress {
 
     /**
      * Should be invoked when the update process is completed successfully.
-     *
+     * 
      * @param msg
      */
     void updateCompleted(final String msg);
 
     /**
      * Should be invoked when the update process has failed.
-     *
+     * 
      * @param msg
      */
     void updateFailed(final Exception ex);

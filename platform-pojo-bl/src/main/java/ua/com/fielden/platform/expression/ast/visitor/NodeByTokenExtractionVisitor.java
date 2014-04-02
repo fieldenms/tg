@@ -12,9 +12,9 @@ import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 
 /**
  * A convenient visitor to extract nodes from AST based on their token category.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class NodeByTokenExtractionVisitor extends AbstractAstVisitor {
 
@@ -22,24 +22,24 @@ public class NodeByTokenExtractionVisitor extends AbstractAstVisitor {
     private final EgTokenCategory category;
 
     public NodeByTokenExtractionVisitor(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty, final EgTokenCategory category) {
-	super(higherOrderType, contextProperty);
-	this.category = category;
+        super(higherOrderType, contextProperty);
+        this.category = category;
     }
 
     public NodeByTokenExtractionVisitor(final Class<? extends AbstractEntity> higherOrderType, final EgTokenCategory category) {
-	this(higherOrderType, null, category);
+        this(higherOrderType, null, category);
     }
 
     public NodeByTokenExtractionVisitor(final EgTokenCategory category) {
-	this(null, null, category);
+        this(null, null, category);
     }
 
     @Override
     public void visit(final AstNode node) throws SemanticException {
-	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
-	if (cat == category) {
-	    nodes.add(node);
-	}
+        final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+        if (cat == category) {
+            nodes.add(node);
+        }
     }
 
     public List<AstNode> getNodes() {

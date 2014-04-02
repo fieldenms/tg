@@ -15,9 +15,9 @@ import com.google.inject.Module;
 
 /**
  * Test correct construction of the main menu structure using {@link MainMenuStructureFactory}.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class MainMenuStructureFactoryTest {
 
@@ -26,19 +26,12 @@ public class MainMenuStructureFactoryTest {
 
     @Test
     public void test_menu_construction() {
-	final String menuItemName = "ua.com.fielden.platform.swing.menu.TreeMenuItem";
-	final MainMenuStructureFactory builder = injector.getInstance(MainMenuStructureFactory.class)
-	.push(menuItemName)
-	     .push(menuItemName).pop()
-	.pop()
-	.push(menuItemName)
-	     .push(menuItemName).pop()
-	     .push(menuItemName).pop()
-	.pop();
+        final String menuItemName = "ua.com.fielden.platform.swing.menu.TreeMenuItem";
+        final MainMenuStructureFactory builder = injector.getInstance(MainMenuStructureFactory.class).push(menuItemName).push(menuItemName).pop().pop().push(menuItemName).push(menuItemName).pop().push(menuItemName).pop().pop();
 
-	final List<MainMenuItem> menu = builder.build();
-	assertEquals("Incorrect number of first level items", 2, menu.size());
-	assertEquals("Incorrect number of sub items of the first item", 1, menu.get(0).getChildren().size());
-	assertEquals("Incorrect number of sub items of the second item", 2, menu.get(1).getChildren().size());
+        final List<MainMenuItem> menu = builder.build();
+        assertEquals("Incorrect number of first level items", 2, menu.size());
+        assertEquals("Incorrect number of sub items of the first item", 1, menu.get(0).getChildren().size());
+        assertEquals("Incorrect number of sub items of the second item", 2, menu.get(1).getChildren().size());
     }
 }

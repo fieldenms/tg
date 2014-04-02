@@ -10,16 +10,16 @@ import com.google.inject.Inject;
 
 /**
  * DAO for retrieving TgTimesheets.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @EntityType(TgFuelUsage.class)
 public class TgFuelUsageDao extends CommonEntityDao<TgFuelUsage> implements ITgFuelUsage {
 
     @Inject
     protected TgFuelUsageDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 
 }

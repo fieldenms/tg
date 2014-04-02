@@ -11,12 +11,12 @@ import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAn
 
 /**
  * A {@link GridConfigurationView}'s model for Message.
- *
+ * 
  * @author Developers
  */
 public abstract class GpsGridConfigurationModel<T extends AbstractEntity<?>> extends GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
     public GpsGridConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisQueryCustomiser<T, GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer>> queryCustomiser) {
-	super(criteria, queryCustomiser);
+        super(criteria, queryCustomiser);
     }
 
     @Override

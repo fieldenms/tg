@@ -11,17 +11,17 @@ public class MultipleChartPanelEvent extends EventObject {
     private final boolean removed;
 
     public MultipleChartPanelEvent(final Object source, final ActionChartPanel<?, ?> chartPanel, final boolean removed) {
-	super(source);
-	this.chartPanel = chartPanel;
-	this.removed = removed;
+        super(source);
+        this.chartPanel = chartPanel;
+        this.removed = removed;
     }
 
     public ActionChartPanel<?, ?> getChartPanel() {
-	return chartPanel;
+        return chartPanel;
     }
 
     public boolean isRemoved() {
-	return removed;
+        return removed;
     }
 
 }

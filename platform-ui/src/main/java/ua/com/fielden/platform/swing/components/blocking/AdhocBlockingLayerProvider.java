@@ -2,9 +2,9 @@ package ua.com.fielden.platform.swing.components.blocking;
 
 /**
  * This is a provider, which supports setting of a blocking layer instance at any time it is necessary.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class AdhocBlockingLayerProvider implements IBlockingLayerProvider {
 
@@ -12,7 +12,7 @@ public class AdhocBlockingLayerProvider implements IBlockingLayerProvider {
 
     @Override
     public BlockingIndefiniteProgressLayer getBlockingLayer() {
-	return blockingLayer;
+        return blockingLayer;
     }
 
     public void setBlockingLayer(final BlockingIndefiniteProgressLayer blockingLayer) {

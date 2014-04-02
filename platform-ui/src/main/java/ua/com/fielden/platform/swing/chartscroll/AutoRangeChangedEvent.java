@@ -12,16 +12,16 @@ public class AutoRangeChangedEvent extends EventObject {
     private final int axisIndex;
 
     public AutoRangeChangedEvent(final Object source, final Range newRange, final int axisIndex) {
-	super(source);
-	this.newRange = newRange;
-	this.axisIndex = axisIndex;
+        super(source);
+        this.newRange = newRange;
+        this.axisIndex = axisIndex;
     }
 
     public Range getNewRange() {
-	return newRange;
+        return newRange;
     }
 
     public int getAxisIndex() {
-	return axisIndex;
+        return axisIndex;
     }
 }

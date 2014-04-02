@@ -32,7 +32,8 @@ public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
     @MapTo("LAST_READING_DATE")
     private Date readingDate;
 
-    @IsProperty @Required
+    @IsProperty
+    @Required
     @Title(value = "Reading", desc = "Reading")
     @MapTo("LAST_READING")
     private Integer reading;

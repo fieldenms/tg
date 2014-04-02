@@ -18,6 +18,6 @@ public class DefaultPlatformRowStyle extends RowStripeCellStyleProvider {
      * Creates new {@link DefaultPlatformRowStyle} with gray and white rows.
      */
     public DefaultPlatformRowStyle() {
-	super(new Color[] { new Color(242, 242, 242), new Color(255, 255, 255) });
+        super(new Color[] { new Color(242, 242, 242), new Color(255, 255, 255) });
     }
 }

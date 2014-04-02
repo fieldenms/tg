@@ -11,9 +11,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "included properties logic" testing.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(DynamicEntityKey.class)
@@ -24,7 +24,7 @@ public class SlaveEntityForIncludedPropertiesLogic extends AbstractEntity<Dynami
      * Constructor for the entity factory from TG.
      */
     protected SlaveEntityForIncludedPropertiesLogic() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     @CompositeKeyMember(1)
@@ -41,6 +41,7 @@ public class SlaveEntityForIncludedPropertiesLogic extends AbstractEntity<Dynami
     public MasterEntityForIncludedPropertiesLogic getKeyPartProp() {
         return keyPartProp;
     }
+
     @Observable
     public void setKeyPartProp(final MasterEntityForIncludedPropertiesLogic keyPartProp) {
         this.keyPartProp = keyPartProp;
@@ -49,6 +50,7 @@ public class SlaveEntityForIncludedPropertiesLogic extends AbstractEntity<Dynami
     public Money getMoneyProp() {
         return moneyProp;
     }
+
     @Observable
     public void setMoneyProp(final Money moneyProp) {
         this.moneyProp = moneyProp;
@@ -57,6 +59,7 @@ public class SlaveEntityForIncludedPropertiesLogic extends AbstractEntity<Dynami
     public Integer getIntegerProp() {
         return integerProp;
     }
+
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;

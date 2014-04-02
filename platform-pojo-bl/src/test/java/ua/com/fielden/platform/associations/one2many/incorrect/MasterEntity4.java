@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing assocaitons.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key")
@@ -20,13 +20,15 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 public class MasterEntity4 extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty // linkProperty="key1" is missing on purpose
+    @IsProperty
+    // linkProperty="key1" is missing on purpose
     @MapTo
     private DetailsEntity4 one2manyAssociationSpecialCase;
 
     public DetailsEntity4 getOne2manyAssociationSpecialCase() {
         return one2manyAssociationSpecialCase;
     }
+
     @Observable
     public void setOne2manyAssociationSpecialCase(final DetailsEntity4 one2manyAssociationSpecialCase) {
         this.one2manyAssociationSpecialCase = one2manyAssociationSpecialCase;

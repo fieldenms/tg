@@ -26,35 +26,36 @@ public class EntProp implements ISingleOperand {
     }
 
     public EntPropStage getStage() {
-	if (unresolved) {
-	    return EntPropStage.UNRESOLVED;
-	} else if (external) {
-	    return EntPropStage.EXTERNAL;
-	} else if (isFinallyResolved()) {
-	    return EntPropStage.FINALLY_RESOLVED;
-	} else if (isPreliminaryResolved()) {
-	    return EntPropStage.PRELIMINARY_RESOLVED;
-	} else {
-	    return EntPropStage.UNPROCESSED;
-	}
+        if (unresolved) {
+            return EntPropStage.UNRESOLVED;
+        } else if (external) {
+            return EntPropStage.EXTERNAL;
+        } else if (isFinallyResolved()) {
+            return EntPropStage.FINALLY_RESOLVED;
+        } else if (isPreliminaryResolved()) {
+            return EntPropStage.PRELIMINARY_RESOLVED;
+        } else {
+            return EntPropStage.UNPROCESSED;
+        }
     }
 
     public boolean isPreliminaryResolved() {
-	return source != null;
+        return source != null;
     }
 
     public boolean isFinallyResolved() {
-	return sql != null;
+        return sql != null;
     }
 
     @Override
     public String toString() {
-        return name + " [" + (propType != null ? propType.getSimpleName() : "") + ", pr = " + isPreliminaryResolved() + ", fr = " + isFinallyResolved() + ", gen = " + generated + ", " + getStage() + ", nullable = " + nullable + "] " + getSource();
+        return name + " [" + (propType != null ? propType.getSimpleName() : "") + ", pr = " + isPreliminaryResolved() + ", fr = " + isFinallyResolved() + ", gen = " + generated
+                + ", " + getStage() + ", nullable = " + nullable + "] " + getSource();
     }
 
     @Override
     public String sql() {
-        return isExpression() ? expression.sql() : ((source != null ? source.getSqlAlias() : "?") +  "." + sql);
+        return isExpression() ? expression.sql() : ((source != null ? source.getSqlAlias() : "?") + "." + sql);
     }
 
     public EntProp(final String name, final boolean external, final boolean generated) {
@@ -74,7 +75,7 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public List<EntProp> getLocalProps() {
-        return isExpression() ? expression.getLocalProps() : Arrays.asList(new EntProp[]{this});
+        return isExpression() ? expression.getLocalProps() : Arrays.asList(new EntProp[] { this });
     }
 
     @Override
@@ -179,8 +180,8 @@ public class EntProp implements ISingleOperand {
 
     private String getContextPrefix() {
         // FIX
-	final String nameWithoutAmount = name.endsWith(".amount") ? name.substring(0, name.length() - 7) : name;
-	final int lastDotIndex = nameWithoutAmount.lastIndexOf(".");
+        final String nameWithoutAmount = name.endsWith(".amount") ? name.substring(0, name.length() - 7) : name;
+        final int lastDotIndex = nameWithoutAmount.lastIndexOf(".");
         if (lastDotIndex > 0) {
             return nameWithoutAmount.substring(0, lastDotIndex);
         }

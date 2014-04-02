@@ -13,6 +13,6 @@ public class TgWagonClassCompatibilityDao extends CommonEntityDao<TgWagonClassCo
 
     @Inject
     protected TgWagonClassCompatibilityDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

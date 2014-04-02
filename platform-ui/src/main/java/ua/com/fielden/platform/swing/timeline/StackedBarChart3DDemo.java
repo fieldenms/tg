@@ -20,12 +20,12 @@ public class StackedBarChart3DDemo extends ApplicationFrame {
      */
     public StackedBarChart3DDemo(final String title) {
 
-	super(title);
-	final CategoryDataset dataset = DemoDatasetFactory.createCategoryDataset();
-	final JFreeChart chart = createChart(dataset);
-	final ChartPanel chartPanel = new ChartPanel(chart);
-	chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
-	setContentPane(chartPanel);
+        super(title);
+        final CategoryDataset dataset = DemoDatasetFactory.createCategoryDataset();
+        final JFreeChart chart = createChart(dataset);
+        final ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
+        setContentPane(chartPanel);
 
     }
 
@@ -39,28 +39,28 @@ public class StackedBarChart3DDemo extends ApplicationFrame {
      */
     private JFreeChart createChart(final CategoryDataset dataset) {
 
-	final JFreeChart chart = ChartFactory.createStackedBarChart3D("Stacked Bar Chart 3D Demo", // chart title
-	"Category", // domain axis label
-	"Value", // range axis label
-	dataset, // data
-	PlotOrientation.HORIZONTAL, // the plot orientation
-	true, // include legend
-	true, // tooltips
-	false // urls
-	);
-	//        final StandardLegend legend = (StandardLegend) chart.getLegend();
-	//        legend.setRenderingOrder(LegendRenderingOrder.REVERSE);
-	final CategoryPlot plot = (CategoryPlot) chart.getPlot();
-	final CategoryItemRenderer renderer = plot.getRenderer();
-	//        renderer.setLabelGenerator(new StandardCategoryItemLabelGenerator());
-	//        renderer.setItemLabelsVisible(true);
-	//        renderer.setPositiveItemLabelPosition(
-	//            new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER)
-	//        );
-	//        renderer.setNegativeItemLabelPosition(
-	//            new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER)
-	//        );
-	return chart;
+        final JFreeChart chart = ChartFactory.createStackedBarChart3D("Stacked Bar Chart 3D Demo", // chart title
+                "Category", // domain axis label
+                "Value", // range axis label
+                dataset, // data
+                PlotOrientation.HORIZONTAL, // the plot orientation
+                true, // include legend
+                true, // tooltips
+                false // urls
+        );
+        //        final StandardLegend legend = (StandardLegend) chart.getLegend();
+        //        legend.setRenderingOrder(LegendRenderingOrder.REVERSE);
+        final CategoryPlot plot = (CategoryPlot) chart.getPlot();
+        final CategoryItemRenderer renderer = plot.getRenderer();
+        //        renderer.setLabelGenerator(new StandardCategoryItemLabelGenerator());
+        //        renderer.setItemLabelsVisible(true);
+        //        renderer.setPositiveItemLabelPosition(
+        //            new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER)
+        //        );
+        //        renderer.setNegativeItemLabelPosition(
+        //            new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER)
+        //        );
+        return chart;
 
     }
 
@@ -83,10 +83,10 @@ public class StackedBarChart3DDemo extends ApplicationFrame {
      */
     public static void main(final String[] args) {
 
-	final StackedBarChart3DDemo demo = new StackedBarChart3DDemo("Stacked Bar Chart 3D Demo");
-	demo.pack();
-	RefineryUtilities.centerFrameOnScreen(demo);
-	demo.setVisible(true);
+        final StackedBarChart3DDemo demo = new StackedBarChart3DDemo("Stacked Bar Chart 3D Demo");
+        demo.pack();
+        RefineryUtilities.centerFrameOnScreen(demo);
+        demo.setVisible(true);
 
     }
 

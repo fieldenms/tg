@@ -6,15 +6,15 @@ import javafx.scene.Group;
 
 /**
  * An abstraction for JavaFX node that represent a view of {@link MessagePoint}.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 public interface IMessagePointNode {
 
     /**
      * Returns a corresponding {@link MessagePoint}.
-     *
+     * 
      * @return
      */
     MessagePoint messagePoint();
@@ -36,7 +36,7 @@ public interface IMessagePointNode {
 
     /**
      * Returns a size.
-     *
+     * 
      * @return
      */
     double getSize();
@@ -52,7 +52,9 @@ public interface IMessagePointNode {
     void clickedAction();
 
     void select();
+
     boolean selected();
+
     void unselect();
 
     /**

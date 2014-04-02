@@ -16,12 +16,11 @@ import com.google.inject.Inject;
 
 /**
  * Factoring for instantiating master of entity {@link TgPublishedYearly}.
- *
+ * 
  * @author Developers
- *
+ * 
  */
 public class TgPublishedYearlyMasterFactory implements IEntityMasterFactory<TgPublishedYearly, ITgPublishedYearly> {
-
 
     private final ITgPublishedYearly companionObject;
     private final ICriteriaGenerator criteriaGenerator;
@@ -32,16 +31,15 @@ public class TgPublishedYearlyMasterFactory implements IEntityMasterFactory<TgPu
         this.criteriaGenerator = criteriaGenerator;
     }
 
-     @Override
-     public BaseFrame createMasterFrame(//
-    			final IEntityProducer<TgPublishedYearly> entityProducer,//
-    		        final IEntityMasterCache cache,//
-    		        final TgPublishedYearly entityObject,//
-    		        final IValueMatcherFactory valueMatcherFactory,//
-    		        final IMasterDomainTreeManager masterManager,//
-    		        final IUmViewOwner owner, final IPostInitCallback<TgPublishedYearly, ITgPublishedYearly> postInitCallback) {
-	 return new TgPublishedYearlyMasterFrame(entityProducer, cache, entityObject, companionObject, valueMatcherFactory, owner, masterManager, criteriaGenerator, postInitCallback);
-     }
-
+    @Override
+    public BaseFrame createMasterFrame(//
+    final IEntityProducer<TgPublishedYearly> entityProducer,//
+            final IEntityMasterCache cache,//
+            final TgPublishedYearly entityObject,//
+            final IValueMatcherFactory valueMatcherFactory,//
+            final IMasterDomainTreeManager masterManager,//
+            final IUmViewOwner owner, final IPostInitCallback<TgPublishedYearly, ITgPublishedYearly> postInitCallback) {
+        return new TgPublishedYearlyMasterFrame(entityProducer, cache, entityObject, companionObject, valueMatcherFactory, owner, masterManager, criteriaGenerator, postInitCallback);
+    }
 
 }

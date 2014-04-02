@@ -31,26 +31,26 @@ public class SimpleEntity extends AbstractEntity<String> {
     private String propertyTwo;
 
     protected SimpleEntity(final String key) {
-	super(null, key, "");
+        super(null, key, "");
     }
 
     public String getProperty() {
-	return property;
+        return property;
     }
 
     @Observable
     @NotNull
     @DomainValidation
     public void setProperty(final String property) {
-	this.property = property;
+        this.property = property;
     }
 
     public String getPropertyTwo() {
-	return propertyTwo;
+        return propertyTwo;
     }
 
     @Observable
     public void setPropertyTwo(final String propertyTwo) {
-	this.propertyTwo = propertyTwo;
+        this.propertyTwo = propertyTwo;
     }
 }

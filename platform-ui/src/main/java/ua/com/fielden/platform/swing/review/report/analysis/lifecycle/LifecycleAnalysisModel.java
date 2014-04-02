@@ -30,7 +30,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
 import ua.com.fielden.platform.types.ICategory;
 import ua.com.fielden.platform.utils.Pair;
 
-public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager>{
+public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager> {
 
     private final LifecycleChartFactory<T> chartFactory;
 
@@ -45,186 +45,185 @@ public class LifecycleAnalysisModel<T extends AbstractEntity<?>> extends Abstrac
     private LifecycleModel<T> lifecycleModel;
 
     public LifecycleAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final ILifecycleDomainTreeManager adtme) {
-	super(criteria, adtme);
-	this.chartFactory = createChartFactory();
-	this.lifecycleModel = null;
+        super(criteria, adtme);
+        this.chartFactory = createChartFactory();
+        this.lifecycleModel = null;
 
-	this.propertyUpdater = getCriteria().getEntityFactory().newByKey(LifecyclePropertiesUpdater.class, "NOT REQUIRED");
-	this.propertyUpdater.setLdtm(adtme);
-	this.propertyEditors = MasterPropertyBinder.createPropertyBinderWithoutLocatorSupport(null, "key").bind(propertyUpdater);
+        this.propertyUpdater = getCriteria().getEntityFactory().newByKey(LifecyclePropertiesUpdater.class, "NOT REQUIRED");
+        this.propertyUpdater.setLdtm(adtme);
+        this.propertyEditors = MasterPropertyBinder.createPropertyBinderWithoutLocatorSupport(null, "key").bind(propertyUpdater);
     }
 
-    public void addLifecycleModelUpdatedListener(final ILifecycleModelUpdated l){
-	listeners.add(ILifecycleModelUpdated.class, l);
+    public void addLifecycleModelUpdatedListener(final ILifecycleModelUpdated l) {
+        listeners.add(ILifecycleModelUpdated.class, l);
     }
 
-    public void removeLifecycleUpdatedListener(final ILifecycleModelUpdated l){
-	listeners.remove(ILifecycleModelUpdated.class, l);
+    public void removeLifecycleUpdatedListener(final ILifecycleModelUpdated l) {
+        listeners.remove(ILifecycleModelUpdated.class, l);
     }
 
     @Override
     protected Result executeAnalysisQuery() {
-	final Result analysisQueryExecutionResult = canLoadData();
-	if(!analysisQueryExecutionResult.isSuccessful()){
-	    return analysisQueryExecutionResult;
-	}
+        final Result analysisQueryExecutionResult = canLoadData();
+        if (!analysisQueryExecutionResult.isSuccessful()) {
+            return analysisQueryExecutionResult;
+        }
 
-	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getCriteria().getManagedType(), getCriteria().createQueryProperties()).model();
-	final List<String> fetchProperties = new ArrayList<>();
-	for(final String distrProp : adtme().getFirstTick().checkedProperties(getCriteria().getEntityClass())){
-	    if(!LifecycleAddToCategoriesTickRepresentation.isDatePeriodProperty(getCriteria().getManagedType(), distrProp)){
-		fetchProperties.add(distrProp);
-	    }
-	}
-	lifecycleModel = getCriteria().getLifecycleInformation(notOrderedQuery, fetchProperties, adtme().getLifecycleProperty().getValue(), new DateTime(adtme().getFrom()), new DateTime(adtme().getTo()));
-	SwingUtilities.invokeLater(new Runnable() {
+        final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getCriteria().getManagedType(), getCriteria().createQueryProperties()).model();
+        final List<String> fetchProperties = new ArrayList<>();
+        for (final String distrProp : adtme().getFirstTick().checkedProperties(getCriteria().getEntityClass())) {
+            if (!LifecycleAddToCategoriesTickRepresentation.isDatePeriodProperty(getCriteria().getManagedType(), distrProp)) {
+                fetchProperties.add(distrProp);
+            }
+        }
+        lifecycleModel = getCriteria().getLifecycleInformation(notOrderedQuery, fetchProperties, adtme().getLifecycleProperty().getValue(), new DateTime(adtme().getFrom()), new DateTime(adtme().getTo()));
+        SwingUtilities.invokeLater(new Runnable() {
 
-	    @Override
-	    public void run() {
-		fireLifecycleModelUpdated(new LifecycleModelUpdateEvent<>(LifecycleAnalysisModel.this, lifecycleModel));
-	    }
-	});
-	return Result.successful(lifecycleModel);
+            @Override
+            public void run() {
+                fireLifecycleModelUpdated(new LifecycleModelUpdateEvent<>(LifecycleAnalysisModel.this, lifecycleModel));
+            }
+        });
+        return Result.successful(lifecycleModel);
     }
 
     @Override
     protected Result exportData(final String fileName) throws IOException {
-	return new Result(new UnsupportedOperationException("The data exporting for lifecycle analysis is not supported!"));
+        return new Result(new UnsupportedOperationException("The data exporting for lifecycle analysis is not supported!"));
     }
 
     private Result canLoadData() {
-	final Result res = getCriteria().isValid();
-	if(!res.isSuccessful()){
-	    return res;
-	}
-	final Result lifecycleResult = propertyUpdater.isValid();
-	if(!lifecycleResult.isSuccessful()){
-	    return lifecycleResult;
-	}
-	if(getLifecycleProperty() == null){
-	    return new Result(new IllegalStateException("<html>Please specify the <b>lifecycle property</b>.</html>"));
-	}
-	return Result.successful(this);
+        final Result res = getCriteria().isValid();
+        if (!res.isSuccessful()) {
+            return res;
+        }
+        final Result lifecycleResult = propertyUpdater.isValid();
+        if (!lifecycleResult.isSuccessful()) {
+            return lifecycleResult;
+        }
+        if (getLifecycleProperty() == null) {
+            return new Result(new IllegalStateException("<html>Please specify the <b>lifecycle property</b>.</html>"));
+        }
+        return Result.successful(this);
     }
 
     @Override
     protected String[] getExportFileExtensions() {
-	throw new UnsupportedOperationException("The data exporting for lifecycle analysis is not supported!");
+        throw new UnsupportedOperationException("The data exporting for lifecycle analysis is not supported!");
     }
 
     @Override
     protected String getDefaultExportFileExtension() {
-	throw new UnsupportedOperationException("The data exporting for lifecycle analysis is not supported!");
+        throw new UnsupportedOperationException("The data exporting for lifecycle analysis is not supported!");
     }
 
-    protected void fireLifecycleModelUpdated(final LifecycleModelUpdateEvent<T> event){
-	for(final ILifecycleModelUpdated listener : listeners.getListeners(ILifecycleModelUpdated.class)){
-	    listener.lifecycleModelUpdated(event);
-	}
+    protected void fireLifecycleModelUpdated(final LifecycleModelUpdateEvent<T> event) {
+        for (final ILifecycleModelUpdated listener : listeners.getListeners(ILifecycleModelUpdated.class)) {
+            listener.lifecycleModelUpdated(event);
+        }
     }
 
     /**
      * Creates the chart factory for this Lifecycle analysis model. Override this to provide custom chart factory.
-     *
+     * 
      * @return
      */
-    protected LifecycleChartFactory<T> createChartFactory(){
-	return new LifecycleChartFactory<>(this);
+    protected LifecycleChartFactory<T> createChartFactory() {
+        return new LifecycleChartFactory<>(this);
     }
 
     /**
      * Returns the associated {@link LifecycleChartFactory} instance, that was created with {@link #createChartFactory()}.
-     *
+     * 
      * @return
      */
     public LifecycleChartFactory<T> getChartFactory() {
-	return chartFactory;
+        return chartFactory;
     }
 
     /**
      * Returns the binded {@link DatePickerLayer} for the "from" property editor.
-     *
+     * 
      * @return
      */
     @SuppressWarnings("unchecked")
-    public BoundedValidationLayer<DatePickerLayer> getFromeEditor(){
-	return (BoundedValidationLayer<DatePickerLayer>)propertyEditors.get("from").getEditor();
+    public BoundedValidationLayer<DatePickerLayer> getFromeEditor() {
+        return (BoundedValidationLayer<DatePickerLayer>) propertyEditors.get("from").getEditor();
     }
 
     /**
      * Returns the binded {@link DatePickerLayer} for the "to" property editor.
-     *
+     * 
      * @return
      */
     @SuppressWarnings("unchecked")
-    public BoundedValidationLayer<DatePickerLayer> getToEditor(){
-	return (BoundedValidationLayer<DatePickerLayer>)propertyEditors.get("to").getEditor();
+    public BoundedValidationLayer<DatePickerLayer> getToEditor() {
+        return (BoundedValidationLayer<DatePickerLayer>) propertyEditors.get("to").getEditor();
     }
 
     //////////////////////// Recently added stubs ////////////////////////
 
     /**
-     * TODO please note that ordering will be performed only on one property.
-     * It should be extended to many properties.
-     *
+     * TODO please note that ordering will be performed only on one property. It should be extended to many properties.
+     * 
      * @return
      */
     public Pair<ICategory, Ordering> getOrdering() {
-	final List<Pair<String, Ordering>> orderings = adtme().getSecondTick().orderedProperties(getCriteria().getEntityClass());
-	if(orderings.isEmpty()){
-	    return null;
-	}
-	final Pair<String, Ordering> firstOrdering = orderings.get(0);
-	return new Pair<ICategory, Ordering>(LifecycleDomainTreeManager.getCategory(getCriteria().getManagedType(), firstOrdering.getKey(), adtme().getSecondTick().allCategories(getCriteria().getEntityClass())), firstOrdering.getValue());
+        final List<Pair<String, Ordering>> orderings = adtme().getSecondTick().orderedProperties(getCriteria().getEntityClass());
+        if (orderings.isEmpty()) {
+            return null;
+        }
+        final Pair<String, Ordering> firstOrdering = orderings.get(0);
+        return new Pair<ICategory, Ordering>(LifecycleDomainTreeManager.getCategory(getCriteria().getManagedType(), firstOrdering.getKey(), adtme().getSecondTick().allCategories(getCriteria().getEntityClass())), firstOrdering.getValue());
     }
 
     public boolean getTotal() {
-	return adtme().isTotal();
+        return adtme().isTotal();
     }
 
     /**
      * Returns string representations of categories associated with current lifecycle property.
-     *
+     * 
      * @param property
      * @return
      */
     public List<String> getCurrentCategoriesStrings() {
-	final List<String> l = new ArrayList<String>();
-	for (final ICategory c : getCurrentCategories()) {
-	    l.add(c.toString());
-	}
-	return l;
+        final List<String> l = new ArrayList<String>();
+        for (final ICategory c : getCurrentCategories()) {
+            l.add(c.toString());
+        }
+        return l;
     }
 
     public String getDistributionProperty() {
-	// TODO consider empty
-	return adtme().getFirstTick().usedProperties(getCriteria().getEntityClass()).get(0);
+        // TODO consider empty
+        return adtme().getFirstTick().usedProperties(getCriteria().getEntityClass()).get(0);
     }
 
     /**
      * Returns current categories (used properties for second tick).
-     *
+     * 
      * @param property
      * @return
      */
     public List<? extends ICategory> getCurrentCategories() {
-	return adtme().getSecondTick().currentCategories(getCriteria().getEntityClass());
+        return adtme().getSecondTick().currentCategories(getCriteria().getEntityClass());
     }
 
     public ICategory findCategoryByName(final String info) {
-	for (final ICategory c : getCurrentCategories()) {
-	    if (c.getName().equals(info)) {
-		return c;
-	    }
-	}
-	return null;
+        for (final ICategory c : getCurrentCategories()) {
+            if (c.getName().equals(info)) {
+                return c;
+            }
+        }
+        return null;
     }
 
     public String getLifecycleProperty() {
-	return adtme().getLifecycleProperty().getValue();
+        return adtme().getLifecycleProperty().getValue();
     }
 
     public List<? extends ICategory> allCategories() {
-	return adtme().getSecondTick().allCategories(getCriteria().getEntityClass());
+        return adtme().getSecondTick().allCategories(getCriteria().getEntityClass());
     }
 }

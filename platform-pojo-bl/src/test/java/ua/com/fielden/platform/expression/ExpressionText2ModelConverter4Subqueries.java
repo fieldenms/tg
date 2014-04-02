@@ -20,29 +20,29 @@ public class ExpressionText2ModelConverter4Subqueries {
     @Test
     @Ignore
     public void test_model_creation_for_vehicle_property_as_sum_of_collectional_fuel_usages_association() throws RecognitionException, SemanticException {
-	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(TgVehicle.class, "SUM(fuelUsages.qty)");
-	final AstNode root = ev.convert();
-	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
-	final ExpressionModel sum = expr().sumOf().prop("qty").model();
-	final ExpressionModel em = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().prop("$$$1"). //
-		yield().expr(sum).modelAsPrimitive()).model();
-	assertEquals("Incorrect model.", em, root.getModel());
+        final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(TgVehicle.class, "SUM(fuelUsages.qty)");
+        final AstNode root = ev.convert();
+        assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
+        final ExpressionModel sum = expr().sumOf().prop("qty").model();
+        final ExpressionModel em = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().prop("$$$1"). //
+        yield().expr(sum).modelAsPrimitive()).model();
+        assertEquals("Incorrect model.", em, root.getModel());
     }
 
     @Test
     @Ignore
     public void test_case_37a() throws RecognitionException, SemanticException {
-	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
-		EntityLevel1.class, // higher-order type
-		"selfProperty.collectional", // expression context
-		"2 * intProperty + ←.intProperty");
-	final AstNode root = ev.convert();
-	assertEquals("Incorrect expression type", Integer.class, root.getType());
-	assertEquals("Incorrect expression collectional context", "selfProperty.collectional", root.getTag());
+        final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
+        EntityLevel1.class, // higher-order type
+        "selfProperty.collectional", // expression context
+        "2 * intProperty + ←.intProperty");
+        final AstNode root = ev.convert();
+        assertEquals("Incorrect expression type", Integer.class, root.getType());
+        assertEquals("Incorrect expression collectional context", "selfProperty.collectional", root.getTag());
 
-	final ExpressionModel mult = expr().val(2).mult().prop("selfProperty.collectional.intProperty").model();
-	final ExpressionModel plus = expr().expr(mult).add().prop("selfProperty.intProperty").model();
-	assertEquals("Incorrect model.", plus, root.getModel());
+        final ExpressionModel mult = expr().val(2).mult().prop("selfProperty.collectional.intProperty").model();
+        final ExpressionModel plus = expr().expr(mult).add().prop("selfProperty.intProperty").model();
+        assertEquals("Incorrect model.", plus, root.getModel());
     }
 
 }

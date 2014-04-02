@@ -33,29 +33,29 @@ public class DummyEntity extends AbstractEntity<String> {
     }
 
     public DummyEntity(final String key, final String desc) {
-	super(null, key, desc);
+        super(null, key, desc);
     }
 
     public String getDummyEntity2Ref() {
-	return dummyEntity2Ref;
+        return dummyEntity2Ref;
     }
 
     @Observable
     @NotNull
     public DummyEntity setDummyEntity2Ref(final String dummyEntity2Ref) {
-	this.dummyEntity2Ref = dummyEntity2Ref;
-	return this;
+        this.dummyEntity2Ref = dummyEntity2Ref;
+        return this;
     }
 
     public DummyEntity2 getDummyEntity2() {
-	return dummyEntity2;
+        return dummyEntity2;
     }
 
     @Observable
     @NotNull
     public DummyEntity setDummyEntity2(final DummyEntity2 dummyEntity2) {
-	this.dummyEntity2 = dummyEntity2;
-	return this;
+        this.dummyEntity2 = dummyEntity2;
+        return this;
     }
 
 }

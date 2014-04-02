@@ -13,8 +13,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * BCE event handler for testing purposes.
+ * 
  * @author TG Team
- *
+ * 
  */
 public class BeforeChangeEventHandler implements IBeforeChangeEventHandler<Object> {
 
@@ -32,12 +33,12 @@ public class BeforeChangeEventHandler implements IBeforeChangeEventHandler<Objec
 
     @Override
     public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-	if (controllerParam != null) {
-	    controllerParam.run();
-	}
+        if (controllerParam != null) {
+            controllerParam.run();
+        }
 
-	setInvoked(true);
-	return Result.successful(null);
+        setInvoked(true);
+        return Result.successful(null);
     }
 
     public String getStrParam() {

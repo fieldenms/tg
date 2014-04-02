@@ -21,48 +21,49 @@ import ua.com.fielden.platform.rao.RestClientUtil;
 
 /**
  * This {@link IReport} implementor sends request to server in order to obtain reports.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
 public class ReportRao implements IReport {
 
     private final RestClientUtil restUtil;
 
     public ReportRao(final RestClientUtil restUtil) {
-	this.restUtil = restUtil;
+        this.restUtil = restUtil;
     }
 
     @Override
-    public byte[] getReport(final String reportName, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final Map<String, Object> params) throws IOException {
-	// create request envelope containing Entity Query
-	final List<Object> requestContent = new ArrayList<Object>();
-	requestContent.add(reportName);
-	requestContent.add(query);
-	requestContent.add(params);
-	final Representation envelope = restUtil.represent(requestContent);
-	// send request
-	final Response response = restUtil.send(new Request(Method.POST, restUtil.getReportUri(), envelope));
-	if (!Status.SUCCESS_OK.equals(response.getStatus())) {
-	    throw new IllegalStateException(response.getStatus().toString());
-	}
-	final InputStream content = response.getEntity().getStream();
-	final GZIPInputStream stream = new GZIPInputStream(content);
-	final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
-	int i = stream.read();
-	while (i != -1) {
-	    oStream.write(i);
-	    i = stream.read();
-	}
-	oStream.flush();
-	oStream.close();
-	stream.close();
+    public byte[] getReport(final String reportName, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final Map<String, Object> params)
+            throws IOException {
+        // create request envelope containing Entity Query
+        final List<Object> requestContent = new ArrayList<Object>();
+        requestContent.add(reportName);
+        requestContent.add(query);
+        requestContent.add(params);
+        final Representation envelope = restUtil.represent(requestContent);
+        // send request
+        final Response response = restUtil.send(new Request(Method.POST, restUtil.getReportUri(), envelope));
+        if (!Status.SUCCESS_OK.equals(response.getStatus())) {
+            throw new IllegalStateException(response.getStatus().toString());
+        }
+        final InputStream content = response.getEntity().getStream();
+        final GZIPInputStream stream = new GZIPInputStream(content);
+        final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
+        int i = stream.read();
+        while (i != -1) {
+            oStream.write(i);
+            i = stream.read();
+        }
+        oStream.flush();
+        oStream.close();
+        stream.close();
 
-	return oStream.toByteArray();
+        return oStream.toByteArray();
     }
 
     @Override
     public String getUsername() {
-	throw new UnsupportedOperationException("Getting username is not required at the client side, and this fact most likely points to a programming mistake.");
+        throw new UnsupportedOperationException("Getting username is not required at the client side, and this fact most likely points to a programming mistake.");
     }
 }

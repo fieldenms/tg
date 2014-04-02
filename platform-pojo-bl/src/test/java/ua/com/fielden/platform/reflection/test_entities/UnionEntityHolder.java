@@ -20,12 +20,12 @@ public class UnionEntityHolder extends AbstractEntity<String> {
     private UnionEntityForReflector unionEntity;
 
     public UnionEntityForReflector getUnionEntity() {
-	return unionEntity;
+        return unionEntity;
     }
 
     @Observable
     public void setUnionEntity(final UnionEntityForReflector unionEntity) {
-	this.unionEntity = unionEntity;
+        this.unionEntity = unionEntity;
     }
 
 }

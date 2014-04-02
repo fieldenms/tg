@@ -10,16 +10,16 @@ extends AbstractWhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, 
 implements IStandAloneConditionOperand<ET> {
 
     protected StandAloneConditionOperand(final Tokens queryTokens) {
-	super(queryTokens);
+        super(queryTokens);
     }
 
     @Override
     IStandAloneConditionCompoundCondition<ET> getParent2() {
-	return new StandAloneConditionCompoundCondition<ET>(getTokens());
+        return new StandAloneConditionCompoundCondition<ET>(getTokens());
     }
 
     @Override
     IStandAloneConditionComparisonOperator<ET> getParent() {
-	return new StandAloneConditionComparisonOperator<ET>(getTokens());
+        return new StandAloneConditionComparisonOperator<ET>(getTokens());
     }
 }

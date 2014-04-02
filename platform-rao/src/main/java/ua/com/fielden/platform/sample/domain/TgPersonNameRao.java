@@ -12,23 +12,22 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.sample.domain.mixin.TgPersonNameMixin;
 import com.google.inject.Inject;
 
-/** 
+/**
  * RAO implementation for master object {@link ITgPersonName} based on a common with DAO mixin.
  * 
  * @author Developers
- *
+ * 
  */
 @EntityType(TgPersonName.class)
 public class TgPersonNameRao extends CommonEntityRao<TgPersonName> implements ITgPersonName {
 
-    
     private final TgPersonNameMixin mixin;
-    
+
     @Inject
     public TgPersonNameRao(final RestClientUtil restUtil) {
         super(restUtil);
-        
+
         mixin = new TgPersonNameMixin(this);
     }
-    
+
 }
