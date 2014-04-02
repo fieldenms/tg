@@ -8,7 +8,7 @@ public class BogieDragModel extends AbstractBogieWidget<WheelsetDragModel> {
 
     @Override
     public boolean canDrag() {
-	return true;
+        return true;
     }
 
     /**
@@ -17,23 +17,23 @@ public class BogieDragModel extends AbstractBogieWidget<WheelsetDragModel> {
     private static final long serialVersionUID = 1L;
 
     public BogieDragModel(final Bogie bogie) {
-	super(WheelsetDragModel.class, "bogie");
-	setBogie(bogie);
+        super(WheelsetDragModel.class, "bogie");
+        setBogie(bogie);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Bogie getRotable() {
-	return bogie;
+        return bogie;
     }
 
     @Override
     protected boolean canAccept(final int slotIndex, final WheelsetDragModel widgetToTest) {
-	return true;
+        return true;
     }
 
     public void setBogie(final Bogie bogie) {
-	this.bogie = bogie;
+        this.bogie = bogie;
     }
 
 }

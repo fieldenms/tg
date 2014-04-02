@@ -13,10 +13,10 @@ public abstract class RotableLocation<T extends Comparable<T>> extends AbstractE
     }
 
     public RotableLocation(final Long id, final T key, final String desc) {
-	super(id, key, desc);
+        super(id, key, desc);
     }
 
     public static void main(final String[] args) {
-	final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(RotableLocation.class, "key");
+        final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(RotableLocation.class, "key");
     }
 }

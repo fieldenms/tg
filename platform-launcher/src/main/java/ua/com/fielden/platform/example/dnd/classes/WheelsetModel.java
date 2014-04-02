@@ -9,27 +9,27 @@ public class WheelsetModel extends AbstractWheelsetWidget {
     private Wheelset wheelset;
 
     public WheelsetModel(final Wheelset rotable) {
-	super(rotable.getKey());
-	setWheelset(rotable);
-	fill(rotable.getStatus().getColor());
+        super(rotable.getKey());
+        setWheelset(rotable);
+        fill(rotable.getStatus().getColor());
     }
 
     @Override
     public boolean canDrag() {
-	return true;
+        return true;
     }
 
     public Wheelset getWheelset() {
-	return wheelset;
+        return wheelset;
     }
 
     public void setWheelset(final Wheelset wheelset) {
-	this.wheelset = wheelset;
+        this.wheelset = wheelset;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Rotable getRotable() {
-	return wheelset;
+        return wheelset;
     }
 }

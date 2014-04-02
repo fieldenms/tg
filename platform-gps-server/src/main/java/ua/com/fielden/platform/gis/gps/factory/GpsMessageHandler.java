@@ -9,12 +9,12 @@ public class GpsMessageHandler<MODULE extends AbstractAvlModule> implements IMes
     private final AbstractActors<?, ?, MODULE, ?, ?, ?> actors;
 
     public GpsMessageHandler(final AbstractActors<?, ?, MODULE, ?, ?, ?> actors) {
-	this.actors = actors;
+        this.actors = actors;
     }
 
     @Override
     public IMessageHandler handle(final String imei, final AvlData[] data) {
-	actors.dataReceived(imei, data);
-	return this;
+        actors.dataReceived(imei, data);
+        return this;
     }
 }

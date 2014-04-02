@@ -52,69 +52,75 @@ public class SimpleECEEntity extends AbstractEntity<String> {
     @IsProperty
     private SimpleNestedEntity nestedEntity;
 
-    @IsProperty(value = SimpleCompositeEntity.class, linkProperty = "simpleEntity") @Title("Collection property") @MapTo("ID_SIMPLE_ENTITY")
+    @IsProperty(value = SimpleCompositeEntity.class, linkProperty = "simpleEntity")
+    @Title("Collection property")
+    @MapTo("ID_SIMPLE_ENTITY")
     private Set<SimpleCompositeEntity> entities = new HashSet<SimpleCompositeEntity>();
-    public Set<SimpleCompositeEntity> getEntities() { return entities; }
+
+    public Set<SimpleCompositeEntity> getEntities() {
+        return entities;
+    }
+
     @Observable
     public SimpleECEEntity setEntities(final Set<SimpleCompositeEntity> entities) {
-	this.entities = entities;
-	return this;
+        this.entities = entities;
+        return this;
     }
 
     public String getStringProperty() {
-	return stringProperty;
+        return stringProperty;
     }
 
     @Observable
     public SimpleECEEntity setStringProperty(final String stringProperty) {
-	this.stringProperty = stringProperty;
-	return this;
+        this.stringProperty = stringProperty;
+        return this;
     }
 
     public Date getInitDate() {
-	return initDate;
+        return initDate;
     }
 
     @Observable
     public SimpleECEEntity setInitDate(final Date initDate) {
-	this.initDate = initDate;
-	return this;
+        this.initDate = initDate;
+        return this;
     }
 
     public boolean isActive() {
-	return active;
+        return active;
     }
 
     @Observable
     public SimpleECEEntity setActive(final boolean active) {
-	this.active = active;
-	return this;
+        this.active = active;
+        return this;
     }
 
     public Integer getNumValue() {
-	return numValue;
+        return numValue;
     }
 
     @Observable
     public SimpleECEEntity setNumValue(final Integer numValue) {
-	this.numValue = numValue;
-	return this;
+        this.numValue = numValue;
+        return this;
     }
 
     public SimpleNestedEntity getNestedEntity() {
-	return nestedEntity;
+        return nestedEntity;
     }
 
     @Observable
     public SimpleECEEntity setNestedEntity(final SimpleNestedEntity nestedEntity) {
-	this.nestedEntity = nestedEntity;
-	return this;
+        this.nestedEntity = nestedEntity;
+        return this;
     }
 
     @Override
     @Observable
     public SimpleECEEntity setDesc(final String desc) {
-	super.setDesc(desc);
-	return this;
+        super.setDesc(desc);
+        return this;
     }
 }

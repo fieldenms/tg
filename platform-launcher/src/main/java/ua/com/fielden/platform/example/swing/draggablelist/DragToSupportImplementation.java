@@ -13,23 +13,23 @@ public class DragToSupportImplementation implements DragToSupport {
     private final JList<String> list;
 
     public DragToSupportImplementation(final JList<String> list) {
-	this.list = list;
+        this.list = list;
     }
 
     @Override
     public boolean canDropTo(final Point point, final Object what, final JComponent draggedFrom) {
-	return draggedFrom == list;
+        return draggedFrom == list;
     }
 
     @Override
     public boolean dropTo(final Point point, final Object what, final JComponent draggedFrom) {
-	final int index = list.locationToIndex(point);
-	if (index < 0) {
-	    return false;
-	}
-	((DefaultListModel<String>) list.getModel()).removeElement(what);
-	((DefaultListModel<String>) list.getModel()).add(index, what.toString());
-	return true;
+        final int index = list.locationToIndex(point);
+        if (index < 0) {
+            return false;
+        }
+        ((DefaultListModel<String>) list.getModel()).removeElement(what);
+        ((DefaultListModel<String>) list.getModel()).add(index, what.toString());
+        return true;
     }
 
 }

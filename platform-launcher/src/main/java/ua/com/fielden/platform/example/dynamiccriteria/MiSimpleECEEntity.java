@@ -17,7 +17,7 @@ public class MiSimpleECEEntity extends MiWithConfigurationSupport<SimpleECEEntit
 
     @SuppressWarnings("unchecked")
     public MiSimpleECEEntity(final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ITreeMenuItemVisibilityProvider visibilityProvider) {
-	super("Simple entity", "Simple entity description", treeMenu, injector.getInstance(EntityCentreFactoryBinder.class), visibilityProvider, MiSimpleECEEntity.class, injector.getInstance(IGlobalDomainTreeManager.class));
+        super("Simple entity", "Simple entity description", treeMenu, injector.getInstance(EntityCentreFactoryBinder.class), visibilityProvider, MiSimpleECEEntity.class, injector.getInstance(IGlobalDomainTreeManager.class));
     }
 
 }

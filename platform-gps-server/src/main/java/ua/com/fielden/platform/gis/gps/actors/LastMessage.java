@@ -10,15 +10,15 @@ public class LastMessage<T extends AbstractAvlMessage> extends LastMessageRespon
     private final T message;
 
     public LastMessage(final Long machineId, final T message) {
-	this.machineId = machineId;
-	this.message = message;
+        this.machineId = machineId;
+        this.message = message;
     }
 
     public T getMessage() {
-	return message;
+        return message;
     }
 
     public Long getMachineId() {
-	return machineId;
+        return machineId;
     }
 }

@@ -17,7 +17,7 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Dummy entity for example/testing
- *
+ * 
  * @author Yura
  */
 @KeyType(Integer.class)
@@ -34,7 +34,7 @@ public class DummyEntity2 extends AbstractEntity<Long> {
     private boolean boolField = true;
 
     @IsProperty
-    @Title(value="Date Field", desc="Date Field")
+    @Title(value = "Date Field", desc = "Date Field")
     private Date dateField;
 
     @IsProperty
@@ -47,7 +47,7 @@ public class DummyEntity2 extends AbstractEntity<Long> {
     }
 
     public DummyEntity2(final Long key, final String desc) {
-	super(null, key, desc);
+        super(null, key, desc);
     }
 
     public Money getMoneyField() {
@@ -98,10 +98,11 @@ public class DummyEntity2 extends AbstractEntity<Long> {
 
     /**
      * Getter for non-existing property "dummyEntitiesCount"
+     * 
      * @return
      */
     public Integer getDummyEntitiesCount() {
-	return dummyEntities.size();
+        return dummyEntities.size();
     }
 
 }

@@ -11,17 +11,17 @@ import ua.com.fielden.platform.swing.egi.models.mappings.simplified.ITooltipGett
 
 public class ReadonlyPropertyColumnMappingsForExample<T extends AbstractEntity<?>> extends ReadonlyPropertyColumnMapping<T> {
 
-    public ReadonlyPropertyColumnMappingsForExample(final String propertyName, final Class<?> propertyType, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter){
-	super(propertyName, propertyType, columnName, prefSize, headerTooltip, tooltipGetter, null, null, null, false);
+    public ReadonlyPropertyColumnMappingsForExample(final String propertyName, final Class<?> propertyType, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter) {
+        super(propertyName, propertyType, columnName, prefSize, headerTooltip, tooltipGetter, null, null, null, false);
     }
 
     @Override
     public JComponent getCellRendererComponent(final T entity, final Object value, final boolean isSelected, final boolean hasFocus, final JTable table, final int row, final int column) {
-	if (isCheckBox()) {
-	    ((JCheckBox) getView()).setSelected((Boolean)entity.get(getPropertyName()));
-	} else {
-	    ((JLabel) getView()).setText(entity.get(getPropertyName()).toString());
-	}
-	return getView();
+        if (isCheckBox()) {
+            ((JCheckBox) getView()).setSelected((Boolean) entity.get(getPropertyName()));
+        } else {
+            ((JLabel) getView()).setText(entity.get(getPropertyName()).toString());
+        }
+        return getView();
     }
 }

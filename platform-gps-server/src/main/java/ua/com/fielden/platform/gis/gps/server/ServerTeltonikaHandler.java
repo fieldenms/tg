@@ -23,11 +23,7 @@ import ua.com.fielden.platform.gis.gps.IMessageHandler;
 import ua.com.fielden.platform.gis.gps.IModuleLookup;
 import ua.com.fielden.platform.gis.gps.Option;
 
-public class ServerTeltonikaHandler<
-	MESSAGE extends AbstractAvlMessage,
-	MACHINE extends AbstractAvlMachine<MESSAGE>,
-	MODULE extends AbstractAvlModule
-> extends SimpleChannelUpstreamHandler {
+public class ServerTeltonikaHandler<MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>, MODULE extends AbstractAvlModule> extends SimpleChannelUpstreamHandler {
 
     private static final byte LOGIN_DENY = 0x0;
     private static final byte LOGIN_ALLOW = 0x1;
@@ -42,115 +38,115 @@ public class ServerTeltonikaHandler<
     private final IMessageHandler messageHandler;
 
     public ServerTeltonikaHandler(final ConcurrentHashMap<String, Channel> existingConnections, final ChannelGroup allChannels, final IModuleLookup<MODULE> moduleLookup, final IMessageHandler messageHandler) {
-	this.existingConnections = existingConnections;
-	this.allChannels = allChannels;
-	this.moduleLookup = moduleLookup;
-	this.messageHandler = messageHandler;
+        this.existingConnections = existingConnections;
+        this.allChannels = allChannels;
+        this.moduleLookup = moduleLookup;
+        this.messageHandler = messageHandler;
     }
 
     @Override
     public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
-	final Object msg = e.getMessage();
-	if (msg instanceof String) {
-	    setImei((String) msg);
-	    final Channel prevChannel = existingConnections.get(getImei());
-	    if (prevChannel != null && prevChannel != ctx.getChannel()) { // need to close previous channel
-		log.debug(format("Attempting to close previous connection for IMEI[%s]", getImei()));
-		try {
-		    allChannels.remove(prevChannel);
-		    prevChannel.close().awaitUninterruptibly();
+        final Object msg = e.getMessage();
+        if (msg instanceof String) {
+            setImei((String) msg);
+            final Channel prevChannel = existingConnections.get(getImei());
+            if (prevChannel != null && prevChannel != ctx.getChannel()) { // need to close previous channel
+                log.debug(format("Attempting to close previous connection for IMEI[%s]", getImei()));
+                try {
+                    allChannels.remove(prevChannel);
+                    prevChannel.close().awaitUninterruptibly();
 
-		} catch (final Exception ex) {
-		    log.warn(format("Life sucks and previous connection for IMEI %s could not be closed.", getImei()));
-		}
-	    }
-	    existingConnections.put(getImei(), ctx.getChannel());
-	    // IMEI
-	    handleLogin(ctx, getImei()); // process the initial handshake that result is successful or unsuccessful IMEI recognition
-	} else if (msg instanceof AvlData[]) { // AVL data array
-	    handleData(ctx, getImei(), (AvlData[]) msg);
-	} else {
-	    super.messageReceived(ctx, e);
-	}
+                } catch (final Exception ex) {
+                    log.warn(format("Life sucks and previous connection for IMEI %s could not be closed.", getImei()));
+                }
+            }
+            existingConnections.put(getImei(), ctx.getChannel());
+            // IMEI
+            handleLogin(ctx, getImei()); // process the initial handshake that result is successful or unsuccessful IMEI recognition
+        } else if (msg instanceof AvlData[]) { // AVL data array
+            handleData(ctx, getImei(), (AvlData[]) msg);
+        } else {
+            super.messageReceived(ctx, e);
+        }
     }
 
     @Override
     public void channelConnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
-	super.channelConnected(ctx, e);
-	allChannels.add(ctx.getChannel());
-	log.debug("Client channel connected.");
+        super.channelConnected(ctx, e);
+        allChannels.add(ctx.getChannel());
+        log.debug("Client channel connected.");
     }
 
     @Override
     public void channelDisconnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
-	log.debug("Originating channel has disconnected.");
-	allChannels.remove(ctx.getChannel());
-	super.channelDisconnected(ctx, e);
+        log.debug("Originating channel has disconnected.");
+        allChannels.remove(ctx.getChannel());
+        super.channelDisconnected(ctx, e);
     }
 
     @Override
     public void channelClosed(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
-	handleLogoff(ctx, 0);
+        handleLogoff(ctx, 0);
 
-	super.channelClosed(ctx, e);
-	log.debug("Client channel closed.");
+        super.channelClosed(ctx, e);
+        log.debug("Client channel closed.");
     }
 
     @Override
     public void exceptionCaught(final ChannelHandlerContext ctx, final ExceptionEvent e) {
-	log.error("-- Exception!\n");
-	log.error(e.getCause() + "\n");
-	final StackTraceElement[] elem = e.getCause().getStackTrace();
-	for (final StackTraceElement stackTraceElement : elem) {
-	    log.error("\t" + stackTraceElement.toString() + "\n");
-	}
-	log.debug("Closing client channel...");
-	final Channel channel = e.getChannel();
-	channel.close();
+        log.error("-- Exception!\n");
+        log.error(e.getCause() + "\n");
+        final StackTraceElement[] elem = e.getCause().getStackTrace();
+        for (final StackTraceElement stackTraceElement : elem) {
+            log.error("\t" + stackTraceElement.toString() + "\n");
+        }
+        log.debug("Closing client channel...");
+        final Channel channel = e.getChannel();
+        channel.close();
     }
 
     private void handleLogin(final ChannelHandlerContext ctx, final String imei) {
-	log.debug("Logging in client [" + imei + "].");
-	final Channel channel = ctx.getChannel();
-	final ChannelBuffer msg = ChannelBuffers.buffer(1);
-	try {
-	    final Option<MODULE> module = moduleLookup.get(imei);
-	    if (module.hasValue()) {
-		log.debug("Authorised IMEI [" + imei + "].");
-		msg.writeByte(LOGIN_ALLOW);
-		setImei(imei);
-	    } else {
-		log.warn("Unrecognised IMEI [" + imei + "].");
-		msg.writeByte(LOGIN_DENY);
-		//channel.close(); // FIXME relies on multiplexer to close the channel
-	    }
-	} finally {
-	    channel.write(msg);
-	}
+        log.debug("Logging in client [" + imei + "].");
+        final Channel channel = ctx.getChannel();
+        final ChannelBuffer msg = ChannelBuffers.buffer(1);
+        try {
+            final Option<MODULE> module = moduleLookup.get(imei);
+            if (module.hasValue()) {
+                log.debug("Authorised IMEI [" + imei + "].");
+                msg.writeByte(LOGIN_ALLOW);
+                setImei(imei);
+            } else {
+                log.warn("Unrecognised IMEI [" + imei + "].");
+                msg.writeByte(LOGIN_DENY);
+                //channel.close(); // FIXME relies on multiplexer to close the channel
+            }
+        } finally {
+            channel.write(msg);
+        }
     }
 
     private void handleLogoff(final ChannelHandlerContext ctx, final Integer reason) {
-	log.debug("Logging off client [" + getImei() + "].");
+        log.debug("Logging off client [" + getImei() + "].");
     }
 
     private void handleData(final ChannelHandlerContext ctx, final String imei, final AvlData[] data) {
-	final Channel channel = ctx.getChannel();
-	log.debug("Received GPS data from IMEI [" + getImei() + "]");
-	final int count = data.length;
-	log.debug("AVL data count = [" + count + "]");
+        final Channel channel = ctx.getChannel();
+        log.debug("Received GPS data from IMEI [" + getImei() + "]");
+        final int count = data.length;
+        log.debug("AVL data count = [" + count + "]");
 
-	messageHandler.handle(imei, data);
+        messageHandler.handle(imei, data);
 
-	ack.resetWriterIndex();
-	ack.writeInt(count);
-	channel.write(ack);
+        ack.resetWriterIndex();
+        ack.writeInt(count);
+        channel.write(ack);
     }
 
     public String getImei() {
-	return imei;
+        return imei;
     }
 
     private void setImei(final String deviceId) {
-	this.imei = deviceId;
+        this.imei = deviceId;
     }
 }

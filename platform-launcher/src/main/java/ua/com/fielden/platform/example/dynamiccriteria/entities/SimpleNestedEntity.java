@@ -44,42 +44,42 @@ public class SimpleNestedEntity extends AbstractEntity<String> {
     private Integer numValue;
 
     public String getStringProperty() {
-	return stringProperty;
+        return stringProperty;
     }
 
     @Observable
     public SimpleNestedEntity setStringProperty(final String stringProperty) {
-	this.stringProperty = stringProperty;
-	return this;
+        this.stringProperty = stringProperty;
+        return this;
     }
 
     public Date getInitDate() {
-	return initDate;
+        return initDate;
     }
 
     @Observable
     public SimpleNestedEntity setInitDate(final Date initDate) {
-	this.initDate = initDate;
-	return this;
+        this.initDate = initDate;
+        return this;
     }
 
     public boolean isActive() {
-	return active;
+        return active;
     }
 
     @Observable
     public SimpleNestedEntity setActive(final boolean active) {
-	this.active = active;
-	return this;
+        this.active = active;
+        return this;
     }
 
     public Integer getNumValue() {
-	return numValue;
+        return numValue;
     }
 
     @Observable
     public SimpleNestedEntity setNumValue(final Integer numValue) {
-	this.numValue = numValue;
-	return this;
+        this.numValue = numValue;
+        return this;
     }
 }

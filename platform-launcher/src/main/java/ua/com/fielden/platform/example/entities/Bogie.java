@@ -28,16 +28,16 @@ public class Bogie extends Rotable {
     }
 
     public Bogie(final String name, final String desc) {
-	super(name, desc);
+        super(name, desc);
     }
 
     public List<BogieSlot> getSlots() {
-	return slots;
+        return slots;
     }
 
     @Observable
     protected void setSlots(final List<BogieSlot> slots) {
-	this.slots = slots;
+        this.slots = slots;
     }
 
     /**
@@ -48,11 +48,11 @@ public class Bogie extends Rotable {
      * @throws Exception
      */
     public BogieSlot getSlot(final Integer slotPosition) throws Exception {
-	if (slotPosition > 0 && slotPosition <= slots.size()) {
-	    return slots.get(slotPosition - 1);
-	} else {
-	    throw new Exception("Invalid slot position.");
-	}
+        if (slotPosition > 0 && slotPosition <= slots.size()) {
+            return slots.get(slotPosition - 1);
+        } else {
+            throw new Exception("Invalid slot position.");
+        }
     }
 
     /**
@@ -62,12 +62,12 @@ public class Bogie extends Rotable {
      * @return
      */
     public boolean isClassCompatible(final Wheelset rotable) {
-	return getRotableClass().isWheelsetClassCompatible(rotable.getRotableClass());
+        return getRotableClass().isWheelsetClassCompatible(rotable.getRotableClass());
     };
 
     @Override
     public BogieClass getRotableClass() {
-	return (BogieClass) super.getRotableClass();
+        return (BogieClass) super.getRotableClass();
     }
 
     @Override
@@ -75,17 +75,17 @@ public class Bogie extends Rotable {
     @EntityExists(BogieClass.class)
     @Observable
     public Bogie setRotableClass(final RotableClass klass) {
-	super.setRotableClass(klass);
-	return this;
+        super.setRotableClass(klass);
+        return this;
     }
 
     @Override
     public String toString() {
-	final StringBuffer result = new StringBuffer();
-	result.append("Name: " + getKey() + "\n");
-	result.append("Desc: " + getDesc() + "\n");
-	result.append(getRotableClass().toString() + "\n");
-	result.append("\nLocation: " + getLocation());
-	return result.toString();
+        final StringBuffer result = new StringBuffer();
+        result.append("Name: " + getKey() + "\n");
+        result.append("Desc: " + getDesc() + "\n");
+        result.append(getRotableClass().toString() + "\n");
+        result.append("\nLocation: " + getLocation());
+        return result.toString();
     }
 }

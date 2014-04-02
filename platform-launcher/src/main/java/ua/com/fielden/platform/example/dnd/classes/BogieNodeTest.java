@@ -6,7 +6,7 @@ public class BogieNodeTest extends AbstractBogieWidget<WheelsetNodeTest> {
 
     @Override
     public boolean canDrag() {
-	return true;
+        return true;
     }
 
     /**
@@ -15,18 +15,18 @@ public class BogieNodeTest extends AbstractBogieWidget<WheelsetNodeTest> {
     private static final long serialVersionUID = 1L;
 
     public BogieNodeTest() {
-	super(WheelsetNodeTest.class, "bogie");
+        super(WheelsetNodeTest.class, "bogie");
     }
 
     @Override
     protected boolean canAccept(final int slotIndex, final WheelsetNodeTest widgetToTest) {
-	return true;
+        return true;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Rotable getRotable() {
-	return null;
+        return null;
     }
 
 }

@@ -19,72 +19,72 @@ public class BogieModel extends AbstractBogieWidget<WheelsetModel> {
     private final Workshop workshop;
 
     public BogieModel(final BogieWithRotables bogieWithRotables, final Workshop workshop) {
-	super(WheelsetModel.class, bogieWithRotables.getBogie().getKey());
-	this.workshop = workshop;
-	this.bogieWithRotables = bogieWithRotables;
-	fill(getBogie().getStatus().getColor());
-	for (final BogieSlot slot : getBogie().getSlots()) {
-	    addSpotCaption(slot.getPosition() - 1, slot.getSlotIndex(), 10, Color.WHITE);
-	    final Wheelset wheelset = bogieWithRotables.getWheelsetInSlot(slot);
-	    if (wheelset != null) {
-		final WheelsetModel wheelsetm = new WheelsetModel(wheelset);
-		plug(wheelsetm, getSlotNodes().get(slot.getPosition() - 1));
-	    }
-	}
+        super(WheelsetModel.class, bogieWithRotables.getBogie().getKey());
+        this.workshop = workshop;
+        this.bogieWithRotables = bogieWithRotables;
+        fill(getBogie().getStatus().getColor());
+        for (final BogieSlot slot : getBogie().getSlots()) {
+            addSpotCaption(slot.getPosition() - 1, slot.getSlotIndex(), 10, Color.WHITE);
+            final Wheelset wheelset = bogieWithRotables.getWheelsetInSlot(slot);
+            if (wheelset != null) {
+                final WheelsetModel wheelsetm = new WheelsetModel(wheelset);
+                plug(wheelsetm, getSlotNodes().get(slot.getPosition() - 1));
+            }
+        }
     }
 
     public BogieModel(final Bogie bogie, final Workshop workshop) {
-	this(new BogieWithRotables(bogie, new ArrayList<Wheelset>()), workshop);
+        this(new BogieWithRotables(bogie, new ArrayList<Wheelset>()), workshop);
     }
 
     public void refreshCaption() {
-	for (int slotCounter = 0; slotCounter < getBogie().getSlots().size(); slotCounter++) {
-	    addSpotCaption(slotCounter, getBogie().getSlots().get(slotCounter).getSlotIndex(), 10, Color.WHITE);
-	}
+        for (int slotCounter = 0; slotCounter < getBogie().getSlots().size(); slotCounter++) {
+            addSpotCaption(slotCounter, getBogie().getSlots().get(slotCounter).getSlotIndex(), 10, Color.WHITE);
+        }
     }
 
     @Override
     protected boolean canAccept(final int slotIndex, final WheelsetModel widgetToTest) {
-	try {
-	    return RotableMovementLogic.canSlotAcceptWheelset(widgetToTest.getWheelset(), bogieWithRotables, slotIndex + 1);
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    return false;
-	}
+        try {
+            return RotableMovementLogic.canSlotAcceptWheelset(widgetToTest.getWheelset(), bogieWithRotables, slotIndex + 1);
+        } catch (final Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public Bogie getBogie() {
-	return bogieWithRotables.getBogie();
+        return bogieWithRotables.getBogie();
     }
 
     public BogieWithRotables getBogieWithRotables() {
-	return bogieWithRotables;
+        return bogieWithRotables;
     }
 
     @Override
     public boolean canDrag() {
-	return true;
+        return true;
     }
 
     @Override
     public void doAfterAttach(final PNode node) {
-	try {
-	    RotableMovementLogic.fitWheelset(((WheelsetModel) node).getWheelset(), bogieWithRotables, getSlotAttachamnets().indexOf(node) + 1);
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	}
+        try {
+            RotableMovementLogic.fitWheelset(((WheelsetModel) node).getWheelset(), bogieWithRotables, getSlotAttachamnets().indexOf(node) + 1);
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void doAfterDetach(final PNode node) {
-	RotableMovementLogic.defitWheelset(((WheelsetModel) node).getWheelset(), bogieWithRotables, workshop);
+        RotableMovementLogic.defitWheelset(((WheelsetModel) node).getWheelset(), bogieWithRotables, workshop);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Rotable getRotable() {
 
-	return bogieWithRotables.getBogie();
+        return bogieWithRotables.getBogie();
     }
 
 }

@@ -8,6 +8,6 @@ public class NoFilter implements IFilter {
 
     @Override
     public <ET extends AbstractEntity<?>> ConditionModel enhance(final Class<ET> entityType, final String typeAlias, final String username) {
-	return null;
+        return null;
     }
 }

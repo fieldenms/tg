@@ -43,40 +43,40 @@ public class ExampleRotableCanvas extends DnDCanvas {
      */
     public ExampleRotableCanvas() {
 
-	super(new ForcedDehighlighter() {
+        super(new ForcedDehighlighter() {
 
-	    @Override
-	    public boolean shouldDehighlight(final IBasicNode node) {
-		return true;
-	    }
+            @Override
+            public boolean shouldDehighlight(final IBasicNode node) {
+                return true;
+            }
 
-	});
-	setDragEnabled(true);
-	setAutoscrollEnable(true);
-	setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-	setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-	setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-	getCamera().translateView(100, 100);
-	addMouseMotionListener(new MouseMotionAdapter() {
-	    @Override
-	    public void mouseDragged(final MouseEvent e) {
-		super.mouseDragged(e);
-		// /System.out.println("test");
-	    }
-	});
-	setAutoscrolls(true);
+        });
+        setDragEnabled(true);
+        setAutoscrollEnable(true);
+        setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        getCamera().translateView(100, 100);
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(final MouseEvent e) {
+                super.mouseDragged(e);
+                // /System.out.println("test");
+            }
+        });
+        setAutoscrolls(true);
     }
 
     @SuppressWarnings("unchecked")
     public Collection<PNode> getSelection() {
-	return getSelectionHandler().getSelection();
+        return getSelectionHandler().getSelection();
     }
 
     /**
      * refreshes all the cameras those are responsible for the model viewing
      */
     public void refreshCameras() {
-	getCamera().repaint();
+        getCamera().repaint();
     }
 
     /**
@@ -84,7 +84,7 @@ public class ExampleRotableCanvas extends DnDCanvas {
      */
     @Override
     protected boolean isDnDStarted(final InputEvent dge) {
-	return dge.isShiftDown();
+        return dge.isShiftDown();
     }
 
     /**
@@ -93,37 +93,37 @@ public class ExampleRotableCanvas extends DnDCanvas {
     @Override
     @SuppressWarnings("unchecked")
     protected void initDrag(final Point2D location, final Object what) {
-	super.initDrag(location, what);
-	final PLayer parentLayer = getLayer();
-	if (!(what instanceof List)) {
-	    return;
-	}
-	transferedRotables = (List<Rotable>) what;
-	if (transferedRotables != null) {
-	    if (transferNode != null) {
-		transferNode.removeFromParent();
-	    }
-	    if (transferedRotables.size() == 1) {
-		if (transferedRotables.get(0) instanceof Bogie) {
-		    transferNode = new BogieDragModel((Bogie) transferedRotables.get(0));
-		} else if (transferedRotables.get(0) instanceof Wheelset) {
-		    transferNode = new WheelsetDragModel((Wheelset) transferedRotables.get(0));
-		} else {
-		    return;
-		}
-		transferNode.setTransparency(0.5f);
-	    } else {
-		transferNode = new TransferExNode(transferedRotables, null);
-	    }
-	    parentLayer.addChild(transferNode);
-	} else {
-	    if (transferNode != null) {
-		transferNode.removeFromParent();
-		transferNode = null;
-	    }
-	    return;
-	}
-	translateTransferNode(location);
+        super.initDrag(location, what);
+        final PLayer parentLayer = getLayer();
+        if (!(what instanceof List)) {
+            return;
+        }
+        transferedRotables = (List<Rotable>) what;
+        if (transferedRotables != null) {
+            if (transferNode != null) {
+                transferNode.removeFromParent();
+            }
+            if (transferedRotables.size() == 1) {
+                if (transferedRotables.get(0) instanceof Bogie) {
+                    transferNode = new BogieDragModel((Bogie) transferedRotables.get(0));
+                } else if (transferedRotables.get(0) instanceof Wheelset) {
+                    transferNode = new WheelsetDragModel((Wheelset) transferedRotables.get(0));
+                } else {
+                    return;
+                }
+                transferNode.setTransparency(0.5f);
+            } else {
+                transferNode = new TransferExNode(transferedRotables, null);
+            }
+            parentLayer.addChild(transferNode);
+        } else {
+            if (transferNode != null) {
+                transferNode.removeFromParent();
+                transferNode = null;
+            }
+            return;
+        }
+        translateTransferNode(location);
     }
 
     /**
@@ -131,8 +131,8 @@ public class ExampleRotableCanvas extends DnDCanvas {
      */
     @Override
     protected void updateDrag(final Point2D location) {
-	super.updateDrag(location);
-	translateTransferNode(location);
+        super.updateDrag(location);
+        translateTransferNode(location);
     }
 
     /**
@@ -142,11 +142,11 @@ public class ExampleRotableCanvas extends DnDCanvas {
      *            - specified point where the node must be situated
      */
     private void translateTransferNode(final Point2D point) {
-	if (transferNode != null) {
-	    final double width = transferNode.getWidth();
-	    final double height = transferNode.getHeight();
-	    transferNode.setOffset(new Point2D.Double(point.getX() - width / 2, point.getY() - height / 2));
-	}
+        if (transferNode != null) {
+            final double width = transferNode.getWidth();
+            final double height = transferNode.getHeight();
+            transferNode.setOffset(new Point2D.Double(point.getX() - width / 2, point.getY() - height / 2));
+        }
     }
 
     /**
@@ -154,19 +154,19 @@ public class ExampleRotableCanvas extends DnDCanvas {
      */
     @Override
     protected void cleanUpDrag(final DropTargetEvent dte, final boolean wasDropped) {
-	super.cleanUpDrag(dte, wasDropped);
-	if (wasDropped) {
-	    transferNode.setTransparency(1.0f);
-	}
-	if (transferNode instanceof TransferNode) {
-	    transferNode.removeFromParent();
-	} else {
-	    if (!wasDropped) {
-		transferNode.removeFromParent();
-	    }
-	}
-	transferNode = null;
-	transferedRotables = null;
+        super.cleanUpDrag(dte, wasDropped);
+        if (wasDropped) {
+            transferNode.setTransparency(1.0f);
+        }
+        if (transferNode instanceof TransferNode) {
+            transferNode.removeFromParent();
+        } else {
+            if (!wasDropped) {
+                transferNode.removeFromParent();
+            }
+        }
+        transferNode = null;
+        transferedRotables = null;
     }
 
     /**
@@ -174,56 +174,56 @@ public class ExampleRotableCanvas extends DnDCanvas {
      */
     @Override
     protected boolean isOkToDrop(final Object object, final Point2D location) {
-	final boolean success = super.isOkToDrop(object, location);
-	if (!success) {
-	    if (transferNode instanceof TransferNode) {
-		((TransferNode) transferNode).setAccept(false);
-	    }
-	    return success;
-	}
-	if (transferNode != null) {
-	    final ArrayList<PNode> intersectedNodes = new ArrayList<PNode>();
-	    getIntersectingNodeswith(intersectedNodes);
-	    if (!(transferNode instanceof TransferNode)) {
+        final boolean success = super.isOkToDrop(object, location);
+        if (!success) {
+            if (transferNode instanceof TransferNode) {
+                ((TransferNode) transferNode).setAccept(false);
+            }
+            return success;
+        }
+        if (transferNode != null) {
+            final ArrayList<PNode> intersectedNodes = new ArrayList<PNode>();
+            getIntersectingNodeswith(intersectedNodes);
+            if (!(transferNode instanceof TransferNode)) {
 
-		if (getDragEventHandler().getForcedDehighlighter().shouldDehighlight(highlightedNode)) {
-		    dehighlight();
-		}
+                if (getDragEventHandler().getForcedDehighlighter().shouldDehighlight(highlightedNode)) {
+                    dehighlight();
+                }
 
-		boolean foundMatch = false;
+                boolean foundMatch = false;
 
-		for (final PNode nextNode : intersectedNodes) {
-		    if (!(nextNode instanceof StubNode) && (nextNode instanceof IContainer) && ((IContainer) nextNode).isCompatible(transferNode)) {
-			if (!nextNode.equals(highlightedNode)) {
-			    dehighlight();
-			}
-			highlightedNode = (IBasicNode) nextNode;
-			highlight();
-			foundMatch = true;
-			break;
-		    }
-		}
-		if (!foundMatch) {
-		    dehighlight();
-		    if (intersectedNodes.size() == 0) {
-			return true;
-		    }
-		    return false;
-		} else {
-		    return true;
-		}
-	    } else {
-		if (intersectedNodes.size() > 0) {
-		    ((TransferNode) transferNode).setAccept(false);
-		    return false;
-		} else {
-		    ((TransferNode) transferNode).setAccept(true);
-		    return true;
-		}
-	    }
-	} else {
-	    return success;
-	}
+                for (final PNode nextNode : intersectedNodes) {
+                    if (!(nextNode instanceof StubNode) && (nextNode instanceof IContainer) && ((IContainer) nextNode).isCompatible(transferNode)) {
+                        if (!nextNode.equals(highlightedNode)) {
+                            dehighlight();
+                        }
+                        highlightedNode = (IBasicNode) nextNode;
+                        highlight();
+                        foundMatch = true;
+                        break;
+                    }
+                }
+                if (!foundMatch) {
+                    dehighlight();
+                    if (intersectedNodes.size() == 0) {
+                        return true;
+                    }
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                if (intersectedNodes.size() > 0) {
+                    ((TransferNode) transferNode).setAccept(false);
+                    return false;
+                } else {
+                    ((TransferNode) transferNode).setAccept(true);
+                    return true;
+                }
+            }
+        } else {
+            return success;
+        }
     }
 
     /**
@@ -233,37 +233,37 @@ public class ExampleRotableCanvas extends DnDCanvas {
      *            - the result of intersection of the transferNodes with the others in the same layer
      */
     private void getIntersectingNodeswith(final ArrayList<PNode> cleanedNodes) {
-	cleanedNodes.clear();
-	final ArrayList<PNode> nodes = new ArrayList<PNode>();
-	// find intersecting nodes that belong to a main layer...
-	getLayer().findIntersectingNodes(transferNode.getGlobalBounds(), nodes);
-	nodes.removeAll(transferNode.getChildrenReference());
-	nodes.remove(transferNode);
-	nodes.remove(getLayer());
-	// remove intersected nodes' children...
-	cleanedNodes.addAll(nodes);
+        cleanedNodes.clear();
+        final ArrayList<PNode> nodes = new ArrayList<PNode>();
+        // find intersecting nodes that belong to a main layer...
+        getLayer().findIntersectingNodes(transferNode.getGlobalBounds(), nodes);
+        nodes.removeAll(transferNode.getChildrenReference());
+        nodes.remove(transferNode);
+        nodes.remove(getLayer());
+        // remove intersected nodes' children...
+        cleanedNodes.addAll(nodes);
 
-	for (final PNode node : nodes) {
-	    // handle node's children
-	    for (final Object childNode : node.getChildrenReference()) {
-		if (!(childNode instanceof IContainer)) {
-		    cleanedNodes.remove(childNode);
-		} else if (nodes.contains(childNode) && !((IContainer) childNode).isCompatible(transferNode)) {
-		    cleanedNodes.remove(childNode);
-		}
-	    }
-	    // handle node itself
-	    if (!(node instanceof IContainer)) {
-		cleanedNodes.remove(node);
-	    }
+        for (final PNode node : nodes) {
+            // handle node's children
+            for (final Object childNode : node.getChildrenReference()) {
+                if (!(childNode instanceof IContainer)) {
+                    cleanedNodes.remove(childNode);
+                } else if (nodes.contains(childNode) && !((IContainer) childNode).isCompatible(transferNode)) {
+                    cleanedNodes.remove(childNode);
+                }
+            }
+            // handle node itself
+            if (!(node instanceof IContainer)) {
+                cleanedNodes.remove(node);
+            }
 
-	    if (node instanceof RotableContainerRetriever) {
-		final RotableContainerRetriever containerretriever = (RotableContainerRetriever) node;
-		if (transferedRotables.contains(containerretriever.getRotable())) {
-		    cleanedNodes.remove(node);
-		}
-	    }
-	}
+            if (node instanceof RotableContainerRetriever) {
+                final RotableContainerRetriever containerretriever = (RotableContainerRetriever) node;
+                if (transferedRotables.contains(containerretriever.getRotable())) {
+                    cleanedNodes.remove(node);
+                }
+            }
+        }
 
     }
 
@@ -271,19 +271,19 @@ public class ExampleRotableCanvas extends DnDCanvas {
      * highlights node when the transferNode is compatible to the highlightedNode
      */
     private void highlight() {
-	if (((IContainer) highlightedNode).isCompatible(transferNode)) {
-	    highlightedNode.highlight(transferNode, highlightColor);
-	}
+        if (((IContainer) highlightedNode).isCompatible(transferNode)) {
+            highlightedNode.highlight(transferNode, highlightColor);
+        }
     }
 
     /**
      * removes the selection from the highlighted node and set the highlighted node to null
      */
     private void dehighlight() {
-	if (highlightedNode != null) {
-	    highlightedNode.dehighlight();
-	}
-	highlightedNode = null;
+        if (highlightedNode != null) {
+            highlightedNode.dehighlight();
+        }
+        highlightedNode = null;
     }
 
     /**
@@ -291,23 +291,23 @@ public class ExampleRotableCanvas extends DnDCanvas {
      */
     @Override
     protected boolean importTranserred(final Object object, final Point2D location) {
-	if (transferNode instanceof TransferNode) {
-	    final List<AbstractNode> rotables = ((TransferNode) transferNode).createRotables();
-	    getLayer().addChildren(rotables);
-	    return true;
-	} else {
-	    final IContainer container = (IContainer) highlightedNode;
-	    if (container != null) {
-		if (container.isCompatible(transferNode)) {
-		    container.attach(null, transferNode, true);
-		    return true;
-		} else {
-		    return false;
-		}
-	    } else {
-		return true;
-	    }
-	}
+        if (transferNode instanceof TransferNode) {
+            final List<AbstractNode> rotables = ((TransferNode) transferNode).createRotables();
+            getLayer().addChildren(rotables);
+            return true;
+        } else {
+            final IContainer container = (IContainer) highlightedNode;
+            if (container != null) {
+                if (container.isCompatible(transferNode)) {
+                    container.attach(null, transferNode, true);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        }
     }
 
     /**
@@ -315,30 +315,30 @@ public class ExampleRotableCanvas extends DnDCanvas {
      */
     @Override
     protected Object getTransferObject(final Point2D point) {
-	final Collection<PNode> nodes = getSelection();
-	final List<Rotable> rotables = new ArrayList<Rotable>();
-	for (final PNode node : nodes) {
-	    if (node instanceof RotableContainerRetriever) {
-		rotables.add(((RotableContainerRetriever) node).getRotable());
-	    }
-	}
-	return rotables;
+        final Collection<PNode> nodes = getSelection();
+        final List<Rotable> rotables = new ArrayList<Rotable>();
+        for (final PNode node : nodes) {
+            if (node instanceof RotableContainerRetriever) {
+                rotables.add(((RotableContainerRetriever) node).getRotable());
+            }
+        }
+        return rotables;
     }
 
     @Override
     protected void dropDone(final JComponent c, final Object transferObject, final int dropAction) {
-	super.dropDone(c, transferObject, dropAction);
-	if (dropAction != DnDConstants.ACTION_NONE) {
-	    getLayer().removeChildren(getSelection());
-	    getSelectionHandler().unselect(getSelection());
-	}
+        super.dropDone(c, transferObject, dropAction);
+        if (dropAction != DnDConstants.ACTION_NONE) {
+            getLayer().removeChildren(getSelection());
+            getSelectionHandler().unselect(getSelection());
+        }
     }
 
     @Override
     protected void updateCanvas(final Point2D delta) {
-	super.updateCanvas(delta);
-	if (transferNode != null) {
-	    transferNode.offset(delta.getX(), delta.getY());
-	}
+        super.updateCanvas(delta);
+        if (transferNode != null) {
+            transferNode.offset(delta.getX(), delta.getY());
+        }
     }
 }

@@ -6,7 +6,7 @@ public class WheelsetNodeTest extends AbstractWheelsetWidget {
 
     @Override
     public boolean canDrag() {
-	return true;
+        return true;
     }
 
     /**
@@ -15,13 +15,13 @@ public class WheelsetNodeTest extends AbstractWheelsetWidget {
     private static final long serialVersionUID = 1L;
 
     public WheelsetNodeTest() {
-	super("caption");
+        super("caption");
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Rotable getRotable() {
-	return null;
+        return null;
     }
 
 }

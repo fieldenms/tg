@@ -13,20 +13,20 @@ public class LastMessagesRequest {
     private final boolean onlyOne;
 
     public LastMessagesRequest(final Long machineId, final Date afterDate) {
-	this.machineId = machineId;
-	this.afterDate = afterDate;
-	this.onlyOne = EntityUtils.equalsEx(/*INFINITY_LEFT*/null, afterDate);
+        this.machineId = machineId;
+        this.afterDate = afterDate;
+        this.onlyOne = EntityUtils.equalsEx(/*INFINITY_LEFT*/null, afterDate);
     }
 
     public Date getAfterDate() {
-	return afterDate;
+        return afterDate;
     }
 
     public boolean isOnlyOne() {
-	return onlyOne;
+        return onlyOne;
     }
 
     public Long getMachineId() {
-	return machineId;
+        return machineId;
     }
 }

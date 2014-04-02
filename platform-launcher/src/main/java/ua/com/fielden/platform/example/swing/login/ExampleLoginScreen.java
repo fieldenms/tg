@@ -17,27 +17,27 @@ public class ExampleLoginScreen extends BlockingIndefiniteProgressLayer {
     private final MenuNotificationPanel notificationPanel;
 
     public ExampleLoginScreen(final ExampleLoginScreenModel model) {
-	super(new JPanel(new MigLayout("fill, insets 2", "[:80:][]", "[][][][]")), "");
-	this.notificationPanel = new MenuNotificationPanel("Login screen");
+        super(new JPanel(new MigLayout("fill, insets 2", "[:80:][]", "[][][][]")), "");
+        this.notificationPanel = new MenuNotificationPanel("Login screen");
 
-	model.initLoginAction(this);
+        model.initLoginAction(this);
 
-	final JPanel panel = (JPanel) getView();
-	panel.add(notificationPanel, "span 2, grow, wrap");
+        final JPanel panel = (JPanel) getView();
+        panel.add(notificationPanel, "span 2, grow, wrap");
 
-	panel.add(model.getUsernameLabel(), "grow");
-	panel.add(model.getUsernameEditor(), "grow, wrap");
+        panel.add(model.getUsernameLabel(), "grow");
+        panel.add(model.getUsernameEditor(), "grow, wrap");
 
-	panel.add(model.getPasswordLabel(), "grow");
-	panel.add(model.getPasswordEditor(), "grow, wrap");
+        panel.add(model.getPasswordLabel(), "grow");
+        panel.add(model.getPasswordEditor(), "grow, wrap");
 
-	final JButton button = new JButton("Login");
-	button.setAction(model.getLoginAction());
-	panel.add(button, "grow, span 2");
+        final JButton button = new JButton("Login");
+        button.setAction(model.getLoginAction());
+        panel.add(button, "grow, span 2");
     }
 
     protected MenuNotificationPanel getNotificationPanel() {
-	return notificationPanel;
+        return notificationPanel;
     }
 
 }

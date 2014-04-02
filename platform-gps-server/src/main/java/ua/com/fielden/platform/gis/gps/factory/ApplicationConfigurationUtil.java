@@ -18,31 +18,24 @@ import com.google.inject.Injector;
 
 /**
  * An utility class to start GPS server services (like Netty GPS server and Machine actors).
- *
+ * 
  * @author TG Team
- *
+ * 
  */
-public abstract class ApplicationConfigurationUtil<
-	MESSAGE extends AbstractAvlMessage,
-	MACHINE extends AbstractAvlMachine<MESSAGE>,
-	MODULE extends AbstractAvlModule,
-	ASSOCIATION extends AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>,
-	MACHINE_ACTOR extends AbstractAvlMachineActor<MESSAGE, MACHINE>,
-	MODULE_ACTOR extends AbstractAvlModuleActor<MESSAGE, MACHINE, MODULE, ASSOCIATION>
-> {
+public abstract class ApplicationConfigurationUtil<MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>, MODULE extends AbstractAvlModule, ASSOCIATION extends AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>, MACHINE_ACTOR extends AbstractAvlMachineActor<MESSAGE, MACHINE>, MODULE_ACTOR extends AbstractAvlModuleActor<MESSAGE, MACHINE, MODULE, ASSOCIATION>> {
     private final static Logger logger = Logger.getLogger(ApplicationConfigurationUtil.class);
 
     /** An utility class to start GPS server services (like Netty GPS server and Module + Machine actors). */
     public final void startGpsServices(final Properties props, final Injector injector) {
-	// get all vehicles with their latest GPS message
-	// the resultant map is used by both the GPS message handler for updating and CurrentMachinesState resource for read
-	// thus a concurrent map is used to synchronize read/write operations
+        // get all vehicles with their latest GPS message
+        // the resultant map is used by both the GPS message handler for updating and CurrentMachinesState resource for read
+        // thus a concurrent map is used to synchronize read/write operations
 
-	// create and start all actors responsible for message handling
-	final AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR> actors = createActors(fetchMachinesWithLastMessages(injector), fetchModulesWithAssociations(injector));
-	actors.startActorSystem();
+        // create and start all actors responsible for message handling
+        final AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR> actors = createActors(fetchMachinesWithLastMessages(injector), fetchModulesWithAssociations(injector));
+        actors.startActorSystem();
 
-	promoteActors(injector, actors);
+        promoteActors(injector, actors);
     }
 
     protected abstract void promoteActors(final Injector injector, final AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR> actors);
@@ -57,6 +50,6 @@ public abstract class ApplicationConfigurationUtil<
     protected abstract Map<MODULE, List<ASSOCIATION>> fetchModulesWithAssociations(final Injector injector);
 
     protected Logger getLogger() {
-	return logger;
+        return logger;
     }
 }

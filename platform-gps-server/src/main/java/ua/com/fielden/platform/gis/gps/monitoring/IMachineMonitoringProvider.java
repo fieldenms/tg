@@ -11,51 +11,40 @@ import ua.com.fielden.platform.gis.gps.AbstractAvlModule;
 
 /**
  * A contract to provide access to machine related monitoring information that gets updated asynchronously at runtime during receiving of GPS messages.
- *
+ * 
  * @author TG Team
- *
+ * 
  */
-public interface IMachineMonitoringProvider<
-	MESSAGE extends AbstractAvlMessage,
-	MACHINE extends AbstractAvlMachine<MESSAGE>,
-	MODULE extends AbstractAvlModule,
-	ASSOCIATION extends AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>
-> {
+public interface IMachineMonitoringProvider<MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>, MODULE extends AbstractAvlModule, ASSOCIATION extends AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>> {
     Map<Long, List<MESSAGE>> getLastMessagesUpdate(final Map<Long, Date> machinesTiming);
 
     /**
-     * Every new association needs to be promoted to server cache to correctly handle volatile nature of modules for machine.
-     * This API method does the job.
+     * Every new association needs to be promoted to server cache to correctly handle volatile nature of modules for machine. This API method does the job.
      */
     void promoteNewMachineAssociation(final ASSOCIATION machineModuleTemporalAssociation);
 
     /**
-     * Every changed association needs to be promoted to server cache to correctly handle volatile nature of modules for machine.
-     * This API method does the job.
+     * Every changed association needs to be promoted to server cache to correctly handle volatile nature of modules for machine. This API method does the job.
      */
     void promoteChangedMachineAssociation(final ASSOCIATION machineModuleTemporalAssociation);
 
     /**
-     * Every new machine needs to be promoted to server cache to correctly handle machine processing.
-     * This API method does the job.
+     * Every new machine needs to be promoted to server cache to correctly handle machine processing. This API method does the job.
      */
     void promoteNewMachine(final MACHINE machine);
 
     /**
-     * Every new module needs to be promoted to server cache to correctly handle machine processing.
-     * This API method does the job.
+     * Every new module needs to be promoted to server cache to correctly handle machine processing. This API method does the job.
      */
     void promoteNewModule(final MODULE module);
 
     /**
-     * Every changed machine needs to be promoted to server cache to correctly handle machine processing.
-     * This API method does the job.
+     * Every changed machine needs to be promoted to server cache to correctly handle machine processing. This API method does the job.
      */
     void promoteChangedMachine(final MACHINE machine);
 
     /**
-     * Every changed module needs to be promoted to server cache to correctly handle module processing.
-     * This API method does the job.
+     * Every changed module needs to be promoted to server cache to correctly handle module processing. This API method does the job.
      */
     void promoteChangedModule(final MODULE module);
 }

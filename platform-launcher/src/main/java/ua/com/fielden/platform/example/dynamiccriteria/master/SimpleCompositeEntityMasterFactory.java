@@ -21,19 +21,19 @@ public class SimpleCompositeEntityMasterFactory implements IEntityMasterFactory<
     private final ICriteriaGenerator criteriaGenerator;
 
     @Inject
-    public SimpleCompositeEntityMasterFactory(final ISimpleCompositeEntityDao dao, final ICriteriaGenerator criteriaGenerator){
-	this.dao = dao;
-	this.criteriaGenerator = criteriaGenerator;
+    public SimpleCompositeEntityMasterFactory(final ISimpleCompositeEntityDao dao, final ICriteriaGenerator criteriaGenerator) {
+        this.dao = dao;
+        this.criteriaGenerator = criteriaGenerator;
     }
 
     @Override
     public BaseFrame createMasterFrame(final IEntityProducer<SimpleCompositeEntity> entityProducer, final IEntityMasterCache cache, final SimpleCompositeEntity entity, final IValueMatcherFactory vmf, final IMasterDomainTreeManager masterManager, final IUmViewOwner ownerView, final IPostInitCallback<SimpleCompositeEntity, ISimpleCompositeEntityDao> postInitCallback) {
-	final SimpleCompositeEntityFrame frame = new SimpleCompositeEntityFrame(entityProducer, cache, entity, dao, vmf, //
-		ownerView, masterManager, criteriaGenerator, postInitCallback);
-	if (!entity.isPersisted()) {
-	    frame.enforceNewState();
-	}
-	return frame;
+        final SimpleCompositeEntityFrame frame = new SimpleCompositeEntityFrame(entityProducer, cache, entity, dao, vmf, //
+        ownerView, masterManager, criteriaGenerator, postInitCallback);
+        if (!entity.isPersisted()) {
+            frame.enforceNewState();
+        }
+        return frame;
     }
 
 }

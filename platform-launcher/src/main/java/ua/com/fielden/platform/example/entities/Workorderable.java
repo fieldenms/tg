@@ -24,21 +24,21 @@ public class Workorderable extends AbstractUnionEntity {
     private FEquipment equipment;
 
     public Vehicle getVehicle() {
-	return vehicle;
+        return vehicle;
     }
 
     @Observable
     public void setVehicle(final Vehicle vehicle) {
-	this.vehicle = vehicle;
+        this.vehicle = vehicle;
     }
 
     public FEquipment getEquipment() {
-	return equipment;
+        return equipment;
     }
 
     @Observable
     public void setEquipment(final FEquipment equipment) {
-	this.equipment = equipment;
+        this.equipment = equipment;
     }
 
 }

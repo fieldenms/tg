@@ -35,14 +35,14 @@ public class Workshop extends RotableLocation<String> {
      * @param desc
      */
     public Workshop(final String name, final String desc) {
-	super(null, name, desc);
+        super(null, name, desc);
     }
 
     public boolean isContractorWorkshop() {
-	return contractorWorkshop;
+        return contractorWorkshop;
     }
 
     protected void setContractorWorkshop(final boolean value) {
-	this.contractorWorkshop = value;
+        this.contractorWorkshop = value;
     }
 }

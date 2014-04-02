@@ -10,16 +10,16 @@ public abstract class EntitycentreUserProvider implements IUserProvider {
 
     private User user = null;
 
-    public EntitycentreUserProvider(final IUserDao userDao){
-	this.userDao = userDao;
+    public EntitycentreUserProvider(final IUserDao userDao) {
+        this.userDao = userDao;
     }
 
     @Override
     public final User getUser() {
-	if(user == null){
-	    user = initUser();
-	}
-	return user;
+        if (user == null) {
+            user = initUser();
+        }
+        return user;
     }
 
     abstract protected User initUser();

@@ -33,39 +33,39 @@ public class FEquipment extends AbstractEntity<String> {
     private String number;
 
     public String getCommonProperty() {
-	return commonProperty;
+        return commonProperty;
     }
 
     @Observable
     public void setCommonProperty(final String commonProperty) {
-	this.commonProperty = commonProperty;
+        this.commonProperty = commonProperty;
     }
 
     public EqClass getEqClass() {
-	return eqClass;
+        return eqClass;
     }
 
     @Observable
     public void setEqClass(final EqClass eqClass) {
-	this.eqClass = eqClass;
+        this.eqClass = eqClass;
     }
 
     public Date getInitDate() {
-	return initDate;
+        return initDate;
     }
 
     @Observable
     public void setInitDate(final Date initDate) {
-	this.initDate = initDate;
+        this.initDate = initDate;
     }
 
     public String getNumber() {
-	return number;
+        return number;
     }
 
     @Observable
     public void setNumber(final String number) {
-	this.number = number;
+        this.number = number;
     }
 
 }

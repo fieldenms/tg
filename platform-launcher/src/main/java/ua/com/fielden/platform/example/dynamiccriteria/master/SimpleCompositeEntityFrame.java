@@ -26,33 +26,33 @@ public class SimpleCompositeEntityFrame extends BaseFrame {
     private final SimpleCompositeEntityModel model;
 
     public SimpleCompositeEntityFrame(final IEntityProducer<SimpleCompositeEntity> entityProducer,//
-	    final IEntityMasterCache cache,//
-	    final SimpleCompositeEntity entity, //
-	    final ISimpleCompositeEntityDao controller,//
-	    final IValueMatcherFactory valueMatcherFactory,//
-	    //final IEntityMasterManager entityMasterFactory,//
-	    //final IDaoFactory daoFactory, //
-	    final IUmViewOwner owner,//
-	    final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, final IPostInitCallback<SimpleCompositeEntity, ISimpleCompositeEntityDao> postInitCallback) {
-	super(TitlesDescsGetter.getEntityTitleAndDesc(SimpleCompositeEntity.class).getKey() + " Master: " + entity.getKey() + " -- " + entity.getDesc());
-	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
+            final IEntityMasterCache cache,//
+            final SimpleCompositeEntity entity, //
+            final ISimpleCompositeEntityDao controller,//
+            final IValueMatcherFactory valueMatcherFactory,//
+            //final IEntityMasterManager entityMasterFactory,//
+            //final IDaoFactory daoFactory, //
+            final IUmViewOwner owner,//
+            final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, final IPostInitCallback<SimpleCompositeEntity, ISimpleCompositeEntityDao> postInitCallback) {
+        super(TitlesDescsGetter.getEntityTitleAndDesc(SimpleCompositeEntity.class).getKey() + " Master: " + entity.getKey() + " -- " + entity.getDesc());
+        setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
 
-	final FrameTitleUpdater titleUpdater = new FrameTitleUpdater(this);
+        final FrameTitleUpdater titleUpdater = new FrameTitleUpdater(this);
 
-	model = new SimpleCompositeEntityModel(entityProducer, cache, entity, controller, valueMatcherFactory, titleUpdater, owner, masterManager, criteriaGenerator, postInitCallback);
+        model = new SimpleCompositeEntityModel(entityProducer, cache, entity, controller, valueMatcherFactory, titleUpdater, owner, masterManager, criteriaGenerator, postInitCallback);
 
-	add(view = new SimpleCompositeEntityView(model));
+        add(view = new SimpleCompositeEntityView(model));
 
-	pack();
-	RefineryUtilities.centerFrameOnScreen(this);
+        pack();
+        RefineryUtilities.centerFrameOnScreen(this);
     }
 
     @Override
     protected void notify(final ICloseGuard guard) {
-	view.notify(guard.whyCannotClose(), MessageType.WARNING);
+        view.notify(guard.whyCannotClose(), MessageType.WARNING);
     }
 
     public void enforceNewState() {
-	model.getNewAction().actionPerformed(null);
+        model.getNewAction().actionPerformed(null);
     }
 }

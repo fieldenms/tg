@@ -27,31 +27,31 @@ public class ExpressionEditorExample extends AbstractUiApplication {
 
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Throwable {
-	SwingUtilitiesEx.installNimbusLnFifPossible();
-	com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
-	LookAndFeelFactory.installJideExtension();
+        SwingUtilitiesEx.installNimbusLnFifPossible();
+        com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
+        LookAndFeelFactory.installJideExtension();
 
-	//initiating entity factory
-	final ProxyInterceptor interceptor = new ProxyInterceptor();
-	final ExpressionEditorModule hibernateModule = new ExpressionEditorModule();
-	final Injector injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
-	entityFactory = injector.getInstance(EntityFactory.class);
-	interceptor.setFactory(entityFactory);
+        //initiating entity factory
+        final ProxyInterceptor interceptor = new ProxyInterceptor();
+        final ExpressionEditorModule hibernateModule = new ExpressionEditorModule();
+        final Injector injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
+        entityFactory = injector.getInstance(EntityFactory.class);
+        interceptor.setFactory(entityFactory);
     }
 
     @Override
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
-	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
-	// rootTypes.add(Vehicle.class);
-	rootTypes.add(MasterEntity.class);
-	final CentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(new TgKryoForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes()), rootTypes);
-	// final DomainTreeEditorView<Vehicle> wizard = new DomainTreeEditorView<Vehicle>(new DomainTreeEditorModel<Vehicle>(entityFactory, cdtme, Vehicle.class));
-	final DomainTreeEditorView<MasterEntity> wizard = new DomainTreeEditorView<MasterEntity>(new DomainTreeEditorModel<MasterEntity>(entityFactory, cdtme, MasterEntity.class));
-	wizard.setPreferredSize(new Dimension(640,800));
-	SimpleLauncher.show("Expression editor example", wizard);
+        final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
+        // rootTypes.add(Vehicle.class);
+        rootTypes.add(MasterEntity.class);
+        final CentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(new TgKryoForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes()), rootTypes);
+        // final DomainTreeEditorView<Vehicle> wizard = new DomainTreeEditorView<Vehicle>(new DomainTreeEditorModel<Vehicle>(entityFactory, cdtme, Vehicle.class));
+        final DomainTreeEditorView<MasterEntity> wizard = new DomainTreeEditorView<MasterEntity>(new DomainTreeEditorModel<MasterEntity>(entityFactory, cdtme, MasterEntity.class));
+        wizard.setPreferredSize(new Dimension(640, 800));
+        SimpleLauncher.show("Expression editor example", wizard);
     }
 
     public static void main(final String[] args) {
-	new ExpressionEditorExample().launch(args);
+        new ExpressionEditorExample().launch(args);
     }
 }

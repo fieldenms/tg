@@ -13,8 +13,7 @@ public class NestedEntityDao extends CommonEntityDao<SimpleNestedEntity> impleme
 
     @Inject
     protected NestedEntityDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
-
 
 }

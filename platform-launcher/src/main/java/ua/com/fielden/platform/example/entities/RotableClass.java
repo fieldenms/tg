@@ -8,9 +8,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
  * Represents rotable class entity.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Rotable Class No", desc = "Rotable Class key")
@@ -18,7 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class RotableClass extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @Title(value="Tonnage", desc="Rotable tonnage")
+    @Title(value = "Tonnage", desc = "Rotable tonnage")
     private Integer tonnage; // most likely should be immutable
 
     /**
@@ -29,14 +29,14 @@ public class RotableClass extends AbstractEntity<String> {
     }
 
     public RotableClass(final String code, final String desc) {
-	super(null, code, desc);
+        super(null, code, desc);
     }
 
     public Integer getTonnage() {
-	return tonnage;
+        return tonnage;
     }
 
     protected void setTonnage(final Integer tonnage) {
-	this.tonnage = tonnage;
+        this.tonnage = tonnage;
     }
 }

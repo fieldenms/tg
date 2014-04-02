@@ -42,80 +42,78 @@ public class EntityCentreExample extends AbstractUiApplication {
 
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Throwable {
-	SwingUtilitiesEx.installNimbusLnFifPossible();
-	com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
-	LookAndFeelFactory.installJideExtension();
+        SwingUtilitiesEx.installNimbusLnFifPossible();
+        com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
+        LookAndFeelFactory.installJideExtension();
 
-	//TODO please review entity_centre_example.properties and correct appropriate properties.
-	final String configFileName = args.length == 1 ? args[0] : "src/main/resources/entity_centre_example.properties";
-	final FileInputStream in = new FileInputStream(configFileName);
-	final Properties props = IDomainDrivenTestCaseConfiguration.hbc;
-	props.load(in);
-	in.close();
+        //TODO please review entity_centre_example.properties and correct appropriate properties.
+        final String configFileName = args.length == 1 ? args[0] : "src/main/resources/entity_centre_example.properties";
+        final FileInputStream in = new FileInputStream(configFileName);
+        final Properties props = IDomainDrivenTestCaseConfiguration.hbc;
+        props.load(in);
+        in.close();
 
-	// override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
-	props.put("hibernate.show_sql", "true");
-	props.put("hibernate.format_sql", "true");
+        // override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
+        props.put("hibernate.show_sql", "true");
+        props.put("hibernate.format_sql", "true");
 
-	config = new EntityCentreDataPopulationConfiguration();
+        config = new EntityCentreDataPopulationConfiguration();
 
-	configEntityMasterManager(config.getInjector());
+        configEntityMasterManager(config.getInjector());
 
-	emm = EntityCentreExampleMasterManagerConfig.createEntityMasterFactory(config.getInjector());
-	userProvider = config.getInstance(IUserProvider.class);
+        emm = EntityCentreExampleMasterManagerConfig.createEntityMasterFactory(config.getInjector());
+        userProvider = config.getInstance(IUserProvider.class);
 
-	super.beforeUiExposure(args, splashController);
+        super.beforeUiExposure(args, splashController);
     }
 
     private void buildMainMenu(//
-	    final Injector injector, //
-	    final IMainMenuBinder mmBinder,//
-	    final TreeMenuItem<?> menuItems, //
-	    final UndockableTreeMenuWithTabs<?> menu) {
-	final ITreeMenuFactory menuFactory = new TreeMenuFactory(menuItems, menu, injector);
-	mmBinder.bindMainMenuItemFactories(menuFactory);
-	final IMainMenuStructureBuilder mmsBuilder = new TemplateMainMenu(config.getEntityFactory());
-	final List<MainMenuItem> itemsFromCloud = mmsBuilder.build();
-	menuFactory.build(itemsFromCloud);
-	menu.getModel().getOriginModel().reload();
+    final Injector injector, //
+            final IMainMenuBinder mmBinder,//
+            final TreeMenuItem<?> menuItems, //
+            final UndockableTreeMenuWithTabs<?> menu) {
+        final ITreeMenuFactory menuFactory = new TreeMenuFactory(menuItems, menu, injector);
+        mmBinder.bindMainMenuItemFactories(menuFactory);
+        final IMainMenuStructureBuilder mmsBuilder = new TemplateMainMenu(config.getEntityFactory());
+        final List<MainMenuItem> itemsFromCloud = mmsBuilder.build();
+        menuFactory.build(itemsFromCloud);
+        menu.getModel().getOriginModel().reload();
     }
 
     //    private void configValidation(final DomainValidationConfig dvc){
     //		dvc.setValidator(ExpressionEntity.class, "expression", new ExpressionValidator());
     //    }
 
-    private static void configEntityMasterManager(final Injector injector){
-	final EntityMasterManager entityMasterManager = (EntityMasterManager) injector.getInstance(IEntityMasterManager.class);
-	entityMasterManager.addFactory(SimpleCompositeEntity.class, injector.getInstance(SimpleCompositeEntityMasterFactory.class));
+    private static void configEntityMasterManager(final Injector injector) {
+        final EntityMasterManager entityMasterManager = (EntityMasterManager) injector.getInstance(IEntityMasterManager.class);
+        entityMasterManager.addFactory(SimpleCompositeEntity.class, injector.getInstance(SimpleCompositeEntityMasterFactory.class));
     }
-
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
 
-	final TreeMenuItem<?> menuItems = new TreeMenuItem("root", "root panel");
-	final BaseFrame mainApplicationFrame = new BaseFrame("Expression editor example", emm.getEntityMasterCache());
-	final UndockableTreeMenuWithTabs<?> menu = new UndockableTreeMenuWithTabs(menuItems, new WordFilter(), userProvider, new BlockingIndefiniteProgressPane(mainApplicationFrame));
+        final TreeMenuItem<?> menuItems = new TreeMenuItem("root", "root panel");
+        final BaseFrame mainApplicationFrame = new BaseFrame("Expression editor example", emm.getEntityMasterCache());
+        final UndockableTreeMenuWithTabs<?> menu = new UndockableTreeMenuWithTabs(menuItems, new WordFilter(), userProvider, new BlockingIndefiniteProgressPane(mainApplicationFrame));
 
-	//Configuring menu
-	buildMainMenu(config.getInjector(), new EntityCentreExampleMainMenuBinder(), menuItems, menu);
-	//	menuItems.addItem(new MiSimpleECEEntity(menu, config.getInjector(), new StubMenuItemVisibilityProvider()));
-	//	menuItems.addItem(new MiSimpleCompositeEntity(menu, config.getInjector(), new StubMenuItemVisibilityProvider()));
-	//	menu.getModel().getOriginModel().reload();
+        //Configuring menu
+        buildMainMenu(config.getInjector(), new EntityCentreExampleMainMenuBinder(), menuItems, menu);
+        //	menuItems.addItem(new MiSimpleECEEntity(menu, config.getInjector(), new StubMenuItemVisibilityProvider()));
+        //	menuItems.addItem(new MiSimpleCompositeEntity(menu, config.getInjector(), new StubMenuItemVisibilityProvider()));
+        //	menu.getModel().getOriginModel().reload();
 
+        mainApplicationFrame.setPreferredSize(new Dimension(1280, 800));
+        mainApplicationFrame.add(new DefaultApplicationMainPanel(menu));
+        mainApplicationFrame.pack();
 
-	mainApplicationFrame.setPreferredSize(new Dimension(1280, 800));
-	mainApplicationFrame.add(new DefaultApplicationMainPanel(menu));
-	mainApplicationFrame.pack();
-
-	RefineryUtilities.centerFrameOnScreen(mainApplicationFrame);
-	SimpleLauncher.show("Expression editor example", mainApplicationFrame, null);
+        RefineryUtilities.centerFrameOnScreen(mainApplicationFrame);
+        SimpleLauncher.show("Expression editor example", mainApplicationFrame, null);
     }
 
     public static void main(final String[] args) {
-	DOMConfigurator.configure("src/main/resources/log4j.xml");
-	new EntityCentreExample().launch(args);
+        DOMConfigurator.configure("src/main/resources/log4j.xml");
+        new EntityCentreExample().launch(args);
     }
 
 }

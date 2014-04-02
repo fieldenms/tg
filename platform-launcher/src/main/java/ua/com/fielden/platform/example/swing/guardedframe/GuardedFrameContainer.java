@@ -34,71 +34,71 @@ public class GuardedFrameContainer extends JFrame {
 
     @SuppressWarnings("serial")
     public GuardedFrameContainer() {
-	setLayout(new MigLayout("fill", "[:80:][grow,fill]", "[][grow, fill]"));
-	setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new MigLayout("fill", "[:80:][grow,fill]", "[][grow, fill]"));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-	frame = new BaseFrame("Guarded Frame");
-	frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);// to stop frame from being closed uncontrollably
-	frame.setPreferredSize(new Dimension(200, 200));
+        frame = new BaseFrame("Guarded Frame");
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);// to stop frame from being closed uncontrollably
+        frame.setPreferredSize(new Dimension(200, 200));
 
-	final BasePanel guardedPanel = new BasePanel() {
-	    @Override
-	    public String getInfo() {
-		return "No info";
-	    }
-	};
-	guardedPanel.add(new JButton(new AbstractAction("Close") {
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		final ICloseGuard guard = frame.canClose();
-		if (guard == null) {
-		    frame.close();
-		} else {
-		    notify(guard);
-		}
-	    }
+        final BasePanel guardedPanel = new BasePanel() {
+            @Override
+            public String getInfo() {
+                return "No info";
+            }
+        };
+        guardedPanel.add(new JButton(new AbstractAction("Close") {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                final ICloseGuard guard = frame.canClose();
+                if (guard == null) {
+                    frame.close();
+                } else {
+                    notify(guard);
+                }
+            }
 
-	    private void notify(final ICloseGuard guard) {
-		JOptionPane.showMessageDialog(frame, guard.whyCannotClose(), "Warning", JOptionPane.WARNING_MESSAGE);
-	    }
-	}));
+            private void notify(final ICloseGuard guard) {
+                JOptionPane.showMessageDialog(frame, guard.whyCannotClose(), "Warning", JOptionPane.WARNING_MESSAGE);
+            }
+        }));
 
-	final JPanel simplePanel = new JPanel();
-	simplePanel.add(new BasePanel() {
+        final JPanel simplePanel = new JPanel();
+        simplePanel.add(new BasePanel() {
 
-	    @Override
-	    public ICloseGuard canClose() {
-		return this;
-	    }
+            @Override
+            public ICloseGuard canClose() {
+                return this;
+            }
 
-	    @Override
-	    public String whyCannotClose() {
-		return "cannot close guarded frame";
-	    }
+            @Override
+            public String whyCannotClose() {
+                return "cannot close guarded frame";
+            }
 
-	    @Override
-	    public String getInfo() {
-		return "No info";
-	    }
-	});
+            @Override
+            public String getInfo() {
+                return "No info";
+            }
+        });
 
-	guardedPanel.add(simplePanel);
-	frame.add(guardedPanel);
-	frame.pack();
-	RefineryUtilities.centerFrameOnScreen(frame);
+        guardedPanel.add(simplePanel);
+        frame.add(guardedPanel);
+        frame.pack();
+        RefineryUtilities.centerFrameOnScreen(frame);
 
-	final Action action = new AbstractAction("Open Frame") {
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		frame.setVisible(true);
-	    }
-	};
-	add(new JButton(action));
-	pack();
+        final Action action = new AbstractAction("Open Frame") {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                frame.setVisible(true);
+            }
+        };
+        add(new JButton(action));
+        pack();
     }
 
     public JFrame getFrame() {
-	return frame;
+        return frame;
     }
 
 }

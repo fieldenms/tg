@@ -15,14 +15,12 @@ public class TemplateMainMenu implements IMainMenuStructureBuilder {
 
     @Inject
     public TemplateMainMenu(final EntityFactory factory) {
-	builder = new MainMenuStructureFactory(factory);
-	builder
-	.push(MiSimpleECEEntity.class.getName()).pop()
-	.push(MiSimpleCompositeEntity.class.getName()).pop();
+        builder = new MainMenuStructureFactory(factory);
+        builder.push(MiSimpleECEEntity.class.getName()).pop().push(MiSimpleCompositeEntity.class.getName()).pop();
     }
 
     @Override
     public List<MainMenuItem> build() {
-	return builder.build();
+        return builder.build();
     }
 }

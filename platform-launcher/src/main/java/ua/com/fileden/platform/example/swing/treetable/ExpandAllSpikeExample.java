@@ -16,22 +16,22 @@ public class ExpandAllSpikeExample extends AbstractUiApplication {
 
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Throwable {
-	SwingUtilitiesEx.installNimbusLnFifPossible();
-	com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
-	LookAndFeelFactory.installJideExtension();
+        SwingUtilitiesEx.installNimbusLnFifPossible();
+        com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
+        LookAndFeelFactory.installJideExtension();
     }
 
     @Override
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
-	final FilterableTreeTableModel treeTableModel=new FilterableTreeTableModel(new ExampleTreeTableModel());
-	final ExampleTreeTable treeTable=new ExampleTreeTable(treeTableModel);
-	final FilterableTreeTablePanel<ExampleTreeTable> filterableTreeTablePanel=new FilterableTreeTablePanel<ExampleTreeTable>(treeTable, new WordFilter(), "filter items");
-	filterableTreeTablePanel.setPreferredSize(new Dimension(640,480));
-	SimpleLauncher.show("Expand all example", filterableTreeTablePanel);
+        final FilterableTreeTableModel treeTableModel = new FilterableTreeTableModel(new ExampleTreeTableModel());
+        final ExampleTreeTable treeTable = new ExampleTreeTable(treeTableModel);
+        final FilterableTreeTablePanel<ExampleTreeTable> filterableTreeTablePanel = new FilterableTreeTablePanel<ExampleTreeTable>(treeTable, new WordFilter(), "filter items");
+        filterableTreeTablePanel.setPreferredSize(new Dimension(640, 480));
+        SimpleLauncher.show("Expand all example", filterableTreeTablePanel);
     }
 
     public static void main(final String[] args) {
-	new ExpandAllSpikeExample().launch(args);
+        new ExpandAllSpikeExample().launch(args);
     }
 
 }

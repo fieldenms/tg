@@ -13,21 +13,21 @@ public class ExpressionExampleDomain implements IApplicationDomainProvider {
     private static final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
 
     static void add(final Class<? extends AbstractEntity<?>> domainType) {
-	entityTypes.add(domainType);
-	domainTypes.add(domainType);
+        entityTypes.add(domainType);
+        domainTypes.add(domainType);
     }
 
     static {
-	entityTypes.addAll(PlatformDomainTypes.types);
+        entityTypes.addAll(PlatformDomainTypes.types);
     }
 
     @Override
     public List<Class<? extends AbstractEntity<?>>> entityTypes() {
-	return entityTypes;
+        return entityTypes;
     }
 
     public List<Class<? extends AbstractEntity<?>>> domainTypes() {
-	return domainTypes;
+        return domainTypes;
     }
 
 }

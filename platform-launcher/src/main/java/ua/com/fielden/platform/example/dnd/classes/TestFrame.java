@@ -29,58 +29,58 @@ public abstract class TestFrame extends PSwingFrame {
 
     @Override
     public void initialize() {
-	super.initialize();
-	// rendering settings
+        super.initialize();
+        // rendering settings
 
-	birdsEyeView = new JPanel(new MigLayout("fill,insets 1"));
-	birdView = new BirdsEyeView();
-	birdView.connect(getCanvas().getCamera(), new PLayer[] { getCanvas().getLayer() });
-	birdView.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
-	birdsEyeView.add(birdView, "grow");
-	birdsEyeView.setLocation(0, 0);
-	birdsEyeView.setSize(new Dimension(150, 150));
-	getCanvas().add(birdsEyeView);
-	birdsEyeView.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
+        birdsEyeView = new JPanel(new MigLayout("fill,insets 1"));
+        birdView = new BirdsEyeView();
+        birdView.connect(getCanvas().getCamera(), new PLayer[] { getCanvas().getLayer() });
+        birdView.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
+        birdsEyeView.add(birdView, "grow");
+        birdsEyeView.setLocation(0, 0);
+        birdsEyeView.setSize(new Dimension(150, 150));
+        getCanvas().add(birdsEyeView);
+        birdsEyeView.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 
-	getCanvas().setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-	getCanvas().setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-	getCanvas().setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-	getCanvas().removeInputEventListener(getCanvas().getZoomEventHandler());
+        getCanvas().setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        getCanvas().setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        getCanvas().setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+        getCanvas().removeInputEventListener(getCanvas().getZoomEventHandler());
 
-	getCanvas().addInputEventListener(new WheelRatoteZoomEventHandler(0.2, 1.5, getCanvas().getCamera()));
-	getCanvas().setPanEventHandler(null);
+        getCanvas().addInputEventListener(new WheelRatoteZoomEventHandler(0.2, 1.5, getCanvas().getCamera()));
+        getCanvas().setPanEventHandler(null);
 
-	getCanvas().getLayer().setPickable(false);
-	getCanvas().getLayer().setChildrenPickable(true);
+        getCanvas().getLayer().setPickable(false);
+        getCanvas().getLayer().setChildrenPickable(true);
 
-	final ForcedDehighlighter focusDehighlighter = new ForcedDehighlighter() {
+        final ForcedDehighlighter focusDehighlighter = new ForcedDehighlighter() {
 
-	    @Override
-	    public boolean shouldDehighlight(final IBasicNode node) {
+            @Override
+            public boolean shouldDehighlight(final IBasicNode node) {
 
-		return true;
-	    }
+                return true;
+            }
 
-	};
-	final MultipleSelectionHandler handler = new MultipleSelectionHandler(getCanvas().getLayer(), getCanvas().getLayer());
-	getCanvas().addInputEventListener(handler);
-	final MultipleDragEventHandler mdeHandler = new MultipleDragEventHandler(getCanvas(), focusDehighlighter, new SelectionHolder(handler));
-	mdeHandler.setPostDragAction(new Runnable() {
+        };
+        final MultipleSelectionHandler handler = new MultipleSelectionHandler(getCanvas().getLayer(), getCanvas().getLayer());
+        getCanvas().addInputEventListener(handler);
+        final MultipleDragEventHandler mdeHandler = new MultipleDragEventHandler(getCanvas(), focusDehighlighter, new SelectionHolder(handler));
+        mdeHandler.setPostDragAction(new Runnable() {
 
-	    @Override
-	    public void run() {
-		birdView.updateFromViewed();
-	    }
+            @Override
+            public void run() {
+                birdView.updateFromViewed();
+            }
 
-	});
-	getCanvas().addInputEventListener(mdeHandler);
-	initWidgets(getCanvas().getLayer());
-	addComponentListener(new ComponentAdapter() {
-	    @Override
-	    public void componentResized(final ComponentEvent e) {
-		birdView.updateFromViewed();
-	    }
-	});
+        });
+        getCanvas().addInputEventListener(mdeHandler);
+        initWidgets(getCanvas().getLayer());
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(final ComponentEvent e) {
+                birdView.updateFromViewed();
+            }
+        });
 
     }
 
@@ -92,12 +92,12 @@ public abstract class TestFrame extends PSwingFrame {
     public abstract void initWidgets(final PLayer nodeLayer);
 
     private JPopupMenu createPopupMenu() {
-	final JPopupMenu menu = new JPopupMenu();
-	final JMenuItem item1 = new JMenuItem("test1");
-	final JMenuItem item2 = new JMenuItem("test2");
-	menu.add(item1);
-	menu.add(item2);
-	return menu;
+        final JPopupMenu menu = new JPopupMenu();
+        final JMenuItem item1 = new JMenuItem("test1");
+        final JMenuItem item2 = new JMenuItem("test2");
+        menu.add(item1);
+        menu.add(item2);
+        return menu;
     }
 
 }

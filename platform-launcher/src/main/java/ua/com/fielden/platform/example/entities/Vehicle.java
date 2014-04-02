@@ -43,66 +43,66 @@ public class Vehicle extends AbstractEntity<String> {
     private BigDecimal numValue;
 
     public String getCommonProperty() {
-	return commonProperty;
+        return commonProperty;
     }
 
     @Observable
     public void setCommonProperty(final String commonProperty) {
-	this.commonProperty = commonProperty;
+        this.commonProperty = commonProperty;
     }
 
     public Vehicle getReplacing() {
-	return replacing;
+        return replacing;
     }
 
     @Observable
     public void setReplacing(final Vehicle replacing) {
-	this.replacing = replacing;
+        this.replacing = replacing;
     }
 
     public Vehicle getReplacedBy() {
-	return replacedBy;
+        return replacedBy;
     }
 
     @Observable
     public void setReplacedBy(final Vehicle replacedBy) {
-	this.replacedBy = replacedBy;
+        this.replacedBy = replacedBy;
     }
 
     public EqClass getEqClass() {
-	return eqClass;
+        return eqClass;
     }
 
     @Observable
     public void setEqClass(final EqClass eqClass) {
-	this.eqClass = eqClass;
+        this.eqClass = eqClass;
     }
 
     public Workorderable getNestedWorkorder() {
-	return nestedWorkorder;
+        return nestedWorkorder;
     }
 
     @Observable
     public void setNestedWorkorder(final Workorderable nestedWorkorder) {
-	this.nestedWorkorder = nestedWorkorder;
+        this.nestedWorkorder = nestedWorkorder;
     }
 
     public Date getInitDate() {
-	return initDate;
+        return initDate;
     }
 
     @Observable
     public void setInitDate(final Date initDate) {
-	this.initDate = initDate;
+        this.initDate = initDate;
     }
 
     public BigDecimal getNumValue() {
-	return numValue;
+        return numValue;
     }
 
     @Observable
     public void setNumValue(final BigDecimal numValue) {
-	this.numValue = numValue;
+        this.numValue = numValue;
     }
 
 }

@@ -23,11 +23,11 @@ public enum DemoEnum {
     final String desc;
 
     DemoEnum(final String desc) {
-	this.desc = desc;
+        this.desc = desc;
     }
 
     @Override
     public String toString() {
-	return desc;
+        return desc;
     }
 }

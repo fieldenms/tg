@@ -14,12 +14,12 @@ import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Dummy entity for example/testing
- *
+ * 
  * @author Yura
  */
 @KeyType(String.class)
-@KeyTitle(value="Key", desc="Dummy entity number")
-@DescTitle(value="Description", desc="Dummy entity description")
+@KeyTitle(value = "Key", desc = "Dummy entity number")
+@DescTitle(value = "Description", desc = "Dummy entity description")
 public class DummyEntity extends AbstractEntity<String> {
 
     private static final long serialVersionUID = 1L;
@@ -36,7 +36,7 @@ public class DummyEntity extends AbstractEntity<String> {
     }
 
     public DummyEntity(final String key, final String desc) {
-	super(null, key, desc);
+        super(null, key, desc);
     }
 
     public String getDummyEntity2Ref() {

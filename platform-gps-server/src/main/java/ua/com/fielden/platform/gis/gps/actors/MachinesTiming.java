@@ -10,10 +10,10 @@ public class MachinesTiming {
     private final Map<Long, Date> machinesTiming;
 
     public MachinesTiming(final Map<Long, Date> machinesTiming) {
-	this.machinesTiming = machinesTiming;
+        this.machinesTiming = machinesTiming;
     }
 
     public Map<Long, Date> getMachinesTiming() {
-	return machinesTiming;
+        return machinesTiming;
     }
 }

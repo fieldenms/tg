@@ -40,59 +40,59 @@ public class ExampleEntity extends AbstractEntity<String> {
     private ExampleEntity nestedEntity;
 
     public String getStringProperty() {
-	return stringProperty;
+        return stringProperty;
     }
 
     @Observable
     public ExampleEntity setStringProperty(final String stringProperty) {
-	this.stringProperty = stringProperty;
-	return this;
+        this.stringProperty = stringProperty;
+        return this;
     }
 
     public Date getInitDate() {
-	return initDate;
+        return initDate;
     }
 
     @Observable
     public ExampleEntity setInitDate(final Date initDate) {
-	this.initDate = initDate;
-	return this;
+        this.initDate = initDate;
+        return this;
     }
 
     public boolean isActive() {
-	return active;
+        return active;
     }
 
     @Observable
     public ExampleEntity setActive(final boolean active) {
-	this.active = active;
-	return this;
+        this.active = active;
+        return this;
     }
 
     public Integer getNumValue() {
-	return numValue;
+        return numValue;
     }
 
     @Observable
     public ExampleEntity setNumValue(final Integer numValue) {
-	this.numValue = numValue;
-	return this;
+        this.numValue = numValue;
+        return this;
     }
 
     public ExampleEntity getNestedEntity() {
-	return nestedEntity;
+        return nestedEntity;
     }
 
     @Observable
     public ExampleEntity setNestedEntity(final ExampleEntity nestedEntity) {
-	this.nestedEntity = nestedEntity;
-	return this;
+        this.nestedEntity = nestedEntity;
+        return this;
     }
 
     @Override
     @Observable
     public ExampleEntity setDesc(final String desc) {
-	super.setDesc(desc);
-	return this;
+        super.setDesc(desc);
+        return this;
     }
 }

@@ -5,4 +5,3 @@ package ua.com.fielden.platform.gis.gps.actors;
  */
 public class LastMessageResponse {
 }
-

@@ -8,8 +8,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 
 /**
  * Represents the compatibility between certain wagon and bogie classes.
+ * 
  * @author nc
- *
+ * 
  */
 @KeyType(DynamicEntityKey.class)
 public class WagonClassCompatibility extends AbstractEntity<DynamicEntityKey> {
@@ -26,30 +27,30 @@ public class WagonClassCompatibility extends AbstractEntity<DynamicEntityKey> {
     private String status;
 
     public WagonClassCompatibility() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     public WagonClass getWagonClass() {
-	return wagonClass;
+        return wagonClass;
     }
 
     protected void setWagonClass(final WagonClass wagonClass) {
-	this.wagonClass = wagonClass;
+        this.wagonClass = wagonClass;
     }
 
     public BogieClass getBogieClass() {
-	return bogieClass;
+        return bogieClass;
     }
 
     protected void setBogieClass(final BogieClass bogieClass) {
-	this.bogieClass = bogieClass;
+        this.bogieClass = bogieClass;
     }
 
     public String getStatus() {
-	return status;
+        return status;
     }
 
     protected void setStatus(final String status) {
-	this.status = status;
+        this.status = status;
     }
 }

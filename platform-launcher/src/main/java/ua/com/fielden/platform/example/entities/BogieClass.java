@@ -23,35 +23,34 @@ public class BogieClass extends RotableClass {
     }
 
     public BogieClass(final String code, final String desc, final Integer tonnage) {
-	super(code, desc);
-	setTonnage(tonnage);
+        super(code, desc);
+        setTonnage(tonnage);
     }
 
     public Set<BogieClassCompatibility> getCompatibles() {
-	return this.compatibles;
+        return this.compatibles;
     }
 
     protected void setCompatibles(final Set<BogieClassCompatibility> compatibles) {
-	this.compatibles = compatibles;
+        this.compatibles = compatibles;
     }
 
     public int getNumberOfWheelsets() {
-	return 2;
+        return 2;
     }
 
     /**
-     * Determines whether given wheelset class is compatible with given bogie
-     * class
+     * Determines whether given wheelset class is compatible with given bogie class
      * 
      * @param wheelsetClass
      * @return
      */
     public boolean isWheelsetClassCompatible(final WheelsetClass wheelsetClass) {
-	for (final BogieClassCompatibility bogieClassCompatibility : compatibles) {
-	    if (bogieClassCompatibility.getWheelsetClass().equals(wheelsetClass)) {
-		return true;
-	    }
-	}
-	return false;
+        for (final BogieClassCompatibility bogieClassCompatibility : compatibles) {
+            if (bogieClassCompatibility.getWheelsetClass().equals(wheelsetClass)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

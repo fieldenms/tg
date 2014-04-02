@@ -11,12 +11,12 @@ public class NonBaseUserProvider extends EntitycentreUserProvider {
 
     @Inject
     public NonBaseUserProvider(final IUserDao userDao) {
-	super(userDao);
+        super(userDao);
     }
 
     @Override
     protected User initUser() {
-	return userDao.findByKeyAndFetch(fetch(User.class).with("basedOnUser"), "DEMO");
+        return userDao.findByKeyAndFetch(fetch(User.class).with("basedOnUser"), "DEMO");
     }
 
     @Override

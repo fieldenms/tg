@@ -24,32 +24,31 @@ import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 
 import com.google.inject.Scopes;
 
-public class EntityCentreExampleModule extends BasicWebServerModule{
-
+public class EntityCentreExampleModule extends BasicWebServerModule {
 
     @SuppressWarnings("rawtypes")
     public EntityCentreExampleModule(//
-	    final Map<Class, Class> defaultHibernateTypes, //
-	    final IApplicationDomainProvider applicationDomainProvider,//
-	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-	    final Class<? extends IFilter> automaticDataFilterType, //
-	    final Properties props) throws Exception {
-	super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
+    final Map<Class, Class> defaultHibernateTypes, //
+            final IApplicationDomainProvider applicationDomainProvider,//
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
+            final Class<? extends IFilter> automaticDataFilterType, //
+            final Properties props) throws Exception {
+        super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
 
     }
 
     @Override
     protected void configure() {
-	super.configure();
-	bind(IUserProvider.class).to(BaseUserProvider.class).in(Scopes.SINGLETON);
-	bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
-	bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class).in(Scopes.SINGLETON);
-	bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
-	bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class).in(Scopes.SINGLETON);
-	bind(ISimpleECEEntityDao.class).to(SimpleECEEntityDao.class);
-	bind(INestedEntityDao.class).to(NestedEntityDao.class);
-	//bind(IMasterConfigurationController.class).to(RemoteMasterConfigurationController.class).in(Scopes.SINGLETON);
-	bind(ISimpleCompositeEntityDao.class).to(SimpleCompositeEntityDao.class);
+        super.configure();
+        bind(IUserProvider.class).to(BaseUserProvider.class).in(Scopes.SINGLETON);
+        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
+        bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class).in(Scopes.SINGLETON);
+        bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
+        bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class).in(Scopes.SINGLETON);
+        bind(ISimpleECEEntityDao.class).to(SimpleECEEntityDao.class);
+        bind(INestedEntityDao.class).to(NestedEntityDao.class);
+        //bind(IMasterConfigurationController.class).to(RemoteMasterConfigurationController.class).in(Scopes.SINGLETON);
+        bind(ISimpleCompositeEntityDao.class).to(SimpleCompositeEntityDao.class);
     }
 
 }

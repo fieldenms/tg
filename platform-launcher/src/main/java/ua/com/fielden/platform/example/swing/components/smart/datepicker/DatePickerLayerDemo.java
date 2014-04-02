@@ -38,70 +38,69 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class DatePickerLayerDemo {
     public static void main(final String[] args) throws Exception {
-	for (final LookAndFeelInfo laf : UIManager.getInstalledLookAndFeels()) {
-	    if ("Nimbus".equals(laf.getName())) {
-		UIManager.setLookAndFeel(laf.getClassName());
-	    }
-	}
-	SwingUtilities.invokeLater(new Runnable() {
-	    public void run() {
-		final JPanel panel = new JPanel(new MigLayout("fill"));
-		panel.add(createAutocompleter(), "growx, h 25!, w 300, wrap");
-		final JXDatePicker picker = new JXDatePicker(Locale.TRADITIONAL_CHINESE);
-		final Calendar c = Calendar.getInstance();
-		c.add(Calendar.DAY_OF_MONTH, 10);
-		picker.getMonthView().setFlaggedDayForeground(Color.green);
-		picker.getMonthView().setFlaggedDates(new Date(), c.getTime());
-		picker.getMonthView().setTodayBackground(Color.MAGENTA);
-		panel.add(picker, "growx, h 25!, w 300, wrap");
-		panel.add(new DatePickerLayer("type date...", Locale.getDefault(), true, new Date(), DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()), "growx, h 25!, w 300, wrap");
-		panel.add(new DatePickerLayer("type date...", Locale.TRADITIONAL_CHINESE, true, null, 0L), "growx, h 25!, w 300, wrap");
-		panel.add(new CaptionTextFieldLayer<JTextField>(new JFormattedTextField(), "some caption"), "growx, h 25!, w 300, wrap");
-		panel.add(new JButton(new Command<Boolean>("Print values") {
-		    @Override
-		    protected Boolean action(final ActionEvent e) throws Exception {
-			//			for (final DemoEnum entity : autocompleter.values()) {
-			//			    System.out.println(entity);
-			//			}
-			return true;
-		    }
-		}), "align right");
+        for (final LookAndFeelInfo laf : UIManager.getInstalledLookAndFeels()) {
+            if ("Nimbus".equals(laf.getName())) {
+                UIManager.setLookAndFeel(laf.getClassName());
+            }
+        }
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                final JPanel panel = new JPanel(new MigLayout("fill"));
+                panel.add(createAutocompleter(), "growx, h 25!, w 300, wrap");
+                final JXDatePicker picker = new JXDatePicker(Locale.TRADITIONAL_CHINESE);
+                final Calendar c = Calendar.getInstance();
+                c.add(Calendar.DAY_OF_MONTH, 10);
+                picker.getMonthView().setFlaggedDayForeground(Color.green);
+                picker.getMonthView().setFlaggedDates(new Date(), c.getTime());
+                picker.getMonthView().setTodayBackground(Color.MAGENTA);
+                panel.add(picker, "growx, h 25!, w 300, wrap");
+                panel.add(new DatePickerLayer("type date...", Locale.getDefault(), true, new Date(), DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()), "growx, h 25!, w 300, wrap");
+                panel.add(new DatePickerLayer("type date...", Locale.TRADITIONAL_CHINESE, true, null, 0L), "growx, h 25!, w 300, wrap");
+                panel.add(new CaptionTextFieldLayer<JTextField>(new JFormattedTextField(), "some caption"), "growx, h 25!, w 300, wrap");
+                panel.add(new JButton(new Command<Boolean>("Print values") {
+                    @Override
+                    protected Boolean action(final ActionEvent e) throws Exception {
+                        //			for (final DemoEnum entity : autocompleter.values()) {
+                        //			    System.out.println(entity);
+                        //			}
+                        return true;
+                    }
+                }), "align right");
 
-		panel.add(new JLabel("bla"));
-		final JFormattedTextField tft3 = new JFormattedTextField(new SimpleDateFormat("yyyy-M-d"));
-		tft3.setValue(new Date());
-		panel.add(tft3);
+                panel.add(new JLabel("bla"));
+                final JFormattedTextField tft3 = new JFormattedTextField(new SimpleDateFormat("yyyy-M-d"));
+                tft3.setValue(new Date());
+                panel.add(tft3);
 
+                SimpleLauncher.show("Date picker layer demo", panel);
 
-		SimpleLauncher.show("Date picker layer demo", panel);
-
-	    }
-	});
+            }
+        });
     }
 
-    private static AutocompleterTextFieldLayer<DemoEntity> createAutocompleter(){
-	// Property <code>values</code> holds a complete list of values used for autocompletion. Alternative implementations may retrieve data from a database or other sources.
-	final DemoEntity[] acceptableValues = new DemoEntity[] { new DemoEntity("NAME 1", "demo for name 1 demo for name 1 demo for name 1"),
-		new DemoEntity("NAME 2", "demo for name 2"), new DemoEntity("NAME 3", "demo for name 3"), new DemoEntity("NMAE", "demo for name 2"),
-		new DemoEntity("DONE 1", "demo for name 3"), new DemoEntity("D2NE 2", "demo for name 3"), new DemoEntity("DONE 3", "demo for name 3") };
+    private static AutocompleterTextFieldLayer<DemoEntity> createAutocompleter() {
+        // Property <code>values</code> holds a complete list of values used for autocompletion. Alternative implementations may retrieve data from a database or other sources.
+        final DemoEntity[] acceptableValues = new DemoEntity[] { new DemoEntity("NAME 1", "demo for name 1 demo for name 1 demo for name 1"),
+                new DemoEntity("NAME 2", "demo for name 2"), new DemoEntity("NAME 3", "demo for name 3"), new DemoEntity("NMAE", "demo for name 2"),
+                new DemoEntity("DONE 1", "demo for name 3"), new DemoEntity("D2NE 2", "demo for name 3"), new DemoEntity("DONE 3", "demo for name 3") };
 
-	// create an instance of the overlayable text field, which bill be used for attaching overlay components
-	final IValueMatcher<DemoEntity> matcher = new PojoValueMatcher<DemoEntity>(Arrays.asList(acceptableValues), "name", 10) {
-	    @Override
-	    public List<DemoEntity> findMatches(final String value) {
-		try {
-		    Thread.sleep(1000);
-		} catch (final InterruptedException e) {
-		}
+        // create an instance of the overlayable text field, which bill be used for attaching overlay components
+        final IValueMatcher<DemoEntity> matcher = new PojoValueMatcher<DemoEntity>(Arrays.asList(acceptableValues), "name", 10) {
+            @Override
+            public List<DemoEntity> findMatches(final String value) {
+                try {
+                    Thread.sleep(1000);
+                } catch (final InterruptedException e) {
+                }
 
-		return super.findMatches(value);
-	    }
-	};
-	final Set<String> highlightProps = new HashSet<String>();
-	highlightProps.add("name");
-	final MultiplePropertiesListCellRenderer<DemoEntity> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEntity>("name", new Pair[] {new Pair<String, String>("Description", "desc")}, highlightProps);
-	final AutocompleterTextFieldLayer<DemoEntity> autocompleter = new AutocompleterTextFieldLayer<DemoEntity>(new UpperCaseTextField(), matcher, DemoEntity.class, "name", cellRenderer, "caption...", ";");
-	cellRenderer.setAuto(autocompleter.getAutocompleter());
-	return autocompleter;
+                return super.findMatches(value);
+            }
+        };
+        final Set<String> highlightProps = new HashSet<String>();
+        highlightProps.add("name");
+        final MultiplePropertiesListCellRenderer<DemoEntity> cellRenderer = new MultiplePropertiesListCellRenderer<DemoEntity>("name", new Pair[] { new Pair<String, String>("Description", "desc") }, highlightProps);
+        final AutocompleterTextFieldLayer<DemoEntity> autocompleter = new AutocompleterTextFieldLayer<DemoEntity>(new UpperCaseTextField(), matcher, DemoEntity.class, "name", cellRenderer, "caption...", ";");
+        cellRenderer.setAuto(autocompleter.getAutocompleter());
+        return autocompleter;
     }
 }

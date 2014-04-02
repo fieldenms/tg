@@ -16,57 +16,57 @@ public class PartModel extends PPath implements IPaintable {
     private static Stroke originStroke;
 
     public PartModel() {
-	super();
+        super();
     }
 
     @Override
     public void fill(final Color color) {
-	if (color == null) {
-	    setPaint(originColor);
-	} else {
-	    setPaint(color);
-	}
+        if (color == null) {
+            setPaint(originColor);
+        } else {
+            setPaint(color);
+        }
     }
 
     @Override
     public void stroke(final Color color) {
-	if (color == null) {
-	    setStrokePaint(originStrokeColor);
-	} else {
-	    setStrokePaint(color);
-	}
+        if (color == null) {
+            setStrokePaint(originStrokeColor);
+        } else {
+            setStrokePaint(color);
+        }
     }
 
     @Override
     public void stroke(final Stroke stroke) {
-	if (stroke == null) {
-	    setStroke(originStroke);
-	} else {
-	    setStroke(stroke);
-	}
+        if (stroke == null) {
+            setStroke(originStroke);
+        } else {
+            setStroke(stroke);
+        }
     }
 
     public Color getOriginColor() {
-	return originColor;
+        return originColor;
     }
 
     public void setOriginColor(final Color originColor) {
-	this.originColor = originColor;
+        this.originColor = originColor;
     }
 
     public Color getOriginStrokeColor() {
-	return originStrokeColor;
+        return originStrokeColor;
     }
 
     public void setOriginStrokeColor(final Color originStrokeColor) {
-	this.originStrokeColor = originStrokeColor;
+        this.originStrokeColor = originStrokeColor;
     }
 
     public Stroke getOriginStroke() {
-	return originStroke;
+        return originStroke;
     }
 
     public void setOriginStroke(final Stroke originStroke) {
-	this.originStroke = originStroke;
+        this.originStroke = originStroke;
     }
 }

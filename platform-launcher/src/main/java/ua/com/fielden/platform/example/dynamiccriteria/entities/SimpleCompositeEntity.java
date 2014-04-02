@@ -54,56 +54,56 @@ public class SimpleCompositeEntity extends AbstractEntity<DynamicEntityKey> {
      * Constructor for the entity factory from TG.
      */
     protected SimpleCompositeEntity() {
-	setKey(new DynamicEntityKey(this));
+        setKey(new DynamicEntityKey(this));
     }
 
     public SimpleECEEntity getSimpleEntity() {
-	return simpleEntity;
+        return simpleEntity;
     }
 
     @Observable
     public SimpleCompositeEntity setSimpleEntity(final SimpleECEEntity simpleEntity) {
-	this.simpleEntity = simpleEntity;
-	return this;
+        this.simpleEntity = simpleEntity;
+        return this;
     }
 
     public String getStringKey() {
-	return stringKey;
+        return stringKey;
     }
 
     @Observable
     public SimpleCompositeEntity setStringKey(final String stringKey) {
-	this.stringKey = stringKey;
-	return this;
+        this.stringKey = stringKey;
+        return this;
     }
 
     public Date getInitDate() {
-	return initDate;
+        return initDate;
     }
 
     @Observable
     public SimpleCompositeEntity setInitDate(final Date initDate) {
-	this.initDate = initDate;
-	return this;
+        this.initDate = initDate;
+        return this;
     }
 
     public boolean isActive() {
-	return active;
+        return active;
     }
 
     @Observable
     public SimpleCompositeEntity setActive(final boolean active) {
-	this.active = active;
-	return this;
+        this.active = active;
+        return this;
     }
 
     public Integer getNumValue() {
-	return numValue;
+        return numValue;
     }
 
     @Observable
     public SimpleCompositeEntity setNumValue(final Integer numValue) {
-	this.numValue = numValue;
-	return this;
+        this.numValue = numValue;
+        return this;
     }
 }

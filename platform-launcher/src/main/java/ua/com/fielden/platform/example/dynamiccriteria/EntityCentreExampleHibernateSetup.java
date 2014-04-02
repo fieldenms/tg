@@ -18,17 +18,16 @@ public class EntityCentreExampleHibernateSetup {
     @SuppressWarnings("rawtypes")
     private static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
     static {
-	hibTypeDefaults.put(boolean.class, YesNoType.class);
-	hibTypeDefaults.put(Boolean.class, YesNoType.class);
-	hibTypeDefaults.put(Date.class, DateTimeType.class);
-	hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
-	hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+        hibTypeDefaults.put(boolean.class, YesNoType.class);
+        hibTypeDefaults.put(Boolean.class, YesNoType.class);
+        hibTypeDefaults.put(Date.class, DateTimeType.class);
+        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
+        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
     }
-
 
     @SuppressWarnings("rawtypes")
     public static Map<Class, Class> getHibernateTypes() {
-	return Collections.unmodifiableMap(hibTypeDefaults);
+        return Collections.unmodifiableMap(hibTypeDefaults);
     }
 
 }

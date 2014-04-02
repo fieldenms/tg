@@ -13,8 +13,7 @@ public class SimpleECEEntityDao extends CommonEntityDao<SimpleECEEntity> impleme
 
     @Inject
     protected SimpleECEEntityDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
-
 
 }

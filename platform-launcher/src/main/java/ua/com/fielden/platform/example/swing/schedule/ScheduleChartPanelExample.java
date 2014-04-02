@@ -39,189 +39,188 @@ import com.jidesoft.plaf.LookAndFeelFactory;
 public class ScheduleChartPanelExample {
 
     public static void main(final String[] args) {
-	SwingUtilitiesEx.invokeLater(new Runnable() {
+        SwingUtilitiesEx.invokeLater(new Runnable() {
 
-	    @Override
-	    public void run() {
-		for (final LookAndFeelInfo laf : UIManager.getInstalledLookAndFeels()) {
-		    if ("Nimbus".equals(laf.getName())) {
-			try {
-			    UIManager.setLookAndFeel(laf.getClassName());
-			} catch (final Exception e) {
-			    e.printStackTrace();
-			}
-		    }
-		}
-		com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
-		LookAndFeelFactory.installJideExtension();
-		final JFrame frame = new JFrame("Scedule chart demo");
-		final JLabel label = new JLabel("None");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setLayout(new MigLayout("fill, insets 0", "[grow, fill]", "[grow, fill][]"));
-		frame.add(createScheduleChartPanel(label), "wrap");
-		frame.add(label);
-		frame.setPreferredSize(new Dimension(640, 480));
-		frame.pack();
-		frame.setVisible(true);
-	    }
-	});
+            @Override
+            public void run() {
+                for (final LookAndFeelInfo laf : UIManager.getInstalledLookAndFeels()) {
+                    if ("Nimbus".equals(laf.getName())) {
+                        try {
+                            UIManager.setLookAndFeel(laf.getClassName());
+                        } catch (final Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
+                LookAndFeelFactory.installJideExtension();
+                final JFrame frame = new JFrame("Scedule chart demo");
+                final JLabel label = new JLabel("None");
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setLayout(new MigLayout("fill, insets 0", "[grow, fill]", "[grow, fill][]"));
+                frame.add(createScheduleChartPanel(label), "wrap");
+                frame.add(label);
+                frame.setPreferredSize(new Dimension(640, 480));
+                frame.pack();
+                frame.setVisible(true);
+            }
+        });
     }
 
     private static Component createScheduleChartPanel(final JLabel taskBar) {
-	final ScheduleChartPanel<? extends AbstractEntity<?>> schedule = new ScheduleChartPanel<AbstractEntity<?>>();
+        final ScheduleChartPanel<? extends AbstractEntity<?>> schedule = new ScheduleChartPanel<AbstractEntity<?>>();
 
-	schedule.setChartName("Schedule chart demo");
-	schedule.setRangeAxisName("Range axis");
-	schedule.setDomainAxisName("Domain axis");
+        schedule.setChartName("Schedule chart demo");
+        schedule.setRangeAxisName("Range axis");
+        schedule.setDomainAxisName("Domain axis");
 
-	//marker value now.
-	final Date now = new Date();
+        //marker value now.
+        final Date now = new Date();
 
-	schedule.addScheduleSeries(createActualSeries(now));
-	schedule.addScheduleSeries(createEstimateSeries(now));
+        schedule.addScheduleSeries(createActualSeries(now));
+        schedule.addScheduleSeries(createEstimateSeries(now));
 
-	schedule.addMarker(createNowMarker(now));
+        schedule.addMarker(createNowMarker(now));
 
-	schedule.setData(WorkOrderDataStore.dataAll);
+        schedule.setData(WorkOrderDataStore.dataAll);
 
-	schedule.addScheduleChartMouseEventListener(createMoseListener(taskBar));
-	schedule.addScheduleChangedEventListener(createScheduleChangedListener(taskBar));
+        schedule.addScheduleChartMouseEventListener(createMoseListener(taskBar));
+        schedule.addScheduleChangedEventListener(createScheduleChangedListener(taskBar));
 
-	return schedule;
+        return schedule;
     }
 
     private static IScheduleChangeEventListener<AbstractEntity<?>> createScheduleChangedListener(final JLabel taskBar) {
-	return new IScheduleChangeEventListener<AbstractEntity<?>>() {
+        return new IScheduleChangeEventListener<AbstractEntity<?>>() {
 
-	    @Override
-	    public void scheduleChanged(final ScheduleChangedEvent<AbstractEntity<?>> event) {
-		taskBar.setText(event.getEntity() + ": ("+ event.getSeries().getScheduleEntity().getFrom(event.getEntity()) + ", " +
-			event.getSeries().getScheduleEntity().getTo(event.getEntity()) + ")");
-	    }
+            @Override
+            public void scheduleChanged(final ScheduleChangedEvent<AbstractEntity<?>> event) {
+                taskBar.setText(event.getEntity() + ": (" + event.getSeries().getScheduleEntity().getFrom(event.getEntity()) + ", "
+                        + event.getSeries().getScheduleEntity().getTo(event.getEntity()) + ")");
+            }
 
-	};
+        };
     }
 
     private static IScheduleChartMouseEventListener<AbstractEntity<?>> createMoseListener(final JLabel taskBar) {
-	return new IScheduleChartMouseEventListener<AbstractEntity<?>>() {
+        return new IScheduleChartMouseEventListener<AbstractEntity<?>>() {
 
-	    @Override
-	    public void mouseClick(final ScheduleMouseEvent<AbstractEntity<?>> event) {
-		System.out.println("==========mouse clicked==========");
-		System.out.println("Coordinates: " + event.getX() + " : " + event.getY());
-		if(event.getEntity() != null) {
-		    System.out.println("Entity: " + event.getEntity() + " Series name: " + event.getSeries().getName());
-		}
-		System.out.println("=================================");
+            @Override
+            public void mouseClick(final ScheduleMouseEvent<AbstractEntity<?>> event) {
+                System.out.println("==========mouse clicked==========");
+                System.out.println("Coordinates: " + event.getX() + " : " + event.getY());
+                if (event.getEntity() != null) {
+                    System.out.println("Entity: " + event.getEntity() + " Series name: " + event.getSeries().getName());
+                }
+                System.out.println("=================================");
 
-	    }
+            }
 
-	    @Override
-	    public void mouseMove(final ScheduleMouseEvent<AbstractEntity<?>> event) {
-		taskBar.setText("Coordinates: " + event.getX() + " : " + event.getY());
-	    }
+            @Override
+            public void mouseMove(final ScheduleMouseEvent<AbstractEntity<?>> event) {
+                taskBar.setText("Coordinates: " + event.getX() + " : " + event.getY());
+            }
 
-	};
+        };
     }
 
     private static Marker createNowMarker(final Date now) {
-	final ValueMarker valuemarker = new ValueMarker(now.getTime());
-	valuemarker.setLabelOffsetType(LengthAdjustmentType.EXPAND);
-	valuemarker.setPaint(Color.BLACK);
-	valuemarker.setLabel("Today");
-	valuemarker.setLabelAnchor(RectangleAnchor.TOP_LEFT);
-	valuemarker.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
-	return valuemarker;
+        final ValueMarker valuemarker = new ValueMarker(now.getTime());
+        valuemarker.setLabelOffsetType(LengthAdjustmentType.EXPAND);
+        valuemarker.setPaint(Color.BLACK);
+        valuemarker.setLabel("Today");
+        valuemarker.setLabelAnchor(RectangleAnchor.TOP_LEFT);
+        valuemarker.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
+        return valuemarker;
     }
 
     private static ScheduleSeries<AbstractEntity<?>> createActualSeries(final Date now) {
-	final MultipleTypeScheduleEntity entity = new MultipleTypeScheduleEntity();
-	entity.setScheduleSeries(WorkOrderEntity.class, new SingleTypeScheduleEntity<WorkOrderEntity>(WorkOrderEntity.class, "actualStart", "actualFinish", now){
+        final MultipleTypeScheduleEntity entity = new MultipleTypeScheduleEntity();
+        entity.setScheduleSeries(WorkOrderEntity.class, new SingleTypeScheduleEntity<WorkOrderEntity>(WorkOrderEntity.class, "actualStart", "actualFinish", now) {
 
-	    @Override
-	    public boolean canEditEntity(final WorkOrderEntity entity) {
-		return false;
-	    }
+            @Override
+            public boolean canEditEntity(final WorkOrderEntity entity) {
+                return false;
+            }
 
-	});
-	final ScheduleSeries<AbstractEntity<?>> series = new ScheduleSeries<AbstractEntity<?>>(entity);
-	series.setCutOfFactor(0.5);
-	series.setName("Actual series");
-	series.setPainter(new ISchedulePainter<AbstractEntity<?>>() {
+        });
+        final ScheduleSeries<AbstractEntity<?>> series = new ScheduleSeries<AbstractEntity<?>>(entity);
+        series.setCutOfFactor(0.5);
+        series.setName("Actual series");
+        series.setPainter(new ISchedulePainter<AbstractEntity<?>>() {
 
-	    final Color color = new Color(39, 148, 216);
+            final Color color = new Color(39, 148, 216);
 
-	    @Override
-	    public Paint getPainterFor(final AbstractEntity<?> entity) {
-		return color;
-	    }
+            @Override
+            public Paint getPainterFor(final AbstractEntity<?> entity) {
+                return color;
+            }
 
-	    @SuppressWarnings("unchecked")
-	    @Override
-	    public List<Pair<String, Paint>> getAvailableLegendItems() {
-		return Arrays.asList(new Pair<String, Paint>("Actual duration", color));
-	    }
-	});
-	return series;
+            @SuppressWarnings("unchecked")
+            @Override
+            public List<Pair<String, Paint>> getAvailableLegendItems() {
+                return Arrays.asList(new Pair<String, Paint>("Actual duration", color));
+            }
+        });
+        return series;
     }
 
     private static ScheduleSeries<AbstractEntity<?>> createEstimateSeries(final Date now) {
-	final MultipleTypeScheduleEntity entity = new MultipleTypeScheduleEntity();
-	entity.setScheduleSeries(WorkOrderEntity.class, new SingleTypeScheduleEntity<WorkOrderEntity>(WorkOrderEntity.class, "earlyStart", "earlyFinish", now){
+        final MultipleTypeScheduleEntity entity = new MultipleTypeScheduleEntity();
+        entity.setScheduleSeries(WorkOrderEntity.class, new SingleTypeScheduleEntity<WorkOrderEntity>(WorkOrderEntity.class, "earlyStart", "earlyFinish", now) {
 
-	    @Override
-	    public boolean canEditEntity(final WorkOrderEntity entity) {
-		return true;
-	    }
+            @Override
+            public boolean canEditEntity(final WorkOrderEntity entity) {
+                return true;
+            }
 
-	})//
-	.setScheduleSeries(WorkRequest.class, new SingleTypeScheduleEntity<WorkRequest>(WorkRequest.class, "requestStart", "requestFinish", now){
+        })//
+        .setScheduleSeries(WorkRequest.class, new SingleTypeScheduleEntity<WorkRequest>(WorkRequest.class, "requestStart", "requestFinish", now) {
 
-	    @Override
-	    public boolean canEditEntity(final WorkRequest entity) {
-		return true;
-	    }
+            @Override
+            public boolean canEditEntity(final WorkRequest entity) {
+                return true;
+            }
 
-	});
+        });
 
+        final ScheduleSeries<AbstractEntity<?>> series = new ScheduleSeries<AbstractEntity<?>>(entity);
+        series.setCutOfFactor(0.10);
+        series.setName("Early series");
+        series.setPainter(new ISchedulePainter<AbstractEntity<?>>() {
 
-	final ScheduleSeries<AbstractEntity<?>> series = new ScheduleSeries<AbstractEntity<?>>(entity);
-	series.setCutOfFactor(0.10);
-	series.setName("Early series");
-	series.setPainter(new ISchedulePainter<AbstractEntity<?>>() {
+            final Color color = new Color(254, 214, 88);
+            final Color invalidColor = new Color(238, 83, 35);
+            final Color requestColor = new Color(27, 114, 25);
 
-	    final Color color = new Color(254, 214, 88);
-	    final Color invalidColor = new Color(238, 83, 35);
-	    final Color requestColor = new Color(27, 114, 25);
+            @Override
+            public Paint getPainterFor(final AbstractEntity<?> entity) {
+                if (entity instanceof WorkOrderEntity) {
+                    if (isValid((WorkOrderEntity) entity)) {
+                        return color;
+                    } else {
+                        return invalidColor;
+                    }
+                } else {
+                    return requestColor;
+                }
+            }
 
-	    @Override
-	    public Paint getPainterFor(final AbstractEntity<?> entity) {
-		if (entity instanceof WorkOrderEntity) {
-		    if (isValid((WorkOrderEntity) entity)) {
-			return color;
-		    } else {
-			return invalidColor;
-		    }
-		} else {
-		    return requestColor;
-		}
-	    }
+            private boolean isValid(final WorkOrderEntity entity) {
+                final WorkRequest request = entity.getWorkRequest();
+                final Date date = entity.getEarlyFinish() == null ? now : entity.getEarlyFinish();
+                if (request.getRequestFinish().before(date)) {
+                    return false;
+                }
+                return true;
+            }
 
-	    private boolean isValid(final WorkOrderEntity entity) {
-		final WorkRequest request = entity.getWorkRequest();
-		final Date date = entity.getEarlyFinish() == null ? now : entity.getEarlyFinish();
-		if (request.getRequestFinish().before(date)) {
-		    return false;
-		}
-		return true;
-	    }
-
-	    @SuppressWarnings("unchecked")
-	    @Override
-	    public List<Pair<String, Paint>> getAvailableLegendItems() {
-		return Arrays.asList(new Pair<String, Paint>("Estimated duration", color), new Pair<String, Paint>("Work requst duration", requestColor));
-	    }
-	});
-	return series;
+            @SuppressWarnings("unchecked")
+            @Override
+            public List<Pair<String, Paint>> getAvailableLegendItems() {
+                return Arrays.asList(new Pair<String, Paint>("Estimated duration", color), new Pair<String, Paint>("Work requst duration", requestColor));
+            }
+        });
+        return series;
     }
 }

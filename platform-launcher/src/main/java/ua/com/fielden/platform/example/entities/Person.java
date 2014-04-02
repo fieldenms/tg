@@ -17,7 +17,7 @@ public class Person extends User {
      * Constructor for Hibernate.
      */
     protected Person() {
-	super(null, null);
+        super(null, null);
     }
 
     /**
@@ -27,6 +27,6 @@ public class Person extends User {
      * @param desc
      */
     public Person(final String name, final String desc) {
-	super(name, desc);
+        super(name, desc);
     }
 }

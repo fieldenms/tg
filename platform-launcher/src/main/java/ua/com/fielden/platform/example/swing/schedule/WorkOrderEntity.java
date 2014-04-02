@@ -60,12 +60,12 @@ public class WorkOrderEntity extends AbstractEntity<String> {
     @Observable
     @EntityExists(WorkRequest.class)
     public WorkOrderEntity setWorkRequest(final WorkRequest workRequest) {
-	this.workRequest = workRequest;
-	return this;
+        this.workRequest = workRequest;
+        return this;
     }
 
     public WorkRequest getWorkRequest() {
-	return workRequest;
+        return workRequest;
     }
 
     /////////////////////////////////////////////
@@ -73,23 +73,23 @@ public class WorkOrderEntity extends AbstractEntity<String> {
     /////////////////////////////////////////////
 
     public Date getEarlyStart() {
-	return earlyStart;
+        return earlyStart;
     }
 
     public Date getEarlyFinish() {
-	return earlyFinish;
+        return earlyFinish;
     }
 
     public Date getActualStart() {
-	return actualStart;
+        return actualStart;
     }
 
     public Date getActualFinish() {
-	return actualFinish;
+        return actualFinish;
     }
 
     public String getJobNo() {
-	return jobNo;
+        return jobNo;
     }
 
     /////////////////////////////////////////////
@@ -99,35 +99,35 @@ public class WorkOrderEntity extends AbstractEntity<String> {
     @Observable
     @LeProperty("earlyFinish")
     public WorkOrderEntity setEarlyStart(final Date earlyStart) throws Result {
-	this.earlyStart = earlyStart;
-	return this;
+        this.earlyStart = earlyStart;
+        return this;
     }
 
     @Observable
     @GeProperty("earlyStart")
     public WorkOrderEntity setEarlyFinish(final Date earlyFinish) throws Result {
-	this.earlyFinish = earlyFinish;
-	return this;
+        this.earlyFinish = earlyFinish;
+        return this;
     }
 
     @Observable
     @LeProperty("actualFinish")
     public WorkOrderEntity setActualStart(final Date actualStart) throws Result {
-	this.actualStart = actualStart;
-	return this;
+        this.actualStart = actualStart;
+        return this;
     }
 
     @Observable
     @GeProperty("actualStart")
     public WorkOrderEntity setActualFinish(final Date actualFinish) throws Result {
-	this.actualFinish = actualFinish;
-	return this;
+        this.actualFinish = actualFinish;
+        return this;
     }
 
     @Observable
     public WorkOrderEntity setJobNo(final String jobNo) {
-	this.jobNo = jobNo;
-	return this;
+        this.jobNo = jobNo;
+        return this;
     }
 
     @Override

@@ -42,49 +42,49 @@ public class BirdsEyeView extends PCanvas implements PropertyChangeListener {
      * Creates a new instance of a BirdsEyeView
      */
     public BirdsEyeView() {
-	// create the PropertyChangeListener for listening to the viewed canvas
-	changeListener = new PropertyChangeListener() {
-	    public void propertyChange(PropertyChangeEvent evt) {
-		passiveUpdateFromViewed();
-	    }
-	};
-	// create the coverage node
-	areaVisiblePNode = new P3DRect();
-	areaVisiblePNode.setPaint(new Color(250, 214, 105));
-	areaVisiblePNode.setTransparency(.5f);
-	areaVisiblePNode.setBounds(0, 0, 100, 100);
-	getCamera().addChild(areaVisiblePNode);
-	// add the drag event handler
-	getCamera().addInputEventListener(new PDragSequenceEventHandler() {
-	    protected void startDrag(PInputEvent e) {
-		if (e.getPickedNode() == areaVisiblePNode) {
-		    super.startDrag(e);
-		    updateFromViewed();
-		}
-	    }
+        // create the PropertyChangeListener for listening to the viewed canvas
+        changeListener = new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                passiveUpdateFromViewed();
+            }
+        };
+        // create the coverage node
+        areaVisiblePNode = new P3DRect();
+        areaVisiblePNode.setPaint(new Color(250, 214, 105));
+        areaVisiblePNode.setTransparency(.5f);
+        areaVisiblePNode.setBounds(0, 0, 100, 100);
+        getCamera().addChild(areaVisiblePNode);
+        // add the drag event handler
+        getCamera().addInputEventListener(new PDragSequenceEventHandler() {
+            protected void startDrag(PInputEvent e) {
+                if (e.getPickedNode() == areaVisiblePNode) {
+                    super.startDrag(e);
+                    updateFromViewed();
+                }
+            }
 
-	    protected void drag(PInputEvent e) {
-		PDimension dim = e.getDelta();
-		camera.translateView(0 - dim.getWidth(), 0 - dim.getHeight());
-	    }
-	});
-	// remove Pan and Zoom
-	removeInputEventListener(getPanEventHandler());
-	removeInputEventListener(getZoomEventHandler());
+            protected void drag(PInputEvent e) {
+                PDimension dim = e.getDelta();
+                camera.translateView(0 - dim.getWidth(), 0 - dim.getHeight());
+            }
+        });
+        // remove Pan and Zoom
+        removeInputEventListener(getPanEventHandler());
+        removeInputEventListener(getZoomEventHandler());
 
-	setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING); // LOW_QUALITY_RENDERING
+        setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING); // LOW_QUALITY_RENDERING
 
     }
 
     public void connect(PCamera camera, PLayer[] viewedLayers) {
-	this.camera = camera; // assigns camera to be viewed
-	layerCount = 0;
-	// assign changeListener event to the camera viewing a canvas to make sure the birds view is updated when something changes on the main canvas
-	camera.addPropertyChangeListener(changeListener);
+        this.camera = camera; // assigns camera to be viewed
+        layerCount = 0;
+        // assign changeListener event to the camera viewing a canvas to make sure the birds view is updated when something changes on the main canvas
+        camera.addPropertyChangeListener(changeListener);
 
-	for (layerCount = 0; layerCount < viewedLayers.length; ++layerCount) {
-	    getCamera().addLayer(layerCount, viewedLayers[layerCount]);
-	}
+        for (layerCount = 0; layerCount < viewedLayers.length; ++layerCount) {
+            getCamera().addLayer(layerCount, viewedLayers[layerCount]);
+        }
 
     }
 
@@ -92,27 +92,27 @@ public class BirdsEyeView extends PCanvas implements PropertyChangeListener {
      * Add a layer to list of viewed layers
      */
     public void addLayer(PLayer new_layer) {
-	getCamera().addLayer(new_layer);
-	layerCount++;
+        getCamera().addLayer(new_layer);
+        layerCount++;
     }
 
     /**
      * Remove the layer from the viewed layers
      */
     public void removeLayer(PLayer old_layer) {
-	getCamera().removeLayer(old_layer);
-	layerCount--;
+        getCamera().removeLayer(old_layer);
+        layerCount--;
     }
 
     /**
      * Stop the birds eye view from receiving events from the viewed canvas and remove all layers
      */
     public void disconnect() {
-	camera.removePropertyChangeListener(changeListener);
+        camera.removePropertyChangeListener(changeListener);
 
-	for (int i = 0; i < getCamera().getLayerCount(); ++i) {
-	    getCamera().removeLayer(i);
-	}
+        for (int i = 0; i < getCamera().getLayerCount(); ++i) {
+            getCamera().removeLayer(i);
+        }
 
     }
 
@@ -120,19 +120,19 @@ public class BirdsEyeView extends PCanvas implements PropertyChangeListener {
      * This method gets the state of the viewed canvas and updates the BirdsEyeViewer This can be called from outside code
      */
     public void updateFromViewed() {
-	// keep the birds eye view centered
-	getCamera().animateViewToCenterBounds(getCamera().getUnionOfLayerFullBounds(), true, 0);
-	passiveUpdateFromViewed();
+        // keep the birds eye view centered
+        getCamera().animateViewToCenterBounds(getCamera().getUnionOfLayerFullBounds(), true, 0);
+        passiveUpdateFromViewed();
     }
 
     public void passiveUpdateFromViewed() {
-	areaVisiblePNode.setBounds(getCamera().viewToLocal(camera.getViewBounds()));
+        areaVisiblePNode.setBounds(getCamera().viewToLocal(camera.getViewBounds()));
     }
 
     /**
      * This method will get called when the viewed canvas changes
      */
     public void propertyChange(PropertyChangeEvent event) {
-	updateFromViewed();
+        updateFromViewed();
     }
 }

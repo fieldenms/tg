@@ -4,7 +4,7 @@ public class Changed<T> {
     private final T value;
 
     public Changed(final T value) {
-	this.value = value;
+        this.value = value;
     }
 
     public T getValue() {

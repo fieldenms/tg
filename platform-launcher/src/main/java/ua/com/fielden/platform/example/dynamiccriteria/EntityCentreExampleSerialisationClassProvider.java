@@ -13,10 +13,10 @@ public class EntityCentreExampleSerialisationClassProvider extends DefaultSerial
 
     @Inject
     public EntityCentreExampleSerialisationClassProvider(final IApplicationSettings settings, final IApplicationDomainProvider applicationDomain) throws Exception {
-	super(settings, applicationDomain);
-	types.add(SimpleECEEntity.class);
-	types.add(SimpleNestedEntity.class);
-	types.add(SimpleCompositeEntity.class);
+        super(settings, applicationDomain);
+        types.add(SimpleECEEntity.class);
+        types.add(SimpleNestedEntity.class);
+        types.add(SimpleCompositeEntity.class);
     }
 
 }

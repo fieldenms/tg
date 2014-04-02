@@ -33,13 +33,13 @@ public class WorkRequest extends AbstractEntity<String> {
 
     @Observable
     protected WorkRequest setWorkOrders(final Set<WorkOrderEntity> workOrders) {
-	this.workOrders.clear();
-	this.workOrders.addAll(workOrders);
-	return this;
+        this.workOrders.clear();
+        this.workOrders.addAll(workOrders);
+        return this;
     }
 
     public Set<WorkOrderEntity> getWorkOrders() {
-	return Collections.unmodifiableSet(workOrders);
+        return Collections.unmodifiableSet(workOrders);
     }
 
     @IsProperty
@@ -57,11 +57,11 @@ public class WorkRequest extends AbstractEntity<String> {
     /////////////////////////////////////////////
 
     public Date getRequestStart() {
-	return requestStart;
+        return requestStart;
     }
 
     public Date getRequestFinish() {
-	return requestFinish;
+        return requestFinish;
     }
 
     /////////////////////////////////////////////
@@ -71,15 +71,15 @@ public class WorkRequest extends AbstractEntity<String> {
     @Observable
     @LeProperty("requestFinish")
     public WorkRequest setRequestStart(final Date requestStart) throws Result {
-	this.requestStart = requestStart;
-	return this;
+        this.requestStart = requestStart;
+        return this;
     }
 
     @Observable
     @GeProperty("requestStart")
     public WorkRequest setRequestFinish(final Date requestFinish) throws Result {
-	this.requestFinish = requestFinish;
-	return this;
+        this.requestFinish = requestFinish;
+        return this;
     }
 
     @Override
@@ -97,4 +97,4 @@ public class WorkRequest extends AbstractEntity<String> {
         return this;
     }
 
- }
+}

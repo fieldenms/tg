@@ -13,6 +13,6 @@ public class SimpleCompositeEntityDao extends CommonEntityDao<SimpleCompositeEnt
 
     @Inject
     protected SimpleCompositeEntityDao(final IFilter filter) {
-	super(filter);
+        super(filter);
     }
 }

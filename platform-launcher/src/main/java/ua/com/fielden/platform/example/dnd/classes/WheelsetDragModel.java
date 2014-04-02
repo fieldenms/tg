@@ -9,7 +9,7 @@ public class WheelsetDragModel extends AbstractWheelsetWidget {
 
     @Override
     public boolean canDrag() {
-	return true;
+        return true;
     }
 
     /**
@@ -18,18 +18,18 @@ public class WheelsetDragModel extends AbstractWheelsetWidget {
     private static final long serialVersionUID = 1L;
 
     public WheelsetDragModel(final Wheelset rotable) {
-	super("caption");
-	setRotable(rotable);
+        super("caption");
+        setRotable(rotable);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Rotable getRotable() {
-	return rotable;
+        return rotable;
     }
 
     public void setRotable(final Rotable rotable) {
-	this.rotable = rotable;
+        this.rotable = rotable;
     }
 
 }

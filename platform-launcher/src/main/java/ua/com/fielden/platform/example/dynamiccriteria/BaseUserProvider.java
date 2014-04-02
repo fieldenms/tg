@@ -11,12 +11,12 @@ public class BaseUserProvider extends EntitycentreUserProvider {
 
     @Inject
     public BaseUserProvider(final IUserDao userDao) {
-	super(userDao);
+        super(userDao);
     }
 
     @Override
     protected User initUser() {
-	return userDao.findByKeyAndFetch(fetch(User.class).with("basedOnUser"), User.system_users.SU.name());
+        return userDao.findByKeyAndFetch(fetch(User.class).with("basedOnUser"), User.system_users.SU.name());
     }
 
     @Override

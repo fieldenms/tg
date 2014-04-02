@@ -12,19 +12,19 @@ public class DragFromSupportImplementation implements DragFromSupport {
     private final JList<String> list;
 
     public DragFromSupportImplementation(final JList<String> list) {
-	this.list = list;
+        this.list = list;
     }
 
     @Override
     public Object getObject4DragAt(final Point point) {
-	return list.getModel().getElementAt(list.locationToIndex(point));
+        return list.getModel().getElementAt(list.locationToIndex(point));
     }
 
     @Override
     public void dragNDropDone(final Object object, final JComponent dropTo, final int action) {
-	if (dropTo == list) {
-	    //((DefaultListModel) list.getModel()).removeElement(object);
-	}
+        if (dropTo == list) {
+            //((DefaultListModel) list.getModel()).removeElement(object);
+        }
     }
 
 }

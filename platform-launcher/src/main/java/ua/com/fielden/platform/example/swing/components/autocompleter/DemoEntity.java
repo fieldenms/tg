@@ -9,13 +9,13 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
  * This is a dummy implementation of interface Entity used in this demo.
- *
+ * 
  * @author 01es
- *
+ * 
  */
 @KeyType(String.class)
 @KeyTitle(value = "Dynamic Entity", desc = "Dynamic entity used for demonstrations")
-public class DemoEntity extends AbstractEntity<String>{
+public class DemoEntity extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
