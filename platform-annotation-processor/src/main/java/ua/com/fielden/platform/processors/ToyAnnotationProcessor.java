@@ -16,20 +16,20 @@ public class ToyAnnotationProcessor extends AbstractProcessor {
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment env) {
 
-	for (final Element element : env.getRootElements()) {
-	    if (element.getSimpleName().toString().startsWith("Toy")) {
-		processingEnv.getMessager().printMessage(Kind.WARNING, "Do not play with toys!", element);
-	    }
+        for (final Element element : env.getRootElements()) {
+            if (element.getSimpleName().toString().startsWith("Toy")) {
+                processingEnv.getMessager().printMessage(Kind.WARNING, "Do not play with toys!", element);
+            }
 
-	    if (element.getAnnotation(ClassLevelAnnotation.class) != null) {
-		processingEnv.getMessager().printMessage(Kind.WARNING, "Be carefull with this annotations... it bites!", element);
-	    }
-	}
+            if (element.getAnnotation(ClassLevelAnnotation.class) != null) {
+                processingEnv.getMessager().printMessage(Kind.WARNING, "Be carefull with this annotations... it bites!", element);
+            }
+        }
 
-//	for (final TypeElement element : annotations) {
-//	    System.out.println(element.getQualifiedName());
-//	}
+        //	for (final TypeElement element : annotations) {
+        //	    System.out.println(element.getQualifiedName());
+        //	}
 
-	return false;
+        return false;
     }
 }
