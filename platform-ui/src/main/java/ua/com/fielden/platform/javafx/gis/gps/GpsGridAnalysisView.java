@@ -50,7 +50,7 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
 	addDataPromotListener(createDataPromotingListener());
 
 	gisViewPanel = createGisViewPanel(getEgiPanel().getEgi(), getEgiPanel().getEgi().getSelectionModel(), getModel().getPageHolder());
-	gisViewPanel.addGisPanelLoadListener(createLoadListener());
+	gisViewPanel.addWebViewLoadListener(createLoadListener());
 	tableAndGisViewSplitter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, getEgiPanel(), gisViewPanel);
 	tableAndGisViewSplitter.setOneTouchExpandable(true);
 
@@ -98,13 +98,13 @@ public abstract class GpsGridAnalysisView<T extends AbstractEntity<?>, GVPTYPE e
 	};
     }
 
-    private IGisPanelLoadedListener createLoadListener() {
-	return new IGisPanelLoadedListener() {
+    private IWebViewLoadedListener createLoadListener() {
+	return new IWebViewLoadedListener() {
 
 	    @Override
-	    public void gisPanelLoaded(final GisPanelLoadEvent e) {
+	    public void webViewLoaded(final WebViewLoadEvent e) {
 		if (State.SUCCEEDED == e.getState() || State.FAILED == e.getState()) {
-		    gisViewPanel.removeGisPanelLoadListener(this);
+		    gisViewPanel.removeWebViewLoadListener(this);
 		    gpsViewPanelLoadingNode.tryLoading();
 		}
 	    }

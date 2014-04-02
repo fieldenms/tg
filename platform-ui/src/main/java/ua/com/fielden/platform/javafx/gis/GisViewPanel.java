@@ -62,8 +62,8 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.gis.Point;
-import ua.com.fielden.platform.javafx.gis.gps.GisPanelLoadEvent;
-import ua.com.fielden.platform.javafx.gis.gps.IGisPanelLoadedListener;
+import ua.com.fielden.platform.javafx.gis.gps.WebViewLoadEvent;
+import ua.com.fielden.platform.javafx.gis.gps.IWebViewLoadedListener;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.pagination.IPageChangedListener;
 import ua.com.fielden.platform.pagination.PageChangedEvent;
@@ -283,10 +283,10 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	    public void changed(final ObservableValue ov, final State oldState, final State newState) {
 		if (newState == State.SUCCEEDED) {
 		    afterMapLoaded();
-		    fireGisLoadEvent(new GisPanelLoadEvent(GisViewPanel.this, State.SUCCEEDED));
+		    fireWebViewLoadEvent(new WebViewLoadEvent(GisViewPanel.this, State.SUCCEEDED));
 		} else if (newState == State.FAILED) {
 		    webEngine.reload();
-		    fireGisLoadEvent(new GisPanelLoadEvent(GisViewPanel.this, State.FAILED));
+		    fireWebViewLoadEvent(new WebViewLoadEvent(GisViewPanel.this, State.FAILED));
 
 		    // invokeErrorDialog(new Exception("Web view page loading has been failed."));
 		} else {
@@ -912,19 +912,19 @@ public abstract class GisViewPanel<T extends AbstractEntity<?>, P extends Point>
 	requestFocusForEgi();
     }
 
-    public void addGisPanelLoadListener(final IGisPanelLoadedListener listener) {
-	listenerList.add(IGisPanelLoadedListener.class, listener);
+    public void addWebViewLoadListener(final IWebViewLoadedListener listener) {
+	listenerList.add(IWebViewLoadedListener.class, listener);
     }
 
-    public void removeGisPanelLoadListener(final IGisPanelLoadedListener listener) {
-	listenerList.remove(IGisPanelLoadedListener.class, listener);
+    public void removeWebViewLoadListener(final IWebViewLoadedListener listener) {
+	listenerList.remove(IWebViewLoadedListener.class, listener);
     }
 
-    private void fireGisLoadEvent(final GisPanelLoadEvent e) {
+    private void fireWebViewLoadEvent(final WebViewLoadEvent e) {
 	SwingUtilitiesEx.invokeLater(new Runnable() {
 	    public void run() {
-		for(final IGisPanelLoadedListener listener : listenerList.getListeners(IGisPanelLoadedListener.class)) {
-		    listener.gisPanelLoaded(e);
+		for(final IWebViewLoadedListener listener : listenerList.getListeners(IWebViewLoadedListener.class)) {
+		    listener.webViewLoaded(e);
 		}
 	    }
 	});
