@@ -8,14 +8,15 @@ import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
  * Test class, which represent an entity derived directly from AbstractEntity.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Leveled Entity No")
@@ -31,6 +32,7 @@ public class FirstLevelEntity extends AbstractEntity<DynamicEntityKey> implement
     @IsProperty
     @CompositeKeyMember(2)
     @CritOnly
+    @MapTo
     private String propertyTwo;
 
     @IsProperty

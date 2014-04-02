@@ -5,13 +5,14 @@ import java.lang.ref.Reference;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Test class, which represent an second level entity derived FirstLevelEntity.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class SecondLevelEntity extends FirstLevelEntity {
     private static final long serialVersionUID = 1L;
@@ -21,6 +22,7 @@ public class SecondLevelEntity extends FirstLevelEntity {
     private Long anotherProperty;
 
     @IsProperty
+    @MapTo
     private SecondLevelEntity propertyOfSelfType;
 
     @IsProperty

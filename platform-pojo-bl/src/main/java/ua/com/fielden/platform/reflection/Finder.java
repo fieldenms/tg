@@ -44,9 +44,9 @@ import ua.com.fielden.platform.utils.Pair;
  * 1. Finding logic for properties and fields.
  * <p>
  * 2. Finding logic for MetaProperti'es or PropertyDescriptor's.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class Finder {
     private final static Map<Class<?>, List<Field>> entityKeyMembers = new HashMap<>();
@@ -61,7 +61,7 @@ public class Finder {
     ///////////////////////////////////// Finding/getting MetaProperties and PropertyDescriptors ////////////
     /**
      * Produces a list of property descriptors for a given entity type, including properties inherited from super a super type.
-     * 
+     *
      * @param <T>
      * @param entityType
      * @return
@@ -76,7 +76,7 @@ public class Finder {
 
     /**
      * Same as above, but instantiation happens using entity factory.
-     * 
+     *
      * @param <T>
      * @param entityType
      * @param factory
@@ -99,7 +99,7 @@ public class Finder {
      * Does much the same as {@link #findMetaProperty(AbstractEntity, String)}, but it retrieves all {@link MetaProperty}s specified in <code>dotNotationExp</code>. If, during
      * retrieval, some of the properties is null, then this method returns only that properties, which were retrieved.<br>
      * <br>
-     * 
+     *
      * @param entity
      * @param dotNotationExp
      * @return
@@ -136,7 +136,7 @@ public class Finder {
      * The first part of the expression should correspond to a property in the provided entity.
      * <p>
      * The last part should correspond to a property for which meta-property is being determined.
-     * 
+     *
      * @param entity
      * @param dotNotationExp
      * @return
@@ -153,7 +153,7 @@ public class Finder {
 
     /**
      * Obtains a set of meta-properties from an entity, sorted in a natural order as defined by {@link MetaProperty}.
-     * 
+     *
      * @param entity
      * @return
      * @throws RuntimeException
@@ -169,7 +169,7 @@ public class Finder {
 
     /**
      * Obtains a list of collectional meta-properties of the specified element type from an entity. The resultant list sorted in a natural order as defined by {@link MetaProperty}.
-     * 
+     *
      * @param entity
      * @param collectionType
      *            -- the type of the collection elements
@@ -195,10 +195,10 @@ public class Finder {
      * <p>
      * Takes into account the fact that <code>entityType</code> might be an {@link AbstractUnionEntity} class (it means that {@link AbstractUnionEntity}'s common properties are
      * included).
-     * 
+     *
      * @param entityType
      * @param annotations
-     * 
+     *
      * @return
      */
     @SafeVarargs
@@ -210,10 +210,10 @@ public class Finder {
      * Returns "real" properties (fields annotated with {@link IsProperty}) for <code>entityType</code> that are also annotated with specified <code>annotations</code> (if any).
      * <p>
      * For {@link AbstractUnionEntity} <code>entityType</code>s common properties are disregarded.
-     * 
+     *
      * @param entityType
      * @param annotations
-     * 
+     *
      * @return
      */
     public static List<Field> findRealProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
@@ -222,7 +222,7 @@ public class Finder {
 
     /**
      * Returns the list of properties that could be used in lifecycle reporting.
-     * 
+     *
      * @return
      */
     public static List<Field> findLifecycleProperties(final Class<? extends AbstractEntity> clazz) {
@@ -236,7 +236,7 @@ public class Finder {
 
     /**
      * Returns list of properties of the entity class that are entities themselves.
-     * 
+     *
      * @param entityType
      * @return
      */
@@ -254,7 +254,7 @@ public class Finder {
 
     /**
      * Returns a list of properties of the specified type that are declared in the provided entity type.
-     * 
+     *
      * @param entityType
      * @param propertyType
      * @return
@@ -277,10 +277,10 @@ public class Finder {
      * <p>
      * The implementation of this method is based on {@link #getFieldsAnnotatedWith(Class, Class)}, which traverses the whole class hierarchy. Thus, it supports correct
      * determination of properties declared at different hierarchical levels constituting a part of the composite key.
-     * 
+     *
      * IMPORTANT: all key members for types are cached during application lifecycle. It greatly reduces computational complexity as there is no need to retrieve key members for
      * immutable {@link AbstractEntity}'s descendants.
-     * 
+     *
      * @param klass
      * @return
      */
@@ -299,7 +299,7 @@ public class Finder {
 
     /**
      * Loads key members for <code>type</code> and caches them in global cache.
-     * 
+     *
      * @param type
      * @return
      */
@@ -315,7 +315,7 @@ public class Finder {
      * <p>
      * The implementation of this method is based on {@link #getFieldsAnnotatedWith(Class, Class)}, which traverses the whole class hierarchy. Thus, it supports correct
      * determination of properties declared at different hierarchical levels constituting a part of the composite key.
-     * 
+     *
      * @param klass
      * @return
      */
@@ -348,7 +348,7 @@ public class Finder {
      * Finds field (including private, protected and public) by name in the type's hierarchy.
      * <p>
      * Throws exception if field was not found.
-     * 
+     *
      * @param type
      * @param name
      * @return
@@ -388,7 +388,7 @@ public class Finder {
      * <p>
      * Throws {@link MethodFoundException} if method was found by its dot-notation (but no field could be retrieved in this case).
      * <p>
-     * 
+     *
      * @param type
      * @param dotNotationExp
      *            -- dot-notation field/method definition (e.g. "prop1.prop2", "prop1.method2()", "method1().prop2", "method1().method2()")
@@ -406,7 +406,7 @@ public class Finder {
 
     /**
      * This method is similar to {@link #findFieldByName(Class, String)}, but returns property values rather than type information.
-     * 
+     *
      * @param instance
      * @param dotNotationExp
      * @return
@@ -429,7 +429,7 @@ public class Finder {
 
     /**
      * Searches through the owner type hierarchy for all fields of the type assignable to the provided field type.
-     * 
+     *
      * @param ownerType
      * @param fieldType
      * @return list of found fields, which can be empty
@@ -440,7 +440,7 @@ public class Finder {
 
     /**
      * Searches through the owner type hierarchy for all fields of the type assignable to the provided field type.
-     * 
+     *
      * @param ownerType
      * @param fieldType
      * @return list of found fields, which can be empty
@@ -477,7 +477,7 @@ public class Finder {
 
     /**
      * Returns fields of the specified class that extends {@link AbstractUnionEntity}.
-     * 
+     *
      * @param type
      * @return
      */
@@ -494,7 +494,7 @@ public class Finder {
 
     /**
      * Traces through specified list of fields and returns those annotated with allAnnotations.
-     * 
+     *
      * @param fields
      * @param allAnnotations
      * @return
@@ -517,7 +517,7 @@ public class Finder {
 
     /**
      * Returns a list of fields (including private, protected and public). This method processes the whole class hierarchy.
-     * 
+     *
      * @param type
      * @param withUnion
      *            - determines whether include union entitie's properties (i.e. common properties, union properties) or just simple union entity fields.
@@ -575,12 +575,12 @@ public class Finder {
 
     /**
      * Returns a list of fields (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
-     * 
+     *
      * @param type
      * @param annotation
      * @param withUnion
      *            - determines whether include union entitie's properties (i.e. common properties, union properties) or just simple union entity fields.
-     * 
+     *
      * @return
      */
     private static List<Field> getFieldsAnnotatedWith(final Class<?> type, final boolean withUnion, final Class<? extends Annotation> annot, final Class<? extends Annotation>... annotations) {
@@ -611,7 +611,7 @@ public class Finder {
 
     /**
      * Returns value of the {@link AbstractUnionEntity} field specified with property.
-     * 
+     *
      * @param value
      * @param property
      * @return
@@ -643,7 +643,7 @@ public class Finder {
 
     /**
      * Returns method value for {@link AbstractUnionEntity} instance.
-     * 
+     *
      * @param instance
      * @param methodName
      * @param arguments
@@ -673,7 +673,7 @@ public class Finder {
 
     /**
      * Returns field value for the {@code valueToRetrievefrom} object.
-     * 
+     *
      * @param field
      * @param valueToRetrieveFrom
      * @return
@@ -689,7 +689,7 @@ public class Finder {
 
     /**
      * Invokes specified method on given {@code objectToInvoceOn}.
-     * 
+     *
      * @param method
      * @param objectToInvokeOn
      * @return
@@ -707,7 +707,7 @@ public class Finder {
 
     /**
      * Returns value of the field specified with property parameter.
-     * 
+     *
      * @param value
      * @param property
      * @return
@@ -741,7 +741,7 @@ public class Finder {
 
     /**
      * Returns a list of properties that are present in all of the types passed into the method.
-     * 
+     *
      * @param entityTypes
      * @return
      */
@@ -774,8 +774,8 @@ public class Finder {
 
     /**
      * Returns true if the field with appropriate name and type is present in the list of specified properties.
-     * 
-     * 
+     *
+     *
      * @param field
      * @param properties
      * @return
@@ -804,7 +804,7 @@ public class Finder {
     /**
      * Returns <code>true</code> if property (defined by <code>dotNotationExp</code>) is present in type <code>forType</code>. Field should have {@link IsProperty} annotation
      * assigned to be recognised as "property".
-     * 
+     *
      * @param forType
      * @param dotNotationExp
      * @return
@@ -821,7 +821,7 @@ public class Finder {
 
     /**
      * Extracts field names.
-     * 
+     *
      * @param fields
      * @return
      */
@@ -835,7 +835,7 @@ public class Finder {
 
     /**
      * A contract for ignoring properties and entity type during composition of property paths.
-     * 
+     *
      */
     public interface IPropertyPathFilteringCondition {
         boolean ignore(String propertyName);
@@ -845,9 +845,9 @@ public class Finder {
 
     /**
      * Marks exceptional situation when method was found by according dot-notation expression.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class MethodFoundException extends RuntimeException {
         private static final long serialVersionUID = 1L;
@@ -859,11 +859,11 @@ public class Finder {
 
     /**
      * Method to recursively find properties of the specified type in the provided entity type and build dot notated paths.
-     * 
+     *
      * TODO Need to provide support for handling union entities, which requires a special treatment -- should return a pair of enclosing union entity property and the enclosed
      * property. For example, in case of WorkOrder while searching for property of type Workshop a pair of <code>workorderable.vehicle</code> and
      * <code>workorderable.vehicle.station.sector.workshop</code> should be returned.
-     * 
+     *
      * @param entityType
      * @param propertyType
      * @return
@@ -913,7 +913,7 @@ public class Finder {
      * In case <code>linkProperty</code> could not be either read or determined, a runtime exception is thrown.
      * <p>
      * This method covers situation of all possible entity associations, including One-to-One where <code>linkProperty</code> is not present.
-     * 
+     *
      * @param type
      * @param dotNotationExp
      * @return
@@ -980,7 +980,7 @@ public class Finder {
      * Determines whether specified property is one2many or one2one association.
      * <p>
      * The rule is following : if the type of property contains reference to the type of property parent then return <code>true</code>, otherwise <code>false</code>.
-     * 
+     *
      * @param type
      * @param dotNotationExp
      * @return
@@ -1004,7 +1004,7 @@ public class Finder {
      * Determines whether specified property is one2one association.
      * <p>
      * The rule is following : if the type of property contains the "key" of the type of property parent then return <code>true</code>, otherwise <code>false</code>.
-     * 
+     *
      * @param type
      * @param dotNotationExp
      * @return
@@ -1015,4 +1015,5 @@ public class Finder {
         return EntityUtils.isEntityType(propertyType)
                 && DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, KEY)).equals(masterType);
     }
+
 }
