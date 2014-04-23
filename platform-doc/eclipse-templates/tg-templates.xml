@@ -97,6 +97,33 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.MapTo,
           ua.com.fielden.platform.entity.validation.annotation.EntityExists,
   	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember)}
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a composite key member of an 'activatable' entity type - entity type with 'active' property" enabled="true" name="tgprop-composite-key-activatable-entity-member">@IsProperty
+@MapTo
+@Title(value = "${Title}", desc = "${Desc}")
+@CompositeKeyMember(${index})
+@BeforeChange(@Handler(ActivatablePropertyValidator.class))
+private ${type} ${name};${cursor}
+
+@Observable
+@EntityExists(${type}.class)
+public ${enclosing_type} set${Name}(final ${type} ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public ${type} get${Name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.MapTo,
+          ua.com.fielden.platform.entity.validation.annotation.EntityExists,
+  	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember,
+          ua.com.fielden.platform.entity.annotation.mutator.BeforeChange,
+          ua.com.fielden.platform.entity.annotation.mutator.Handler,
+          fielden.common.validation.ActivatablePropertyValidator)}
 </template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a composite key member of an ordinary type" enabled="true" name="tgprop-composite-key-ordinary-member">@IsProperty
 @MapTo
 @Title(value = "${Title}", desc = "${Desc}")
@@ -139,6 +166,31 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Observable,
   	  ua.com.fielden.platform.entity.validation.annotation.EntityExists,
           ua.com.fielden.platform.entity.annotation.MapTo)}
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for an 'activatable' property - entity type with 'active' property" enabled="true" name="tgprop-activatable-entity">@IsProperty
+@MapTo
+@Title(value = "${Title}", desc = "${Desc}")
+@BeforeChange(@Handler(ActivatablePropertyValidator.class))
+private ${type} ${name};${cursor}
+
+@Observable
+@EntityExists(${type}.class)
+public ${enclosing_type} set${Name}(final ${type} ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public ${type} get${Name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+  	  ua.com.fielden.platform.entity.validation.annotation.EntityExists,
+          ua.com.fielden.platform.entity.annotation.MapTo,
+          ua.com.fielden.platform.entity.annotation.mutator.BeforeChange,
+          ua.com.fielden.platform.entity.annotation.mutator.Handler,
+          fielden.common.validation.ActivatablePropertyValidator)}
 </template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a pairt of comparable and dependent properties such as fromDate and toDate" enabled="true" name="tgprop-from-and-to">@IsProperty
 @MapTo
 @Dependent("${name2}")
