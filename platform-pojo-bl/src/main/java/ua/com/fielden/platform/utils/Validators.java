@@ -49,7 +49,7 @@ public final class Validators {
      * @return <i>true</i> if there is at least one overlapped entity.
      */
     public static <T extends AbstractEntity<?>> boolean overlaps(//
-    /*    */final T entity, //
+            /*    */final T entity, //
             final IEntityDao<T> controller, //
             final String fromDateProperty, //
             final String toDateProperty, //
@@ -71,7 +71,7 @@ public final class Validators {
      * @return
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
-    /*    */final T entity, //
+            /*    */final T entity, //
             final fetch<T> fetchModel,//
             final IEntityDao<T> controller, //
             final String fromDateProperty, //
@@ -96,7 +96,7 @@ public final class Validators {
      * @return
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
-    /*    */final T entity, //
+            /*    */final T entity, //
             final IEntityDao<T> controller, //
             final String fromDateProperty, //
             final String toDateProperty, //
@@ -116,7 +116,7 @@ public final class Validators {
         final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getType();
         final List<Class<? extends AbstractEntity<?>>> relevantTypes = TypeFilter.filter(entityTypes, new EntityHasPropertyOfType(entityType));
 
-        if (relevantTypes.isEmpty()) {
+        if (!entity.isPersisted() || relevantTypes.isEmpty()) {
             return 0;
         } else {
             final Iterator<Class<? extends AbstractEntity<?>>> iter = relevantTypes.iterator();
@@ -186,11 +186,11 @@ public final class Validators {
 
         // Condition for the end of the period for potentially overlapped existing entities
         condition_1: cc = cc.and().//
-        /*              */begin().//
-        /*                  */prop(toDateProperty).isNull()./* the end of the potentially overlapped entity is OPEN and thus is after the fromDateProperty value of the entity under test */
-        /*                  */or().//
-        /*                  */prop(toDateProperty).gt().val(entity.get(fromDateProperty))./* the end of the potentially overlapped entity is AFTER the fromDateProperty value of the entity under test */
-        /*              */end();//.
+                /*              */begin().//
+                /*                  */prop(toDateProperty).isNull()./* the end of the potentially overlapped entity is OPEN and thus is after the fromDateProperty value of the entity under test */
+                /*                  */or().//
+                /*                  */prop(toDateProperty).gt().val(entity.get(fromDateProperty))./* the end of the potentially overlapped entity is AFTER the fromDateProperty value of the entity under test */
+                /*              */end();//.
 
         // Condition for the beginning of the period for potentially overlapped existing entities
         // Open ended period does not require any condition, because any toDateProperty of the potentially overlapped entity would be BEFORE such an end.
@@ -199,9 +199,9 @@ public final class Validators {
         // Closed ended period does require an additional condition to ensure the beginning of the potentially overlapped entity if BEFORE that end value of the entity under test
         condition_2: if (entity.get(toDateProperty) != null) {
             cc = cc.and().//
-            /*    */begin().//
-            /*        */prop(fromDateProperty).lt().val(entity.get(toDateProperty))./* the beginning of the potentially overlapped entity is BEFORE the toDateProperty value of the entity under test */
-            /*    */end();
+                    /*    */begin().//
+                    /*        */prop(fromDateProperty).lt().val(entity.get(toDateProperty))./* the beginning of the potentially overlapped entity is BEFORE the toDateProperty value of the entity under test */
+                    /*    */end();
         }
 
         // make a model with result ordered by fromDateProperty, which is only required if at some stage it would be used for selecting overlapped entities.

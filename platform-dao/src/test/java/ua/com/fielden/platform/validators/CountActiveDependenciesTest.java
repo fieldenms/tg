@@ -23,6 +23,17 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
     private final IApplicationDomainProvider domainProvider = getInstance(IApplicationDomainProvider.class);
 
     @Test
+    public void incorrect_number_of_active_dependencies_for_non_persisted() {
+
+        final TgCategory cat1 = new_(TgCategory.class, "Cat1");
+        assertNotNull(cat1);
+
+        final int count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat1, coAggregates);
+        assertEquals(0, count);
+    }
+
+
+    @Test
     public void incorrect_number_of_active_dependencies_for_cat1() {
 
         final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
