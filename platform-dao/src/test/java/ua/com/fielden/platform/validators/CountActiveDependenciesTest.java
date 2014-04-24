@@ -28,7 +28,7 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
         final TgCategory cat1 = new_(TgCategory.class, "Cat1");
         assertNotNull(cat1);
 
-        final int count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat1, coAggregates);
+        final long count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat1, coAggregates);
         assertEquals(0, count);
     }
 
@@ -39,7 +39,7 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
         final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
         assertNotNull(cat1);
 
-        final int count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat1, coAggregates);
+        final long count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat1, coAggregates);
         assertEquals(2, count);
     }
 
@@ -49,7 +49,7 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
         final TgCategory cat2 = ao(TgCategory.class).findByKey("Cat2");
         assertNotNull(cat2);
 
-        final int count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat2, coAggregates);
+        final long count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat2, coAggregates);
         assertEquals(1, count);
     }
 
@@ -59,7 +59,7 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
         final TgCategory cat3 = ao(TgCategory.class).findByKey("Cat3");
         assertNotNull(cat3);
 
-        final int count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat3, coAggregates);
+        final long count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat3, coAggregates);
         assertEquals(0, count);
     }
 

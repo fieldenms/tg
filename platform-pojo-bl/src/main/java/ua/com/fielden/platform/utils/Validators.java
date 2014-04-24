@@ -112,7 +112,7 @@ public final class Validators {
      * @param entityType
      * @return
      */
-    public static <T extends AbstractEntity<?>> int countActiveDependencies(final List<Class<? extends AbstractEntity<?>>> entityTypes, final T entity, final IEntityAggregatesDao coAggregate) {
+    public static <T extends AbstractEntity<?>> long countActiveDependencies(final List<Class<? extends AbstractEntity<?>>> entityTypes, final T entity, final IEntityAggregatesDao coAggregate) {
         final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getType();
         final List<Class<? extends AbstractEntity<?>>> relevantTypes = TypeFilter.filter(entityTypes, new EntityHasPropertyOfType(entityType));
 
@@ -134,7 +134,7 @@ public final class Validators {
             final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = from(query).model();
 
             final BigInteger kount = (BigInteger) coAggregate.getEntity(qem).get("kount");
-            return kount.intValue();
+            return kount.longValue();
         }
     }
 
