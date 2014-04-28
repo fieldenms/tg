@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
-import static com.google.inject.matcher.Matchers.any;
 import static com.google.inject.matcher.Matchers.subclassesOf;
 
 import java.util.Collections;
@@ -15,7 +14,6 @@ import org.hibernate.cfg.Configuration;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.annotations.Transactional;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Proxy;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
@@ -26,9 +24,9 @@ import ua.com.fielden.platform.persistence.ProxyInterceptor;
 
 /**
  * Guice injector module for platform-wide Hibernate related injections such as transaction support and domain level validation configurations.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class TransactionalModule extends EntityModule {
     protected final SessionFactory sessionFactory;
@@ -42,7 +40,7 @@ public abstract class TransactionalModule extends EntityModule {
     /**
      * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainMetadata}. All descending classes needs to provide those two
      * parameters.
-     * 
+     *
      * @param sessionFactory
      * @param mappingExtractor
      * @throws Exception
@@ -80,11 +78,6 @@ public abstract class TransactionalModule extends EntityModule {
             bind(HibernateUtil.class).toInstance(hibernateUtil);
         }
 
-        // order of intercepter binding is extremely important as it defines the order of their execution if applied to the same method
-        bindInterceptor(any(), // match any class
-                annotatedWith(Transactional.class), // having annotated methods
-                new TransactionalInterceptor(sessionFactory) // the intercepter
-        );
         // bind SessionRequired injector
         bindInterceptor(subclassesOf(ISessionEnabled.class), // match only DAO derived from  CommonEntityDao
                 annotatedWith(SessionRequired.class), // having annotated methods

@@ -5,9 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Session;
+
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
+import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.dao.annotations.Transactional;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -16,15 +19,17 @@ import com.google.inject.Inject;
 
 /**
  * Provides the simplest controller for retrieving data for the {@link SecurityTreeTableModel}. Implemented for testing purpose
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public class SecurityTokenController implements ISecurityTokenController {
+public class SecurityTokenController implements ISecurityTokenController, ISessionEnabled {
 
     private final ISecurityRoleAssociationDao securityAssociationDao;
 
     private final IUserRoleDao roleDao;
+
+    private Session session;
 
     @Override
     public Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations() {
@@ -54,8 +59,8 @@ public class SecurityTokenController implements ISecurityTokenController {
         return roles;
     }
 
-    @Transactional
     @Override
+    @SessionRequired
     public void saveSecurityToken(final Map<Class<? extends ISecurityToken>, Set<UserRole>> tokenToRoleAssociations) {
         for (final Class<? extends ISecurityToken> token : tokenToRoleAssociations.keySet()) {
             securityAssociationDao.removeAssociationsFor(token);
@@ -77,5 +82,18 @@ public class SecurityTokenController implements ISecurityTokenController {
     @Override
     public boolean canAccess(final String username, final Class<? extends ISecurityToken> securityTokenClass) {
         return securityAssociationDao.countAssociations(username, securityTokenClass) > 0;
+    }
+
+    @Override
+    public Session getSession() {
+        if (session == null) {
+            throw new IllegalStateException("Someone forgot to annotate some method with SessionRequired!");
+        }
+        return session;
+    }
+
+    @Override
+    public void setSession(final Session session) {
+        this.session = session;
     }
 }

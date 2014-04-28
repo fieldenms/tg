@@ -4,7 +4,6 @@ import org.hibernate.LockMode;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.annotations.Transactional;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
@@ -26,7 +25,8 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
     /**
      * This is a convenience method for retrieval of the next number.
      */
-    @Transactional
+    @Override
+    @SessionRequired
     public Integer nextNumber(final String key) {
         KeyNumber number = findByKey(key); // find an instance
         if (number != null) {
@@ -45,6 +45,7 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
     /**
      * This is a convenience method for retrieval of the current number.
      */
+    @Override
     @SessionRequired
     public Integer currNumber(final String key) {
         final KeyNumber number = findByKey(key); // find an instance

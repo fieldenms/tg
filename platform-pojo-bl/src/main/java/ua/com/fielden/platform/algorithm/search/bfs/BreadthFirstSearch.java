@@ -11,14 +11,14 @@ import ua.com.fielden.platform.algorithm.search.ITreeNodePredicate;
 
 /**
  * Breadth-first search algorithm for a graph-like state space (i.e. handles loops gracefully).
- * 
+ *
  * @author TG Team
- * 
+ *
  * @param <T>
  */
 public final class BreadthFirstSearch<T, N extends ITreeNode<T>> implements ISearchAlgorithm<T, N> {
 
-    private IQueue<N> frontier = new FifoQueue<N>();
+    private IQueue<N> frontier = new FifoQueue<>();
     private Set<N> explored = new HashSet<N>();
 
     @Override

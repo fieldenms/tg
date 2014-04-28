@@ -6,14 +6,15 @@ import java.util.LinkedList;
 
 /**
  * A generic implementation of the FIFO queue.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class FifoQueue<T> implements IQueue<T> {
 
     private final LinkedList<T> queue = new LinkedList<T>();
 
+    @SafeVarargs
     public FifoQueue(final T... elements) {
         for (final T el : elements) {
             queue.add(el);

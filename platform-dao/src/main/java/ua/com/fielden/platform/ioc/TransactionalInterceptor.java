@@ -9,7 +9,6 @@ import org.hibernate.Transaction;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.annotations.Transactional;
 
 /**
  * This intercepter is very similar in its behaviour to {@link SessionInterceptor} with major difference -- it does not require the invocation owner to be an instance of
@@ -20,9 +19,9 @@ import ua.com.fielden.platform.dao.annotations.Transactional;
  * <p>
  * Mixing annotations {@link Transactional} and {@link SessionRequired} is possible, but meaningless since intercepter for these annotated methods start a transaction if there no
  * active one.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class TransactionalInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
