@@ -21,9 +21,9 @@ import com.google.inject.Injector;
 
 /**
  * Unit test to ensure correct composition of composite entity keys with DynamicEntityKey.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DynamicEntityKeyTest {
 
@@ -87,14 +87,22 @@ public class DynamicEntityKeyTest {
     }
 
     @Test
-    public void test_that_creation_of_the_key_failes_for_entity_with_no_annotations() {
-        final EntityWithNoAnnotation instance = new EntityWithNoAnnotation();
+    public void test_that_creation_of_the_key_failes_for_entity_with_no_key_members() {
+        final EntityWithoutKeyMembers instance = new EntityWithoutKeyMembers();
         try {
             new DynamicEntityKey(instance);
             fail("Should have failed for an entity with a simple key.");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
+            assertEquals("Composite key should have at least one member.", ex.getMessage());
         }
+    }
+
+    @Test
+    public void test_that_creation_of_the_key_failes_for_entity_with_single_key_member() {
+        final EntityWithSingleKeyMemver instance = new EntityWithSingleKeyMemver();
+        final DynamicEntityKey key = new DynamicEntityKey(instance);
+        assertEquals("Incorrect number of key members.", 1, key.getPropertyExpressions().size());
+        assertEquals("Incorrect key member.", "entity.property1", key.getPropertyExpressions().get(0).getExpression());
     }
 
     @Test
@@ -343,12 +351,26 @@ public class DynamicEntityKeyTest {
     }
 
     @KeyType(DynamicEntityKey.class)
-    static class EntityWithNoAnnotation extends AbstractEntity<DynamicEntityKey> {
+    static class EntityWithoutKeyMembers extends AbstractEntity<DynamicEntityKey> {
         private static final long serialVersionUID = 1L;
         protected Long property1;
         protected Long property2;
 
-        public EntityWithNoAnnotation() {
+        public EntityWithoutKeyMembers() {
+        }
+    }
+
+    @KeyType(DynamicEntityKey.class)
+    static class EntityWithSingleKeyMemver extends AbstractEntity<DynamicEntityKey> {
+        private static final long serialVersionUID = 1L;
+        @IsProperty
+        @CompositeKeyMember(1)
+        protected Long property1;
+
+        @IsProperty
+        protected Long property2;
+
+        public EntityWithSingleKeyMemver() {
         }
     }
 }

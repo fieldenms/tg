@@ -31,9 +31,9 @@ import ua.com.fielden.platform.reflection.Reflector;
  * <p>
  * In cases where {@link Comparable} cannot be implemented by the property class, a {@link Comparator} instance should be provided using method
  * {@link #addKeyMemberComparator(Integer, Comparator)}.
- * 
+ *
  * @author TG Team
- * 
+ *
  * @param <T>
  */
 public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
@@ -51,7 +51,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
 
     /**
      * Constructs composite key for the specified entity based on the list of expressions, which are in most cases properties of the entity.
-     * 
+     *
      * @param entity
      * @param expressions
      */
@@ -61,8 +61,9 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
         KEY_MEMBERS_SEPARATOR = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) entity.getType());
 
         final List<Field> compositeKeyMambers = Finder.getKeyMembers(entity.getType());
-        if (compositeKeyMambers.size() == 1) {
-            throw new IllegalStateException("Found only one key member: should not use DynamicEntityKey for a non-composite key.");
+        // TODO Should this be relaxed? Should a key with only one member be possible?
+        if (compositeKeyMambers.size() == 1 && AbstractEntity.KEY.equals(compositeKeyMambers.get(0).getName())) {
+            throw new IllegalStateException("Composite key should have at least one member.");
         }
         for (final Field member : compositeKeyMambers) {
             try {
@@ -78,7 +79,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
      * Associates comparator instance with a key member by its order number.
      * <p>
      * The associated comparator is used if provided even if the key member implements Comparable.
-     * 
+     *
      * @param keyMemberOrderNumber
      * @param comparator
      */
@@ -88,7 +89,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
 
     /**
      * Evaluates an expression with a specified index.
-     * 
+     *
      * @param expressionIndex
      * @return
      */
@@ -107,7 +108,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
 
     /**
      * A convenient method for obtaining values of the entity properties constituting its composite key.
-     * 
+     *
      * @return an array of values
      */
     public Object[] getKeyValues() {
@@ -121,7 +122,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     /**
      * Perform dynamic comparison of this and passed key instances sequentially comparing associated with them expressions. The first mismatch is used for the final comparison,
      * which becomes the result of this method.
-     * 
+     *
      */
     @SuppressWarnings("unchecked")
     @Override
