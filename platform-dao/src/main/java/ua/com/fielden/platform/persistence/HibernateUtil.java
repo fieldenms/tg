@@ -33,7 +33,7 @@ import org.hibernate.cfg.Environment;
  * <p>
  * This implementation is taken from CaveatEmptor Hibernate demo application (developed by Christian Bauer).
  * </p>
- * 
+ *
  * @author 01es
  */
 public class HibernateUtil {
@@ -49,7 +49,7 @@ public class HibernateUtil {
 
     /**
      * Constructs utility with custom intercepter and configuration.
-     * 
+     *
      * @param interceptor
      */
     public HibernateUtil(final Interceptor interceptor, final Configuration configuration) {
@@ -69,7 +69,7 @@ public class HibernateUtil {
 
     /**
      * Returns the Hibernate configuration that was used to build the SessionFactory.
-     * 
+     *
      * @return Configuration
      */
     public Configuration getConfiguration() {
@@ -78,7 +78,7 @@ public class HibernateUtil {
 
     /**
      * Returns the global SessionFactory either from a static variable or a JNDI lookup.
-     * 
+     *
      * @return SessionFactory
      */
     public SessionFactory getSessionFactory() {
@@ -98,7 +98,7 @@ public class HibernateUtil {
 
     public SessionFactory getManagedSessionFactory() {
         if (managedSessionFactory == null) {
-            throw new IllegalStateException("No support for managed sussion was added.");
+            throw new IllegalStateException("No support for managed session was added.");
         }
         return managedSessionFactory;
     }
@@ -138,7 +138,7 @@ public class HibernateUtil {
      * HibernateUtil does not configure() the given Configuration object, it directly calls buildSessionFactory(). This method also closes the old static variable SessionFactory
      * before, if it is still open.
      * </p>
-     * 
+     *
      * @param cfg
      */
     protected Configuration rebuildSessionFactory(final Configuration cfg) {

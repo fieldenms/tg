@@ -31,9 +31,9 @@ import com.google.inject.Guice;
  * <li><i>c3p0.acquire_increment</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
  * <li><i>c3p0.idle_test_period</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
  * </ul>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class HibernateConfigurationFactory {
 
@@ -63,7 +63,7 @@ public class HibernateConfigurationFactory {
     }
 
     public Configuration build() {
-        cfg.setProperty("hibernate.current_session_context_class", "thread");
+        setSafely(cfg, "hibernate.current_session_context_class", "thread");
 
         setSafely(cfg, "hibernate.show_sql", "false");
         setSafely(cfg, "hibernate.format_sql", "true");
