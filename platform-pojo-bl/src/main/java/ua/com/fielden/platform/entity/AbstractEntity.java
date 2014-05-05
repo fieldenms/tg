@@ -66,21 +66,21 @@ import com.google.inject.Inject;
 
 /**
  * <h3>General Info</h3>
- * 
+ *
  * This class serves as a common parent for all entity types. It is envisaged that all entity classes should have a surrogate key <code>id</code>, business key <code>key</code> and
  * the description <code>desc</code>.
- * 
+ *
  * Also, this class provides a generic implementation for methods {@link #hashCode()}, {@link #equals(Object)()}, {@link #toString()} and {@link #compareTo(AbstractEntity)}, which
  * is based on the used of the business key and thus should be suitable in most cases.
- * 
+ *
  * Composite key with no reference to other entities can be easily mapped by Hibernate as a component. However, Hibernate does not permit many-to-one associations as part of the
  * component mapping. Thus, the need for special treatment of composite keys with such associations.
- * 
+ *
  * Let's introduce a use case. Consider that there is a purchase order (PO) entity and its items. The business key for PO is just a string reflecting its number. The business key
  * for PO item is composite consisting of the sequential number (i.e. 1, 2, 3) representing the order of items associated with a PO, and a PO itself. A possible implementation of
  * such key could be as follows:
  * <p>
- * 
+ *
  * <pre>
  * public class PoItemKey {
  * 	private Integer number;
@@ -88,24 +88,24 @@ import com.google.inject.Inject;
  * 	...
  * }
  * </pre>
- * 
+ *
  * <p>
  * And the PO item class would have this class as a <code>key</code> property:
  * <p>
- * 
+ *
  * <pre>
  * public class PoItem {
  * 	private PoItemKey key;
  * 	...
  * }
  * </pre>
- * 
+ *
  * <p>
  * Unfortunately, there is no way to map property PoItem.key with Hibernate. So what needs to be done is this.<br/>
  * <p>
  * First, introduce public inner class PoItemKey within PoItem, which implements {@link Comparable} and methods {@link #equals(Object)}, {@link #hashCode()} based on properties
  * from the enclosing class PoItem:<br/>
- * 
+ *
  * <pre>
  * class PoItemKey implements Comparable[PoItemKey] {
  * 	 &#064;Override public int hashCode() {
@@ -127,15 +127,15 @@ import com.google.inject.Inject;
  *      ...
  * }
  * </pre>
- * 
+ *
  * <p>
  * The PoItem class itself should need to have properties <code>purchaseOrder</code> and <code>number</>, which can be easily mapped by Hibernate.
  * <p>
  * Please note that class {@link DynamicEntityKey} automates implementation of entities with composite keys.
  * <p>
- * 
+ *
  * <h3>Additional Functionality</h3>
- * 
+ *
  * AbstractEntity supports meta properties, property change listeners and validation.
  * <p>
  * For any field to be recognised as property that requires meta-information annotation {@link IsProperty} should be used.
@@ -148,14 +148,14 @@ import com.google.inject.Inject;
  * In order for validators to perform validation upon an attempt to set a property value, setters should be intercepted.
  * Intercepter {@link ValidationMutatorInterceptor} was implemented specifically to handle validation of values being passed into setters.
  * Its implementation uses validators associated with property during meta-property instantiation.
- * 
+ *
  * However, entity instance should be created with Guice intercepter provided with a module configured to bind this intercepter.
  * <p>
  * A similar situation is with support of property change event handling. Any setter annotated with {@link Observable} should be intercepted by {@link ObservableMutatorInterceptor},
  * which can be achieved by using appropriately configured Guice module.
- * 
+ *
  * Please refer {@link EntityModule} for more details.
- * 
+ *
  * <h3>Property mutators</h3>
  * The <i>property</i> specification as defined in JavaBeans does not cover fully the needs identified by our team for working with business entities where properties have loosely coupled validation logic and change observation.
  * Also, the approach taken in JavaBeans does not provide the possibility to follow [http://en.wikipedia.org/wiki/Fluent_interface fluent interface] programming approach.
@@ -176,7 +176,7 @@ import com.google.inject.Inject;
  * The mutator concept is a different beast, and should be introduced separately for simple and collectional properties.
  * <ul>
  *   <li>Mutator for a simple property -- a method with name '''set[property]''' and one parameter matching the type of the field representing the property.
- * 
+ *
  *       It may and usually should be annotated with {@link Observable} to ensure observation of the property change. And may have a number of validation annotations such as {@link NotNull} etc.
  *       Please note that mutator with at least one validation annotation should also be annotated with {@link ValidationRequired} -- this is enforced by the platform and failure to comply results in early runtime exception.
  *   </li>
@@ -212,25 +212,25 @@ import com.google.inject.Inject;
  * <h3>Notable changes</h3>
  * Date: 2008-10-28
  * Introduced validation synchronisation mechanism.
- * 
+ *
  * Date: 2008-10-29
  * Implemented support for domain validation logic. Simply annotate property setter with {@link DomainValidation} and
  * provide appropriate {@link IBeforeChangeEventHandler} instance as part of {@link DomainValidationConfig} configuration.
- * 
+ *
  * Date: 2009-02-09
  * Introduced property <code>initialising</code> to indicate an entity state where its properties are being initialised and thus no properties require any validation.
- * 
+ *
  * Date: 2009-02-10 Implemented runtime validation of {@link KeyType} presence. If annotation is not present a runtime exception is thrown preventing entity instantiation.
- * 
+ *
  * Date: 2009-06-10 Introduced property <code>version</code> to enable optimistic locking in Hibernate.
- * 
+ *
  * Date: 2010-03-18 Added restore to original feature.
- * 
+ *
  * Date: 2010-04-06 Implemented method copy, which can copy anything to anything.
- * 
+ *
  * @param <K>
  *            Type of the business key (e.g. String, Integer, component), which must implement {@link Comparable}.
- * 
+ *
  * @author TG Team
  */
 public abstract class AbstractEntity<K extends Comparable> implements Serializable, Comparable<AbstractEntity<K>>, IBindingEntity {
@@ -347,18 +347,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             throw new IllegalStateException("Type " + this.getClass().getName() + " is not fully defined.");
         }
 
-        compositeKey = Finder.getKeyMembers(getType()).size() > 1;
-
         logger = Logger.getLogger(this.getType());
 
-        if (hasCompositeKey() && DynamicEntityKey.class.equals(keyType)) {
+        compositeKey = DynamicEntityKey.class.equals(keyType); //Finder.getKeyMembers(getType()).size() > 1;
+        if (hasCompositeKey()) {
             setKey((K) new DynamicEntityKey((AbstractEntity<DynamicEntityKey>) this));
         }
     }
 
     /**
      * The main entity constructor.
-     * 
+     *
      * @param id
      * @param key
      * @param desc
@@ -376,7 +375,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * This setter is protected so that descendants could provide additional functionality if required (e.g. validation).
-     * 
+     *
      * @param id
      */
     protected void setId(final Long id) {
@@ -463,7 +462,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * A convenient method for obtaining entity key type.
-     * 
+     *
      * @return
      */
     public final Class<K> getKeyType() {
@@ -474,7 +473,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * Registers property change listener.<br>
      * <br>
      * Note : Please, refer also to {@link PropertyChangeOrIncorrectAttemptListener} JavaDocs.
-     * 
+     *
      * @param propertyName
      * @param listener
      */
@@ -491,7 +490,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Determines whether class was enhanced in order to get the correct entity class.
-     * 
+     *
      * @return
      */
     public final Class<?> getType() {
@@ -523,7 +522,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * Determines whether the specified property is observable.
      * <p>
      * The main purpose for this method is to identify at early runtime situations where property change listeners are bound to non-observable properties.
-     * 
+     *
      * @param startWithClass
      * @param propertyName
      * @return
@@ -549,7 +548,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Dynamic getter for accessing property value.
-     * 
+     *
      * @param propertyName
      * @return
      */
@@ -564,7 +563,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Dynamic setter for setting property value.
-     * 
+     *
      * @param propertyName
      * @param value
      */
@@ -590,7 +589,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Returns property by name.
-     * 
+     *
      * @param name
      * @return
      */
@@ -606,7 +605,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * This setter is responsible for meta-property creation. It is envisaged that {@link IMetaPropertyFactory} is be provided as an injection. An thus, meta-property instantiation
      * should happen immediately after entity creation when being created via IoC mechanism.
-     * 
+     *
      * @param metaPropertyFactory
      */
     @Inject
@@ -695,7 +694,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Determines property type.
-     * 
+     *
      * @param field
      * @return
      */
@@ -709,7 +708,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Analyses mutators and their annotations to collect and instantiate all property validators.
-     * 
+     *
      * @param metaPropertyFactory
      * @param field
      * @param type
@@ -749,7 +748,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Initialises meta-property properties used most commonly for UI construction such as required, editable, title and desc.
-     * 
+     *
      * @param keyMembers
      * @param field
      * @param metaProperty
@@ -789,7 +788,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Extracts and validates the array of dependent propertyNames related to the 'field' in the case if it is annotated with @Dependent. Throws RuntimeException if there is no
      * property with the specified propertyNames, or if the self-dependence was specified.
-     * 
+     *
      * @param field
      * @param allFields
      * @return
@@ -815,7 +814,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Creates a set of all validation annotations specified for property mutators.
-     * 
+     *
      * @param field
      * @param type
      * @param isCollectional
@@ -841,7 +840,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Attempts to obtain collectional field decrementor and extract its annotations for further processing. If there is no decrementor defined then an empty set of annotations is
      * returned.
-     * 
+     *
      * @param field
      * @param type
      * @return
@@ -864,7 +863,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Attempts to obtain collectional field incrementor and extract its annotations for further processing. If there is no incrementor defined then an empty set of annotations is
      * returned.
-     * 
+     *
      * @param field
      * @param type
      * @return
@@ -886,7 +885,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Attempts to obtain field setter and extract its annotations for further processing. If there is no setter defined then an empty set of annotations is returned.
-     * 
+     *
      * @param field
      * @param type
      * @return
@@ -912,7 +911,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Processed BCE and ACE declarations in order to instantiate event handlers.
-     * 
+     *
      * @param field
      * @param type
      * @return
@@ -928,7 +927,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Returns unmodifiable map of properties.
-     * 
+     *
      * @return
      */
     public final Map<String, MetaProperty> getProperties() {
@@ -962,7 +961,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * This method should be used to check whether entity is valid.
      * <p>
      * Supports locking mechanism to ensure that property validation finishes before checking its results.
-     * 
+     *
      * @return
      */
     public final Result isValid() {
@@ -988,11 +987,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * {@link AbstractEntity} has a default way of validating, which has a support for descendants to override it. However, sometimes it is required to validate an entity ad-hoc
      * from some specific perspective.
-     * 
+     *
      * <p>
      * This method performs entity validation based on the provided custom validator. It is important to note that this validation process locks the entity being validated
      * preventing concurrent modification while it is being processed. This is exactly the same invariant behaviour as per the default validation process.
-     * 
+     *
      * @param validator
      * @return
      */
@@ -1022,7 +1021,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * The default implementation checks fields declared as property (see {@link IsProperty}) for validity. It is envisaged that descendants will invoke super implementation and
      * provide some specific logic.
      * <p>
-     * 
+     *
      * @return validation result
      */
     protected Result validate() {
@@ -1048,7 +1047,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Sets reference to new {@link EntityFactory} instance. However this method should be called only once (probably in {@link EntityFactory}), because during runtime there is
      * only one {@link EntityFactory} instance
-     * 
+     *
      * @param entityFactory
      */
     protected final void setEntityFactory(final EntityFactory entityFactory) {
@@ -1057,7 +1056,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * A convenience method for determining whether this entity has been persisted.
-     * 
+     *
      * @return true if this entity is persisted in the database (i.e. id is not null), false otherwise
      */
     public final boolean isPersisted() {
@@ -1066,7 +1065,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Checks whether this is an enhanced entity instance.
-     * 
+     *
      * @return
      */
     public final boolean isEnhanced() {
@@ -1088,7 +1087,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * This is an experimental support for checking whether an entity instance is dirty -- was modified, but changes has not been yet persisted. The envisage scenario is this: any
      * change to a property leads to isDirty; once entity is persisted the dirty state is reset to false.
-     * 
+     *
      * @return
      */
     public final boolean isDirty() {
@@ -1106,7 +1105,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * A utility method for accessing dirty properties.
-     * 
+     *
      * @return
      */
     public final List<MetaProperty> getDirtyProperties() {
@@ -1137,7 +1136,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * This method should be overridden if some custom logic needs to be provided.
      * <p>
      * For example, some entity instance should not be changed when its certain property has some specific value.
-     * 
+     *
      * @return
      */
     public Result isEditable() {
@@ -1181,7 +1180,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Creates a new instance of the given type and copies all properties including ID from this instance into the created one.
-     * 
+     *
      * @param <COPY>
      * @param type
      * @return
@@ -1192,7 +1191,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Creates a new instance of the given type and copies all properties including, but not system properties such as ID and version.
-     * 
+     *
      * @param type
      * @return
      */
@@ -1206,7 +1205,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * <p>
      * <i>IMPORTANT: the type of provided instance and the type of this instance do not have to be the same or even be polymorphic; properties are copied on name by name basis.
      * properties.</i>
-     * 
+     *
      * @param copy
      * @return
      */
@@ -1229,7 +1228,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Creates a new instance of the given type and copies ID from this instance into the created one.
-     * 
+     *
      * @param <COPY>
      * @param type
      * @return
@@ -1242,7 +1241,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * Returns a property, which is some sense is preferred.
      * <p>
      * For example, it is used as part of the UI logic to determine what property should be focused when entity is being switched into the edit mode.
-     * 
+     *
      * @return
      */
     public String getPreferredProperty() {
@@ -1251,7 +1250,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Sets the preferred property.
-     * 
+     *
      * @param preferredProperty
      */
     public void setPreferredProperty(final String preferredProperty) {
@@ -1264,7 +1263,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * If this entity is persisted, then ID is used to identify whether this and that entities represent the same thing. If both entities are not persisted then equality is used,
      * which is based on their keys for comparison. Otherwise, returns false.
-     * 
+     *
      * @param that
      * @return
      */

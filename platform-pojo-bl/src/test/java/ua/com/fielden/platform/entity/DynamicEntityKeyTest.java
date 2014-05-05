@@ -88,9 +88,8 @@ public class DynamicEntityKeyTest {
 
     @Test
     public void test_that_creation_of_the_key_failes_for_entity_with_no_key_members() {
-        final EntityWithoutKeyMembers instance = new EntityWithoutKeyMembers();
         try {
-            new DynamicEntityKey(instance);
+            new EntityWithoutKeyMembers();
             fail("Should have failed for an entity with a simple key.");
         } catch (final Exception ex) {
             assertEquals("Composite key should have at least one member.", ex.getMessage());
