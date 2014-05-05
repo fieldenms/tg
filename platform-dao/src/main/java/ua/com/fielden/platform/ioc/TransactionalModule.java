@@ -50,7 +50,7 @@ public abstract class TransactionalModule extends EntityModule {
         final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(props, defaultHibernateTypes, applicationEntityTypes);
         final Configuration hibernateConfig = hcf.build();
         interceptor = new ProxyInterceptor();
-        hibernateUtil = new HibernateUtil(interceptor, hibernateConfig).addSupprtForManagedSessionFactory(hcf.buildManaged());
+        hibernateUtil = new HibernateUtil(interceptor, hibernateConfig);
 
         this.sessionFactory = hibernateUtil.getSessionFactory();
         this.domainMetadata = hcf.getDomainMetadata();
