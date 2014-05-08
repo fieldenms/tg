@@ -32,7 +32,6 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
         assertEquals(0, count);
     }
 
-
     @Test
     public void incorrect_number_of_active_dependencies_for_cat1() {
 

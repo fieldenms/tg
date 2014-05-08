@@ -122,12 +122,13 @@ public final class Validators {
             final Iterator<Class<? extends AbstractEntity<?>>> iter = relevantTypes.iterator();
             final Class<? extends AbstractEntity<?>> firstEntityType = iter.next();
 
-            final List<Field> props = Finder.findPropertiesOfSpecifiedType(firstEntityType, entityType);
-            IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(getReferenceCountForSingleProp(firstEntityType, props));
+            final List<Field> propsForFirstEntityType = Finder.findPropertiesOfSpecifiedType(firstEntityType, entityType);
+            IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(getReferenceCountForSingleProp(firstEntityType, propsForFirstEntityType));
 
             for (; iter.hasNext();) {
                 final Class<? extends AbstractEntity<?>> nextEntityType = iter.next();
-                expressionModelInProgress = expressionModelInProgress.add().model(getReferenceCountForSingleProp(nextEntityType, props));
+                final List<Field> propsForNextEntityType = Finder.findPropertiesOfSpecifiedType(nextEntityType, entityType);
+                expressionModelInProgress = expressionModelInProgress.add().model(getReferenceCountForSingleProp(nextEntityType, propsForNextEntityType));
             }
 
             final AggregatedResultQueryModel query = select(entityType).where().prop("id").eq().val(entity).yield().expr(expressionModelInProgress.model()).as("kount").modelAsAggregate();
