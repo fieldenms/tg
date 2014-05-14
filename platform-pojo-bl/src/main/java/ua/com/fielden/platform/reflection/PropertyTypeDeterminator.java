@@ -16,9 +16,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Contains methods for property type determination. Methods traverses through 1. class hierarchy 2. dot-notation expression.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PropertyTypeDeterminator {
     private static final String PROPERTY_SPLITTER = ".";
@@ -31,7 +31,7 @@ public class PropertyTypeDeterminator {
 
     /**
      * Determines a class of property/function defined by "dotNotationExp".
-     * 
+     *
      * @param type
      *            -- the class that should contain property/function defined by dot-notation expression. (e.g. "Vehicle" contains "status.isGeneratePmWo()")
      * @param dotNotationExp
@@ -49,9 +49,9 @@ public class PropertyTypeDeterminator {
 
     /**
      * Determines class of property/function that should be inside <code>clazz</code> hierarchy.
-     * 
+     *
      * If <code>clazz</code> doesn't have desired property or function -- {@link IllegalArgumentException} will be thrown.
-     * 
+     *
      * @param clazz
      *            -- the class that should contain "propertyOrFunction" (property or function)
      * @param propertyOrFunction
@@ -60,7 +60,7 @@ public class PropertyTypeDeterminator {
      *            -- true => then correct "key"/"getKey()" class is returned, otherwise {@link Comparable} is returned.
      * @param determineElementType
      *            -- true => then correct element type of collectional property is returned, otherwise a type of collection (list, set etc.) is returned.
-     * 
+     *
      * @return
      */
     public static Class<?> determineClass(final Class<?> clazz, final String propertyOrFunction, final boolean determineKeyType, final boolean determineElementType) {
@@ -98,7 +98,7 @@ public class PropertyTypeDeterminator {
 
     /**
      * If method return type is collectional then it returns type of collection elements.
-     * 
+     *
      * @param field
      * @return
      */
@@ -109,7 +109,7 @@ public class PropertyTypeDeterminator {
 
     /**
      * If field is collectional property then it returns type of collection elements.
-     * 
+     *
      * @param field
      * @return
      */
@@ -120,38 +120,38 @@ public class PropertyTypeDeterminator {
 
     /**
      * Determines correct {@link Class} from different {@link Type} implementations.
-     * 
+     *
      * <p>
      * Type could be parameterized. If it is - inner type would be returned. If type is simple class - method returns this simple class.
      * <p>
      * Examples:
-     * 
+     *
      * <pre>
      * private class GenericsPropertiesTestClass&lt;T extends Number&gt; {
      *     private List&lt;Integer&gt; prop1; - <b>returns Integer</b>
      *     private List&lt;T&gt; prop2; - <b>returns Number</b>
      *     private List&lt;? extends Float&gt; prop3; - <b>returns Float</b>
      *     private List&lt;BigInteger[]&gt; prop4; - <b>returns BigInteger</b>
-     * 
+     *
      *     public List&lt;Integer&gt; getProp1() { - <b>returns Integer</b>
      * 	return prop1;
      *     }
-     * 
+     *
      *     public List&lt;T&gt; getProp2() { - <b>returns Number</b>
      * 	return prop2;
      *     }
-     * 
+     *
      *     public List&lt;? extends Float&gt; getProp3() { - <b>returns Float</b>
      * 	return prop3;
      *     }
-     * 
+     *
      *     public List&lt;BigInteger[]&gt; getProp4() { - <b>returns BigInteger</b>
      * 	return prop4;
      *     }
      * }
-     * 
+     *
      * </pre>
-     * 
+     *
      * @param type
      * @return
      */
@@ -173,7 +173,7 @@ public class PropertyTypeDeterminator {
 
     /**
      * Determines a type ({@link Type}) of property/function defined by "dotNotationExp".
-     * 
+     *
      * @param type
      *            -- the class that should contain property/function defined by dot-notation expression. (e.g. "Vehicle" contains "status.isGeneratePmWo()")
      * @param dotNotationExp
@@ -188,16 +188,16 @@ public class PropertyTypeDeterminator {
 
     /**
      * Determines type ({@link Type}) of property/function that should be inside <code>clazz</code> hierarchy.
-     * 
+     *
      * If <code>clazz</code> doesn't have desired property or function -- {@link IllegalArgumentException} will be thrown.
-     * 
+     *
      * @param clazz
      *            -- the class that should contain "propertyOrFunction" (property or function)
      * @param propertyOrFunction
      *            -- the name of property or function (e.g. "isObservable()", "vehicle", "key", "getKey()") -- no dot-notation!
      * @param determineKeyType
      *            -- true => then correct "key"/"getKey()" class is returned, otherwise {@link Comparable} is returned.
-     * 
+     *
      * @return
      */
     private static Type determineType(final Class<?> clazz, final String propertyOrFunction) {
@@ -227,7 +227,7 @@ public class PropertyTypeDeterminator {
 
     /**
      * Returns class without enhancements if present.
-     * 
+     *
      * @param clazz
      * @return
      */
@@ -237,9 +237,9 @@ public class PropertyTypeDeterminator {
 
     /**
      * Returns if specified class is enhanced by Guice/Hibernate.
-     * 
+     *
      * Enhancer.isEnhanced does not recognise classes enhanced directly with CGLIB (Hibernate), therefore need to provide an alternative way.
-     * 
+     *
      * @param klass
      * @return
      */
@@ -263,7 +263,7 @@ public class PropertyTypeDeterminator {
 
     /**
      * Transforms "type/dotNotationExp" pair into form of "penultPropertyType/lastPropertyName".
-     * 
+     *
      * @param type
      * @param dotNotationExp
      * @return
@@ -279,13 +279,13 @@ public class PropertyTypeDeterminator {
 
     /**
      * Identifies whether property <code>doNotationExp</code> in type <code>entityType</code> is collectional.
-     * 
-     * @param enityType
+     *
+     * @param entityType
      * @param doNotationExp
      * @return
      */
-    public static boolean isCollectional(final Class<?> enityType, final String doNotationExp) {
-        final Field field = Finder.findFieldByName(enityType, doNotationExp);
+    public static boolean isCollectional(final Class<?> entityType, final String doNotationExp) {
+        final Field field = Finder.findFieldByName(entityType, doNotationExp);
         return EntityUtils.isCollectional(field.getType());
     }
 }
