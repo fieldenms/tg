@@ -163,4 +163,14 @@ public class BookingTaskSeries<T extends AbstractEntity<?>, ST extends AbstractE
     public BookingTask<T, ST> higher(final BookingTask<T, ST> fromKey) {
 	return tasks.higher(fromKey);
     }
+
+    public boolean replaceSubTask(final ST oldOne, final ST newOne) {
+	for(final BookingTask<T, ST> task : tasks) {
+	    if(oldOne.equals(task.getSubEntity())) {
+		task.replaceSubEntity(newOne);
+		return true;
+	    }
+	}
+	return false;
+    }
 }

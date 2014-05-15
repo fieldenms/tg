@@ -160,7 +160,7 @@ public class BookingChartPanel<T extends AbstractEntity<?>, ST extends AbstractE
 	if (tail == null || tail.getFrom().after(newTo)) {
 	    currentTask.setTo(newTo);
 	} else {
-	    currentTask.setTo(new Date(currentTask.getTo().getTime() + moveTaskRight(delta, tail)));
+	    currentTask.setTo(new Date(currentTask.getTo().getTime() + moveTaskRight(newTo.getTime() - tail.getFrom().getTime(), tail)));
 	}
 	final TimePeriod newDuration = currentTask.getDuration();
 	if(!prevDuration.equals(newDuration)) {
@@ -175,7 +175,7 @@ public class BookingChartPanel<T extends AbstractEntity<?>, ST extends AbstractE
 	if (head == null || head.getTo().before(newFrom)) {
 	    currentTask.setFrom(newFrom);
 	} else {
-	    currentTask.setFrom(new Date(currentTask.getFrom().getTime() + moveTaskLeft(delta, head)));
+	    currentTask.setFrom(new Date(currentTask.getFrom().getTime() + moveTaskLeft(newFrom.getTime() - head.getTo().getTime(), head)));
 	}
 	final TimePeriod newDuration = currentTask.getDuration();
 	if(!prevDuration.equals(newDuration)) {
@@ -194,22 +194,17 @@ public class BookingChartPanel<T extends AbstractEntity<?>, ST extends AbstractE
     private long moveTaskRight(final long delta, final BookingTask<T, ST> task) {
 	final BookingTask<T, ST> tail = currentSeries.higher(task);
 	final TimePeriod prevDuration = task.getDuration();
-	final long rightDelta;
-	if (tail == null) {
-	    rightDelta = delta;
-	} else {
-	    if (tail.getFrom().after(new Date(prevDuration.getEnd().getTime() + delta))) {
-		rightDelta = delta;
-	    } else {
-		rightDelta = moveTaskLeft(delta, tail);
+	long newDelta = delta;
+	if (tail != null && tail.getFrom().before(new Date(prevDuration.getEnd().getTime() + delta))) {
+	    newDelta = moveTaskRight(prevDuration.getEnd().getTime() + delta - tail.getFrom().getTime(), tail);
+	    if (newDelta == 0) {
+		newDelta = tail.getFrom().getTime() - task.getTo().getTime();
 	    }
 	}
-	final Date newLeftValue = new Date(task.getFrom().getTime() + delta);
-	final Date newRightValue = new Date(task.getTo().getTime() + rightDelta);
+	final Date newLeftValue = new Date(task.getFrom().getTime() + newDelta);
+	final Date newRightValue = new Date(task.getTo().getTime() + newDelta);
 	if(task.canEdit(BookingChangedEventType.MOVE, null)) {
 	    task.setDuration(new SimpleTimePeriod(newLeftValue, newRightValue));
-	} else if (task.canEdit(BookingChangedEventType.STRETCH, BookingStretchSide.LEFT)) {
-	    task.setFrom(newRightValue);
 	}
 	final TimePeriod newDuration = task.getDuration();
 	if(!prevDuration.equals(newDuration)) {
@@ -221,22 +216,17 @@ public class BookingChartPanel<T extends AbstractEntity<?>, ST extends AbstractE
     private long moveTaskLeft(final long delta, final BookingTask<T, ST> task) {
 	final BookingTask<T, ST> head = currentSeries.lower(task);
 	final TimePeriod prevDuration = task.getDuration();
-	final long leftDelta;
-	if (head == null) {
-	    leftDelta = delta;
-	} else {
-	    if (head.getTo().before(new Date(prevDuration.getStart().getTime() + delta))) {
-		leftDelta = delta;
-	    } else {
-		leftDelta = moveTaskLeft(delta, head);
+	long newDelta = delta;
+	if (head != null && head.getTo().after(new Date(prevDuration.getStart().getTime() + delta))) {
+	    newDelta = moveTaskLeft(prevDuration.getStart().getTime() + delta - head.getTo().getTime(), head);
+	    if (newDelta == 0) {
+		newDelta = head.getTo().getTime() - task.getFrom().getTime();
 	    }
 	}
-	final Date newLeftValue = new Date(task.getFrom().getTime() + leftDelta);
-	final Date newRightValue = new Date(task.getTo().getTime() + delta);
+	final Date newLeftValue = new Date(task.getFrom().getTime() + newDelta);
+	final Date newRightValue = new Date(task.getTo().getTime() + newDelta);
 	if(task.canEdit(BookingChangedEventType.MOVE, null)) {
 	    task.setDuration(new SimpleTimePeriod(newLeftValue, newRightValue.before(newLeftValue) ? newLeftValue : newRightValue));
-	} else if (task.canEdit(BookingChangedEventType.STRETCH, BookingStretchSide.RIGHT)) {
-	    task.setTo(newRightValue);
 	}
 	final TimePeriod newDuration = task.getDuration();
 	if(!prevDuration.equals(newDuration)) {
@@ -687,5 +677,39 @@ public class BookingChartPanel<T extends AbstractEntity<?>, ST extends AbstractE
 	    seriesIndex++;
 	}
 	return seriesIndex == serieses.size() ? null : getPlot().getDataset(seriesIndex);
+    }
+
+    public void replaceSubTask(final T entity, final ST oldOne, final ST newOne) {
+	for (int ind = 0; ind < data.size(); ind++) {
+	    if (data.get(ind).getKey().equals(entity)) {
+		if (replaceInDataList(ind, oldOne, newOne)) {
+		    replaceSubTask(ind, oldOne, newOne);
+		}
+		return;
+	    }
+	}
+    }
+
+    private boolean replaceInDataList(final int ind, final ST oldOne, final ST newOne) {
+	final List<ST> subTasks = data.get(ind).getValue();
+	for(int stind = 0; stind < subTasks.size(); stind++) {
+	    if(subTasks.get(stind).equals(oldOne)) {
+		subTasks.set(stind, newOne);
+		return true;
+	    }
+	}
+	return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void replaceSubTask(final int ind, final ST oldOne, final ST newOne) {
+	int dind = 0;
+	for(final BookingSeries<T, ST> bookSeries : serieses) {
+	    final BookingTaskSeries<T, ST> series = (BookingTaskSeries<T, ST>)((XYTaskDataset)getPlot().getDataset(dind)).getTasks().getSeries(ind);
+	    if(!series.replaceSubTask(oldOne, newOne) && bookSeries.isTaskVisible(data.get(ind).getKey(), newOne)){
+		series.add(new BookingTask<T, ST>(bookSeries.getName(), bookSeries, data.get(ind).getKey(), newOne));
+	    }
+	    dind++;
+	}
     }
 }

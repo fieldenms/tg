@@ -16,7 +16,7 @@ public class BookingTask<T extends AbstractEntity<?>, ST extends AbstractEntity<
 
     private final BookingSeries<T, ST> bookingSeries;
     private final T entity;
-    private final ST subEntity;
+    private ST subEntity;
 
     public BookingTask(final String description, final BookingSeries<T, ST> bookingSeries, final T entity, final ST subEntity) {
         super(description, bookingSeries.getBookingEntity().getFrom(entity, subEntity), bookingSeries.getBookingEntity().getTo(entity, subEntity));
@@ -32,15 +32,7 @@ public class BookingTask<T extends AbstractEntity<?>, ST extends AbstractEntity<
 
     @Override
     public void setDuration(final TimePeriod duration) {
-        if (duration.getStart().before(duration.getEnd())) {
-            if(duration.getStart().after(getTo())) {
-        	setTo(duration.getEnd());
-        	setFrom(duration.getStart());
-            } else {
-        	setFrom(duration.getStart());
-        	setTo(duration.getEnd());
-            }
-        }
+	bookingSeries.getBookingEntity().setDuration(entity, subEntity, duration.getStart(), duration.getEnd());
     }
 
     public Date getFrom() {
@@ -73,5 +65,9 @@ public class BookingTask<T extends AbstractEntity<?>, ST extends AbstractEntity<
 
     public BookingSeries<T, ST> getBookingSeries() {
         return bookingSeries;
+    }
+
+    public void replaceSubEntity(final ST subEntity) {
+	this.subEntity = subEntity;
     }
 }

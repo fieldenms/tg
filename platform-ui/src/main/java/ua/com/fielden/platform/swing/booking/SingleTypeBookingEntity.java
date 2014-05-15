@@ -4,6 +4,7 @@ import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.utils.Pair;
 
 public abstract class SingleTypeBookingEntity<T extends AbstractEntity<?>, ST extends AbstractEntity<?>> implements IBookingEntity<T, ST> {
 
@@ -70,6 +71,30 @@ public abstract class SingleTypeBookingEntity<T extends AbstractEntity<?>, ST ex
         } else if (leftLimit != null && leftLimit.after(toDate)) {
 	    subEntity.set(to, leftLimit);
 	} else if (rightLimit != null && rightLimit.before(toDate)) {
+	    subEntity.set(to, rightLimit);
+	}
+    }
+
+    @Override
+    public Pair<Date, Date> getDuration(final T entity, final ST subEntity) {
+        return new Pair<>(getFrom(entity, subEntity), getTo(entity, subEntity));
+    }
+
+    @Override
+    public void setDuration(final T entity, final ST subEntity, final Date fromDate, final Date toDate) {
+	if(fromDate.after(toDate)) {
+	    throw new IllegalArgumentException("The start must be >= end!");
+	}
+	if ((leftLimit == null || leftLimit.before(fromDate)) && (rightLimit ==  null || rightLimit.after(toDate))) {
+	    subEntity.set(from, fromDate);
+	    subEntity.set(to, toDate);
+	} else if (leftLimit != null && leftLimit.after(fromDate)) {
+	    final long delta = leftLimit.getTime() - fromDate.getTime();
+	    subEntity.set(from, leftLimit);
+	    subEntity.set(to, new Date(toDate.getTime() + delta));
+	} else if(rightLimit != null && rightLimit.before(toDate)) {
+	    final long delta = rightLimit.getTime() - toDate.getTime();
+	    subEntity.set(from, new Date(fromDate.getTime() + delta));
 	    subEntity.set(to, rightLimit);
 	}
     }
