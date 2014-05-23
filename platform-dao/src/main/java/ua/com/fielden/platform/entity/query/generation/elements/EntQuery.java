@@ -145,7 +145,7 @@ public class EntQuery implements ISingleOperand {
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
             if (mainSourceIsTypeBased()) {
-                for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
+                for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity((Class<? extends AbstractEntity<?>>) resultType)) {
                     final boolean skipProperty = ppi.isSynthetic() || //
                             ppi.isVirtual() || //
                             ppi.isCollection() || //
@@ -164,7 +164,7 @@ public class EntQuery implements ISingleOperand {
                     }
                 }
                 if (resultType != EntityAggregates.class) {
-                    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
+                    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity((Class<? extends AbstractEntity<?>>) resultType)) {
                         final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
                         if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null && !skipProperty) {
                             yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));

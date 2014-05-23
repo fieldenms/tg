@@ -186,7 +186,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
         if (!AbstractEntity.class.isAssignableFrom(entityType)) {
             throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + entityType + ".");
         }
-        return ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, //
+        return (BoundedValidationLayer<AutocompleterTextFieldLayer>) ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, //
                 locatorConfigurationModel, entityType, getValueMatcher(), "key", secondaryExpressions(entityType), //
                 highlightProperties(entityType), caption, isSingle ? null : ",", toolTip, stringBinding, editorCase);
     }
