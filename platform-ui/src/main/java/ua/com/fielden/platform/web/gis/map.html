@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Simple Leaflet Map</title>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css"/>
+		<link rel="stylesheet" href="http://leaflet.github.io/Leaflet.draw/leaflet.draw.css"/>
+
+		<style>
+			body {
+				padding: 0;
+				margin: 0;
+			}
+			html, body, #map {
+				height: 100%;
+				width: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="map"></div>
+ 		<!-- Leaflet stuff -->
+		<script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+		<script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js"></script>
+
+		<!-- Map providers: Google -->
+		<script src="http://maps.google.com/maps/api/js?v=3.2&sensor=false"></script>
+		<script src="Google.js"></script>
+		<!-- Map providers: Yandex -->
+		<script src="http://api-maps.yandex.ru/2.0/?load=package.map&lang=ru-RU"></script>		
+		<script src="Yandex.js"></script>
+		<!-- script src="Bing.js"></script -->
+		<script> 
+			var osmLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>',
+				thunLink = '<a href="http://thunderforest.com/">Thunderforest</a>';
+
+			var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+				osmAttrib = '&copy; ' + osmLink + ' Contributors',
+				landUrl = 'http://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png',
+				thunAttrib = '&copy; ' + osmLink + ' Contributors & ' + thunLink;
+
+			// initialise different layers for different tile providers
+			var osmMap = L.tileLayer(osmUrl, {
+					attribution: osmAttrib
+				});
+			var	landMap = L.tileLayer(landUrl, {
+					attribution: thunAttrib
+				});
+			// var bingMap = new L.BingLayer("YOUR_BING_API_KEY"); -- need an API key to use it 
+			// http://stackoverflow.com/questions/14442055/use-bing-maps-tiles-with-leaflet
+			var	googleRoadMap = new L.Google('ROADMAP');
+			var	googleSatelliteMap = new L.Google('SATELLITE');
+			var	googleHybridMap = new L.Google('HYBRID');
+			var	googleTerrainMap = new L.Google('TERRAIN');
+			var yandexMap = new L.Yandex();
+			var ytraffic = new L.Yandex("null", {
+				traffic:true, 
+				opacity:0.8, 
+				overlay:true
+			});
+ 
+			var map = L.map('map', {
+				layers: [osmMap] // only add one!
+			})
+			.setView([49.842536, 24.02607], 14); // Lviv has been centered
+ 
+			var baseLayers = {
+				"OpenStreetMap": osmMap,
+				"Landscape": landMap,
+				// "Bing": bingMap,				
+				"Yandex": yandexMap,
+				"Google Roadmap": googleRoadMap,
+				"Google Sattelite": googleSatelliteMap,
+				"Google Hybrid": googleHybridMap,
+				"Google Terrain": googleTerrainMap				
+			};
+
+			// ADD REGULAR LAYER BASED ON SIMPLE PRIMITIVES
+			var gpsTracksOverlay = new L.LayerGroup();
+			L.marker([49.836163,24.067783])
+				.bindPopup('Te Papa').addTo(gpsTracksOverlay),
+			L.marker([49.839817,24.050446])
+				.bindPopup('Embassy Theatre').addTo(gpsTracksOverlay),
+			L.marker([49.838488,24.035339])
+				.bindPopup('Michael Fowler Centre').addTo(gpsTracksOverlay),
+			L.marker([49.844134,24.025555])
+				.bindPopup('Leuven Belgin Beer Cafe').addTo(gpsTracksOverlay),
+			L.polyline([
+				[49.844134,24.025555],
+				[49.838488,24.035339],
+				[49.839817,24.050446],
+				[49.836163,24.067783]
+			]).addTo(gpsTracksOverlay);
+
+			// ADD REGULAR LAYER BASED ON GEOJSON FEATURES
+			var geoJsonFeatures = [{
+				    "type": "LineString",
+				    "coordinates": [
+				    	[24.03, 49.835],
+						[24.02, 49.84 ],
+						[24.05, 49.845]
+					],
+					"properties": {
+						"popupContent": "FIRST FEATURE"	
+					}					
+				}, {
+				    "type": "LineString",
+				    "coordinates": [
+				    	[24.04, 49.835],
+						[24.03, 49.84],
+						[24.06, 49.845]
+			 	   ],
+					"properties": {
+				 	    "popupContent": "SECOND FEATURE"
+				 	}
+			 	}
+			];
+
+			var geoJsonStyle = {
+			    "color": "green",
+			    "weight": 5,
+			    "opacity": 0.65
+			};
+
+			var geoJsonOverlay = L.geoJson([], {
+			    style: geoJsonStyle,
+			    onEachFeature: function (feature, layer) {
+		            
+		            layer.on('dblclick', function() {
+    	            	geoJsonOverlay.removeLayer(layer);
+	            	});
+
+ 			    	// does this feature have a property named popupContent?
+				    // if (feature.properties && feature.properties.popupContent) {
+	       			//		layer.bindPopup(feature.properties.popupContent);	        			
+			    	// }
+				}
+			});
+			geoJsonOverlay.addData(geoJsonFeatures);
+
+			// ADD LEAFLET.DRAW
+			var drawnItems = new L.FeatureGroup();
+			map.addLayer(drawnItems); // ??
+
+			var drawControl = new L.Control.Draw({
+				edit: {
+					featureGroup: drawnItems
+				},
+
+				draw: {
+					polygon: {
+						shapeOptions: {
+							color: 'purple'
+						},
+						allowIntersection: false,
+						drawError: {
+							color: 'orange',
+							timeout: 1000
+						},
+						showArea: true,
+						metric: true
+					}
+				}
+			});
+			map.addControl(drawControl);
+
+			map.on('draw:created', function (e) {
+				var type = e.layerType,
+					layer = e.layer;
+				drawnItems.addLayer(layer);
+			});
+
+
+
+
+			// GATHER ALL LAYERS
+			var overlays = {
+				"GEO-json": geoJsonOverlay,
+				"GPS-tracks": gpsTracksOverlay,
+				"Traffic": ytraffic
+			};
+ 
+			L.control.layers(baseLayers, overlays).addTo(map); 
+		</script>
+	</body>
+</html>
