@@ -5,6 +5,8 @@
 		<meta charset="utf-8" />
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css"/>
 		<link rel="stylesheet" href="http://leaflet.github.io/Leaflet.draw/leaflet.draw.css"/>
+		<link rel="stylesheet" href="MarkerCluster.css" />
+		<link rel="stylesheet" href="MarkerCluster.Default.css" />
 
 		<style>
 			body {
@@ -29,6 +31,10 @@
 		<!-- Map providers: Yandex -->
 		<script src="http://api-maps.yandex.ru/2.0/?load=package.map&lang=ru-RU"></script>		
 		<script src="Yandex.js"></script>
+		<script src="leaflet.markercluster-src.js"></script>
+
+
+		<!-- script src="geo.json"></script -->
 		<!-- script src="Bing.js"></script -->
 		<script> 
 			var osmLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>',
@@ -122,21 +128,25 @@
 			    "opacity": 0.65
 			};
 
+			var markersClusterGroup = L.markerClusterGroup();
+
 			var geoJsonOverlay = L.geoJson([], {
 			    style: geoJsonStyle,
 			    onEachFeature: function (feature, layer) {
 		            
-		            layer.on('dblclick', function() {
-    	            	geoJsonOverlay.removeLayer(layer);
-	            	});
+		            // layer.on('dblclick', function() {
+    	         //    	geoJsonOverlay.removeLayer(layer);
+	            	// });
 
  			    	// does this feature have a property named popupContent?
-				    // if (feature.properties && feature.properties.popupContent) {
-	       			//		layer.bindPopup(feature.properties.popupContent);	        			
-			    	// }
+				    if (feature.properties && feature.properties.popupContent) {
+	       				layer.bindPopup(feature.properties.popupContent);	        			
+			    	}
 				}
 			});
 			geoJsonOverlay.addData(geoJsonFeatures);
+			markersClusterGroup.addLayer(geoJsonOverlay);
+			map.addLayer(markersClusterGroup);
 
 			// ADD LEAFLET.DRAW
 			var drawnItems = new L.FeatureGroup();
@@ -170,16 +180,13 @@
 				drawnItems.addLayer(layer);
 			});
 
-
-
-
 			// GATHER ALL LAYERS
 			var overlays = {
-				"GEO-json": geoJsonOverlay,
+				"GEO-json": markersClusterGroup,
 				"GPS-tracks": gpsTracksOverlay,
 				"Traffic": ytraffic
 			};
- 
+ 			
 			L.control.layers(baseLayers, overlays).addTo(map); 
 		</script>
 	</body>

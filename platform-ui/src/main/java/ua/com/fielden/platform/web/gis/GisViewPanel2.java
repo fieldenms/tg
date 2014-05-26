@@ -1,6 +1,11 @@
 package ua.com.fielden.platform.web.gis;
 
 import java.awt.event.MouseAdapter;
+import java.io.PrintWriter;
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -130,14 +135,139 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
                         Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
-                                providePoints(createPoints((IPage<AbstractEntity<?>>) e.getNewPage()), shouldFitToBounds());
+
+                                // providePoints(createPoints((IPage<AbstractEntity<?>>) e.getNewPage()), shouldFitToBounds());
                                 // removeOldAndAddNew(webEngine, zoom(webEngine));
+                        	final String geoJsonFeatures = convertToGeoJson((IPage<AbstractEntity<?>>) e.getNewPage());
+
+                        	logger.info("Saving to geo json file...");
+                        	try {
+                            	    final PrintWriter out = new PrintWriter("geo.json");
+                            	    out.println("var geoJsonFeatures = " + geoJsonFeatures);
+                            	    out.close();
+				} catch (final Exception ex) {
+				    ex.printStackTrace();
+				}
+
+                        	executeScript("geoJsonOverlay.clearLayers();");
+                        	executeScript("markersClusterGroup.clearLayers();");
+                        	executeScript("geoJsonFeatures = " + geoJsonFeatures + ";");
+                        	executeScript("geoJsonOverlay.addData(geoJsonFeatures);");
+                        	executeScript("markersClusterGroup.addLayer(geoJsonOverlay);");
+                        	executeScript("map.fitBounds(markersClusterGroup.getBounds());");
+                        	logger.info("Scripts have been executed.");
                             }
                         });
                     }
                 });
             }
         });
+    }
+
+    private static String convertToGeoJson(final IPage<AbstractEntity<?>> newPage) {
+	final List<AbstractEntity<?>> entities = newPage.data();
+	logger.info("Converting to geo json [" + entities.size() + "] entities...");
+	final StringBuilder sb = new StringBuilder();
+	final Iterator<AbstractEntity<?>> iter = entities.iterator();
+
+	if (iter.hasNext()) {
+	    // at least one:
+	    final AbstractEntity<?> first = iter.next();
+	    sb.append(createPointFeature(first));
+
+	    if (iter.hasNext()) {
+		// at least two:
+		final AbstractEntity<?> second = iter.next();
+		sb.append("," + createPointFeature(second));
+
+		while (iter.hasNext()) {
+		    sb.append("," + createPointFeature(iter.next()));
+		}
+
+		sb.append("," + createLineStringFeature(entities)); // TODO MultiLineString for different machines and / or different parts of track
+	    }
+
+	}
+	return "[" + sb.toString() + "]";
+    }
+
+    private static String createLineStringFeature(final List<AbstractEntity<?>> entities) {
+	return "{" +
+		"\"type\": \"Feature\"," +
+		"\"geometry\": " + createLineStringGeometry(entities) + "," +
+		"\"properties\": " + createProperties(entities) +
+	"}";
+    }
+
+    private static String createProperties(final List<AbstractEntity<?>> entities) {
+	return "{" +
+		"\"popupContent\": " + entityToString((AbstractEntity<?>) entities.get(0).get("machine")) + // TODO
+	"}";
+    }
+
+    private static String createLineStringGeometry(final List<AbstractEntity<?>> entities) {
+	return "{" +
+		"\"type\": \"LineString\"," +
+		"\"coordinates\": " + createCoordinates(entities) +
+		"}";
+    }
+
+    private static String createCoordinates(final List<AbstractEntity<?>> entities) {
+	final StringBuilder sb = new StringBuilder();
+	final Iterator<AbstractEntity<?>> iter = entities.iterator();
+	sb.append(createCoordinates(iter.next()));
+	sb.append("," + createCoordinates(iter.next()));
+	while (iter.hasNext()) {
+	    sb.append("," + createCoordinates(iter.next()));
+	}
+	return "[" + sb.toString() + "]";
+    }
+
+    private static String createPointFeature(final AbstractEntity<?> entity) {
+	return "{" +
+		"\"type\": \"Feature\"," +
+		"\"geometry\": " + createPointGeometry(entity) + "," +
+		"\"properties\": " + createProperties(entity) +
+	"}";
+    }
+
+    private static String createProperties(final AbstractEntity<?> entity) {
+	return "{" +
+		"\"popupContent\": " + dateToString((Date) entity.get("gpsTime")) + "," +
+		"\"vectorAngle\": " + integerToString((Integer) entity.get("vectorAngle")) + "," +
+		"\"vectorSpeed\": " + integerToString((Integer) entity.get("vectorSpeed")) +
+	"}";
+    }
+
+    private final static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
+    private static String dateToString(final Date date) {
+	return "\"" + sdf.format(date) + "\"";
+    }
+
+    private static String entityToString(final AbstractEntity<?> entity) {
+	return "\"" + entity.toString() + "\"";
+    }
+
+    private static String createPointGeometry(final AbstractEntity<?> entity) {
+	return "{" +
+		"\"type\": \"Point\"," +
+		"\"coordinates\": " + createCoordinates(entity) +
+	"}";
+    }
+
+    private static String createCoordinates(final AbstractEntity<?> entity) {
+	return "[" +
+			bigDecimalToString((BigDecimal) entity.get("x")) + "," + bigDecimalToString((BigDecimal) entity.get("y")) + "," + integerToString((Integer) entity.get("altitude")) +
+		"]";
+    }
+
+    private static String integerToString(final Integer integer) {
+	return integer.toString();
+    }
+
+    private static String bigDecimalToString(final BigDecimal bigDecimal) {
+	return bigDecimal.toPlainString();
     }
 
     protected abstract Pair<List<P>, Map<Long, List<P>>> createPoints(final IPage<AbstractEntity<?>> entitiesPage);
@@ -297,6 +427,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
      */
     protected Object executeScript(final String jsString) {
         try {
+            logger.info("Executing script [" + jsString + "]...");
             return webEngine.executeScript(jsString);
         } catch (final Exception e) {
             e.printStackTrace();
