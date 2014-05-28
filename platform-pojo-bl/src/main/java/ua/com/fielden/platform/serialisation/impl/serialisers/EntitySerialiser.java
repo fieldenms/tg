@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 import com.esotericsoftware.kryo.Context;
 import com.esotericsoftware.kryo.Kryo;
@@ -28,9 +28,9 @@ import com.esotericsoftware.kryo.serialize.LongSerializer;
 
 /**
  * Serialises descendants of {@link AbstractEntity}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class EntitySerialiser extends Serializer {
 
@@ -208,7 +208,7 @@ public final class EntitySerialiser extends Serializer {
 
             // 1. read Id
             final Long id = NOT_NULL_NOT_DIRTY == buffer.get() ? LongSerializer.get(buffer, false) : null;
-            final AbstractEntity<?> entity = factory.newEntity(type, id);
+            final AbstractEntity<?> entity = DynamicEntityClassLoader.isEnhanced(type) ? factory.newPlainEntity(type, id) : factory.newEntity(type, id);
 
             references.referenceCount++;
             references.referenceToObject.put(references.referenceCount, entity);
@@ -218,27 +218,36 @@ public final class EntitySerialiser extends Serializer {
             versionField.set(entity, LongSerializer.get(buffer, false));
 
             // 3. read the rest of properties
+
             for (final CachedProperty prop : properties) {
                 final byte attr = buffer.get();
 
                 switch (attr) {
                 case NOT_NULL_DIRTY:
-                    readProperty(buffer, entity, prop).setDirty(true);
+                    final MetaProperty mp = readProperty(buffer, entity, prop);
+                    if (mp != null) {
+                        mp.setDirty(true);
+                    }
                     break;
                 case NULL_DIRTY:
-                    entity.getProperty(prop.field.getName()).setOriginalValue(null).setDirty(true);
+                    if (!DynamicEntityClassLoader.isEnhanced(type)) {
+                        entity.getProperty(prop.field.getName()).setOriginalValue(null).setDirty(true);
+                    }
                     break;
                 case NOT_NULL_NOT_DIRTY:
                     readProperty(buffer, entity, prop);
                     break;
                 case NULL_NOT_DIRTY:
-                    entity.getProperty(prop.field.getName()).setOriginalValue(null);
+                    if (!DynamicEntityClassLoader.isEnhanced(type)) {
+                        entity.getProperty(prop.field.getName()).setOriginalValue(null);
+                    }
                     break;
 
                 default:
                     throw new SerializationException("EntitySerialiser could not correctly identify state attribute for property " + prop.field.getName()
                             + " when reading entity of type " + type.getName());
                 }
+
             }
             return (T) entity;
         } catch (final Exception ex) {
@@ -249,7 +258,7 @@ public final class EntitySerialiser extends Serializer {
 
     /**
      * Read a non-null value from the buffer and assigns it to the property. Also, handles assignemt of the restored value as the original for meta-property.
-     * 
+     *
      * @param buffer
      * @param entity
      * @param prop
@@ -273,16 +282,17 @@ public final class EntitySerialiser extends Serializer {
         }
         final Object value = serializer.readObjectData(buffer, concreteType);
         prop.field.set(entity, value);
-        return entity.getProperty(prop.field.getName()).setOriginalValue(value);
+
+        return !DynamicEntityClassLoader.isEnhanced(type) ? entity.getProperty(prop.field.getName()).setOriginalValue(value) : null;
     }
 
     /**
      * A convenient class to store property related information.
-     * 
+     *
      * Serialiser is initialised lazily, which is required to avoid issues with class registration order.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     private final class CachedProperty {
         final Field field;
