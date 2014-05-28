@@ -27,18 +27,16 @@ public class ValuePreprocessor {
 
     /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */
     private Object convertValue(final Object value) {
+        final Object result;
         if (value instanceof PropertyDescriptor || value instanceof Class) {
-            return value.toString();
+            result = value.toString();
+        } else if (value instanceof AbstractEntity) {
+            result = ((AbstractEntity<?>) value).getId();
+        } else if (value instanceof Money) {
+            result = ((Money) value).getAmount();
+        } else {
+            result = value;
         }
-
-        if (value instanceof AbstractEntity) {
-            return ((AbstractEntity<?>) value).getId();
-        }
-
-        if (value instanceof Money) {
-            return ((Money) value).getAmount();
-        }
-
-        return value;
+        return result;
     }
 }
