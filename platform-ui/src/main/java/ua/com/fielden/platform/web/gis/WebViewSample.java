@@ -12,18 +12,18 @@ import javafx.stage.Stage;
 public class WebViewSample extends Application {
     @Override
     public void start(final Stage stage) throws Exception {
-	final StackPane root = new StackPane();
+        final StackPane root = new StackPane();
 
-	final WebView view = new WebView();
-	final WebEngine engine = view.getEngine();
-	engine.load(GisViewPanel2.class.getResource("map.html").toString());
-	root.getChildren().add(view);
-	final Scene scene = new Scene(root, 800, 600);
-	stage.setScene(scene);
-	stage.show();
+        final WebView view = new WebView();
+        final WebEngine engine = view.getEngine();
+        engine.load(GisViewPanel2.class.getResource("map.html").toString());
+        root.getChildren().add(view);
+        final Scene scene = new Scene(root, 800, 600);
+        stage.setScene(scene);
+        stage.show();
     }
 
     public static void main(final String[] args) throws IOException {
-	Application.launch(args);
+        Application.launch(args);
     }
 }

@@ -7,6 +7,7 @@
 		<link rel="stylesheet" href="http://leaflet.github.io/Leaflet.draw/leaflet.draw.css"/>
 		<link rel="stylesheet" href="MarkerCluster.css" />
 		<link rel="stylesheet" href="MarkerCluster.Default.css" />
+		<link rel="stylesheet" href="screen.css" />
 
 		<style>
 			body {
@@ -20,6 +21,7 @@
 		</style>
 	</head>
 	<body>
+		<div id="progress"><div id="progress-bar"></div></div>
 		<div id="map"></div>
  		<!-- Leaflet stuff -->
 		<script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
@@ -37,6 +39,22 @@
 		<!-- script src="geo.json"></script -->
 		<!-- script src="Bing.js"></script -->
 		<script> 
+			var progress = document.getElementById('progress');
+			var progressBar = document.getElementById('progress-bar');
+
+			function updateProgressBar(processed, total, elapsed, layersArray) {
+				if (elapsed > 1) { // 1000
+					// if it takes more than a second to load, display the progress bar:
+					progress.style.display = 'block';
+					progressBar.style.width = Math.round(processed/total*100) + '%';
+				}
+
+				if (processed === total) {
+					// all markers processed - hide the progress bar:
+					progress.style.display = 'none';
+				}
+			}
+
 			var osmLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>',
 				thunLink = '<a href="http://thunderforest.com/">Thunderforest</a>';
 
@@ -128,7 +146,7 @@
 			    "opacity": 0.65
 			};
 
-			var markersClusterGroup = L.markerClusterGroup();
+			var markersClusterGroup = L.markerClusterGroup({ chunkedLoading: true, chunkProgress: updateProgressBar });
 
 			var geoJsonOverlay = L.geoJson([], {
 			    style: geoJsonStyle,

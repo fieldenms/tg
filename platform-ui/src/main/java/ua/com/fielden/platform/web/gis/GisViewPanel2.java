@@ -4,6 +4,7 @@ import java.awt.event.MouseAdapter;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -53,7 +54,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point> extends JFXPanel /* implements IPoint<P> */ {
+public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point> extends JFXPanel /* implements IPoint<P> */{
     private static final long serialVersionUID = 9202827128855362320L;
     private static final Logger logger = Logger.getLogger(GisViewPanel2.class);
 
@@ -61,7 +62,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
     private final GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> parentView;
     private WebView webView;
     private WebEngine webEngine;
-//    private BorderPane root;
+    //    private BorderPane root;
     private StackPane webViewPanel;
 
     private AbstractEntity<?> previousSelectedEntity;
@@ -100,7 +101,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
                         // logger.info("mouseClicked = false");
                         mouseClicked = false;
                     } else {
-                	// TODO
+                        // TODO
                         // selectEntity(calloutChangeShouldBeForced);
                     }
                 }
@@ -138,24 +139,34 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
 
                                 // providePoints(createPoints((IPage<AbstractEntity<?>>) e.getNewPage()), shouldFitToBounds());
                                 // removeOldAndAddNew(webEngine, zoom(webEngine));
-                        	final String geoJsonFeatures = convertToGeoJson((IPage<AbstractEntity<?>>) e.getNewPage());
+                                logger.info("Converting entities to geo json...");
+                                // final String geoJsonFeatures = convertToGeoJson((IPage<AbstractEntity<?>>) e.getNewPage());
+                                final List<String> geoJsonFeatures = convertToGeoJsonFeatures((IPage<AbstractEntity<?>>) e.getNewPage());
 
-                        	logger.info("Saving to geo json file...");
-                        	try {
-                            	    final PrintWriter out = new PrintWriter("geo.json");
-                            	    out.println("var geoJsonFeatures = " + geoJsonFeatures);
-                            	    out.close();
-				} catch (final Exception ex) {
-				    ex.printStackTrace();
-				}
+                                logger.info("Saving to geo json file...");
+                                try {
+                                    final PrintWriter out = new PrintWriter("geo.json");
+                                    // out.println("var geoJsonFeatures = " + geoJsonFeatures);
+                                    out.close();
+                                } catch (final Exception ex) {
+                                    ex.printStackTrace();
+                                }
 
-                        	executeScript("geoJsonOverlay.clearLayers();");
-                        	executeScript("markersClusterGroup.clearLayers();");
-                        	executeScript("geoJsonFeatures = " + geoJsonFeatures + ";");
-                        	executeScript("geoJsonOverlay.addData(geoJsonFeatures);");
-                        	executeScript("markersClusterGroup.addLayer(geoJsonOverlay);");
-                        	executeScript("map.fitBounds(markersClusterGroup.getBounds());");
-                        	logger.info("Scripts have been executed.");
+                                executeScript("geoJsonOverlay.clearLayers();");
+                                executeScript("markersClusterGroup.clearLayers();");
+                                logger.info("Executing script [geoJsonFeatures = {...};]...");
+                                // executeScript("geoJsonFeatures = " + geoJsonFeatures + ";", false);
+                                // executeScript("geoJsonOverlay.addData(geoJsonFeatures);");
+                                int i = 0;
+                                logger.info("Adding features [" + geoJsonFeatures.size() + "]...");
+                                for (final String feature : geoJsonFeatures) {
+                                    i++;
+                                    // logger.info("Adding feature [" + i + " / " + geoJsonFeatures.size() + "]...");
+                                    executeScript("geoJsonOverlay.addData(" + feature + ");", false);
+                                }
+                                executeScript("markersClusterGroup.addLayer(geoJsonOverlay);");
+                                executeScript("map.fitBounds(markersClusterGroup.getBounds());");
+                                logger.info("Scripts have been executed.");
                             }
                         });
                     }
@@ -164,110 +175,119 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
         });
     }
 
+    private static List<String> convertToGeoJsonFeatures(final IPage<AbstractEntity<?>> newPage) {
+        final List<AbstractEntity<?>> entities = newPage.data();
+        logger.info("Converting to geo json [" + entities.size() + "] entities...");
+        // final StringBuilder sb = new StringBuilder();
+        final List<String> features = new ArrayList<>();
+        final Iterator<AbstractEntity<?>> iter = entities.iterator();
+
+        if (iter.hasNext()) {
+            // at least one:
+            final AbstractEntity<?> first = iter.next();
+            features.add(createPointFeature(first));
+
+            if (iter.hasNext()) {
+                // at least two:
+                final AbstractEntity<?> second = iter.next();
+                features.add(createPointFeature(second));
+
+                while (iter.hasNext()) {
+                    features.add(createPointFeature(iter.next()));
+                }
+
+                features.add(createLineStringFeature(entities)); // TODO MultiLineString for different machines and / or different parts of track
+            }
+
+        }
+        return features;
+    }
+
     private static String convertToGeoJson(final IPage<AbstractEntity<?>> newPage) {
-	final List<AbstractEntity<?>> entities = newPage.data();
-	logger.info("Converting to geo json [" + entities.size() + "] entities...");
-	final StringBuilder sb = new StringBuilder();
-	final Iterator<AbstractEntity<?>> iter = entities.iterator();
+        final List<AbstractEntity<?>> entities = newPage.data();
+        logger.info("Converting to geo json [" + entities.size() + "] entities...");
+        final StringBuilder sb = new StringBuilder();
+        final Iterator<AbstractEntity<?>> iter = entities.iterator();
 
-	if (iter.hasNext()) {
-	    // at least one:
-	    final AbstractEntity<?> first = iter.next();
-	    sb.append(createPointFeature(first));
+        if (iter.hasNext()) {
+            // at least one:
+            final AbstractEntity<?> first = iter.next();
+            sb.append(createPointFeature(first));
 
-	    if (iter.hasNext()) {
-		// at least two:
-		final AbstractEntity<?> second = iter.next();
-		sb.append("," + createPointFeature(second));
+            if (iter.hasNext()) {
+                // at least two:
+                final AbstractEntity<?> second = iter.next();
+                sb.append("," + createPointFeature(second));
 
-		while (iter.hasNext()) {
-		    sb.append("," + createPointFeature(iter.next()));
-		}
+                while (iter.hasNext()) {
+                    sb.append("," + createPointFeature(iter.next()));
+                }
 
-		sb.append("," + createLineStringFeature(entities)); // TODO MultiLineString for different machines and / or different parts of track
-	    }
+                sb.append("," + createLineStringFeature(entities)); // TODO MultiLineString for different machines and / or different parts of track
+            }
 
-	}
-	return "[" + sb.toString() + "]";
+        }
+        return "[" + sb.toString() + "]";
     }
 
     private static String createLineStringFeature(final List<AbstractEntity<?>> entities) {
-	return "{" +
-		"\"type\": \"Feature\"," +
-		"\"geometry\": " + createLineStringGeometry(entities) + "," +
-		"\"properties\": " + createProperties(entities) +
-	"}";
+        return "{" + "\"type\": \"Feature\"," + "\"geometry\": " + createLineStringGeometry(entities) + "," + "\"properties\": " + createProperties(entities) + "}";
     }
 
     private static String createProperties(final List<AbstractEntity<?>> entities) {
-	return "{" +
-		"\"popupContent\": " + entityToString((AbstractEntity<?>) entities.get(0).get("machine")) + // TODO
-	"}";
+        return "{" + "\"popupContent\": " + entityToString((AbstractEntity<?>) entities.get(0).get("machine")) + // TODO
+                "}";
     }
 
     private static String createLineStringGeometry(final List<AbstractEntity<?>> entities) {
-	return "{" +
-		"\"type\": \"LineString\"," +
-		"\"coordinates\": " + createCoordinates(entities) +
-		"}";
+        return "{" + "\"type\": \"LineString\"," + "\"coordinates\": " + createCoordinates(entities) + "}";
     }
 
     private static String createCoordinates(final List<AbstractEntity<?>> entities) {
-	final StringBuilder sb = new StringBuilder();
-	final Iterator<AbstractEntity<?>> iter = entities.iterator();
-	sb.append(createCoordinates(iter.next()));
-	sb.append("," + createCoordinates(iter.next()));
-	while (iter.hasNext()) {
-	    sb.append("," + createCoordinates(iter.next()));
-	}
-	return "[" + sb.toString() + "]";
+        final StringBuilder sb = new StringBuilder();
+        final Iterator<AbstractEntity<?>> iter = entities.iterator();
+        sb.append(createCoordinates(iter.next()));
+        sb.append("," + createCoordinates(iter.next()));
+        while (iter.hasNext()) {
+            sb.append("," + createCoordinates(iter.next()));
+        }
+        return "[" + sb.toString() + "]";
     }
 
     private static String createPointFeature(final AbstractEntity<?> entity) {
-	return "{" +
-		"\"type\": \"Feature\"," +
-		"\"geometry\": " + createPointGeometry(entity) + "," +
-		"\"properties\": " + createProperties(entity) +
-	"}";
+        return "{" + "\"type\": \"Feature\"," + "\"geometry\": " + createPointGeometry(entity) + "," + "\"properties\": " + createProperties(entity) + "}";
     }
 
     private static String createProperties(final AbstractEntity<?> entity) {
-	return "{" +
-		"\"popupContent\": " + dateToString((Date) entity.get("gpsTime")) + "," +
-		"\"vectorAngle\": " + integerToString((Integer) entity.get("vectorAngle")) + "," +
-		"\"vectorSpeed\": " + integerToString((Integer) entity.get("vectorSpeed")) +
-	"}";
+        return "{" + "\"popupContent\": " + dateToString((Date) entity.get("gpsTime")) + "," + "\"vectorAngle\": " + integerToString((Integer) entity.get("vectorAngle")) + ","
+                + "\"vectorSpeed\": " + integerToString((Integer) entity.get("vectorSpeed")) + "}";
     }
 
     private final static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
     private static String dateToString(final Date date) {
-	return "\"" + sdf.format(date) + "\"";
+        return "\"" + sdf.format(date) + "\"";
     }
 
     private static String entityToString(final AbstractEntity<?> entity) {
-	return "\"" + entity.toString() + "\"";
+        return "\"" + entity.toString() + "\"";
     }
 
     private static String createPointGeometry(final AbstractEntity<?> entity) {
-	return "{" +
-		"\"type\": \"Point\"," +
-		"\"coordinates\": " + createCoordinates(entity) +
-	"}";
+        return "{" + "\"type\": \"Point\"," + "\"coordinates\": " + createCoordinates(entity) + "}";
     }
 
     private static String createCoordinates(final AbstractEntity<?> entity) {
-	return "[" +
-			bigDecimalToString((BigDecimal) entity.get("x")) + "," + bigDecimalToString((BigDecimal) entity.get("y")) + "," + integerToString((Integer) entity.get("altitude")) +
-		"]";
+        return "[" + bigDecimalToString((BigDecimal) entity.get("x")) + "," + bigDecimalToString((BigDecimal) entity.get("y")) + ","
+                + integerToString((Integer) entity.get("altitude")) + "]";
     }
 
     private static String integerToString(final Integer integer) {
-	return integer.toString();
+        return integer.toString();
     }
 
     private static String bigDecimalToString(final BigDecimal bigDecimal) {
-	return bigDecimal.toPlainString();
+        return bigDecimal.toPlainString();
     }
 
     protected abstract Pair<List<P>, Map<Long, List<P>>> createPoints(final IPage<AbstractEntity<?>> entitiesPage);
@@ -281,6 +301,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
     protected void requestFocusForEgi() {
         if (!egi.hasFocus()) {
             SwingUtilitiesEx.invokeLater(new Runnable() {
+                @Override
                 public void run() {
                     final boolean focused = egi.requestFocusInWindow();
                     if (!focused) {
@@ -311,6 +332,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
         webEngine = webView.getEngine();
 
         webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
+            @Override
             public void changed(final ObservableValue ov, final State oldState, final State newState) {
                 if (newState == State.SUCCEEDED) {
                     afterMapLoaded();
@@ -328,22 +350,21 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
 
         loadMap();
 
-//        final Button fitToBounds = new Button("Fit To Bounds");
-//        fitToBounds.setOnAction(new EventHandler<ActionEvent>() {
-//            public void handle(final ActionEvent actionEvent) {
-//                fitToBounds();
-//            }
-//        });
+        //        final Button fitToBounds = new Button("Fit To Bounds");
+        //        fitToBounds.setOnAction(new EventHandler<ActionEvent>() {
+        //            public void handle(final ActionEvent actionEvent) {
+        //                fitToBounds();
+        //            }
+        //        });
 
-//        // create toolbar
-//        final ToolBar toolBar = new ToolBar();
-//        toolBar.getStyleClass().add("map-toolbar");
-//        toolBar.getItems().addAll(createSpacer(), fitToBounds);
+        //        // create toolbar
+        //        final ToolBar toolBar = new ToolBar();
+        //        toolBar.getStyleClass().add("map-toolbar");
+        //        toolBar.getItems().addAll(createSpacer(), fitToBounds);
 
-
-//        // create root
-//        root = new BorderPane();
-//        root.getStyleClass().add("map");
+        //        // create root
+        //        root = new BorderPane();
+        //        root.getStyleClass().add("map");
 
         webViewPanel = new StackPane();
 
@@ -354,14 +375,13 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
 
         // webViewPanel.setCenter(webView);
         webViewPanel.getChildren().add(webView);
-//        canvas = new BorderPane();
-//        webViewPanel.getChildren().add(canvas);
+        //        canvas = new BorderPane();
+        //        webViewPanel.getChildren().add(canvas);
 
-//        root.setCenter(webViewPanel);
-//        root.setTop(toolBar);
+        //        root.setCenter(webViewPanel);
+        //        root.setTop(toolBar);
 
-
-        final Scene scene = new Scene(webViewPanel, /*1100, 600, */ Color.web("#666970"));
+        final Scene scene = new Scene(webViewPanel, /*1100, 600, */Color.web("#666970"));
 
         return scene;
     }
@@ -385,38 +405,37 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
         return spacer;
     }
 
-
-//    @Override
-//    public Color getColor(final P start) {
-//        final int speed = start.getSpeed();
-//        final double maxSpeed = 80.0;
-//        // return Color.hsb(0, speed / maxSpeed, 1.0);
-//        // return Color.hsb(120.0 - (120.0 * speed / maxSpeed), 1.0, 1.0); // 0 (green, hue=120) to 80 (red, hue=0) km/hour
-//        return Color.hsb(240.0 + ((360.0 - 240.0) * speed / maxSpeed), 1.0, 1.0); // 0 (dark blue, hue=? 120) to 80 (red, hue=0) km/hour
-//    }
-//
-//    @Override
-//    public String getTooltip(final P point) {
-//        return point.toString();
-//    }
+    //    @Override
+    //    public Color getColor(final P start) {
+    //        final int speed = start.getSpeed();
+    //        final double maxSpeed = 80.0;
+    //        // return Color.hsb(0, speed / maxSpeed, 1.0);
+    //        // return Color.hsb(120.0 - (120.0 * speed / maxSpeed), 1.0, 1.0); // 0 (green, hue=120) to 80 (red, hue=0) km/hour
+    //        return Color.hsb(240.0 + ((360.0 - 240.0) * speed / maxSpeed), 1.0, 1.0); // 0 (dark blue, hue=? 120) to 80 (red, hue=0) km/hour
+    //    }
+    //
+    //    @Override
+    //    public String getTooltip(final P point) {
+    //        return point.toString();
+    //    }
 
     protected void fitToBounds() {
-	// TODO provide map-independent implementation
-	// TODO provide map-independent implementation
-	// TODO provide map-independent implementation
-	// TODO provide map-independent implementation
-	// TODO provide map-independent implementation
-	// TODO provide map-independent implementation
-	// TODO provide map-independent implementation
+        // TODO provide map-independent implementation
+        // TODO provide map-independent implementation
+        // TODO provide map-independent implementation
+        // TODO provide map-independent implementation
+        // TODO provide map-independent implementation
+        // TODO provide map-independent implementation
+        // TODO provide map-independent implementation
 
-//        if (points != null && !points.isEmpty()) {
-//            // fit all coordinates to the bounds calculated by existing points
-//            executeScript("document.viewBounds = new google.maps.LatLngBounds()");
-//            for (final P point : points) {
-//                executeScript("document.viewBounds.extend(new google.maps.LatLng(" + point.getLatitude() + "," + point.getLongitude() + "))");
-//            }
-//            executeScript("document.map.fitBounds(document.viewBounds)");
-//        }
+        //        if (points != null && !points.isEmpty()) {
+        //            // fit all coordinates to the bounds calculated by existing points
+        //            executeScript("document.viewBounds = new google.maps.LatLngBounds()");
+        //            for (final P point : points) {
+        //                executeScript("document.viewBounds.extend(new google.maps.LatLng(" + point.getLatitude() + "," + point.getLongitude() + "))");
+        //            }
+        //            executeScript("document.map.fitBounds(document.viewBounds)");
+        //        }
     }
 
     /**
@@ -426,8 +445,20 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
      * @return
      */
     protected Object executeScript(final String jsString) {
+        return executeScript(jsString, true);
+    }
+
+    /**
+     * Executes javaScript script. If execution fails -- it reports that in dialog window (there is a need to reload all centre).
+     *
+     * @param jsString
+     * @return
+     */
+    protected Object executeScript(final String jsString, final boolean log) {
         try {
-            logger.info("Executing script [" + jsString + "]...");
+            if (log) {
+                logger.info("Executing script [" + jsString + "]...");
+            }
             return webEngine.executeScript(jsString);
         } catch (final Exception e) {
             e.printStackTrace();
@@ -440,6 +471,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
 
     private void invokeErrorDialog(final Exception e) {
         SwingUtilitiesEx.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new DialogWithDetails(null, "Перевантажте центр (перервано звязок з інтернетом)", e).setVisible(true);
             }
@@ -456,54 +488,54 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
      * @param fitToBounds
      */
     protected void providePoints(final Pair<List<P>, Map<Long, List<P>>> pointsAndEntityPoints, final boolean fitToBounds) {
-	// TODO provide similar implementation
-//        freeResources();
-//
-//        final List<P> points = pointsAndEntityPoints.getKey();
-//
-//        // This should order points in its natural ordering (see compareTo() method in concrete Point implementation)
-//        Collections.sort(points);
-//
-//        this.points.addAll(points);
-//        this.entityPoints.putAll(pointsAndEntityPoints.getValue());
-//
-//        if (fitToBounds) {
-//            fitToBounds();
-//        }
+        // TODO provide similar implementation
+        //        freeResources();
+        //
+        //        final List<P> points = pointsAndEntityPoints.getKey();
+        //
+        //        // This should order points in its natural ordering (see compareTo() method in concrete Point implementation)
+        //        Collections.sort(points);
+        //
+        //        this.points.addAll(points);
+        //        this.entityPoints.putAll(pointsAndEntityPoints.getValue());
+        //
+        //        if (fitToBounds) {
+        //            fitToBounds();
+        //        }
     }
 
     /**
      * Clears all caches for nodes as well as the models (called 'points').
      */
     protected void freeResources() {
-	// TODO provide similar implementation
-//        pixelNodes.clear();
-//        trackSegments.clear();
-//
-//        entityPoints.clear();
-//        points.clear();
-//
-//        if (path != null) {
-//            path.getChildren().clear();
-//        }
+        // TODO provide similar implementation
+        //        pixelNodes.clear();
+        //        trackSegments.clear();
+        //
+        //        entityPoints.clear();
+        //        points.clear();
+        //
+        //        if (path != null) {
+        //            path.getChildren().clear();
+        //        }
     }
 
     public WebEngine getWebEngine() {
         return webEngine;
     }
 
-//    @Override
-//    public final void clickedAction(final P point) {
-//        parentView.deselectAll();
-// TODO provide similar implementation
-//
-//        final AbstractEntity<?> entityToSelect = entityToSelect(point);
-//
-//        parentView.selectEntities(Arrays.<AbstractEntity<?>> asList(entityToSelect));
-//        parentView.bringToView(entityToSelect);
-//
-//        requestFocusForEgi();
-//    }
+    //    @Override
+    //    public final void clickedAction(final P point) {
+    //        parentView.deselectAll();
+    // TODO provide similar implementation
+    //
+    //        final AbstractEntity<?> entityToSelect = entityToSelect(point);
+    //
+    //        parentView.selectEntities(Arrays.<AbstractEntity<?>> asList(entityToSelect));
+    //        parentView.bringToView(entityToSelect);
+    //
+    //        requestFocusForEgi();
+    //    }
 
     public void addWebViewLoadListener(final IWebViewLoadedListener listener) {
         listenerList.add(IWebViewLoadedListener.class, listener);
@@ -515,6 +547,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
 
     private void fireWebViewLoadEvent(final WebViewLoadEvent e) {
         SwingUtilitiesEx.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 for (final IWebViewLoadedListener listener : listenerList.getListeners(IWebViewLoadedListener.class)) {
                     listener.webViewLoaded(e);
