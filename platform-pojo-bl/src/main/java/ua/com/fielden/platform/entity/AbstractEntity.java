@@ -1050,7 +1050,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      *
      * @param entityFactory
      */
-    protected final void setEntityFactory(final EntityFactory entityFactory) {
+    public final void setEntityFactory(final EntityFactory entityFactory) {
         this.entityFactory = entityFactory;
     }
 

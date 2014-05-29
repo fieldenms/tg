@@ -208,7 +208,14 @@ public final class EntitySerialiser extends Serializer {
 
             // 1. read Id
             final Long id = NOT_NULL_NOT_DIRTY == buffer.get() ? LongSerializer.get(buffer, false) : null;
-            final AbstractEntity<?> entity = DynamicEntityClassLoader.isEnhanced(type) ? factory.newPlainEntity(type, id) : factory.newEntity(type, id);
+            final AbstractEntity<?> entity;
+
+            if (DynamicEntityClassLoader.isEnhanced(type)) {
+                entity = factory.newPlainEntity(type, id);
+                entity.setEntityFactory(factory);
+            } else {
+                entity = factory.newEntity(type, id);
+            }
 
             references.referenceCount++;
             references.referenceToObject.put(references.referenceCount, entity);
