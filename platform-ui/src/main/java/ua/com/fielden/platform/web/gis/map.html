@@ -8,6 +8,7 @@
 		<link rel="stylesheet" href="MarkerCluster.css" />
 		<link rel="stylesheet" href="MarkerCluster.Default.css" />
 		<link rel="stylesheet" href="screen.css" />
+        <link rel="stylesheet" href="Control.Loading.css" />
 
 		<style>
 			body {
@@ -34,6 +35,9 @@
 		<script src="http://api-maps.yandex.ru/2.0/?load=package.map&lang=ru-RU"></script>		
 		<script src="Yandex.js"></script>
 		<script src="leaflet.markercluster-src.js"></script>
+
+        <!-- Include the loading control -->
+        <script src="Control.Loading.js"></script>
 
 
 		<!-- script src="geo.json"></script -->
@@ -65,18 +69,42 @@
 
 			// initialise different layers for different tile providers
 			var osmMap = L.tileLayer(osmUrl, {
+				    maxZoom: 19,
+				    minZoom: 0,
 					attribution: osmAttrib
 				});
 			var	landMap = L.tileLayer(landUrl, {
+				    maxZoom: 18,
+				    minZoom: 0,
 					attribution: thunAttrib
 				});
 			// var bingMap = new L.BingLayer("YOUR_BING_API_KEY"); -- need an API key to use it 
 			// http://stackoverflow.com/questions/14442055/use-bing-maps-tiles-with-leaflet
-			var	googleRoadMap = new L.Google('ROADMAP');
-			var	googleSatelliteMap = new L.Google('SATELLITE');
-			var	googleHybridMap = new L.Google('HYBRID');
-			var	googleTerrainMap = new L.Google('TERRAIN');
-			var yandexMap = new L.Yandex();
+			var	googleRoadMap = new L.Google('ROADMAP', {
+				    maxZoom: 21,
+				    minZoom: 0
+				});
+			var	googleSatelliteMap = new L.Google('SATELLITE', {
+				    maxZoom: 19,
+				    minZoom: 0
+				});
+			var	googleHybridMap = new L.Google('HYBRID', {
+				    maxZoom: 19,
+				    minZoom: 0
+				});
+			var	googleTerrainMap = new L.Google('TERRAIN', {
+				    maxZoom: 15,
+				    minZoom: 0
+				});
+			var yandexRoadMap = new L.Yandex('map', {
+				    maxZoom: 18,
+				    minZoom: 0
+				});
+			var yandexHybridMap = new L.Yandex('hybrid', {
+				    maxZoom: 19,
+				    minZoom: 0
+				});
+			
 			var ytraffic = new L.Yandex("null", {
 				traffic:true, 
 				opacity:0.8, 
@@ -84,15 +112,20 @@
 			});
  
 			var map = L.map('map', {
-				layers: [osmMap] // only add one!
+				layers: [osmMap], // only add one!
+                // Tell the map to use a loading control
+                loadingControl: true
 			})
-			.setView([49.842536, 24.02607], 14); // Lviv has been centered
+			.setView([49.841919, 24.0316], 18); // Lviv (Rynok Sq) has been centered
  
+			map.fire('dataloading');
+
 			var baseLayers = {
 				"OpenStreetMap": osmMap,
 				"Landscape": landMap,
 				// "Bing": bingMap,				
-				"Yandex": yandexMap,
+				"Yandex Roadmap": yandexRoadMap,
+				"Yandex Hybrid": yandexHybridMap,
 				"Google Roadmap": googleRoadMap,
 				"Google Sattelite": googleSatelliteMap,
 				"Google Hybrid": googleHybridMap,
@@ -206,6 +239,9 @@
 			};
  			
 			L.control.layers(baseLayers, overlays).addTo(map); 
+
+			map.fire('dataload');
+
 		</script>
 	</body>
 </html>

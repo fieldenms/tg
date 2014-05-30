@@ -2,6 +2,9 @@ package ua.com.fielden.platform.web.gis;
 
 import java.awt.event.MouseAdapter;
 import java.io.PrintWriter;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -15,8 +18,10 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker.State;
 import javafx.embed.swing.JFXPanel;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -136,10 +141,8 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
                         Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
+                                executeScript("map.fire('dataloading');");
 
-                                // providePoints(createPoints((IPage<AbstractEntity<?>>) e.getNewPage()), shouldFitToBounds());
-                                // removeOldAndAddNew(webEngine, zoom(webEngine));
-                                logger.info("Converting entities to geo json...");
                                 // final String geoJsonFeatures = convertToGeoJson((IPage<AbstractEntity<?>>) e.getNewPage());
                                 final List<String> geoJsonFeatures = convertToGeoJsonFeatures((IPage<AbstractEntity<?>>) e.getNewPage());
 
@@ -167,6 +170,14 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
                                 executeScript("markersClusterGroup.addLayer(geoJsonOverlay);");
                                 executeScript("map.fitBounds(markersClusterGroup.getBounds());");
                                 logger.info("Scripts have been executed.");
+
+                                final MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
+                                final MemoryUsage usage = mbean.getHeapMemoryUsage();
+                                final MemoryUsage nonHeapusage = mbean.getNonHeapMemoryUsage();
+                                final long total = ((usage.getUsed() + nonHeapusage.getUsed()) / 1024) / 1024;
+                                System.out.println("total = " + total);
+
+                                executeScript("map.fire('dataload');");
                             }
                         });
                     }
@@ -329,6 +340,23 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
     public Scene createScene() {
         // create web engine and view
         webView = new WebView();
+
+        webView.addEventFilter(ScrollEvent.SCROLL, new EventHandler<ScrollEvent>() {
+            @Override
+            public void handle(final ScrollEvent e) {
+                if (Math.abs(e.getDeltaY()) >= 20.0) {
+                    e.consume();
+                    final ScrollEvent adjustedEvent = new ScrollEvent(e.getEventType(), e.getX(), e.getY(), e.getScreenX(), e.getScreenY(), e.isShiftDown(), //
+                            e.isControlDown(), e.isAltDown(), e.isMetaDown(), e.isDirect(), e.isInertia(), e.getDeltaX(), //
+                            e.getDeltaY() / e.getMultiplierY(), // here the value for y delta is turning back to 1.0 or -1.0 instead of multiplied 40.0 or -40.0
+                            e.getTotalDeltaX(), e.getTotalDeltaY(), //
+                            e.getMultiplierX(), e.getMultiplierY(), // these values do not make any changes
+                            e.getTextDeltaXUnits(), e.getTextDeltaX(), e.getTextDeltaYUnits(), e.getTextDeltaY(), e.getTouchCount(), e.getPickResult());
+                    webView.fireEvent(adjustedEvent);
+                }
+            }
+        });
+
         webEngine = webView.getEngine();
 
         webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
