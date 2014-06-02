@@ -174,10 +174,11 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
+				<!-- version>3.1</version -->
 				<configuration>
 					<fork>true</fork>
 					<compilerArguments>
-						<J>-Xss10M</J>
+						<!-- J>-Xss10M</J -->
 						<!-- processor>br.com.sonner.infra.seguranca.SegurancaAnnotationProcessor</processor -->
 					</compilerArguments>
 				</configuration>
