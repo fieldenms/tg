@@ -1,7 +1,29 @@
+*.orig
+*.aux
+*.db
+*.backup
+*.tex~
+*.bib~
+*.dvi
+*.bbl
+*.log
+*.out
+*.pdf
+*.ps
+*.blg
+*.toc
+*~
+*.lof
+*.lot
+*.kate-swp
+*.~*
+*.tps
+target
+.classpath
+.project
+.settings
 *.class
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
 
 # Package Files #
 *.jar
