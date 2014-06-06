@@ -289,13 +289,19 @@
 		</snapshotRepository>
 	</distributionManagement>
 
-	<scm>
+	<!--scm>
 		<connection>
 			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/trunk
 		</connection>
 		<developerConnection>
 			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/trunk
 		</developerConnection>
-	</scm>
+	</scm-->
+
+        <scm>
+	        <connection>scm:git:git@github.com:fielden/tg.git</connection>
+	        <url>scm:git:git@github.com:fielden/tg.git</url>
+	        <developerConnection>scm:git:git@github.com:fielden/tg.git</developerConnection>
+        </scm>
 
 </project>
