@@ -8,7 +8,7 @@
 	<version>1.2-SNAPSHOT</version>
 	<name>Trident Genesis Platform Parent</name>
 	<description>
-		Trident Genesis is an application platform designed for
+		Trident Genesis is a software application platform designed for
 		development of ERP type applications supporting Client/Server and RIA/ROA architectures.
 		Its main goal is to provide a holistic solution for development of information system with domain oriented approach.
 	</description>
