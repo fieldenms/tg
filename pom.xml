@@ -302,9 +302,9 @@
 	</scm-->
 
         <scm>
-	        <connection>scm:git:git@github.com:fielden/tg.git</connection>
-	        <url>scm:git:git@github.com:fielden/tg.git</url>
-	        <developerConnection>scm:git:git@github.com:fielden/tg.git</developerConnection>
+	        <connection>scm:git:git@github.com:fieldenms/tg.git</connection>
+	        <url>scm:git:git@github.com:fieldenms/tg.git</url>
+	        <developerConnection>scm:git:git@github.com:fieldenms/tg.git</developerConnection>
         </scm>
 
 </project>
