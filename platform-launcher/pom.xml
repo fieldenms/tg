@@ -14,32 +14,32 @@
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-ui</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-pojo-bl</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-dao</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-web-resources</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>		
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-rao</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-web-client-utils</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>
 		<!-- google-API -->
 		<dependency>

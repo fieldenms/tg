@@ -17,12 +17,12 @@
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-ui</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-rao</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>	
 	<build>
