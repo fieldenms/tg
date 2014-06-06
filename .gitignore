@@ -23,7 +23,7 @@ target
 .project
 .settings
 *.class
-
+*.dtd
 
 # Package Files #
 *.jar
