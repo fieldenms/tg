@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.coloring.IColouringScheme;
+import ua.com.fielden.platform.swing.review.report.analysis.chart.CategoryChartFactory;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
 import ua.com.fielden.platform.web.gis.gps.GpsGridAnalysisModel2;
 import ua.com.fielden.platform.web.gis.gps.GpsGridAnalysisView2;
@@ -36,21 +37,16 @@ public abstract class MessageGpsGridAnalysisView2<T extends AbstractEntity<?>> e
         return new IColouringScheme<AbstractEntity>() {
             @Override
             public Color getColor(final AbstractEntity entity) {
-        	// TODO use new colouring contract mechanism
-        	// TODO use new colouring contract mechanism
-        	// TODO use new colouring contract mechanism
-        	// TODO use new colouring contract mechanism
-        	// TODO use new colouring contract mechanism
-        	// TODO use new colouring contract mechanism
-        	return Color.WHITE;
 
-//                final MessagePoint p = getGisViewPanel().getCorrespondingPoint(entity);
-//                if (p == null) {
-//                    return Color.WHITE;
-//                } else {
-//                    final javafx.scene.paint.Color messageColor = getGisViewPanel().getColor(p);
-//                    return CategoryChartFactory.getAwtColor(messageColor.equals(javafx.scene.paint.Color.BLUE) ? javafx.scene.paint.Color.GREEN : messageColor);
-//                }
+                if (entity.get("vectorSpeed") == null) {
+                    return Color.WHITE;
+                } else if (entity.get("vectorSpeed").equals(0)) {
+                    return CategoryChartFactory.getAwtColor(javafx.scene.paint.Color.RED);
+                } else {
+                    return CategoryChartFactory.getAwtColor(javafx.scene.paint.Color.GREEN);
+                }
+                // final javafx.scene.paint.Color messageColor = getGisViewPanel().getColor(p);
+                // return CategoryChartFactory.getAwtColor(messageColor.equals(javafx.scene.paint.Color.BLUE) ? javafx.scene.paint.Color.GREEN : messageColor);
             }
         };
     }
