@@ -175,7 +175,6 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
                                     executeScript("geoJsonOverlay.addData(" + feature + ");", false);
                                 }
                                 executeScript("markersClusterGroup.addLayer(geoJsonOverlay);");
-                                // executeScript("map.fitBounds(markersClusterGroup.getBounds());");
                                 logger.info("Scripts have been executed.");
                                 executeScript("map.fire('dataload');");
 
@@ -257,7 +256,12 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
     }
 
     private static String createLineStringFeature(final List<AbstractEntity<?>> entities) {
-        return "{" + "\"type\": \"Feature\"," + "\"geometry\": " + createLineStringGeometry(entities) + "," + "\"properties\": " + createProperties(entities) + "}";
+        return "{" //
+                + "\"type\": \"Feature\"," //
+                + "\"id\": \"null\"," // the identification is not necessary
+                + "\"geometry\": " + createLineStringGeometry(entities) + "," //
+                + "\"properties\": " + createProperties(entities) //
+                + "}";
     }
 
     private static String createProperties(final List<AbstractEntity<?>> entities) {
@@ -281,7 +285,12 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
     }
 
     private String createPointFeature(final AbstractEntity<?> entity) {
-        return "{" + "\"type\": \"Feature\"," + "\"geometry\": " + createPointGeometry(entity) + "," + "\"properties\": " + createProperties(entity) + "}";
+        return "{" //
+                + "\"type\": \"Feature\"," //
+                + "\"id\": \"" + entity.getId() + "\"," // the identification will be done by AbstractEntity's "id" property for the main entity (e.g. Machine, Message or GeoFenceEvent)
+                + "\"geometry\": " + createPointGeometry(entity) + "," //
+                + "\"properties\": " + createProperties(entity) //
+                + "}"; //
     }
 
     private String createProperties(final AbstractEntity<?> entity) {
@@ -362,11 +371,11 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
                 if (Math.abs(e.getDeltaY()) >= 20.0) {
                     e.consume();
                     final ScrollEvent adjustedEvent = new ScrollEvent(e.getEventType(), e.getX(), e.getY(), e.getScreenX(), e.getScreenY(), e.isShiftDown(), //
-                            e.isControlDown(), e.isAltDown(), e.isMetaDown(), e.isDirect(), e.isInertia(), e.getDeltaX(), //
-                            e.getDeltaY() / e.getMultiplierY(), // here the value for y delta is turning back to 1.0 or -1.0 instead of multiplied 40.0 or -40.0
-                            e.getTotalDeltaX(), e.getTotalDeltaY(), //
-                            e.getMultiplierX(), e.getMultiplierY(), // these values do not make any changes
-                            e.getTextDeltaXUnits(), e.getTextDeltaX(), e.getTextDeltaYUnits(), e.getTextDeltaY(), e.getTouchCount(), e.getPickResult());
+                    e.isControlDown(), e.isAltDown(), e.isMetaDown(), e.isDirect(), e.isInertia(), e.getDeltaX(), //
+                    e.getDeltaY() / e.getMultiplierY(), // here the value for y delta is turning back to 1.0 or -1.0 instead of multiplied 40.0 or -40.0
+                    e.getTotalDeltaX(), e.getTotalDeltaY(), //
+                    e.getMultiplierX(), e.getMultiplierY(), // these values do not make any changes
+                    e.getTextDeltaXUnits(), e.getTextDeltaX(), e.getTextDeltaYUnits(), e.getTextDeltaY(), e.getTouchCount(), e.getPickResult());
                     webView.fireEvent(adjustedEvent);
                 }
             }
@@ -423,6 +432,9 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
 
         //        root.setCenter(webViewPanel);
         //        root.setTop(toolBar);
+
+        final JSObject jsobj = (JSObject) webEngine.executeScript("window");
+        jsobj.setMember("java", new Js2JavaBridge());
 
         final Scene scene = new Scene(webViewPanel, /*1100, 600, */Color.web("#666970"));
 

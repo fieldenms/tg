@@ -106,7 +106,7 @@
 			// var iteration = 1;
 
 			function updateProgressBar(processed, total, elapsed, layersArray) {
-				console.log("updateProgressBar(processed = " + processed + ", total = " + total + ", elapsed = " + elapsed + ",layersArray);");
+				log("updateProgressBar(processed = " + processed + ", total = " + total + ", elapsed = " + elapsed + ",layersArray);");
 
 				if (elapsed > 0) { // 1000
 					// if it takes more than a second to load, display the progress bar:
@@ -294,11 +294,17 @@
 			// });
 
 			// var arrowIcon = new ArrowIcon({
-			// 	iconUrl: 'arrow3.png'
+			// 	iconUrl: 'arrow-blue.png'
 			// });
 
 			var arrowIcon = new L.Icon({
-				iconUrl: 'arrow3.png',
+				iconUrl: 'arrow-blue.png',
+				iconAnchor:   [12, 12],
+				popupAnchor:  [0, 0]        			
+			});
+
+			var arrowIconSelected = new L.Icon({
+				iconUrl: 'arrow-green.png',
 				iconAnchor:   [12, 12],
 				popupAnchor:  [0, 0]        			
 			});
@@ -311,7 +317,10 @@
 			});
 
 			var circleIcon = new CircleIcon({
-				iconUrl: 'circle.png'
+				iconUrl: 'circle-red.png'
+			});
+			var circleIconSelected = new CircleIcon({
+				iconUrl: 'circle-orange.png'
 			});
 
 			var CircleMarker = L.Marker.extend({
@@ -319,7 +328,8 @@
 					icon: circleIcon,
 					title: "BlaBla",
 					riseOnHover: true,
-					zIndexOffset: 1000 // high value to make the circles always on top				
+					riseOffset: 1000,
+					zIndexOffset: 750 // high value to make the circles always on top				
 				}
 			});
 
@@ -327,6 +337,7 @@
 				options: {
 		    		icon: arrowIcon,
 		    		title: "BlaBla",
+					riseOffset: 1000,
 		    		riseOnHover: true
 				}
 			});
@@ -339,8 +350,8 @@
 					return 60;
 				},
 				iconCreateFunction: function(cluster) {
-					// console.log("Creating cluster:");
-					// console.log(cluster);
+					// log("Creating cluster:");
+					// log(cluster);
      				// return new L.DivIcon({ html: '<b>' + cluster.getChildCount() + '</b>' });
 					var markers = cluster.getAllChildMarkers();					
 					var chosenMarker; // = markers[0];
@@ -353,7 +364,7 @@
 							// return circleIcon; // new CircleMarker(chosenMarker.getLatLng());
 
 							return L.divIcon({
-								html: '<div class="img-overlay"><img src="circle.png" /><div class="overlay" >&#x2194</div></div>',
+								html: '<div class="img-overlay"><img src="circle-red.png" /><div class="overlay" >&#x2194</div></div>',
 								className: 'gps-marker-cluster',
 								iconSize: new L.Point(24, 24)
 							});
@@ -363,8 +374,8 @@
 						chosenMarker = markers[Math.floor(count / 2)]; // use middle arrow marker as the marker for the cluster when no circle markers exist
 					}
 					// var arrowMarker = new ArrowMarker(chosenMarker.getLatLng()); // L.divIcon({ html: n, className: 'mycluster', iconSize: L.point(40, 40) });
-					// console.log("arrowMarker: ");					
-					// console.log(arrowMarker);					
+					// log("arrowMarker: ");					
+					// log(arrowMarker);					
 
 					// var m = new L.Marker(getRandomLatLng(map), { 
 					// 	icon: L.divIcon({
@@ -375,7 +386,7 @@
 					// return arrowIcon; // arrowMarker;
 
 					return L.divIcon({
-						html: '<div class="img-overlay"><img src="arrow3.png" style="-webkit-transform: rotate(' + 
+						html: '<div class="img-overlay"><img src="arrow-blue.png" style="-webkit-transform: rotate(' + 
 					 					chosenMarker.options.angle + 
 					 					'deg); " /><div class="overlay" style="-webkit-transform: rotate(' + 
 					 					(chosenMarker.options.angle + 90) + 
@@ -385,7 +396,7 @@
 					});
 
 					// return L.divIcon({ // TODO consider crossbrowser rotation issues (see Marker.Rotate.js for more details)
-					// 	html: '<img src="arrow3.png" style="-webkit-transform: rotate(' + 
+					// 	html: '<img src="arrow-blue.png" style="-webkit-transform: rotate(' + 
 					// 				chosenMarker.options.angle + 
 					// 		'deg); position:absolute; top:-6px; left:-6px;" />',
 					// 	className: 'gps-marker-cluster',
@@ -412,6 +423,58 @@
 			//     opacity: 1,
 			//     fillOpacity: 0.8
 			// };
+
+			var featureToLeafletIds = {};
+			var prevId;
+
+			function log(object) {
+				java.println(object);
+				console.log(object);
+			}
+
+			function deselectVisuallyWithoutEventFiring(featureId) {
+				var leafletId = featureToLeafletIds["" + featureId + ""];
+				var layer = geoJsonOverlay.getLayer(leafletId);
+				log("deselectVisuallyWithoutEventFiring:");
+				log(layer);
+				if (layer instanceof ArrowMarker) {
+					layer.setIcon(arrowIcon);
+					layer.setZIndexOffset(0); // return to previous zIndexOffset which make the marker of default priority based on the latitude
+				} else {
+					layer.setIcon(circleIcon);
+					layer.setZIndexOffset(750); // return to previous zIndexOffset which make the marker of high priority (zero speed)
+				}				
+			}
+
+			function selectVisuallyWithoutEventFiring(featureId) {
+				var leafletId = featureToLeafletIds["" + featureId + ""];
+				var layer = geoJsonOverlay.getLayer(leafletId);
+				log("selectVisuallyWithoutEventFiring:");
+				log(layer);
+				map.panTo(layer.getLatLng()); // centering of the marker (fitToBounds is not needed)
+				if (layer instanceof ArrowMarker) {
+					layer.setIcon(arrowIconSelected);
+				} else {
+					layer.setIcon(circleIconSelected);
+				}	
+				// log("zIndexOffset:");
+				// log(layer.getZIndexOffset()); // no such function
+				layer.setZIndexOffset(1000); // selected marker has the highest priority
+			}
+	
+			function selectTabularlyWithoutEventFiring(featureId) {
+				log("selectTabularlyWithoutEventFiring " + featureId);
+			}
+
+			function selectById(featureId) {
+				log("selectById(" + featureId + ");");
+				if (prevId) { // at the moment of selecting the feature - there has been other previously selected feature (or, perhaps, the same) 
+					deselectVisuallyWithoutEventFiring(prevId);
+				}
+				selectVisuallyWithoutEventFiring(featureId);
+				selectTabularlyWithoutEventFiring(featureId);
+				prevId = featureId;
+			}
 
 			var geoJsonOverlay = L.geoJson([], {
 			    style: geoJsonStyle,
@@ -453,7 +516,12 @@
 		            
 		            layer.on('click', function() { // dblclick
     	            	// alert("Hi!");
-    	            	console.log("clicked.");
+    	            	log("clicked.");
+
+						var featureId = feature.id;
+    	            	featureToLeafletIds["" + featureId + ""] = geoJsonOverlay.getLayerId(layer); // layer.getLayerId();
+
+    	            	selectById(featureId);
 	            	});
 
  			    	// does this feature have a property named popupContent?
