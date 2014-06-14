@@ -5,15 +5,13 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.kohsuke.asm3.AnnotationVisitor;
-import org.kohsuke.asm3.Attribute;
-import org.kohsuke.asm3.ClassAdapter;
-import org.kohsuke.asm3.ClassVisitor;
-import org.kohsuke.asm3.FieldVisitor;
-import org.kohsuke.asm3.MethodAdapter;
-import org.kohsuke.asm3.MethodVisitor;
-import org.kohsuke.asm3.Opcodes;
-import org.kohsuke.asm3.Type;
+import org.kohsuke.asm5.AnnotationVisitor;
+import org.kohsuke.asm5.Attribute;
+import org.kohsuke.asm5.ClassVisitor;
+import org.kohsuke.asm5.FieldVisitor;
+import org.kohsuke.asm5.MethodVisitor;
+import org.kohsuke.asm5.Opcodes;
+import org.kohsuke.asm5.Type;
 
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -23,11 +21,11 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 
 /**
  * A class adapter designed for modification of existing fields based on the new specification.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcodes {
+public class AdvancedModifyPropertyAdapter extends ClassVisitor implements Opcodes {
 
     /**
      * Mapping between the type names, property names and their respective new types.
@@ -42,14 +40,14 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
     private final DynamicTypeNamingService namingService;
 
     public AdvancedModifyPropertyAdapter(final ClassVisitor cv, final DynamicTypeNamingService namingService, final Map<String, NewProperty> propertiesToAdapt) {
-        super(cv);
+        super(Opcodes.ASM5, cv);
         this.propertiesToAdapt = propertiesToAdapt;
         this.namingService = namingService;
     }
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * Additionally, modifies and records the name of the currently being traversed class.
      */
     @Override
@@ -151,20 +149,20 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
 
     /**
      * MethodAdapter is a CodeVisitor ie a visitor to visit the bytecode instructions of a Java method.
-     * 
+     *
      */
-    private class MethodRenamer extends MethodAdapter {
+    private class MethodRenamer extends MethodVisitor {
 
         public MethodRenamer(final MethodVisitor mv) {
-            super(mv);
+            super(Opcodes.ASM5, mv);
         }
 
         /**
          * Visits method type instruction. A type instruction is an instruction that takes a type descriptor as parameter.
-         * 
+         *
          * @param opcode
          *            - the opcode of the type instruction to be visited. This opcode is either NEW, ANEWARRAY, CHECKCAST or INSTANCEOF.
-         * 
+         *
          * @param desc
          *            - the operand of the instruction to be visited. This operand is must be a fully qualified class name in internal form, or the type descriptor of an array type
          *            (see Type).
@@ -179,7 +177,7 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
 
         /**
          * Visits method field instruction. A field instruction is an instruction that loads or stores the value of a field of an object.
-         * 
+         *
          * @param opcode
          *            - the opcode of the type instruction to be visited. This opcode is either GETSTATIC, PUTSTATIC, GETFIELD or PUTFIELD.
          * @param owner
@@ -204,7 +202,7 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
 
         /**
          * Visits method instruction. A method instruction is an instruction that invokes a method.
-         * 
+         *
          * @param opcode
          *            - the opcode of the type instruction to be visited. This opcode is either INVOKEVIRTUAL, INVOKESPECIAL, INVOKESTATIC or INVOKEINTERFACE.
          * @param owner
@@ -228,14 +226,15 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
     /**
      * Field visitor for collectional properties, which modifies value for {@link IsProperty} annotation according to the specified new property information, and assigns
      * <code>linkProperty</code> attribute with its original value in case annotation was present originally.
-     * 
+     *
      */
-    private class CollectionalFieldVisitor implements FieldVisitor {
+    private class CollectionalFieldVisitor extends FieldVisitor {
 
         private final FieldVisitor fv;
         private final NewProperty np;
 
         public CollectionalFieldVisitor(final FieldVisitor fv, final NewProperty np) {
+            super(org.kohsuke.asm5.Opcodes.ASM5, fv);
             this.fv = fv;
             this.np = np;
         }

@@ -1,28 +1,27 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import org.kohsuke.asm3.ClassAdapter;
-import org.kohsuke.asm3.ClassVisitor;
-import org.kohsuke.asm3.MethodVisitor;
-import org.kohsuke.asm3.Opcodes;
+import org.kohsuke.asm5.ClassVisitor;
+import org.kohsuke.asm5.MethodVisitor;
+import org.kohsuke.asm5.Opcodes;
 
 /**
  * A class adapter designed for changing a class supertype.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public class AdvancedChangeSupertypeAdapter extends ClassAdapter implements Opcodes {
+public class AdvancedChangeSupertypeAdapter extends ClassVisitor implements Opcodes {
 
     private final String supertype;
 
     public AdvancedChangeSupertypeAdapter(final String supertype, final ClassVisitor visitor) {
-        super(visitor);
+        super(Opcodes.ASM5, visitor);
         this.supertype = supertype;
     }
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * Additionally, sets supertype to the specified one.
      */
     @Override

@@ -11,21 +11,14 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "included properties logic" testing.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(DynamicEntityKey.class)
 public class SlaveEntityForIncludedPropertiesLogic extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
-
-    /**
-     * Constructor for the entity factory from TG.
-     */
-    protected SlaveEntityForIncludedPropertiesLogic() {
-        setKey(new DynamicEntityKey(this));
-    }
 
     @CompositeKeyMember(1)
     @IsProperty

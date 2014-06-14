@@ -21,9 +21,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * An entity used for testing.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 @KeyType(String.class)
 @MapEntityTo("INSPECTED_ENTITIES")
@@ -58,91 +58,91 @@ public class InspectedEntity extends AbstractEntity<String> {
     private List<Integer> collectionalProperty = new ArrayList<Integer>();
 
     protected InspectedEntity() {
-        collectionalProperty = new ArrayList<Integer>();
-        setCollectionalProperty(Arrays.asList(new Integer[] { 23, 2, 6, 8, 9, 89, 87, 45 }));
+	collectionalProperty = new ArrayList<Integer>();
+	setCollectionalProperty(Arrays.asList(new Integer[] { 23, 2, 6, 8, 9, 89, 87, 45 }));
     }
 
     @Max(150)
     @Observable
     @Override
     public InspectedEntity setDesc(final String desc) {
-        super.setDesc(desc);
-        return this;
+	super.setDesc(desc);
+	return this;
     }
 
     public Integer getIntProperty() {
-        return intProperty;
+	return intProperty;
     }
 
     @Observable
     public void setIntProperty(final Integer intProperty) {
-        this.intProperty = intProperty;
+	this.intProperty = intProperty;
     }
 
     public BigDecimal getDecimalProperty() {
-        return decimalProperty;
+	return decimalProperty;
     }
 
     @Observable
     public void setDecimalProperty(final BigDecimal decimalProperty) {
-        this.decimalProperty = decimalProperty;
+	this.decimalProperty = decimalProperty;
     }
 
     public Money getMoneyProperty() {
-        return moneyProperty;
+	return moneyProperty;
     }
 
     @Observable
     public void setMoneyProperty(final Money moneyProperty) {
-        this.moneyProperty = moneyProperty;
+	this.moneyProperty = moneyProperty;
     }
 
     public Date getDateProperty() {
-        return dateProperty;
+	return dateProperty;
     }
 
     @Observable
     public void setDateProperty(final Date dateProperty) {
-        this.dateProperty = dateProperty;
+	this.dateProperty = dateProperty;
     }
 
     public Boolean getBooleanProperty() {
-        return booleanProperty;
+	return booleanProperty;
     }
 
     @Observable
     public void setBooleanProperty(final Boolean booleanProperty) {
-        this.booleanProperty = booleanProperty;
+	this.booleanProperty = booleanProperty;
     }
 
     public InspectedEntity getEntityPropertyOne() {
-        return entityPropertyOne;
+	return entityPropertyOne;
     }
 
     @Observable
     @EntityExists(InspectedEntity.class)
     public void setEntityPropertyOne(final InspectedEntity entityPropertyOne) {
-        this.entityPropertyOne = entityPropertyOne;
+	this.entityPropertyOne = entityPropertyOne;
     }
 
     public InspectedEntity getEntityPropertyTwo() {
-        return entityPropertyTwo;
+	return entityPropertyTwo;
     }
 
     @Observable
     @EntityExists(InspectedEntity.class)
     public void setEntityPropertyTwo(final InspectedEntity entityPropertyTwo) {
-        this.entityPropertyTwo = entityPropertyTwo;
+	this.entityPropertyTwo = entityPropertyTwo;
     }
 
     public List<Integer> getCollectionalProperty() {
-        return collectionalProperty;
+	return collectionalProperty;
     }
 
     @Observable
     public void setCollectionalProperty(final List<Integer> collectionalProperty) {
-        this.collectionalProperty.clear();
-        this.collectionalProperty.addAll(collectionalProperty);
+	this.collectionalProperty.clear();
+	this.collectionalProperty.addAll(collectionalProperty);
     }
 
 }

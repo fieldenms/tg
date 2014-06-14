@@ -6,6 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.asm5.ClassReader;
+import org.kohsuke.asm5.ClassWriter;
 
 import ua.com.fielden.platform.classloader.TgSystemClassLoader;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -13,16 +15,13 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.utils.Pair;
 
-import org.kohsuke.asm3.ClassReader;
-import org.kohsuke.asm3.ClassWriter;
-
 /**
  * A class loader for dynamically constructed or modified entity types.
  * <p>
  * All created types should be loaded by the same instance as used for type modification.
- * 
+ *
  * This class is NOT thread safe!!! Nor should it be!
- * 
+ *
  * @author TG Team
  */
 public class DynamicEntityClassLoader extends ClassLoader {
@@ -43,7 +42,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
 
     /**
      * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
-     * 
+     *
      * @param typeName
      * @return
      * @throws ClassNotFoundException
@@ -61,9 +60,9 @@ public class DynamicEntityClassLoader extends ClassLoader {
             final InputStream is = getResourceAsStream(resource);
             try {
                 final ClassReader cr = new ClassReader(is);
-                final ClassWriter cw = new ClassWriter(0);
+                final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
                 final DoNothingAdapter cv = new DoNothingAdapter(cw);
-                cr.accept(cv, 0);
+                cr.accept(cv, ClassReader.SKIP_FRAMES);
                 currentType = cw.toByteArray();
                 currentName = typeName;
             } catch (final Exception e) {
@@ -77,7 +76,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
     /**
      * Adds the specified properties to the type. The provided properties are checked for conflicts with the type being modified -- only non-conflicting ones are added. Also,
      * duplicate properties are eliminated.
-     * 
+     *
      * @param properties
      * @return
      */
@@ -97,9 +96,9 @@ public class DynamicEntityClassLoader extends ClassLoader {
 
         try {
             final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(0);
+            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
             final AdvancedAddPropertyAdapter cv = new AdvancedAddPropertyAdapter(cw, namingService, propertiesToAdd);
-            cr.accept(cv, 0);
+            cr.accept(cv, ClassReader.SKIP_FRAMES);
             currentType = cw.toByteArray();
             currentName = cv.getEnhancedName().replace('/', '.');
         } catch (final Exception e) {
@@ -113,7 +112,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
     /**
      * Modifies type's name with the specified <code>newTypeName</code>. Note that, if type name is needed to be changed, it should be made after all other modifications
      * (properties adding / adapting etc.).
-     * 
+     *
      * @param newTypeName
      * @return
      */
@@ -126,9 +125,9 @@ public class DynamicEntityClassLoader extends ClassLoader {
         }
         try {
             final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(0);
+            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES); //Opcodes..ASM5
             final AdvancedChangeNameAdapter cv = new AdvancedChangeNameAdapter(cw, currentName.replace('.', '/'), newTypeName.replace('.', '/')); //
-            cr.accept(cv, ClassReader.EXPAND_FRAMES);
+            cr.accept(cv, ClassReader.SKIP_FRAMES); //  EXPAND_FRAMES
             currentType = cw.toByteArray();
             currentName = cv.getNewTypeName().replace('/', '.');
         } catch (final Exception e) {
@@ -146,9 +145,9 @@ public class DynamicEntityClassLoader extends ClassLoader {
         }
         try {
             final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(0);
+            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
             final AdvancedChangeSupertypeAdapter cv = new AdvancedChangeSupertypeAdapter(newSupertypeName.replace('.', '/'), cw); //
-            cr.accept(cv, ClassReader.EXPAND_FRAMES);
+            cr.accept(cv, ClassReader.SKIP_FRAMES); //ClassReader.EXPAND_FRAMES
             currentType = cw.toByteArray();
         } catch (final Exception e) {
             throw new IllegalStateException(e);
@@ -158,7 +157,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
 
     /**
      * Modifies type's properties with the specified information.
-     * 
+     *
      * @param propertyReplacements
      * @return
      */
@@ -178,9 +177,9 @@ public class DynamicEntityClassLoader extends ClassLoader {
 
         try {
             final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(0);
+            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
             final AdvancedModifyPropertyAdapter cv = new AdvancedModifyPropertyAdapter(cw, namingService, propertiesToAdapt);
-            cr.accept(cv, 0);
+            cr.accept(cv, ClassReader.SKIP_FRAMES);
             currentType = cw.toByteArray();
             currentName = cv.getEnhancedName().replace('/', '.');
         } catch (final Exception e) {
@@ -226,7 +225,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
     /**
      * Returns an original type for the specified one (the type from which <code>type</code> was generated). If <code>type</code> is not enhanced -- returns the same
      * <code>type</code>.
-     * 
+     *
      * @param type
      * @return
      */

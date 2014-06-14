@@ -10,21 +10,14 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity for "domain tree representation" testing.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(DynamicEntityKey.class)
 public class EntityWithCompositeKey extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
-
-    /**
-     * Constructor for the entity factory from TG.
-     */
-    protected EntityWithCompositeKey() {
-        setKey(new DynamicEntityKey(this));
-    }
 
     @CompositeKeyMember(1)
     @IsProperty
