@@ -36,10 +36,11 @@ import javax.swing.event.ListSelectionListener;
 
 import netscape.javascript.JSObject;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.gis.Point;
 import ua.com.fielden.platform.javafx.gis.gps.IWebViewLoadedListener;
 import ua.com.fielden.platform.javafx.gis.gps.WebViewLoadEvent;
@@ -47,11 +48,14 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.pagination.IPageChangedListener;
 import ua.com.fielden.platform.pagination.PageChangedEvent;
 import ua.com.fielden.platform.pagination.PageHolder;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
-import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.gis.gps.GpsGridAnalysisView2;
 
 /**
  * A swing container to contain javaFx dashboard.
@@ -64,7 +68,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
     private static final Logger logger = Logger.getLogger(GisViewPanel2.class);
 
     private final EntityGridInspector egi;
-    private final GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> parentView;
+    private final GpsGridAnalysisView2<T, ?> parentView;
     private WebView webView;
     private WebEngine webEngine;
     //    private BorderPane root;
@@ -82,7 +86,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
      *
      * @return
      */
-    public GisViewPanel2(final GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> parentView, final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
+    public GisViewPanel2(final GpsGridAnalysisView2<T, ?> parentView, final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
         this.parentView = parentView;
         this.egi = egi;
         setFocusable(false);
@@ -141,43 +145,64 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
                         Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
-                                executeScript("map.fire('dataloading');");
 
-                                // final String geoJsonFeatures = convertToGeoJson((IPage<AbstractEntity<?>>) e.getNewPage());
+                                // final String geoJsonFeatures = convertToGeoJson(convertToGeoJsonFeatures((IPage<AbstractEntity<?>>) e.getNewPage()));
                                 final List<String> geoJsonFeatures = convertToGeoJsonFeatures((IPage<AbstractEntity<?>>) e.getNewPage());
 
                                 logger.info("Saving to geo json file...");
                                 try {
                                     final PrintWriter out = new PrintWriter("geo.json");
-                                    // out.println("var geoJsonFeatures = " + geoJsonFeatures);
+                                    out.println("var geoJsonFeatures = " + convertToGeoJson(geoJsonFeatures));
                                     out.close();
                                 } catch (final Exception ex) {
                                     ex.printStackTrace();
                                 }
 
+                                executeScript("map.fire('dataloading');");
                                 executeScript("geoJsonOverlay.clearLayers();");
                                 executeScript("markersClusterGroup.clearLayers();");
-                                logger.info("Executing script [geoJsonFeatures = {...};]...");
                                 // executeScript("geoJsonFeatures = " + geoJsonFeatures + ";", false);
                                 // executeScript("geoJsonOverlay.addData(geoJsonFeatures);");
+                                //executeScript("geoJsonOverlay.addData(" + geoJsonFeatures + ");");
                                 int i = 0;
-                                logger.info("Adding features [" + geoJsonFeatures.size() + "]...");
+                                final int featuresSize = geoJsonFeatures.size();
+                                logger.info("Adding features [" + featuresSize + "]...");
                                 for (final String feature : geoJsonFeatures) {
                                     i++;
-                                    // logger.info("Adding feature [" + i + " / " + geoJsonFeatures.size() + "]...");
+                                    if (i % 50 == 0 || i == featuresSize) {
+                                        logger.info("Adding feature [" + i + " / " + featuresSize + "]...");
+                                    }
                                     executeScript("geoJsonOverlay.addData(" + feature + ");", false);
                                 }
                                 executeScript("markersClusterGroup.addLayer(geoJsonOverlay);");
-                                executeScript("map.fitBounds(markersClusterGroup.getBounds());");
                                 logger.info("Scripts have been executed.");
+                                executeScript("map.fire('dataload');");
+
+                                //                                logger.info("Started...");
+                                //                                executeScript("var timeoutID = window.setTimeout(function(geoJson) {" //
+                                //                                        + "    updateProgressBar(0, 7, 10, undefined); " //
+                                //                                        + "    map.fire('dataloading'); " //
+                                //                                        + "    updateProgressBar(1, 7, 10, undefined); " //
+                                //                                        + "    geoJsonOverlay.clearLayers(); " //
+                                //                                        + "    updateProgressBar(2, 7, 10, undefined); " //
+                                //                                        + "    markersClusterGroup.clearLayers(); " //
+                                //                                        + "    updateProgressBar(3, 7, 10, undefined); " //
+                                //                                        + "    geoJsonOverlay.addData(geoJson); " //
+                                //                                        + "    updateProgressBar(4, 7, 10, undefined); " //
+                                //                                        + "    markersClusterGroup.addLayer(geoJsonOverlay); " //
+                                //                                        + "    updateProgressBar(5, 7, 10, undefined); " //
+                                //                                        + "    map.fitBounds(markersClusterGroup.getBounds()); " //
+                                //                                        + "    updateProgressBar(6, 7, 10, undefined); " //
+                                //                                        + "    map.fire('dataload'); " //
+                                //                                        + "    updateProgressBar(7, 7, 10, undefined); " //
+                                //                                        + "}, 0, " + geoJsonFeatures + ");", false);
+                                //                                logger.info("Ended.");
 
                                 final MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
                                 final MemoryUsage usage = mbean.getHeapMemoryUsage();
                                 final MemoryUsage nonHeapusage = mbean.getNonHeapMemoryUsage();
                                 final long total = ((usage.getUsed() + nonHeapusage.getUsed()) / 1024) / 1024;
                                 System.out.println("total = " + total);
-
-                                executeScript("map.fire('dataload');");
                             }
                         });
                     }
@@ -186,7 +211,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
         });
     }
 
-    private static List<String> convertToGeoJsonFeatures(final IPage<AbstractEntity<?>> newPage) {
+    private List<String> convertToGeoJsonFeatures(final IPage<AbstractEntity<?>> newPage) {
         final List<AbstractEntity<?>> entities = newPage.data();
         logger.info("Converting to geo json [" + entities.size() + "] entities...");
         // final StringBuilder sb = new StringBuilder();
@@ -214,35 +239,29 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
         return features;
     }
 
-    private static String convertToGeoJson(final IPage<AbstractEntity<?>> newPage) {
-        final List<AbstractEntity<?>> entities = newPage.data();
-        logger.info("Converting to geo json [" + entities.size() + "] entities...");
+    private static String convertToGeoJson(final List<String> geoJsonFeatures) {
         final StringBuilder sb = new StringBuilder();
-        final Iterator<AbstractEntity<?>> iter = entities.iterator();
+        final Iterator<String> iter = geoJsonFeatures.iterator();
 
         if (iter.hasNext()) {
             // at least one:
-            final AbstractEntity<?> first = iter.next();
-            sb.append(createPointFeature(first));
+            final String first = iter.next();
+            sb.append(first);
 
-            if (iter.hasNext()) {
-                // at least two:
-                final AbstractEntity<?> second = iter.next();
-                sb.append("," + createPointFeature(second));
-
-                while (iter.hasNext()) {
-                    sb.append("," + createPointFeature(iter.next()));
-                }
-
-                sb.append("," + createLineStringFeature(entities)); // TODO MultiLineString for different machines and / or different parts of track
+            while (iter.hasNext()) {
+                sb.append("," + iter.next());
             }
-
         }
         return "[" + sb.toString() + "]";
     }
 
     private static String createLineStringFeature(final List<AbstractEntity<?>> entities) {
-        return "{" + "\"type\": \"Feature\"," + "\"geometry\": " + createLineStringGeometry(entities) + "," + "\"properties\": " + createProperties(entities) + "}";
+        return "{" //
+                + "\"type\": \"Feature\"," //
+                + "\"id\": \"null\"," // the identification is not necessary
+                + "\"geometry\": " + createLineStringGeometry(entities) + "," //
+                + "\"properties\": " + createProperties(entities) //
+                + "}";
     }
 
     private static String createProperties(final List<AbstractEntity<?>> entities) {
@@ -265,13 +284,18 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
         return "[" + sb.toString() + "]";
     }
 
-    private static String createPointFeature(final AbstractEntity<?> entity) {
-        return "{" + "\"type\": \"Feature\"," + "\"geometry\": " + createPointGeometry(entity) + "," + "\"properties\": " + createProperties(entity) + "}";
+    private String createPointFeature(final AbstractEntity<?> entity) {
+        return "{" //
+                + "\"type\": \"Feature\"," //
+                + "\"id\": \"" + entity.getId() + "\"," // the identification will be done by AbstractEntity's "id" property for the main entity (e.g. Machine, Message or GeoFenceEvent)
+                + "\"geometry\": " + createPointGeometry(entity) + "," //
+                + "\"properties\": " + createProperties(entity) //
+                + "}"; //
     }
 
-    private static String createProperties(final AbstractEntity<?> entity) {
-        return "{" + "\"popupContent\": " + dateToString((Date) entity.get("gpsTime")) + "," + "\"vectorAngle\": " + integerToString((Integer) entity.get("vectorAngle")) + ","
-                + "\"vectorSpeed\": " + integerToString((Integer) entity.get("vectorSpeed")) + "}";
+    private String createProperties(final AbstractEntity<?> entity) {
+        return "{" + "\"popupContent\": " + popupText(entity) /*dateToString((Date) entity.get("gpsTime"))*/+ "," + "\"vectorAngle\": "
+                + integerToString((Integer) entity.get("vectorAngle")) + "," + "\"vectorSpeed\": " + integerToString((Integer) entity.get("vectorSpeed")) + "}";
     }
 
     private final static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -347,11 +371,11 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
                 if (Math.abs(e.getDeltaY()) >= 20.0) {
                     e.consume();
                     final ScrollEvent adjustedEvent = new ScrollEvent(e.getEventType(), e.getX(), e.getY(), e.getScreenX(), e.getScreenY(), e.isShiftDown(), //
-                            e.isControlDown(), e.isAltDown(), e.isMetaDown(), e.isDirect(), e.isInertia(), e.getDeltaX(), //
-                            e.getDeltaY() / e.getMultiplierY(), // here the value for y delta is turning back to 1.0 or -1.0 instead of multiplied 40.0 or -40.0
-                            e.getTotalDeltaX(), e.getTotalDeltaY(), //
-                            e.getMultiplierX(), e.getMultiplierY(), // these values do not make any changes
-                            e.getTextDeltaXUnits(), e.getTextDeltaX(), e.getTextDeltaYUnits(), e.getTextDeltaY(), e.getTouchCount(), e.getPickResult());
+                    e.isControlDown(), e.isAltDown(), e.isMetaDown(), e.isDirect(), e.isInertia(), e.getDeltaX(), //
+                    e.getDeltaY() / e.getMultiplierY(), // here the value for y delta is turning back to 1.0 or -1.0 instead of multiplied 40.0 or -40.0
+                    e.getTotalDeltaX(), e.getTotalDeltaY(), //
+                    e.getMultiplierX(), e.getMultiplierY(), // these values do not make any changes
+                    e.getTextDeltaXUnits(), e.getTextDeltaX(), e.getTextDeltaYUnits(), e.getTextDeltaY(), e.getTouchCount(), e.getPickResult());
                     webView.fireEvent(adjustedEvent);
                 }
             }
@@ -409,6 +433,9 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
         //        root.setCenter(webViewPanel);
         //        root.setTop(toolBar);
 
+        final JSObject jsobj = (JSObject) webEngine.executeScript("window");
+        jsobj.setMember("java", new Js2JavaBridge());
+
         final Scene scene = new Scene(webViewPanel, /*1100, 600, */Color.web("#666970"));
 
         return scene;
@@ -446,25 +473,6 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
     //    public String getTooltip(final P point) {
     //        return point.toString();
     //    }
-
-    protected void fitToBounds() {
-        // TODO provide map-independent implementation
-        // TODO provide map-independent implementation
-        // TODO provide map-independent implementation
-        // TODO provide map-independent implementation
-        // TODO provide map-independent implementation
-        // TODO provide map-independent implementation
-        // TODO provide map-independent implementation
-
-        //        if (points != null && !points.isEmpty()) {
-        //            // fit all coordinates to the bounds calculated by existing points
-        //            executeScript("document.viewBounds = new google.maps.LatLngBounds()");
-        //            for (final P point : points) {
-        //                executeScript("document.viewBounds.extend(new google.maps.LatLng(" + point.getLatitude() + "," + point.getLongitude() + "))");
-        //            }
-        //            executeScript("document.map.fitBounds(document.viewBounds)");
-        //        }
-    }
 
     /**
      * Executes javaScript script. If execution fails -- it reports that in dialog window (there is a need to reload all centre).
@@ -587,5 +595,41 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>, P extends Point
     private static Double get(final JSObject p, final String what) {
         final String s = p.call(what).toString();
         return new Double(s);
+    }
+
+    public String popupText(final AbstractEntity<?> entity) {
+        final StringBuilder popupText = new StringBuilder();
+        for (final String resultProp : this.parentView.getModel().getCdtme().getSecondTick().checkedProperties(this.parentView.getModel().getEntityType())) {
+            final String property = StringUtils.isEmpty(resultProp) ? AbstractEntity.KEY : resultProp;
+            final Class<?> enhancedType = this.parentView.getModel().getCdtme().getEnhancer().getManagedType(this.parentView.getModel().getEntityType());
+            if (!AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(enhancedType, property), Calculated.class)) {
+                // TODO
+                // TODO
+                // TODO can be calc -- except Calc AGGREGATION_EXPRESSION!
+                // TODO
+                // TODO
+                // TODO
+                popupText.append("" + TitlesDescsGetter.getTitleAndDesc(property, enhancedType).getKey() + ": " + valueToString(entity.get(property)) + "<br>");
+            }
+        }
+        return "\"" + popupText.toString() + "\"";
+    }
+
+    private String valueToString(final Object object) {
+        if (object == null) {
+            return "";
+        } else if (object instanceof Date) {
+            return sdf.format((Date) object);
+        } else if (object instanceof BigDecimal) {
+            return integerToString(((BigDecimal) object).intValue());
+        } else if (object instanceof Boolean) {
+            return booleanToString((Boolean) object);
+        } else {
+            return object.toString();
+        }
+    }
+
+    private String booleanToString(final Boolean bool) {
+        return bool ? "&#x2714" : "&#x2718";
     }
 }

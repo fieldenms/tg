@@ -9,6 +9,7 @@
 		<link rel="stylesheet" href="MarkerCluster.Default.css" />
 		<link rel="stylesheet" href="screen.css" />
         <link rel="stylesheet" href="Control.Loading.css" />
+        <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 
 		<style>
 			body {
@@ -18,6 +19,57 @@
 			html, body, #map {
 				height: 100%;
 				width: 100%;
+			}
+
+			/*
+			 * Unlike other icons, you can style `L.divIcon` with CSS.
+ 			 * These styles make each marker a circle with a border and centered text.
+ 			*/
+			.count-icon {
+  				background:#ff8888;
+  				border:5px solid rgba(255,255,255,0.5);
+  				color:#fff;
+  				font-weight:bold;
+				text-align:center;
+  				border-radius:50%;
+  				line-height:30px;
+  			}
+
+
+  			.img-overlay img {
+ 				margin: 0;
+				opacity: 1.0;
+  				display: block;
+			}
+			.overlay {
+  				position: absolute;
+  				top: 0;
+  				bottom: 0;
+				right: 0;
+  				left: 0;
+  				width: 100%;
+  				/* height: 100%; */
+
+				height: 24px;
+  				line-height: 24px;
+
+
+  				background-color: transparent;
+  				color: black;
+  				font-weight: bold;
+				text-align: center;
+				vertical-align: middle;
+				/* margin-bottom: 0px; */
+				font-size: 12px; 
+			}
+			.img-overlay {
+			    position: relative;
+    			/*border: 1px #000 solid;*/
+    			float: left;
+    		}
+
+			.gps-marker-cluster {
+				background-color: transparent;
 			}
 		</style>
 	</head>
@@ -37,25 +89,47 @@
 		<script src="leaflet.markercluster-src.js"></script>
 
         <!-- Include the loading control -->
+        <script src="easy-button.js"></script>
+
         <script src="Control.Loading.js"></script>
 
+        <script src="Marker.Rotate.js"></script>
 
+
+		<script src="geo0.json"></script>
 		<!-- script src="geo.json"></script -->
 		<!-- script src="Bing.js"></script -->
 		<script> 
 			var progress = document.getElementById('progress');
 			var progressBar = document.getElementById('progress-bar');
 
+			// var iteration = 1;
+
 			function updateProgressBar(processed, total, elapsed, layersArray) {
-				if (elapsed > 1) { // 1000
+				log("updateProgressBar(processed = " + processed + ", total = " + total + ", elapsed = " + elapsed + ",layersArray);");
+
+				if (elapsed > 0) { // 1000
 					// if it takes more than a second to load, display the progress bar:
 					progress.style.display = 'block';
 					progressBar.style.width = Math.round(processed/total*100) + '%';
+
+					// if (elapsed > 500) {
+					// 	map.fitBounds(markersClusterGroup.getBounds());												
+					// }
+
+					// if (elapsed > 1500 * iteration) {
+					// 	map.fitBounds(markersClusterGroup.getBounds());						
+					// 	iteration = iteration + 1;
+					// }
 				}
 
-				if (processed === total) {
+				if (processed && (processed === total)) {
 					// all markers processed - hide the progress bar:
 					progress.style.display = 'none';
+
+					map.fitBounds(markersClusterGroup.getBounds());
+					
+					// iteration = 1;
 				}
 			}
 
@@ -113,8 +187,9 @@
  
 			var map = L.map('map', {
 				layers: [osmMap], // only add one!
+				zoomControl: false,
                 // Tell the map to use a loading control
-                loadingControl: true
+                loadingControl: false
 			})
 			.setView([49.841919, 24.0316], 18); // Lviv (Rynok Sq) has been centered
  
@@ -150,44 +225,304 @@
 			]).addTo(gpsTracksOverlay);
 
 			// ADD REGULAR LAYER BASED ON GEOJSON FEATURES
-			var geoJsonFeatures = [{
-				    "type": "LineString",
-				    "coordinates": [
-				    	[24.03, 49.835],
-						[24.02, 49.84 ],
-						[24.05, 49.845]
-					],
-					"properties": {
-						"popupContent": "FIRST FEATURE"	
-					}					
-				}, {
-				    "type": "LineString",
-				    "coordinates": [
-				    	[24.04, 49.835],
-						[24.03, 49.84],
-						[24.06, 49.845]
-			 	   ],
-					"properties": {
-				 	    "popupContent": "SECOND FEATURE"
-				 	}
-			 	}
-			];
+			// if (!geoJsonFeatures) {
+			// var geoJsonFeatures = [{
+			// 	    "type": "LineString",
+			// 	    "coordinates": [
+			// 	    	[24.03, 49.835],
+			// 			[24.02, 49.84 ],
+			// 			[24.05, 49.845]
+			// 		],
+			// 		"properties": {
+			// 			"popupContent": "FIRST FEATURE"	
+			// 		}					
+			// 	}, {
+			// 	    "type": "LineString",
+			// 	    "coordinates": [
+			// 	    	[24.04, 49.835],
+			// 			[24.03, 49.84],
+			// 			[24.06, 49.845]
+			//  	   ],
+			// 		"properties": {
+			// 	 	    "popupContent": "SECOND FEATURE"
+			// 	 	}
+			//  	}
+			// ];
+			// }
 
-			var geoJsonStyle = {
-			    "color": "green",
-			    "weight": 5,
-			    "opacity": 0.65
-			};
+			// var geoJsonStyle = {
+			//     "color": "blue",
+			//     "weight": 5,
+			//     "opacity": 0.65
+			// };
 
-			var markersClusterGroup = L.markerClusterGroup({ chunkedLoading: true, chunkProgress: updateProgressBar });
+			function getColor(feature) {
+				if (feature && feature.geometry && feature.geometry.type) {
+					if (feature.geometry.type === "LineString") {
+						return "blue";	
+					} else if (feature.geometry.type === "Point") {
+						if (feature.properties && feature.properties.vectorSpeed) {
+							return (feature.properties.vectorSpeed > 0) ? "blue" : "red";	
+						} 
+					}
+					return "white";
+				}
+			}
+
+			function geoJsonStyle(feature) {
+ 			    return {
+        			// fillColor: getColor(feature),
+        			weight: 5,
+			        opacity: 0.65,
+        			color: getColor(feature)
+			        // dashArray: '3',
+			        // fillOpacity: 0.7
+    			};
+			}
+
+			// var ArrowIcon = L.Icon.extend({
+   // 				options: {
+   //      			// shadowUrl: 'leaf-shadow.png',
+   //      			// iconSize:     [38, 95],
+   //      			// shadowSize:   [50, 64],
+   //      			// iconAnchor:   [22, 94],
+   //      			iconAnchor:   [12, 12],
+   //      			// shadowAnchor: [4, 62],
+   //      			// popupAnchor:  [-3, -76]
+   //      			popupAnchor:  [0, 0]        			
+   //  			}
+			// });
+
+			// var arrowIcon = new ArrowIcon({
+			// 	iconUrl: 'arrow-blue.png'
+			// });
+
+			var arrowIcon = new L.Icon({
+				iconUrl: 'arrow-blue.png',
+				iconAnchor:   [12, 12],
+				popupAnchor:  [0, 0]        			
+			});
+
+			var arrowIconSelected = new L.Icon({
+				iconUrl: 'arrow-green.png',
+				iconAnchor:   [12, 12],
+				popupAnchor:  [0, 0]        			
+			});
+
+			var CircleIcon = L.Icon.extend({
+   				options: {
+        			iconAnchor:   [12, 12],
+        			popupAnchor:  [0, 0]        			
+    			}
+			});
+
+			var circleIcon = new CircleIcon({
+				iconUrl: 'circle-red.png'
+			});
+			var circleIconSelected = new CircleIcon({
+				iconUrl: 'circle-orange.png'
+			});
+
+			var CircleMarker = L.Marker.extend({
+				options: {
+					icon: circleIcon,
+					title: "BlaBla",
+					riseOnHover: true,
+					riseOffset: 1000,
+					zIndexOffset: 750 // high value to make the circles always on top				
+				}
+			});
+
+			var ArrowMarker = L.RotatedMarker.extend({
+				options: {
+		    		icon: arrowIcon,
+		    		title: "BlaBla",
+					riseOffset: 1000,
+		    		riseOnHover: true
+				}
+			});
+
+			var markersClusterGroup = L.markerClusterGroup({ 
+				chunkedLoading: true, 
+				chunkProgress: updateProgressBar,
+				disableClusteringAtZoom: 17, // 17
+				maxClusterRadius: function(zoom) {
+					return 60;
+				},
+				iconCreateFunction: function(cluster) {
+					// log("Creating cluster:");
+					// log(cluster);
+     				// return new L.DivIcon({ html: '<b>' + cluster.getChildCount() + '</b>' });
+					var markers = cluster.getAllChildMarkers();					
+					var chosenMarker; // = markers[0];
+					var count = markers.length;
+					for (var i = 0; i < count; i++) {
+						if (markers[i] instanceof ArrowMarker) { // arrow marker
+					
+						} else { // circle marker
+							// chosenMarker = markers[i]; // use first found circle marker as the marker for the cluster
+							// return circleIcon; // new CircleMarker(chosenMarker.getLatLng());
+
+							return L.divIcon({
+								html: '<div class="img-overlay"><img src="circle-red.png" /><div class="overlay" >&#x2194</div></div>',
+								className: 'gps-marker-cluster',
+								iconSize: new L.Point(24, 24)
+							});
+						}
+					}
+					if (!chosenMarker) {
+						chosenMarker = markers[Math.floor(count / 2)]; // use middle arrow marker as the marker for the cluster when no circle markers exist
+					}
+					// var arrowMarker = new ArrowMarker(chosenMarker.getLatLng()); // L.divIcon({ html: n, className: 'mycluster', iconSize: L.point(40, 40) });
+					// log("arrowMarker: ");					
+					// log(arrowMarker);					
+
+					// var m = new L.Marker(getRandomLatLng(map), { 
+					// 	icon: L.divIcon({
+					// 		html: '<img src="marker-icon.png" style="-webkit-transform: rotate(39deg)" />'
+					// 	})
+					// });
+
+					// return arrowIcon; // arrowMarker;
+
+					return L.divIcon({
+						html: '<div class="img-overlay"><img src="arrow-blue.png" style="-webkit-transform: rotate(' + 
+					 					chosenMarker.options.angle + 
+					 					'deg); " /><div class="overlay" style="-webkit-transform: rotate(' + 
+					 					(chosenMarker.options.angle + 90) + 
+					 					'deg); ">&#x2194</div></div>', // ' + cluster.getChildCount() + ' &#x21FF
+						className: 'gps-marker-cluster',
+						iconSize: new L.Point(24, 24)
+					});
+
+					// return L.divIcon({ // TODO consider crossbrowser rotation issues (see Marker.Rotate.js for more details)
+					// 	html: '<img src="arrow-blue.png" style="-webkit-transform: rotate(' + 
+					// 				chosenMarker.options.angle + 
+					// 		'deg); position:absolute; top:-6px; left:-6px;" />',
+					// 	className: 'gps-marker-cluster',
+					// 	iconSize: new L.Point(80, 80)
+					// }); 
+    			}
+			});
+
+			// var myIcon = L.divIcon({
+   //          	// Specify a class name we can refer to in CSS.
+   //          	className: 'count-icon',
+   //          	// Define what HTML goes in each marker.
+	  //           html: i,
+   //  	        // Set a markers width and height.
+   //          	iconSize: [40, 40]
+   //      	});
+
+			// var geojsonMarkerOptions = {
+			// 	icon: myIcon,
+  	// 			radius: 8,
+			//     fillColor: "#ff7800",
+			//     color: "#000",
+			//     weight: 1,
+			//     opacity: 1,
+			//     fillOpacity: 0.8
+			// };
+
+			var featureToLeafletIds = {};
+			var prevId;
+
+			function log(object) {
+				java.println(object);
+				console.log(object);
+			}
+
+			function deselectVisuallyWithoutEventFiring(featureId) {
+				var leafletId = featureToLeafletIds["" + featureId + ""];
+				var layer = geoJsonOverlay.getLayer(leafletId);
+				log("deselectVisuallyWithoutEventFiring:");
+				log(layer);
+				if (layer instanceof ArrowMarker) {
+					layer.setIcon(arrowIcon);
+					layer.setZIndexOffset(0); // return to previous zIndexOffset which make the marker of default priority based on the latitude
+				} else {
+					layer.setIcon(circleIcon);
+					layer.setZIndexOffset(750); // return to previous zIndexOffset which make the marker of high priority (zero speed)
+				}				
+			}
+
+			function selectVisuallyWithoutEventFiring(featureId) {
+				var leafletId = featureToLeafletIds["" + featureId + ""];
+				var layer = geoJsonOverlay.getLayer(leafletId);
+				log("selectVisuallyWithoutEventFiring:");
+				log(layer);
+				map.panTo(layer.getLatLng()); // centering of the marker (fitToBounds is not needed)
+				if (layer instanceof ArrowMarker) {
+					layer.setIcon(arrowIconSelected);
+				} else {
+					layer.setIcon(circleIconSelected);
+				}	
+				// log("zIndexOffset:");
+				// log(layer.getZIndexOffset()); // no such function
+				layer.setZIndexOffset(1000); // selected marker has the highest priority
+			}
+	
+			function selectTabularlyWithoutEventFiring(featureId) {
+				log("selectTabularlyWithoutEventFiring " + featureId);
+			}
+
+			function selectById(featureId) {
+				log("selectById(" + featureId + ");");
+				if (prevId) { // at the moment of selecting the feature - there has been other previously selected feature (or, perhaps, the same) 
+					deselectVisuallyWithoutEventFiring(prevId);
+				}
+				selectVisuallyWithoutEventFiring(featureId);
+				selectTabularlyWithoutEventFiring(featureId);
+				prevId = featureId;
+			}
 
 			var geoJsonOverlay = L.geoJson([], {
 			    style: geoJsonStyle,
+
+			    pointToLayer: function (feature, latlng) {
+			    	if (feature.properties && feature.properties.vectorSpeed) { 
+				    	return new ArrowMarker(latlng, {
+				    		angle: ((feature.properties && feature.properties.vectorAngle) ? feature.properties.vectorAngle : 0)
+				    	});
+			    	} else {
+			    		return new CircleMarker(latlng);
+			    	}
+			    },
+
+// 		        pointToLayer: function (feature, latlng) {
+//     			    return L.marker(latlng, {
+// 						icon: L.divIcon({
+//             				// Specify a class name we can refer to in CSS.
+//             				className: 'count-icon',
+//             				// Define what HTML goes in each marker.
+// 	            			// html: ((feature.properties && feature.properties.popupContent) ? feature.properties.popupContent : "UNKNOWN"),
+// 	            			html: "<svg height=&quot;210&quot; width=&quot;500&quot;>
+//   <polygon points=&quot;100,10 40,180 190,60 10,60 160,180&quot;
+//   style=&quot;fill:lime;stroke:purple;stroke-width:5;fill-rule:nonzero;&quot; />
+// </svg> "
+//     	        			// Set a markers width and height.
+//             				iconSize: [20, 20]
+//         				}),
+//   						radius: 8,
+// 			    		fillColor: "#ff7800",
+// 			    		color: "#000",
+// 			    		weight: 1,
+// 			    		opacity: 1,
+// 			    		fillOpacity: 0.8
+// 					}); // circleMarker
+//     			},
+
 			    onEachFeature: function (feature, layer) {
 		            
-		            // layer.on('dblclick', function() {
-    	         //    	geoJsonOverlay.removeLayer(layer);
-	            	// });
+		            layer.on('click', function() { // dblclick
+    	            	// alert("Hi!");
+    	            	log("clicked.");
+
+						var featureId = feature.id;
+    	            	featureToLeafletIds["" + featureId + ""] = geoJsonOverlay.getLayerId(layer); // layer.getLayerId();
+
+    	            	selectById(featureId);
+	            	});
 
  			    	// does this feature have a property named popupContent?
 				    if (feature.properties && feature.properties.popupContent) {
@@ -199,11 +534,44 @@
 			markersClusterGroup.addLayer(geoJsonOverlay);
 			map.addLayer(markersClusterGroup);
 
+			// fitToBounds control
+			var fitToBoundsControl = new L.easyButton(
+				"fa-compress",
+				function() {
+					map.fitBounds(markersClusterGroup.getBounds());
+				},
+				"Fit to bounds",
+				map
+			);
+
+		    // Add our zoom control manually where we want to
+            var zoomControl = L.control.zoom({
+                position: 'topleft'
+            });
+            map.addControl(zoomControl);
+
+            // Add our loading control in the same position and pass the
+            // zoom control to attach to it
+            var loadingControl = L.Control.loading({
+                position: 'topleft',
+                zoomControl: zoomControl
+            });
+            map.addControl(loadingControl);
+
+  			// scale control on the left bottom of the map
+			var scaleControl = L.control.scale({
+			    imperial: false,
+			    position: 'bottomleft'
+			});
+			map.addControl(scaleControl);
+
 			// ADD LEAFLET.DRAW
 			var drawnItems = new L.FeatureGroup();
-			map.addLayer(drawnItems); // ??
+			map.addLayer(drawnItems);
 
 			var drawControl = new L.Control.Draw({
+				position: 'bottomleft',
+
 				edit: {
 					featureGroup: drawnItems
 				},
