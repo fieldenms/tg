@@ -58,7 +58,7 @@ public class HibernateConfigurationFactory {
             return DbVersion.POSTGRESQL;
         } else if (dialect.equals("org.hibernate.dialect.SQLServerDialect")) {
             return DbVersion.MSSQL;
-        } else if (dialect.equals("org.hibernate.dialect.OralceDialect")) {
+        } else if (dialect.equals("org.hibernate.dialect.OracleDialect")) {
             return DbVersion.ORACLE;
         }
 
