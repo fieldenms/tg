@@ -62,9 +62,6 @@ public class HibernateMappingsGenerator {
             sb.append("\t\t<generator class=\"sequence-identity\">\n");
             sb.append("\t\t\t<param name=\"sequence\">TG_ENTITY_ID_SEQ</param>\n");
             sb.append("\t\t</generator>\n");
-//            <generator class="sequence-identity" >
-//                <param name="sequence">PRODUCT_ID_SEQ</param>
-//            </generator>
         }
         sb.append("\t</id>\n");
         return sb.toString();

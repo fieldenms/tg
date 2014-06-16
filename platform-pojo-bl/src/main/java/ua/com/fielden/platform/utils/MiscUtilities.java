@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
@@ -22,7 +23,7 @@ public class MiscUtilities {
 
     /**
      * Creates file filter for files with specified extensions and filter name.
-     * 
+     *
      * @param extensionPattern
      * @param filterName
      * @return
@@ -53,7 +54,7 @@ public class MiscUtilities {
 
     /**
      * Creates a new array of values based on the passed list by changing * to %.
-     * 
+     *
      * @param criteria
      * @return
      */
@@ -76,7 +77,7 @@ public class MiscUtilities {
 
     /**
      * Converts the content of the input stream into a string.
-     * 
+     *
      * @param ins
      * @return depending on the context of the input stream, may return either single or multi-line string
      * @throws IOException
@@ -99,7 +100,7 @@ public class MiscUtilities {
 
     /**
      * Converts a string value to an instance of {@link InputStream} using UTF-8 encoding.
-     * 
+     *
      * @param value
      * @return
      * @throws UnsupportedEncodingException
@@ -110,7 +111,7 @@ public class MiscUtilities {
 
     /**
      * Loads the specified property file returning a corresponding instance of {@link Properties}.
-     * 
+     *
      * @param fileName
      * @return
      * @throws Exception
@@ -122,6 +123,15 @@ public class MiscUtilities {
             st = new FileInputStream(fileName);
             props = new Properties();
             props.load(st);
+
+            // clean loaded properties off loading and trailing whitespace characters
+            for (final Enumeration<?> propKeys = props.propertyNames(); propKeys.hasMoreElements();) {
+                final String key = (String) propKeys.nextElement();
+                String value = props.getProperty(key);
+                value = value.trim();
+                props.put(key, value);
+            }
+
             return props;
         } finally {
             try {
