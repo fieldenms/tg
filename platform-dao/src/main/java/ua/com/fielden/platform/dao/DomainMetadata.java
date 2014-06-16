@@ -76,7 +76,6 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -85,24 +84,41 @@ import com.google.inject.Injector;
 
 public class DomainMetadata {
     public final static List<String> specialProps = Arrays.asList(new String[] { AbstractEntity.ID, AbstractEntity.KEY, AbstractEntity.VERSION });
-    private final static PropertyColumn id = new PropertyColumn("_ID");
-    private final static PropertyColumn version = new PropertyColumn("_VERSION");
-    private final static PropertyColumn key = new PropertyColumn("KEY_");
+
+    private final PropertyColumn id;
+    private final PropertyColumn version;
+    private final PropertyColumn key = new PropertyColumn("KEY_");
     //    private final static PropertyMetadata idProperty(final Class<? extends AbstractEntity<?>> entityType) { return new PropertyMetadata.Builder(AbstractEntity.ID, entityType, /*Long.class,*/ false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();}
-    private final static PropertyMetadata idProperty = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();
-    private final static PropertyMetadata idPropertyInOne2One = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(ONE2ONE_ID).build();
-    private final static PropertyMetadata versionProperty = new PropertyMetadata.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(VERSION).build();
-    private final DbVersion dbVersion;
+    private final PropertyMetadata idProperty;
+    private final PropertyMetadata idPropertyInOne2One;
+    private final PropertyMetadata versionProperty;
+    public final DbVersion dbVersion;
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
-    private final Map<Class, Object> hibTypesDefaults = new HashMap<Class, Object>();
-    private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityMetadata>();
+    private final Map<Class<?>, Object> hibTypesDefaults = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap = new HashMap<>();
     private Injector hibTypesInjector;
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
 
     public DomainMetadata(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity<?>>> entityTypes, final DbVersion dbVersion) {
         this.dbVersion = dbVersion;
+
+        // initialise meta-data for basic entity properties, which is RDBMS dependent
+        if (dbVersion != DbVersion.ORACLE) {
+            id = new PropertyColumn("_ID");
+            version = new PropertyColumn("_VERSION");
+        } else {
+            id = new PropertyColumn("TG_ID");
+            version = new PropertyColumn("TG_VERSION");
+        }
+
+        idProperty = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();
+        idPropertyInOne2One = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(ONE2ONE_ID).build();
+        versionProperty = new PropertyMetadata.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(VERSION).build();
+
+
+        // carry on with other stuff
         if (hibTypesDefaults != null) {
             for (final Entry<Class, Class> entry : hibTypesDefaults.entrySet()) {
                 try {
@@ -237,7 +253,7 @@ public class DomainMetadata {
 
     /**
      * Generates persistence info for common properties of provided entity type.
-     * 
+     *
      * @param entityType
      * @return
      * @throws Exception
@@ -287,7 +303,7 @@ public class DomainMetadata {
 
     /**
      * Generates list of column names for mapping of CompositeUserType implementors.
-     * 
+     *
      * @param hibType
      * @param parentColumn
      * @return
@@ -311,7 +327,7 @@ public class DomainMetadata {
 
     /**
      * Determines hibernate type instance for entity property based on provided property's meta information.
-     * 
+     *
      * @param entityType
      * @param field
      * @return
@@ -506,7 +522,7 @@ public class DomainMetadata {
         }
     }
 
-    public Map<Class, Object> getHibTypesDefaults() {
+    public Map<Class<?>, Object> getHibTypesDefaults() {
         return hibTypesDefaults;
     }
 

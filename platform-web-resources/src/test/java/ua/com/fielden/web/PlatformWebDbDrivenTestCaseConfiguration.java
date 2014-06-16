@@ -40,9 +40,9 @@ import com.google.inject.Injector;
 
 /**
  * Provides a test specific implementation of {@link IDbDrivenTestCaseConfiguration}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseConfiguration {
     protected final EntityFactory entityFactory;
@@ -80,7 +80,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(InspectedEntity.class);
             domainTypes.add(Attachment.class);
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, DbVersion.H2);
-            cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
+            cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
 
             cfg.setProperty("hibernate.current_session_context_class", "thread");
             cfg.setProperty("hibernate.show_sql", "false");

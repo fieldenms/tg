@@ -11,17 +11,19 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class HibernateMappingsGenerator {
 
-    public String generateMappings(final Collection<EntityMetadata> entityMetadatas) {
+    public String generateMappings(final DomainMetadata domainMetadata) {
+        final Collection<EntityMetadata> entityMetadatas = domainMetadata.getEntityMetadatas();
         final StringBuffer sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");
@@ -29,10 +31,10 @@ public class HibernateMappingsGenerator {
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        for (final EntityMetadata entityMetadata : entityMetadatas) {
+        for (final EntityMetadata<?> entityMetadata : entityMetadatas) {
             try {
                 if (entityMetadata.isPersisted()) {
-                    sb.append(generateEntityClassMapping(entityMetadata));
+                    sb.append(generateEntityClassMapping(entityMetadata, domainMetadata.dbVersion));
                 }
             } catch (final Exception e) {
                 e.printStackTrace();
@@ -47,14 +49,23 @@ public class HibernateMappingsGenerator {
         return result;
     }
 
-    private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName) {
+    private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName, final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\t<id name=\"" + name + "\" column=\"" + column.getName() + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
-        sb.append("\t\t<generator class=\"hilo\">\n");
-        sb.append("\t\t\t<param name=\"table\">UNIQUE_ID</param>\n");
-        sb.append("\t\t\t<param name=\"column\">NEXT_VALUE</param>\n");
-        sb.append("\t\t\t<param name=\"max_lo\">0</param>\n");
-        sb.append("\t\t</generator>\n");
+        if (dbVersion != DbVersion.ORACLE) {
+            sb.append("\t\t<generator class=\"hilo\">\n");
+            sb.append("\t\t\t<param name=\"table\">UNIQUE_ID</param>\n");
+            sb.append("\t\t\t<param name=\"column\">NEXT_VALUE</param>\n");
+            sb.append("\t\t\t<param name=\"max_lo\">0</param>\n");
+            sb.append("\t\t</generator>\n");
+        } else {
+            sb.append("\t\t<generator class=\"sequence-identity\">\n");
+            sb.append("\t\t\t<param name=\"sequence\">TG_ENTITY_ID_SEQ</param>\n");
+            sb.append("\t\t</generator>\n");
+//            <generator class="sequence-identity" >
+//                <param name="sequence">PRODUCT_ID_SEQ</param>
+//            </generator>
+        }
         sb.append("\t</id>\n");
         return sb.toString();
     }
@@ -129,26 +140,26 @@ public class HibernateMappingsGenerator {
 
     /**
      * Generates mapping for entity type.
-     * 
+     *
      * @param entityType
      * @return
      * @throws Exception
      */
-    private <ET extends AbstractEntity<?>> String generateEntityClassMapping(final EntityMetadata<ET> entityMetadata) throws Exception {
+    private <ET extends AbstractEntity<?>> String generateEntityClassMapping(final EntityMetadata<ET> entityMetadata, final DbVersion dbVersion) throws Exception {
         final StringBuffer sb = new StringBuffer();
         sb.append("<class name=\"" + entityMetadata.getType().getName() + "\" table=\"" + entityMetadata.getTable() + "\">\n");
 
-        sb.append(generatePropertyMappingFromPropertyMetadata(entityMetadata.getProps().get(AbstractEntity.ID)));
-        sb.append(generatePropertyMappingFromPropertyMetadata(entityMetadata.getProps().get(AbstractEntity.VERSION)));
+        sb.append(generatePropertyMappingFromPropertyMetadata(entityMetadata.getProps().get(AbstractEntity.ID), dbVersion));
+        sb.append(generatePropertyMappingFromPropertyMetadata(entityMetadata.getProps().get(AbstractEntity.VERSION), dbVersion));
 
         final PropertyMetadata keyProp = entityMetadata.getProps().get(AbstractEntity.KEY);
         if (keyProp.affectsMapping()) {
-            sb.append(generatePropertyMappingFromPropertyMetadata(keyProp));
+            sb.append(generatePropertyMappingFromPropertyMetadata(keyProp, dbVersion));
         }
 
         for (final PropertyMetadata ppi : entityMetadata.getProps().values()) {
             if (ppi.affectsMapping() && !specialProps.contains(ppi.getName())) {
-                sb.append(generatePropertyMappingFromPropertyMetadata(ppi));
+                sb.append(generatePropertyMappingFromPropertyMetadata(ppi, dbVersion));
             }
         }
         sb.append("</class>\n");
@@ -157,12 +168,12 @@ public class HibernateMappingsGenerator {
 
     /**
      * Generates mapping string for common property based on it persistence info.
-     * 
+     *
      * @param propMetadata
      * @return
      * @throws Exception
      */
-    private String generatePropertyMappingFromPropertyMetadata(final PropertyMetadata propMetadata) throws Exception {
+    private String generatePropertyMappingFromPropertyMetadata(final PropertyMetadata propMetadata, final DbVersion dbVersion) throws Exception {
         switch (propMetadata.getType()) {
         case UNION_ENTITY_HEADER:
             return generateUnionEntityPropertyMapping(propMetadata);
@@ -174,7 +185,7 @@ public class HibernateMappingsGenerator {
         case VERSION:
             return generateEntityVersionMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString());
         case ID:
-            return generateEntityIdMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString());
+            return generateEntityIdMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString(), dbVersion);
         case ONE2ONE_ID:
             return generateOneToOneEntityIdMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString());
         default:

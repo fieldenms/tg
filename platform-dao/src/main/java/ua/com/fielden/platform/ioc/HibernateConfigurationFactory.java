@@ -46,8 +46,8 @@ public class HibernateConfigurationFactory {
             throws Exception {
         this.props = props;
         domainMetadata = new DomainMetadata(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()), applicationEntityTypes, determineDbVersion(props));
-        cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
-        cfgManaged.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
+        cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
+        cfgManaged.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
     }
 
     private DbVersion determineDbVersion(final Properties props) {
@@ -58,7 +58,10 @@ public class HibernateConfigurationFactory {
             return DbVersion.POSTGRESQL;
         } else if (dialect.equals("org.hibernate.dialect.SQLServerDialect")) {
             return DbVersion.MSSQL;
+        } else if (dialect.equals("org.hibernate.dialect.OralceDialect")) {
+            return DbVersion.ORACLE;
         }
+
         throw new IllegalStateException("Could not determine DB version based on the provided Hibernate dialect \"" + dialect + "\".");
     }
 

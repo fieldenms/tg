@@ -59,11 +59,11 @@ import com.google.inject.Provider;
 
 /**
  * Provides platform specific implementation of {@link IDbDrivenTestCaseConfiguration}, which is mainly related to the use of {@link DaoTestHibernateModule}.
- * 
+ *
  * @author TG Team
- * 
+ *
  * @deprecated Use {@link PlatformDomainDrivenTestCaseConfiguration} instead.
- * 
+ *
  */
 @Deprecated
 public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseConfiguration {
@@ -118,7 +118,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
         try {
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, DbVersion.H2);
             final Configuration cfg = new Configuration();
-            cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
+            cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
 
             hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
             hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata);

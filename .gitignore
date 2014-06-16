@@ -30,5 +30,8 @@ target
 *.war
 *.ear
 
+# artefacts of unit test should be ignored
+platform-web-resources/src/test/resources/data-files/attachments/NEW-ATTACHMENT-FILE.TXT
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*

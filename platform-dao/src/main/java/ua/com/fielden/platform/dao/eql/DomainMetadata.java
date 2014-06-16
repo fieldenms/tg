@@ -84,6 +84,10 @@ import com.google.inject.Injector;
 
 public class DomainMetadata {
     public final static List<String> specialProps = Arrays.asList(new String[] { AbstractEntity.ID, AbstractEntity.KEY, AbstractEntity.VERSION });
+    // TODO The new get generation logic should take into account the fact that not all RDBMS systems permit
+    // column names starting with underscore (_).
+    // For example Oracle 9i (tested) does not.
+    // Thus, it is important to provide a way to configure the names on per application or per RDBMS basis.
     private final static PropertyColumn id = new PropertyColumn("_ID");
     private final static PropertyColumn version = new PropertyColumn("_VERSION");
     private final static PropertyColumn key = new PropertyColumn("KEY_");
@@ -236,7 +240,7 @@ public class DomainMetadata {
 
     /**
      * Generates persistence info for common properties of provided entity type.
-     * 
+     *
      * @param entityType
      * @return
      * @throws Exception
@@ -286,7 +290,7 @@ public class DomainMetadata {
 
     /**
      * Generates list of column names for mapping of CompositeUserType implementors.
-     * 
+     *
      * @param hibType
      * @param parentColumn
      * @return
@@ -310,7 +314,7 @@ public class DomainMetadata {
 
     /**
      * Determines hibernate type instance for entity property based on provided property's meta information.
-     * 
+     *
      * @param entityType
      * @param field
      * @return

@@ -53,9 +53,9 @@ import com.google.inject.Injector;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @SuppressWarnings({ "serial", "unchecked" })
 public class DynamicQueryBuilderSqlTest {
@@ -118,7 +118,7 @@ public class DynamicQueryBuilderSqlTest {
         domainTypes.add(MasterEntity.class);
         domainTypes.add(SlaveEntity.class);
         domainTypes.add(EvenSlaverEntity.class);
-        hibConf.addXML(new HibernateMappingsGenerator().generateMappings(new DomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2).getEntityMetadatas()));
+        hibConf.addXML(new HibernateMappingsGenerator().generateMappings(new DomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2)));
         final List<String> propertyNames = Arrays.asList(new String[] { //
         "integerProp", //
                 "doubleProp", //
