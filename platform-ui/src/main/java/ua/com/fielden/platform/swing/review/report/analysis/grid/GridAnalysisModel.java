@@ -66,9 +66,9 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     /**
      * An utility class to receive delta and to provide a merged entities.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public class DeltaRetriever {
         // private final TreeSet<T> entities;
@@ -183,9 +183,9 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     /**
      * Provides a new {@link EntityQueryCriteria} for "cdtmaeCopy".
-     * 
+     *
      * TODO : this is dangerous, need to create a proper copy (perhaps through {@link CriteriaGenerator}?).
-     * 
+     *
      * @return
      */
     public EntityQueryCriteria<CDTME, T, IEntityDao<T>> getUpdatedCriteria() {
@@ -230,7 +230,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     /**
      * This method is designed to be overridden for adding some custom fetch properties or other stuff to override query.
-     * 
+     *
      * @param cdtmaeCopy
      */
     protected void provideCustomPropertiesForQueries(final ICentreDomainTreeManagerAndEnhancer cdtmaeCopy) {
@@ -242,9 +242,13 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
         }
     }
 
+    protected fetch<T> customFetchModel(final Class<T> enhancedType) {
+        return null;
+    }
+
     /**
      * Enhance existing queries (immutably) with transaction date boundaries.
-     * 
+     *
      * @param oldNow
      *            -- if <code>null</code> then the initial query is performed, else -- delta query from "oldNow" should be performed.
      * @param now
@@ -290,7 +294,13 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
             //FIXME		throw new IllegalArgumentException("The type [" + tdPropType.getSimpleName() + "] of property [" + tdProp + "] in entity [" + root + "] is not supported.");
             //	FIXME}
 
-            final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> newQGenerator = new GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(root, cdtmaeCopy);
+            final fetch<T> customFetchModel = customFetchModel((Class<T>) cdtmaeCopy.getEnhancer().getManagedType(root));
+            final GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer> newQGenerator = new GridAnalysisQueryGenerator<T, ICentreDomainTreeManagerAndEnhancer>(root, cdtmaeCopy) {
+                @Override
+                public fetch<T> createFetchModel() {
+                    return customFetchModel == null ? super.createFetchModel() : customFetchModel;
+                }
+            };
             final List<IQueryComposer<T>> newQueries = newQGenerator.generateQueryModel().getQueries();
             if (newQueries.size() == 2) {
                 // TODO total query should remain the same (to get updated totals) and other query should be filtered by transaction date (from NOW)
@@ -418,7 +428,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     /**
      * Runs the specified query models. The first query of the specified pair returns result for grid the second one returns result for totals.
-     * 
+     *
      * @param analysisQueries
      * @return
      */
@@ -454,7 +464,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     /**
      * Returns entities by their id's using the current query and fetch model. Returns empty list if there are entities those satisfies current query model.
-     * 
+     *
      * @param entities
      * @return
      */
@@ -542,7 +552,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     /**
      * Returns the pair of {@link QueryExecutionModel} instances. The second {@link QueryExecutionModel} is total query model.
-     * 
+     *
      * @return
      */
     public final Pair<IQueryComposer<T>, IQueryComposer<T>> createQueryExecutionModel() {

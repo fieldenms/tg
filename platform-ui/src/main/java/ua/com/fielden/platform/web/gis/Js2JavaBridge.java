@@ -27,4 +27,8 @@ public class Js2JavaBridge {
     public void println(final String string) {
         System.out.println(string);
     }
+
+    public void selectTabularlyWithoutEventFiring(final String featureId) {
+        System.out.println("selectTabularlyWithoutEventFiring(" + featureId + ");");
+    }
 }

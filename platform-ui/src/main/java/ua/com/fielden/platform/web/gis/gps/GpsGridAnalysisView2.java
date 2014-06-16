@@ -27,6 +27,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.IDataPromotingL
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
+import ua.com.fielden.platform.web.gis.GisViewPanel2;
 
 /**
  * {@link GridAnalysisView} with EGI and GPS GIS views.
@@ -34,7 +35,7 @@ import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
  * @author TG Team
  *
  */
-public abstract class GpsGridAnalysisView2<T extends AbstractEntity<?>, GVPTYPE extends GpsGisViewPanel2<T>> extends GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> {
+public abstract class GpsGridAnalysisView2<T extends AbstractEntity<?>, GVPTYPE extends GisViewPanel2<T>> extends GridAnalysisView<T, ICentreDomainTreeManagerAndEnhancer> {
     private static final long serialVersionUID = 553731585658593055L;
 
     private final JSplitPane tableAndGisViewSplitter;
@@ -87,10 +88,10 @@ public abstract class GpsGridAnalysisView2<T extends AbstractEntity<?>, GVPTYPE 
             public void afterDataPromoting(final DataPromotingEvent<T, ICentreDomainTreeManagerAndEnhancer> event) {
                 if (getGisViewPanel() != null) {
                     selectEntities((List<AbstractEntity<?>>) oldSelected);
-                 // TODO getGisViewPanel().setCalloutChangeShouldBeForced(true);
+                    // TODO getGisViewPanel().setCalloutChangeShouldBeForced(true);
 
                     if (getEnhancedSelectedEntities().isEmpty()) {
-                	// TODO getGisViewPanel().closeCallout();
+                        // TODO getGisViewPanel().closeCallout();
                     }
                 }
 
