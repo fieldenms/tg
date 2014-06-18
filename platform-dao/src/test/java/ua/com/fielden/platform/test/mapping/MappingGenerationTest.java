@@ -10,7 +10,10 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
 public class MappingGenerationTest {
@@ -18,7 +21,7 @@ public class MappingGenerationTest {
     public void dump_mapping_for_type_wity_byte_array_property() {
         final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
         domainTypes.add(EntityCentreConfig.class);
-        final DomainMetadata mg = new DomainMetadata(null, null, domainTypes, DbVersion.H2);
+        final DomainMetadata mg = new DomainMetadata(null, null, domainTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
         final String tgModelMapping = new HibernateMappingsGenerator().generateMappings(mg);
         final String expectedMapping = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "<!DOCTYPE hibernate-mapping PUBLIC\n" + "\"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
                 + "\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n" + "<hibernate-mapping default-access=\"field\">\n"

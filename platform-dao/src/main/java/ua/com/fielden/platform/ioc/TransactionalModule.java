@@ -15,12 +15,16 @@ import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.MapEntityToOverride;
 import ua.com.fielden.platform.entity.annotation.Proxy;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.security.user.User;
 
 /**
  * Guice injector module for platform-wide Hibernate related injections such as transaction support and domain level validation configurations.
@@ -47,7 +51,11 @@ public abstract class TransactionalModule extends EntityModule {
      */
     public TransactionalModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
             throws Exception {
-        final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(props, defaultHibernateTypes, applicationEntityTypes);
+        final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(//
+                props, //
+                defaultHibernateTypes, //
+                applicationEntityTypes,//
+                getUserMapTo());
         final Configuration hibernateConfig = hcf.build();
         interceptor = new ProxyInterceptor();
         hibernateUtil = new HibernateUtil(interceptor, hibernateConfig);
@@ -55,6 +63,13 @@ public abstract class TransactionalModule extends EntityModule {
         this.sessionFactory = hibernateUtil.getSessionFactory();
         this.domainMetadata = hcf.getDomainMetadata();
         this.applicationEntityTypes = applicationEntityTypes;
+    }
+
+    /**
+     * Method that can be overridden in order to provide an alternative to the default table mapping for type {@link User}.
+     */
+    protected MapEntityTo getUserMapTo() {
+        return AnnotationReflector.getAnnotation(User.class, MapEntityTo.class);
     }
 
     public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {

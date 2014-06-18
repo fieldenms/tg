@@ -9,6 +9,7 @@ import org.hibernate.cfg.Configuration;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
 
 import com.google.inject.Guice;
@@ -42,10 +43,19 @@ public class HibernateConfigurationFactory {
     private final Configuration cfg = new Configuration();
     private final Configuration cfgManaged = new Configuration();
 
-    public HibernateConfigurationFactory(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
+    public HibernateConfigurationFactory(//
+            final Properties props, //
+            final Map<Class, Class> defaultHibernateTypes, //
+            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes,//
+            final MapEntityTo userMapTo)
             throws Exception {
         this.props = props;
-        domainMetadata = new DomainMetadata(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()), applicationEntityTypes, determineDbVersion(props));
+        domainMetadata = new DomainMetadata(//
+                defaultHibernateTypes,//
+                Guice.createInjector(new HibernateUserTypesModule()), //
+                applicationEntityTypes, //
+                userMapTo, //
+                determineDbVersion(props));
         cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
         cfgManaged.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
     }

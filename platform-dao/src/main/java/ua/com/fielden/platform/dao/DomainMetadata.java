@@ -77,6 +77,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -101,8 +102,16 @@ public class DomainMetadata {
     private Injector hibTypesInjector;
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
 
-    public DomainMetadata(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity<?>>> entityTypes, final DbVersion dbVersion) {
+    private final MapEntityTo userMapTo;
+
+    public DomainMetadata(//
+            final Map<Class, Class> hibTypesDefaults, //
+            final Injector hibTypesInjector, //
+            final List<Class<? extends AbstractEntity<?>>> entityTypes, //
+            final MapEntityTo userMapTo, //
+            final DbVersion dbVersion) {
         this.dbVersion = dbVersion;
+        this.userMapTo = userMapTo;
 
         // initialise meta-data for basic entity properties, which is RDBMS dependent
         if (dbVersion != DbVersion.ORACLE) {
@@ -157,7 +166,6 @@ public class DomainMetadata {
 
     public <ET extends AbstractEntity<?>> EntityMetadata<ET> generateEntityMetadata(final Class<ET> entityType) throws Exception {
         final EntityMetadata<ET> result = generateEntityMetadata(entityType, true);
-        //enhanceWithCalcProps(new HashSet<EntityMetadata>(){{add(result);}});
         return result;
     }
 
@@ -512,7 +520,7 @@ public class DomainMetadata {
             return null;
         }
 
-        final MapEntityTo mapEntityToAnnotation = AnnotationReflector.getAnnotation(entityType, MapEntityTo.class);
+        final MapEntityTo mapEntityToAnnotation = User.class == entityType ? userMapTo : AnnotationReflector.getAnnotation(entityType, MapEntityTo.class);
 
         final String providedTableName = mapEntityToAnnotation.value();
         if (!StringUtils.isEmpty(providedTableName)) {
