@@ -55,9 +55,9 @@ import com.google.inject.Injector;
  * <li>{@link AbstractEntity}'s support for properties and validation.</li>
  * <li>{@link AbstractEntity}'s meta-property support.</li>
  * </ul>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AbstractEntityTest {
     private boolean observed = false; // used
@@ -932,6 +932,25 @@ public class AbstractEntityTest {
         assertEquals("Incorrect value for the first key property.", (Long) 40L, copy.getProperty1());
         assertEquals("Incorrect value for the second key property.", (Long) 100L, copy.getProperty2());
     }
+
+    @Test
+    public void test_copy_from_non_instrumented_instance() {
+        final Entity entity = new Entity();
+        entity.setEntityFactory(factory); // factory is required at all times
+        entity.setId(1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
+
+        final Entity copy = entity.copy(Entity.class);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertFalse("Should have not been dirty", copy.isDirty());
+        assertEquals("Property id does not match", entity.getId(), copy.getId());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
+    }
+
 
     @Test
     public void test_equals_for_instances_of_the_same_type_with_the_same_key_values() {

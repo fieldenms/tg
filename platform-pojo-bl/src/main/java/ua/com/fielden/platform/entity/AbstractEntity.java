@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -1211,7 +1212,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     public final <COPY extends AbstractEntity> COPY copyTo(final COPY copy) {
         copy.setInitialising(true);
-        for (final String propName : getProperties().keySet()) {
+        // Under certain circumstances copying happens for a non-instrumented entity instance
+        // In such cases there would be no meta-properties, and copying would not happen.
+        // Therefore, it is important to perform ad-hoc property retrieval via reflection.
+        final Stream<String> propertyNames = !getProperties().isEmpty() ? getProperties().keySet().stream()
+                : Finder.findRealProperties(getType()).stream().map(field -> field.getName());
+
+        // Copy each identified property into a new instance.
+        propertyNames.forEach(propName -> {
             if (AbstractEntity.KEY.equals(propName) && copy.getKeyType().equals(getKeyType()) && DynamicEntityKey.class.isAssignableFrom(getKeyType())) {
                 copy.setKey(new DynamicEntityKey(copy));
             } else {
@@ -1221,7 +1229,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                     logger.trace("Setter for property " + propName + " did not succeed during coping.");
                 }
             }
-        }
+        });
         copy.setInitialising(false);
         return copy;
     }
@@ -1281,4 +1289,5 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         }
 
     }
+
 }
