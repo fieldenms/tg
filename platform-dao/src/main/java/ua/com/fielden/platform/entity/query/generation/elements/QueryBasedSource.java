@@ -11,6 +11,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QueryBasedSource extends AbstractSource {
@@ -161,7 +162,7 @@ public class QueryBasedSource extends AbstractSource {
 
     /**
      * Generates one dot.notated string from list of strings (subproperties).
-     * 
+     *
      * @param parts
      * @return
      */
@@ -204,7 +205,13 @@ public class QueryBasedSource extends AbstractSource {
             sb.append(iterator.next().sql());
             sb.append(iterator.hasNext() ? "\nUNION ALL\n" : "");
         }
-        sb.append(") AS " + sqlAlias + "/*" + alias + "*/");
+
+        if (dbVersion == DbVersion.ORACLE) {
+            sb.append(") " + sqlAlias + "/*" + alias + "*/");
+        } else {
+            sb.append(") AS " + sqlAlias + "/*" + alias + "*/");
+        }
+
         return sb.toString();
     }
 

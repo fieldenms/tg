@@ -7,6 +7,7 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropByFirstDot;
 
@@ -87,7 +88,11 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public String sql() {
-        return entityMetadata.getTable() + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
+        if (dbVersion == DbVersion.ORACLE) {
+            return entityMetadata.getTable() + " " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
+        } else {
+            return entityMetadata.getTable() + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
+        }
     }
 
     @Override
@@ -97,7 +102,11 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public String toString() {
-        return sourceType().getSimpleName() + "-table AS " + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
+        if (dbVersion == DbVersion.ORACLE) {
+            return sourceType().getSimpleName() + "-table " + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
+        } else {
+            return sourceType().getSimpleName() + "-table AS " + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
+        }
     }
 
     @Override

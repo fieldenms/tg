@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,16 +13,17 @@ import org.hibernate.Hibernate;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 public abstract class AbstractSource implements ISource {
 
     protected final boolean persistedType;
+    public final DbVersion dbVersion;
 
     /**
      * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).
@@ -49,6 +52,7 @@ public abstract class AbstractSource implements ISource {
 
     private boolean nullable;
 
+    @Override
     public void assignNullability(final boolean nullable) {
         this.nullable = nullable;
     }
@@ -62,6 +66,7 @@ public abstract class AbstractSource implements ISource {
         this.alias = alias;
         this.persistedType = persistedType;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
+        this.dbVersion = domainMetadataAnalyser.getDomainMetadata().dbVersion;
     }
 
     @Override
@@ -107,7 +112,7 @@ public abstract class AbstractSource implements ISource {
 
     /**
      * If there is alias and property is prepended with this alias, then return property with alias removed, otherwise return null
-     * 
+     *
      * @param dotNotatedPropName
      * @param sourceAlias
      * @return
@@ -340,9 +345,9 @@ public abstract class AbstractSource implements ISource {
 
     /**
      * Represent data structure to hold information about potential prop resolution against some query source.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class PropResolutionInfo {
 
@@ -481,6 +486,7 @@ public abstract class AbstractSource implements ISource {
         return nullable;
     }
 
+    @Override
     public String getSqlAlias() {
         return sqlAlias;
     }

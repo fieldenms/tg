@@ -23,8 +23,20 @@ public abstract class AbstractFunction {
             return getConvertToStringSqlForMsSql2005(operand);
         case POSTGRESQL:
             return getConvertToStringSqlForPostgresql(operand);
+        case ORACLE:
+            return getConvertToStringSqlForOracle(operand);
         default:
             throw new IllegalStateException("Function of converting value to string [" + getClass().getSimpleName() + "] is not yet implemented for RDBMS [" + dbVersion + "]!");
+        }
+    }
+
+    private String getConvertToStringSqlForOracle(final ISingleOperand operand) {
+        if (Date.class.equals(operand.type())) {
+            return "TO_CHAR(" + operand.sql() + ", 'YYYY-MM-dd hh24:mm:ss')";
+        } else if (String.class.equals(operand.type())) {
+            return operand.sql();
+        } else {
+            return "CAST(" + operand.sql() + " AS VARCHAR2(255))";
         }
     }
 
