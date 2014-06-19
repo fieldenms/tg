@@ -242,7 +242,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @MapTo("_ID")
     private Long id;
     @MapTo("_VERSION")
-    private Long version = 0L;
+    private long version = 0L;
     @IsProperty
     @UpperCase
     @MapTo("KEY_")
