@@ -26,9 +26,9 @@ import static java.lang.String.format;
 /**
  * This is a base class for implementing development data population in a domain driven manner. Reuses {@link IDomainDrivenTestCaseConfiguration} for configuration of application
  * specific IoC modules.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class DomainDrivenDataPopulation {
 
@@ -60,7 +60,7 @@ public abstract class DomainDrivenDataPopulation {
 
     /**
      * Should return a complete list of domain entity types.
-     * 
+     *
      * @return
      */
     protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
@@ -71,12 +71,15 @@ public abstract class DomainDrivenDataPopulation {
         truncateScript.clear();
     }
 
+    public final void createAndPopulate() throws Exception {
+        createAndPopulate(true);
+    }
     /**
      * The entry point to trigger creation of the database and its population.
-     * 
+     *
      * @throws Exception
      */
-    public final void createAndPopulate() throws Exception {
+    public final void createAndPopulate(final boolean generateSchemaScript) throws Exception {
         final Connection conn = createConnection();
 
         if (domainPopulated) {
@@ -86,24 +89,25 @@ public abstract class DomainDrivenDataPopulation {
             populateDomain();
 
             // record data population statements
-            final Statement st = conn.createStatement();
-            final ResultSet set = st.executeQuery("SCRIPT");
-            while (set.next()) {
-                final String result = set.getString(1).toUpperCase().trim();
-                if (!result.startsWith("INSERT INTO PUBLIC.UNIQUE_ID") && (result.startsWith("INSERT") || result.startsWith("UPDATE") || result.startsWith("DELETE"))) {
-                    dataScript.add(result);
+            if (generateSchemaScript) {
+                final Statement st = conn.createStatement();
+                final ResultSet set = st.executeQuery("SCRIPT");
+                while (set.next()) {
+                    final String result = set.getString(1).toUpperCase().trim();
+                    if (!result.startsWith("INSERT INTO PUBLIC.UNIQUE_ID") && (result.startsWith("INSERT") || result.startsWith("UPDATE") || result.startsWith("DELETE"))) {
+                        dataScript.add(result);
+                    }
+                }
+                set.close();
+                st.close();
+
+                // create truncate statements
+                for (final EntityMetadata entry : config.getDomainMetadata().getEntityMetadatas()) {
+                    if (entry.isPersisted()) {
+                        truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
+                    }
                 }
             }
-            set.close();
-            st.close();
-
-            // create truncate statements
-            for (final EntityMetadata entry : config.getDomainMetadata().getEntityMetadatas()) {
-                if (entry.isPersisted()) {
-                    truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-                }
-            }
-
             domainPopulated = true;
         }
 
@@ -164,7 +168,7 @@ public abstract class DomainDrivenDataPopulation {
 
     /**
      * Instantiates a new entity with a non-composite key, the value for which is provided as the second argument, and description -- provided as the value for the third argument.
-     * 
+     *
      * @param entityClass
      * @param key
      * @param desc
@@ -176,7 +180,7 @@ public abstract class DomainDrivenDataPopulation {
 
     /**
      * Instantiates a new entity with a non-composite key, the value for which is provided as the second argument.
-     * 
+     *
      * @param entityClass
      * @param key
      * @return
@@ -187,7 +191,7 @@ public abstract class DomainDrivenDataPopulation {
 
     /**
      * Instantiates a new entity based on the provided type only, which leads to creation of a completely empty instance without any of entity properties assigned.
-     * 
+     *
      * @param entityClass
      * @return
      */
@@ -198,7 +202,7 @@ public abstract class DomainDrivenDataPopulation {
     /**
      * Instantiates a new entity with composite key, where composite key members are assigned based on the provide value. The order of values must match the order specified in key
      * member definitions. An empty list of key values is permitted.
-     * 
+     *
      * @param entityClass
      * @param keys
      * @return
