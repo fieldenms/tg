@@ -57,9 +57,9 @@ import com.google.inject.Injector;
  * <p>
  * Property <code>session</code> is used to allocation session whenever is appropriate -- all data access methods should use this session. It is envisaged that the real class usage
  * will include Guice method intercepter that would assign session instance dynamically before executing calls to methods annotated with {@link SessionRequired}.
- * 
+ *
  * @author TG Team
- * 
+ *
  * @param <T>
  *            -- entity type
  * @param <K>
@@ -89,7 +89,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A principle constructor.
-     * 
+     *
      * @param entityType
      */
     @Inject
@@ -99,7 +99,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A setter for injection of entityFactory instance.
-     * 
+     *
      * @param entityFactory
      */
     @Inject
@@ -109,7 +109,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
-     * 
+     *
      * @param mappingExtractor
      */
     @Inject
@@ -119,7 +119,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Cancels currently running query.
-     * 
+     *
      * @return
      */
     @Override
@@ -244,8 +244,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                         final Object value = entity.get(propName);
                         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
                         // the easiest way to do that is to load entity by id using the current session
+                        System.out.println(persistedEntity.getType() + "::" + persistedEntity.getId() + "\t" + propName);
                         if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
-                            persistedEntity.set(propName, getSession().load(((AbstractEntity) value).getType(), ((AbstractEntity) value).getId()));
+                            persistedEntity.set(propName, getSession().load(((AbstractEntity<?>) value).getType(), ((AbstractEntity<?>) value).getId()));
                         } else {
                             persistedEntity.set(propName, value);
                         }
@@ -399,7 +400,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Fetches the results of the specified page based on the request of the given instance of {@link QueryExecutionModel}.
-     * 
+     *
      * @param queryModel
      * @param pageNumber
      * @param pageCapacity
@@ -487,8 +488,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Calculates the number of pages of the given size required to fit the whole result set.
-     * 
-     * 
+     *
+     *
      * @param model
      * @param pageCapacity
      * @return
@@ -509,7 +510,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
      * <p>
      * For example it could be a byte array of GZipped Excel data.
-     * 
+     *
      * @param query
      *            -- query result of which should be exported.
      * @param propertyNames
@@ -530,7 +531,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
-     * 
+     *
      * @param entity
      */
     @SessionRequired
@@ -550,7 +551,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A convenient default implementation for deletion of entities specified by provided query model.
-     * 
+     *
      * @param entity
      */
     @SessionRequired
@@ -590,9 +591,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Implements pagination based on the provided query.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public class EntityQueryPage implements IPage<T> {
         private final int pageNumber; // zero-based

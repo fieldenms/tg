@@ -14,9 +14,9 @@ import com.google.inject.Inject;
 
 /**
  * Default implementation of {@link ISerialisationClassProvider}, which relies on the application settings to provide the location of classes to be used in serialisation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DefaultSerialisationClassProvider implements ISerialisationClassProvider {
 
@@ -127,17 +127,17 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer$ByteArray"));
         utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation$Ordering"));
         utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$1"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$2"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$3"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$4"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$5"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$6"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$7"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$8"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$9"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$10"));
-        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$11"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy1"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy2"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy3"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy4"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy5"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy6"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy7"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy8"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy9"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy10"));
+        utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.serialisation.impl.dummies.Dummy11"));
         utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.ICalculatedProperty$CalculatedPropertyCategory"));
         utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.ICalculatedProperty$CalculatedPropertyAttribute"));
         utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.ICalculatedProperty"));
@@ -169,7 +169,7 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
 
     /**
      * Returns utility generated list of classes.
-     * 
+     *
      * @return
      */
     public static List<Class<?>> utilityGeneratedClasses() {

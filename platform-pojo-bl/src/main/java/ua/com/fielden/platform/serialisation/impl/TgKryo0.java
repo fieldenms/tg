@@ -147,9 +147,9 @@ import com.google.inject.Inject;
 
 /**
  * WARNING: this is an OLD version!
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @Deprecated
 public class TgKryo0 extends Kryo implements ISerialiser0 {
@@ -332,14 +332,14 @@ public class TgKryo0 extends Kryo implements ISerialiser0 {
                 register(type);
             } catch (final IllegalArgumentException e) {
                 e.printStackTrace();
-                throw new IllegalArgumentException("The type [" + type + "] can not be registered. Cause = [" + e.getMessage() + "]");
+                //throw new IllegalArgumentException("The type [" + type + "] can not be registered. Cause = [" + e.getMessage() + "]");
             }
         }
     }
 
     /**
      * Returns all types (including inner classes, enumeration values etc.) to be registered for all <code>baseTypes</code> in specified [path; package].
-     * 
+     *
      * @param path
      * @param packageName
      * @param baseTypes
@@ -390,7 +390,7 @@ public class TgKryo0 extends Kryo implements ISerialiser0 {
 
     /**
      * Creates serialisers for entity types in such a way that each seprate type has its own serialiser.
-     * 
+     *
      * This allows for type specific serialisation optimisation such as caching of property information etc.
      */
     @Override
@@ -506,7 +506,7 @@ public class TgKryo0 extends Kryo implements ISerialiser0 {
 
     /**
      * Writes an object and resizes the buffer in case if its limit is exceeded.
-     * 
+     *
      * @param writeBuffer
      * @param obj
      * @return
@@ -590,12 +590,12 @@ public class TgKryo0 extends Kryo implements ISerialiser0 {
 
     /**
      * All entity instances are cached during deserialisation.
-     * 
+     *
      * Once serialisation is completed it is necessary to execute respective definers for all cached instances.
-     * 
+     *
      * Definers cannot be executed inside {@link EntitySerialiser} due to the use of cache in conjunction with sub-requests issued by some of the definers leasing to an incorrect
      * deserialisation (specifically, object identifiers in cache get mixed up with the ones from newly obtained stream of data).
-     * 
+     *
      */
     private void executeDefiners() {
         final Context context = getContext();

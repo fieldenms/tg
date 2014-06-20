@@ -9,9 +9,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Implements test cases for using entity with composite key, which includes testing of basic functionality such as method equals, as well as Hibernate interaction.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class DynamicCompositeKeyPersistenceTestCase extends DbDrivenTestCase {
     /**
@@ -42,8 +42,15 @@ public class DynamicCompositeKeyPersistenceTestCase extends DbDrivenTestCase {
         final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
         final EntityWithDynamicCompositeKey result = (EntityWithDynamicCompositeKey) session.load(EntityWithDynamicCompositeKey.class, 1L);
 
-        assertEquals("Incorrect part one of the key.", keyPartOne, result.getKeyPartOne());
-        assertEquals("Incorrect part tow of the key.", keyPartTwo, result.getKeyPartTwo());
+        System.out.println(keyPartOne.getClass() + "\t'" + keyPartOne + "'");
+        System.out.println(result.getKeyPartOne().getClass() + "\t'" + result.getKeyPartOne() + "'");
+
+        if (!keyPartOne.equals(result.getKeyPartOne())) {
+            fail("Incorrect part one of the key.");
+        }
+        if (!keyPartOne.equals(result.getKeyPartOne())) {
+            fail("Incorrect part two of the key.");
+        }
     }
 
     @Override

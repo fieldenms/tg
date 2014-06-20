@@ -50,6 +50,14 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     private transient final Map<Integer, Comparator<?>> keyMemberComparables = new HashMap<Integer, Comparator<?>>();
 
     /**
+     * This default constructor is required purely for Kryo serialisation.
+     */
+    protected DynamicEntityKey(){
+        KEY_MEMBERS_SEPARATOR = null;
+        entity = null;
+    }
+
+    /**
      * Constructs composite key for the specified entity based on the list of expressions, which are in most cases properties of the entity.
      *
      * @param entity
