@@ -12,12 +12,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker.State;
 import javafx.embed.swing.JFXPanel;
+import javafx.event.EventDispatcher;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.ScrollEvent;
@@ -35,6 +37,7 @@ import netscape.javascript.JSObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.javafx.gis.gps.IWebViewLoadedListener;
@@ -49,6 +52,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
+import ua.com.fielden.platform.web.gis.gps.GpsGridAnalysisModel2;
 import ua.com.fielden.platform.web.gis.gps.GpsGridAnalysisView2;
 
 /**
@@ -139,9 +143,8 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
                         Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
-
                                 // final String geoJsonFeatures = convertToGeoJson(convertToGeoJsonFeatures((IPage<AbstractEntity<?>>) e.getNewPage()));
-                                final List<String> geoJsonFeatures = convertToGeoJsonFeatures((IPage<AbstractEntity<?>>) e.getNewPage());
+                                final List<String> geoJsonFeatures = convertToGeoJsonFeatures(((IPage<AbstractEntity<?>>) e.getNewPage()).data());
 
                                 logger.info("Saving to geo json file...");
                                 try {
@@ -205,41 +208,64 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
         });
     }
 
-    private List<String> convertToGeoJsonFeatures(final IPage<AbstractEntity<?>> newPage) {
-        final List<AbstractEntity<?>> entities = newPage.data();
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////// GENERIC GEOJSON FACTORIES ///////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Converts a couple of entities into list of features representing them.
+     *
+     * @param entities
+     * @return
+     */
+    protected abstract List<String> convertToGeoJsonFeatures(final List<AbstractEntity<?>> entities);
+
+    /**
+     * Converts a couple of entities into list of features representing them. One entity -- one feature, + one summary feature for all entities.
+     *
+     * @param entities
+     * @param createFeature
+     * @param createSummaryFeature
+     * @return
+     */
+    protected static List<String> convertToGeoJsonFeatures(final List<AbstractEntity<?>> entities, //
+            final Function<AbstractEntity<?>, String> createFeature, //
+            final Function<List<AbstractEntity<?>>, String> createSummaryFeature) {
+
         logger.info("Converting to geo json [" + entities.size() + "] entities...");
-        // final StringBuilder sb = new StringBuilder();
         final List<String> features = new ArrayList<>();
         final Iterator<AbstractEntity<?>> iter = entities.iterator();
 
         if (iter.hasNext()) {
             // at least one:
             final AbstractEntity<?> first = iter.next();
-            features.add(createFeature(first));
+            features.add(createFeature.apply(first));
 
             if (iter.hasNext()) {
                 // at least two:
                 final AbstractEntity<?> second = iter.next();
-                features.add(createFeature(second));
+                features.add(createFeature.apply(second));
 
                 while (iter.hasNext()) {
-                    features.add(createFeature(iter.next()));
+                    features.add(createFeature.apply(iter.next()));
                 }
 
-                // TODO features.add(createLineStringFeature(entities)); // TODO MultiLineString for different machines and / or different parts of track
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
+                final String lineStringFeature = createSummaryFeature.apply(entities); // LineString
+                if (lineStringFeature != null) {
+                    features.add(lineStringFeature); // TODO MultiLineString for different machines and / or different parts of track
+                }
             }
-
         }
         return features;
     }
 
-    private static String convertToGeoJson(final List<String> geoJsonFeatures) {
+    /**
+     * Composes a couple of features into single geojson array.
+     *
+     * @param geoJsonFeatures
+     * @return
+     */
+    protected static String convertToGeoJson(final List<String> geoJsonFeatures) {
         final StringBuilder sb = new StringBuilder();
         final Iterator<String> iter = geoJsonFeatures.iterator();
 
@@ -255,51 +281,88 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
         return "[" + sb.toString() + "]";
     }
 
-    protected String createLineStringFeature(final List<AbstractEntity<?>> entities) {
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////// UTILITIES FOR CREATING SUMMARY FEATURE //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    protected static String createLineStringFeature(final List<AbstractEntity<?>> entities, final Function<AbstractEntity<?>, String> createCoordinates) { // Message entity
         return "{" //
                 + "\"type\": \"Feature\"," //
-                + "\"id\": \"null\"," // the identification is not necessary
-                + "\"geometry\": " + createLineStringGeometry(entities) + "," //
+                + "\"id\": \"track-line-string-id\"," // the identification is not necessary
+                + "\"geometry\": " + createLineStringGeometry(entities, createCoordinates) + "," //
                 + "\"properties\": " + createProperties(entities) //
                 + "}";
     }
 
-    protected static String createProperties(final List<AbstractEntity<?>> entities) {
-        return "{" + "\"popupContent\": " + entityToString((AbstractEntity<?>) entities.get(0).get("machine")) + // TODO
+    protected static String createProperties(final List<AbstractEntity<?>> entities) { // Message entity
+        return "{" //
+                + "\"popupContent\": " + entityToString((AbstractEntity<?>) entities.get(0).get("machine")) + // TODO
                 "}";
     }
 
-    protected String createLineStringGeometry(final List<AbstractEntity<?>> entities) {
-        return "{" + "\"type\": \"LineString\"," + "\"coordinates\": " + createCoordinates(entities) + "}";
+    protected static String createLineStringGeometry(final List<AbstractEntity<?>> entities, final Function<AbstractEntity<?>, String> createCoordinates) { // Message entity
+        return "{" //
+                + "\"type\": \"LineString\"," //
+                + "\"coordinates\": " + createCoordinates(entities, createCoordinates) //
+                + "}";
     }
 
-    protected String createCoordinates(final Collection<AbstractEntity<?>> entities) {
+    protected static String createCoordinates(final Collection<AbstractEntity<?>> entities, final Function<AbstractEntity<?>, String> createCoordinates) {
         final StringBuilder sb = new StringBuilder();
         final Iterator<AbstractEntity<?>> iter = entities.iterator();
-        sb.append(createCoordinates(iter.next()));
-        sb.append("," + createCoordinates(iter.next()));
+        sb.append(createCoordinates.apply(iter.next()));
+        sb.append("," + createCoordinates.apply(iter.next()));
         while (iter.hasNext()) {
-            sb.append("," + createCoordinates(iter.next()));
+            sb.append("," + createCoordinates.apply(iter.next()));
         }
         return "[" + sb.toString() + "]";
     }
 
-    //////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////// UTILITIES FOR CREATING FEATURE //////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected final String createFeature(final AbstractEntity<?> entity) {
+    protected static String createFeature(final AbstractEntity<?> entity, final Function<AbstractEntity<?>, String> createGeometry, final Function<AbstractEntity<?>, String> createProperties) {
         return "{" //
                 + "\"type\": \"Feature\"," //
-                + "\"id\": \"" + entity.getId() + "\"," // the identification will be done by AbstractEntity's "id" property for the main entity (e.g. Machine, Message or GeoFenceEvent)
-                + "\"geometry\": " + createEntityGeometry(entity) + "," //
-                + "\"properties\": " + createEntityProperties(entity) //
+                + "\"id\": \"" + entity.getId().toString() + "\"," // the identification will be done by AbstractEntity's "id" property for the main entity (e.g. Machine, Message or GeoFenceEvent)
+                + "\"geometry\": " + createGeometry.apply(entity) + "," //
+                + "\"properties\": " + createProperties.apply(entity) //
                 + "}"; //
     }
 
-    protected abstract String createEntityProperties(final AbstractEntity<?> entity);
+    protected static String createFeature(final AbstractEntity<?> entity, final Function<AbstractEntity<?>, String> createFeatures) {
+        return "{" //
+                + "\"type\": \"FeatureCollection\"," //
+                + "\"features\": " + createFeatures.apply(entity) //
+                + "}"; //
+    }
 
-    protected abstract String createEntityGeometry(final AbstractEntity<?> entity);
+    protected static Function<AbstractEntity<?>, String> createMessageGeometryFun(final Function<AbstractEntity<?>, String> createMessageCoordsFun) {
+        return entity -> "{" //
+                + "\"type\": \"Point\"," //
+                + "\"coordinates\": " + createMessageCoordsFun.apply(entity) //
+                + "}"; //
+    }
 
-    //////////////////////////////////////////////////////////////////////
+    protected static <T extends AbstractEntity<?>> Function<AbstractEntity<?>, String> createMessagePropertiesFun(final Function<AbstractEntity<?>, String> createMessageCoordsFun, final ICentreDomainTreeManagerAndEnhancer messagesCdtme, final Class<?> messageType) {
+        return entity -> "{" //
+                + "\"popupContent\": " + popupText(entity, messagesCdtme, messageType) //
+                + (entity.get("vectorAngle") == null ? "" : ("," + "\"vectorAngle\": " + integerToString((Integer) entity.get("vectorAngle"))))//
+                + (entity.get("vectorSpeed") == null ? "" : ("," + "\"vectorSpeed\": " + integerToString((Integer) entity.get("vectorSpeed"))))//
+                + "}"; //
+    }
+
+    protected static Function<AbstractEntity<?>, String> createMessageCoordsFun() {
+        return entity -> "[" //
+                + bigDecimalToString((BigDecimal) entity.get("x")) + "," //
+                + bigDecimalToString((BigDecimal) entity.get("y")) //
+                + (entity.get("altitude") == null ? "" : ("," + integerToString((Integer) entity.get("altitude"))))//
+                + "]";
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////// VALUES CONVERSION ///////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private final static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
@@ -311,21 +374,6 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
         return "\"" + entity.toString() + "\"";
     }
 
-    //    protected static String createCoordinates(final AbstractEntity<?> entity, final String xProp, final String yProp, final String zProp) {
-    //        return "[" + bigDecimalToString((BigDecimal) entity.get("x")) + "," + bigDecimalToString((BigDecimal) entity.get("y")) + ","
-    //                + integerToString((Integer) entity.get("altitude")) + "]";
-    //    }
-
-    protected abstract String createCoordinates(final AbstractEntity<?> entity);
-
-    //    {
-    //        return "[" //
-    //                + bigDecimalToString((BigDecimal) entity.get("x")) + "," //
-    //                + bigDecimalToString((BigDecimal) entity.get("y")) + "," //
-    //                + integerToString((Integer) entity.get("altitude")) //
-    //                + "]";
-    //    }
-
     protected static String integerToString(final Integer integer) {
         return integer.toString();
     }
@@ -334,9 +382,54 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
         return bigDecimal.toPlainString();
     }
 
-    // protected abstract Pair<List<P>, Map<Long, List<P>>> createPoints(final IPage<AbstractEntity<?>> entitiesPage);
+    protected static String stringToString(final String str) {
+        return "\"" + str + "\"";
+    }
 
-    //protected abstract void findAndSelectPoint(final AbstractEntity<?> selectedEntity, final AbstractEntity<?> unselectedEntity, final boolean forceCalloutChange);
+    private static String valueToString(final Object object) {
+        if (object == null) {
+            return "";
+        } else if (object instanceof Date) {
+            return sdf.format((Date) object);
+        } else if (object instanceof BigDecimal) {
+            return integerToString(((BigDecimal) object).intValue());
+        } else if (object instanceof Boolean) {
+            return booleanToString((Boolean) object);
+        } else {
+            return object.toString();
+        }
+    }
+
+    private static String booleanToString(final Boolean bool) {
+        return bool ? "&#x2714" : "&#x2718";
+    }
+
+    protected static <T extends AbstractEntity<?>> String popupText(final AbstractEntity<?> entity, final ICentreDomainTreeManagerAndEnhancer cdtme, final Class<?> entityType) {
+        // final GpsGridAnalysisModel2<T> model = this.parentView.getModel();
+        final StringBuilder popupText = new StringBuilder();
+        for (final String resultProp : cdtme.getSecondTick().checkedProperties(entityType)) {
+            final String property = StringUtils.isEmpty(resultProp) ? AbstractEntity.KEY : resultProp;
+            final Class<?> enhancedType = cdtme.getEnhancer().getManagedType(entityType);
+            if (!AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(enhancedType, property), Calculated.class)) {
+                // TODO
+                // TODO
+                // TODO can be calc -- except Calc AGGREGATION_EXPRESSION!
+                // TODO
+                // TODO
+                // TODO
+                popupText.append("" + TitlesDescsGetter.getTitleAndDesc(property, enhancedType).getKey() + ": " + valueToString(entity.get(property)) + "<br>");
+            }
+        }
+        return "\"" + popupText.toString() + "\"";
+    }
+
+    protected static <T extends AbstractEntity<?>> String popupText(final AbstractEntity<?> entity, final GpsGridAnalysisModel2<T> model) {
+        return popupText(entity, model.getCdtme(), model.getEntityType());
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////// OTHER STUFF /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected boolean shouldFitToBounds() {
         return this.parentView.getModel().getFitToBounds();
@@ -375,6 +468,9 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
     public Scene createScene() {
         // create web engine and view
         webView = new WebView();
+
+        final EventDispatcher originalDispatcher = webView.getEventDispatcher();
+        webView.setEventDispatcher(new MyEventDispatcher(originalDispatcher));
 
         webView.addEventFilter(ScrollEvent.SCROLL, new EventHandler<ScrollEvent>() {
             @Override
@@ -432,7 +528,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
         webViewPanel = new StackPane();
 
         ///////////////////// Dragging and scrolling logic ////////////
-        // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!                     webView.setDisable(true); // need to disable web view as it steals mouse events
+        // TODO webView.setDisable(true); // need to disable web view as it steals mouse events
 
         ////////////////////////////////
 
@@ -453,6 +549,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
     }
 
     protected void afterMapLoaded() {
+        //executeScript("if (!document.getElementById('FirebugLite')){E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');E['setAttribute']('id', 'FirebugLite');E['setAttribute']('src', 'https://getfirebug.com/' + 'firebug-lite.js' + '#startOpened');E['setAttribute']('FirebugLite', '4');(document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);E = new Image;E['setAttribute']('src', 'https://getfirebug.com/' + '#startOpened');}");
         // executeScript("document.checkLoadedScripts()");
 
         // executeScript("document.goToLocation(\"Lviv\")");
@@ -590,43 +687,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
         return new Double(s);
     }
 
-    public String popupText(final AbstractEntity<?> entity) {
-        final StringBuilder popupText = new StringBuilder();
-        for (final String resultProp : this.parentView.getModel().getCdtme().getSecondTick().checkedProperties(this.parentView.getModel().getEntityType())) {
-            final String property = StringUtils.isEmpty(resultProp) ? AbstractEntity.KEY : resultProp;
-            final Class<?> enhancedType = this.parentView.getModel().getCdtme().getEnhancer().getManagedType(this.parentView.getModel().getEntityType());
-            if (!AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(enhancedType, property), Calculated.class)) {
-                // TODO
-                // TODO
-                // TODO can be calc -- except Calc AGGREGATION_EXPRESSION!
-                // TODO
-                // TODO
-                // TODO
-                popupText.append("" + TitlesDescsGetter.getTitleAndDesc(property, enhancedType).getKey() + ": " + valueToString(entity.get(property)) + "<br>");
-            }
-        }
-        return "\"" + popupText.toString() + "\"";
-    }
-
-    protected String stringToString(final String str) {
-        return "\"" + str + "\"";
-    }
-
-    private String valueToString(final Object object) {
-        if (object == null) {
-            return "";
-        } else if (object instanceof Date) {
-            return sdf.format((Date) object);
-        } else if (object instanceof BigDecimal) {
-            return integerToString(((BigDecimal) object).intValue());
-        } else if (object instanceof Boolean) {
-            return booleanToString((Boolean) object);
-        } else {
-            return object.toString();
-        }
-    }
-
-    private String booleanToString(final Boolean bool) {
-        return bool ? "&#x2714" : "&#x2718";
+    protected GpsGridAnalysisView2<T, ?> parentView() {
+        return parentView;
     }
 }

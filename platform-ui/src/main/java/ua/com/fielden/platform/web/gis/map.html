@@ -95,9 +95,11 @@
 
         <script src="Marker.Rotate.js"></script>
 
+		<!-- script src="empty.json"></script -->
+		<!-- script src="gps-track.json"></script -->
+		<!-- script src="geo-zones.json"></script -->
+		<script src="stops.json"></script>
 
-		<script src="geo0.json"></script>
-		<!-- script src="geo.json"></script -->
 		<!-- script src="Bing.js"></script -->
 		<script> 
 			var progress = document.getElementById('progress');
@@ -216,13 +218,32 @@
 			L.marker([49.838488,24.035339])
 				.bindPopup('Michael Fowler Centre').addTo(gpsTracksOverlay),
 			L.marker([49.844134,24.025555])
-				.bindPopup('Leuven Belgin Beer Cafe').addTo(gpsTracksOverlay),
-			L.polyline([
+				.bindPopup('Leuven Belgin Beer Cafe').addTo(gpsTracksOverlay);
+
+			var polyline = L.polyline([
 				[49.844134,24.025555],
 				[49.838488,24.035339],
 				[49.839817,24.050446],
 				[49.836163,24.067783]
-			]).addTo(gpsTracksOverlay);
+			], {
+				weight: 15,
+				opacity: 1.0,
+				//noClip: true,
+				//clickable: true,
+				fill: true,
+				//"pointer-events": "none"
+			});
+
+			polyline.on('mouseover', function() {
+            	log("polyline mouseover (entered):");
+          	});
+			polyline.on('click', function() {
+            	log("polyline click:");
+           	});
+
+           	polyline.bindPopup('Polyline popup.');
+
+			polyline.addTo(gpsTracksOverlay);
 
 			// ADD REGULAR LAYER BASED ON GEOJSON FEATURES
 			// if (!geoJsonFeatures) {
@@ -258,12 +279,16 @@
 
 			function getColor(feature) {
 				if (feature && feature.geometry && feature.geometry.type) {
-					if (feature.geometry.type === "LineString") {
+					if (feature.properties && feature.properties.what && feature.properties.what === "circle") {
+						return "#FF4500";	 //  orange
+					} else if (feature.geometry.type === "LineString") {
 						return "blue";	
 					} else if (feature.geometry.type === "Point") {
 						if (feature.properties && feature.properties.vectorSpeed) {
 							return (feature.properties.vectorSpeed > 0) ? "blue" : "red";	
 						} 
+					} else if (feature.geometry.type === "Polygon") {
+						return "purple";	
 					}
 					return "white";
 				}
@@ -316,11 +341,21 @@
     			}
 			});
 
+			var TriangleIcon = L.Icon.extend({
+   				options: {
+        			iconAnchor:   [12, 12],
+        			popupAnchor:  [0, 0]        			
+    			}
+			});
+
 			var circleIcon = new CircleIcon({
 				iconUrl: 'circle-red.png'
 			});
 			var circleIconSelected = new CircleIcon({
 				iconUrl: 'circle-orange.png'
+			});
+			var triangleIcon = new TriangleIcon({
+				iconUrl: 'triangle.png'
 			});
 
 			var CircleMarker = L.Marker.extend({
@@ -339,6 +374,16 @@
 		    		title: "BlaBla",
 					riseOffset: 1000,
 		    		riseOnHover: true
+				}
+			});
+
+			var CoordMarker = L.Marker.extend({
+				options: {
+					icon: triangleIcon,
+					title: "BlaBla",
+					riseOnHover: true,
+					riseOffset: 1000,
+					zIndexOffset: 750 // high value to make the circles always on top				
 				}
 			});
 
@@ -363,8 +408,8 @@
 							// chosenMarker = markers[i]; // use first found circle marker as the marker for the cluster
 							// return circleIcon; // new CircleMarker(chosenMarker.getLatLng());
 
-							return L.divIcon({
-								html: '<div class="img-overlay"><img src="circle-red.png" /><div class="overlay" >&#x2194</div></div>',
+							return L.divIcon({ // TODO !!!!!!!!!!!!!!! circle-red.png circle-purple.png circle-orange.png
+								html: '<div class="img-overlay"><img src="circle-purple.png" /><div class="overlay" >&#x2194</div></div>',
 								className: 'gps-marker-cluster',
 								iconSize: new L.Point(24, 24)
 							});
@@ -428,43 +473,57 @@
 			var prevId;
 
 			function log(object) {
-				java.println(object);
+				//java.println(object);
 				console.log(object);
 			}
 
 			function deselectVisuallyWithoutEventFiring(featureId) {
 				var leafletId = featureToLeafletIds["" + featureId + ""];
 				var layer = geoJsonOverlay.getLayer(leafletId);
-				log("deselectVisuallyWithoutEventFiring:");
+				log("deselectVisuallyWithoutEventFiring: featureId = " + featureId);
 				log(layer);
-				if (layer instanceof ArrowMarker) {
-					layer.setIcon(arrowIcon);
-					layer.setZIndexOffset(0); // return to previous zIndexOffset which make the marker of default priority based on the latitude
+				if (featureId === "track-line-string-id") {
+					// do nothing
 				} else {
-					layer.setIcon(circleIcon);
-					layer.setZIndexOffset(750); // return to previous zIndexOffset which make the marker of high priority (zero speed)
-				}				
+					if (layer instanceof ArrowMarker) {
+						layer.setIcon(arrowIcon);
+						layer.setZIndexOffset(0); // return to previous zIndexOffset which make the marker of default priority based on the latitude
+					} else if (layer instanceof CircleMarker) {
+						layer.setIcon(circleIcon);
+						layer.setZIndexOffset(750); // return to previous zIndexOffset which make the marker of high priority (zero speed)
+					} else {
+					}					
+				}
 			}
 
 			function selectVisuallyWithoutEventFiring(featureId) {
 				var leafletId = featureToLeafletIds["" + featureId + ""];
 				var layer = geoJsonOverlay.getLayer(leafletId);
-				log("selectVisuallyWithoutEventFiring:");
+				log("selectVisuallyWithoutEventFiring: feautureId = " + featureId);
 				log(layer);
-				map.panTo(layer.getLatLng()); // centering of the marker (fitToBounds is not needed)
-				if (layer instanceof ArrowMarker) {
-					layer.setIcon(arrowIconSelected);
+
+				if (featureId === "track-line-string-id") {
+					// do nothing
 				} else {
-					layer.setIcon(circleIconSelected);
-				}	
-				// log("zIndexOffset:");
-				// log(layer.getZIndexOffset()); // no such function
-				layer.setZIndexOffset(1000); // selected marker has the highest priority
+					if (layer instanceof ArrowMarker) {
+						map.panTo(layer.getLatLng()); // centering of the marker (fitToBounds is not needed)	
+						layer.setIcon(arrowIconSelected);
+						layer.setZIndexOffset(1000); // selected marker has the highest priority
+					} else if (layer instanceof CircleMarker) {
+						map.panTo(layer.getLatLng()); // centering of the marker (fitToBounds is not needed)	
+						layer.setIcon(circleIconSelected);
+						layer.setZIndexOffset(1000); // selected marker has the highest priority
+					} else if (layer instanceof L.Polygon) {
+						map.fitBounds(layer.getBounds());
+						// map.panTo(layer.getBounds().getCenter()); // fitToBounds?
+					} else {
+					}
+				}
 			}
 	
 			function selectTabularlyWithoutEventFiring(featureId) {
-				log("selectTabularlyWithoutEventFiring " + featureId);
-				java.selectTabularlyWithoutEventFiring(featureId);
+				log("selectTabularlyWithoutEventFiring: feautureId = " + featureId);
+				// java.selectTabularlyWithoutEventFiring(featureId);
 			}
 
 			function selectById(featureId) {
@@ -481,10 +540,17 @@
 			    style: geoJsonStyle,
 
 			    pointToLayer: function (feature, latlng) {
+			    	log(feature, latlng);
 			    	if (feature.properties && feature.properties.vectorSpeed) { 
 				    	return new ArrowMarker(latlng, {
-				    		angle: ((feature.properties && feature.properties.vectorAngle) ? feature.properties.vectorAngle : 0)
+				    		angle: ((feature.properties && feature.properties.vectorAngle) ? (feature.properties.vectorAngle - 180) : 0)
 				    	});
+			    	} else if (feature.properties && feature.properties.stuff) { 
+			    		var coordMarker = new CoordMarker(latlng) // , {
+			    		// 	opacity: 0.0
+			    		// });
+			        	// coordMarker.setZIndexOffset(-1000);
+				    	return coordMarker;
 			    	} else {
 			    		return new CircleMarker(latlng);
 			    	}
@@ -514,16 +580,32 @@
 //     			},
 
 			    onEachFeature: function (feature, layer) {
-		            
+					var featureId = feature.id;
+   	            	featureToLeafletIds["" + featureId + ""] = geoJsonOverlay.getLayerId(layer);	
+
+   	            	log("onEachFeature featureId = " + featureId + " ");	            
+  	            	log(layer);	            
+
+  	            	layer.on('mouseover', function() {
+    	            	log("mouseover (entered):");
+    	            	log(layer); 	            		
+  	            	});
+
+  	            	layer.on('mouseout', function() {
+    	            	log("mouseout (leaved):");
+    	            	log(layer); 	            		
+  	            	});
+
 		            layer.on('click', function() { // dblclick
     	            	// alert("Hi!");
-    	            	log("clicked.");
+    	            	log("clicked:");
+    	            	log(layer);
 
-						var featureId = feature.id;
-    	            	featureToLeafletIds["" + featureId + ""] = geoJsonOverlay.getLayerId(layer); // layer.getLayerId();
-
-    	            	selectById(featureId);
+						selectById(featureId);
 	            	});
+	            	// if (layer instanceof CoordMarker) {
+	            	// 	layer.setOpacity(0.0);
+	            	// }
 
  			    	// does this feature have a property named popupContent?
 				    if (feature.properties && feature.properties.popupContent) {
@@ -531,10 +613,21 @@
 			    	}
 				}
 			});
+			log(geoJsonFeatures);
 			geoJsonOverlay.addData(geoJsonFeatures);
 			markersClusterGroup.addLayer(geoJsonOverlay);
 			map.addLayer(markersClusterGroup);
 
+			// firebug control
+/*			var firebugControl = new L.easyButton(
+				"fa-fire",
+				function() {
+					if (!document.getElementById('FirebugLite')){E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');E['setAttribute']('id', 'FirebugLite');E['setAttribute']('src', 'https://getfirebug.com/' + 'firebug-lite.js' + '#startOpened');E['setAttribute']('FirebugLite', '4');(document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);E = new Image;E['setAttribute']('src', 'https://getfirebug.com/' + '#startOpened');}
+				},
+				"Firebug",
+				map
+			);
+*/
 			// fitToBounds control
 			var fitToBoundsControl = new L.easyButton(
 				"fa-compress",
@@ -567,14 +660,14 @@
 			map.addControl(scaleControl);
 
 			// ADD LEAFLET.DRAW
-			var drawnItems = new L.FeatureGroup();
-			map.addLayer(drawnItems);
+			// var drawnItems = new L.FeatureGroup();
+			// map.addLayer(drawnItems);
 
 			var drawControl = new L.Control.Draw({
 				position: 'bottomleft',
 
 				edit: {
-					featureGroup: drawnItems
+					featureGroup: markersClusterGroup // drawnItems
 				},
 
 				draw: {
@@ -597,7 +690,7 @@
 			map.on('draw:created', function (e) {
 				var type = e.layerType,
 					layer = e.layer;
-				drawnItems.addLayer(layer);
+				markersClusterGroup.addLayer(layer);
 			});
 
 			// GATHER ALL LAYERS
@@ -612,5 +705,6 @@
 			map.fire('dataload');
 
 		</script>
+        <!-- script type='text/javascript' src='http://getfirebug.com/releases/lite/1.2/firebug-lite-compressed.js'></script -->
 	</body>
 </html>
