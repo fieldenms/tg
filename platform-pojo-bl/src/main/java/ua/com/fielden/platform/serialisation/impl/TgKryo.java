@@ -334,7 +334,7 @@ public class TgKryo extends Kryo implements ISerialiser {
                 register(type);
             } catch (final IllegalArgumentException e) {
                 e.printStackTrace();
-                //throw new IllegalArgumentException("The type [" + type + "] can not be registered. Cause = [" + e.getMessage() + "]");
+                throw new IllegalArgumentException("The type [" + type + "] can not be registered. Cause = [" + e.getMessage() + "]");
             }
         }
     }
