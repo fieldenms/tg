@@ -244,7 +244,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                         final Object value = entity.get(propName);
                         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
                         // the easiest way to do that is to load entity by id using the current session
-                        System.out.println(persistedEntity.getType() + "::" + persistedEntity.getId() + "\t" + propName);
                         if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
                             persistedEntity.set(propName, getSession().load(((AbstractEntity<?>) value).getType(), ((AbstractEntity<?>) value).getId()));
                         } else {

@@ -20,15 +20,15 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
  * <li>If the current session has an active transaction then the current method invocation is marked as the one that should NOT commit it.</li>
  * <li>In case of an exception, which could occur during method invocation, the transaction is rollbacked if it is active and the exception is propagated up.</li> *
  * </ul>
- * 
+ *
  * The last item ensures that any exception at any level of method invocation would ensure transaction rollback. If transaction is not active at the time of rollback then that
  * means it has already been rollbacked.
- * 
+ *
  * Please note that transaction can be started outside of this intercepter, which means it will not be committed within it, and the transaction originator is responsible for
  * commit. At the same time, if an exception occurs then transaction will be rollbacked.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class SessionInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
@@ -58,7 +58,9 @@ public class SessionInterceptor implements MethodInterceptor {
             final Object result = invocation.proceed(); // this invocation could also be captured by SessionInterceptor
             if (shouldCommit && tr.isActive()) { // if this is the invocation that activated the current transaction then we should commit it
                 tr.commit();
-            } else {
+            } else if (session.isOpen()) {
+                // should flush only if the current session is still open
+                // this check was not needed before migrating off Hibernate 3.2.6 GA
                 session.flush();
             }
             return result;
