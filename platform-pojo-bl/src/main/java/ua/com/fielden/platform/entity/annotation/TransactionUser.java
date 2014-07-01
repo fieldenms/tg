@@ -8,11 +8,10 @@ import java.lang.annotation.Target;
 import ua.com.fielden.platform.security.user.User;
 
 /**
- * Should be used to annotate properties of type {@link User} or {@link String} (in the latter case user's name is used). The intent is to automatically assign <code>user</code>
- * making the entity save request to such properties upon initial saving of a corresponding entity if the value is <code>null</code>.
- * 
+ * Automatically assigns the value of the current user to annotated properties with <code>null</code> values, which happens at the time of saving.
+ * Should be used to annotate properties of type {@link User} or {@link String} (in the latter case user's name is used).
+ *
  * @author TG Team
- * 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
