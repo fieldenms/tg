@@ -16,8 +16,8 @@ import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapEntityToOverride;
 import ua.com.fielden.platform.entity.annotation.Proxy;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
@@ -37,7 +37,7 @@ public abstract class TransactionalModule extends EntityModule {
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
     private final DomainMetadata domainMetadata;
-    protected final ProxyInterceptor interceptor;
+    private final ProxyInterceptor interceptor;
     private final HibernateUtil hibernateUtil;
     private final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes;
 
@@ -56,13 +56,17 @@ public abstract class TransactionalModule extends EntityModule {
                 defaultHibernateTypes, //
                 applicationEntityTypes,//
                 getUserMapTo());
-        final Configuration hibernateConfig = hcf.build();
+        final Configuration cfg = hcf.build();
         interceptor = new ProxyInterceptor();
-        hibernateUtil = new HibernateUtil(interceptor, hibernateConfig);
+        hibernateUtil = new HibernateUtil(interceptor, cfg);
 
         this.sessionFactory = hibernateUtil.getSessionFactory();
         this.domainMetadata = hcf.getDomainMetadata();
         this.applicationEntityTypes = applicationEntityTypes;
+    }
+
+    protected void initHibernateConfig(final EntityFactory factory) {
+        interceptor.setFactory(factory);
     }
 
     /**

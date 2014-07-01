@@ -155,8 +155,4 @@ public class HibernateUtil {
             throw new IllegalStateException("SessionFactory instance was not built. Call either rebuildSessionFactory() or rebuildSessionFactory(Configuration) method beforehand");
         }
     }
-
-    public Interceptor getInterceptor() {
-        return interceptor;
-    }
 }

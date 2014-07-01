@@ -5,13 +5,15 @@ import java.io.Serializable;
 import org.apache.log4j.Logger;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
+import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.error.Result;
 
 /**
  * This is a thread-safe implementation of the global Hibernate intercepter for correct handling of entities enhanced with Guice(CGLIB) method intercepter.
- * 
+ *
  * @author TG Team
  */
 public class ProxyInterceptor extends EmptyInterceptor {
@@ -46,16 +48,13 @@ public class ProxyInterceptor extends EmptyInterceptor {
     @Override
     public Object instantiate(final String entityName, final EntityMode entityMode, final Serializable id) {
         logger.info("instantiating: " + entityName + " for id = " + id);
+        logger.info("instantiating using factory.newEntity(...)");
         try {
-            logger.info("instantiating using factory.newEntity(...)");
             return factory.newEntity((Class<AbstractEntity<?>>) Class.forName(entityName), (Long) id);
-        } catch (final RuntimeException e) {
-            e.printStackTrace();
-        } catch (final ClassNotFoundException e) {
-            e.printStackTrace();
+        } catch (final ClassNotFoundException ex) {
+            ex.printStackTrace();
+            throw Result.failure(ex);
         }
-        logger.info("instantiating using super.instantiate(...)");
-        return super.instantiate(entityName, entityMode, id);
     }
 
 }

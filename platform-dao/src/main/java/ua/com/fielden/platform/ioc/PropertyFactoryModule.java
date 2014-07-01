@@ -22,9 +22,9 @@ import com.google.inject.Scopes;
 
 /**
  * Hibernate driven module required for correct instantiation of entities.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PropertyFactoryModule extends TransactionalModule {
 
@@ -35,12 +35,11 @@ public class PropertyFactoryModule extends TransactionalModule {
     public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
             throws Exception {
         super(props, defaultHibernateTypes, applicationEntityTypes);
-        entityFactory = new EntityFactory() {
-        };
-        daoFactory = new DaoFactory() {
-        };
+        entityFactory = new EntityFactory() {};
+        daoFactory = new DaoFactory() {};
         defaultControllerProvider = new DefaultCompanionObjectFinderImpl();
-        interceptor.setFactory(entityFactory);
+
+        initHibernateConfig(entityFactory);
     }
 
     public PropertyFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
