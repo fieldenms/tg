@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -72,26 +73,34 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
     }
 
     /** A convenient factory method, which instantiates property descriptor from its toString representation. */
-    public static <T extends AbstractEntity<?>> PropertyDescriptor<T> fromString(final String toStringRepresentation) throws Exception {
-        final String[] parts = toStringRepresentation.split(":");
-        final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
-        final String propertyName = parts[1];
-        return new PropertyDescriptor<T>(entityType, propertyName);
+    public static <T extends AbstractEntity<?>> PropertyDescriptor<T> fromString(final String toStringRepresentation) {
+        try {
+            final String[] parts = toStringRepresentation.split(":");
+            final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
+            final String propertyName = parts[1];
+            return new PropertyDescriptor<T>(entityType, propertyName);
+        } catch (final ClassNotFoundException ex) {
+            throw Result.failure(ex);
+        }
     }
 
     /** A convenient factory method, which instantiates property descriptor from its toString representation. */
-    public static <T extends AbstractEntity<?>> PropertyDescriptor<T> fromString(final String toStringRepresentation, final EntityFactory factory) throws Exception {
-        final String[] parts = toStringRepresentation.split(":");
-        final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
-        final String propertyName = parts[1];
+    public static <T extends AbstractEntity<?>> PropertyDescriptor<T> fromString(final String toStringRepresentation, final EntityFactory factory) {
+        try {
+            final String[] parts = toStringRepresentation.split(":");
+            final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
+            final String propertyName = parts[1];
 
-        final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
-        final PropertyDescriptor inst = (PropertyDescriptor) factory.newByKey(PropertyDescriptor.class, pair.getKey());
-        inst.setDesc(pair.getValue());
-        inst.setEntityType(entityType);
-        inst.setPropertyName(propertyName);
+            final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
+            final PropertyDescriptor inst = factory.newByKey(PropertyDescriptor.class, pair.getKey());
+            inst.setDesc(pair.getValue());
+            inst.setEntityType(entityType);
+            inst.setPropertyName(propertyName);
 
-        return inst;//new PropertyDescriptor<T>(entityType, propertyName);
+            return inst;//new PropertyDescriptor<T>(entityType, propertyName);
+        } catch (final ClassNotFoundException ex) {
+            throw Result.failure(ex);
+        }
     }
 
     private void setEntityType(final Class<T> entityType) {
