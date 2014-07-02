@@ -92,7 +92,7 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             final String propertyName = parts[1];
 
             final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
-            final PropertyDescriptor inst = factory.newByKey(PropertyDescriptor.class, pair.getKey());
+            final PropertyDescriptor<T> inst = factory.newByKey(PropertyDescriptor.class, pair.getKey());
             inst.setDesc(pair.getValue());
             inst.setEntityType(entityType);
             inst.setPropertyName(propertyName);
