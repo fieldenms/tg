@@ -24,6 +24,10 @@ target
 .settings
 *.class
 *.dtd
+*.nav
+*.snm
+*.vrb
+
 
 # Package Files #
 *.jar
