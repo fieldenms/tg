@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
+import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
@@ -85,10 +87,11 @@ public class BaseEntQueryTCase1 {
     protected static final Class<Integer> INTEGER = Integer.class;
     protected static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
     protected static final Class<BigDecimal> BIG_DECIMAL = BigDecimal.class;
-    protected static final Type H_LONG = Hibernate.LONG;
-    protected static final Type H_STRING = Hibernate.STRING;
-    protected static final Type H_BIG_DECIMAL = Hibernate.BIG_DECIMAL;
-    protected static final Type H_BIG_INTEGER = Hibernate.BIG_INTEGER;
+    protected static final Type H_LONG = StandardBasicTypes.LONG;
+    protected static final Type H_STRING = StandardBasicTypes.STRING;
+    protected static final Type H_BIG_DECIMAL = StandardBasicTypes.BIG_DECIMAL;
+    protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
+    protected static final TypeResolver typeResolver = new TypeResolver();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
@@ -101,7 +104,7 @@ public class BaseEntQueryTCase1 {
     }
 
     protected static Type hibtype(final String name) {
-        return TypeFactory.basic(name);
+        return typeResolver.basic(name);
     }
 
     protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
@@ -270,7 +273,7 @@ public class BaseEntQueryTCase1 {
     //    }
 
     public static Type hibType(final String name) {
-        return TypeFactory.basic(name);
+        return typeResolver.basic(name);
     }
 
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type) {
