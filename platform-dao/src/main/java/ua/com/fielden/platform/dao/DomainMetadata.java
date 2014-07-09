@@ -53,6 +53,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.TypeFactory;
+import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.EntityMetadata.EntityCategory;
@@ -103,6 +104,8 @@ public class DomainMetadata {
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
 
     private final MapEntityTo userMapTo;
+    
+    private final TypeResolver typeResolver = new TypeResolver();
 
     public DomainMetadata(//
             final Map<Class, Class> hibTypesDefaults, //
@@ -121,11 +124,10 @@ public class DomainMetadata {
             id = new PropertyColumn("TG_ID");
             version = new PropertyColumn("TG_VERSION");
         }
-
-        idProperty = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();
-        idPropertyInOne2One = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(ONE2ONE_ID).build();
-        versionProperty = new PropertyMetadata.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(VERSION).build();
-
+        
+        idProperty = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(typeResolver.basic("long")).type(ID).build();
+        idPropertyInOne2One = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(typeResolver.basic("long")).type(ONE2ONE_ID).build();
+        versionProperty = new PropertyMetadata.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(typeResolver.basic("long")).type(VERSION).build();
 
         // carry on with other stuff
         if (hibTypesDefaults != null) {
@@ -215,12 +217,12 @@ public class DomainMetadata {
             return isOneToOne(entityType) ? idPropertyInOne2One : idProperty/*(entityType)*/;
         case QUERY_BASED:
             if (isEntityType(getKeyType(entityType))) {
-                return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(expr().prop("key").model()).type(EXPRESSION).build();
+                return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(typeResolver.basic("long")).expression(expr().prop("key").model()).type(EXPRESSION).build();
             } else {
                 return null;
             }
         case UNION:
-            return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "id")).type(EXPRESSION).build();
+            return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(typeResolver.basic("long")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "id")).type(EXPRESSION).build();
         default:
             return null;
         }
@@ -234,9 +236,9 @@ public class DomainMetadata {
         if (isOneToOne(entityType)) {
             switch (entityCategory) {
             case PERSISTED:
-                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(ENTITY_AS_KEY).build();
+                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(typeResolver.basic("long")).type(ENTITY_AS_KEY).build();
             case QUERY_BASED:
-                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).hibType(TypeFactory.basic("long")).type(SYNTHETIC).build();
+                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).hibType(typeResolver.basic("long")).type(SYNTHETIC).build();
             default:
                 return null;
             }
@@ -244,18 +246,18 @@ public class DomainMetadata {
             switch (entityCategory) {
             case PERSISTED:
                 final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
-                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PRIMITIVE_AS_KEY).build();
+                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(typeResolver.basic(getKeyType(entityType).getName())).type(PRIMITIVE_AS_KEY).build();
             case QUERY_BASED:
                 return null; //FIXME
             case UNION:
-                return new PropertyMetadata.Builder(AbstractEntity.KEY, String.class, false).hibType(TypeFactory.basic("string")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "key")).type(EXPRESSION).build();
+                return new PropertyMetadata.Builder(AbstractEntity.KEY, String.class, false).hibType(typeResolver.basic("string")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "key")).type(EXPRESSION).build();
             default:
                 return null;
             }
         } else if (DynamicEntityKey.class.equals(getKeyType(entityType))) {
             return getVirtualPropInfoForDynamicEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType);
         } else {
-            return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), true).hibType(TypeFactory.basic(getKeyType(entityType).getName())).build();
+            return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), true).hibType(typeResolver.basic(getKeyType(entityType).getName())).build();
         }
     }
 
@@ -347,11 +349,11 @@ public class DomainMetadata {
         final Class hibernateUserTypeImplementor = persistedType != null ? persistedType.userType() : Void.class;
 
         if (entity) {
-            return TypeFactory.basic("long");
+            return typeResolver.basic("long");
         }
 
         if (isNotEmpty(hibernateTypeName)) {
-            return TypeFactory.basic(hibernateTypeName);
+            return typeResolver.basic(hibernateTypeName);
         }
 
         if (hibTypesInjector != null && !Void.class.equals(hibernateUserTypeImplementor)) { // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
@@ -361,7 +363,7 @@ public class DomainMetadata {
             if (defaultHibType != null) { // default is provided for given property java type
                 return defaultHibType;
             } else { // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults
-                return TypeFactory.basic(javaType.getName());
+                return typeResolver.basic(javaType.getName());
             }
         }
     }
