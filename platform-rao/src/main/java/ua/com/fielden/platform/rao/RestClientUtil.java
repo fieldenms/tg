@@ -104,7 +104,7 @@ public final class RestClientUtil implements IUserProvider {
      */
     public void warmUp() {
         final Response response = send(newRequest(Method.HEAD, getSystemUri() + "/info"));
-        if (!Status.SUCCESS_OK.equals(response.getStatus())) {
+        if (!Status.isSuccess(response.getStatus().getCode())) {
             throw new IllegalStateException(response.getStatus().toString());
         }
     }
@@ -322,7 +322,7 @@ public final class RestClientUtil implements IUserProvider {
         final DateTime requestInitiated = new DateTime();
         final Response response = send(request);
 
-        if (!Status.SUCCESS_OK.equals(response.getStatus()) && !Status.CLIENT_ERROR_CONFLICT.equals(response.getStatus())
+        if (!Status.isSuccess(response.getStatus().getCode()) && !Status.CLIENT_ERROR_CONFLICT.equals(response.getStatus())
                 && !Status.CLIENT_ERROR_UNAUTHORIZED.equals(response.getStatus())) {
             throw new IllegalStateException(response.getStatus().toString());
         }
