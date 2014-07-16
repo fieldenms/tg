@@ -1,5 +1,13 @@
 package ua.com.fielden.platform.web.application;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.restlet.Application;
 import org.restlet.Context;
@@ -60,78 +68,53 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
 
     protected void attachGisComponentResources(final Router router) {
         logger.info("\t\tGIS component resources attaching...");
-        router.attach("/map.html", new FileResourceFactory(platformGisJsScriptsLocation + "map.html", MediaType.TEXT_HTML));
-        router.attach("/map.js", new FileResourceFactory(platformGisJsScriptsLocation + "map.js", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/map.css", new FileResourceFactory(platformGisJsScriptsLocation + "map.css", MediaType.TEXT_CSS));
 
-        attachLeafletResources(router);
-        attachLeafletMapProviderResources(router);
-        attachLeafletDrawResources(router);
-        attachLeafletMarkerClusterResources(router);
-        attachLeafletControlLoadingResources(router);
-        attachLeafletEasyButtonResources(router);
-        attachLeafletMarkerRotationResources(router);
-
-        attachInitialisationResources(router);
+        register(router, platformGisJsScriptsLocation, "/gis/", //
+                platformGisJsScriptsLocation + "gps/", // directory to exclude
+                platformGisJsScriptsLocation + "spike/"); // directory to exclude
     }
 
-    private void attachLeafletControlLoadingResources(final Router router) {
-        logger.info("\t\t\tLeaflet.control.loading resources attaching...");
-        router.attach("/leaflet/controlloading/Control.Loading.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/controlloading/Control.Loading.js", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/leaflet/controlloading/Control.Loading.css", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/controlloading/Control.Loading.css", MediaType.TEXT_CSS));
+    protected void register(final Router router, final String where, final String prefix, final String... excludeDirs) {
+        List<String> relativeFilenames;
+        try {
+            relativeFilenames = determineFilenames(where, excludeDirs);
+            for (final String relativeFilename : relativeFilenames) {
+                logger.info("Attaching [" + where + relativeFilename + "] into [" + prefix + relativeFilename + "] with media type [" + mediaType(relativeFilename) + "]...");
+                router.attach(prefix + relativeFilename, new FileResourceFactory(where + relativeFilename, mediaType(relativeFilename)));
+            }
+        } catch (final IOException e) {
+            logger.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
-    private void attachLeafletEasyButtonResources(final Router router) {
-        logger.info("\t\t\tLeaflet.easy.button resources attaching...");
-        router.attach("/leaflet/easybutton/easy-button.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/easybutton/easy-button.js", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/leaflet/easybutton/font-awesome.css", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/easybutton/font-awesome.css", MediaType.TEXT_CSS));
+    private List<String> determineFilenames(final String where, final String... excludeDirs) throws IOException {
+        final List<String> filenames = new ArrayList<String>();
+        Files.walk(Paths.get(where)).forEach(filePath -> {
+
+            if (Files.isRegularFile(filePath) && !shouldExclude(filePath, Arrays.asList(excludeDirs))) {
+                final String relativeName = filePath.toString().replaceFirst(where, "");
+                filenames.add(relativeName);
+            }
+        });
+        return filenames;
     }
 
-    private void attachLeafletMarkerRotationResources(final Router router) {
-        logger.info("\t\t\tLeaflet.marker.rotation resources attaching...");
-        router.attach("/leaflet/markerrotation/Marker.Rotate.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/markerrotation/Marker.Rotate.js", MediaType.TEXT_JAVASCRIPT));
+    private boolean shouldExclude(final Path filePath, final List<String> excludeDirs) {
+        for (final String excludeDir : excludeDirs) {
+            if (filePath.startsWith(excludeDir)) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    private void attachLeafletMarkerClusterResources(final Router router) {
-        logger.info("\t\t\tLeaflet.markercluster resources attaching...");
-        router.attach("/leaflet/markercluster/leaflet.markercluster.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/markercluster/leaflet.markercluster.js", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/leaflet/markercluster/leaflet.markercluster-src.js", new FileResourceFactory(platformGisJsScriptsLocation
-                + "leaflet/markercluster/leaflet.markercluster-src.js", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/leaflet/markercluster/MarkerCluster.css", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/markercluster/MarkerCluster.css", MediaType.TEXT_CSS));
-        router.attach("/leaflet/markercluster/MarkerCluster.Default.css", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/markercluster/MarkerCluster.Default.css", MediaType.TEXT_CSS));
-    }
-
-    private void attachLeafletResources(final Router router) {
-        logger.info("\t\t\tLeaflet resources attaching...");
-        router.attach("/leaflet/leaflet.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/leaflet.js", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/leaflet/leaflet.css", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/leaflet.css", MediaType.TEXT_CSS));
-        router.attach("/leaflet/leaflet-src.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/leaflet-src.js", MediaType.TEXT_JAVASCRIPT));
-
-        // TODO images
-    }
-
-    private void attachLeafletDrawResources(final Router router) {
-        logger.info("\t\t\tLeaflet.draw resources attaching...");
-        router.attach("/leaflet/draw/leaflet.draw.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/draw/leaflet.draw.js", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/leaflet/draw/leaflet.draw.css", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/draw/leaflet.draw.css", MediaType.TEXT_CSS));
-        router.attach("/leaflet/draw/leaflet.draw-src.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/draw/leaflet.draw-src.js", MediaType.TEXT_JAVASCRIPT));
-
-        // TODO images
-    }
-
-    private void attachLeafletMapProviderResources(final Router router) {
-        logger.info("\t\t\tLeaflet map provider resources attaching...");
-        router.attach("/leaflet/providers/Google.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/providers/Google.js", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/leaflet/providers/Yandex.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/providers/Yandex.js", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/leaflet/providers/Bing.js", new FileResourceFactory(platformGisJsScriptsLocation + "leaflet/providers/Bing.js", MediaType.TEXT_JAVASCRIPT));
-    }
-
-    private void attachInitialisationResources(final Router router) {
-        logger.info("\t\t\tLeaflet initialisation json resources attaching...");
-        router.attach("/init/empty.json", new FileResourceFactory(platformGisJsScriptsLocation + "init/empty.json", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/init/gps-track.json", new FileResourceFactory(platformGisJsScriptsLocation + "init/gps-track.json", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/init/geo-zones.json", new FileResourceFactory(platformGisJsScriptsLocation + "init/geo-zones.json", MediaType.TEXT_JAVASCRIPT));
-        router.attach("/init/stops.json", new FileResourceFactory(platformGisJsScriptsLocation + "init/stops.json", MediaType.TEXT_JAVASCRIPT));
+    private MediaType mediaType(final String relativeFilename) {
+        return relativeFilename.toLowerCase().endsWith(".png") ? MediaType.IMAGE_PNG : //
+                relativeFilename.toLowerCase().endsWith(".js") ? MediaType.TEXT_JAVASCRIPT : //;
+                        relativeFilename.toLowerCase().endsWith(".json") ? MediaType.TEXT_JAVASCRIPT : //;
+                                relativeFilename.toLowerCase().endsWith(".html") ? MediaType.TEXT_HTML : //;
+                                        relativeFilename.toLowerCase().endsWith(".css") ? MediaType.TEXT_CSS : MediaType.ALL;
     }
 
     protected abstract void attachAdditionalResources(final Router router);
