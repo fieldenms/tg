@@ -51,20 +51,6 @@ public class EntityMetadata<ET extends AbstractEntity<?>> {
         return !StringUtils.isEmpty(table);
     }
 
-    public String ddl() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append("CREATE TABLE " + table + "(\n");
-        for (final Iterator<Map.Entry<String, PropertyMetadata>> iterator = props.entrySet().iterator(); iterator.hasNext();) {
-            final Map.Entry<String, PropertyMetadata> entry = iterator.next();
-            if (entry.getValue().affectsMapping()) {
-                sb.append(entry.getValue().ddl() + (iterator.hasNext() ? ",\n" : ""));
-            }
-        }
-        sb.append(")");
-
-        return sb.toString();
-    }
-
     public boolean isOneToOne() {
         return isPersistedEntityType(getKeyType(type));
     }

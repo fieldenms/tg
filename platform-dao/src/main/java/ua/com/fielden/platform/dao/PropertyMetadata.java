@@ -1,18 +1,17 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_DETAILS;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.EXPRESSION_COMMON;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_DETAILS;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY_HEADER;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
-
+import static ua.com.fielden.platform.dao.PropertyCategory.COLLECTIONAL;
+import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_HEADER;
+import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyCategory.EXPRESSION_COMMON;
+import static ua.com.fielden.platform.dao.PropertyCategory.ONE2ONE_ID;
+import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
+import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
+import static ua.com.fielden.platform.dao.PropertyCategory.VERSION;
+import static ua.com.fielden.platform.dao.PropertyCategory.VIRTUAL_OVERRIDE;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -214,120 +213,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return columns.size() > 0 ? columns.get(0) : null;
     }
 
-    public static enum PropertyCategory {
-        PRIMITIVE {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        COLLECTIONAL {
-            @Override
-            boolean affectsMappings() {
-                return false;
-            }
-        }, //
-        ENTITY {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        ID {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        ONE2ONE_ID {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        VERSION {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        PRIMITIVE_AS_KEY {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        ENTITY_AS_KEY {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        ENTITY_MEMBER_OF_COMPOSITE_KEY {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        PRIMITIVE_MEMBER_OF_COMPOSITE_KEY {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        COMPONENT_HEADER {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        COMPONENT_DETAILS {
-            @Override
-            boolean affectsMappings() {
-                return false;
-            }
-        }, //
-        UNION_ENTITY_HEADER {
-            @Override
-            boolean affectsMappings() {
-                return true;
-            }
-        }, //
-        UNION_ENTITY_DETAILS {
-            @Override
-            boolean affectsMappings() {
-                return false;
-            }
-        }, //
-        EXPRESSION {
-            @Override
-            boolean affectsMappings() {
-                return false;
-            }
-        }, //
-        SYNTHETIC {
-            @Override
-            boolean affectsMappings() {
-                return false;
-            }
-        }, //
-        EXPRESSION_COMMON {
-            @Override
-            boolean affectsMappings() {
-                return false;
-            }
-        }, //
-        VIRTUAL_OVERRIDE {
-            @Override
-            boolean affectsMappings() {
-                return false;
-            }
-        }; // the case of virtual generation of composite entity key by concatenation of all members during eQuery processing.
-
-        abstract boolean affectsMappings();
-
-    }
-
+    
     public String getName() {
         return name;
     }

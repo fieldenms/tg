@@ -5,7 +5,7 @@ import java.util.TreeSet;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
+import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import static org.junit.Assert.assertEquals;
