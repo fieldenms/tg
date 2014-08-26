@@ -112,7 +112,7 @@ public class SecurityTokenControllerRao implements ISecurityTokenController {
 
         final Request request = restUtil.newRequest(Method.HEAD, restUtil.getBaseUri(getDefaultWebResourceType()) + "/securitytokens/" + token.getName());
         final Response response = restUtil.send(request);
-        if (!Status.SUCCESS_OK.equals(response.getStatus())) {
+        if (!Status.isSuccess(response.getStatus().getCode())) {
             throw new IllegalStateException(response.getStatus().toString());
         } else if (!StringUtils.isEmpty(restUtil.getHeaderValue(response, HttpHeaders.ERROR))) {
             throw new IllegalStateException(restUtil.getHeaderValue(response, HttpHeaders.ERROR));

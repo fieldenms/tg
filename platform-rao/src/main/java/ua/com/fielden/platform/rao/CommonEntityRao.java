@@ -80,7 +80,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
         }
         final String uri = restUtil.getUri(getEntityType(), getDefaultWebResourceType()) + "/" + id;
         final Response response = restUtil.send(new Request(Method.HEAD, uri));
-        if (!Status.SUCCESS_OK.equals(response.getStatus())) {
+        if (!Status.isSuccess(response.getStatus().getCode())) {
             throw new IllegalStateException(response.getStatus().toString());
         } else if (!StringUtils.isEmpty(restUtil.getHeaderValue(response, HttpHeaders.ERROR))) {
             throw new IllegalStateException(restUtil.getHeaderValue(response, HttpHeaders.ERROR));
@@ -182,7 +182,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
         final String uri = restUtil.getUri(getEntityType(), getDefaultWebResourceType()) + "/" + entity.getId();
         final Request request = new Request(Method.DELETE, uri);
         final Response response = restUtil.send(request);
-        if (!Status.SUCCESS_OK.equals(response.getStatus())) {
+        if (!Status.isSuccess(response.getStatus().getCode())) {
             throw new IllegalStateException("Failed with error: " + restUtil.getHeaderValue(response, HttpHeaders.ERROR));
         } else if (!StringUtils.isEmpty(restUtil.getHeaderValue(response, HttpHeaders.ERROR))) {
             throw new IllegalStateException(restUtil.getHeaderValue(response, HttpHeaders.ERROR));
@@ -303,7 +303,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
         final Request request = new Request(Method.POST, uri, envelope);
         // process request
         final Response response = restUtil.send(request);
-        if (!Status.SUCCESS_OK.equals(response.getStatus())) {
+        if (!Status.isSuccess(response.getStatus().getCode())) {
             throw new IllegalStateException(response.getStatus().toString());
         }
         return Integer.parseInt(restUtil.getHeaderValue(response, HttpHeaders.COUNT));
@@ -511,7 +511,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
         ;
         // send request
         final Response response = restUtil.send(new Request(Method.POST, uri, envelope));
-        if (!Status.SUCCESS_OK.equals(response.getStatus())) {
+        if (!Status.isSuccess(response.getStatus().getCode())) {
             final Result result = restUtil.process(response);
             throw new IllegalStateException(result.getEx());
         }
@@ -580,7 +580,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
         final String uri = restUtil.getUri(getEntityType(), entityId, getDefaultWebResourceType()) + "?version=" + version;
 
         final Response response = restUtil.send(restUtil.newRequest(Method.HEAD, uri));
-        if (!Status.SUCCESS_OK.equals(response.getStatus())) {
+        if (!Status.isSuccess(response.getStatus().getCode())) {
             throw new IllegalStateException(response.getStatus().toString());
         } else if (!StringUtils.isEmpty(restUtil.getHeaderValue(response, HttpHeaders.ERROR))) {
             throw new IllegalStateException(restUtil.getHeaderValue(response, HttpHeaders.ERROR));
