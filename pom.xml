@@ -101,11 +101,6 @@
 			<artifactId>junit</artifactId>
 			<version>4.4</version>
 		</dependency>
-		<!-- dependency> 
-			<groupId>com.google.inject</groupId> 
-			<artifactId>guice</artifactId> 
-			<version>3.0</version> 
-		</dependency -->
 		<dependency>
 			<groupId>com.google.inject</groupId>
 			<artifactId>guice</artifactId>
@@ -283,10 +278,6 @@
 			<url>http://www.fielden.com.ua:8090/nexus/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
-
-	<!--scm> <connection> scm:svn:https://www.fielden.com.ua/svn/trident-genesis/trunk 
-		</connection> <developerConnection> scm:svn:https://www.fielden.com.ua/svn/trident-genesis/trunk 
-		</developerConnection> </scm -->
 
 	<scm>
 		<connection>scm:git:git@github.com:fieldenms/tg.git</connection>
