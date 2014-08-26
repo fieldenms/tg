@@ -32,7 +32,7 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
 
     public AbstractWebBrowserBasedServerApplication(final Context context, final Injector injector, final String name, final String desc, final String owner, final String author, final String username) {
         super(context);
-        this.platformJsScriptsLocation = "../../tg/platform-ui/src/main/java/ua/com/fielden/platform/web/";
+        this.platformJsScriptsLocation = "../../tg/platform-ui/src/main/web/ua/com/fielden/platform/web/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
         this.platformGisJsScriptsLocation = platformJsScriptsLocation + "gis/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
@@ -70,7 +70,6 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
         logger.info("\t\tGIS component resources attaching...");
 
         register(router, platformGisJsScriptsLocation, "/gis/", //
-                platformGisJsScriptsLocation + "gps/", // directory to exclude
                 platformGisJsScriptsLocation + "spike/"); // directory to exclude
     }
 
