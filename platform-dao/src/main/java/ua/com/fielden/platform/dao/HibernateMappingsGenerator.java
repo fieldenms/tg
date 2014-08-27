@@ -23,7 +23,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 public class HibernateMappingsGenerator {
 
     public String generateMappings(final DomainMetadata domainMetadata) {
-        final Collection<EntityMetadata> entityMetadatas = domainMetadata.getEntityMetadatas();
+        final Collection<PersistedEntityMetadata> entityMetadatas = domainMetadata.getEntityMetadatas();
         final StringBuffer sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");
@@ -31,11 +31,9 @@ public class HibernateMappingsGenerator {
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        for (final EntityMetadata<?> entityMetadata : entityMetadatas) {
+        for (final PersistedEntityMetadata<?> entityMetadata : entityMetadatas) {
             try {
-                if (entityMetadata.isPersisted()) {
-                    sb.append(generateEntityClassMapping(entityMetadata, domainMetadata.dbVersion));
-                }
+                sb.append(generateEntityClassMapping(entityMetadata, domainMetadata.dbVersion));
             } catch (final Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException("Couldn't generate mapping for " + entityMetadata.getType().getName() + " due to: " + e.getMessage());
@@ -142,7 +140,7 @@ public class HibernateMappingsGenerator {
      * @return
      * @throws Exception
      */
-    private <ET extends AbstractEntity<?>> String generateEntityClassMapping(final EntityMetadata<ET> entityMetadata, final DbVersion dbVersion) throws Exception {
+    private <ET extends AbstractEntity<?>> String generateEntityClassMapping(final PersistedEntityMetadata<ET> entityMetadata, final DbVersion dbVersion) throws Exception {
         final StringBuffer sb = new StringBuffer();
         sb.append("<class name=\"" + entityMetadata.getType().getName() + "\" table=\"" + entityMetadata.getTable() + "\">\n");
 

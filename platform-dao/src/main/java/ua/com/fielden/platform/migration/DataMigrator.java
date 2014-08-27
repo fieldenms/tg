@@ -89,7 +89,7 @@ public class DataMigrator {
         runSql(new ArrayList<String>() {
             {
                 add("UPDATE UNIQUE_ID SET NEXT_VALUE = " + finalId + " WHERE _ID = 1");
-                add("UPDATE NUMBERS SET WONOINC = (SELECT CAST(MAX(KEY_) AS INTEGER) + 1 FROM WODET) WHERE _ID = 0");
+                add("UPDATE NUMBERS SET WONOINC = COALESCE((SELECT CAST(MAX(KEY_) AS INTEGER) + 1 FROM WODET), 0) WHERE _ID = 0");
             }
         });
 

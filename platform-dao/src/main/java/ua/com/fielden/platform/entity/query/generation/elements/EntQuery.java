@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
+import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -146,12 +147,16 @@ public class EntQuery implements ISingleOperand {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
             if (mainSourceIsTypeBased()) {
                 for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity((Class<? extends AbstractEntity<?>>) resultType)) {
+//                    if (ppi.isSynthetic()) {
+//                        throw new IllegalStateException(ppi.toString());
+//                    }
                     final boolean skipProperty = ppi.isSynthetic() || //
                             ppi.isVirtual() || //
                             ppi.isCollection() || //
                             (ppi.isAggregatedExpression() && !isResultQuery()) //
                             || (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())));
                     if (!skipProperty) {
+                        //System.out.println("!!!!!!!!!!!!!!!!!!! ------------------------ " + ppi.getName());
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                     }
                 }
@@ -222,11 +227,13 @@ public class EntQuery implements ISingleOperand {
             final Set<Yield> toBeRemoved = new HashSet<Yield>();
             for (final Yield yield : yields.getYields()) {
                 if (!fetchModel.containsProp(yield.getAlias())) {
-                    //		    System.out.println("--------------------- removing according to fetch: " + yield.getAlias());
+                    //System.out.println("--------------------- removing according to fetch: " + yield.getAlias());
                     toBeRemoved.add(yield);
                 }
             }
             yields.removeYields(toBeRemoved);
+        } else {
+            //System.out.println("--------------------- removing according to fetch: NONE fetch model was provided -- nothing was removed");
         }
     }
 
@@ -405,7 +412,7 @@ public class EntQuery implements ISingleOperand {
             throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
         }
 
-        persistedType = (resultType == null || resultType == EntityAggregates.class) ? false : domainMetadataAnalyser.getEntityMetadata(this.resultType).isPersisted();
+        persistedType = (resultType == null || resultType == EntityAggregates.class) ? false : (domainMetadataAnalyser.getEntityMetadata(this.resultType) instanceof PersistedEntityMetadata);
 
         this.paramValues = paramValues;
 

@@ -1,26 +1,27 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropByFirstDot;
+
 import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.EntityMetadata;
+import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.utils.EntityUtils.splitPropByFirstDot;
 
 public class TypeBasedSource extends AbstractSource {
     private final boolean generated;
-    private EntityMetadata<? extends AbstractEntity<?>> entityMetadata;
+    private PersistedEntityMetadata<? extends AbstractEntity<?>> entityMetadata;
 
-    public TypeBasedSource(final EntityMetadata<? extends AbstractEntity<?>> entityMetadata, final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
+    public TypeBasedSource(final PersistedEntityMetadata<? extends AbstractEntity<?>> entityMetadata, final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this(entityMetadata, alias, false, domainMetadataAnalyser);
     }
 
-    public TypeBasedSource(final EntityMetadata<? extends AbstractEntity<?>> entityMetadata, final String alias, final boolean generated, final DomainMetadataAnalyser domainMetadataAnalyser) {
-        super(alias, domainMetadataAnalyser, entityMetadata.isPersisted());
+    public TypeBasedSource(final PersistedEntityMetadata<? extends AbstractEntity<?>> entityMetadata, final String alias, final boolean generated, final DomainMetadataAnalyser domainMetadataAnalyser) {
+        super(alias, domainMetadataAnalyser, true);
         this.generated = generated;
         this.entityMetadata = entityMetadata;
         if (entityMetadata == null) {

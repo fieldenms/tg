@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.EntityMetadata;
+import ua.com.fielden.platform.dao.AbstractEntityMetadata;
+import ua.com.fielden.platform.dao.ModelledEntityMetadata;
+import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
@@ -47,12 +49,12 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 
     private Pair<TokenCategory, Object> getResultForEntityTypeAsSource() {
         final Class<AbstractEntity<?>> resultType = (Class) firstValue();
-        final EntityMetadata entityMetadata = getQueryBuilder().getDomainMetadataAnalyser().getEntityMetadata(resultType);
-        if (entityMetadata.isPersisted()) {
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource(entityMetadata, (String) secondValue(), getQueryBuilder().getDomainMetadataAnalyser()));
+        final AbstractEntityMetadata entityMetadata = getQueryBuilder().getDomainMetadataAnalyser().getEntityMetadata(resultType);
+        if (entityMetadata instanceof PersistedEntityMetadata) {
+            return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource((PersistedEntityMetadata) entityMetadata, (String) secondValue(), getQueryBuilder().getDomainMetadataAnalyser()));
         } else {
             final List<QueryModel> readyModels = new ArrayList<QueryModel>();
-            readyModels.addAll(entityMetadata.getModels());
+            readyModels.addAll(((ModelledEntityMetadata) entityMetadata).getModels());
             return getResultForEntityModelAsSource(readyModels, (String) secondValue(), resultType);
         }
     }

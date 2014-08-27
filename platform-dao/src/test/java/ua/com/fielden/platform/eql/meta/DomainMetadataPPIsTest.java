@@ -64,7 +64,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
         //expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyPersistenceType.PRIMITIVE_KEY));
         //expected.add(ppi("desc", STRING, false, hibType("string"), "DESC_", PropertyPersistenceType.PROP));
         expected.add(ppi("vehicle", VEHICLE, false, hibType("long"), "VEHICLE_", PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY));
-        expected.add(ppi("date", DATE, false, DOMAIN_METADATA_ANALYSER.getDomainMetadata().getHibTypesDefaults().get(Date.class), "DATE_", PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY));
+        expected.add(ppi("date", DATE, false, DOMAIN_METADATA_ANALYSER.getHibTypesDefaults().get(Date.class), "DATE_", PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY));
 
         final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
         actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(FUEL_USAGE));

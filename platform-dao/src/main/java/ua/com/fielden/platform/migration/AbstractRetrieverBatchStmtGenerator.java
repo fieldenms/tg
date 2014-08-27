@@ -8,7 +8,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.EntityMetadata;
+import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.Finder;
@@ -19,12 +19,12 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
     private final IRetriever<? extends AbstractEntity<?>> retriever;
     private final String insertStmt;
     private final List<Container> containers;
-    private final EntityMetadata<? extends AbstractEntity<?>> emd;
+    private final PersistedEntityMetadata<? extends AbstractEntity<?>> emd;
 
     public AbstractRetrieverBatchStmtGenerator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever) {
         this.dma = dma;
         this.retriever = retriever;
-        this.emd = dma.getEntityMetadata(retriever.type());
+        this.emd = dma.getPersistedEntityMetadata(retriever.type());
         final List<PropertyMetadata> fields = extractFields();
         this.insertStmt = generateInsertStmt(getInsertFields(fields), emd.getTable());
         this.containers = produceContainers(fields);
@@ -36,7 +36,7 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
 
     protected abstract List<PropertyMetadata> extractFields();
 
-    protected List<PropertyMetadata> extractAllFields(final EntityMetadata<? extends AbstractEntity<?>> emd) {
+    protected List<PropertyMetadata> extractAllFields(final PersistedEntityMetadata<? extends AbstractEntity<?>> emd) {
         final List<PropertyMetadata> result = new ArrayList<>();
         final SortedSet<String> fields = EntityUtils.getFirstLevelProps(retriever.resultFields().keySet());
         final SortedMap<String, PropertyMetadata> props = emd.getProps();
@@ -133,7 +133,7 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
         return containers;
     }
 
-    protected EntityMetadata<? extends AbstractEntity<?>> getEmd() {
+    protected PersistedEntityMetadata<? extends AbstractEntity<?>> getEmd() {
         return emd;
     }
 }

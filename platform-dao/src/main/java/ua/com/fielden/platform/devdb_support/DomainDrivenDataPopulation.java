@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.devdb_support;
 
+import static java.lang.String.format;
+
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,15 +15,14 @@ import java.util.List;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
-import static java.lang.String.format;
 
 /**
  * This is a base class for implementing development data population in a domain driven manner. Reuses {@link IDomainDrivenTestCaseConfiguration} for configuration of application
@@ -102,10 +103,8 @@ public abstract class DomainDrivenDataPopulation {
                 st.close();
 
                 // create truncate statements
-                for (final EntityMetadata entry : config.getDomainMetadata().getEntityMetadatas()) {
-                    if (entry.isPersisted()) {
-                        truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-                    }
+                for (final PersistedEntityMetadata entry : config.getDomainMetadata().getEntityMetadatas()) {
+                    truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
                 }
             }
             domainPopulated = true;

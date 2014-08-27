@@ -14,7 +14,7 @@ import java.util.TreeSet;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.EntityMetadata;
+import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Updater;
@@ -34,7 +34,7 @@ public class RetrieverDeadReferencesSeeker {
 
     public Map<Class<? extends AbstractEntity<?>>, String> determineUsers(final List<IRetriever<? extends AbstractEntity<?>>> allRetrievers) {
         final Map<Class<? extends AbstractEntity<?>>, String> result = new HashMap<Class<? extends AbstractEntity<?>>, String>();
-        final Map<EntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> grouped = groupRetrieversByType(allRetrievers);
+        final Map<PersistedEntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> grouped = groupRetrieversByType(allRetrievers);
         final Map<Class<? extends AbstractEntity<?>>, List<EntityTypeReference>> doResult = do1(grouped);
 
         for (final Entry<Class<? extends AbstractEntity<?>>, List<EntityTypeReference>> entry : doResult.entrySet()) {
@@ -92,10 +92,10 @@ public class RetrieverDeadReferencesSeeker {
         return result;
     }
 
-    private Map<EntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> groupRetrieversByType(final List<IRetriever<? extends AbstractEntity<?>>> allRetrievers) {
-        final Map<EntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> result = new HashMap<EntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>>();
+    private Map<PersistedEntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> groupRetrieversByType(final List<IRetriever<? extends AbstractEntity<?>>> allRetrievers) {
+        final Map<PersistedEntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> result = new HashMap<>();
         for (final IRetriever<? extends AbstractEntity<?>> iRetriever : allRetrievers) {
-            final EntityMetadata<? extends AbstractEntity<?>> emd = dma.getEntityMetadata(iRetriever.type());
+            final PersistedEntityMetadata<? extends AbstractEntity<?>> emd = dma.getPersistedEntityMetadata(iRetriever.type());
             final List<RetrieverProps> searchResult = result.get(emd);
             final List<RetrieverProps> list = (searchResult != null ? searchResult : new ArrayList<RetrieverProps>());
             list.add(getProps(iRetriever));
@@ -125,10 +125,10 @@ public class RetrieverDeadReferencesSeeker {
         return new RetrieverProps(retriever, props);
     }
 
-    private Map<Class<? extends AbstractEntity<?>>, List<EntityTypeReference>> do1(final Map<EntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> groupedRetrievers) {
+    private Map<Class<? extends AbstractEntity<?>>, List<EntityTypeReference>> do1(final Map<PersistedEntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> groupedRetrievers) {
         final Map<Class<? extends AbstractEntity<?>>, List<EntityTypeReference>> result = new HashMap<Class<? extends AbstractEntity<?>>, List<EntityTypeReference>>();
 
-        for (final Entry<EntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> entry : groupedRetrievers.entrySet()) {
+        for (final Entry<PersistedEntityMetadata<? extends AbstractEntity<?>>, List<RetrieverProps>> entry : groupedRetrievers.entrySet()) {
             for (final PropertyMetadata pmd : entry.getKey().getProps().values()) {
                 if (pmd.isEntityOfPersistedType()) {
                     for (final RetrieverProps retrieverProps : entry.getValue()) {

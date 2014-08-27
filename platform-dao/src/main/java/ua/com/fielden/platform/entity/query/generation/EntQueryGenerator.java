@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+
 import java.util.Iterator;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
@@ -25,7 +28,7 @@ public class EntQueryGenerator {
     private final String username;
 
     public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-        this.dbVersion = domainMetadataAnalyser.getDomainMetadata().getDbVersion();
+        this.dbVersion = domainMetadataAnalyser.getDbVersion();
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.filter = filter;
         this.username = username;
@@ -97,17 +100,18 @@ public class EntQueryGenerator {
             final QueryCategory category, //
             final IFilter filter, //
             final String username) {
-
+        Class actualResultType = resultType != null ? resultType : qryModel.getResultType();
+//        FetchModel actualFetchModel = fetchModel == null ? (actualResultType.equals(EntityAggregates.class) ? null : new FetchModel(fetch(actualResultType), domainMetadataAnalyser)) : new FetchModel(fetchModel, domainMetadataAnalyser); 
         return new EntQuery( //
         qryModel.isFilterable(), //
         parseTokensIntoComponents(qryModel, orderModel, fetchModel, paramValues), //
-        resultType != null ? resultType : qryModel.getResultType(), //
+        actualResultType, //
         category, //
         domainMetadataAnalyser, //
         filter, //
         username, //
         this, //
-        fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //
+        fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //actualFetchModel, //
         paramValues);
     }
 

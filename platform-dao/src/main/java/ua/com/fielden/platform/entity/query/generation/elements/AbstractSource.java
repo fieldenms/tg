@@ -12,6 +12,7 @@ import java.util.TreeMap;
 import org.hibernate.Hibernate;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
+import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
@@ -66,7 +67,7 @@ public abstract class AbstractSource implements ISource {
         this.alias = alias;
         this.persistedType = persistedType;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
-        this.dbVersion = domainMetadataAnalyser.getDomainMetadata().dbVersion;
+        this.dbVersion = domainMetadataAnalyser.getDbVersion();
     }
 
     @Override
@@ -329,7 +330,7 @@ public abstract class AbstractSource implements ISource {
 
         for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
             //            final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, domainMetadataAnalyser);
-            final TypeBasedSource qrySource = new TypeBasedSource(domainMetadataAnalyser.getEntityMetadata(groupEntry.getKey().type), composeAlias(groupEntry.getKey().name), true, domainMetadataAnalyser);
+            final TypeBasedSource qrySource = new TypeBasedSource(domainMetadataAnalyser.getPersistedEntityMetadata(groupEntry.getKey().type), composeAlias(groupEntry.getKey().name), true, domainMetadataAnalyser);
             //System.out.println("                           adding new source: " + qrySource.getAlias() + " to existing source: " + getAlias());
             qrySource.populateSourceItems(groupEntry.getKey().nullable);
             qrySource.assignNullability(groupEntry.getKey().nullable);

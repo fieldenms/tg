@@ -7,33 +7,55 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadataAnalyser {
-    private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityMetadata>();
+    private final Map<Class<? extends AbstractEntity<?>>, AbstractEntityMetadata> entityMetadataMap = new HashMap<>();
     private final DomainMetadata domainMetadata;
+    private final BaseInfoForDomainMetadata baseInfoForDomainMetadata;
 
     public DomainMetadataAnalyser(final DomainMetadata domainMetadata) {
         super();
         this.domainMetadata = domainMetadata;
-        entityMetadataMap.putAll(domainMetadata.getEntityMetadataMap());
+        baseInfoForDomainMetadata = new BaseInfoForDomainMetadata(domainMetadata.getUserMapTo());
+        entityMetadataMap.putAll(domainMetadata.getPersistedEntityMetadataMap());
+        entityMetadataMap.putAll(domainMetadata.getModelledEntityMetadataMap());
     }
 
-    public <ET extends AbstractEntity<?>> EntityMetadata<ET> getEntityMetadata(final Class<ET> entityType) {
+    public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> getPersistedEntityMetadata(final Class<ET> entityType) {
+        return (PersistedEntityMetadata) entityMetadataMap.get(entityType);
+    }
+
+    public <ET extends AbstractEntity<?>> AbstractEntityMetadata<ET> getEntityMetadata(final Class<ET> entityType) {
         if (entityType == null || !AbstractEntity.class.isAssignableFrom(entityType) || EntityAggregates.class.equals(entityType)) {
             return null;
         }
 
-        final EntityMetadata<ET> existing = entityMetadataMap.get(entityType);
+        final AbstractEntityMetadata<ET> existing = entityMetadataMap.get(entityType);
 
         if (existing != null) {
             return existing;
         } else {
             try {
-                final EntityMetadata<ET> newOne = domainMetadata.generateEntityMetadata(entityType);
+                final AbstractEntityMetadata<ET> newOne;
+                switch (baseInfoForDomainMetadata.getCategory(entityType)) {
+                case PERSISTED:
+                    newOne = domainMetadata.generatePersistedEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    break;
+                case QUERY_BASED:
+                    newOne = domainMetadata.generateModelledEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    break;
+                case UNION:
+                    newOne = domainMetadata.generateUnionedEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    break;
+                default:
+                    throw new IllegalStateException("Can't generate EntityMetadata for entity type: " + entityType);
+                }
+
                 entityMetadataMap.put(entityType, newOne);
                 return newOne;
             } catch (final Exception e) {
@@ -51,7 +73,7 @@ public class DomainMetadataAnalyser {
      * @return
      */
     public <ET extends AbstractEntity<?>> PropertyMetadata getPropPersistenceInfoExplicitly(final Class<ET> entityType, final String propName) {
-        final EntityMetadata<ET> map = getEntityMetadata(entityType);
+        final AbstractEntityMetadata<ET> map = getEntityMetadata(entityType);
         return map != null ? map.getProps().get(propName) : null;
     }
 
@@ -93,17 +115,25 @@ public class DomainMetadataAnalyser {
     }
 
     public Collection<PropertyMetadata> getPropertyMetadatasForEntity(final Class<? extends AbstractEntity<?>> entityType) {
-        final EntityMetadata epm = getEntityMetadata(entityType);
+        final AbstractEntityMetadata epm = getEntityMetadata(entityType);
         if (epm == null) {
             throw new IllegalStateException("Missing ppi map for entity type: " + entityType);
         }
         return epm.getProps().values();
     }
 
-    public DomainMetadata getDomainMetadata() {
-        return domainMetadata;
+    public DbVersion getDbVersion() {
+        return domainMetadata.dbVersion;
     }
 
+    public Map<Class<?>, Object> getHibTypesDefaults() {
+        return domainMetadata.getHibTypesDefaults();
+    }
+    
+    public Object getBooleanValue(final boolean value) {
+        return domainMetadata.getBooleanValue(value);
+    }
+    
     public Set<String> getLeafPropsFromFirstLevelProps(final String parentProp, final Class<? extends AbstractEntity<?>> entityType, final Set<String> firstLevelProps) {
         final Set<String> result = new HashSet<String>();
 

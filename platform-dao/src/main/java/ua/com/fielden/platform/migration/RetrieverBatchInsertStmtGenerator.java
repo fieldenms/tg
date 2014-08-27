@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.SortedMap;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.EntityMetadata;
+import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
@@ -27,7 +27,7 @@ public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStm
         return result;
     }
 
-    private List<PropertyMetadata> extractSystemFields(final EntityMetadata<? extends AbstractEntity<?>> emd) {
+    private List<PropertyMetadata> extractSystemFields(final PersistedEntityMetadata<? extends AbstractEntity<?>> emd) {
         final List<PropertyMetadata> result = new ArrayList<>();
         final SortedMap<String, PropertyMetadata> props = emd.getProps();
         result.add(props.get("version"));

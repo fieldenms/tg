@@ -310,7 +310,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     /** Ensures that values of boolean types are converted properly. */
     private Object convertValue(final Object value) {
         if (value instanceof Boolean) {
-            return getQueryBuilder().getDomainMetadataAnalyser().getDomainMetadata().getBooleanValue((Boolean) value);
+            return getQueryBuilder().getDomainMetadataAnalyser().getBooleanValue((Boolean) value);
         }
         return value;
     }

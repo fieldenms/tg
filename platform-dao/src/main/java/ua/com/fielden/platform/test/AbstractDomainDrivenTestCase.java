@@ -21,8 +21,8 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 
-import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -46,7 +46,7 @@ public abstract class AbstractDomainDrivenTestCase {
     private final EntityFactory factory = config.getEntityFactory();
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final Collection<EntityMetadata> entityMetadatas = config.getDomainMetadata().getEntityMetadatas();
+    private final Collection<PersistedEntityMetadata> entityMetadatas = config.getDomainMetadata().getEntityMetadatas();
 
     private static boolean domainPopulated = false;
 
@@ -128,10 +128,8 @@ public abstract class AbstractDomainDrivenTestCase {
             st.close();
 
             // create truncate statements
-            for (final EntityMetadata<?> entry : entityMetadatas) {
-                if (entry.isPersisted()) {
-                    truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-                }
+            for (final PersistedEntityMetadata<?> entry : entityMetadatas) {
+                truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
             }
 
             domainPopulated = true;
