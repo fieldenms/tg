@@ -1,10 +1,10 @@
 define(['log'], function(log) {
 
-	var ProgressBarUpdater = function(_map, _getMarkers) {
+	var ProgressBarUpdater = function(_map, _getMarkers, progressDiv, progressBarDiv) {
 		this._map = _map;
 		this._getMarkers = _getMarkers;
-		this._progress = document.getElementById('progress');
-		this._progressBar = document.getElementById('progress-bar');
+		this._progress = progressDiv;
+		this._progressBar = progressBarDiv;
 		this._shouldFitToBounds = true;
 	};
 

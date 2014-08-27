@@ -9,12 +9,10 @@
 /* Application stylesheets */
 /* @import url("app/site.css"); */
 
-#map {
-    width: 800px;
-    height: 600px;
+.map {
     border: 1px solid #ccc;
 }
-#progress {
+.progress {
     display: none;
     position: absolute;
     z-index: 1000;
@@ -29,7 +27,7 @@
     border-radius: 4px;
     padding: 2px;
 }
-#progress-bar {
+.progress-bar {
     width: 0;
     height: 100%;
     background-color: #76A6FC;
@@ -39,7 +37,7 @@ body {
     padding: 0;
     margin: 0;
 }
-html, body, #map {
+html, body, .map-container, .map{
     height: 100%;
     width: 100%;
 }
