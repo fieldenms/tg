@@ -7,14 +7,14 @@ define([
 	LeafletMarkercluster, /* should not be used, use L.markerClusterGroup instead */
 	ProgressBarUpdater) { 
 
-	var MarkerCluster = function(_map, _markerFactory) {
+	var MarkerCluster = function(_map, _markerFactory, progressDiv, progressBarDiv) {
 		var self = this;
 
 		self._markerFactory = _markerFactory;
 		self._getMarkers = function() {
 			return self._gisMarkerClusterGroup;
 		};
-		self._progressBarUpdater = new ProgressBarUpdater(_map, self._getMarkers);
+		self._progressBarUpdater = new ProgressBarUpdater(_map, self._getMarkers, progressDiv, progressBarDiv);
 
 		self._gisMarkerClusterGroup = new L.MarkerClusterGroup({ // .extend
 			chunkedLoading: true,

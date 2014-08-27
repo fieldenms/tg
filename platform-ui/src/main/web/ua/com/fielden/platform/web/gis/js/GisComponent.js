@@ -17,7 +17,7 @@ define([
 	Select,
 	Controls) {
 
-	var GisComponent = function() {
+	var GisComponent = function(mapDiv, progressDiv, progressBarDiv) {
 		// IMPORTANT: use the following reference in cases when you need some properties of the 
 		// GisComponent inside the functions or nested classes
 		var self = this;
@@ -25,7 +25,7 @@ define([
 		// creating and configuring all layers
 		self._baseLayers = new BaseLayers();
 
-		self._map = L.map('map', {
+		self._map = L.map(mapDiv, {
 				layers: [self._baseLayers.getBaseLayer("OpenStreetMap")], // only add one!
 				zoomControl: false, // add it later
 				loadingControl: false // add it later
@@ -35,7 +35,7 @@ define([
 
 		// create a factory for markers
 		self._markerFactory = new MarkerFactory();
-		self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory);
+		self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
 		self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers);
 
 		self._featureStyling = new FeatureStyling();
@@ -107,8 +107,8 @@ define([
 		// this._geoJsonOverlay.addData(_initialiser.geoJsonFeatures());
 	};
 
-	GisComponent.prototype.createMarkerCluster = function(map, markerFactory) {
-		return new MarkerCluster(map, markerFactory);
+	GisComponent.prototype.createMarkerCluster = function(map, markerFactory, progressDiv, progressBarDiv) {
+		return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 	};
 
 	GisComponent.prototype.initReload = function() {

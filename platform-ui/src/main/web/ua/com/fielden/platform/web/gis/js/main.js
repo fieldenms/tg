@@ -15,7 +15,8 @@ require.config({
 		'leaflet.markercluster': 'vendor/leaflet/markercluster/leaflet.markercluster', // non-AMD module
 		'leaflet.loadingcontrol': 'vendor/leaflet/controlloading/Control.Loading',
 		'leaflet.easybutton': 'vendor/leaflet/easybutton/easy-button', // non-AMD module
-		'leaflet.markerrotation': 'vendor/leaflet/markerrotation/Marker.Rotate' // non-AMD module
+		'leaflet.markerrotation': 'vendor/leaflet/markerrotation/Marker.Rotate', // non-AMD module
+		'angular': 'vendor/angular/angular' // why angular.min does not work?
 	},
 	shim: { // used for non-AMD modules
 
@@ -60,6 +61,11 @@ require.config({
 		'leaflet.markerrotation': {
 			deps: ['leaflet'],
 			exports: 'LeafletMarkerrotation'
+		},
+
+		'angular': {
+			deps: [],
+			exports: 'angular'
 		}
 	},
 	googlemaps: { // configuration for 'async' requirejs plugin wrapper (google maps loading)
@@ -75,10 +81,17 @@ require.config({
 	}
 });
 
-require(['log', 'GisComponent'], function(log, GisComponent) {
-	var _gisComponent = new GisComponent();
-
-	log(_gisComponent);
-
-	window.gisComponent = _gisComponent;
+require(['log', 'angular', 'GisComponent', 'GisModule'], function(log, angular, GisComponent, GisModule) {
+	var app = angular.module('app', ['GisModule']); // create main angular application module which depends on GisModule
+	app.controller('appCtrl', ['$scope', function($scope) {
+		// provide a function, to be used inside directive:
+		$scope.createGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
+			var _gisComponent = new GisComponent(mapDiv, progressDiv, progressBarDiv);
+			if (typeof java !== 'undefined') {
+				window.gisComponent = _gisComponent;
+			}
+			return _gisComponent;
+		};
+	}]);
+	angular.bootstrap(document.getElementsByTagName('body')[0], ['app']); // boot angular application with main module
 });
