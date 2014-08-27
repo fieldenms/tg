@@ -31,9 +31,9 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 /**
  * This is a base class for all test cases in TG based applications. Each application module should provide file <b>src/test/resources/test.properties</b> with property
  * <code>config-domain</code> assigned an application specific class implementing contract {@link IDomainDrivenTestCaseConfiguration}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractDomainDrivenTestCase {
 
@@ -89,7 +89,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
     /**
      * Should return a complete list of domain entity types.
-     * 
+     *
      * @return
      */
     protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
@@ -128,7 +128,7 @@ public abstract class AbstractDomainDrivenTestCase {
             st.close();
 
             // create truncate statements
-            for (final EntityMetadata entry : entityMetadatas) {
+            for (final EntityMetadata<?> entry : entityMetadatas) {
                 if (entry.isPersisted()) {
                     truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
                 }
@@ -194,7 +194,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
     /**
      * Instantiates a new entity with a non-composite key, the value for which is provided as the second argument, and description -- provided as the value for the third argument.
-     * 
+     *
      * @param entityClass
      * @param key
      * @param desc
@@ -206,7 +206,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
     /**
      * Instantiates a new entity with a non-composite key, the value for which is provided as the second argument.
-     * 
+     *
      * @param entityClass
      * @param key
      * @return
@@ -218,7 +218,7 @@ public abstract class AbstractDomainDrivenTestCase {
     /**
      * Instantiates a new entity with composite key, where composite key members are assigned based on the provide value. The order of values must match the order specified in key
      * member definitions. An empty list of key values is permitted.
-     * 
+     *
      * @param entityClass
      * @param keys
      * @return
@@ -229,7 +229,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
     /**
      * Instantiates a new entity based on the provided type only, which leads to creation of a completely empty instance without any of entity properties assigned.
-     * 
+     *
      * @param entityClass
      * @return
      */

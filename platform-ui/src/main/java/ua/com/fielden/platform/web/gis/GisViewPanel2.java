@@ -87,6 +87,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
     public GisViewPanel2(final GpsGridAnalysisView2<T, ?> parentView, final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
         this.parentView = parentView;
         this.egi = egi;
+
         setFocusable(false);
         Platform.setImplicitExit(false);
 
@@ -149,15 +150,22 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
                                 logger.info("Saving to geo json file...");
                                 try {
                                     final PrintWriter out = new PrintWriter("geo.json");
-                                    out.println("var geoJsonFeatures = " + convertToGeoJson(geoJsonFeatures));
+                                    out.println("define([], function() { " //
+                                            + " var Initialiser = function() { " //
+                                            + " this._geoJsonFeatures = " + convertToGeoJson(geoJsonFeatures) + "; " //
+                                            + " this.geoJsonFeatures = function() { " //
+                                            + " return this._geoJsonFeatures; " + " }; " //
+                                            + " }; " //
+                                            + " return Initialiser; " //
+                                            + " }); ");
+
                                     out.close();
                                 } catch (final Exception ex) {
                                     ex.printStackTrace();
                                 }
 
-                                executeScript("map.fire('dataloading');");
-                                executeScript("geoJsonOverlay.clearLayers();");
-                                executeScript("markersClusterGroup.clearLayers();");
+                                executeScript("gisComponent.initReload();");
+                                executeScript("gisComponent.clearAll();");
                                 // executeScript("geoJsonFeatures = " + geoJsonFeatures + ";", false);
                                 // executeScript("geoJsonOverlay.addData(geoJsonFeatures);");
                                 //executeScript("geoJsonOverlay.addData(" + geoJsonFeatures + ");");
@@ -169,11 +177,13 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
                                     if (i % 50 == 0 || i == featuresSize) {
                                         logger.info("Adding feature [" + i + " / " + featuresSize + "]...");
                                     }
-                                    executeScript("geoJsonOverlay.addData(" + feature + ");", false);
+                                    executeScript("gisComponent._geoJsonOverlay.addData(" + feature + ");", false);
                                 }
-                                executeScript("markersClusterGroup.addLayer(geoJsonOverlay);");
+                                executeScript("gisComponent._markerCluster.setShouldFitToBounds(" + shouldFitToBounds() + "); ");
+                                executeScript("gisComponent._markerCluster.getGisMarkerClusterGroup().addLayer(gisComponent._geoJsonOverlay);");
+
+                                executeScript("gisComponent.finishReload();");
                                 logger.info("Scripts have been executed.");
-                                executeScript("map.fire('dataload');");
 
                                 //                                logger.info("Started...");
                                 //                                executeScript("var timeoutID = window.setTimeout(function(geoJson) {" //
@@ -239,15 +249,63 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
         if (iter.hasNext()) {
             // at least one:
             final AbstractEntity<?> first = iter.next();
-            features.add(createFeature.apply(first));
+            final String firstFeature = createFeature.apply(first);
+            if (firstFeature != null) {
+                features.add(firstFeature);
+            }
 
             if (iter.hasNext()) {
                 // at least two:
                 final AbstractEntity<?> second = iter.next();
-                features.add(createFeature.apply(second));
+                final String secondFeature = createFeature.apply(second);
+                if (secondFeature != null) {
+                    features.add(secondFeature);
+                }
 
                 while (iter.hasNext()) {
-                    features.add(createFeature.apply(iter.next()));
+                    final String nextFeature = createFeature.apply(iter.next());
+                    if (nextFeature != null) {
+                        features.add(nextFeature);
+                    }
+                }
+
+                final String lineStringFeature = createSummaryFeature.apply(entities); // LineString
+                if (lineStringFeature != null) {
+                    features.add(lineStringFeature); // TODO MultiLineString for different machines and / or different parts of track
+                }
+            }
+        }
+        return features;
+    }
+
+    /**
+     * Converts a couple of entities into list of features representing them. One entity -- multiple features, + one summary feature for all entities.
+     *
+     * @param entities
+     * @param createFeatures
+     * @param createSummaryFeature
+     * @return
+     */
+    protected static List<String> convertToGeoJsonFeatures2(final List<AbstractEntity<?>> entities, //
+            final Function<AbstractEntity<?>, List<String>> createFeatures, //
+            final Function<List<AbstractEntity<?>>, String> createSummaryFeature) {
+
+        logger.info("Converting to geo json [" + entities.size() + "] entities...");
+        final List<String> features = new ArrayList<>();
+        final Iterator<AbstractEntity<?>> iter = entities.iterator();
+
+        if (iter.hasNext()) {
+            // at least one:
+            final AbstractEntity<?> first = iter.next();
+            features.addAll(createFeatures.apply(first));
+
+            if (iter.hasNext()) {
+                // at least two:
+                final AbstractEntity<?> second = iter.next();
+                features.addAll(createFeatures.apply(second));
+
+                while (iter.hasNext()) {
+                    features.addAll(createFeatures.apply(iter.next()));
                 }
 
                 final String lineStringFeature = createSummaryFeature.apply(entities); // LineString
@@ -555,14 +613,17 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
         // executeScript("document.goToLocation(\"Lviv\")");
     }
 
-    private void loadMap() {
+    protected final void loadMap() {
         try {
-            webEngine.load(GisViewPanel2.class.getResource("map.html").toString());
+            webEngine.load(mapPage());
         } catch (final Exception e) {
             e.printStackTrace();
             invokeErrorDialog(e);
         }
     }
+
+    // GisViewPanel2.class.getResource("main.html").toString()
+    protected abstract String mapPage();
 
     /**
      * Executes javaScript script. If execution fails -- it reports that in dialog window (there is a need to reload all centre).
@@ -595,7 +656,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
         }
     }
 
-    private void invokeErrorDialog(final Exception e) {
+    protected void invokeErrorDialog(final Exception e) {
         SwingUtilitiesEx.invokeLater(new Runnable() {
             @Override
             public void run() {

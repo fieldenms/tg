@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.dao.PropertyMetadata;
-import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
+import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgMakeCount;
