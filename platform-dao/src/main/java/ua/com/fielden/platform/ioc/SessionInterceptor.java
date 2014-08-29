@@ -2,6 +2,7 @@ package ua.com.fielden.platform.ioc;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -33,6 +34,8 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 public class SessionInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
 
+    private transient final Logger logger = Logger.getLogger(this.getClass());
+
     public SessionInterceptor(final SessionFactory sessnioFactory) {
         this.sessionFactory = sessnioFactory;
     }
@@ -52,12 +55,16 @@ public class SessionInterceptor implements MethodInterceptor {
         // activate transaction if it not active
         if (!tr.isActive()) {
             session.setFlushMode(FlushMode.COMMIT);
+            logger.debug("Starting new DB transaction");
             tr.begin();
+            logger.debug("Started new DB transaction");
         }
         try {
             final Object result = invocation.proceed(); // this invocation could also be captured by SessionInterceptor
             if (shouldCommit && tr.isActive()) { // if this is the invocation that activated the current transaction then we should commit it
+                logger.debug("Committing DB transaction");
                 tr.commit();
+                logger.debug("Committed DB transaction");
             } else if (session.isOpen()) {
                 // should flush only if the current session is still open
                 // this check was not needed before migrating off Hibernate 3.2.6 GA
@@ -65,8 +72,11 @@ public class SessionInterceptor implements MethodInterceptor {
             }
             return result;
         } catch (final RuntimeException e) {
+            logger.warn(e);
             if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
+                logger.debug("Rolling back DB transaction");
                 tr.rollback();
+                logger.debug("Rolled back DB transaction");
             }
             throw e;
         }
