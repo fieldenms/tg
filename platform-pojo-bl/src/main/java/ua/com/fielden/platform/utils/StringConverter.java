@@ -37,25 +37,14 @@ public final class StringConverter {
         return toDayOfWeek(new DateTime(dateTime));
     }
 
+    /**
+     * Converts integer number representing a day of week to a string representation.
+     *
+     * @param dayOfWeek -- one of the DateTimeConstants constants
+     * @return a string representation of the day of week
+     */
     public static final String toDayOfWeek(final int dayOfWeek) {
-        switch (dayOfWeek) {
-        case DateTimeConstants.MONDAY:
-            return "Monday";
-        case DateTimeConstants.TUESDAY:
-            return "Tuesday";
-        case DateTimeConstants.WEDNESDAY:
-            return "Wednesday";
-        case DateTimeConstants.THURSDAY:
-            return "Thursday";
-        case DateTimeConstants.FRIDAY:
-            return "Friday";
-        case DateTimeConstants.SATURDAY:
-            return "Saturday";
-        case DateTimeConstants.SUNDAY:
-            return "Sunday";
-        default:
-            throw new IllegalArgumentException("For some reason none of the day constants matched for the provided integer argument.");
-        }
+        return toDayOfWeek(new DateTime().dayOfWeek().setCopy(dayOfWeek));
     }
 
     public static final Money toMoney(final String amount) {
@@ -63,8 +52,6 @@ public final class StringConverter {
     }
 
     public static void main(final String[] args) {
-        final Date date = new Date();
-
-        System.out.println(new DateTime(date).dayOfWeek().getAsText());
+        System.out.println(toDayOfWeek(DateTimeConstants.SATURDAY));
     }
 }
