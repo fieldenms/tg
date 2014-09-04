@@ -3,6 +3,7 @@ package ua.com.fielden.platform.utils;
 import java.util.Date;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -10,9 +11,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Provides a set of utilities for converting string values to other frequently used types such as {@link Date}, {@link DateTime} etc.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class StringConverter {
     private StringConverter() {
@@ -26,6 +27,27 @@ public final class StringConverter {
 
     public static final DateTime toDateTime(final String dateTime) {
         return formatter.parseDateTime(dateTime);
+    }
+
+    public static final String toDayOfWeek(final DateTime dateTime) {
+        switch (dateTime.getDayOfWeek()) {
+        case DateTimeConstants.MONDAY:
+            return "Monday";
+        case DateTimeConstants.TUESDAY:
+            return "Tuesday";
+        case DateTimeConstants.WEDNESDAY:
+            return "Wednesday";
+        case DateTimeConstants.THURSDAY:
+            return "Thursday";
+        case DateTimeConstants.FRIDAY:
+            return "Friday";
+        case DateTimeConstants.SATURDAY:
+            return "Saturday";
+        case DateTimeConstants.SUNDAY:
+            return "Sunday";
+        default:
+            throw new IllegalArgumentException("For some reason none of the day constants matched for the provided DateTime argument.");
+        }
     }
 
     public static final Money toMoney(final String amount) {
