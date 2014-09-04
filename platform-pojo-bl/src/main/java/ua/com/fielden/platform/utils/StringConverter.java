@@ -37,6 +37,27 @@ public final class StringConverter {
         return toDayOfWeek(new DateTime(dateTime));
     }
 
+    public static final String toDayOfWeek(final int dayOfWeek) {
+        switch (dayOfWeek) {
+        case DateTimeConstants.MONDAY:
+            return "Monday";
+        case DateTimeConstants.TUESDAY:
+            return "Tuesday";
+        case DateTimeConstants.WEDNESDAY:
+            return "Wednesday";
+        case DateTimeConstants.THURSDAY:
+            return "Thursday";
+        case DateTimeConstants.FRIDAY:
+            return "Friday";
+        case DateTimeConstants.SATURDAY:
+            return "Saturday";
+        case DateTimeConstants.SUNDAY:
+            return "Sunday";
+        default:
+            throw new IllegalArgumentException("For some reason none of the day constants matched for the provided integer argument.");
+        }
+    }
+
     public static final Money toMoney(final String amount) {
         return new Money(amount);
     }
