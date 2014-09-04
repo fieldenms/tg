@@ -20,29 +20,30 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class TgObjectMapper extends ObjectMapper {
 
     private static final long serialVersionUID = 8131371701442950310L;
 
-    private final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mma");
-
     private final TgModule module;
 
     public TgObjectMapper() {
+        this(new SimpleDateFormat("dd/MM/yyyy hh:mma"));
+    }
+
+    public TgObjectMapper(final DateFormat dateFormat) {
         super();
         module = new TgModule();
 
         //Configuring type specific parameters.
         setDateFormat(dateFormat);
-        enable(SerializationFeature.INDENT_OUTPUT);
+        //enable(SerializationFeature.INDENT_OUTPUT);
         enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
 
         //Configuring serialiser.
         addSerialiser(ICentreDomainTreeManagerAndEnhancer.class, new CentreMangerToJsonSerialiser());
         addSerialiser(IPage.class, new PageToJsonSerialiser());
-        addSerialiser(AbstractEntity.class, new AbstractEntityToJsonSerialiser());
+        registerAbstractEntitySerialiser();
 
         //Configuring deserialiser.
         addDeserialiser(LightweightCentre.class, new JsonToCentreConfigDeserialiser(this));
@@ -51,6 +52,10 @@ public class TgObjectMapper extends ObjectMapper {
 
         //Registering module.
         registerModule(module);
+    }
+
+    protected void registerAbstractEntitySerialiser() {
+        addSerialiser(AbstractEntity.class, new AbstractEntityToJsonSerialiser());
     }
 
     public <T> void addSerialiser(final Class<? extends T> clazz, final JsonSerializer<T> serializer) {

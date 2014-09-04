@@ -16,6 +16,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.query.customiser.IAn
  */
 public abstract class GpsGridAnalysisModel2<T extends AbstractEntity<?>> extends GridAnalysisModel<T, ICentreDomainTreeManagerAndEnhancer> {
     private boolean fitToBounds = false;
+    private boolean firstQuery = false;
     private final Class<T> entityType;
     private final ISerialiser serialiser;
 
@@ -39,5 +40,13 @@ public abstract class GpsGridAnalysisModel2<T extends AbstractEntity<?>> extends
 
     public ISerialiser getSerialiser() {
         return serialiser;
+    }
+
+    public boolean isFirstQuery() {
+        return firstQuery;
+    }
+
+    protected void setFirstQuery(final boolean firstQuery) {
+        this.firstQuery = firstQuery;
     }
 }

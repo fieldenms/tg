@@ -2,9 +2,6 @@ package ua.com.fielden.platform.web.gis;
 
 import java.awt.event.MouseAdapter;
 import java.io.PrintWriter;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -38,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.javafx.gis.gps.IWebViewLoadedListener;
@@ -49,6 +47,8 @@ import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
+import ua.com.fielden.platform.serialisation.json.serialiser.AbstractEntityToGeoJsonSerialiser;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
@@ -144,72 +144,87 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
                         Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
-                                // final String geoJsonFeatures = convertToGeoJson(convertToGeoJsonFeatures((IPage<AbstractEntity<?>>) e.getNewPage()));
-                                final List<String> geoJsonFeatures = convertToGeoJsonFeatures(((IPage<AbstractEntity<?>>) e.getNewPage()).data());
+                                // final List<String> geoJsonFeatures = convertToGeoJsonFeatures(((IPage<AbstractEntity<?>>) e.getNewPage()).data());
 
-                                logger.info("Saving to geo json file...");
                                 try {
-                                    final PrintWriter out = new PrintWriter("geo.json");
-                                    out.println("define([], function() { " //
-                                            + " var Initialiser = function() { " //
-                                            + " this._geoJsonFeatures = " + convertToGeoJson(geoJsonFeatures) + "; " //
-                                            + " this.geoJsonFeatures = function() { " //
-                                            + " return this._geoJsonFeatures; " + " }; " //
-                                            + " }; " //
-                                            + " return Initialiser; " //
-                                            + " }); ");
+                                    final PrintWriter out0 = new PrintWriter("entities.js");
+                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper(sdf) {
+                                        @Override
+                                        protected void registerAbstractEntitySerialiser() {
+                                            addSerialiser(AbstractEntity.class, new AbstractEntityToGeoJsonSerialiser());
+                                        }
+                                    };
+                                    final String entitiesString = tgObjectMapper.writeValueAsString(((IPage<AbstractEntity<?>>) e.getNewPage()).data());
+                                    logger.info("Saving to geo json file...");
+                                    out0.println(entitiesString);
+                                    logger.info("Saving to geo json file...done");
 
-                                    out.close();
+                                    executeScript("gisComponent.initReload();");
+                                    executeScript("gisComponent.clearAll();");
+
+                                    executeScript("gisComponent.promoteEntitiesString('" + entitiesString + "');", false);
+
+                                    executeScript("gisComponent._markerCluster.setShouldFitToBounds(" + shouldFitToBounds() + "); ");
+                                    executeScript("gisComponent._markerCluster.getGisMarkerClusterGroup().addLayer(gisComponent._geoJsonOverlay);");
+                                    executeScript("gisComponent.finishReload();");
+                                    logger.info("Scripts have been executed.");
+
+                                    out0.close();
+
+                                    //                                    final PrintWriter out = new PrintWriter("geo.json");
+                                    //                                    out.println("define([], function() { " //
+                                    //                                            + " var Initialiser = function() { " //
+                                    //                                            + " this._geoJsonFeatures = " + convertToGeoJson(geoJsonFeatures) + "; " //
+                                    //                                            + " this.geoJsonFeatures = function() { " //
+                                    //                                            + " return this._geoJsonFeatures; " + " }; " //
+                                    //                                            + " }; " //
+                                    //                                            + " return Initialiser; " //
+                                    //                                            + " }); ");
+                                    //                                    out.close();
+
                                 } catch (final Exception ex) {
                                     ex.printStackTrace();
                                 }
 
-                                executeScript("gisComponent.initReload();");
-                                executeScript("gisComponent.clearAll();");
-                                // executeScript("geoJsonFeatures = " + geoJsonFeatures + ";", false);
-                                // executeScript("geoJsonOverlay.addData(geoJsonFeatures);");
-                                //executeScript("geoJsonOverlay.addData(" + geoJsonFeatures + ");");
-                                int i = 0;
-                                final int featuresSize = geoJsonFeatures.size();
-                                logger.info("Adding features [" + featuresSize + "]...");
-                                for (final String feature : geoJsonFeatures) {
-                                    i++;
-                                    if (i % 50 == 0 || i == featuresSize) {
-                                        logger.info("Adding feature [" + i + " / " + featuresSize + "]...");
-                                    }
-                                    executeScript("gisComponent._geoJsonOverlay.addData(" + feature + ");", false);
+                                try {
+                                    final PrintWriter out0 = new PrintWriter("entityCentre.js");
+                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper() {
+                                        @Override
+                                        protected void registerAbstractEntitySerialiser() {
+                                            addSerialiser(AbstractEntity.class, new AbstractEntityToGeoJsonSerialiser());
+                                        }
+                                    };
+                                    final CentreDomainTreeManagerAndEnhancer entityCentre = (CentreDomainTreeManagerAndEnhancer) GisViewPanel2.this.parentView().getModel().getCdtme();
+                                    final String entityCentreString = tgObjectMapper.writeValueAsString(entityCentre);
+
+                                    logger.info("Saving to geo json file...");
+                                    out0.println(entityCentreString);
+                                    logger.info("Saving to geo json file...done");
+
+                                    executeScript("gisComponent.promoteEntityCentreString('" + entityCentreString + "');", false);
+                                    logger.info("Scripts have been executed.");
+
+                                    out0.close();
+                                } catch (final Exception ex) {
+                                    ex.printStackTrace();
                                 }
-                                executeScript("gisComponent._markerCluster.setShouldFitToBounds(" + shouldFitToBounds() + "); ");
-                                executeScript("gisComponent._markerCluster.getGisMarkerClusterGroup().addLayer(gisComponent._geoJsonOverlay);");
 
-                                executeScript("gisComponent.finishReload();");
-                                logger.info("Scripts have been executed.");
-
-                                //                                logger.info("Started...");
-                                //                                executeScript("var timeoutID = window.setTimeout(function(geoJson) {" //
-                                //                                        + "    updateProgressBar(0, 7, 10, undefined); " //
-                                //                                        + "    map.fire('dataloading'); " //
-                                //                                        + "    updateProgressBar(1, 7, 10, undefined); " //
-                                //                                        + "    geoJsonOverlay.clearLayers(); " //
-                                //                                        + "    updateProgressBar(2, 7, 10, undefined); " //
-                                //                                        + "    markersClusterGroup.clearLayers(); " //
-                                //                                        + "    updateProgressBar(3, 7, 10, undefined); " //
-                                //                                        + "    geoJsonOverlay.addData(geoJson); " //
-                                //                                        + "    updateProgressBar(4, 7, 10, undefined); " //
-                                //                                        + "    markersClusterGroup.addLayer(geoJsonOverlay); " //
-                                //                                        + "    updateProgressBar(5, 7, 10, undefined); " //
-                                //                                        + "    map.fitBounds(markersClusterGroup.getBounds()); " //
-                                //                                        + "    updateProgressBar(6, 7, 10, undefined); " //
-                                //                                        + "    map.fire('dataload'); " //
-                                //                                        + "    updateProgressBar(7, 7, 10, undefined); " //
-                                //                                        + "}, 0, " + geoJsonFeatures + ");", false);
-                                //                                logger.info("Ended.");
-
-                                final MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
-                                final MemoryUsage usage = mbean.getHeapMemoryUsage();
-                                final MemoryUsage nonHeapusage = mbean.getNonHeapMemoryUsage();
-                                final long total = ((usage.getUsed() + nonHeapusage.getUsed()) / 1024) / 1024;
-                                System.out.println("total = " + total);
+                                //                                executeScript("gisComponent.initReload();");
+                                //                                executeScript("gisComponent.clearAll();");
+                                //                                int i = 0;
+                                //                                final int featuresSize = geoJsonFeatures.size();
+                                //                                logger.info("Adding features [" + featuresSize + "]...");
+                                //                                for (final String feature : geoJsonFeatures) {
+                                //                                    i++;
+                                //                                    if (i % 50 == 0 || i == featuresSize) {
+                                //                                        logger.info("Adding feature [" + i + " / " + featuresSize + "]...");
+                                //                                    }
+                                //                                    executeScript("gisComponent._geoJsonOverlay.addData(" + feature + ");", false);
+                                //                                }
+                                //                                executeScript("gisComponent._markerCluster.setShouldFitToBounds(" + shouldFitToBounds() + "); ");
+                                //                                executeScript("gisComponent._markerCluster.getGisMarkerClusterGroup().addLayer(gisComponent._geoJsonOverlay);");
+                                //                                executeScript("gisComponent.finishReload();");
+                                //                                logger.info("Scripts have been executed.");
                             }
                         });
                     }
@@ -491,6 +506,10 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
 
     protected boolean shouldFitToBounds() {
         return this.parentView.getModel().getFitToBounds();
+    }
+
+    protected boolean isFirstQuery() {
+        return this.parentView.getModel().isFirstQuery();
     }
 
     // protected abstract AbstractEntity<?> entityToSelect(final P point);

@@ -3,6 +3,7 @@ require.config({
 	paths: {
 		// 'jQuery': 'vendor/jquery-1.9.0.min',
 		// 'underscore': 'vendor/underscore-1.9.min',
+		'text': 'vendor/text', // AMD-compliant
 		'async': 'vendor/async', // AMD-compliant
 		'leaflet': 'vendor/leaflet/leaflet', // AMD-compliant
 

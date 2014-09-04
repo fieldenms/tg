@@ -2,7 +2,7 @@ define([
 	'log',
 	'leaflet',
 	'BaseLayers',
-	'FeatureStyling',
+	'EntityStyling',
 	'MarkerFactory',
 	'MarkerCluster',
 	'Select',
@@ -11,7 +11,7 @@ define([
 	log,
 	leaflet,
 	BaseLayers,
-	FeatureStyling,
+	EntityStyling,
 	MarkerFactory,
 	MarkerCluster,
 	Select,
@@ -26,10 +26,10 @@ define([
 		self._baseLayers = new BaseLayers();
 
 		self._map = L.map(mapDiv, {
-				layers: [self._baseLayers.getBaseLayer("OpenStreetMap")], // only add one!
-				zoomControl: false, // add it later
-				loadingControl: false // add it later
-			})
+			layers: [self._baseLayers.getBaseLayer("OpenStreetMap")], // only add one!
+			zoomControl: false, // add it later
+			loadingControl: false // add it later
+		})
 			.setView([49.841919, 24.0316], 18); // Lviv (Rynok Sq) has been centered
 
 
@@ -38,10 +38,10 @@ define([
 		self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
 		self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers);
 
-		self._featureStyling = new FeatureStyling();
+		self._entityStyling = self.createEntityStyling();
 		self._geoJsonOverlay = L.geoJson([], {
 			style: function(feature) {
-				return self._featureStyling.geoJsonStyle(feature);
+				return self._entityStyling.getStyle(feature);
 			},
 
 			pointToLayer: function(feature, latlng) {
@@ -78,7 +78,8 @@ define([
 				// }
 
 				// does this feature have a property named popupContent?
-				if (feature.properties && feature.properties.popupContent) {
+				if (feature.properties) {
+					feature.properties.popupContent = self.createPopupContent(feature);
 					layer.bindPopup(feature.properties.popupContent);
 				}
 			}
@@ -102,14 +103,15 @@ define([
 
 	GisComponent.prototype.initialise = function() {
 		this._geoJsonOverlay.addData([]);
-
-		// var _initialiser = new Initialiser();
-		// this._geoJsonOverlay.addData(_initialiser.geoJsonFeatures());
 	};
 
 	GisComponent.prototype.createMarkerCluster = function(map, markerFactory, progressDiv, progressBarDiv) {
 		return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 	};
+
+	GisComponent.prototype.createEntityStyling = function() {
+		return new EntityStyling();
+	};	
 
 	GisComponent.prototype.initReload = function() {
 		log("initReload");
@@ -125,6 +127,119 @@ define([
 		this._geoJsonOverlay.clearLayers();
 		this._markerCluster.getGisMarkerClusterGroup().clearLayers();
 	};
+
+	GisComponent.prototype.promoteEntityCentreString = function(entityCentreString) {
+		var self = this;
+		log("Entity centre JSON string parsing...");
+		this._entityCentre = JSON.parse(entityCentreString);
+		log("Entity centre JSON string parsing ended.");
+	};
+
+	GisComponent.prototype.promoteEntitiesString = function(entitiesString) {
+		var self = this;
+		log("Entities JSON string parsing...");
+		this._entities = JSON.parse(entitiesString);
+		log("Entities JSON string parsing ended.");
+
+		this.traverseEntities(this._entities, function(entity) {
+			entity.type = "Feature";
+			entity.geometry = self.createGeometry(entity);
+
+			// log('entity:');
+			// log(entity);
+			// log('entity.geometry:');
+			// log(entity.geometry);
+
+			self._geoJsonOverlay.addData(entity);
+
+			entity.id = null; // TODO
+		}, function(entities) {
+			return self.createSummaryEntity(entities);
+		});
+	};
+
+	/** 
+	* The method for creating 'summary' entity for an array of entities of different types (designed for overriding). 
+	* Query the type of entity with 'entities[0].properties._entityType'.
+	*/
+	GisComponent.prototype.createSummaryEntity = function(entities) {
+		return {
+			test: "S U M M A R Y"
+		};
+	}	
+
+	/** 
+	* The method for creating geometry objects for entities of different types (designed for overriding). 
+	* Query the type of entity with 'entity.properties._entityType'.
+	*/
+	GisComponent.prototype.createGeometry = function(entity) {
+		return {
+			test: "T E S T"
+		};
+	}	
+
+	GisComponent.prototype.traverseEntities = function(entities, entityAction, createSummaryEntityAction) {
+		for (var i = 0; i < entities.length; i++) {
+			var entity = entities[i];
+			this.traverseEntity(entity, entityAction, createSummaryEntityAction);
+		}
+		var summaryEntity = createSummaryEntityAction(entities);
+		if (summaryEntity) {
+			entities.push(summaryEntity); // the last sibling item to the entities will be summaryEntity (if any)
+			entityAction(summaryEntity);
+		}
+	}
+
+	GisComponent.prototype.traverseEntity = function(entity, entityAction, createSummaryEntityAction) {
+		entityAction(entity);
+
+		if (entity.properties) {
+			for (var prop in entity.properties) {
+				if (entity.properties.hasOwnProperty(prop)) { // check that the property belongs to the object and not a prototype
+					var value = entity.properties[prop];
+					if (value && (value instanceof Array)) { // assume that array contains only other entities
+						this.traverseEntities(value, entityAction, createSummaryEntityAction);
+					}
+				}
+			}
+		}
+	}
+
+	GisComponent.prototype.createCoordinatesFromMessage = function(message) {	
+		return (message.properties.altitude) ? [message.properties.x, message.properties.y, message.properties.altitude] : [message.properties.x, message.properties.y]		
+	}
+
+	GisComponent.prototype.createPopupContent = function(entity) {	
+        var popupText = '';
+
+        var resultProps = this._entityCentre.centreConfig.resultProperties;
+	    for (var i = 0; i < resultProps.length; i++) {
+	    	var property = resultProps[i];	    	
+	    	var propertyName = (!resultProps[i].propertyName) ? 'key' : resultProps[i].propertyName;
+
+	    	popupText = popupText + "" + property.title + ": " + this.valueToString(entity.properties["" + propertyName + ""]) + "<br>";
+        }
+        return popupText;
+	}
+
+	GisComponent.prototype.valueToString = function(value) {	
+		if (value === null) {
+			return '';
+		} else if (typeof value === 'number') {
+			return Math.round(value);
+		} else if (typeof value === 'boolean') {
+			return value ? "&#x2714" : "&#x2718";
+		} else if (typeof value === 'string') {
+			return value;
+		} else if (value instanceof Object) {
+			return this.valueToString(value.properties.key);
+		} else if (value === undefined) {
+			return '';
+		} else {
+			throw "unknown value:" + (typeof value);
+		}
+		return value;
+	}
 
 	return GisComponent;
 });

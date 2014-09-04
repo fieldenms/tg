@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.gis;
 import javafx.application.Platform;
 import javafx.scene.web.WebView;
 
+import org.apache.log4j.Logger;
+
 /**
  * A bridge between JavaScript and Java for {@link WebView} web application integration. Allows to use Java code from JavaScript. Usage:
  * <p>
@@ -19,6 +21,7 @@ import javafx.scene.web.WebView;
  *
  */
 public class Js2JavaBridge {
+    private final Logger logger = Logger.getLogger(getClass());
 
     public void exit() {
         Platform.exit();
@@ -26,6 +29,10 @@ public class Js2JavaBridge {
 
     public void println(final String string) {
         System.out.println(string);
+    }
+
+    public void info(final String string) {
+        logger.info(string);
     }
 
     public void selectTabularlyWithoutEventFiring(final String featureId) {
