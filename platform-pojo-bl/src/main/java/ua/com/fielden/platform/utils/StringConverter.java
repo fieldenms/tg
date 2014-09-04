@@ -30,27 +30,20 @@ public final class StringConverter {
     }
 
     public static final String toDayOfWeek(final DateTime dateTime) {
-        switch (dateTime.getDayOfWeek()) {
-        case DateTimeConstants.MONDAY:
-            return "Monday";
-        case DateTimeConstants.TUESDAY:
-            return "Tuesday";
-        case DateTimeConstants.WEDNESDAY:
-            return "Wednesday";
-        case DateTimeConstants.THURSDAY:
-            return "Thursday";
-        case DateTimeConstants.FRIDAY:
-            return "Friday";
-        case DateTimeConstants.SATURDAY:
-            return "Saturday";
-        case DateTimeConstants.SUNDAY:
-            return "Sunday";
-        default:
-            throw new IllegalArgumentException("For some reason none of the day constants matched for the provided DateTime argument.");
-        }
+        return dateTime.dayOfWeek().getAsText();
+    }
+
+    public static final String toDayOfWeek(final Date dateTime) {
+        return toDayOfWeek(new DateTime(dateTime));
     }
 
     public static final Money toMoney(final String amount) {
         return new Money(amount);
+    }
+
+    public static void main(final String[] args) {
+        final Date date = new Date();
+
+        System.out.println(new DateTime(date).dayOfWeek().getAsText());
     }
 }
