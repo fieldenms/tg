@@ -14,11 +14,13 @@ import static ua.com.fielden.platform.dao.PropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.dao.PropertyCategory.EXPRESSION_COMMON;
 import static ua.com.fielden.platform.dao.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE;
-import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_AS_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.VIRTUAL_OVERRIDE;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -66,7 +68,6 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.AbstractEntity.*;
 
 import com.google.inject.Injector;
 
@@ -262,7 +263,7 @@ public class DomainMetadata {
             switch (entityCategory) {
             case PERSISTED:
                 final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
-                return new PropertyMetadata.Builder(KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(typeResolver.basic(getKeyType(entityType).getName())).type(PRIMITIVE_AS_KEY).build();
+                return new PropertyMetadata.Builder(KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(typeResolver.basic(getKeyType(entityType).getName())).type(PRIMITIVE).build();
             case QUERY_BASED:
                 return null; //FIXME
             case UNION:

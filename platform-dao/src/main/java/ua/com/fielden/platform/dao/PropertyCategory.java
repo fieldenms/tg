@@ -25,12 +25,6 @@ public enum PropertyCategory {
             return true;
         }
     }, //
-    PRIMITIVE_AS_KEY {
-        @Override
-        boolean affectsMappings() {
-            return true;
-        }
-    }, //
     ENTITY_AS_KEY {
         @Override
         boolean affectsMappings() {
