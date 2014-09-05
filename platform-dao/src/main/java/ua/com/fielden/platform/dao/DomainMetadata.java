@@ -12,14 +12,12 @@ import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_AS_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.dao.PropertyCategory.EXPRESSION_COMMON;
-import static ua.com.fielden.platform.dao.PropertyCategory.ID;
 import static ua.com.fielden.platform.dao.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_AS_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
-import static ua.com.fielden.platform.dao.PropertyCategory.VERSION;
 import static ua.com.fielden.platform.dao.PropertyCategory.VIRTUAL_OVERRIDE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
@@ -68,11 +66,12 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
 
 import com.google.inject.Injector;
 
 public class DomainMetadata {
-    public final static List<String> specialProps = Arrays.asList(new String[] { AbstractEntity.ID, AbstractEntity.KEY, AbstractEntity.VERSION });
+    public final static List<String> specialProps = Arrays.asList(new String[] { ID, KEY, VERSION });
 
     private final PropertyColumn id;
     private final PropertyColumn version;
@@ -118,9 +117,9 @@ public class DomainMetadata {
             version = new PropertyColumn("TG_VERSION");
         }
         
-        idProperty = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(typeResolver.basic("long")).type(ID).build();
-        idPropertyInOne2One = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(typeResolver.basic("long")).type(ONE2ONE_ID).build();
-        versionProperty = new PropertyMetadata.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(typeResolver.basic("long")).type(VERSION).build();
+        idProperty = new PropertyMetadata.Builder(ID, Long.class, false).column(id).hibType(typeResolver.basic("long")).type(PRIMITIVE).build();
+        idPropertyInOne2One = new PropertyMetadata.Builder(ID, Long.class, false).column(id).hibType(typeResolver.basic("long")).type(ONE2ONE_ID).build();
+        versionProperty = new PropertyMetadata.Builder(VERSION, Long.class, false).column(version).hibType(typeResolver.basic("long")).type(PRIMITIVE).build();
 
         BaseInfoForDomainMetadata baseInfoForDomainMetadata = new BaseInfoForDomainMetadata(userMapTo);
         
@@ -234,12 +233,12 @@ public class DomainMetadata {
             return isOneToOne(entityType) ? idPropertyInOne2One : idProperty/*(entityType)*/;
         case QUERY_BASED:
             if (isEntityType(getKeyType(entityType))) {
-                return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(typeResolver.basic("long")).expression(expr().prop("key").model()).type(EXPRESSION).build();
+                return new PropertyMetadata.Builder(ID, Long.class, false).hibType(typeResolver.basic("long")).expression(expr().prop("key").model()).type(EXPRESSION).build();
             } else {
                 return null;
             }
         case UNION:
-            return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(typeResolver.basic("long")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "id")).type(EXPRESSION).build();
+            return new PropertyMetadata.Builder(ID, Long.class, false).hibType(typeResolver.basic("long")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "id")).type(EXPRESSION).build();
         default:
             return null;
         }
@@ -253,9 +252,9 @@ public class DomainMetadata {
         if (isOneToOne(entityType)) {
             switch (entityCategory) {
             case PERSISTED:
-                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(typeResolver.basic("long")).type(ENTITY_AS_KEY).build();
+                return new PropertyMetadata.Builder(KEY, getKeyType(entityType), false).column(id).hibType(typeResolver.basic("long")).type(ENTITY_AS_KEY).build();
             case QUERY_BASED:
-                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).hibType(typeResolver.basic("long")).type(SYNTHETIC).build();
+                return new PropertyMetadata.Builder(KEY, getKeyType(entityType), false).hibType(typeResolver.basic("long")).type(SYNTHETIC).build();
             default:
                 return null;
             }
@@ -263,18 +262,18 @@ public class DomainMetadata {
             switch (entityCategory) {
             case PERSISTED:
                 final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
-                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(typeResolver.basic(getKeyType(entityType).getName())).type(PRIMITIVE_AS_KEY).build();
+                return new PropertyMetadata.Builder(KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(typeResolver.basic(getKeyType(entityType).getName())).type(PRIMITIVE_AS_KEY).build();
             case QUERY_BASED:
                 return null; //FIXME
             case UNION:
-                return new PropertyMetadata.Builder(AbstractEntity.KEY, String.class, false).hibType(typeResolver.basic("string")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "key")).type(EXPRESSION).build();
+                return new PropertyMetadata.Builder(KEY, String.class, false).hibType(typeResolver.basic("string")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "key")).type(EXPRESSION).build();
             default:
                 return null;
             }
         } else if (DynamicEntityKey.class.equals(getKeyType(entityType))) {
             return getVirtualPropInfoForDynamicEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType);
         } else {
-            return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), true).hibType(typeResolver.basic(getKeyType(entityType).getName())).build();
+            return new PropertyMetadata.Builder(KEY, getKeyType(entityType), true).hibType(typeResolver.basic(getKeyType(entityType).getName())).build();
         }
     }
 

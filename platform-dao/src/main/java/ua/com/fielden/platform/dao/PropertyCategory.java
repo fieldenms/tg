@@ -19,19 +19,7 @@ public enum PropertyCategory {
             return true;
         }
     }, //
-    ID {
-        @Override
-        boolean affectsMappings() {
-            return true;
-        }
-    }, //
     ONE2ONE_ID {
-        @Override
-        boolean affectsMappings() {
-            return true;
-        }
-    }, //
-    VERSION {
         @Override
         boolean affectsMappings() {
             return true;

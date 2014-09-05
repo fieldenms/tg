@@ -10,7 +10,6 @@ import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_C
 import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
-import static ua.com.fielden.platform.dao.PropertyCategory.VERSION;
 import static ua.com.fielden.platform.dao.PropertyCategory.VIRTUAL_OVERRIDE;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -121,16 +120,8 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return type.equals(EXPRESSION_COMMON);
     }
 
-    public boolean isId() {
-        return type.equals(PropertyCategory.ID);
-    }
-
     public boolean isOne2OneId() {
         return type.equals(ONE2ONE_ID);
-    }
-
-    public boolean isVersion() {
-        return type.equals(VERSION);
     }
 
     public boolean isUnionEntity() {

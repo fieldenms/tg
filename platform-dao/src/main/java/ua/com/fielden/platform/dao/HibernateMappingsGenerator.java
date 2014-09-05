@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
@@ -144,10 +145,10 @@ public class HibernateMappingsGenerator {
         final StringBuffer sb = new StringBuffer();
         sb.append("<class name=\"" + entityMetadata.getType().getName() + "\" table=\"" + entityMetadata.getTable() + "\">\n");
 
-        sb.append(generatePropertyMappingFromPropertyMetadata(entityMetadata.getProps().get(AbstractEntity.ID), dbVersion));
-        sb.append(generatePropertyMappingFromPropertyMetadata(entityMetadata.getProps().get(AbstractEntity.VERSION), dbVersion));
+        sb.append(generatePropertyMappingFromPropertyMetadata(entityMetadata.getProps().get(ID), dbVersion));
+        sb.append(generatePropertyMappingFromPropertyMetadata(entityMetadata.getProps().get(VERSION), dbVersion));
 
-        final PropertyMetadata keyProp = entityMetadata.getProps().get(AbstractEntity.KEY);
+        final PropertyMetadata keyProp = entityMetadata.getProps().get(KEY);
         if (keyProp.affectsMapping()) {
             sb.append(generatePropertyMappingFromPropertyMetadata(keyProp, dbVersion));
         }
@@ -177,14 +178,16 @@ public class HibernateMappingsGenerator {
         case ENTITY:
         case ENTITY_MEMBER_OF_COMPOSITE_KEY:
             return generateManyToOnePropertyMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getJavaType());
-        case VERSION:
-            return generateEntityVersionMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString());
-        case ID:
-            return generateEntityIdMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString(), dbVersion);
         case ONE2ONE_ID:
             return generateOneToOneEntityIdMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString());
         default:
-            return generatePlainPropertyMapping(propMetadata.getName(), propMetadata.getColumns(), propMetadata.getTypeString());
+            if (propMetadata.getName().equals(ID)) {
+                return generateEntityIdMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString(), dbVersion);    
+            } else if (propMetadata.getName().equals(VERSION)) {
+                return generateEntityVersionMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString());    
+            } else {
+                return generatePlainPropertyMapping(propMetadata.getName(), propMetadata.getColumns(), propMetadata.getTypeString());    
+            }
         }
     }
 }

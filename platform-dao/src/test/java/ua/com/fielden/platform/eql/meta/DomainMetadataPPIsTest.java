@@ -22,15 +22,30 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import static ua.com.fielden.platform.dao.PropertyCategory.COLLECTIONAL;
+import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_HEADER;
+import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyCategory.EXPRESSION_COMMON;
+import static ua.com.fielden.platform.dao.PropertyCategory.ONE2ONE_ID;
+import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
+import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
+import static ua.com.fielden.platform.dao.PropertyCategory.VIRTUAL_OVERRIDE;
+import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE;
+import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_AS_KEY;
+import static ua.com.fielden.platform.dao.PropertyCategory.*;
+
 public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
     @Test
     public void test1() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
-        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
-        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
-        expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyCategory.PRIMITIVE_AS_KEY));
-        expected.add(ppi("desc", STRING, true, hibType("string"), "DESC_", PropertyCategory.PRIMITIVE));
-        expected.add(ppi("make", MAKE, false, hibType("long"), "MAKE_", PropertyCategory.ENTITY));
+        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PRIMITIVE));
+        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PRIMITIVE));
+        expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PRIMITIVE_AS_KEY));
+        expected.add(ppi("desc", STRING, true, hibType("string"), "DESC_", PRIMITIVE));
+        expected.add(ppi("make", MAKE, false, hibType("long"), "MAKE_", ENTITY));
         //	expected.add(ppi("referencesCount", INTEGER, false, hibType("integer"), Collections.<PropertyColumn> emptyList(), PropertyCategory.EXPRESSION_COMMON));
 
         final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
@@ -41,14 +56,14 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
     @Test
     public void test2() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
-        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
-        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
-        expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyCategory.PRIMITIVE_AS_KEY));
-        expected.add(ppi("desc", STRING, true, hibType("string"), "DESC_", PropertyCategory.PRIMITIVE));
-        expected.add(ppi("model", MODEL, false, hibType("long"), "MODEL_", PropertyCategory.ENTITY));
-        expected.add(ppi("price.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PRICE_", PropertyCategory.COMPONENT_DETAILS));
-        expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PURCHASEPRICE_", PropertyCategory.COMPONENT_DETAILS));
-        expected.add(ppi("fuelUsages", FUEL_USAGE, true, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
+        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PRIMITIVE));
+        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PRIMITIVE));
+        expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PRIMITIVE_AS_KEY));
+        expected.add(ppi("desc", STRING, true, hibType("string"), "DESC_", PRIMITIVE));
+        expected.add(ppi("model", MODEL, false, hibType("long"), "MODEL_", ENTITY));
+        expected.add(ppi("price.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PRICE_", COMPONENT_DETAILS));
+        expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PURCHASEPRICE_", COMPONENT_DETAILS));
+        expected.add(ppi("fuelUsages", FUEL_USAGE, true, null, Collections.<PropertyColumn> emptyList(), COLLECTIONAL));
 
         final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
         actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(VEHICLE));
@@ -59,12 +74,12 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
     @Test
     public void test5() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
-        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
-        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
+        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PRIMITIVE));
+        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PRIMITIVE));
         //expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyPersistenceType.PRIMITIVE_KEY));
         //expected.add(ppi("desc", STRING, false, hibType("string"), "DESC_", PropertyPersistenceType.PROP));
-        expected.add(ppi("vehicle", VEHICLE, false, hibType("long"), "VEHICLE_", PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY));
-        expected.add(ppi("date", DATE, false, DOMAIN_METADATA_ANALYSER.getHibTypesDefaults().get(Date.class), "DATE_", PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY));
+        expected.add(ppi("vehicle", VEHICLE, false, hibType("long"), "VEHICLE_", ENTITY_MEMBER_OF_COMPOSITE_KEY));
+        expected.add(ppi("date", DATE, false, DOMAIN_METADATA_ANALYSER.getHibTypesDefaults().get(Date.class), "DATE_", PRIMITIVE_MEMBER_OF_COMPOSITE_KEY));
 
         final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
         actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(FUEL_USAGE));
@@ -75,10 +90,10 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
     @Test
     public void test4() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
-        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
-        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
-        expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PropertyCategory.PRIMITIVE_AS_KEY));
-        expected.add(ppi("roles", UserAndRoleAssociation.class, true, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
+        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PRIMITIVE));
+        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PRIMITIVE));
+        expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PRIMITIVE_AS_KEY));
+        expected.add(ppi("roles", UserAndRoleAssociation.class, true, null, Collections.<PropertyColumn> emptyList(), COLLECTIONAL));
 
         final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
         actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(User.class));
@@ -110,10 +125,10 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
     @Test
     public void test6() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
-        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
-        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
-        expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PropertyCategory.PRIMITIVE_AS_KEY));
-        expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
+        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PRIMITIVE));
+        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PRIMITIVE));
+        expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PRIMITIVE_AS_KEY));
+        expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), COLLECTIONAL));
 
         final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
         actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(TgMakeCount.class));
@@ -127,10 +142,10 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
     @Test
     public void test7() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
-        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
-        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
-        expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PropertyCategory.PRIMITIVE_AS_KEY));
-        expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
+        expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PRIMITIVE));
+        expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PRIMITIVE));
+        expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PRIMITIVE_AS_KEY));
+        expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), COLLECTIONAL));
 
         final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
         actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(TgBogie.class));
