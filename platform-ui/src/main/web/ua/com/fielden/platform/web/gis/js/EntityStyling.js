@@ -30,27 +30,11 @@ define(['log'], function(log) {
 			} else if (entity.properties._entityType === 'Summary_Message') {
 				return "blue";
 			} else {
-				throw "myException2"; // generates an exception	
+				throw "EntityStyling.prototype.getColor: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Message' or 'Summary_Message'."; // generates an exception
 			}
 		} else {
-			throw "myException1"; // generates an exception
+			throw "EntityStyling.prototype.getColor: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
 		}
-
-
-		// if (entity && entity.geometry && entity.geometry.type) {
-		// 	if (entity.properties && entity.properties.what && entity.properties.what === "circle") {
-		// 		return "#FF4500"; //  orange
-		// 	} else if (entity.geometry.type === "LineString") {
-		// 		return "blue";
-		// 	} else if (entity.geometry.type === "Point") {
-		// 		if (entity.properties && entity.properties.vectorSpeed) {
-		// 			return (entity.properties.vectorSpeed > 0) ? "blue" : "red";
-		// 		}
-		// 	} else if (entity.geometry.type === "Polygon") {
-		// 	!!!!!!!!!!!!!!!	return "purple";
-		// 	}
-		// 	return "white";
-		// }
 	}
 
 	EntityStyling.prototype.getStyle = function (entity) {
