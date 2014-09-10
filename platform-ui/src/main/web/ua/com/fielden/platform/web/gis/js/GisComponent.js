@@ -34,7 +34,7 @@ define([
 
 
 		// create a factory for markers
-		self._markerFactory = new MarkerFactory();
+		self._markerFactory = self.createMarkerFactory();
 		self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
 		self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers);
 
@@ -45,7 +45,7 @@ define([
 			},
 
 			pointToLayer: function(feature, latlng) {
-				return self._markerFactory.createFeatureMarker(feature, latlng);
+				return self._markerFactory.createEntityMarker(feature, latlng);
 			},
 
 			onEachFeature: function(feature, layer) {
@@ -105,6 +105,10 @@ define([
 		this._geoJsonOverlay.addData([]);
 	};
 
+	GisComponent.prototype.createMarkerFactory = function() {
+		return new MarkerFactory();
+	};
+
 	GisComponent.prototype.createMarkerCluster = function(map, markerFactory, progressDiv, progressBarDiv) {
 		return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 	};
@@ -150,9 +154,14 @@ define([
 			// log('entity.geometry:');
 			// log(entity.geometry);
 
-			self._geoJsonOverlay.addData(entity);
-
-			entity.id = null; // TODO
+			if (entity.geometry) {
+				self._geoJsonOverlay.addData(entity);
+				entity.id = null; // TODO
+			} else {
+				// TODO do nothing in case when the entity has no visual representation
+				log("entity with no visual representation: ");
+				log(entity);
+			}				
 		}, function(entities) {
 			return self.createSummaryEntity(entities);
 		});
@@ -251,9 +260,32 @@ define([
 			var property = resultProps[i];
 			var propertyName = (!resultProps[i].propertyName) ? 'key' : resultProps[i].propertyName;
 
-			popupText = popupText + "" + property.title + ": " + this.valueToString(entity.properties["" + propertyName + ""]) + "<br>";
+			popupText = popupText + "" + property.title + ": " + this.valueToString(this.getValue(entity, propertyName)) + "<br>";
 		}
 		return popupText;
+	}
+
+	GisComponent.prototype.getValue = function(entity, dotNotation) {
+		if (dotNotation.indexOf(".") > -1) {
+			// log(entity.properties["" + "lastMessage.properties.gpsTime" + ""]);
+
+
+			// throw "[" + dotNotation + "] contains dot. Value = [" + (entity.properties["" + "lastMessage.properties.gpsTime" + ""]) + "].";
+			var firstPart = this.firstPart(dotNotation);
+			var lastPartWithoutProps = this.lastPart(dotNotation);
+			return this.getValue(entity.properties["" + firstPart + ""], lastPartWithoutProps);
+		} else {
+			return entity.properties["" + dotNotation + ""];
+		}
+	}
+
+	GisComponent.prototype.firstPart = function(dotNotation) {
+		return dotNotation.substring(0, dotNotation.indexOf("."));
+	}
+
+	GisComponent.prototype.lastPart = function(dotNotation) {
+		var withProperties = dotNotation.substring((dotNotation.indexOf(".") + 1), dotNotation.length);
+		return withProperties.substring((withProperties.indexOf(".") + 1), withProperties.length);
 	}
 
 	GisComponent.prototype.valueToString = function(value) {

@@ -68,21 +68,38 @@ define([
 		return this._iconFactory.createClusterIcon(htmlString);
 	}
 
-	MarkerFactory.prototype.createFeatureMarker = function(feature, latlng) {
-		// log(feature, latlng);
-		if (feature.properties && feature.properties.vectorSpeed) {
-			return new this.ArrowMarker(latlng, {
-				angle: ((feature.properties && feature.properties.vectorAngle) ? (feature.properties.vectorAngle - 180) : 0)
-			});
-		} else if (feature.properties && feature.properties.stuff) {
-			var coordMarker = new this.CoordMarker(latlng) // , {
-				// 	opacity: 0.0
-				// });
-				// coordMarker.setZIndexOffset(-1000);
-			return coordMarker;
+	MarkerFactory.prototype.createEntityMarker = function(entity, latlng) {
+		var self = this;
+		if (entity && entity.properties && entity.properties._entityType) {
+			if (entity.properties._entityType === 'Message') {
+				if (entity.properties.vectorSpeed) {
+					return new this.ArrowMarker(latlng, {
+						angle: ((entity.properties.vectorAngle) ? (entity.properties.vectorAngle - 180) : 0)
+					});
+				} else {
+					return new this.CircleMarker(latlng);
+				}
+			} else {
+				throw "MarkerFactory.prototype.createEntityMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Message' only."; // generates an exception
+			}
 		} else {
-			return new this.CircleMarker(latlng);
+			throw "MarkerFactory.prototype.createEntityMarker: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
 		}
+
+		// log(feature, latlng);
+		// if (feature.properties && feature.properties.vectorSpeed) {
+		// 	return new this.ArrowMarker(latlng, {
+		// 		angle: ((feature.properties && feature.properties.vectorAngle) ? (feature.properties.vectorAngle - 180) : 0)
+		// 	});
+		// } else if (feature.properties && feature.properties.stuff) {
+		// 	var coordMarker = new this.CoordMarker(latlng) // , {
+		// 		// 	opacity: 0.0
+		// 		// });
+		// 		// coordMarker.setZIndexOffset(-1000);
+		// 	return coordMarker;
+		// } else {
+		// 	return new this.CircleMarker(latlng);
+		// }
 	}
 
 	return MarkerFactory;

@@ -155,9 +155,9 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
                                         }
                                     };
                                     final String entitiesString = tgObjectMapper.writeValueAsString(((IPage<AbstractEntity<?>>) e.getNewPage()).data());
-                                    logger.info("Saving to geo json file...");
+                                    logger.info("Saving entities to geo json file...");
                                     out0.println(entitiesString);
-                                    logger.info("Saving to geo json file...done");
+                                    logger.info("Saving entities to geo json file...done");
 
                                     executeScript("gisComponent.initReload();");
                                     executeScript("gisComponent.clearAll();");
@@ -197,9 +197,9 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
                                     final CentreDomainTreeManagerAndEnhancer entityCentre = (CentreDomainTreeManagerAndEnhancer) GisViewPanel2.this.parentView().getModel().getCdtme();
                                     final String entityCentreString = tgObjectMapper.writeValueAsString(entityCentre);
 
-                                    logger.info("Saving to geo json file...");
+                                    logger.info("Saving entityCentre to geo json file...");
                                     out0.println(entityCentreString);
-                                    logger.info("Saving to geo json file...done");
+                                    logger.info("Saving entityCentre to geo json file...done");
 
                                     executeScript("gisComponent.promoteEntityCentreString('" + entityCentreString + "');", false);
                                     logger.info("Scripts have been executed.");
