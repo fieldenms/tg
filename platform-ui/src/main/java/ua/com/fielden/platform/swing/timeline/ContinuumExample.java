@@ -25,14 +25,12 @@ import org.jfree.data.gantt.XYTaskDataset;
 import org.jfree.data.time.SimpleTimePeriod;
 
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
-import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 public class ContinuumExample {
 
     public static void main(final String[] args) {
 
         try {
-            SwingUtilitiesEx.installNimbusLnFifPossible();
 
             final TaskSeriesCollection dataset = new TaskSeriesCollection();
 

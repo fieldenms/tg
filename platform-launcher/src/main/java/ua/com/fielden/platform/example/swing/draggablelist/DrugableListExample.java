@@ -9,7 +9,6 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
-import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 import com.jidesoft.plaf.LookAndFeelFactory;
 
@@ -19,7 +18,6 @@ public class DrugableListExample {
      * @param args
      */
     public static void main(final String[] args) {
-        SwingUtilitiesEx.installNimbusLnFifPossible();
         com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
         LookAndFeelFactory.installJideExtension();
 

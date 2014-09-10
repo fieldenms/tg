@@ -19,7 +19,6 @@ import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
-import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 import com.jidesoft.plaf.LookAndFeelFactory;
 
@@ -29,7 +28,6 @@ public class UninstrumentalEntityEGIExample extends AbstractUiApplication {
 
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Exception {
-        SwingUtilitiesEx.installNimbusLnFifPossible();
         com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
         LookAndFeelFactory.installJideExtension();
 

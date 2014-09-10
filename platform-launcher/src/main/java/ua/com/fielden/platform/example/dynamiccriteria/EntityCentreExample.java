@@ -24,7 +24,6 @@ import ua.com.fielden.platform.swing.menu.filter.WordFilter;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
-import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -42,7 +41,6 @@ public class EntityCentreExample extends AbstractUiApplication {
 
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Throwable {
-        SwingUtilitiesEx.installNimbusLnFifPossible();
         com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
         LookAndFeelFactory.installJideExtension();
 

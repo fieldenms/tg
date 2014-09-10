@@ -22,8 +22,6 @@ public class SimpleLauncher {
         SwingUtilitiesEx.invokeLater(new Runnable() {
             @Override
             public void run() {
-                SwingUtilitiesEx.installNimbusLnFifPossible();
-
                 JFrame.setDefaultLookAndFeelDecorated(true);
                 JDialog.setDefaultLookAndFeelDecorated(true);
 
@@ -51,8 +49,6 @@ public class SimpleLauncher {
         SwingUtilitiesEx.invokeLater(new Runnable() {
             @Override
             public void run() {
-                SwingUtilitiesEx.installNimbusLnFifPossible();
-
                 JFrame.setDefaultLookAndFeelDecorated(true);
                 JDialog.setDefaultLookAndFeelDecorated(true);
 

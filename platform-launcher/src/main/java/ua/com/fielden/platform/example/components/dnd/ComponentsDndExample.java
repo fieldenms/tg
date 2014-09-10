@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.example.components.dnd;
 
 import static ua.com.fielden.platform.swing.utils.SimpleLauncher.show;
-import static ua.com.fielden.platform.swing.utils.SwingUtilitiesEx.installNimbusLnFifPossible;
 
 import java.util.Date;
 
@@ -30,7 +29,6 @@ public class ComponentsDndExample extends AbstractUiApplication {
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Throwable {
         super.beforeUiExposure(args, splashController);
-        installNimbusLnFifPossible();
         //        setLookAndFeel(getSystemLookAndFeelClassName());
     }
 

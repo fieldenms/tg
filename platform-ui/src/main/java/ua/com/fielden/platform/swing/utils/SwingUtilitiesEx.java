@@ -1,13 +1,9 @@
 package ua.com.fielden.platform.swing.utils;
 
-import static javax.swing.UIManager.getInstalledLookAndFeels;
-import static javax.swing.UIManager.setLookAndFeel;
-
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager.LookAndFeelInfo;
 
 public class SwingUtilitiesEx {
 
@@ -39,18 +35,6 @@ public class SwingUtilitiesEx {
                 EventQueue.invokeAndWait(runnable);
             } catch (InvocationTargetException | InterruptedException e) {
                 throw new IllegalStateException(e);
-            }
-        }
-    }
-
-    public static void installNimbusLnFifPossible() {
-        for (final LookAndFeelInfo laf : getInstalledLookAndFeels()) {
-            if ("Nimbus".equals(laf.getName())) {
-                try {
-                    setLookAndFeel(laf.getClassName());
-                } catch (final Exception e) {
-                    e.printStackTrace();
-                }
             }
         }
     }

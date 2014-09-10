@@ -17,13 +17,11 @@ import org.jfree.data.time.TimePeriodValues;
 import org.jfree.data.time.TimePeriodValuesCollection;
 
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
-import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 public class TimePeriodSpike {
 
     public static void main(final String[] args) {
         try {
-            SwingUtilitiesEx.installNimbusLnFifPossible();
             final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy hh:mm a");
 
             final TimePeriodValues tpv = new TimePeriodValues("TimePeriodValues");

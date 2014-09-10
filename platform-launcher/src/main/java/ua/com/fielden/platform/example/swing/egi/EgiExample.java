@@ -41,7 +41,6 @@ import ua.com.fielden.platform.swing.egi.coloring.IColouringScheme;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
-import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.types.Money;
 
 import com.google.inject.Injector;
@@ -60,7 +59,6 @@ public class EgiExample extends AbstractUiApplication {
 
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Exception {
-        SwingUtilitiesEx.installNimbusLnFifPossible();
         com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
         LookAndFeelFactory.installJideExtension();
 

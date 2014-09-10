@@ -96,10 +96,6 @@ public class WebClientStartupUtility {
                     JFrame.setDefaultLookAndFeelDecorated(true);
                     JDialog.setDefaultLookAndFeelDecorated(true);
 
-                    // installing Nimbus LnF once again in order to correctly draw check box as table renderer
-                    // this installation should be performed after main frame was created
-                    SwingUtilitiesEx.installNimbusLnFifPossible();
-
                     // prepare the login prompt
                     final StyledLoginScreenModel loginScreenModel = new StyledLoginScreenModel(authenticationModel, "Login Screen", ResourceLoader.getIcon("images/styled-login-scr-background.png")) {
                         @Override
@@ -208,7 +204,6 @@ public class WebClientStartupUtility {
                 message("Loading application modules...", splash, loginScreen);
                 JFrame.setDefaultLookAndFeelDecorated(true);
                 JDialog.setDefaultLookAndFeelDecorated(true);
-                SwingUtilitiesEx.installNimbusLnFifPossible();
 
                 if (restUtil.isUserConfigured()) {
                     createAndRunMainApplicationFrame(restUtil, splash, loginScreen, injector, emm, mmBinder, developmentMainMenuStructureBuilder, caption, dim, icon, startupCallback);
@@ -467,7 +462,6 @@ public class WebClientStartupUtility {
         SwingUtilitiesEx.invokeLater(new Runnable() {
             @Override
             public void run() {
-                SwingUtilitiesEx.installNimbusLnFifPossible();
                 com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
                 LookAndFeelFactory.installJideExtension();
 
