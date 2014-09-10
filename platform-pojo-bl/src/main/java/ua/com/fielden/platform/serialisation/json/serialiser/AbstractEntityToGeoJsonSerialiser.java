@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,7 +31,7 @@ public class AbstractEntityToGeoJsonSerialiser extends JsonSerializer<AbstractEn
         generator.writeFieldName("properties"); // this is necessary to make it geoJson compatible (not to rebuild the tree again)
         generator.writeStartObject();
         generator.writeFieldName("_entityType");
-        generator.writeObject(PropertyTypeDeterminator.stripIfNeeded(entity.getType()).getSimpleName());
+        generator.writeObject(DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.stripIfNeeded(entity.getType())).getSimpleName());
 
         for (final Field propertyField : Finder.findRealProperties(entity.getType())) {
             if (!AbstractEntity.KEY.equals(propertyField.getName()) // disregard inclusion of composite key property inside json (as the separate parts of keys will be included)
