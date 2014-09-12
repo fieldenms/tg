@@ -39,6 +39,8 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.TransactionDate;
+import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -776,8 +778,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             metaProperty.setVisible(!AnnotationReflector.isAnnotationPresent(field, Invisible.class)
                     || (AnnotationReflector.isAnnotationPresent(field, Invisible.class) && AnnotationReflector.getAnnotation(field, Invisible.class).centreOnly()));
             metaProperty.setEditable(!AnnotationReflector.isAnnotationPresent(field, Readonly.class));
+
             // TODO may need to relax this condition for composite key member in order to support empty composite members
-            metaProperty.setRequired(AnnotationReflector.isAnnotationPresent(field, Required.class) || AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class));
+            // As part of issue #28 need to relax requiredness for composite key members in case they have transactional nature
+            if (AnnotationReflector.isAnnotationPresent(field, TransactionUser.class) || AnnotationReflector.isAnnotationPresent(field, TransactionDate.class)) {
+                metaProperty.setRequired(false);
+            } else {
+                metaProperty.setRequired(AnnotationReflector.isAnnotationPresent(field, Required.class) || AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class));
+            }
+
             if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {
                 final Title title = AnnotationReflector.getAnnotation(field, Title.class);
                 metaProperty.setTitle(title.value());
