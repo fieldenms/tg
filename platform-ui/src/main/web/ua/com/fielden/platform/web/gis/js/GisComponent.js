@@ -21,6 +21,7 @@ define([
 		// IMPORTANT: use the following reference in cases when you need some properties of the 
 		// GisComponent inside the functions or nested classes
 		var self = this;
+		self._leafletIdToEntity = {};
 
 		// creating and configuring all layers
 		self._baseLayers = new BaseLayers();
@@ -49,27 +50,31 @@ define([
 			},
 
 			onEachFeature: function(feature, layer) {
-				var featureId = feature.id;
+				var layerId = self._geoJsonOverlay.getLayerId(layer);
+				// provide leafletId of the layer directly inside corresponding entity
 
-				self._select.setLeafletIdFor(featureId, self._geoJsonOverlay.getLayerId(layer));
+				feature.id = layerId; 
+				self.setEntityFor(layerId, feature);
+
+				// var featureId = feature.id;
+				// self._select.setLeafletIdFor(featureId, self._geoJsonOverlay.getLayerId(layer));
 
 				// log("onEachFeature featureId = " + featureId + " ");	            
 				// log(layer);	            
 
 				layer.on('mouseover', function() {
-					//log("mouseover (entered):");
-					//log(layer);
+					// log("mouseover (entered):");
+					// log(layer);
 				});
 
 				layer.on('mouseout', function() {
-					//log("mouseout (leaved):");
-					//log(layer);
+					// log("mouseout (leaved):");
+					// log(layer);
 				});
 
 				layer.on('click', function() { // dblclick
-					// alert("Hi!");
-					log("clicked:");
-					log(layer);
+					// log("clicked:");
+					// log(layer);
 
 					self._select.selectById(featureId);
 				});
@@ -100,6 +105,26 @@ define([
 
 		self._map.fire('dataload');
 	};
+
+	GisComponent.prototype.setEntityFor = function(layerId, entity) {
+		this._leafletIdToEntity["" + layerId + ""] = entity;
+	}
+
+	GisComponent.prototype.getEntityFor = function(layerId) {
+		return this._leafletIdToEntity["" + layerId + ""];
+	}
+
+	GisComponent.prototype.getTopEntityFor = function(entity) {
+		if (entity && entity.properties) {
+			if (entity.properties._parentEntity) {
+				return this.getTopEntityFor(entity.properties._parentEntity);
+			} else {
+				return entity;
+			}
+		} else {
+			throw "GisComponent.prototype.getTopEntityFor: [" + entity + "] has no 'properties' or itself is missing."; // generates an exception
+		}
+	}
 
 	GisComponent.prototype.initialise = function() {
 		this._geoJsonOverlay.addData([]);
@@ -145,7 +170,7 @@ define([
 		this._entities = JSON.parse(entitiesString);
 		log("Entities JSON string parsing ended.");
 
-		this.traverseEntities(this._entities, function(entity) {
+		this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function(entity) {
 			entity.type = "Feature";
 			entity.geometry = self.createGeometry(entity);
 
@@ -156,7 +181,6 @@ define([
 
 			if (entity.geometry) {
 				self._geoJsonOverlay.addData(entity);
-				entity.id = null; // TODO
 			} else {
 				// TODO do nothing in case when the entity has no visual representation
 				log("entity with no visual representation: ");
@@ -221,15 +245,19 @@ define([
 		}
 	}
 
-	GisComponent.prototype.traverseEntities = function(entities, entityAction, createSummaryEntityAction) {
+	GisComponent.prototype.traverseEntities = function(entities, parentEntity, entityAction, createSummaryEntityAction) {
 		for (var i = 0; i < entities.length; i++) {
 			var entity = entities[i];
 			this.traverseEntity(entity, entityAction, createSummaryEntityAction);
+
+			entity.properties._parentEntity = parentEntity;
 		}
 		var summaryEntity = createSummaryEntityAction(entities);
 		if (summaryEntity) {
 			entities.push(summaryEntity); // the last sibling item to the entities will be summaryEntity (if any)
 			entityAction(summaryEntity);
+
+			summaryEntity.properties._parentEntity = parentEntity;
 		}
 	}
 
@@ -241,7 +269,7 @@ define([
 				if (entity.properties.hasOwnProperty(prop)) { // check that the property belongs to the object and not a prototype
 					var value = entity.properties[prop];
 					if (value && (value instanceof Array)) { // assume that array contains only other entities
-						this.traverseEntities(value, entityAction, createSummaryEntityAction);
+						this.traverseEntities(value, entity, entityAction, createSummaryEntityAction);
 					}
 				}
 			}
@@ -305,6 +333,11 @@ define([
 			throw "unknown value:" + (typeof value);
 		}
 		return value;
+	}
+
+	GisComponent.prototype.getLayer = function(entity) {
+		var layerId = entity.id;
+		return this._geoJsonOverlay.getLayer(layerId); 
 	}
 
 	return GisComponent;
