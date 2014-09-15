@@ -11,6 +11,8 @@
 	<packaging>jar</packaging>
 
 	<name>Trident Genesis Platform POJOs and Business Logic</name>
+	<description>This platform module provides all the essentials for supporting the Fractal Objects design pattern.</description>
+	
 	<dependencies>
 
 		<!-- start of Kryo specific libs -->
