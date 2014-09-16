@@ -24,6 +24,32 @@ ${imp:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Calculated,
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.query.model.ExpressionModel)}
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a persistently-calculated property" enabled="true" name="tgprop-persistently-calculated">@IsProperty
+@Readonly
+@MapTo
+@Title(value = "${Title}", desc = "${Desc}")
+private ${type} ${name};
+
+@Observable
+protected ${enclosing_type} set${Name}(final ${type} ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public ${type} get${Name}() {
+    return ${name};
+}
+
+// TODO - call this method from every setter, which affects this property
+private void recalculate${Name}() {
+  // TODO - implement recalculation logic 
+  set${Name}(recalculatedValue);
+}
+
+${imp:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+             ua.com.fielden.platform.entity.annotation.Readonly,   
+             ua.com.fielden.platform.entity.annotation.MapTo,
+             ua.com.fielden.platform.entity.annotation.Title)}
 </template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for collectional one-to-many association" enabled="true" name="tgprop-collectional">@IsProperty(${type}.class)
 @Title(value = "${Title}", desc = "${Desc}")
 private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();${cursor}
