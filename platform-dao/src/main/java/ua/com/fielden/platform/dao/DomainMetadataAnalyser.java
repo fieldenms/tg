@@ -53,10 +53,12 @@ public class DomainMetadataAnalyser {
                     newOne = domainMetadata.generateUnionedEntityMetadata(entityType, baseInfoForDomainMetadata);
                     break;
                 default:
-                    throw new IllegalStateException("Can't generate EntityMetadata for entity type: " + entityType);
+                    newOne = null;
+                    //throw new IllegalStateException("Can't generate EntityMetadata for entity type: " + entityType);
                 }
-
-                entityMetadataMap.put(entityType, newOne);
+                if (newOne != null) {
+                    entityMetadataMap.put(entityType, newOne);    
+                }
                 return newOne;
             } catch (final Exception e) {
                 e.printStackTrace();
