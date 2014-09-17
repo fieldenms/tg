@@ -11,6 +11,8 @@
 	<packaging>jar</packaging>
 
 	<name>Trident Genesis Platform DAO</name>
+	<description>
+           The platform module that provide database communication logic fully compatible with the Fractal Objects design pattern."
 	<dependencies>
 		<!-- inner module dependencies -->
 		<dependency>
