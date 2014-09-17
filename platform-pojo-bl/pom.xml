@@ -13,7 +13,7 @@
 	<name>Trident Genesis Platform POJOs and Business Logic</name>
 	<description>
               The platform module that provides all the essentials for supporting the Fractal Objects design pattern.
-              This includes all necessary annotation for domain definition.
+              This includes all necessary annotation for domain definition and validation.
         </description>
 	
 	<dependencies>
