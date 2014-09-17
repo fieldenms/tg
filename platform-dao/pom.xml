@@ -13,6 +13,7 @@
 	<name>Trident Genesis Platform DAO</name>
 	<description>
            The platform module that provide database communication logic fully compatible with the Fractal Objects design pattern."
+	   This includes base DAO implementation logic for data-aware companion object.
 	<dependencies>
 		<!-- inner module dependencies -->
 		<dependency>
