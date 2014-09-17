@@ -14,6 +14,7 @@
 	<description>
            The platform module that provide database communication logic fully compatible with the Fractal Objects design pattern."
            This includes base DAO implementation logic for data-aware companion object.
+        </description>
 	<dependencies>
 		<!-- inner module dependencies -->
 		<dependency>
