@@ -24,6 +24,7 @@ public class DomainMetadataAnalyser {
         baseInfoForDomainMetadata = new BaseInfoForDomainMetadata(domainMetadata.getUserMapTo());
         entityMetadataMap.putAll(domainMetadata.getPersistedEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getModelledEntityMetadataMap());
+        entityMetadataMap.putAll(domainMetadata.getPureEntityMetadataMap());
     }
 
     public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> getPersistedEntityMetadata(final Class<ET> entityType) {
@@ -53,12 +54,11 @@ public class DomainMetadataAnalyser {
                     newOne = domainMetadata.generateUnionedEntityMetadata(entityType, baseInfoForDomainMetadata);
                     break;
                 default:
-                    newOne = null;
-                    //throw new IllegalStateException("Can't generate EntityMetadata for entity type: " + entityType);
+                    newOne = domainMetadata.generatePureEntityMetadata(entityType, baseInfoForDomainMetadata);
                 }
-                if (newOne != null) {
-                    entityMetadataMap.put(entityType, newOne);    
-                }
+ 
+                entityMetadataMap.put(entityType, newOne);    
+                
                 return newOne;
             } catch (final Exception e) {
                 e.printStackTrace();
