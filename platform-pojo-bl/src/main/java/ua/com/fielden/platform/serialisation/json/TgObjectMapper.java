@@ -35,7 +35,7 @@ public class TgObjectMapper extends ObjectMapper {
         super();
         module = new TgModule();
 
-        //Configuring type specific parameters.
+        // Configuring type specific parameters.
         setDateFormat(dateFormat);
         //enable(SerializationFeature.INDENT_OUTPUT);
         enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
