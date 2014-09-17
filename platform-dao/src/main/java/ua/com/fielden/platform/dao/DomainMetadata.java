@@ -5,6 +5,7 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.dao.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.dao.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.dao.EntityCategory.UNION;
+import static ua.com.fielden.platform.dao.EntityCategory.PURE;
 import static ua.com.fielden.platform.dao.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY;
@@ -88,6 +89,7 @@ public class DomainMetadata {
     private final Map<Class<?>, Object> hibTypesDefaults = new HashMap<>();
     private final Map<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata> persistedEntityMetadataMap = new HashMap<>();
     private final Map<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap = new HashMap<>();
 
     private Injector hibTypesInjector;
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
@@ -148,6 +150,7 @@ public class DomainMetadata {
                     modelledEntityMetadataMap.put(entityType, generateUnionedEntityMetadata(entityType, baseInfoForDomainMetadata));
                     break;
                 default:
+                    pureEntityMetadataMap.put(entityType, generatePureEntityMetadata(entityType, baseInfoForDomainMetadata));
                     System.out.println("PURE ENTITY: " + entityType);
                     //throw new IllegalStateException("Not yet supported category: " + baseInfoForDomainMetadata.getCategory(entityType) + " of " + entityType);
                 }
@@ -171,6 +174,10 @@ public class DomainMetadata {
     public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateUnionedEntityMetadata(final Class<ET> entityType, BaseInfoForDomainMetadata baseInfoForDomainMetadata) throws Exception {
         return new ModelledEntityMetadata(baseInfoForDomainMetadata.getUnionEntityModels(entityType), entityType, generatePropertyMetadatasForEntity(entityType, UNION));
     }    
+
+    public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final Class<ET> entityType, BaseInfoForDomainMetadata baseInfoForDomainMetadata) throws Exception {
+        return new PureEntityMetadata(baseInfoForDomainMetadata.getTableClause(entityType), entityType, generatePropertyMetadatasForEntity(entityType, PURE));
+    }
 
     //    public void enhanceWithCalcProps(final Collection<EntityMetadata> entityMetadatas) {
 //        for (final EntityMetadata emd : entityMetadatas) {
@@ -526,4 +533,9 @@ public class DomainMetadata {
     public Map<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> getModelledEntityMetadataMap() {
         return modelledEntityMetadataMap;
     }
+    
+    public Map<Class<? extends AbstractEntity<?>>, PureEntityMetadata> getPureEntityMetadataMap() {
+        return pureEntityMetadataMap;
+    }
+
 }
