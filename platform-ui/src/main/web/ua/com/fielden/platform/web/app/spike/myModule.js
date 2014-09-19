@@ -6,7 +6,16 @@ define([], function() {
 		return {
 			restrict: "E",
 			templateUrl: "hello.html",
-			replace: true
+			replace: true,
+			link: function(scope) {
+				scope.name = 'Oleh';
+
+				require(['heavy'], function(heavy) {
+					scope.$apply(function() {
+						scope.name = heavy;	
+					});
+				});
+			}
 		};
 	});
 	return myModule;
