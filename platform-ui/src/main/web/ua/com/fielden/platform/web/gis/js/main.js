@@ -82,17 +82,7 @@ require.config({
 	}
 });
 
-require(['log', 'angular', 'GisComponent', 'GisModule'], function(log, angular, GisComponent, GisModule) {
-	var app = angular.module('app', ['GisModule']); // create main angular application module which depends on GisModule
-	app.controller('appCtrl', ['$scope', function($scope) {
-		// provide a function, to be used inside directive:
-		$scope.createGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
-			var _gisComponent = new GisComponent(mapDiv, progressDiv, progressBarDiv);
-			if (typeof java !== 'undefined') {
-				window.gisComponent = _gisComponent;
-			}
-			return _gisComponent;
-		};
-	}]);
+require(['log', 'angular', 'GisModule'], function(log, angular, GisModule) {
+	angular.module('app', ['GisModule']); // create main angular application module which depends on GisModule
 	angular.bootstrap(document.getElementsByTagName('body')[0], ['app']); // boot angular application with main module
 });
