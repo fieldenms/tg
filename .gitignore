@@ -21,6 +21,7 @@
 target
 .classpath
 .project
+.idea
 .settings
 *.class
 *.dtd
