@@ -5,7 +5,7 @@
 */
 
 define(['angular', 'angular.mocks', 
-	'ua/com/fielden/platform/web/app/testspike/greetingFactory'], function(angular, angularMocks, greetingFactory) {
+	'app/testspike/greetingFactory'], function(angular, angularMocks, greetingFactory) {
     
     describe('Greeting factory suite', function () {
 
