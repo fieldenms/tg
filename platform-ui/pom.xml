@@ -105,25 +105,31 @@
 					<specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>
 					<jsSrcDir>src/main/web</jsSrcDir>
 					<jsTestSrcDir>src/test/web</jsTestSrcDir>
+					<customRunnerConfiguration>src/test/web/ua/com/fielden/platform/web/app/testspike/jasmine.txt</customRunnerConfiguration>
 					<preloadSources>
-						<source>src/main/web/ua/com/fielden/platform/web/vendor/require.js</source>
-					</preloadSources>
-				</configuration>
-			</plugin>
-		</plugins>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<excludes>
-					<exclude>**/log4j.xml</exclude>
-				</excludes>
-			</resource>
-			<resource>
-				<directory>src/main/java</directory>
-				<excludes>
-					<exclude>**/*.java</exclude>
-				</excludes>
-			</resource>
-		</resources>
-	</build>
+							<!-- The following 'polyfill' is necessary to augment default Rhino fork (HtmlUnit) that is used in 
+							default jasmine-maven-plugin WebDriver: HtmlUnitDriver. Default Rhino fork does not have, for example, 
+							String.prototype.trim() function, which is necessary for angularjs usage in tests. 
+							See more in https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-browser-Polyfills -->
+							<source>src/main/web/ua/com/fielden/platform/web/app/testspike/es5-shim.js</source> 
+							<source>src/main/web/ua/com/fielden/platform/web/vendor/require.js</source>
+						</preloadSources>
+					</configuration>
+				</plugin>
+			</plugins>
+			<resources>
+				<resource>
+					<directory>src/main/resources</directory>
+					<excludes>
+						<exclude>**/log4j.xml</exclude>
+					</excludes>
+				</resource>
+				<resource>
+					<directory>src/main/java</directory>
+					<excludes>
+						<exclude>**/*.java</exclude>
+					</excludes>
+				</resource>
+			</resources>
+		</build>
 </project>
