@@ -1,4 +1,4 @@
-define(['ua/com/fielden/platform/web/app/testspike/greeter', 'customLib', 'customNonAmdLib', 'angular', 'angular.mocks'], function(greeter, customLib, CustomNonAmdLib, angular, angularMocks) {
+define(['app/testspike/greeter', 'customLib', 'customNonAmdLib', 'angular', 'angular.mocks'], function(greeter, customLib, CustomNonAmdLib, angular, angularMocks) {
     describe('Greeter module', function () {
         
         it(" must return 'Hello, World' for 'World' parameter.", function() {

@@ -1,9 +1,9 @@
 paths: {
-	'customLib': 'ua/com/fielden/platform/web/app/testspike/customLib',
-	'customNonAmdLib': 'ua/com/fielden/platform/web/app/testspike/customNonAmdLib',
+	'customLib': 'app/testspike/customLib',
+	'customNonAmdLib': 'app/testspike/customNonAmdLib',
 		
-	'angular': 'ua/com/fielden/platform/web/vendor/angular',
-	'angular.mocks': 'ua/com/fielden/platform/web/vendor/angular-mocks'	
+	'angular': 'vendor/angular',
+	'angular.mocks': 'vendor/angular-mocks'	
 		
 	
 	// 'jquery': 'ua/com/fielden/platform/web/app/testspike/jquery'
