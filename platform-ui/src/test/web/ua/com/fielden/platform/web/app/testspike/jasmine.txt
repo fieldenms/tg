@@ -1,0 +1,42 @@
+paths: {
+	'customLib': 'app/testspike/customLib',
+	'customNonAmdLib': 'app/testspike/customNonAmdLib',
+		
+	'angular': 'vendor/angular',
+	'angular.mocks': 'vendor/angular-mocks'	
+		
+	
+	// 'jquery': 'ua/com/fielden/platform/web/app/testspike/jquery'
+	// 'leaflet': 'ua/com/fielden/platform/web/app/testspike/leaflet', // AMD-compliant	
+	// 'leaflet.draw': 'ua/com/fielden/platform/web/app/testspike/leaflet.draw' // non-AMD module
+},
+
+shim: { // used for non-AMD modules
+
+	'customNonAmdLib': {
+		deps: [],
+		exports: 'CustomNonAmdLib'
+	},
+
+	'angular': {
+		deps: [], // can be 'jquery', but we have used 'es5-shim' instead
+		exports: 'angular'
+	},
+
+	'angular.mocks': {
+		deps: ['angular'],
+		exports: 'angularMocks'
+	}
+
+	
+	//'jquery': {
+	//	deps: [],
+	//	exports: 'jquery'
+	//},
+	
+
+	// 'leaflet.draw': {
+	//	deps: ['leaflet'],
+	//	exports: 'LeafletDraw'
+	// }
+}
