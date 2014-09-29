@@ -41,7 +41,7 @@
 					<specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>
 					<jsSrcDir>src/main/web/ua/com/fielden/platform/web</jsSrcDir>
 					<jsTestSrcDir>src/test/web/ua/com/fielden/platform/web</jsTestSrcDir>
-					<customRunnerConfiguration>src/test/web/ua/com/fielden/platform/web/app/testspike/jasmine.txt</customRunnerConfiguration>
+					<customRunnerConfiguration>src/test/web/ua/com/fielden/platform/web/jasmine.txt</customRunnerConfiguration>
 					<preloadSources>
 							<!-- The following 'polyfill' is necessary to augment default Rhino fork (HtmlUnit) that is used in 
 							default jasmine-maven-plugin WebDriver: HtmlUnitDriver. Default Rhino fork does not have, for example, 
