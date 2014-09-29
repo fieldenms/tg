@@ -1,9 +1,3 @@
-/*  paths: {
-    'angular': 'ua/com/fielden/platform/web/app/vendor/angular',
-    'angular.mocks': 'ua/com/fielden/platform/web/app/vendor/angular-mocks'
-  },
-*/
-
 define(['angular', 'angular.mocks', 
 	'app/testspike/greetingFactory'], function(angular, angularMocks, greetingFactory) {
     
