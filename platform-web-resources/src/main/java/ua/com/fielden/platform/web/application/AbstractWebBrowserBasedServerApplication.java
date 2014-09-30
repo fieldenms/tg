@@ -27,12 +27,14 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
     private final Injector injector;
     private final String username;
     private final String platformJsScriptsLocation;
+    private final String platformVendorJsScriptsLocation;
     private final String platformGisJsScriptsLocation;
     private final Logger logger = Logger.getLogger(getClass());
 
     public AbstractWebBrowserBasedServerApplication(final Context context, final Injector injector, final String name, final String desc, final String owner, final String author, final String username) {
         super(context);
         this.platformJsScriptsLocation = "../../tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
+        this.platformVendorJsScriptsLocation = "../../tg/platform-web-ui/src/main/resources/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
         this.platformGisJsScriptsLocation = platformJsScriptsLocation + "gis/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
@@ -51,10 +53,18 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
         final Router router = new Router(getContext());
 
         router.attach("/main", new FileResourceFactory(platformJsScriptsLocation + "centre/main.html", MediaType.TEXT_HTML));
-        attachAdditionalResources(router);
+
+        attachVendorResources(router);
+        
         attachCentreResources(eccc, serialiser, router);
         attachGisComponentResources(router);
+        attachAdditionalResources(router);
         return router;
+    }
+    
+    protected void attachVendorResources(final Router router) {
+        logger.info("\t\tVendor resources attaching...");
+        register(router, platformVendorJsScriptsLocation, "/");
     }
 
     protected void attachCentreResources(final IEntityCentreConfigController eccc, final ISerialiser serialiser, final Router router) {

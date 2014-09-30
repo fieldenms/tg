@@ -1,10 +1,10 @@
 /* 3rd party stylesheets */
 @import url("http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css");/* leaflet/easybutton/font-awesome.css */
-@import url("js/vendor/leaflet/leaflet.css");/* http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css */
-@import url("js/vendor/leaflet/draw/leaflet.draw.css");/* http://leaflet.github.io/Leaflet.draw/leaflet.draw.css */
-@import url("js/vendor/leaflet/markercluster/MarkerCluster.css");
-@import url("js/vendor/leaflet/markercluster/MarkerCluster.Default.css");
-@import url("js/vendor/leaflet/controlloading/Control.Loading.css");
+@import url("js/leaflet/leaflet.css");/* http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css */
+@import url("js/leaflet/draw/leaflet.draw.css");/* http://leaflet.github.io/Leaflet.draw/leaflet.draw.css */
+@import url("js/leaflet/markercluster/MarkerCluster.css");
+@import url("js/leaflet/markercluster/MarkerCluster.Default.css");
+@import url("js/leaflet/controlloading/Control.Loading.css");
 
 /* Application stylesheets */
 /* @import url("app/site.css"); */

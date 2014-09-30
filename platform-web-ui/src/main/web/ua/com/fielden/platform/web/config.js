@@ -1,83 +1,54 @@
-require.config({
-	// waitSeconds : 120,
-	paths: {
-		// 'jQuery': 'vendor/jquery-1.9.0.min',
-		// 'underscore': 'vendor/underscore-1.9.min',
-		'text': 'vendor/text', // AMD-compliant
-		'async': 'vendor/async', // AMD-compliant
-		'leaflet': 'vendor/leaflet/leaflet', // AMD-compliant
-
-		'googlemaps': 'vendor/leaflet/providers/googlemaps', // an 'async' requirejs plugin wrapper for google maps loading -- AMD-compliant
-		'leaflet.googlemaps': 'vendor/leaflet/providers/Google', // non-AMD module
-		'yandexmaps': "http://api-maps.yandex.ru/2.0/?load=package.map&lang=ru-RU", // non-AMD module // TODO: lang RU??		
-		'leaflet.yandexmaps': 'vendor/leaflet/providers/Yandex', // non-AMD module
-
-		'leaflet.draw': 'vendor/leaflet/draw/leaflet.draw', // non-AMD module
-		'leaflet.markercluster': 'vendor/leaflet/markercluster/leaflet.markercluster', // non-AMD module
-		'leaflet.loadingcontrol': 'vendor/leaflet/controlloading/Control.Loading',
-		'leaflet.easybutton': 'vendor/leaflet/easybutton/easy-button', // non-AMD module
-		'leaflet.markerrotation': 'vendor/leaflet/markerrotation/Marker.Rotate', // non-AMD module
-		'angular': 'vendor/angular/angular' // why angular.min does not work?
-	},
-	shim: { // used for non-AMD modules
-
-		// 'jQuery': {
-		//     exports: '$'
-		// },
-		// 'underscore': {
-		//     exports: '_'
-		// },
-
-		// MAP PROVIDERS:
-		'leaflet.googlemaps': {
-			deps: ['leaflet', 'googlemaps!'],
-			exports: 'LeafletGoogleMaps'
-		},
-		'yandexmaps': {
-			deps: [],
-			exports: 'YandexMaps'
-		},
-		'leaflet.yandexmaps': {
-			deps: ['leaflet', 'yandexmaps'],
-			exports: 'LeafletYandexMaps'
-		},
-
-		// MAP DRAWING:
-		'leaflet.draw': {
-			deps: ['leaflet'],
-			exports: 'LeafletDraw'
-		},
-
-		// MAP CLUSTERING:
-		'leaflet.markercluster': {
-			deps: ['leaflet'],
-			exports: 'LeafletMarkercluster'
-		},
-
-		'leaflet.easybutton': {
-			deps: ['leaflet'],
-			exports: 'LeafletEasybutton'
-		},
-
-		'leaflet.markerrotation': {
-			deps: ['leaflet'],
-			exports: 'LeafletMarkerrotation'
-		},
-
-		'angular': {
-			deps: [],
-			exports: 'angular'
+(function() {
+	var prepender0 = function(baseUrl, acc) {
+		if (baseUrl.lastIndexOf("/") > -1) {
+			return prepender0(baseUrl.substr(0, baseUrl.lastIndexOf("/")), ("../" + acc));
+		} else {
+			return acc;
 		}
-	},
-	googlemaps: { // configuration for 'async' requirejs plugin wrapper (google maps loading)
-		url: 'http://maps.google.com/maps/api/js',
-		// url: 'https://maps.googleapis.com/maps/api/js',
-		params: {
-			'v': '3.2',
-			// key: 'abcd1234',
-			// libraries: 'geometry',
-			sensor: false // Defaults to false
+	};
+
+	var prepender = function(baseUrl) {
+		return prepender0(baseUrl, "");
+	};
+
+	var removeTrailingSlash = function(str) {
+		if (str.lastIndexOf("/") > -1) {
+			return str.substr(0, str.lastIndexOf("/"));
+		} else {
+			throw "Base url string (from requirejs) [" + str + "] should have one additional trailing slash.";
 		}
-		// async: asyncLoaderPlugin // Primarly for providing test stubs.
-	}
-});
+	};
+
+	var base = removeTrailingSlash(requirejs.s.contexts._.config.baseUrl); // require.toUrl();
+	var prepender = prepender(base);
+
+	// console.log('!config', requirejs.s.contexts._.config);
+	// console.log('!base', base);
+	// console.log('!prepender(base)', prepender);
+
+	require.config({
+		// baseUrl: '/',
+		// waitSeconds : 120,
+		paths: {
+			// external library modules:
+			'text': prepender + 'require/text', // AMD-compliant     ../../
+			'async': prepender + 'require/async', // AMD-compliant    ../../
+			'angular': prepender + 'angular/angular' // why angular.min does not work?   ../../
+			// 'jQuery': 'vendor/jquery-1.9.0.min',
+			// 'underscore': 'vendor/underscore-1.9.min',
+		},
+		shim: { // used for non-AMD modules
+			'angular': {
+				deps: [],
+				exports: 'angular'
+			}
+
+			// 'jQuery': {
+			//     exports: '$'
+			// },
+			// 'underscore': {
+			//     exports: '_'
+			// },
+		}
+	});
+})();

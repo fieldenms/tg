@@ -1,9 +1,11 @@
 paths: {
+	// developed modules:
 	'app/testspike/greeter': 'web/ua/com/fielden/platform/web/app/testspike/greeter',
 	'app/testspike/greetingFactory': 'web/ua/com/fielden/platform/web/app/testspike/greetingFactory',
 	'app/testspike/customLib': 'web/ua/com/fielden/platform/web/app/testspike/customLib',
 	'app/testspike/customNonAmdLib': 'web/ua/com/fielden/platform/web/app/testspike/customNonAmdLib',
 		
+	// external library modules:
 	'angular': 'resources/vendor/angular',
 	'angular.mocks': 'resources/vendor/angular-mocks'		
 },
