@@ -56,7 +56,11 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
 
         attachVendorResources(router);
         
+        // register global configuration point for requirejs dependencies
+        router.attach("/config.js", new FileResourceFactory(platformJsScriptsLocation + "config.js", MediaType.TEXT_JAVASCRIPT));
+        
         attachCentreResources(eccc, serialiser, router);
+        attachLoggingResources(router);
         attachGisComponentResources(router);
         attachAdditionalResources(router);
         return router;
@@ -75,12 +79,15 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
         router.attach("/centre/{centreName}", new CentreResourceFactory(eccc, serialiser, username));
         router.attach("/centre/{centreName}/query/{page}", new QueryPageResourceFactory(injector, username));
     }
+    
+    protected void attachLoggingResources(final Router router) {
+        logger.info("\t\tLogging resources attaching...");
+        
+        register(router, platformJsScriptsLocation + "logging/", "/logging/");
+    }
 
     protected void attachGisComponentResources(final Router router) {
         logger.info("\t\tGIS component resources attaching...");
-        
-        // register global configuration point for requirejs dependencies
-        router.attach("/config.js", new FileResourceFactory(platformJsScriptsLocation + "config.js", MediaType.TEXT_JAVASCRIPT));
         
         register(router, platformGisJsScriptsLocation, "/gis/", //
                 platformGisJsScriptsLocation + "spike/"); // directory to exclude
