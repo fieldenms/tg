@@ -1,4 +1,4 @@
-define([], function() {
+define(['angular'], function(angular) {
 
 	var myModule = angular.module("myModule", []);
 

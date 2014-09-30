@@ -62,6 +62,7 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
         attachCentreResources(eccc, serialiser, router);
         attachLoggingResources(router);
         attachGisComponentResources(router);
+        attachAppSpikeResources(router);
         attachAdditionalResources(router);
         return router;
     }
@@ -86,6 +87,12 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
         register(router, platformJsScriptsLocation + "logging/", "/logging/");
     }
 
+    protected void attachAppSpikeResources(final Router router) {
+        logger.info("\t\tApp spike resources attaching...");
+        
+        register(router, platformJsScriptsLocation + "app/spike/", "/app/spike/");
+    }
+    
     protected void attachGisComponentResources(final Router router) {
         logger.info("\t\tGIS component resources attaching...");
         
