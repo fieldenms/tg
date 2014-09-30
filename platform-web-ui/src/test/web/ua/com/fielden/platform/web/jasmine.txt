@@ -6,8 +6,8 @@ paths: {
 	'app/testspike/customNonAmdLib': 'web/ua/com/fielden/platform/web/app/testspike/customNonAmdLib',
 		
 	// external library modules:
-	'angular': 'resources/vendor/angular',
-	'angular.mocks': 'resources/vendor/angular-mocks'		
+	'angular': 'resources/angular/angular',
+	'angular.mocks': 'resources/angular/angular-mocks'		
 },
 
 shim: { // used for non-AMD modules
