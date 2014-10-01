@@ -78,7 +78,7 @@ define(['angular', 'log'], function(angular, log) {
 					}
 				});
 
-				require([scope.dependency], function(GisComponentClass) {
+				require([scope.dependency, 'css!main'], function(GisComponentClass, mainCss) {
 					var _gisComponent = new GisComponentClass(iElement[0].lastElementChild, /*map*/
 						iElement[0].firstElementChild, /*progress*/
 						iElement[0].firstElementChild.firstElementChild /*progressBar*/ );
