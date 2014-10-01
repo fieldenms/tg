@@ -1,0 +1,29 @@
+paths: {
+	// developed modules:
+	'app/testspike/greeter': 'web/ua/com/fielden/platform/web/app/test/spike/greeter',
+	'app/testspike/greetingFactory': 'web/ua/com/fielden/platform/web/app/test/spike/greetingFactory',
+	'app/testspike/customLib': 'web/ua/com/fielden/platform/web/app/test/spike/customLib',
+	'app/testspike/customNonAmdLib': 'web/ua/com/fielden/platform/web/app/test/spike/customNonAmdLib',
+		
+	// external library modules:
+	'angular': 'resources/angular/angular',
+	'angular.mocks': 'resources/angular/angular-mocks'		
+},
+
+shim: { // used for non-AMD modules
+
+	'customNonAmdLib': {
+		deps: [],
+		exports: 'CustomNonAmdLib'
+	},
+
+	'angular': {
+		deps: [], // can be 'jquery', but we have used 'es5-shim' instead
+		exports: 'angular'
+	},
+
+	'angular.mocks': {
+		deps: ['angular'],
+		exports: 'angularMocks'
+	}
+}
