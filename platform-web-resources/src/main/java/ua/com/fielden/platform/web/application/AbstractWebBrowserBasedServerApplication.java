@@ -27,12 +27,14 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
     private final Injector injector;
     private final String username;
     private final String platformJsScriptsLocation;
+    private final String platformVendorJsScriptsLocation;
     private final String platformGisJsScriptsLocation;
     private final Logger logger = Logger.getLogger(getClass());
 
     public AbstractWebBrowserBasedServerApplication(final Context context, final Injector injector, final String name, final String desc, final String owner, final String author, final String username) {
         super(context);
-        this.platformJsScriptsLocation = "../../tg/platform-ui/src/main/web/ua/com/fielden/platform/web/";
+        this.platformJsScriptsLocation = "../../tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
+        this.platformVendorJsScriptsLocation = "../../tg/platform-web-ui/src/main/resources/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
         this.platformGisJsScriptsLocation = platformJsScriptsLocation + "gis/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
@@ -51,10 +53,23 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
         final Router router = new Router(getContext());
 
         router.attach("/main", new FileResourceFactory(platformJsScriptsLocation + "centre/main.html", MediaType.TEXT_HTML));
-        attachAdditionalResources(router);
+
+        attachVendorResources(router);
+        
+        // register global configuration point for requirejs dependencies
+        router.attach("/config.js", new FileResourceFactory(platformJsScriptsLocation + "config.js", MediaType.TEXT_JAVASCRIPT));
+        
         attachCentreResources(eccc, serialiser, router);
+        attachLoggingResources(router);
         attachGisComponentResources(router);
+        attachAppSpikeResources(router);
+        attachAdditionalResources(router);
         return router;
+    }
+    
+    protected void attachVendorResources(final Router router) {
+        logger.info("\t\tVendor resources attaching...");
+        register(router, platformVendorJsScriptsLocation, "/");
     }
 
     protected void attachCentreResources(final IEntityCentreConfigController eccc, final ISerialiser serialiser, final Router router) {
@@ -65,10 +80,22 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
         router.attach("/centre/{centreName}", new CentreResourceFactory(eccc, serialiser, username));
         router.attach("/centre/{centreName}/query/{page}", new QueryPageResourceFactory(injector, username));
     }
+    
+    protected void attachLoggingResources(final Router router) {
+        logger.info("\t\tLogging resources attaching...");
+        
+        register(router, platformJsScriptsLocation + "logging/", "/logging/");
+    }
 
+    protected void attachAppSpikeResources(final Router router) {
+        logger.info("\t\tApp spike resources attaching...");
+        
+        register(router, platformJsScriptsLocation + "app/spike/", "/app/spike/");
+    }
+    
     protected void attachGisComponentResources(final Router router) {
         logger.info("\t\tGIS component resources attaching...");
-
+        
         register(router, platformGisJsScriptsLocation, "/gis/", //
                 platformGisJsScriptsLocation + "spike/"); // directory to exclude
     }

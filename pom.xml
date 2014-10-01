@@ -88,6 +88,7 @@
 		<module>platform-pojo-bl</module>
 		<module>platform-rao</module>
 		<module>platform-ui</module>
+		<module>platform-web-ui</module>
 		<module>platform-web-client-utils</module>
 	</modules>
 

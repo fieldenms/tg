@@ -89,35 +89,6 @@
 		</dependency>
 	</dependencies>
 	<build>
-		<plugins>
-			<plugin>
-				<groupId>com.github.searls</groupId>
-				<artifactId>jasmine-maven-plugin</artifactId>
-				<version>1.3.1.5</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>test</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<webDriverClassName>org.openqa.selenium.phantomjs.PhantomJSDriver</webDriverClassName>
-					<specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>
-					<jsSrcDir>src/main/web/ua/com/fielden/platform/web</jsSrcDir>
-					<jsTestSrcDir>src/test/web/ua/com/fielden/platform/web</jsTestSrcDir>
-					<customRunnerConfiguration>src/test/web/ua/com/fielden/platform/web/app/testspike/jasmine.txt</customRunnerConfiguration>
-					<preloadSources>
-							<!-- The following 'polyfill' is necessary to augment default Rhino fork (HtmlUnit) that is used in 
-							default jasmine-maven-plugin WebDriver: HtmlUnitDriver. Default Rhino fork does not have, for example, 
-							String.prototype.trim() function, which is necessary for angularjs usage in tests. 
-							See more in https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-browser-Polyfills -->
-							<!-- <source>vendor/es5-shim.js</source> --> 
-						<source>vendor/require.js</source>
-					</preloadSources>
-				</configuration>
-			</plugin>
-		</plugins>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
