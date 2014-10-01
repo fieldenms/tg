@@ -4,6 +4,7 @@ require.config({
 		// external library modules:
 		'text': '/require/text', // AMD-compliant
 		'async': '/require/async', // AMD-compliant
+		'css': '/require/css', // AMD-compliant
 		'angular': '/angular/angular', // why angular.min does not work?
 		'angular.route': '/angular/angular-route',
 
