@@ -14,6 +14,7 @@ define(['angular', 'log'], function(angular, log) {
 					paths: {
 						// 'gis' feature-specific library modules:
 						'leaflet': 'leaflet/leaflet', // AMD-compliant
+						'css.leaflet': 'leaflet/leaflet',
 
 						'googlemaps': 'leaflet/providers/googlemaps', // an 'async' requirejs plugin wrapper for google maps loading -- AMD-compliant
 						'leaflet.googlemaps': 'leaflet/providers/Google', // non-AMD module
@@ -21,13 +22,26 @@ define(['angular', 'log'], function(angular, log) {
 						'leaflet.yandexmaps': 'leaflet/providers/Yandex', // non-AMD module
 
 						'leaflet.draw': 'leaflet/draw/leaflet.draw', // non-AMD module
+						'css.leaflet.draw': 'leaflet/draw/leaflet.draw', 
+
 						'leaflet.markercluster': 'leaflet/markercluster/leaflet.markercluster', // non-AMD module
+						'css.MarkerCluster.Default': 'leaflet/markercluster/MarkerCluster.Default',
+						'css.MarkerCluster': 'leaflet/markercluster/MarkerCluster',
+
 						'leaflet.loadingcontrol': 'leaflet/controlloading/Control.Loading',
+						'css.Control.Loading': 'leaflet/controlloading/Control.Loading',						
+
 						'leaflet.easybutton': 'leaflet/easybutton/easy-button', // non-AMD module
+						'css.font-awesome': 'http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome', // 'leaflet/easybutton/font-awesome', // non-AMD module
+						
 						'leaflet.markerrotation': 'leaflet/markerrotation/Marker.Rotate' // non-AMD module
 					},
 
 					shim: {
+						'leaflet': { // is AMD compliant, but we have provided shim config for it to enable dependency on appropriate css
+							deps: ['css!css.leaflet'],
+							exports: 'Leaflet1'
+						},
 						// MAP PROVIDERS:
 						'leaflet.googlemaps': {
 							deps: ['leaflet', 'googlemaps!'],
@@ -44,18 +58,23 @@ define(['angular', 'log'], function(angular, log) {
 
 						// MAP DRAWING:
 						'leaflet.draw': {
-							deps: ['leaflet'],
+							deps: ['leaflet', 'css!css.leaflet.draw'],
 							exports: 'LeafletDraw'
 						},
 
 						// MAP CLUSTERING:
 						'leaflet.markercluster': {
-							deps: ['leaflet'],
+							deps: ['leaflet', 'css!css.MarkerCluster.Default', 'css!css.MarkerCluster'],
 							exports: 'LeafletMarkercluster'
 						},
 
+						'leaflet.loadingcontrol': { // is AMD compliant, but we have provided shim config for it to enable dependency on appropriate css
+							deps: ['leaflet', 'css!css.Control.Loading'],
+							exports: 'LeafletLoadingControl'
+						},
+
 						'leaflet.easybutton': {
-							deps: ['leaflet'],
+							deps: ['leaflet', 'css!css.font-awesome'],
 							exports: 'LeafletEasybutton'
 						},
 
