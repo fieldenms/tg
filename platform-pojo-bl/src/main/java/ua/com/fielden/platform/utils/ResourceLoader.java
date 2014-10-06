@@ -41,7 +41,7 @@ public class ResourceLoader {
 	try {
 	    return IOUtils.toString(getURL(pathAndFileName).openStream(), "UTF-8");
 	} catch (final Exception e) {
-	    logger.error(e.getMessage());
+	    logger.error(e.getMessage() + " for path: " + pathAndFileName);
 	    return null;
 	}
     }

@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javafx.scene.web.WebView;
-import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.dom.SingleDomElement;
+
+import org.apache.commons.lang.StringUtils;
+
+import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.component.WebComponent;
 import ua.com.fielden.platform.web.master.EntityMaster;
 
 /**
@@ -18,6 +19,8 @@ import ua.com.fielden.platform.web.master.EntityMaster;
  *
  */
 public class WebApplication{
+
+    private final String appName;
 
     /*
      * Properties related to device configuration (i.e. their minimal and maximal width). The default values are in pt (1/72 inch).
@@ -33,6 +36,15 @@ public class WebApplication{
     private final List<EntityCentre> centres = new ArrayList<>();
     private final List<EntityMaster> masters = new ArrayList<>();
     private final List<WebView> customViews = new ArrayList<>();
+
+    /**
+     * Creates web application instance and initialises it with application name.
+     *
+     * @param appName
+     */
+    public WebApplication(final String appName) {
+	this.appName = appName;
+    }
 
     /**
      * Set the minimal screen width of the desktop device.
@@ -109,24 +121,53 @@ public class WebApplication{
     }
 
     /**
-     * Renders the componentToShow component and wraps it into html page with configured dependencies routes and screens.
+     * Runs the web application by sending the html file for this application.
      *
-     * @param componentToShow
      * @return
      */
-    public String run(final WebComponent componentToShow) {
-	//See whether screen configurations are correct: desktopMinWidth < tabletMaxWidth < tabletMinWidth < phoneMaxWidth.
-	if (desktopMinWidth < tabletMaxWidth) {
-	    throw new IllegalStateException("The desktop screen width can not be less then tablet screen width: " + desktopMinWidth + " < " + tabletMaxWidth);
-	}
-	if (tabletMinWidth < phoneMaxWidth) {
-	    throw new IllegalStateException("The tablet screen width can not be less then phone screen width: " + tabletMinWidth + " < " + phoneMaxWidth);
-	}
-	final DomElement head = new DomElement("head").
-		add(new SingleDomElement("meta").attr("charset", "UTF-8"));
-	final DomElement body = componentToShow.render(new DomElement("body"));
-	return new SingleDomElement("!DOCTYPE").attr("html", null).toString() + "\n"
-		+ new DomElement("html").attr("ng-app", "tgAppModule").
-		add(head).add(body);
+    public String run() {
+	// TODO should check whether user is authentic first.
+	return ResourceLoader.getText("ua/com/fielden/platform/web/app.html").
+		replace("@appName", appName).
+		replace("@menuItems", generateMenu());
     }
+
+    /**
+     * Generates the menu for the application. This generation of menu items is based on the information about the entity centres.
+     *
+     * @return
+     */
+    private String generateMenu() {
+	// TODO generate menu on entity masters and custom views (not only entity centre).
+	// TODO consider the ability to create menu item template for menu generator.
+	final List<String> menuBuilder = new ArrayList<>();
+	centres.forEach(centre -> {
+	   menuBuilder.add("<li ng-class=\"navClass('centre/"+
+		   		centre.getName() + "')\"><a href=\"#/centre/"+
+		   centre.getName() + "\">Simple Entity</a></li>");
+	});
+	return StringUtils.join(menuBuilder, "\n");
+    }
+
+//    /**
+//     * Renders the componentToShow component and wraps it into html page with configured dependencies routes and screens.
+//     *
+//     * @param componentToShow
+//     * @return
+//     */
+//    public String run(final WebComponent componentToShow) {
+//	//See whether screen configurations are correct: desktopMinWidth < tabletMaxWidth < tabletMinWidth < phoneMaxWidth.
+//	if (desktopMinWidth < tabletMaxWidth) {
+//	    throw new IllegalStateException("The desktop screen width can not be less then tablet screen width: " + desktopMinWidth + " < " + tabletMaxWidth);
+//	}
+//	if (tabletMinWidth < phoneMaxWidth) {
+//	    throw new IllegalStateException("The tablet screen width can not be less then phone screen width: " + tabletMinWidth + " < " + phoneMaxWidth);
+//	}
+//	final DomElement head = new DomElement("head").
+//		add(new SingleDomElement("meta").attr("charset", "UTF-8"));
+//	final DomElement body = componentToShow.render(new DomElement("body"));
+//	return new SingleDomElement("!DOCTYPE").attr("html", null).toString() + "\n"
+//		+ new DomElement("html").attr("ng-app", "tgAppModule").
+//		add(head).add(body);
+//    }
 }
