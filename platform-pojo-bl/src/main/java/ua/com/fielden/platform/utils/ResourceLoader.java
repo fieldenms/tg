@@ -6,13 +6,14 @@ import java.net.URL;
 
 import javax.swing.ImageIcon;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 /**
  * This is a helper class for loading resources, which correctly handles path resolution for resources bundled in a jar.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ResourceLoader {
 
@@ -34,6 +35,15 @@ public class ResourceLoader {
             logger.error(e.getMessage());
             return null;
         }
+    }
+
+    public static String getText(final String pathAndFileName) {
+	try {
+	    return IOUtils.toString(getURL(pathAndFileName).openStream(), "UTF-8");
+	} catch (final Exception e) {
+	    logger.error(e.getMessage());
+	    return null;
+	}
     }
 
     public static URL getURL(final String pathAndFileName) {
