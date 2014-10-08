@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javafx.scene.web.WebView;
 
@@ -33,7 +36,7 @@ public class WebApplication{
     /*
      * The properties below represent essential tg views: entity centres, entity masters. Also it is possible to specify custom view.
      */
-    private final List<EntityCentre> centres = new ArrayList<>();
+    private final Map<String, EntityCentre> centres = new LinkedHashMap<>();
     private final List<EntityMaster> masters = new ArrayList<>();
     private final List<WebView> customViews = new ArrayList<>();
 
@@ -133,6 +136,15 @@ public class WebApplication{
     }
 
     /**
+     * Returns registered entity centres.
+     *
+     * @return
+     */
+    public Map<String, EntityCentre> getCentres() {
+	return Collections.unmodifiableMap(centres);
+    }
+
+    /**
      * Generates the menu for the application. This generation of menu items is based on the information about the entity centres.
      *
      * @return
@@ -141,10 +153,10 @@ public class WebApplication{
 	// TODO generate menu on entity masters and custom views (not only entity centre).
 	// TODO consider the ability to create menu item template for menu generator.
 	final List<String> menuBuilder = new ArrayList<>();
-	centres.forEach(centre -> {
+	centres.keySet().forEach(key -> {
 	   menuBuilder.add("<li ng-class=\"navClass('centre/"+
-		   		centre.getName() + "')\"><a href=\"#/centre/"+
-		   centre.getName() + "\">Simple Entity</a></li>");
+		   		key + "')\"><a href=\"#/centre/"+
+		   key + "\">Simple Entity</a></li>");
 	});
 	return StringUtils.join(menuBuilder, "\n");
     }

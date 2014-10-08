@@ -26,6 +26,11 @@
 			<artifactId>platform-rao</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>fielden</groupId>
+			<artifactId>platform-web-ui</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<!-- other dependencies, including third party libs -->
 		<!-- Apache -->
 		<dependency>
