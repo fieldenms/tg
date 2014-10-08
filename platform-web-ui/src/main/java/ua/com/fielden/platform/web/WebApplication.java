@@ -123,6 +123,19 @@ public class WebApplication{
 	return phoneMaxWidth;
     }
 
+    public void addCentre(final EntityCentre centre) {
+	centres.put(centre.getMenuItemType().getName(), centre);
+    }
+
+    /**
+     * Returns registered entity centres.
+     *
+     * @return
+     */
+    public Map<String, EntityCentre> getCentres() {
+	return Collections.unmodifiableMap(centres);
+    }
+
     /**
      * Runs the web application by sending the html file for this application.
      *
@@ -136,15 +149,6 @@ public class WebApplication{
     }
 
     /**
-     * Returns registered entity centres.
-     *
-     * @return
-     */
-    public Map<String, EntityCentre> getCentres() {
-	return Collections.unmodifiableMap(centres);
-    }
-
-    /**
      * Generates the menu for the application. This generation of menu items is based on the information about the entity centres.
      *
      * @return
@@ -153,10 +157,10 @@ public class WebApplication{
 	// TODO generate menu on entity masters and custom views (not only entity centre).
 	// TODO consider the ability to create menu item template for menu generator.
 	final List<String> menuBuilder = new ArrayList<>();
-	centres.keySet().forEach(key -> {
+	centres.forEach((key, value) -> {
 	   menuBuilder.add("<li ng-class=\"navClass('centre/"+
 		   		key + "')\"><a href=\"#/centre/"+
-		   key + "\">Simple Entity</a></li>");
+		   key + "\">" + value.getName() + "</a></li>");
 	});
 	return StringUtils.join(menuBuilder, "\n");
     }

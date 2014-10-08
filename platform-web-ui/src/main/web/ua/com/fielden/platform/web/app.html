@@ -6,17 +6,17 @@
 <body>
 	<div class="container">
 		<div class="row">
-			<div class="span2 bs-docs-sidebar">
-				<ul class="nav nav-list bs-docs-sidenav affix" ng-controller="navCtrl">
+			<div class="col-md-2 bs-docs-sidebar">
+				<ul class="nav bs-docs-sidenav affix" ng-controller="navCtrl">
 					<li ng-class="navClass('')"><a href="#/">My Profile</a></li>
 					@menuItems
 					<!-- <li ng-class="navClass('centre/fielden.main.menu.example.MiSimpleECEEntity')"><a href="#/centre/fielden.main.menu.example.MiSimpleECEEntity">Simple Entity</a></li> -->
 				</ul>
 			</div>
-			<div class="span10" ng-view></div>
+			<div class="col-md-10" ng-view></div>
 		</div>
 	</div>
 
-	<script data-main="app" src="/require/require.js"></script>
+	<script data-main="vendor/app" src="vendor/require/require.js"></script>
 </body>
 </html>

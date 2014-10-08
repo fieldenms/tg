@@ -11,13 +11,19 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 public class EntityCentre {
 
     private final Class<? extends MiWithConfigurationSupport<?>> menuItemType;
+    private final String name;
 
-    public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> menuItemType) {
+    public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> menuItemType, final String name) {
 	this.menuItemType = menuItemType;
+	this.name = name;
     }
 
     public Class<? extends MiWithConfigurationSupport<?>> getMenuItemType() {
 	return this.menuItemType;
+    }
+
+    public String getName() {
+	return name;
     }
 
 }

@@ -11,6 +11,7 @@ import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
+import org.restlet.routing.Template;
 
 import ua.com.fielden.platform.web.CentreResourceFactory;
 import ua.com.fielden.platform.web.FileResourceFactory;
@@ -73,7 +74,7 @@ public abstract class AbstractWebBrowserBasedServerApplication extends Applicati
 
     private void attacheResoureces(final Router router) {
 	logger.info("\t\tResources attaching for:..." + "\n\t\t" + StringUtils.join(resourcePaths, "/\n\t\t") + "/");
-	router.attach("/vendor/{filePath}", new FileResourceFactory(Collections.unmodifiableSet(resourcePaths)));
+	router.attach("/vendor/", new FileResourceFactory(Collections.unmodifiableSet(resourcePaths)), Template.MODE_STARTS_WITH);
     }
 
 

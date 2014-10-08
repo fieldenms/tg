@@ -2,18 +2,18 @@ require.config({
 	// baseUrl: should be set at the earlier stage
 	paths: {
 		// external library modules:
-		'jquery': '/jquery/jquery',// 2.1.1
-		'text': '/require/text', // AMD-compliant
-		'async': '/require/async', // AMD-compliant
-		'css': '/require/css', // AMD-compliant
-		'angular': '/angular/angular', // 1.3.0-beta.19
-		'angular.resource': '/angular/angular-resource', // 1.3.0-beta.19
-		'angular.route': '/angular/angular-route', // 1.3.0-beta.19
-		'bootstrap.ui': '/angular/angular-route', // 1.3.0-beta.19
-		'css.bootstrap': '/bootstrap/bootstrap', // 3.2.0
+		'jquery': 'vendor/jquery/jquery',// 2.1.1
+		'text': 'vendor/require/text', // AMD-compliant
+		'async': 'vendor/require/async', // AMD-compliant
+		'css': 'vendor/require/css', // AMD-compliant
+		'angular': 'vendor/angular/angular', // 1.3.0-beta.19
+		'angular.resource': 'vendor/angular/angular-resource', // 1.3.0-beta.19
+		'angular.route': 'vendor/angular/angular-route', // 1.3.0-beta.19
+		'bootstrap.ui': 'vendor/angular/ui-bootstrap-tpls', // 0.11.2
+		'css.bootstrap': 'vendor/bootstrap/css/bootstrap', // 3.2.0
 
 		// internal modules:
-		'log': '/logging/log'
+		'log': 'vendor/logging/log'
 	},
 	shim: { // used for non-AMD modules
 		'jquery': {

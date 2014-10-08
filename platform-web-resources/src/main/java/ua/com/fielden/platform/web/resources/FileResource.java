@@ -20,21 +20,21 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 public class FileResource extends ServerResource {
 
     private final List<String> resourcePaths;
-    private final String filePath;
 
     public FileResource(final List<String> resourcePaths, final Context context, final Request request, final Response response) {
         init(context, request, response);
 	this.resourcePaths = resourcePaths;
-	this.filePath = generateFileName((String)request.getAttributes().get("filePath"));
     }
 
     @Override
     protected Representation get() throws ResourceException {
         try {
+            final String filePath = generateFileName(getReference().getRemainingPart());
+            final String extension = getReference().getExtensions();
             if (StringUtils.isEmpty(filePath)) {
         	throw new FileNotFoundException("The requested resource wasn't faound.");
             } else {
-        	return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(ResourceLoader.getStream(filePath), determineMediaType(filePath)));
+        	return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(ResourceLoader.getStream(filePath), determineMediaType(extension)));
             }
         } catch (final FileNotFoundException e) {
             e.printStackTrace();
@@ -51,16 +51,16 @@ public class FileResource extends ServerResource {
         return null;
     }
 
-    private MediaType determineMediaType(final String filePath) {
-	switch (filePath.toLowerCase().substring(filePath.lastIndexOf("."))) {
-	case ".png":
+    private MediaType determineMediaType(final String extension) {
+	switch (extension) {
+	case "png":
 	    return MediaType.IMAGE_PNG;
-	case ".js":
-	case ".json":
+	case "js":
+	case "json":
 	    return MediaType.TEXT_JAVASCRIPT;
-	case ".html":
+	case "html":
 	    return MediaType.TEXT_HTML;
-	case ".css":
+	case "css":
 	    return MediaType.TEXT_CSS;
 	default: return MediaType.ALL;
 	}

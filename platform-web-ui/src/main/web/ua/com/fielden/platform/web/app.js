@@ -2,18 +2,18 @@ require.config({
 	baseUrl: '/' // the baseUrl is set to correspond to server configuration, which states that main App feature is located in 'localhost:1692/'
 });
 
-require(['/config.js'], function() {
-	require(['angular', 'angular.route', 'angular.resource', 'bootstrap.ui', 'css!app'], function(angular) {
+require(['/vendor/config.js'], function() {
+	require(['angular', 'angular.route', 'angular.resource', 'bootstrap.ui', 'css!vendor/app'], function(angular) {
 		var appModule = angular.module('app', ['ngRoute', 'ngResource', 'ui.bootstrap']); // create main angular application module which depends on GisModule
 
 		appModule.config(function($routeProvider) {
 
 			$routeProvider.
 			when('/', {
-				templateUrl: 'myProfile'
+				templateUrl: 'vendor/myProfile.html'
 			}).
 			when('/centre/:centreName', {
-				templateUrl: 'centre',
+				templateUrl: 'vendor/centre/centre.html',
 				controller: 'CentreController',
 				resolve: {
 					centre: function(CentreEntity, $route, $q) {
