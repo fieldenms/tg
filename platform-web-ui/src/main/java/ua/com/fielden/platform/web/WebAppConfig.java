@@ -21,7 +21,7 @@ import ua.com.fielden.platform.web.master.EntityMaster;
  * @author TG Team
  *
  */
-public class WebApplication{
+public class WebAppConfig{
 
     private final String appName;
 
@@ -45,7 +45,7 @@ public class WebApplication{
      *
      * @param appName
      */
-    public WebApplication(final String appName) {
+    public WebAppConfig(final String appName) {
 	this.appName = appName;
     }
 
@@ -55,7 +55,7 @@ public class WebApplication{
      * @param minWidth
      * @return
      */
-    public WebApplication desktop(final float minWidth) {
+    public WebAppConfig desktop(final float minWidth) {
 	this.desktopMinWidth = minWidth;
 	return this;
     }
@@ -67,7 +67,7 @@ public class WebApplication{
      * @param maxWidth
      * @return
      */
-    public WebApplication tablet(final float minWidth, final float maxWidth) {
+    public WebAppConfig tablet(final float minWidth, final float maxWidth) {
 	if (maxWidth < minWidth) {
 	    throw new IllegalArgumentException("The min tablet width can not be greater then the max tablet width: " + minWidth + " > " + maxWidth);
 	}
@@ -82,7 +82,7 @@ public class WebApplication{
      * @param maxWidth
      * @return
      */
-    public WebApplication phone(final float maxWidth) {
+    public WebAppConfig phone(final float maxWidth) {
 	this.phoneMaxWidth = maxWidth;
 	return this;
     }

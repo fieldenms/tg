@@ -9,9 +9,9 @@ import ua.com.fielden.platform.web.resources.MainWebApplicationResource;
 
 public class MainWebApplicationResourceFactory extends Restlet {
 
-    private final WebApplication app;
+    private final WebAppConfig app;
 
-    public MainWebApplicationResourceFactory(final WebApplication app) {
+    public MainWebApplicationResourceFactory(final WebAppConfig app) {
 	this.app = app;
     }
 

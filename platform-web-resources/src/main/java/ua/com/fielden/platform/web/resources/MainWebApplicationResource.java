@@ -13,13 +13,13 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.web.WebApplication;
+import ua.com.fielden.platform.web.WebAppConfig;
 
 public class MainWebApplicationResource extends ServerResource{
 
-    private final WebApplication app;
+    private final WebAppConfig app;
 
-    public MainWebApplicationResource(final WebApplication app, final Context context, final Request request, final Response response) {
+    public MainWebApplicationResource(final WebAppConfig app, final Context context, final Request request, final Response response) {
 	init(context, request, response);
 	this.app = app;
     }
