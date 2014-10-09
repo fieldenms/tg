@@ -11,3 +11,7 @@
     overflow:hidden;
     text-overflow: ellipsis;
 }
+
+.panel-title a {
+    cursor: pointer;
+}

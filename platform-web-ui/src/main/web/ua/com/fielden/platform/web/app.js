@@ -32,15 +32,6 @@ require(['/vendor/config.js'], function() {
 			});
 		});
 
-		appModule.controller('navCtrl', ['$scope', '$location',
-			function($scope, $location) {
-				$scope.navClass = function(page) {
-					var currentRoute = $location.path().substring(1) || '';
-					return page === currentRoute ? 'active' : '';
-				};
-			}
-		]);
-
 		appModule.factory("CentreEntity", function($resource) {
 			return $resource("/centre/:centreName");
 		});
@@ -62,6 +53,23 @@ require(['/vendor/config.js'], function() {
 				}
 			});
 		});
+
+		appModule.controller('navCtrl', ['$scope', '$location',
+			function($scope, $location) {
+				$scope.navClass = function(page) {
+					var currentRoute = $location.path().substring(1) || '';
+					return page === currentRoute ? 'active' : '';
+				};
+			}
+		]);
+
+		appModule.controller("TaskBarController", ["$scope",
+			function($scope) {
+				$scope.status = {
+					isOpen: true
+				};
+			}
+		]);
 
 		appModule.controller("CentreController", ["$scope", "$routeParams", "centre", "CentreQuery",
 			function($scope, $routeParams, centre, CentreQuery) {
@@ -301,7 +309,7 @@ require(['/vendor/config.js'], function() {
 		appModule.directive("tgEditor", function($compile) {
 
 			function getEditorConfig() {
-				return "class='input-block-level' style='margin-top:5px;margin-bottom:5px'";
+				return "class='input-block-level form-control' style='margin-top:5px;margin-bottom:5px'";
 			}
 
 			var createEntityEditor = function(config) {
@@ -329,13 +337,13 @@ require(['/vendor/config.js'], function() {
 			};
 
 			var createBooleanEditor = function(config) {
-				var firstInput = "<td style='width:{{metric.doubleEditorWidth}}px;padding:0px'>" +
-					"<label class='checkbox' style='margin-top:5px;margin-bottom:5px'>" +
+				var firstInput = "<td class='checkbox' style='width:{{metric.doubleEditorWidth}}px;padding:0px'>" +
+					"<label style='margin-top:5px;margin-bottom:5px'>" +
 					"<input type='checkbox' ng-model='config.value1'>yes</label>" +
 					"</td>";
 				var emptyPart = "<td style='width:{{metric.toPartWidth}}px;padding:0px'></td>";
-				var secondInput = "<td style='width:{{metric.doubleEditorWidth}}px;padding:0px'>" +
-					"<label class='checkbox' style='margin-top:5px;margin-bottom:5px'>" +
+				var secondInput = "<td class='checkbox' style='width:{{metric.doubleEditorWidth}}px;padding:0px'>" +
+					"<label style='margin-top:5px;margin-bottom:5px'>" +
 					"<input type='checkbox' ng-model='config.value2'>no</label>" +
 					"</td>";
 				return "<table style='width:100%;height:100%'><tr>" +
