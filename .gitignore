@@ -1,3 +1,4 @@
+*.synctex.gz
 *.orig
 *.aux
 *.db

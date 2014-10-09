@@ -15,7 +15,7 @@
               The platform module that provides all the essentials for supporting the Fractal Objects design pattern.
               This includes all necessary annotation for domain definition and validation.
         </description>
-	
+
 	<dependencies>
 
 		<!-- start of Kryo specific libs -->
@@ -58,15 +58,21 @@
 
 		<!-- End of jackson dependencies -->
 
-		<!-- Hibernate 3.2.6.ga conflicts with ASM 3.3.1, thus Guice packaged version
+		<!-- Hibernate 3.2.6.ga conflicts with ASM 3.3.1, thus Guice packaged version 
 			of ASM is used. -->
 		<!-- kryo depends on asm only for managing public fields -->
-		<!-- dependency> <groupId>asm</groupId> <artifactId>asm-all</artifactId>
+		<!-- dependency> <groupId>asm</groupId> <artifactId>asm-all</artifactId> 
 			<version>3.3.1</version> </dependency -->
 		<dependency>
-		    <groupId>org.kohsuke</groupId>
-		    <artifactId>asm5</artifactId>
-		    <version>5.0.1</version>
+			<groupId>org.kohsuke</groupId>
+			<artifactId>asm5</artifactId>
+			<version>5.0.1</version>
+		</dependency>
+		<!-- This is the same dependency as for Hibernate 3.6.10 -->
+		<dependency>
+			<groupId>javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<version>3.12.0.GA</version>
 		</dependency>
 
 		<dependency>
