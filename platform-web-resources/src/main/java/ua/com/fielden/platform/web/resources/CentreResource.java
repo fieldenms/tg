@@ -15,11 +15,26 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+/**
+ * Represents web server resource that retrievers the entity centre configuration and returns it to the client..
+ *
+ * @author TG Team
+ *
+ */
 public class CentreResource extends ServerResource {
 
     private final EntityCentre centre;
     private final IGlobalDomainTreeManager gdtm;
 
+    /**
+     * Creates {@link CentreResource} and initialises it with {@link EntityCentre} instance.
+     *
+     * @param centre
+     * @param context
+     * @param request
+     * @param response
+     * @param gdtm
+     */
     public CentreResource(//
 	    final EntityCentre centre,//
             final Context context, //

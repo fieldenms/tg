@@ -2,13 +2,35 @@ package ua.com.fielden.platform.dom;
 
 import org.apache.commons.lang.StringUtils;
 
+/**
+ * Represents html5 tag's attribute name and value.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class Attribute<T> {
 
+    /**
+     * The attribute's name.
+     */
     public final String name;
+    /**
+     * The attribute's value.
+     */
     public final T value;
-
+    /**
+     * Separator between attribute's name and value (e.g. class="className" separator is "=" sign, style="backgroundColor:#FFFFFF" the separator is ":" sign).
+     */
     protected final String nameValueSeparator;
 
+    /**
+     * Creates the {@link Attribute} instance with specified {@link #name} and {@link #value}, {@link #nameValueSeparator}.
+     *
+     * @param name
+     * @param value
+     * @param nameValueSeparator
+     */
     public Attribute(final String name, final T value, final String nameValueSeparator) {
 	if (name == null || name.isEmpty()) {
 	    throw new IllegalArgumentException("The attribute name can not be null or emptty.");

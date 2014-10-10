@@ -84,6 +84,13 @@ public class DeviceSensitiveLayout implements IRenderable{
 	return getLayout(device, null);
     }
 
+    /**
+     * Returns the {@link LayoutWrapper} instance for the specified {@link Device} and {@link Orientation}.
+     *
+     * @param device
+     * @param orientation
+     * @return
+     */
     private LayoutWrapper getLayout(final Device device, final Orientation orientation) {
 	if (device == null) {
 	    throw new NullPointerException("The device of devecie sensitive layout can not be null");
@@ -96,6 +103,12 @@ public class DeviceSensitiveLayout implements IRenderable{
 	return layoutDefiner;
     }
 
+    /**
+     * The internal {@link ILayoutSetter} implementation.
+     *
+     * @author TG Team
+     *
+     */
     private class LayoutWrapper implements ILayoutSetter{
 	public ILayout layout;
 

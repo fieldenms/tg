@@ -13,7 +13,7 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.web.resources.FileResource;
 
 /**
- * The server resource that returns the content of the file;
+ * The server resource factory for {@link FileResource} that returns file to the client.
  *
  * @author TG Team
  *
@@ -22,11 +22,19 @@ public class FileResourceFactory extends Restlet {
 
     private final List<String> resourcePaths;
 
+    /**
+     * Creates new {@link FileResourceFactory} instance with specified paths of file resources.
+     *
+     * @param resourcePaths
+     */
     public FileResourceFactory(final Set<String> resourcePaths) {
 	this.resourcePaths = new ArrayList<String>(resourcePaths);
 	Collections.reverse(this.resourcePaths);
     }
 
+    /**
+     * Invoked on GET request from client.
+     */
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);

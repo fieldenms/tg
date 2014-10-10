@@ -15,8 +15,7 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.master.EntityMaster;
 
 /**
- * The abstraction that represents the web application. It also play role of dependency manager and configures devices and
- * routes.
+ * The web application configurator. Allows one to specify which entity centre, entity master and other custom parameters for the application.
  *
  * @author TG Team
  *
@@ -123,6 +122,11 @@ public class WebAppConfig{
 	return phoneMaxWidth;
     }
 
+    /**
+     * Adds new {@link EntityCentre} instance to this web application configuration.
+     *
+     * @param centre
+     */
     public void addCentre(final EntityCentre centre) {
 	centres.put(centre.getMenuItemType().getName(), centre);
     }

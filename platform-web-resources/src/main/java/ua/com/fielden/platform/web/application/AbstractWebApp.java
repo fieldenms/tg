@@ -20,13 +20,40 @@ import ua.com.fielden.platform.web.WebAppConfig;
 
 import com.google.inject.Injector;
 
+/**
+ * Represents the web application that is running on the server as a resource provider for browser client.
+ * Extend this abstract web application in order to provide custom entity centres, entity masters and other custom views.
+ *
+ * @author TG Team
+ *
+ */
 public abstract class AbstractWebApp extends Application {
+
     private final Injector injector;
     // TODO when authentication mechanism will be implemented then user name won't be needed any longer.
     private final String username;
+    /**
+     *  The paths for any kind of file resources those are needed for browser client.
+     *  These are mapped to the '/resources/' router path. Also these resource paths might be augmented with other custom paths.
+     *  When client asks for a resource then this application will search for that
+     *  resource in these paths starting from the custom ones.
+     */
     private final Set<String> resourcePaths = new LinkedHashSet<>();
-    private final Logger logger = Logger.getLogger(getClass());
 
+    protected final Logger logger = Logger.getLogger(getClass());
+
+    /**
+     * Creates an instance of {@link AbstractWebApp} with custom application name, description, author, owner and resource paths.
+     *
+     * @param context
+     * @param injector
+     * @param resourcePaths - additional root paths for file resources. (see {@link #resourcePaths} for more information).
+     * @param appName - meaningful application name.
+     * @param desc - short description for this application.
+     * @param owner - the application owner.
+     * @param author - the application author
+     * @param username - TODO will be removed later after the authentication mechanism for web browser client will be implemented.
+     */
     public AbstractWebApp(
 	    final Context context,
 	    final Injector injector,
@@ -52,6 +79,10 @@ public abstract class AbstractWebApp extends Application {
 	setAuthor(author);
     }
 
+    /**
+     * Creates router and configures it with default resources and their paths.
+     *
+     */
     @Override
     public final Restlet createInboundRoot() {
 	// Create router and web application for registering resources.
@@ -71,25 +102,34 @@ public abstract class AbstractWebApp extends Application {
 	// Register resources those are in resource paths.
 	attacheResoureces(router);
 
-	attachAdditionalResources(router);
 	return router;
     }
 
+    /**
+     * Configures router for entity centre resource.
+     *
+     * @param router
+     * @param webAppConfig - holds the entity centre configurations.
+     */
     private void attachCentreResources(final Router router, final WebAppConfig webAppConfig) {
 	logger.info("\t\tCentre resources attaching...");
 	router.attach("/centre/{centreName}", new CentreResourceFactory(webAppConfig.getCentres(), username, injector));
     }
 
+    /**
+     * Configures router for file resources needed for web browser client.
+     *
+     * @param router
+     */
     private void attacheResoureces(final Router router) {
 	logger.info("\t\tResources attaching for:..." + "\n\t\t" + StringUtils.join(resourcePaths, "/\n\t\t") + "/");
-	router.attach("/vendor/", new FileResourceFactory(Collections.unmodifiableSet(resourcePaths)), Template.MODE_STARTS_WITH);
+	router.attach("/resources/", new FileResourceFactory(Collections.unmodifiableSet(resourcePaths)), Template.MODE_STARTS_WITH);
     }
 
-    protected Logger logger() {
-	return logger;
-    }
-
-    protected abstract void attachAdditionalResources(final Router router);
-
+    /**
+     * Implement this in order to provide custom configurations for entity centre, master and other views.
+     *
+     * @param app
+     */
     protected abstract void initWebApplication(WebAppConfig app);
 }
