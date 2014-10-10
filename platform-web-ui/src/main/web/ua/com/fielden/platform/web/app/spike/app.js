@@ -5,6 +5,7 @@ require.config({
 require(['/config.js'], function() {
 	require(['angular', 'angular.route', 'myModule'], function(angular, angularRoute, myModule) {
 		var myApp = angular.module("my-app", ["ngRoute", "myModule"]);
+		
 		myApp.config(["$routeProvider",
 			function($routeProvider) {
 				$routeProvider.

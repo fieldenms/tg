@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>@appName</title>
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-2 bs-docs-sidebar">
+				<ul class="nav nav-pills nav-stacked bs-docs-sidenav affix" ng-controller="navCtrl">
+					<li ng-class="navClass('')"><a href="#/">My Profile</a></li>
+					@menuItems
+				</ul>
+			</div>
+			<div class="col-md-10" ng-view></div>
+		</div>
+	</div>
+
+	<script data-main="resources/app" src="resources/require/require.js"></script>
+</body>
+</html>

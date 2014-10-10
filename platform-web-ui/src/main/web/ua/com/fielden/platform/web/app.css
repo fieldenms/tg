@@ -1,0 +1,17 @@
+.htmlDimensionCalculation {
+    position: absolute;
+    visibility: hidden;
+    height: auto;
+    width: auto;
+    white-space: nowrap;
+}
+
+.elipsedText {
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.panel-title a {
+    cursor: pointer;
+}
