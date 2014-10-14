@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.reflection.Reflector;
 
 /**
@@ -154,7 +155,9 @@ public class EntityAggregates extends AbstractEntity<String> {
                     try {
                         // TODO alias should become useful and ultimately required in case of many root entities discovered.
                         return rootEntity.get(propertyName);
-                    } catch (final Exception e2) {
+                    }  catch (final StrictProxyException e1) {
+                        throw e1;
+                    }  catch (final Exception e2) {
                         try {
                             return rootEntity.get(propertyName.substring(propertyName.indexOf(".") + 1));
                         } catch (final Exception e1) {

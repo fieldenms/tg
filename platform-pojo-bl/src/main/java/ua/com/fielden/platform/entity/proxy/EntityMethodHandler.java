@@ -4,11 +4,9 @@ import static java.lang.String.format;
 
 import java.lang.reflect.Method;
 
+import javassist.util.proxy.MethodHandler;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.Accessor;
-import ua.com.fielden.platform.entity.Mutator;
-import javassist.util.proxy.MethodHandler;
 
 /**
  * This is a method handler intercepts calls to proxied entities, but at the same time it also acts as a mixin to the proxy itself by providing additional functionality
@@ -52,7 +50,7 @@ public class EntityMethodHandler implements MethodHandler {
 
     @Override
     public Object invoke(final Object self, final Method thisMethod, final Method proceed, final Object[] args) throws Throwable {
-        System.out.printf("Owner %s for entity %s executing method %s in mode %s\n", owner, proxy.getId(), thisMethod.getName(), mode);
+        System.out.printf("Owner %s of type %s for entity %s of type %s executing method %s in mode %s\n", owner.getId(), owner.getType(), proxy.getId(), proxy.getType(), thisMethod.getName(), mode);
         
         if (getProxy() == null) {
             throw new IllegalStateException("This method handler should not be used as the instance it proxies is null (most likely is has been converted to a non-proxied entity).");
@@ -60,6 +58,8 @@ public class EntityMethodHandler implements MethodHandler {
         
         switch (mode) {
         case STRICT:
+//            System.out.printf("--- STRICT Attempting to invoke method %s on proxy for type type %s; owner: %s; ownerId: %s; ownerClass: %s; isOwnerProxy: %s; selfId: %s; selfClass: %s; \n", 
+//                    proceed.getName(), type.getName(), owner, owner.getClass(), owner.getId(), ProxyFactory.isProxyClass(owner.getClass()), ((AbstractEntity) self).getId(), self.getClass());
             throw new StrictProxyException(owner, self, format("Attempting to invoke method %s on proxy for type type %s.", proceed.getName(), type.getName()));
         case LAZY:
             // TODO Call to findById should be change to load -- yet to be introduced method

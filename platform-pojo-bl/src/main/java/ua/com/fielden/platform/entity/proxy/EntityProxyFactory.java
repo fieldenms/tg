@@ -9,7 +9,6 @@ import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.reflection.Finder;
 
 /**
@@ -29,7 +28,9 @@ public class EntityProxyFactory<T extends AbstractEntity<?>> extends ProxyFactor
         
         this.skipMethods.add("getId");
         this.skipMethods.add("setId");
-
+        this.skipMethods.add("getVersion");
+        this.skipMethods.add("setVersion");
+        
         super.setFilter(new MethodFilter() {
             @Override
             public boolean isHandled(final Method method) {
