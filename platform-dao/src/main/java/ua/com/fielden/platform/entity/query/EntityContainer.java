@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,9 +10,11 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.proxy.EntityProxyFactory;
+import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 public final class EntityContainer<R extends AbstractEntity<?>> {
 
@@ -20,9 +24,11 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     private final Map<String, ValueContainer> composites = new HashMap<String, ValueContainer>();
     private final Map<String, EntityContainer<? extends AbstractEntity<?>>> entities = new HashMap<String, EntityContainer<? extends AbstractEntity<?>>>();
     private final Map<String, CollectionContainer<? extends AbstractEntity<?>>> collections = new HashMap<String, CollectionContainer<? extends AbstractEntity<?>>>();
+    private final ICompanionObjectFinder coFinder;
 
-    public EntityContainer(final Class<R> resultType) {
+    public EntityContainer(final Class<R> resultType, final ICompanionObjectFinder coFinder) {
         this.resultType = resultType;
+        this.coFinder = coFinder;
     }
 
     private int countAllDataItems() {
@@ -47,7 +53,12 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
                 : (isUnionEntityType(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
     }
 
-    public R instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
+    private Object instantiateProxy(final Class<? extends AbstractEntity<?>> entityType, final R owningEntity, final Long id, final String propName,  final ProxyMode proxyMode) {
+        final EntityProxyFactory<?> epf = new EntityProxyFactory<>(entityType);
+        return epf.create(id, owningEntity, propName, coFinder.find(entityType), proxyMode);
+    }
+
+    public R instantiate(final EntityFactory entFactory, final boolean userViewOnly, final ProxyMode proxyMode) {
         entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
         entity.setInitialising(true);
         final boolean unionEntity = isUnionEntityType(resultType);
@@ -61,7 +72,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         }
 
         for (final Map.Entry<String, EntityContainer<? extends AbstractEntity<?>>> entityEntry : entities.entrySet()) {
-            final Object propValue = determinePropValue(entityEntry.getValue(), entFactory, userViewOnly);
+            final Object propValue = determinePropValue(entity, entityEntry.getKey(), entityEntry.getValue(), entFactory, userViewOnly, proxyMode);
             setPropertyValue(entity, entityEntry.getKey(), propValue);
             if (unionEntity && propValue != null /*&& userViewOnly*/) {
                 ((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey());
@@ -69,7 +80,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         }
 
         for (final Map.Entry<String, CollectionContainer<? extends AbstractEntity<?>>> entityEntry : collections.entrySet()) {
-            setPropertyValue(entity, entityEntry.getKey(), entityEntry.getValue().instantiate(entFactory, userViewOnly));
+            setPropertyValue(entity, entityEntry.getKey(), entityEntry.getValue().instantiate(entFactory, userViewOnly, proxyMode));
         }
 
         if (!userViewOnly) {
@@ -81,13 +92,15 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         return entity;
     }
 
-    private Object determinePropValue(final EntityContainer<? extends AbstractEntity<?>> entityContainer, final EntityFactory entFactory, final boolean userViewOnly) {
-        if (entityContainer == null || entityContainer.notYetInitialised()) {
+    private Object determinePropValue(final R owningEntity, final String propName, final EntityContainer<? extends AbstractEntity<?>> entityContainer, final EntityFactory entFactory, final boolean userViewOnly,  final ProxyMode proxyMode) {
+        if (entityContainer == null) {
             return null;
+        } else if (entityContainer.notYetInitialised()) {
+            return instantiateProxy(entityContainer.resultType, owningEntity, entityContainer.getId(), propName, proxyMode);
         } else if (entityContainer.isInstantiated()) {
             return entityContainer.entity;
         } else {
-            return entityContainer.instantiate(entFactory, userViewOnly);
+            return entityContainer.instantiate(entFactory, userViewOnly, proxyMode);
         }
     }
 
@@ -99,6 +112,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
                 setPropertyToField(entity, propName, propValue);
             }
         } catch (final Exception e) {
+            e.printStackTrace();
             throw new IllegalStateException("Can't set value [" + propValue + "] of type [" + (propValue != null ? propValue.getClass() : "?") + "] for property [" + propName
                     + "] due to:" + e);
         }

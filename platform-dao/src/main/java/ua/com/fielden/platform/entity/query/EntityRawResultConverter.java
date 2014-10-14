@@ -6,13 +6,16 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 
 public class EntityRawResultConverter<E extends AbstractEntity<?>> {
-    private EntityFactory entityFactory;
+    private final EntityFactory entityFactory;
+    private final ICompanionObjectFinder coFinder;
 
-    protected EntityRawResultConverter(final EntityFactory entityFactory) {
+    protected EntityRawResultConverter(final EntityFactory entityFactory, final ICompanionObjectFinder coFinder) {
         this.entityFactory = entityFactory;
+        this.coFinder = coFinder;
     }
 
     /**
@@ -43,7 +46,7 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      */
     private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTuple(final Object[] data, final EntityTree<ET> resultTree) {
 
-        final EntityContainer<ET> entCont = new EntityContainer<ET>(resultTree.getResultType());
+        final EntityContainer<ET> entCont = new EntityContainer<ET>(resultTree.getResultType(), coFinder);
 
         for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
             entCont.getPrimitives().put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsUserType()));

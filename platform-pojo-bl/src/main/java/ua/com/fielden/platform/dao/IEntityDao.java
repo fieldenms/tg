@@ -76,7 +76,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      *            -- one or more fetching models specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @return
      */
-    T findById(final Long id, fetch<T> fetchModel);
+    T findById(final Long id, final fetch<T> fetchModel);
 
     /**
      * Finds entity by its surrogate id.
@@ -105,7 +105,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @param keyValues
      * @return
      */
-    T findByKeyAndFetch(fetch<T> fetchModel, final Object... keyValues);
+    T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues);
 
     /**
      * Finds entity by its instance and enhances it according to provided fetch model.
@@ -114,8 +114,22 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @param entity
      * @return
      */
-    T findByEntityAndFetch(fetch<T> fetchModel, T entity);
+    T findByEntityAndFetch(final fetch<T> fetchModel, final T entity);
 
+
+    /**
+     * Load entity by id in lazy mode -- all its entity properties will be proxied in LAZY mode.
+     * <p>
+     * PLEASE REFRAIN YOURSELF AND OTHERS FROM USING THIS METHOD!!! 
+     * </p>
+     * 
+     * @param id
+     * @return
+     */
+    default T lazyLoad(final Long id) {
+        throw new org.apache.commons.lang.NotImplementedException("Should be overridden by subclasses");
+    }
+    
     /**
      * Should return a reference to the first page of the specified size containing entity instances.
      * 
@@ -243,7 +257,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @param model
      * @return
      */
-    int count(final EntityResultQueryModel<T> model, Map<String, Object> paramValues);
+    int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
 
     int count(final EntityResultQueryModel<T> model);
 
@@ -261,7 +275,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @param quert
      * @return
      */
-    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, int numberOfEntities);
+    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
 
     /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.

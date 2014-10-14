@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.NotNullValidator;
 import ua.com.fielden.platform.entity.validation.StubValidator;
@@ -53,10 +54,12 @@ import ua.com.fielden.platform.reflection.Reflector;
  * Implemented support for restoring to original value with validation error cancellation.<br>
  * <b>Date: 2011-09-26</b><br>
  * Significant modification due to introduction of BCE and ACE event lifecycle.
- * 
- * 
+ * <b>Date: 2014-10-06</b><br>
+ * Implementing API for supporting proxy values.
+ *
+ *
  * @author TG Team
- * 
+ *
  */
 public final class MetaProperty implements Comparable<MetaProperty> {
     private final AbstractEntity<?> entity;
@@ -87,7 +90,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * setter invocation, and should be a deliberate act enforced as part of the application logic. Enforcing validation for default values is not technically difficult, but would
      * introduce a maintenance hurdle for application developers, where during an evolution of the system the validation logic might change, but default values not updated
      * accordingly. This would lead to entity instantiation failure.
-     * 
+     *
      * A much preferred approach is to provide a custom entity constructor or instantiation factories in case default property values support is required, where property values
      * should be set via setters. The use of factories would provide additional flexibility, where default values could be governed by business logic and a place of entity
      * instantiation.
@@ -130,7 +133,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     /**
      * Property supports specification of the precise type. For example, property <code>key</code> in entity classes is recognised by reflection API as Comparable. Therefore, it
      * might be desirable to specify type more accurately.
-     * 
+     *
      * @param field
      * @param type
      * @param validators
@@ -155,12 +158,12 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Perform sequential validation.
-     * 
+     *
      * Stops validation at the first violation. This is preferred since subsequent validators may depend on success of preceding ones.
-     * 
+     *
      * Please note that collectional properties may have up to three mutators having different annotations. Thus, a special logic is used to ensure that only validators associated
      * with the mutator being processed are applied.
-     * 
+     *
      * @param property
      * @param value
      * @param entity
@@ -197,7 +200,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     /**
      * Revalidates this property using {@link #getLastAttemptedValue()} value as the input for the property. Revalidation occurs only if this property has an assigned value (null
      * could also be an assigned value).
-     * 
+     *
      * @param ignoreRequiredness
      *            when true then isRequired value is ignored during revalidation, this is currently used for re-validating dependent properties where there is no need to mark
      *            properties as invalid only because they are empty.
@@ -213,7 +216,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Processes all registered validators (that have its own annotations) by iterating over validators associated with corresponding validation annotations (va).
-     * 
+     *
      * @param newValue
      * @param oldValue
      * @param applicableValidationAnnotations
@@ -247,7 +250,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Checks whether annotation identified by parameter <code>key</code> is amongst applicable validation annotations.
-     * 
+     *
      * @param applicableValidationAnnotations
      * @param validationAnnotationEnumValue
      * @return
@@ -271,7 +274,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Indicates the type of the entity property represented by this meta-property.
-     * 
+     *
      * @return
      */
     public final Class<?> getType() {
@@ -281,9 +284,9 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     /**
      * This setter was introduces specifically to set property type in cases where it is not possible to determine during the creation of meta-property. The specific case is the
      * <code>key</code> property in {@link AbstractEntity}, where the type can be determined only when the actual value is assigned.
-     * 
+     *
      * This setter should be used extremely judiciously.
-     * 
+     *
      * @param type
      */
     public final void setType(final Class<?> type) {
@@ -297,7 +300,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Sets the result for validator with index.
-     * 
+     *
      * @param key
      *            -- annotation representing validator
      * @param validationResult
@@ -319,7 +322,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Same as {@link #setValidationResultNoSynch(Annotation, IBeforeChangeEventHandler, Result)}, but with synchronization block.
-     * 
+     *
      * @param key
      * @param handler
      * @param validationResult
@@ -330,7 +333,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Sets validation result specifically for {@link ValidationAnnotation.REQUIRED};
-     * 
+     *
      * @param validationResult
      */
     public synchronized final void setRequiredValidationResult(final Result validationResult) {
@@ -339,7 +342,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Sets validation result specifically for {@link ValidationAnnotation.ENTITY_EXISTS};
-     * 
+     *
      * @param validationResult
      */
     public synchronized final void setEntityExistsValidationResult(final Result validationResult) {
@@ -348,7 +351,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Sets validation result specifically for {@link ValidationAnnotation.REQUIRED};
-     * 
+     *
      * @param validationResult
      */
     public synchronized final void setDomainValidationResult(final Result validationResult) {
@@ -357,7 +360,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Sets validation result for the first of the annotation handlers designated by the validation annotation value.
-     * 
+     *
      * @param validationResult
      * @param annotationHandlers
      */
@@ -385,7 +388,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * Returns the last result of the first validator associated with {@link ValidationAnnotation} value in a synchronised manner if all validators for this annotation succeeded,
      * or the last result of the first failed validator. Most validation annotations are associated with a single validator. But some, such as
      * {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
-     * 
+     *
      * @param va
      *            -- validation annotation.
      * @return
@@ -397,7 +400,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Returns false if there is at least one unsuccessful result. Evaluation of the validation results happens in a synchronised manner.
-     * 
+     *
      * @return
      */
     public synchronized final boolean isValid() {
@@ -412,7 +415,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Returns the first warning associated with property validators.
-     * 
+     *
      * @return
      */
     public synchronized final Result getFirstWarning() {
@@ -429,7 +432,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * This method invokes {@link #isValid()} and if its result is <code>true</code> (i.e. valid) then additional check kicks in to ensure requiredness validation.
-     * 
+     *
      * @return
      */
     public synchronized final boolean isValidWithRequiredCheck() {
@@ -456,7 +459,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     /**
      * A convenient method, which ensures that only string values are tested for empty when required. This prevents accidental and redundant lazy loading when invoking
      * values.toString() on entity instances.
-     * 
+     *
      * @param value
      * @return
      */
@@ -466,7 +469,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Return the first failed validation result. If there is no failure then returns null.
-     * 
+     *
      * @return
      */
     public synchronized final Result getFirstFailure() {
@@ -483,7 +486,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Returns the first failure associated with <code>annotation</code> value.
-     * 
+     *
      * @param annotation
      * @return
      */
@@ -499,7 +502,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Returns the number of property validators. Can be zero.
-     * 
+     *
      * @return
      */
     public final int numberOfValidators() {
@@ -508,7 +511,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Registers property change listener to validationResults. This listener fires when setValidationResult(..) method invokes.
-     * 
+     *
      * @param propertyName
      * @param listener
      */
@@ -528,7 +531,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Registers property change listener for property <code>editable</code>.
-     * 
+     *
      * @param propertyName
      * @param listener
      */
@@ -548,7 +551,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Registers property change listener for property <code>required</code>.
-     * 
+     *
      * @param propertyName
      * @param listener
      */
@@ -582,10 +585,10 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Sets the original value.
-     * 
+     *
      * <p>
      * VERY IMPORTANT : the method should not cause proxy initialisation!!!
-     * 
+     *
      * @param value
      */
     public final MetaProperty setOriginalValue(final Object value) {
@@ -627,7 +630,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Returns the current (last successful) value of the property.
-     * 
+     *
      * @return
      */
     public final Object getValue() {
@@ -636,9 +639,9 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Updates the previous value for the entity property. Increments the update counter and check if the original value should be updated as well.
-     * 
+     *
      * Please note that for collectional properties their size is used as previous and original values.
-     * 
+     *
      * @param prevValue
      * @return
      */
@@ -657,7 +660,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Checks if the current value is changed from the original one.
-     * 
+     *
      * @return
      */
     public final boolean isChangedFromOriginal() {
@@ -677,7 +680,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Checks if the current value is changed from the previous one
-     * 
+     *
      * @return
      */
     public final boolean isChangedFromPrevious() {
@@ -707,7 +710,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Invokes {@link IAfterChangeEventHandler#handle(MetaProperty, Object)} if it has been provided.
-     * 
+     *
      * @param entityPropertyValue
      * @return
      */
@@ -725,7 +728,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Returns true if MetaProperty represents a collectional property.
-     * 
+     *
      * @return
      */
     public final boolean isCollectional() {
@@ -735,7 +738,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     /**
      * Returns a type provided as part of the annotation {@link IsProperty} when defining property. It is provided, for example, in cases where meta-property represents a
      * collection property -- the provided type indicates the type collection elements.
-     * 
+     *
      * @return
      */
     public final Class<?> getPropertyAnnotationType() {
@@ -745,7 +748,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     /**
      * Meta-property comparison gives preference to properties, which represent a key member. In case where both meta-properties are key members or both are non-key members the
      * property names are used for comparison.
-     * 
+     *
      * Comparison between key and non-key properties happens in reverse order to ensure that key properties are at the top.
      */
     @Override
@@ -778,7 +781,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * A convenient method for determining whether there are validators associated a the corresponding property.
-     * 
+     *
      * @return
      */
     public final boolean hasValidators() {
@@ -790,7 +793,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * <p>
      * A special care is taken for properties with default values assigned at the field level. This method returns <code>original value</code> for properties that are valid and not
      * assigned.
-     * 
+     *
      * @return
      */
     public final Object getLastAttemptedValue() {
@@ -820,7 +823,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     /**
      * This setter change the 'required' state for metaProperty. Also it puts RequiredValidator to the list of validators if it does not exist. And if 'required' became false -> it
      * clears REQUIRED validation result by successful result.
-     * 
+     *
      * @param required
      */
     public final void setRequired(final boolean required) {
@@ -857,7 +860,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Checks if REQUIRED validator were ever put to the list of validators.
-     * 
+     *
      * @return
      */
     public final boolean containsRequiredValidator() {
@@ -866,7 +869,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Checks if DYNAMIC validator were ever put to the list of validators.
-     * 
+     *
      * @return
      */
     public final boolean containsDynamicValidator() {
@@ -891,10 +894,10 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Used to create and put new validator (without any validation logic!) to validators list related to <code>valAnnotation</code>.
-     * 
+     *
      * This method should be used ONLY for DYNAMIC, REQUIRED and all validators that cannot change its result from its own "validate" method, but only from the outside method
      * MetaProperty.setValidationResult().
-     * 
+     *
      * @param valAnnotation
      */
     private void putValidator(final ValidationAnnotation valAnnotation) {
@@ -905,7 +908,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Returns the array of "dependent property names".
-     * 
+     *
      * @return
      */
     public final String[] getDependentPropertyNames() {
@@ -914,7 +917,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Returns true if there is at least one correct dependent property related to this one, false otherwise.
-     * 
+     *
      * @return
      */
     public final boolean hasDependentProperties() {
@@ -1038,7 +1041,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Returns a list of validation annotations associated with this property.
-     * 
+     *
      * @return
      */
     public Set<Annotation> getValidationAnnotations() {
@@ -1047,10 +1050,30 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Returns property ACE handler.
-     * 
+     *
      * @return
      */
     public IAfterChangeEventHandler getAceHandler() {
         return aceHandler;
+    }
+
+    /**
+     * Creates a dynamic proxy with the specified <code>mode</code> if argument <code>id</code> is not null.
+     * The created proxy is returned as the value for convenience.
+     *
+     * In case of <code>id == null</code> value <code>null</code> is returned and property would also become <code>null</code>.
+     *
+     * @param id
+     * @param mode
+     * @return
+     */
+    public AbstractEntity<?> setProxy(final Long id, final ProxyMode mode) {
+        if (id == null) {
+
+            return null;
+        } else {
+
+        }
+        return null;
     }
 }

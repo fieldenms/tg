@@ -264,7 +264,7 @@ public final class EntitySerialiser extends Serializer {
     }
 
     /**
-     * Read a non-null value from the buffer and assigns it to the property. Also, handles assignemt of the restored value as the original for meta-property.
+     * Read a non-null value from the buffer and assigns it to the property. Also, handles assignment of the restored value as the original for meta-property.
      *
      * @param buffer
      * @param entity
