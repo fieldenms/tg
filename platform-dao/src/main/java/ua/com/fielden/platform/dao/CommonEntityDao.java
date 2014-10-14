@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -75,6 +76,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private EntityFactory entityFactory;
 
+    
+    @Inject
+    private ICompanionObjectFinder coFinder;
+    
     @Inject
     private Injector injector;
 
@@ -165,6 +170,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return super.findByKey(keyValues);
     }
 
+    @Override
+    @SessionRequired
+    public T lazyLoad(final Long id) {
+        final List<T> result = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null).getLazyEntitiesOnPage(from(select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model()).model(), 0, 1);
+        
+        return !result.isEmpty() ? result.get(0) : null;
+    }
+
     /**
      * Saves the provided entity. This method checks entity version and throws StaleObjectStateException if the provided entity is stale.
      */
@@ -215,7 +228,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 if (!entity.getDirtyProperties().isEmpty()) {
                     // let's also make sure that duplicate entities are not allowed
                     final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
-                    final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), domainMetadata, null, null).getEntities(from(model).model());
+                    final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null).getEntities(from(model).model());
                     final int count = ids.size();
                     if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
                         throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()
@@ -407,7 +420,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        return new EntityFetcher(getSession(), getEntityFactory(), domainMetadata, filter, getUsername()).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+        return new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername()).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
     }
 
     @Override
@@ -498,7 +511,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ? select((EntityResultQueryModel<T>) model).yield().countAll().as("count").modelAsAggregate()
                 : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
         final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetch(EntityAggregates.class).with("count")).lightweight(true).model();
-        final List<EntityAggregates> counts = new EntityFetcher(getSession(), getEntityFactory(), domainMetadata, filter, getUsername()). //
+        final List<EntityAggregates> counts = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername()). //
         getEntities(countModel);
         final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
@@ -682,6 +695,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
+    public ICompanionObjectFinder getCoFinder() {
+        return coFinder;
+    }
+    
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
     }

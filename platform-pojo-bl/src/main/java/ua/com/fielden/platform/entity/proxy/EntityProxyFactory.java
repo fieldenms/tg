@@ -30,6 +30,7 @@ public class EntityProxyFactory<T extends AbstractEntity<?>> extends ProxyFactor
         this.skipMethods.add("setId");
         this.skipMethods.add("getVersion");
         this.skipMethods.add("setVersion");
+        this.skipMethods.add("getClass");
         
         super.setFilter(new MethodFilter() {
             @Override

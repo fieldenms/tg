@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.entity.proxy;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import javassist.util.proxy.ProxyFactory;
-import static org.mockito.Mockito.*;
 
 import org.junit.Test;
 
@@ -89,7 +92,7 @@ public class ProxyTestCase {
         
         // need to mock a companion object
         final IEntityForProxy coEntityForProxy = mock(IEntityForProxy.class);
-        when(coEntityForProxy.findById(10L)).thenReturn(factory.newByKey(EntityForProxy.class, "REAL!"));
+        when(coEntityForProxy.lazyLoad(10L)).thenReturn(factory.newByKey(EntityForProxy.class, "REAL!"));
 
         final EntityForProxy prop1Proxy = epf.create(10L, owner, "prop1", coEntityForProxy, ProxyMode.LAZY);
 

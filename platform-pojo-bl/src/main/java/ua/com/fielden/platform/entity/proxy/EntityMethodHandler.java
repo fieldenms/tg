@@ -50,7 +50,7 @@ public class EntityMethodHandler implements MethodHandler {
 
     @Override
     public Object invoke(final Object self, final Method thisMethod, final Method proceed, final Object[] args) throws Throwable {
-        System.out.printf("Owner %s of type %s for entity %s of type %s executing method %s in mode %s\n", owner.getId(), owner.getType(), proxy.getId(), proxy.getType(), thisMethod.getName(), mode);
+        // System.out.printf("Owner %s of type %s for entity %s of type %s executing method %s in mode %s\n", owner.getId(), owner.getType(), proxy.getId(), proxy.getType(), thisMethod.getName(), mode);
         
         if (getProxy() == null) {
             throw new IllegalStateException("This method handler should not be used as the instance it proxies is null (most likely is has been converted to a non-proxied entity).");
@@ -63,7 +63,7 @@ public class EntityMethodHandler implements MethodHandler {
             throw new StrictProxyException(owner, self, format("Attempting to invoke method %s on proxy for type type %s.", proceed.getName(), type.getName()));
         case LAZY:
             // TODO Call to findById should be change to load -- yet to be introduced method
-            final AbstractEntity<?> entity = coForProxy.findById(proxy.getId());
+            final AbstractEntity<?> entity = coForProxy.lazyLoad(proxy.getId());
             // obtain the invoked method for just instantiated real entity
             final Method method = entity.getType().getMethod(thisMethod.getName(), thisMethod.getParameterTypes());
             // TODO It's not quite clear what should be done with meta-property original and previos values in this case...

@@ -5,6 +5,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.proxy.ProxyMode;
 
 public final class CollectionContainer<R extends AbstractEntity<?>> {
     private Collection<R> data;
@@ -16,10 +17,10 @@ public final class CollectionContainer<R extends AbstractEntity<?>> {
         this.containers = containers;
     }
 
-    public Collection<R> instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
+    public Collection<R> instantiate(final EntityFactory entFactory, final boolean userViewOnly,  final ProxyMode proxyMode) {
         for (final EntityContainer<R> container : containers) {
             if (!container.notYetInitialised()) {
-                data.add(container.instantiate(entFactory, userViewOnly));
+                data.add(container.instantiate(entFactory, userViewOnly, proxyMode));
             }
         }
 
