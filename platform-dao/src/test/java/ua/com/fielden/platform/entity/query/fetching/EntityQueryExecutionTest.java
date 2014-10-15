@@ -892,6 +892,14 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    public void test_now() {
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("initDate").lt().now().model();
+        final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).model());
+        assertEquals("Incorrect count", 2, models.size());
+    }
+
+    
+    @Test
     @Ignore
     public void test_with_empty_values() {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").in().values().model();

@@ -33,6 +33,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYield
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 public class EntityFetcher {
     private final Session session;
@@ -46,14 +47,17 @@ public class EntityFetcher {
     private final IFilter filter;
     private final String username;
     private final Logger logger = Logger.getLogger(this.getClass());
+   
+    private final IUniversalConstants universalConstants;
 
-    public EntityFetcher(final Session session, final EntityFactory entityFactory, final ICompanionObjectFinder coFinder, final DomainMetadata domainMetadata, final IFilter filter, final String username) {
+    public EntityFetcher(final Session session, final EntityFactory entityFactory, final ICompanionObjectFinder coFinder, final DomainMetadata domainMetadata, final IFilter filter, final String username, final IUniversalConstants universalConstants) {
         this.session = session;
         this.entityFactory = entityFactory;
         this.coFinder = coFinder;
         this.domainMetadata = domainMetadata;
         this.filter = filter;
         this.username = username;
+        this.universalConstants = universalConstants;
     }
 
     private <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity, final ProxyMode proxyMode) {
@@ -82,7 +86,7 @@ public class EntityFetcher {
     }
 
     private <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-        final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username);
+        final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, universalConstants);
         final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem);
         final String sql = entQuery.sql();
         return new QueryModelResult<T>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
