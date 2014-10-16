@@ -67,7 +67,7 @@ import com.google.inject.Injector;
  */
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityDao<T> implements ISessionEnabled {
 
-    private Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = Logger.getLogger(this.getClass());
 
     private Session session;
 
@@ -440,6 +440,18 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
     }
 
+    /**
+     * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by the provided query model with appropriate summary model. This allows a query
+     * based pagination.
+     */
+    @Override
+    @SessionRequired
+    public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
+        return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
+
+        // return super.firstPage(model, summaryModel, pageCapacity);
+    }
+
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
@@ -601,12 +613,37 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         private final List<T> data;
         private final QueryExecutionModel<T, ?> queryModel;
 
+        private final EntityAggregates summary;
+        private final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel;
+
         public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final int pageNumber, final int pageCapacity, final int numberOfPages) {
             this.pageNumber = pageNumber;
             this.pageCapacity = pageCapacity;
             this.numberOfPages = numberOfPages == 0 ? 1 : numberOfPages;
             this.queryModel = queryModel;
             data = getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+
+            summaryModel = null;
+            summary = null;
+        }
+
+        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final int pageNumber, final int pageCapacity, final int numberOfPages, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel) {
+            this.pageNumber = pageNumber;
+            this.pageCapacity = pageCapacity;
+            this.numberOfPages = numberOfPages == 0 ? 1 : numberOfPages;
+            this.queryModel = queryModel;
+            data = getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+
+            summary = summaryModel != null ? calcSummary(summaryModel) : null;
+            this.summaryModel = summaryModel;
+        }
+
+        /**
+         * Delegates the request to EntityAggregates RAO to obtain the result of the query. Expects only one EntityAggregates in the result list.
+         */
+        protected EntityAggregates calcSummary(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model) {
+            final List<EntityAggregates> list = new CommonEntityAggregatesDao(getFilter()).getAllEntities(model);
+            return list.size() == 1 ? list.get(0) : null;
         }
 
         @Override

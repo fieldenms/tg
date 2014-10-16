@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity.functional;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,7 +25,6 @@ import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.swing.review.DynamicParamBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -55,36 +53,35 @@ public class QueryRunnerDao extends CommonEntityDao<QueryRunner> implements IQue
     @Override
     @SessionRequired
     public QueryRunner save(final QueryRunner queryRunner) {
-	final Class<AbstractEntity<?>> entityType = queryRunner.getQuery().getActualEntityType();
+        // Here we get the type of the centre entity, which should be used to get result instances.
+        // This type is generated and in this case IGeneratedEntityController should be used.
+        final Class<AbstractEntity<?>> centreEntityType = queryRunner.getQuery().getActualEntityType();
 
-	final List<QueryProperty> queryProps = queryRunner.getQuery().getQueryProperties();
-	final ICompleted<AbstractEntity<?>> query = DynamicQueryBuilder.createQuery(entityType, queryProps);
+        final ICompleted<AbstractEntity<?>> query = DynamicQueryBuilder.createQuery(centreEntityType, queryRunner.getQuery().getQueryProperties());
+        final fetch<AbstractEntity<?>> fetchModel = DynamicFetchBuilder.createFetchOnlyModel(centreEntityType, queryRunner.getQuery().createFetchProps());
+        final Set<String> summaryProps = queryRunner.getQuery().createSummaryProps();
+        final fetch<AbstractEntity<?>> totalFetchModel = summaryProps == null || summaryProps.isEmpty() ? null
+                : DynamicFetchBuilder.createTotalFetchModel(centreEntityType, summaryProps);
+        final OrderingModel queryOrdering = DynamicOrderingBuilder.createOrderingModel(centreEntityType, queryRunner.getQuery().createOrderingProps());
+        final Map<String, Pair<Object, Object>> paramMap = queryRunner.getQuery().createParamMap();
+        final Map<String, Object> parameters = parameters(centreEntityType, paramMap);
 
-	final fetch<AbstractEntity<?>> fetchModel = DynamicFetchBuilder.createFetchOnlyModel(entityType, queryRunner.getQuery().createFetchProps());
+        final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> queryModel = from(query.model()).with(fetchModel).with(queryOrdering).with(parameters).model();
+        final QueryExecutionModel totalQueryModel = totalFetchModel == null ? null : from(query.model()).with(totalFetchModel).with(parameters).model();
 
-	final Set<String> summaryProps = queryRunner.getQuery().createSummaryProps();
-	final fetch<AbstractEntity<?>> total = summaryProps == null || summaryProps.isEmpty() ? null : DynamicFetchBuilder.createTotalFetchModel(entityType, summaryProps);
+        IEntityDao<AbstractEntity<?>> controller = companionObjectFinder.find(centreEntityType);
+        controller = controller == null ? dynamicDao : controller;
 
-	final OrderingModel queryOrdering = DynamicOrderingBuilder.createOrderingModel(entityType, queryRunner.getQuery().createOrderingProps());
+        final IPage<AbstractEntity<?>> resultPage = controller.firstPage(queryModel, totalQueryModel, queryRunner.getPageCapacity());
+        final Page page = queryRunner.getEntityFactory().newEntity(Page.class).
+                setNumberOfPages(resultPage.numberOfPages()).
+                setPageNo(resultPage.no()).
+                setSummary(resultPage.summary()).
+                setResult(resultPage.data());
+        return queryRunner.getEntityFactory().newEntity(QueryRunner.class).setQuery(null).setPage(page);
+    }
 
-	final Map<String, Pair<Object, Object>> paramMap = queryRunner.getQuery().createParamMap();
-
-	IEntityDao<AbstractEntity<?>> controller = companionObjectFinder.find(entityType);
-	controller = controller == null ? dynamicDao : controller;
-
-	final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> queryModel = from(query.model()).//
-		with(fetchModel).//
-		with(queryOrdering).//
-		with(DynamicParamBuilder.buildParametersMap(entityType, paramMap)).model();
-	final QueryExecutionModel totalModel = total != null ? from(query.model()).//
-		with(total).//
-		with(DynamicParamBuilder.buildParametersMap(entityType, paramMap)).model() : null;
-	final IPage<AbstractEntity<?>> resultPage = controller.firstPage(queryModel, totalModel, queryRunner.getPageCapacity());
-	final Page page = queryRunner.getEntityFactory().newEntity(Page.class).
-		setNumberOfPages(resultPage.numberOfPages()).
-		setPageNo(resultPage.no()).
-		setSummary(resultPage.summary()).
-		setResult(resultPage.data());
-	return queryRunner.getEntityFactory().newEntity(QueryRunner.class).setQuery(null).setPage(page);
+    private Map<String, Object> parameters(final Class<AbstractEntity<?>> centreEntityType, final Map<String, Pair<Object, Object>> paramMap) {
+        return DynamicParamBuilder.buildParametersMap(centreEntityType, paramMap);
     }
 }
