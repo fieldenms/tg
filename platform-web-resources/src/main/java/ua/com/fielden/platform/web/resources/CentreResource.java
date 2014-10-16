@@ -10,6 +10,7 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 
@@ -25,6 +26,7 @@ public class CentreResource extends ServerResource {
 
     private final EntityCentre centre;
     private final IGlobalDomainTreeManager gdtm;
+    private final EntityFactory entityFactory;
 
     /**
      * Creates {@link CentreResource} and initialises it with {@link EntityCentre} instance.
@@ -40,10 +42,12 @@ public class CentreResource extends ServerResource {
             final Context context, //
             final Request request, //
             final Response response, //
-            final IGlobalDomainTreeManager gdtm) {
+            final IGlobalDomainTreeManager gdtm,//
+            final EntityFactory entityFactory) {
         init(context, request, response);
         this.centre = centre;
         this.gdtm = gdtm;
+        this.entityFactory = entityFactory;
     }
 
     @Override
@@ -52,7 +56,7 @@ public class CentreResource extends ServerResource {
 	    gdtm.initEntityCentreManager(centre.getMenuItemType(), null);
 	    final ICentreDomainTreeManagerAndEnhancer cdtmae = gdtm.getEntityCentreManager(centre.getMenuItemType(), null);
 
-	    final String centreString = new TgObjectMapper().writeValueAsString(cdtmae);
+	    final String centreString = new TgObjectMapper(entityFactory).writeValueAsString(cdtmae);
 	    return new JsonRepresentation(centreString);
    	} catch(final JsonProcessingException jpe) {
    	    jpe.printStackTrace();

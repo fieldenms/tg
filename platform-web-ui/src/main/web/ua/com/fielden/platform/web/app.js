@@ -33,23 +33,15 @@ require(['/resources/config.js'], function() {
 		});
 
 		appModule.factory("CentreEntity", function($resource) {
-			return $resource("/centre/:centreName");
+			return $resource("users/SU/centre/:centreName");
 		});
 
-		appModule.factory("CentreQuery", function($resource) {
-			return $resource("/centre/:centreName/query/:page", {}, {
-				firstPage: {
-					method: 'GET',
-					params: {
-						page: 'first',
-						pageNo: 0
-					}
-				},
-				getPage: {
-					method: 'GET',
-					params: {
-						page: 'navigate',
-					}
+		appModule.factory("QueryRunner", function($resource) {
+            JSON
+            JSON
+			return $resource("users/SU/QueryRunner", {}, {
+				action: {
+					method: 'POST'
 				}
 			});
 		});
@@ -71,14 +63,14 @@ require(['/resources/config.js'], function() {
 			}
 		]);
 
-		appModule.controller("CentreController", ["$scope", "$routeParams", "centre", "CentreQuery",
-			function($scope, $routeParams, centre, CentreQuery) {
+		appModule.controller("CentreController", ["$scope", "$routeParams", "centre", "QueryRunner",
+			function($scope, $routeParams, centre, QueryRunner) {
 
 				var emptyPage = {
 					pageNo: 0,
-					pageCount: 0,
+					numberOfPages: 0,
 					summary: {},
-					data: []
+					results: []
 				};
 
 				$scope.centre = centre;
@@ -90,11 +82,11 @@ require(['/resources/config.js'], function() {
 					pageCapacity: 0,
 
 					getPageFeedBack: function() {
-						return "page: " + (this.page.pageCount == 0 ? 0 : this.page.pageNo + 1) + " of " + this.page.pageCount;
+						return "page: " + (this.page.numberOfPages == 0 ? 0 : this.page.pageNo + 1) + " of " + this.page.numberOfPages;
 					},
 
 					hasNext: function() {
-						return this.page.pageNo < this.page.pageCount - 1;
+						return this.page.pageNo < this.page.numberOfPages - 1;
 					},
 
 					hasPrev: function() {
@@ -121,14 +113,14 @@ require(['/resources/config.js'], function() {
 
 					last: function() {
 						if (this.hasNext()) {
-							this.navigatePage(this.page.pageCount - 1);
+							this.navigatePage(this.page.numberOfPages - 1);
 						}
 					},
 
 					navigatePage: function(pageNo) {
 						var oldSummary = this.page.summary;
 						var context = this;
-						CentreQuery.getPage({
+						QueryRunner.getPage({
 							centreName: $routeParams.centreName,
 							pageNo: pageNo,
 							pageCapacity: this.pageCapacity,
@@ -143,15 +135,25 @@ require(['/resources/config.js'], function() {
 				};
 
 				$scope.run = function() {
+					//Setting initial parameters for page.
 					$scope.pageData.query = JSON.parse(JSON.stringify($scope.centre.query));
 					$scope.pageData.pageCapacity = $scope.pageCapacity;
-					CentreQuery.firstPage({
-						centreName: $routeParams.centreName,
-						pageCapacity: $scope.pageData.pageCapacity,
-						query: $scope.pageData.query,
-					}, function(data) {
-						$scope.pageData.page = data;
+
+					var queryRunner = new QueryRunner();
+					queryRunner.key = "QueryRunner";
+					queryRunner["@entityType"] = "ua.com.fielden.platform.entity.functional.centre.QueryRunner";
+					queryRunner.pageCapacity = $scope.pageData.pageCapacity;
+					queryRunner.query = $scope.pageData.query;
+					queryRunner.$action(function(result) {
+						//result is a JavaScript represtation of the appripriate Java class named Result.
+						if (!result.ex){
+							$scope.pageData.page = result.instance.page;	
+						} else {
+							alert(result.message);
+						}
+						
 					}, function(error) {
+						alert(error);
 						$scope.pageData.page = emptyPage;
 					});
 				}
@@ -271,7 +273,7 @@ require(['/resources/config.js'], function() {
 				}
 
 				function createCol(row, col) {
-					var index = row * columns + col;
+					var index = row * columns + col, critName;
 
 					if (scope.centre.centreConfig.criteria.criteriaProperties[index] == null) {
 						return '<td style="width:{{metric.labelWidth}}px"></td>' +
@@ -282,7 +284,7 @@ require(['/resources/config.js'], function() {
 							'{{centre.centreConfig.criteria.criteriaProperties[' + index + '].title}}:</td>' +
 							'<td style="width:{{metric.singleEditorWidth}}px">' +
 							"<tg-editor " +
-							"config='centre.query.criteria[" + '"' + critName + '"' + "]'" +
+							"config='centre.query.criteriaProperties[" + '"' + critName + '"' + "]'" +
 							"metric='metric'></tg-editor></td>";
 					}
 				}
@@ -321,7 +323,7 @@ require(['/resources/config.js'], function() {
 			};
 
 			var createIntegerEditor = function(config) {
-				if (config.isSingle) {
+				if (config.single) {
 					return "<input " + getEditorConfig() + " type='text' ng-model='config.value1'>";
 				} else {
 					var firstInput = "<td style='width:{{metric.doubleEditorWidth}}px;padding:0px'>" +
@@ -369,7 +371,7 @@ require(['/resources/config.js'], function() {
 				},
 				compile: function(tElement, tAttrs, transclude) {
 					return function(scope, iElement, iAttrs, controller) {
-						var elemStr = editorsMap[scope.config.type](scope.config);
+						var elemStr = editorsMap[scope.config.propType](scope.config);
 						var newElem = angular.element(elemStr);
 						iElement.replaceWith(newElem);
 						$compile(newElem)(scope);

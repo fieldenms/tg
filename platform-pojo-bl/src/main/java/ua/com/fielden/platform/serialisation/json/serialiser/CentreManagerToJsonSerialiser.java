@@ -16,6 +16,10 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Orderin
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.functional.centre.CritProp;
+import ua.com.fielden.platform.entity.functional.centre.FetchProp;
+import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
@@ -28,7 +32,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
-public class CentreMangerToJsonSerialiser extends JsonSerializer<ICentreDomainTreeManagerAndEnhancer> {
+public class CentreManagerToJsonSerialiser extends JsonSerializer<ICentreDomainTreeManagerAndEnhancer> {
+
+    private final EntityFactory entityFactory;
+
+    public CentreManagerToJsonSerialiser(final EntityFactory entityFactory) {
+	this.entityFactory = entityFactory;
+    }
 
     @Override
     public void serialize(final ICentreDomainTreeManagerAndEnhancer cdtme, final JsonGenerator generator, final SerializerProvider provider) throws IOException,
@@ -36,18 +46,12 @@ public class CentreMangerToJsonSerialiser extends JsonSerializer<ICentreDomainTr
         final Set<Class<?>> roots = cdtme.getRepresentation().rootTypes();
         if (roots.size() == 1) {
             final Class<?> root = roots.toArray(new Class[0])[0];
-            final Pair<Map<String, Map<String, Object>>, List<Map<String, Object>>> crit = createCriterias(root, cdtme);
-            final Pair<Map<String, Map<String, Object>>, List<Map<String, Object>>> result = createFetches(root, cdtme);
+            final Class<?> managedType =cdtme.getEnhancer().getManagedType(root);
+            final Pair<Map<String, CritProp>, List<Map<String, Object>>> crit = createCriteria(root, cdtme);
+            final Pair<Map<String, FetchProp>, List<Map<String, Object>>> result = createFetches(root, cdtme);
             generator.writeStartObject();
             generator.writeFieldName("query");
-            generator.writeStartObject();
-            generator.writeFieldName("entityType");
-            generator.writeObject(root.getName());
-            generator.writeFieldName("criteria");
-            generator.writeObject(crit.getKey());
-            generator.writeFieldName("fetch");
-            generator.writeObject(result.getKey());
-            generator.writeEndObject();
+            generator.writeObject(createQueryObject(managedType, crit.getKey(), result.getKey()));
             generator.writeFieldName("centreConfig");
             generator.writeStartObject();
             generator.writeFieldName("criteria");
@@ -66,8 +70,15 @@ public class CentreMangerToJsonSerialiser extends JsonSerializer<ICentreDomainTr
         }
     }
 
-    private Pair<Map<String, Map<String, Object>>, List<Map<String, Object>>> createCriterias(final Class<?> root, final ICentreDomainTreeManagerAndEnhancer cdtme) {
-        final Map<String, Map<String, Object>> centre = new HashMap<>();
+    private Object createQueryObject(final Class<?> managedType, final Map<String, CritProp> crit, final Map<String, FetchProp> fetch) {
+	return entityFactory.newEntity(QueryEntity.class).
+			setEntityType(managedType.getName()).
+			setCriteriaProperties(crit).
+			setFetchProperties(fetch);
+    }
+
+    private Pair<Map<String, CritProp>, List<Map<String, Object>>> createCriteria(final Class<?> root, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+        final Map<String, CritProp> centre = new HashMap<>();
         final List<Map<String, Object>> centreConfig = new ArrayList<>();
         final IAddToCriteriaTickManager tick = cdtme.getFirstTick();
         final List<String> checkedProps = tick.checkedProperties(root);
@@ -85,8 +96,8 @@ public class CentreMangerToJsonSerialiser extends JsonSerializer<ICentreDomainTr
         return new Pair<>(centre, centreConfig);
     }
 
-    private Pair<Map<String, Map<String, Object>>, List<Map<String, Object>>> createFetches(final Class<?> root, final ICentreDomainTreeManagerAndEnhancer cdtme) {
-        final Map<String, Map<String, Object>> fetch = new HashMap<>();
+    private Pair<Map<String, FetchProp>, List<Map<String, Object>>> createFetches(final Class<?> root, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+        final Map<String, FetchProp> fetch = new HashMap<>();
         final List<Map<String, Object>> fetchConfig = new ArrayList<>();
         final IAddToResultTickManager tick = cdtme.getSecondTick();
         final Pair<List<Pair<String, Integer>>, Map<String, List<String>>> fetchTotProps = EntityQueryCriteriaUtils.getMappedFetchAndTotals(root, tick, cdtme.getEnhancer());
@@ -103,14 +114,11 @@ public class CentreMangerToJsonSerialiser extends JsonSerializer<ICentreDomainTr
             fetchConfig.add(generateFetchConfigProp(root, prop, width, cdtme, ed));
         }
 
-        return new Pair<Map<String, Map<String, Object>>, List<Map<String, Object>>>(fetch, fetchConfig);
+        return new Pair<>(fetch, fetchConfig);
     }
 
-    private Map<String, Object> generateFetchProp(final Ordering order, final List<String> total) {
-        final Map<String, Object> resultProp = new HashMap<>();
-        resultProp.put("ordering", order);
-        resultProp.put("summary", total);
-        return resultProp;
+    private FetchProp generateFetchProp(final Ordering order, final List<String> total) {
+        return entityFactory.newEntity(FetchProp.class).setOrdering(order).setSummary(total);
     }
 
     private Map<String, Object> generateFetchConfigProp(final Class<?> root, final String prop, final Integer width, final ICentreDomainTreeManagerAndEnhancer cdtme, final EntityDescriptor ed) {
@@ -148,19 +156,18 @@ public class CentreMangerToJsonSerialiser extends JsonSerializer<ICentreDomainTr
         return 0;
     }
 
-    private Map<String, Object> generateCritProp(final Class<?> root, final String prop, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+    private CritProp generateCritProp(final Class<?> root, final String prop, final ICentreDomainTreeManagerAndEnhancer cdtme) {
         final IAddToCriteriaTickManager tick = cdtme.getFirstTick();
         final Class<?> managedType = cdtme.getEnhancer().getManagedType(root);
-        final Map<String, Object> centreProp = new HashMap<>();
         final Class<?> type = prop.isEmpty() ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, prop);
         final CritOnly critOnlyAnnotation = prop.isEmpty() ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
         final boolean isSingle = (critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value()))
                 || (!EntityUtils.isEntityType(type) && !(EntityUtils.isBoolean(type) || EntityUtils.isRangeType(type)));
-        centreProp.put("type", EntityUtils.isEntityType(type) ? "Entity" : WordUtils.capitalize(type.getSimpleName()));
-        centreProp.put("isSingle", isSingle);
-        centreProp.put("value1", tick.getValue(root, prop));
-        centreProp.put("value2", AbstractDomainTree.isDoubleCriterionOrBoolean(root, prop) ? tick.getValue2(root, prop) : null);
-        return centreProp;
+        return entityFactory.newEntity(CritProp.class).
+        	setPropType(EntityUtils.isEntityType(type) ? "Entity" : WordUtils.capitalize(type.getSimpleName())).
+        	setSingle(isSingle).
+        	setValue1(tick.getValue(root, prop)).
+        	setValue2(AbstractDomainTree.isDoubleCriterionOrBoolean(root, prop) ? tick.getValue2(root, prop) : null);
 
     }
 

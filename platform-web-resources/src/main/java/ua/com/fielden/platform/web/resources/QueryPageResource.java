@@ -24,6 +24,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -75,7 +76,7 @@ public class QueryPageResource extends ServerResource {
         this.pageCapacity = Integer.parseInt(queryForm.getFirstValue("pageCapacity"));
         this.queryStr = queryForm.getFirstValue("query");
         //The deserialiser for query.
-        this.mapper = new TgObjectMapper();
+        this.mapper = new TgObjectMapper(injector.getInstance(EntityFactory.class));
 
     }
 
@@ -96,7 +97,7 @@ public class QueryPageResource extends ServerResource {
             final Map<String, Pair<Object, Object>> paramMap = queryEntity.createParamMap();
             IEntityDao<AbstractEntity<?>> controller = injector.getInstance(ICompanionObjectFinder.class).find(entityType);
             controller = controller == null ? injector.getInstance(DynamicEntityDao.class) : controller;
-            final TgObjectMapper serialiser = new TgObjectMapper();
+            final TgObjectMapper serialiser = new TgObjectMapper(injector.getInstance(EntityFactory.class));
 
             final QueryExecutionModel queryModel = from(query.model()).//
             with(fetchModel).//

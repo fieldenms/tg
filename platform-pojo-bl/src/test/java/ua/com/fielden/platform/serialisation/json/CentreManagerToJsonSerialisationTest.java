@@ -67,7 +67,7 @@ public class CentreManagerToJsonSerialisationTest {
         cdtm.getSecondTick().check(TopLevelEntity.class, "entityProp.entityProp.simpleEntityProp", true);
     }
 
-    private final TgObjectMapper tgToJson = new TgObjectMapper();
+    private final TgObjectMapper tgToJson = new TgObjectMapper(entityFactory);
 
     @Test
     @Ignore

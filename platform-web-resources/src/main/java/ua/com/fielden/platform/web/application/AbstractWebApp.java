@@ -13,8 +13,11 @@ import org.restlet.Restlet;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 
+import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
+import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.web.CentreResourceFactory;
 import ua.com.fielden.platform.web.FileResourceFactory;
+import ua.com.fielden.platform.web.FunctionalEntityResourceFactory;
 import ua.com.fielden.platform.web.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.WebAppConfig;
 
@@ -99,6 +102,10 @@ public abstract class AbstractWebApp extends Application {
 	attachCentreResources(router, webAppConfig);
 	// TODO Register entity masters and other custom views.
 
+	// Attach resource for entity centre query runner.
+	// TODO This is a spike resource. Must be replaced with generic functional entity resource.
+	router.attach("/users/{username}/QueryRunner", new FunctionalEntityResourceFactory<QueryRunner, IQueryRunner>(IQueryRunner.class, injector));
+
 	// Register resources those are in resource paths.
 	attacheResoureces(router);
 
@@ -113,7 +120,7 @@ public abstract class AbstractWebApp extends Application {
      */
     private void attachCentreResources(final Router router, final WebAppConfig webAppConfig) {
 	logger.info("\t\tCentre resources attaching...");
-	router.attach("/centre/{centreName}", new CentreResourceFactory(webAppConfig.getCentres(), username, injector));
+	router.attach("/users/{username}/centre/{centreName}", new CentreResourceFactory(webAppConfig.getCentres(), injector));
     }
 
     /**
