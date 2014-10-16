@@ -61,15 +61,15 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final NotNullValidator notNullValidator = new NotNullValidator();
     protected final NotEmptyValidator notEmptyValidator = new NotEmptyValidator();
     protected final FinalValidator finalValidator = new FinalValidator();
-    protected final Map<Class<? extends AbstractEntity>, EntityExistsValidator> entityExistsValidators = Collections.synchronizedMap(new HashMap<Class<? extends AbstractEntity>, EntityExistsValidator>());
+    protected final Map<Class<? extends AbstractEntity<?>>, EntityExistsValidator> entityExistsValidators = Collections.synchronizedMap(new HashMap<>());
     protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = Collections.synchronizedMap(new HashMap<Integer, GreaterOrEqualValidator>());
     protected final Map<Integer, MaxLengthValidator> maxLengthValidators = Collections.synchronizedMap(new HashMap<Integer, MaxLengthValidator>());
     protected final Map<Integer, MaxValueValidator> maxValueValidators = Collections.synchronizedMap(new HashMap<Integer, MaxValueValidator>());
     protected final Map<Class<?>, Map<String, RangePropertyValidator>> geRangeValidators = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, RangePropertyValidator>>());
     protected final Map<Class<?>, Map<String, RangePropertyValidator>> leRangeValidators = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, RangePropertyValidator>>());
     // type, property, array of handlers
-    protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler[]>> beforeChangeEventHandlers = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, IBeforeChangeEventHandler[]>>());
-    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler>> afterChangeEventHandlers = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, IAfterChangeEventHandler>>());
+    protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = Collections.synchronizedMap(new HashMap<>());
+    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = Collections.synchronizedMap(new HashMap<>());
 
     private Injector injector;
 
@@ -82,7 +82,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     }
 
     @Override
-    public IBeforeChangeEventHandler[] create(//
+    public IBeforeChangeEventHandler<?>[] create(//
     final Annotation annotation,//
             final AbstractEntity<?> entity,//
             final String propertyName,//
@@ -141,10 +141,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param annotation
      * @return
      */
-    private IBeforeChangeEventHandler[] createBeforeChange(final AbstractEntity<?> entity, final String propertyName, final BeforeChange annotation) {
-        // TODO Implement creation of BCE handlers
+    private IBeforeChangeEventHandler<?>[] createBeforeChange(final AbstractEntity<?> entity, final String propertyName, final BeforeChange annotation) {
         // 0. If the cache contains handlers for the entity and property then return them. Otherwise, step 1.
-        final Map<String, IBeforeChangeEventHandler[]> typeHandlers = beforeChangeEventHandlers.get(entity.getType());
+        final Map<String, IBeforeChangeEventHandler<?>[]> typeHandlers = beforeChangeEventHandlers.get(entity.getType());
         if (typeHandlers != null && typeHandlers.containsKey(propertyName)) {
             return typeHandlers.get(propertyName);
         }
@@ -155,10 +154,10 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         //    2.1 Instantiate a handler using injector for property <code>value</code>, which contains handler's class declaration
         //    2.2 For each value in arrays <code>non_ordinary</code>, <code>integer</code>, <code>str</code>, <code>dbl</code>, <code>date</code>, <code>date_time</code>, <code>money</code>
         //	  initialise handler's parameters.
-        final IBeforeChangeEventHandler[] handlers = new IBeforeChangeEventHandler[handlerDeclarations.length];
+        final IBeforeChangeEventHandler<?>[] handlers = new IBeforeChangeEventHandler[handlerDeclarations.length];
         for (int index = 0; index < handlerDeclarations.length; index++) {
             final Handler hd = handlerDeclarations[index];
-            final IBeforeChangeEventHandler handler = injector.getInstance(hd.value());
+            final IBeforeChangeEventHandler<?> handler = injector.getInstance(hd.value());
             initNonOrdinaryHandlerParameters(entity, hd.non_ordinary(), handler);
             initClassHandlerParameters(entity, hd.clazz(), handler);
             initIntegerHandlerParameters(entity, hd.integer(), handler);
@@ -173,7 +172,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         // 3. Cache all instantiated handlers against the entity and property.
         if (typeHandlers == null) { // currently there are no handlers associate with any of the type properties
             // the use of LinkedHashMap is critical in order to maintain the order of BCE handlers
-            final Map<String, IBeforeChangeEventHandler[]> newTypeHandlers = new LinkedHashMap<String, IBeforeChangeEventHandler[]>();
+            final Map<String, IBeforeChangeEventHandler<?>[]> newTypeHandlers = new LinkedHashMap<>();
             beforeChangeEventHandlers.put(entity.getType(), newTypeHandlers);
         }
         beforeChangeEventHandlers.get(entity.getType()).put(propertyName, handlers);
@@ -351,7 +350,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         }
     }
 
-    private IBeforeChangeEventHandler createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty) {
+    private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty) {
         if (geRangeValidators.get(entity.getType()) == null) {
             geRangeValidators.put(entity.getType(), Collections.synchronizedMap(new HashMap<String, RangePropertyValidator>()));
         }
@@ -362,7 +361,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         return propertyValidators.get(upperBoundaryProperty);
     }
 
-    private IBeforeChangeEventHandler createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties) {
+    private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties) {
         if (leRangeValidators.get(entity.getType()) == null) {
             leRangeValidators.put(entity.getType(), Collections.synchronizedMap(new HashMap<String, RangePropertyValidator>()));
         }
@@ -373,45 +372,45 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         return propertyValidators.get(lowerBoundaryProperty);
     }
 
-    private IBeforeChangeEventHandler createGreaterOrEqualValidator(final Integer key) {
+    private IBeforeChangeEventHandler<?> createGreaterOrEqualValidator(final Integer key) {
         if (!greaterOrEqualsValidators.containsKey(key)) {
             greaterOrEqualsValidators.put(key, new GreaterOrEqualValidator(key));
         }
         return greaterOrEqualsValidators.get(key);
     }
 
-    private IBeforeChangeEventHandler createMaxLengthValidator(final Integer key) {
+    private IBeforeChangeEventHandler<?> createMaxLengthValidator(final Integer key) {
         if (!maxLengthValidators.containsKey(key)) {
             maxLengthValidators.put(key, new MaxLengthValidator(key));
         }
         return maxLengthValidators.get(key);
     }
 
-    private IBeforeChangeEventHandler createMaxValueValidator(final Integer key) {
+    private IBeforeChangeEventHandler<?> createMaxValueValidator(final Integer key) {
         if (!maxValueValidators.containsKey(key)) {
             maxValueValidators.put(key, new MaxValueValidator(key));
         }
         return maxValueValidators.get(key);
     }
 
-    protected abstract IBeforeChangeEventHandler createEntityExists(final EntityExists anotation);
+    protected abstract IBeforeChangeEventHandler<?> createEntityExists(final EntityExists anotation);
 
     @Override
-    public IAfterChangeEventHandler create(final AbstractEntity<?> entity, final Field propertyField) throws Exception {
+    public IAfterChangeEventHandler<?> create(final AbstractEntity<?> entity, final Field propertyField) throws Exception {
         // let's first check the old way of registering property definers
         final String propertyName = propertyField.getName();
-        final IAfterChangeEventHandler handler = domainMetaConfig.getDefiner(entity.getType(), propertyName);
+        final IAfterChangeEventHandler<?> handler = domainMetaConfig.getDefiner(entity.getType(), propertyName);
         if (handler != null) {
             return handler;
         }
         // if not provided then need to follow the new way of instantiating and caching ACE handlers
         final Class<?> type = entity.getType();
-        Map<String, IAfterChangeEventHandler> typeHandlers = afterChangeEventHandlers.get(type);
+        Map<String, IAfterChangeEventHandler<?>> typeHandlers = afterChangeEventHandlers.get(type);
         if (typeHandlers == null) {
-            typeHandlers = new HashMap<String, IAfterChangeEventHandler>();
+            typeHandlers = new HashMap<String, IAfterChangeEventHandler<?>>();
             afterChangeEventHandlers.put(entity.getType(), typeHandlers);
         }
-        IAfterChangeEventHandler propHandler = typeHandlers.get(propertyName);
+        IAfterChangeEventHandler<?> propHandler = typeHandlers.get(propertyName);
         if (propHandler == null) {
 
             final AfterChange ach = AnnotationReflector.getAnnotation(propertyField, AfterChange.class);

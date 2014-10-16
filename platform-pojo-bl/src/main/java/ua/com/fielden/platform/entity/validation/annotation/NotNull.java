@@ -5,12 +5,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import ua.com.fielden.platform.entity.validation.NotNullValidator;
+
 /**
- * Annotation for indicating setters requiring validation for the passed value to be not null.
+ * Annotation for annotating setters to prevent acceptance of <code>null</code> or empty (in case of <code>String</code>) values.
  * <p>
- * When using this annotation a custom error message can be provided, which is used upon validation failure.
- * 
- * @author 01es
+ * A custom error message is supported by assigning the message to attribute <code>value</code>.
+ * <p>
+ * Please also refer to annotation handling class {@link NotNullValidator} for additional details.
+ * @author TG Team
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)

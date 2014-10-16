@@ -34,10 +34,10 @@ public class RaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
     }
 
     @Override
-    protected synchronized IBeforeChangeEventHandler createEntityExists(final EntityExists anotation) {
-        final Class<? extends AbstractEntity> key = anotation.value();
+    protected synchronized IBeforeChangeEventHandler<?> createEntityExists(final EntityExists anotation) {
+        final Class<? extends AbstractEntity<?>> key = anotation.value();
         if (!entityExistsValidators.containsKey(key)) {
-            final IEntityDao dao = defaultControllerProvider.find(key);
+            final IEntityDao<?> dao = defaultControllerProvider.find(key);
             if (dao != null) {
                 entityExistsValidators.put(key, new EntityExistsValidator(dao));
             } else {

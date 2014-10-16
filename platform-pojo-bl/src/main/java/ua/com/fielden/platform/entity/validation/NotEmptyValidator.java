@@ -17,7 +17,7 @@ import ua.com.fielden.platform.error.Result;
  * Validator for setters marked with {@link NotEmpty} annotation. Checks whether new value's {@link #toString()} representation is not empty (empty means comparing with "" string,
  * null is treated as correct value).
  * 
- * @author Yura
+ * @author TG Team
  */
 public class NotEmptyValidator implements IBeforeChangeEventHandler<Object> {
 
