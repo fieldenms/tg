@@ -719,7 +719,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return map of validators
      * @throws Exception
      */
-    private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> collectValidators(final IMetaPropertyFactory metaPropertyFactory, final Field field, final Class<?> type, final boolean isCollectional, final Set<Annotation> validationAnnotations)
+    private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> collectValidators(
+            final IMetaPropertyFactory metaPropertyFactory, 
+            final Field field, 
+            final Class<?> type, 
+            final boolean isCollectional, 
+            final Set<Annotation> validationAnnotations)
             throws Exception {
         //logger.debug("Start collecting validators for property " + field.getName() + "...");
         try {

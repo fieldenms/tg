@@ -49,11 +49,6 @@
 			<artifactId>hibernate-c3p0</artifactId>
 			<version>3.6.10.Final</version>
 		</dependency>
-		<dependency>
-			<groupId>javassist</groupId>
-			<artifactId>javassist</artifactId>
-			<version>3.12.0.GA</version>
-		</dependency>
 
 	</dependencies>
 	<build>

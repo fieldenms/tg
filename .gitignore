@@ -1,4 +1,4 @@
-*.gz
+*.synctex.gz
 *.orig
 *.aux
 *.db
@@ -29,7 +29,7 @@ target
 *.nav
 *.snm
 *.vrb
-
+*.old
 
 # Package Files #
 *.jar

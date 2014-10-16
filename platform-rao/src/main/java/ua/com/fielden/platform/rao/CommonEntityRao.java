@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.rao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +31,6 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 /**
  * Base class for all RAO implementations. Provides REST-driven implementation of all {@link IEntityDao} functionality including Entity Query API and pagination.
@@ -623,5 +624,10 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
      */
     private String makeCoToken() {
         return new DateTime().getMillis() + "";
+    }
+
+    @Override
+    public T lazyLoad(final Long id) {
+        throw new UnsupportedOperationException("Lazy loading is supported only at the server side.");
     }
 }

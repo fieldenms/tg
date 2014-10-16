@@ -1,5 +1,20 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -76,20 +91,6 @@ import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
@@ -154,7 +155,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_query_based_entities_with_composite_props() {
         final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).model();
-        makeCountDao.getAllEntities(from(qry).model());
+        makeCountDao.getAllEntities(from(qry).with(fetch(TgMakeCount.class)).model());
     }
 
     //    @Test
@@ -401,6 +402,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     public void test_retrieval_of_synthetic_entity6() {
         final EntityResultQueryModel<TgAverageFuelUsage> qry = select(TgAverageFuelUsage.class).where().prop("key.key").eq().val("CAR2").model();
         final List<TgAverageFuelUsage> models = averageFuelUsageDao.getAllEntities(from(qry). //
+        with(fetchAll(TgAverageFuelUsage.class).with("id")). //
         with("datePeriod.from", new DateTime(2008, 01, 01, 0, 0).toDate()). //
         with("datePeriod.to", new DateTime(2010, 01, 01, 0, 0).toDate()). //
         model());
@@ -446,14 +448,14 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("key.key").in().values("MERC", "BMW"). //
         yield().prop("key").as("key").yield().prop("count").as("count").modelAsEntity(TgMakeCount.class);
 
-        final List<TgMakeCount> models = makeCountDao.getAllEntities(from(qry).model());
+        final List<TgMakeCount> models = makeCountDao.getAllEntities(from(qry).with(fetch(TgMakeCount.class)).model());
         assertEquals("Incorrect key", 2, models.size());
     }
 
     @Test
     public void test_retrieval_of_synthetic_entity() {
         final AggregatedResultQueryModel model = select(TgMakeCount.class).where().prop("key.key").in().values("MERC", "BMW").yield().prop("key").as("make").modelAsAggregate();
-        final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).model());
+        final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).with(fetch(EntityAggregates.class).with("make", fetchAll(TgVehicleMake.class))).model());
         assertEquals("Incorrect key", 2, models.size());
     }
 
@@ -889,6 +891,14 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertEquals("Incorrect count", 2, models.size());
     }
 
+    @Test
+    public void test_now() {
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("initDate").lt().now().model();
+        final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).model());
+        assertEquals("Incorrect count", 2, models.size());
+    }
+
+    
     @Test
     @Ignore
     public void test_with_empty_values() {
