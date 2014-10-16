@@ -15,5 +15,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface Required {
-    String value() default ""; // TODO need to reuse this value as requiredness message if provided
+    String value() default "";
 }
