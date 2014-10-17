@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.functional;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -67,18 +68,24 @@ public class QueryRunnerDao extends CommonEntityDao<QueryRunner> implements IQue
         final Map<String, Object> parameters = parameters(centreEntityType, paramMap);
 
         final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> queryModel = from(query.model()).with(fetchModel).with(queryOrdering).with(parameters).model();
-        final QueryExecutionModel totalQueryModel = totalFetchModel == null ? null : from(query.model()).with(totalFetchModel).with(parameters).model();
+        final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> totalQueryModel = totalFetchModel == null ? null : from(query.model()).with(totalFetchModel).with(parameters).model();
 
         IEntityDao<AbstractEntity<?>> controller = companionObjectFinder.find(centreEntityType);
         controller = controller == null ? dynamicDao : controller;
 
-        final IPage<AbstractEntity<?>> resultPage = controller.firstPage(queryModel, totalQueryModel, queryRunner.getPageCapacity());
+        final IPage<AbstractEntity<?>> resultPage = controller.firstPage(queryModel, queryRunner.getPageCapacity());
+        final AbstractEntity<?> totals = totalQueryModel != null ? calcSummary(controller, totalQueryModel) : null;
         final Page page = queryRunner.getEntityFactory().newPlainEntity(Page.class, null).
                 setNumberOfPages(resultPage.numberOfPages()).
                 setPageNo(resultPage.no()).
-                setSummary(resultPage.summary()).
+                setSummary(totals).
                 setResults(resultPage.data());
         return queryRunner.getEntityFactory().newEntity(QueryRunner.class).setQuery(null).setPage(page);
+    }
+
+    private AbstractEntity<?> calcSummary(final IEntityDao<AbstractEntity<?>> controller, final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> totalQueryModel) {
+	final List<AbstractEntity<?>> list = controller.getAllEntities(totalQueryModel);
+        return list.size() == 1 ? list.get(0) : null;
     }
 
     private Map<String, Object> parameters(final Class<AbstractEntity<?>> centreEntityType, final Map<String, Pair<Object, Object>> paramMap) {

@@ -447,7 +447,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
-        return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
+        return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity), summaryModel);
 
         // return super.firstPage(model, summaryModel, pageCapacity);
     }
@@ -613,7 +613,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         private final List<T> data;
         private final QueryExecutionModel<T, ?> queryModel;
 
-        private final EntityAggregates summary;
+        private final T summary;
         private final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel;
 
         public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final int pageNumber, final int pageCapacity, final int numberOfPages) {
@@ -641,14 +641,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         /**
          * Delegates the request to EntityAggregates RAO to obtain the result of the query. Expects only one EntityAggregates in the result list.
          */
-        protected EntityAggregates calcSummary(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model) {
-            final List<EntityAggregates> list = new CommonEntityAggregatesDao(getFilter()).getAllEntities(model);
+        protected T calcSummary(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model) {
+            @SuppressWarnings("unchecked")
+	    final List<T> list = (List<T>) new CommonEntityAggregatesDao(getFilter()).getAllEntities(model);
             return list.size() == 1 ? list.get(0) : null;
         }
 
         @Override
         public T summary() {
-            return null;
+            return summary;
         }
 
         @Override

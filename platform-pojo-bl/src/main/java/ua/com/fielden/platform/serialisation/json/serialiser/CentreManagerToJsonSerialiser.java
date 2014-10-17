@@ -106,8 +106,9 @@ public class CentreManagerToJsonSerialiser extends JsonSerializer<ICentreDomainT
         final Class<?> managedType = cdtme.getEnhancer().getManagedType(root);
         final EntityDescriptor ed = new EntityDescriptor(managedType, checkedProps);
 
-        for (final String prop : tick.checkedProperties(root)) {
-            final Integer width = findWidth(prop, fetchTotProps.getKey());
+        for (final Pair<String, Integer> propPair : fetchTotProps.getKey()) {
+            final String prop = propPair.getKey();
+            final Integer width = propPair.getValue();
             final Ordering order = findOrdering(prop, orderingList);
             final List<String> total = findTotals(prop, fetchTotProps.getValue());
             fetch.put(prop, generateFetchProp(order, total));
