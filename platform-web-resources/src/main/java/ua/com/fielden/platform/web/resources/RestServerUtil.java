@@ -290,7 +290,7 @@ public class RestServerUtil {
             final Result result = entity != null ? new Result(entity, "OK") : new Result(null, new Exception("Could not find entity."));
             //final byte[] bytes = serialiser.serialise(result, SerialiserEngine.JACKSON);
             final TgObjectMapper mapper = new TgObjectMapper(entity.getEntityFactory());
-            final byte[] bytes = mapper.writeValueAsBytes(new Result(result));
+            final byte[] bytes = mapper.writeValueAsBytes(result);
             return jsonRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/ );
         } catch (final Exception ex) {
             logger.error(ex);

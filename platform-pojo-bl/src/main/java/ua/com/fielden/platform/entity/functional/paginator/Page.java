@@ -87,13 +87,13 @@ public class Page extends AbstractEntity<String> {
     }
 
     @Observable
-    public Page setResult(final List<AbstractEntity<?>> results) {
+    public Page setResults(final List<AbstractEntity<?>> results) {
 	this.results.clear();
 	this.results.addAll(results);
 	return this;
     }
 
-    public List<AbstractEntity<?>> getResult() {
+    public List<AbstractEntity<?>> getResults() {
 	return Collections.unmodifiableList(results);
     }
 }

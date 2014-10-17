@@ -73,11 +73,11 @@ public class QueryRunnerDao extends CommonEntityDao<QueryRunner> implements IQue
         controller = controller == null ? dynamicDao : controller;
 
         final IPage<AbstractEntity<?>> resultPage = controller.firstPage(queryModel, totalQueryModel, queryRunner.getPageCapacity());
-        final Page page = queryRunner.getEntityFactory().newEntity(Page.class).
+        final Page page = queryRunner.getEntityFactory().newPlainEntity(Page.class, null).
                 setNumberOfPages(resultPage.numberOfPages()).
                 setPageNo(resultPage.no()).
                 setSummary(resultPage.summary()).
-                setResult(resultPage.data());
+                setResults(resultPage.data());
         return queryRunner.getEntityFactory().newEntity(QueryRunner.class).setQuery(null).setPage(page);
     }
 
