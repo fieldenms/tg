@@ -17,7 +17,6 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 public enum ValidationAnnotation {
     REQUIRED(Required.class), // required and not null are similar in nature, but required represents a dynamic validation
     NOT_NULL(NotNull.class), //
-    //NOT_EMPTY(NotEmpty.class), //
     FINAL(Final.class), //
     ENTITY_EXISTS(EntityExists.class), //
     GREATER_OR_EQUAL(GreaterOrEqual.class), //

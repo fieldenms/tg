@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.entity.validation.annotation.NotEmpty;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.equery.lifecycle.Categorizer;
 import ua.com.fielden.platform.error.Result;
@@ -234,7 +233,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotEmpty
     public void setStrProp(final String strProp) {
         this.strProp = strProp;
     }

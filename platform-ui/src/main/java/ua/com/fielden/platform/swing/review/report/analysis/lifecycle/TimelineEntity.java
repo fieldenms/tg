@@ -21,7 +21,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.entity.validation.annotation.NotEmpty;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -29,9 +28,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity class used for testing.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
@@ -235,7 +234,6 @@ public class TimelineEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotEmpty
     public void setStrProp(final String strProp) {
         this.strProp = strProp;
     }
