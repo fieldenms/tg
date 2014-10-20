@@ -105,8 +105,6 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
                 }
                 // try to instantiate validator
                 switch (value) {
-                case NOT_NULL:
-                    return new IBeforeChangeEventHandler[] { new NotNullValidator() };
                 case GREATER_OR_EQUAL:
                     return new IBeforeChangeEventHandler[] { new GreaterOrEqualValidator(((GreaterOrEqual) annotation).value()) };
                 case MAX:

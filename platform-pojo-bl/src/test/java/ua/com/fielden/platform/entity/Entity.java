@@ -48,6 +48,7 @@ public class Entity extends AbstractEntity<String> {
     private Integer firstProperty = null;
     @IsProperty
     @Title("Observable Property")
+    @Required(NOT_NULL_MSG)
     private Double observableProperty = 0.0;
     @IsProperty
     @Monitoring(Categorizer.class)
@@ -58,6 +59,7 @@ public class Entity extends AbstractEntity<String> {
     @Invisible
     private Double finalProperty;
     @IsProperty(value = Double.class, linkProperty = "--stub to pass tests--")
+    @Required
     private List<Double> doubles = new ArrayList<Double>();
     @IsProperty(Entity.class)
     private List<Entity> entities = new ArrayList<Entity>();
@@ -87,7 +89,6 @@ public class Entity extends AbstractEntity<String> {
         return firstProperty;
     }
 
-    @NotNull
     @GreaterOrEqual(50)
     @DomainValidation
     @Observable
@@ -101,7 +102,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull(NOT_NULL_MSG)
     public Entity setObservableProperty(final Double observableProperty) {
         this.observableProperty = observableProperty;
         return this;
@@ -122,7 +122,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @DomainValidation
     public Entity setDoubles(final List<Double> doubles) {
         this.doubles.clear();

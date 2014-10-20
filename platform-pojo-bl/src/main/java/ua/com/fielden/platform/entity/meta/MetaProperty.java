@@ -132,14 +132,32 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * Property supports specification of the precise type. For example, property <code>key</code> in entity classes is recognised by reflection API as Comparable. Therefore, it
      * might be desirable to specify type more accurately.
      *
+     * @param entity
      * @param field
      * @param type
+     * @param isKey
+     * @param isCollectional
+     * @param propertyAnnotationType
+     * @param calculated
+     * @param upperCase
+     * @param validationAnnotations
      * @param validators
+     * @param aceHandler
+     * @param dependentPropertyNames
      */
-    public MetaProperty(final AbstractEntity<?> entity, final Field field, final Class<?> type, //
-            final boolean isKey, final boolean isCollectional, final Class<?> propertyAnnotationType, final boolean calculated, final boolean upperCase,//
+    public MetaProperty(
+            final AbstractEntity<?> entity,
+            final Field field,
+            final Class<?> type,
+            final boolean isKey,
+            final boolean isCollectional,
+            final Class<?> propertyAnnotationType,
+            final boolean calculated,
+            final boolean upperCase,//
             final Set<Annotation> validationAnnotations,//
-            final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators, final IAfterChangeEventHandler aceHandler, final String[] dependentPropertyNames) {
+            final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators,
+            final IAfterChangeEventHandler aceHandler,
+            final String[] dependentPropertyNames) {
         this.entity = entity;
         this.name = field.getName();
         this.type = type;
@@ -250,6 +268,11 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     private Result processValidators(final Object newValue, final Object oldValue, final Set<Annotation> applicableValidationAnnotations) {
         // iterate over registered validations
         for (final ValidationAnnotation va : validators.keySet()) {
+            // requiredness falls outside of processing logic for other validators, so simply ignore it
+            if (va == ValidationAnnotation.REQUIRED) {
+                continue;
+            }
+
             final Set<Entry<IBeforeChangeEventHandler, Result>> pairs = validators.get(va).entrySet();
             for (final Entry<IBeforeChangeEventHandler, Result> pair : pairs) {
                 // if validator exists ...and it should... then validated and set validation result

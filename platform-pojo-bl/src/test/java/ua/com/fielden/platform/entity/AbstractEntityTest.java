@@ -76,12 +76,6 @@ public class AbstractEntityTest {
                 return super.handle(property, newValue, oldValue, mutatorAnnotations);
             }
         });
-        module.getDomainMetaPropertyConfig().setDefiner(Entity.class, "firstProperty", new IAfterChangeEventHandler<Object>() {
-            @Override
-            public void handle(final MetaProperty property, final Object entityPropertyValue) {
-                property.setRequired(!property.isRequired());
-            }
-        });
     }
 
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
@@ -297,7 +291,7 @@ public class AbstractEntityTest {
     }
 
     /**
-     * This test ensures correct setter behaviour for a collectional property:
+     * This test ensures the correct setter behaviour for a collectional property:
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
@@ -307,12 +301,12 @@ public class AbstractEntityTest {
      */
     @Test
     public void testThatCollectionalPropertySetterIsObservedAndValidated() {
-        final MetaProperty metaProperty = entity.getProperty("doubles");
-        assertEquals("Incorrect number of validators.", 2, metaProperty.getValidators().size());
-        assertTrue("Should have domain validation.", metaProperty.getValidators().containsKey(ValidationAnnotation.DOMAIN));
-        assertTrue("Should have not-null validation.", metaProperty.getValidators().containsKey(ValidationAnnotation.NOT_NULL));
-        assertNull("There should be no domain validation result at this stage.", metaProperty.getValidationResult(ValidationAnnotation.DOMAIN));
-        assertNull("There should be no not-null validation result at this stage.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL));
+        final MetaProperty doublesProperty = entity.getProperty("doubles");
+        assertEquals("Incorrect number of validators.", 2, doublesProperty.getValidators().size());
+        assertTrue("Should have domain validation.", doublesProperty.getValidators().containsKey(ValidationAnnotation.DOMAIN));
+        assertTrue("Should have not-null validation.", doublesProperty.getValidators().containsKey(ValidationAnnotation.REQUIRED));
+        assertNull("There should be no domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+        assertNull("There should be no rquiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
         entity.setDoubles(Arrays.asList(new Double[] { 2.0, 3.0 }));
         entity.addPropertyChangeListener("doubles", new PropertyChangeListener() {
             @Override
@@ -325,15 +319,15 @@ public class AbstractEntityTest {
         entity.setDoubles(Arrays.asList(new Double[] { 2.0 }));
 
         assertEquals("Property should have been observed.", true, observed);
-        assertNull("Incorrect original value", metaProperty.getOriginalValue());
-        assertEquals("Incorrect previous value", 2, metaProperty.getPrevValue());
-        assertNotNull("There should be domain validation result at this stage.", metaProperty.getValidationResult(ValidationAnnotation.DOMAIN));
-        assertTrue("Domain validation result should be successful.", metaProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
-        assertNotNull("There should be not-null validation result at this stage.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL));
-        assertTrue("Not-null validation result should be successful.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL).isSuccessful());
+        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
+        assertEquals("Incorrect previous value", 2, doublesProperty.getPrevValue());
+        assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+        assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
+        assertNotNull("There should be a requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
+        assertTrue("Requirendess validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
 
         entity.setDoubles(null);
-        assertFalse("Not-null validation result should not be successful.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL).isSuccessful());
+        assertFalse("Requiredness validation result should not be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
         assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
     }
 
@@ -348,7 +342,7 @@ public class AbstractEntityTest {
      */
     @Test
     public void testThatCollectionalPropertyIncrementorIsObservedAndValidated() {
-        final MetaProperty metaProperty = entity.getProperty("doubles");
+        final MetaProperty doublesProperty = entity.getProperty("doubles");
         entity.setDoubles(Arrays.asList(new Double[] { -2.0, -3.0 }));
 
         entity.addPropertyChangeListener("doubles", new PropertyChangeListener() {
@@ -363,14 +357,14 @@ public class AbstractEntityTest {
 
         assertEquals("Property should have been observed.", true, observed);
         assertEquals("Incorrect size for doubles", 3, entity.getDoubles().size());
-        assertNull("Incorrect original value", metaProperty.getOriginalValue());
-        assertEquals("Incorrect previous value", 2, metaProperty.getPrevValue());
-        assertNotNull("There should be a domain validation result.", metaProperty.getValidationResult(ValidationAnnotation.DOMAIN));
-        assertNotNull("There should be not-null validation result at this stage.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL));
-        assertTrue("Not-null validation result should be successful.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL).isSuccessful());
+        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
+        assertEquals("Incorrect previous value", 2, doublesProperty.getPrevValue());
+        assertNotNull("There should be a domain validation result.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+        assertNotNull("There should be requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
+        assertTrue("Requiredness validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
 
         entity.addToDoubles(null);
-        assertFalse("Not-null validation result should not be successful.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL).isSuccessful());
+        assertFalse("Requiredness validation result should not be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
         assertEquals("Incorrect size for doubles", 3, entity.getDoubles().size());
         assertNull("Null value is expected for the last invalid value.", entity.getProperty("doubles").getLastInvalidValue());
     }
@@ -386,7 +380,7 @@ public class AbstractEntityTest {
      */
     @Test
     public void testThatCollectionalPropertyDecrementorIsObservedAndValidated() {
-        final MetaProperty metaProperty = entity.getProperty("doubles");
+        final MetaProperty doublesProperty = entity.getProperty("doubles");
         entity.setDoubles(Arrays.asList(new Double[] { -2.0, -3.0 }));
 
         entity.addPropertyChangeListener("doubles", new PropertyChangeListener() {
@@ -401,11 +395,11 @@ public class AbstractEntityTest {
 
         assertTrue("Property should have been observed.", observed);
         assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
-        assertNull("Incorrect original value", metaProperty.getOriginalValue());
-        assertEquals("Incorrect previous value", 2, metaProperty.getPrevValue());
-        assertNotNull("There should be domain validation result at this stage.", metaProperty.getValidationResult(ValidationAnnotation.DOMAIN));
-        assertTrue("Domain validation result should be successful.", metaProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
-        assertNotNull("There should be not-null validation result.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL));
+        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
+        assertEquals("Incorrect previous value", 2, doublesProperty.getPrevValue());
+        assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+        assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
+        assertNotNull("There should be requiredness validation result.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
         assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
     }
 
@@ -579,7 +573,7 @@ public class AbstractEntityTest {
         assertEquals("Incorrect desc", "used for testing", firstPropertyMetaProp.getDesc());
 
         final MetaProperty observablePropertyMetaProp = entity.getProperty("observableProperty");
-        assertFalse("Should not be requried", observablePropertyMetaProp.isRequired());
+        assertTrue("Should be requried", observablePropertyMetaProp.isRequired());
         assertTrue("Should be editable", observablePropertyMetaProp.isEditable());
         assertEquals("Incorrect title", "Observable Property", observablePropertyMetaProp.getTitle());
         assertEquals("Incorrect desc", "Observable Property", observablePropertyMetaProp.getDesc());
@@ -610,13 +604,13 @@ public class AbstractEntityTest {
 
         entity.setFirstProperty(56);
         assertTrue("Required property with not null value have to be valid.", firstPropertyMetaProp.isValid());
-        assertFalse("Should be not required", firstPropertyMetaProp.isRequired());
+        assertTrue("Should remain required", firstPropertyMetaProp.isRequired());
 
         firstPropertyMetaProp.setRequired(false);
         assertFalse("Should not be required", firstPropertyMetaProp.isRequired());
         assertTrue("REQUIREDValidator should be present for 'required in the past' property.", firstPropertyMetaProp.getValidators().containsKey(ValidationAnnotation.REQUIRED));
         entity.setFirstProperty(null);
-        assertFalse("Not 'required' property (with NotNullValidator) with null value have to be invalid.", firstPropertyMetaProp.isValid());
+        assertTrue("Not 'required' property with null value has to be valid.", firstPropertyMetaProp.isValid());
 
         final MetaProperty secondMetaProperty = entity.getProperty("money");
         secondMetaProperty.setRequired(true);

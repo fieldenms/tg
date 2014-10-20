@@ -41,7 +41,6 @@ public class SimpleEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @DomainValidation
     public void setProperty(final String property) {
         this.property = property;

@@ -105,6 +105,8 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                     !wasValid ||
                     // or it could be validation + setter + firePropertyChange(see "processMutatorForCollectionalProperty" method) for a collectional property
                     property.isCollectional() ||
+                    // or the new value is null and the property is required -- need to trigger validation in such cases even if the current prop value is null
+                    newValue == null && property.isRequired() ||
                     // or this is a genuine attempt to set a new property value
                     !EntityUtils.equalsEx(oldValue, newValue)) {
                     ////////////////////////////////////////////////////
