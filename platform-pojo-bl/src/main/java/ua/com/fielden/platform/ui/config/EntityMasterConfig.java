@@ -11,20 +11,19 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
 
 /**
- * 
+ *
  * This is a class to persist configuration of entity masters. At this stage the persistence context includes only configurations for entity locators.
  * <p>
  * Property <code>masterType</code> should contain a string representation of a corresponding master configuration class.
- * 
- * 
+ *
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity master configuration")
@@ -51,7 +50,7 @@ public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> 
 
     /**
      * A helper setter to convert master UI model to the string value.
-     * 
+     *
      * @param masterModelType
      */
     public void setMasterModelType(final Class<?> masterModelType) {
@@ -60,7 +59,7 @@ public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> 
 
     /**
      * A helper getter to obtain master UI model type from a string value.
-     * 
+     *
      * @return
      */
     public Class<?> getMasterModelType() {
@@ -76,7 +75,6 @@ public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> 
     }
 
     @Observable
-    @NotNull
     @EntityExists(User.class)
     public void setOwner(final User owner) {
         // TODO please redefine a rules for saving master configuration not only for base users, but for non-base too. Check the other places.
@@ -91,7 +89,6 @@ public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> 
     }
 
     @Observable
-    @NotNull
     public void setMasterType(final String masterType) {
         this.masterType = masterType;
     }

@@ -21,7 +21,6 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
@@ -158,7 +157,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
             return propertyTwo;
         }
 
-        @NotNull
         @EntityExists(EntityWithDynamicCompositeKey.class)
         @Observable
         public void setPropertyTwo(final EntityWithDynamicCompositeKey property) {
@@ -169,7 +167,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
             return propertyThree;
         }
 
-        @NotNull
         @EntityExists(EntityWithMoney.class)
         @Observable
         public void setPropertyThree(final String entityWithMoneyKey) {

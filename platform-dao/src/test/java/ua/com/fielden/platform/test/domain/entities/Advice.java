@@ -12,14 +12,13 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 
 /**
  * RMA advice business entity.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 @KeyType(Long.class)
 public class Advice extends AbstractEntity<Long> {
@@ -32,7 +31,7 @@ public class Advice extends AbstractEntity<Long> {
     private Date dateDispatched;
     /**
      * For advices initiated in PNL workshops, presence of a contractor workshop in this filed indicates the fact of the final dispatch (i.e. from PNL to Contractor).
-     * 
+     *
      */
     @IsProperty
     private Workshop dispatchedToWorkshop;
@@ -64,9 +63,9 @@ public class Advice extends AbstractEntity<Long> {
 
     /**
      * TODO: should be removed.
-     * 
+     *
      * The main constructor.
-     * 
+     *
      * @param number
      *            -- unique advice number
      * @param desc
@@ -88,7 +87,7 @@ public class Advice extends AbstractEntity<Long> {
 
     /**
      * Should be used construction of brand new advices. TODO: should replace current implementation with commented one.
-     * 
+     *
      * @param desc
      */
     public Advice(final String desc) {
@@ -98,7 +97,7 @@ public class Advice extends AbstractEntity<Long> {
 
     /**
      * Ensures that key and id are the same.
-     * 
+     *
      * TODO: This approach is somewhat questionable.
      */
     @Override
@@ -115,7 +114,6 @@ public class Advice extends AbstractEntity<Long> {
         return dateRaised;
     }
 
-    @NotNull
     @Final
     @Observable
     protected Advice setDateRaised(final Date dateRaised) {
@@ -127,7 +125,6 @@ public class Advice extends AbstractEntity<Long> {
         return dateDispatched;
     }
 
-    @NotNull
     @Observable
     public Advice setDateDispatched(final Date dateDispatched) {
         this.dateDispatched = dateDispatched;
@@ -177,7 +174,7 @@ public class Advice extends AbstractEntity<Long> {
 
     /**
      * Iterates through all positions and tests them for pending. If there is at least one pending position this method returns <code>true</code>, otherwise false.
-     * 
+     *
      * @return
      */
     public boolean hasPendingPositions() {
@@ -195,12 +192,11 @@ public class Advice extends AbstractEntity<Long> {
 
     /**
      * Sets initiatedAtWorkshop value. This assignment can be done only once, and hopefully before this advice instance is persisted.
-     * 
+     *
      * This setter is not intended to be used for setting values specified by a user via UI -- only programmatically.
-     * 
+     *
      * @param initiatedAtWorkshop
      */
-    @NotNull
     @Final
     @EntityExists(Workshop.class)
     @Observable
@@ -214,10 +210,9 @@ public class Advice extends AbstractEntity<Long> {
 
     /**
      * Sets a workshop as part of the dispatch process.
-     * 
+     *
      * @param dispatchedToWorkshop
      */
-    @NotNull
     @EntityExists(Workshop.class)
     @Observable
     public void setDispatchedToWorkshop(final Workshop dispatchedToWorkshop) {
@@ -226,7 +221,7 @@ public class Advice extends AbstractEntity<Long> {
 
     /**
      * Return a list of vacant positions that can be used for placement of rotables.
-     * 
+     *
      * @return
      */
     public List<AdvicePosition> getVacantPositions() {
@@ -284,7 +279,7 @@ public class Advice extends AbstractEntity<Long> {
     /**
      * Advice is active from PNL perspective if: 1. Advice is not received. AND 2. Advice is initiated at PNL, not dispatched or dispatched to another PNL workshop OR Advice is
      * initiated at Contractor workshop, dispatched to a PNL workshop.
-     * 
+     *
      * @return
      */
     public boolean isActiveForPnl() {
@@ -302,7 +297,7 @@ public class Advice extends AbstractEntity<Long> {
     /**
      * Advice is active from Contractor perspective if: 1. Advice is not received. AND 2. Advice is initiated at Contractor, not dispatched or dispatched to another Contractor
      * workshop OR Advice is initiated at PNL workshop, dispatched to a Contractor workshop.
-     * 
+     *
      * @return
      */
     public boolean isActiveForContractor() {
@@ -319,7 +314,7 @@ public class Advice extends AbstractEntity<Long> {
 
     /**
      * A convenience method for obtaining rotables currently associated with advice positions
-     * 
+     *
      * @return
      */
     public List<Rotable> rotables() {

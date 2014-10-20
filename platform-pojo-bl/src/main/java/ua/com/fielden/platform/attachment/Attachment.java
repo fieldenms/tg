@@ -16,14 +16,13 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 
 /**
  * Class representing file attachment. The convention is to use the name of the attached file as entitie's key.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 @KeyTitle(value = "File name", desc = "Unique name of the file attached.")
@@ -53,7 +52,6 @@ public class Attachment extends AbstractEntity<String> {
     }
 
     @Override
-    @NotNull
     @Observable
     public Attachment setKey(final String key) {
         super.setKey(key);

@@ -29,7 +29,6 @@ import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
 import ua.com.fielden.platform.entity.validation.MaxValueValidator;
-import ua.com.fielden.platform.entity.validation.NotNullValidator;
 import ua.com.fielden.platform.entity.validation.RangePropertyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
@@ -57,7 +56,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     public static final String INJECTOR_IS_MISSING = "Meta-property factory is not fully initialised -- injector is missing";
     public static final String HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER = "BCE/ACE handlers should not have a another BCE/ACE handler as its parameter.";
 
-    protected final NotNullValidator notNullValidator = new NotNullValidator();
     protected final FinalValidator finalValidator = new FinalValidator();
     protected final Map<Class<? extends AbstractEntity<?>>, EntityExistsValidator> entityExistsValidators = Collections.synchronizedMap(new HashMap<>());
     protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = Collections.synchronizedMap(new HashMap<Integer, GreaterOrEqualValidator>());

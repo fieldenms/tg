@@ -12,9 +12,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 
 /**
@@ -26,7 +26,7 @@ import ua.com.fielden.platform.error.Result;
  * <p>
  * If provided, user specific public key is used by the authentication mechanism to ensure authenticity of the request. This key cannot be used for decoding user password, because
  * a corresponding private key is not known at the application server end.
- * 
+ *
  * @author TG Team
  */
 @KeyTitle("Application User")
@@ -68,17 +68,22 @@ public class User extends AbstractEntity<String> {
     @IsProperty
     @Invisible
     @MapTo("USER_PASSWORD")
+    // TODO most likely password should be @Required
     private String password;
+
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     private Set<UserAndRoleAssociation> roles = new HashSet<UserAndRoleAssociation>();
+
     @IsProperty
     @Invisible
     @MapTo("USER_PUBLIC_KEY")
     private String publicKey;
+
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
     @MapTo("IS_BASE")
     private boolean base = false;
+
     @IsProperty
     @Title(value = "Base user", desc = "A user on which the current user is based. This mainly relates to the application configuration and security user roles.")
     @MapTo("ID_BASE_CRAFT")
@@ -90,7 +95,7 @@ public class User extends AbstractEntity<String> {
 
     /**
      * Principle constructor.
-     * 
+     *
      * @param name
      *            -- is user's key
      * @param desc
@@ -100,7 +105,6 @@ public class User extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @Override
     public User setKey(final String value) {
         if (isPersisted() && (system_users.SU.matches(getKey()) && !system_users.SU.matches(value))) {
@@ -121,7 +125,6 @@ public class User extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     public User setPassword(final String password) {
         this.password = password;
         return this;
@@ -133,7 +136,7 @@ public class User extends AbstractEntity<String> {
 
     /**
      * A convenient method for extracting {@link UserRole} instances from a set of {@link UserAndRoleAssociation}.
-     * 
+     *
      * @return
      */
     public Set<UserRole> roles() {

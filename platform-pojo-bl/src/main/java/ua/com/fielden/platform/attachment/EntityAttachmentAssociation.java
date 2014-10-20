@@ -11,15 +11,14 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Class representing file attachment association with an entity of any type.
- * 
+ *
  * Entity is represented by its ID, which relies on the act that ID values are unique across all entities.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("ATTACHMENT_ENTITY_ASSOCIATIONS")
@@ -58,7 +57,6 @@ public class EntityAttachmentAssociation extends AbstractEntity<DynamicEntityKey
     }
 
     @Observable
-    @NotNull
     public EntityAttachmentAssociation setEntityId(final Long entityId) {
         this.entityId = entityId;
         return this;

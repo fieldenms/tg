@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.User;
@@ -22,9 +21,9 @@ import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
  * <p>
  * Property <code>key</code> should contain a string representation of a corresponding locator configuration class. The Class type could not be used as a key type because it is not
  * Comparable.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity locator configuration")
@@ -51,7 +50,7 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
 
     /**
      * A helper setter to convert entity locator to the string value.
-     * 
+     *
      * @param masterModelType
      */
     public void setLocatorModelType(final Class<?> masterModelType) {
@@ -60,7 +59,7 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
 
     /**
      * A helper getter to obtain entity locator type from string value.
-     * 
+     *
      * @return
      */
     public Class<?> getLocatorModelType() {
@@ -76,7 +75,6 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
     }
 
     @Observable
-    @NotNull
     @EntityExists(User.class)
     public void setOwner(final User owner) {
         if (owner != null && !owner.isBase()) {
@@ -90,7 +88,6 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
     }
 
     @Observable
-    @NotNull
     public void setLocatorType(final String locatorType) {
         this.locatorType = locatorType;
     }

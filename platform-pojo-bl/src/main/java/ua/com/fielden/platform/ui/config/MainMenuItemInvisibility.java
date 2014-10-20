@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
@@ -22,9 +21,9 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
  * base user.
  * <p>
  * Instances of this type can be deleted only by base users controlling the main menu configuration for the derived users.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(IMainMenuItemInvisibilityController.class)
@@ -63,7 +62,6 @@ public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    @NotNull
     @EntityExists(User.class)
     public void setOwner(final User owner) {
         if (owner != null && !owner.isBase()) {

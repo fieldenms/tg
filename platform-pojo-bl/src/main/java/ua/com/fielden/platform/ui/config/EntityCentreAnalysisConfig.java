@@ -12,13 +12,12 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * An entity that represent a meta-information about entity centre analysis.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Analysis configuration key", desc = "Analysis configuration key")
@@ -55,7 +54,6 @@ public class EntityCentreAnalysisConfig extends AbstractEntity<DynamicEntityKey>
     }
 
     @Observable
-    @NotNull
     public EntityCentreAnalysisConfig setTitle(final String title) {
         this.title = title;
         return this;

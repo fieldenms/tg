@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.equery.lifecycle.Categorizer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -130,7 +129,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     public Entity addToDoubles(final Double value) {
         doubles.add(value);
         return this;
@@ -158,7 +156,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     public void setObservablePropertyInitialisedAsNull(final Double observablePropertyInitialisedAsNull) {
         this.observablePropertyInitialisedAsNull = observablePropertyInitialisedAsNull;
     }

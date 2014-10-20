@@ -54,7 +54,6 @@ import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -180,7 +179,7 @@ import com.google.inject.Inject;
  * <ul>
  *   <li>Mutator for a simple property -- a method with name '''set[property]''' and one parameter matching the type of the field representing the property.
  *
- *       It may and usually should be annotated with {@link Observable} to ensure observation of the property change. And may have a number of validation annotations such as {@link NotNull} etc.
+ *       It may and usually should be annotated with {@link Observable} to ensure observation of the property change. And may have a number of validation annotations.
  *       Please note that mutator with at least one validation annotation should also be annotated with {@link ValidationRequired} -- this is enforced by the platform and failure to comply results in early runtime exception.
  *   </li>
  *   <li>Mutators for a collectional property -- there are three possible mutators recognised by TG:

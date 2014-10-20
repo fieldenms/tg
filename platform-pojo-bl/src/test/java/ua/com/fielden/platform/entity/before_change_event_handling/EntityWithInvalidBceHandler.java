@@ -9,21 +9,19 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.entity.validation.NotNullValidator;
 
 /**
  * Entity for the purpose of BCE handling tests. It has a setter annotated with invalid BCE handler, thus causing exceptional situation during instantiation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 public class EntityWithInvalidBceHandler extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Property 1", desc = "Description")
-    @BeforeChange({ @Handler(value = InvalidBeforeChangeEventHandler.class, non_ordinary = { @ClassParam(name = "invalidParam", value = BeforeChangeEventHandler.class) }),
-            @Handler(NotNullValidator.class) })
+    @BeforeChange({ @Handler(value = InvalidBeforeChangeEventHandler.class, non_ordinary = { @ClassParam(name = "invalidParam", value = BeforeChangeEventHandler.class) })})
     private String property1;
 
     @Observable
