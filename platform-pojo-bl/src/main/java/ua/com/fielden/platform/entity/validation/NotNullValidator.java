@@ -13,9 +13,9 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Checks value for null and empty in case where new value is instance of String.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class NotNullValidator implements IBeforeChangeEventHandler<Object> {
 
@@ -41,12 +41,12 @@ public class NotNullValidator implements IBeforeChangeEventHandler<Object> {
 
     /**
      * Convenient method to determine if the newValue is "null" or is empty in terms of value.
-     * 
+     *
      * @param newValue
      * @param oldValue
      * @return
      */
-    public static boolean isNull(final Object newValue, final Object oldValue) {
+    private boolean isNull(final Object newValue, final Object oldValue) {
         // IMPORTANT : need to check NotNullValidator usage on existing logic. There is the case, when
         // should not to pass the validation : setRotable(null) in AdvicePosition when getRotable() == null!!!
         // that is why - - "&& (oldValue != null)" - - was removed!!!!!
@@ -57,7 +57,7 @@ public class NotNullValidator implements IBeforeChangeEventHandler<Object> {
 
     /**
      * A convenient method to find NotNull annotation instance in the list of annotations be class.
-     * 
+     *
      * @param mutatorAnnotations
      * @return
      */

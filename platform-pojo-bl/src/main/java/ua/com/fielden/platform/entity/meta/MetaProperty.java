@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.meta;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
 
 import java.beans.PropertyChangeListener;
@@ -26,7 +28,6 @@ import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-import ua.com.fielden.platform.entity.validation.NotNullValidator;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
@@ -54,9 +55,6 @@ import ua.com.fielden.platform.reflection.Reflector;
  * Implemented support for restoring to original value with validation error cancellation.<br>
  * <b>Date: 2011-09-26</b><br>
  * Significant modification due to introduction of BCE and ACE event lifecycle.
- * <b>Date: 2014-10-06</b><br>
- * Implementing API for supporting proxy values.
- *
  *
  * @author TG Team
  *
@@ -174,16 +172,26 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      */
     public synchronized final Result validate(final Object newValue, final Object oldValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         setLastInvalidValue(null);
-        if (!ignoreRequiredness && isRequired() && NotNullValidator.isNull(newValue, oldValue)) {
+        if (!ignoreRequiredness && isRequired() && isNull(newValue, oldValue)) {
             final Map<IBeforeChangeEventHandler, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler == null || requiredHandler.size() > 1) {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
             }
 
+            // obtain custom error message in case it has been provided at the domain level
             final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
 
-            final Result result = new Result(getEntity(), new IllegalArgumentException(StringUtils.isEmpty(reqErrorMsg) ? "Required property "
-                    + (StringUtils.isEmpty(getTitle()) ? name : getTitle()) + " is not specified for entity " + getEntityTitleAndDesc(getEntity().getType()).getKey() : reqErrorMsg));
+            final Result result;
+            if (!StringUtils.isEmpty(reqErrorMsg)) {
+                result = Result.failure(getEntity(), reqErrorMsg);
+            } else {
+                final String msg = format("Required property %s is not specified for entity %s",
+                        getTitleAndDesc(name, getEntity().getType()),
+                        getEntityTitleAndDesc(getEntity().getType()).getKey());
+
+                result = Result.failure(getEntity(), msg);
+            }
+
             setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), result);
             return result;
         } else {
@@ -195,6 +203,22 @@ public final class MetaProperty implements Comparable<MetaProperty> {
             // process all registered validators (that have its own annotations)
             return processValidators(newValue, oldValue, applicableValidationAnnotations);
         }
+    }
+
+    /**
+     * Convenient method to determine if the newValue is "null" or is empty in terms of value.
+     *
+     * @param newValue
+     * @param oldValue
+     * @return
+     */
+    private boolean isNull(final Object newValue, final Object oldValue) {
+        // IMPORTANT : need to check NotNullValidator usage on existing logic. There is the case, when
+        // should not to pass the validation : setRotable(null) in AdvicePosition when getRotable() == null!!!
+        // that is why - - "&& (oldValue != null)" - - was removed!!!!!
+        // The current condition is essential for UI binding logic.
+        return (newValue == null) /* && (oldValue != null) */
+                || (newValue instanceof String && StringUtils.isEmpty(newValue.toString()) && !StringUtils.isEmpty((String) oldValue));
     }
 
     /**
