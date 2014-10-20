@@ -316,7 +316,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     private transient volatile int lockCount;
 
     private transient final Class<K> keyType;
-    private transient final Class<?> actualEntityType;
+    private transient final Class<? extends AbstractEntity<?>> actualEntityType;
     /**
      * A reference to the application specific {@link EntityFactory} instance responsible for instantiation of this and other entities. It is also used for entity cloning.
      */
@@ -339,7 +339,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     @SuppressWarnings("unchecked")
     protected AbstractEntity() {
-        actualEntityType = PropertyTypeDeterminator.stripIfNeeded(getClass());
+        actualEntityType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.stripIfNeeded(getClass());
         changeSupport = new PropertyChangeSupportEx(this);
         properties = new LinkedHashMap<String, MetaProperty>();
         lock = new ReentrantLock();
@@ -496,7 +496,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      *
      * @return
      */
-    public final Class<?> getType() {
+    public final Class<? extends AbstractEntity<?>> getType() {
         return actualEntityType;
     }
 
@@ -651,7 +651,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                     throw new IllegalStateException(error);
                 }
 
-                final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) getType();
+                final Class<? extends AbstractEntity<?>> entityType = getType();
                 if (isCollectional && EntityUtils.isPersistedEntityType(entityType) && !Finder.hasLinkProperty(entityType, field.getName())) {
                     final String error = "Property "
                             + field.getName()
