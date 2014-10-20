@@ -248,6 +248,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @IsProperty
     @UpperCase
     @MapTo("KEY_")
+    @Required
     private K key;
     private transient final boolean compositeKey;
     @IsProperty
@@ -402,7 +403,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         return key;
     }
 
-    @NotNull
     @Observable
     public AbstractEntity<K> setKey(final K key) {
         this.key = key;
@@ -720,10 +720,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @throws Exception
      */
     private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> collectValidators(
-            final IMetaPropertyFactory metaPropertyFactory, 
-            final Field field, 
-            final Class<?> type, 
-            final boolean isCollectional, 
+            final IMetaPropertyFactory metaPropertyFactory,
+            final Field field,
+            final Class<?> type,
+            final boolean isCollectional,
             final Set<Annotation> validationAnnotations)
             throws Exception {
         //logger.debug("Start collecting validators for property " + field.getName() + "...");
