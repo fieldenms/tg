@@ -16,7 +16,6 @@ import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.Proxy;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
@@ -101,12 +100,6 @@ public abstract class TransactionalModule extends EntityModule {
         bindInterceptor(subclassesOf(ISessionEnabled.class), // match only DAO derived from  CommonEntityDao
                 annotatedWith(SessionRequired.class), // having annotated methods
                 new SessionInterceptor(sessionFactory) // the intercepter
-        );
-        // TODO This an experimental support for proxied properties with lazy loading. It can also be used with proxied methods.
-        // bind PropertyProxyInterseptor
-        bindInterceptor(subclassesOf(AbstractEntity.class), // match only entity classes
-                annotatedWith(Proxy.class), // having annotated methods
-                new PropertyProxyInterceptor(sessionFactory) // the intercepter
         );
         // bind DomainValidationConfig
         bind(DomainValidationConfig.class).toInstance(domainValidationConfig);
