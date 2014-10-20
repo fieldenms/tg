@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.keygen;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * An entity representing a concept of a sequential number used for generating key for WONO and some other entities.
