@@ -32,9 +32,9 @@ import com.google.inject.Injector;
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityModule}, this module binds
  * {@link IMetaPropertyFactory}.
- * 
+ *
  * IMPORTANT: This module is applicable strictly for testing purposes! Left out in the main source (e.i. not test) due to the need to be visible in other projects.
- * 
+ *
  * @author TG Team
  */
 public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
@@ -56,7 +56,7 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
     /**
      * If passed true value, then for {@link EntityExists} annotation would be created validator that always returns successful {@link Result}. Otherwise, {@link RuntimeException}
      * would be thrown each time {@link EntityExists} annotation would be encountered.
-     * 
+     *
      * @param ignoreEntityExistsAnnotation
      */
     public EntityModuleWithDomainValidatorsForTesting(final boolean ignoreEntityExistsAnnotation) {
@@ -108,8 +108,6 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
                 switch (value) {
                 case NOT_NULL:
                     return new IBeforeChangeEventHandler[] { new NotNullValidator() };
-                case NOT_EMPTY:
-                    return new IBeforeChangeEventHandler[] { new NotEmptyValidator() };
                 case GREATER_OR_EQUAL:
                     return new IBeforeChangeEventHandler[] { new GreaterOrEqualValidator(((GreaterOrEqual) annotation).value()) };
                 case MAX:

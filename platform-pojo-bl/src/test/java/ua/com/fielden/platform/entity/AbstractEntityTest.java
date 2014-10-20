@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation.NOT_EMPTY;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -538,17 +537,6 @@ public class AbstractEntityTest {
         assertTrue("The property should have warnings after recovery (by setting another warning value).", metaProperty.hasWarnings());
         assertTrue("Observing logic should be invoked during recovery.", observed);
         assertEquals("Recovery warning value should be set.", 77, entity.get("number"));
-    }
-
-    @Test
-    public void testNotEmptyValidation() {
-        final Entity entity = factory.newByKey(Entity.class, "test-entity");
-        entity.setStrProp("correct value");
-        assertTrue(entity.getProperty("strProp").getValidators().get(NOT_EMPTY).values().iterator().next().isSuccessful());
-        entity.setStrProp(null);
-        assertTrue(entity.getProperty("strProp").getValidators().get(NOT_EMPTY).values().iterator().next().isSuccessful());
-        entity.setStrProp("");
-        assertFalse(entity.getProperty("strProp").getValidators().get(NOT_EMPTY).values().iterator().next().isSuccessful());
     }
 
     @Test

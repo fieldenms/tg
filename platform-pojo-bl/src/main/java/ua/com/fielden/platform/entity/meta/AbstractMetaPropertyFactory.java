@@ -105,8 +105,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         switch (value) {
         case NOT_NULL:
             return new IBeforeChangeEventHandler[] { notNullValidator };
-        case NOT_EMPTY:
-            return new IBeforeChangeEventHandler[] { notEmptyValidator };
         case ENTITY_EXISTS:
             return new IBeforeChangeEventHandler[] { createEntityExists((EntityExists) annotation) };
         case FINAL:
