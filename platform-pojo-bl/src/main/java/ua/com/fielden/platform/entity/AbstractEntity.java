@@ -441,7 +441,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             return false;
         }
         // let's ensure that types match
-        final AbstractEntity that = (AbstractEntity) obj;
+        final AbstractEntity<?> that = (AbstractEntity<?>) obj;
         if (this.getType() != that.getType()) {
             return false;
         }
