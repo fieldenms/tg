@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity.functional;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -73,19 +72,13 @@ public class QueryRunnerDao extends CommonEntityDao<QueryRunner> implements IQue
         IEntityDao<AbstractEntity<?>> controller = companionObjectFinder.find(centreEntityType);
         controller = controller == null ? dynamicDao : controller;
 
-        final IPage<AbstractEntity<?>> resultPage = controller.firstPage(queryModel, queryRunner.getPageCapacity());
-        final AbstractEntity<?> totals = totalQueryModel != null ? calcSummary(controller, totalQueryModel) : null;
+        final IPage<AbstractEntity<?>> resultPage = controller.firstPage(queryModel, totalQueryModel, queryRunner.getPageCapacity());
         final Page page = queryRunner.getEntityFactory().newPlainEntity(Page.class, null).
                 setNumberOfPages(resultPage.numberOfPages()).
                 setPageNo(resultPage.no()).
-                setSummary(totals).
+                setSummary(resultPage.summary()).
                 setResults(resultPage.data());
         return queryRunner.getEntityFactory().newEntity(QueryRunner.class).setQuery(null).setPage(page);
-    }
-
-    private AbstractEntity<?> calcSummary(final IEntityDao<AbstractEntity<?>> controller, final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> totalQueryModel) {
-	final List<AbstractEntity<?>> list = controller.getAllEntities(totalQueryModel);
-        return list.size() == 1 ? list.get(0) : null;
     }
 
     private Map<String, Object> parameters(final Class<AbstractEntity<?>> centreEntityType, final Map<String, Pair<Object, Object>> paramMap) {
