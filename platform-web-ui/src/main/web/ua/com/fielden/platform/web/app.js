@@ -3,14 +3,21 @@ require.config({
 });
 
 require(['/resources/config.js'], function() {
-	require(['angular', 'angular.route', 'angular.resource', 'bootstrap.ui', 'css!resources/app'], function(angular) {
-		var appModule = angular.module('app', ['ngRoute', 'ngResource', 'ui.bootstrap']); // create main angular application module which depends on GisModule
+	require(['log', 'angular', 'angular.route', 'angular.resource', 'bootstrap.ui', 'css!resources/app', '/webmodel/CustomWebModel' /*, '/resources/custom/customModule.js'*/], function(log, angular, angularRoute, angularResource, bootstrapUi, appCss, CustomWebModel /*, customModule*/) {
+		var appModule = angular.module('app', ['ngRoute', 'ngResource', 'ui.bootstrap', 'customModule']); // create main angular application module which depends on GisModule
+
+		log('CustomWebModel');
+		log(CustomWebModel);
 
 		appModule.config(function($routeProvider) {
 
 			$routeProvider.
 			when('/', {
 				templateUrl: 'resources/myProfile.html'
+			}).
+			when('/custom', {
+				templateUrl: 'resources/custom/custom.html',
+				controller: 'CustomWebModel.customModule.CustomController'
 			}).
 			when('/centre/:centreName', {
 				templateUrl: 'resources/centre/centre.html',
@@ -26,10 +33,10 @@ require(['/resources/config.js'], function() {
 						return deferred.promise;
 					}
 				}
-			}).
-			otherwise({
-				redirectTo: '/'
 			});
+			// .otherwise({
+			// 	redirectTo: '/'
+			// });
 		});
 
 		appModule.factory("CentreEntity", function($resource) {
