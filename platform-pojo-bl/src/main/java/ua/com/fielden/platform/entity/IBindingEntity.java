@@ -8,15 +8,15 @@ import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrInc
 
 /**
  * "Entity" interface for Bind API.
- * 
+ *
  * @author Jhou
- * 
+ *
  */
 public interface IBindingEntity {
 
     /**
      * Dynamic setter for setting property value.
-     * 
+     *
      * @param propertyName
      * @param value
      */
@@ -24,7 +24,7 @@ public interface IBindingEntity {
 
     /**
      * Dynamic getter for accessing property value.
-     * 
+     *
      * @param propertyName
      * @return
      */
@@ -36,7 +36,7 @@ public interface IBindingEntity {
      * Registers property change listener.<br>
      * <br>
      * Note : Please, refer also to {@link PropertyChangeOrIncorrectAttemptListener} JavaDocs.
-     * 
+     *
      * @param propertyName
      * @param listener
      */
@@ -49,15 +49,15 @@ public interface IBindingEntity {
 
     /**
      * Returns property by name.
-     * 
+     *
      * @param name
      * @return
      */
-    MetaProperty getProperty(final String name);
+    <T> MetaProperty<T> getProperty(final String name);
 
     /**
      * Returns the type of property specified by <code>propertyName</code>.
-     * 
+     *
      * @param propertyName
      * @return
      */

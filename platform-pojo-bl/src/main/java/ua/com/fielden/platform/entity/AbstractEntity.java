@@ -596,7 +596,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     @Override
-    public final MetaProperty getProperty(final String name) {
+    public final <T> MetaProperty<T> getProperty(final String name) {
         return properties.get(name);
     }
 
