@@ -51,7 +51,7 @@ public class FileResource extends ServerResource {
             } else {
         	final InputStream stream = ResourceLoader.getStream(filePath);
 		final MediaType mediaType = determineMediaType(extension);
-		return RestServerUtil.jsonRepresentation(stream, mediaType);
+		return RestServerUtil.encodedRepresentation(stream, mediaType);
             }
         } catch (final FileNotFoundException e) {
             e.printStackTrace();

@@ -13,6 +13,7 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.master.EntityMaster;
+import ua.com.fielden.platform.web.model.WebModel;
 
 /**
  * The web application configurator. Allows one to specify which entity centre, entity master and other custom parameters for the application.
@@ -36,6 +37,10 @@ public class WebAppConfig{
      * The properties below represent essential tg views: entity centres, entity masters. Also it is possible to specify custom view.
      */
     private final Map<String, EntityCentre> centres = new LinkedHashMap<>();
+    /*
+     * The properties below represent essential tg views: entity centres, entity masters. Also it is possible to specify custom view.
+     */
+    private final Map<String, WebModel> webModels = new LinkedHashMap<>();
     private final List<EntityMaster> masters = new ArrayList<>();
     private final List<WebView> customViews = new ArrayList<>();
 
@@ -141,6 +146,24 @@ public class WebAppConfig{
     }
 
     /**
+     * Adds new {@link WebModel} instance to this web application configuration.
+     *
+     * @param centre
+     */
+    public void addWebModel(final WebModel webModel) {
+	webModels.put(webModel.getClass().getSimpleName(), webModel);
+    }
+
+    /**
+     * Returns registered web models.
+     *
+     * @return
+     */
+    public Map<String, WebModel> getWebModels() {
+	return Collections.unmodifiableMap(webModels);
+    }
+
+    /**
      * Runs the web application by sending the html file for this application.
      *
      * @return
@@ -168,6 +191,16 @@ public class WebAppConfig{
 	});
 	return StringUtils.join(menuBuilder, "\n");
     }
+
+//    /**
+//     * Initialises web model resources.
+//     *
+//     * @param customWebModel
+//     */
+//    public <WM extends WebModel> void initWebModel(final WM webModel) {
+//	final String jsString = webModel.generate();
+//
+//    }
 
 //    /**
 //     * Renders the componentToShow component and wraps it into html page with configured dependencies routes and screens.

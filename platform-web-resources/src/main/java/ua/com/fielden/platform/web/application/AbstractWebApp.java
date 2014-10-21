@@ -20,6 +20,7 @@ import ua.com.fielden.platform.web.FileResourceFactory;
 import ua.com.fielden.platform.web.FunctionalEntityResourceFactory;
 import ua.com.fielden.platform.web.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.WebAppConfig;
+import ua.com.fielden.platform.web.WebModelResourceFactory;
 
 import com.google.inject.Injector;
 
@@ -100,6 +101,10 @@ public abstract class AbstractWebApp extends Application {
 
 	// Registering entity centres.
 	attachCentreResources(router, webAppConfig);
+
+	// Registering web models.
+	attachWebModelResources(router, webAppConfig);
+
 	// TODO Register entity masters and other custom views.
 
 	// Attach resource for entity centre query runner.
@@ -110,6 +115,17 @@ public abstract class AbstractWebApp extends Application {
 	attacheResoureces(router);
 
 	return router;
+    }
+
+    /**
+     * Configures router for entity centre resource.
+     *
+     * @param router
+     * @param webAppConfig - holds the entity centre configurations.
+     */
+    private void attachWebModelResources(final Router router, final WebAppConfig webAppConfig) {
+	logger.info("\t\tWeb models resources (generated) attaching...");
+	router.attach("/webmodel/{modelName}", new WebModelResourceFactory(webAppConfig.getWebModels()));
     }
 
     /**

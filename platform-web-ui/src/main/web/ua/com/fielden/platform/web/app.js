@@ -37,8 +37,6 @@ require(['/resources/config.js'], function() {
 		});
 
 		appModule.factory("QueryRunner", function($resource) {
-            JSON
-            JSON
 			return $resource("users/SU/QueryRunner", {}, {
 				action: {
 					method: 'POST'

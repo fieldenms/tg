@@ -111,7 +111,7 @@ public class RestServerUtil {
 	    e.printStackTrace();
 	}
         logger.debug("SIZE: " + bytes.length);
-        return jsonRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length */);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length */);
     }
 
     /**
@@ -153,7 +153,7 @@ public class RestServerUtil {
         final TgObjectMapper mapper = new TgObjectMapper(entityFactory);
         final byte[] bytes = mapper.writeValueAsBytes(new Result(ex));
         logger.debug("SIZE: " + bytes.length);
-        return jsonRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/ );
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/ );
     }
 
     /**
@@ -182,7 +182,7 @@ public class RestServerUtil {
         final TgObjectMapper mapper = new TgObjectMapper(entityFactory);
         final byte[] bytes = mapper.writeValueAsBytes(result);
         logger.debug("SIZE: " + bytes.length);
-        return jsonRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM /* , bytes.length */);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM /* , bytes.length */);
     }
 
     /**
@@ -291,7 +291,7 @@ public class RestServerUtil {
             //final byte[] bytes = serialiser.serialise(result, SerialiserEngine.JACKSON);
             final TgObjectMapper mapper = new TgObjectMapper(entity.getEntityFactory());
             final byte[] bytes = mapper.writeValueAsBytes(result);
-            return jsonRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/ );
+            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/ );
         } catch (final Exception ex) {
             logger.error(ex);
             return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage(), entity.getEntityFactory());
@@ -414,7 +414,7 @@ public class RestServerUtil {
      * @param mediaType
      * @return
      */
-    public static Representation jsonRepresentation(final InputStream stream, final MediaType mediaType) {
+    public static Representation encodedRepresentation(final InputStream stream, final MediaType mediaType) {
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(stream, mediaType));
     }
 

@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.functional.IFunctionalEntity;
 import ua.com.fielden.platform.entity.functional.paginator.Page;
 import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
@@ -19,7 +20,7 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IQueryRunner.class)
-public class QueryRunner extends AbstractEntity<String> {
+public class QueryRunner extends AbstractEntity<String> implements IFunctionalEntity{
     private static final long serialVersionUID = 2994126659101256859L;
 
     @IsProperty
