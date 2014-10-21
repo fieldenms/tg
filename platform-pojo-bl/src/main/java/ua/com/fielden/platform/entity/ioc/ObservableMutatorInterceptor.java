@@ -235,7 +235,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         logger.debug("Processing collectional property \"" + fullPropertyName + "\".");
         // get size before invoking mutator
         final Collection<?> collection = (Collection<?>) entity.get(propertyName);
-        final int oldSize = collection == null ? 0 : collection.size();
+        final Integer oldSize = collection == null ? 0 : collection.size();
         try {
             // try to proceed setter - if unhandled exception throws -> take it to the next level.
             final SetterResult setterResult = proceedSetter(entity, propertyName, mutator, wasValidAndNotEnforced, newAndOldValues);
@@ -244,8 +244,8 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 return entity;
             } else {
                 // get new value and size
-                final Collection<?> newValue = (Collection<?>) entity.get(propertyName);
-                final int newSize = newValue.size();
+                final Collection<?> newValue = entity.get(propertyName);
+                final Integer newSize = newValue.size();
                 // fire change event
                 if (Mutator.SETTER == Mutator.getValueByMethod(mutator.getMethod())) {
                     entity.getChangeSupport().firePropertyChange(propertyName, 0, 1);
@@ -259,10 +259,11 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                     }
                 }
                 // update meta-property information
-                final MetaProperty metaProperty = entity.getProperty(propertyName);
+                final MetaProperty<Collection<?>> metaProperty = entity.getProperty(propertyName);
                 if (metaProperty != null) {
                     // set previous value and recalculate meta-property properties based on the new value
-                    metaProperty.setPrevValue(oldSize).define(newValue);
+                    metaProperty.setCollectionPrevSize(oldSize);
+                    metaProperty.define(newValue);
                 }
 
                 // determine property and entity dirty state

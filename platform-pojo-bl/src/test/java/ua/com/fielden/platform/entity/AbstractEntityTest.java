@@ -28,7 +28,6 @@ import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity6;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
-import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -301,7 +300,7 @@ public class AbstractEntityTest {
      */
     @Test
     public void testThatCollectionalPropertySetterIsObservedAndValidated() {
-        final MetaProperty doublesProperty = entity.getProperty("doubles");
+        final MetaProperty<List<Double>> doublesProperty = entity.getProperty("doubles");
         assertEquals("Incorrect number of validators.", 2, doublesProperty.getValidators().size());
         assertTrue("Should have domain validation.", doublesProperty.getValidators().containsKey(ValidationAnnotation.DOMAIN));
         assertTrue("Should have not-null validation.", doublesProperty.getValidators().containsKey(ValidationAnnotation.REQUIRED));
@@ -319,8 +318,8 @@ public class AbstractEntityTest {
         entity.setDoubles(Arrays.asList(new Double[] { 2.0 }));
 
         assertEquals("Property should have been observed.", true, observed);
-        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
-        assertEquals("Incorrect previous value", 2, doublesProperty.getPrevValue());
+        assertNull("Incorrect original value", doublesProperty.getCollectionOrigSize());
+        assertEquals("Incorrect previous value", 2, doublesProperty.getCollectionPrevSize());
         assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
         assertNotNull("There should be a requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
@@ -342,7 +341,7 @@ public class AbstractEntityTest {
      */
     @Test
     public void testThatCollectionalPropertyIncrementorIsObservedAndValidated() {
-        final MetaProperty doublesProperty = entity.getProperty("doubles");
+        final MetaProperty<List<Double>> doublesProperty = entity.getProperty("doubles");
         entity.setDoubles(Arrays.asList(new Double[] { -2.0, -3.0 }));
 
         entity.addPropertyChangeListener("doubles", new PropertyChangeListener() {
@@ -357,8 +356,8 @@ public class AbstractEntityTest {
 
         assertEquals("Property should have been observed.", true, observed);
         assertEquals("Incorrect size for doubles", 3, entity.getDoubles().size());
-        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
-        assertEquals("Incorrect previous value", 2, doublesProperty.getPrevValue());
+        assertNull("Incorrect original value", doublesProperty.getCollectionOrigSize());
+        assertEquals("Incorrect previous value", 2, doublesProperty.getCollectionPrevSize());
         assertNotNull("There should be a domain validation result.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertNotNull("There should be requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
         assertTrue("Requiredness validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
@@ -380,7 +379,7 @@ public class AbstractEntityTest {
      */
     @Test
     public void testThatCollectionalPropertyDecrementorIsObservedAndValidated() {
-        final MetaProperty doublesProperty = entity.getProperty("doubles");
+        final MetaProperty<List<Double>> doublesProperty = entity.getProperty("doubles");
         entity.setDoubles(Arrays.asList(new Double[] { -2.0, -3.0 }));
 
         entity.addPropertyChangeListener("doubles", new PropertyChangeListener() {
@@ -395,8 +394,8 @@ public class AbstractEntityTest {
 
         assertTrue("Property should have been observed.", observed);
         assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
-        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
-        assertEquals("Incorrect previous value", 2, doublesProperty.getPrevValue());
+        assertNull("Incorrect original value", doublesProperty.getCollectionOrigSize());
+        assertEquals("Incorrect previous value", 2, doublesProperty.getCollectionPrevSize());
         assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
         assertNotNull("There should be requiredness validation result.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
@@ -411,10 +410,10 @@ public class AbstractEntityTest {
 
         final EntityWithDynamicEntityKey entityWithDynamicEntityKey = factory.newByKey(EntityWithDynamicEntityKey.class, key1, key2, key3);
 
-        final Set<MetaProperty> metaProperties = Finder.getMetaProperties(entityWithDynamicEntityKey);
+        final Set<MetaProperty<?>> metaProperties = Finder.getMetaProperties(entityWithDynamicEntityKey);
         assertEquals("Incorrect number of meta properties.", 5, metaProperties.size());
 
-        final List<MetaProperty> list = new ArrayList<MetaProperty>();
+        final List<MetaProperty<?>> list = new ArrayList<>();
         list.addAll(metaProperties);
         assertEquals("Incorrect sorting order for meta-properties.", "key1", list.get(0).getName());
         assertEquals("Incorrect sorting order for meta-properties.", "key2", list.get(1).getName());
@@ -432,7 +431,7 @@ public class AbstractEntityTest {
                 observed = true;
             }
         });
-        final MetaProperty metaProperty = entity.getProperty("observableProperty");
+        final MetaProperty<Double> metaProperty = entity.getProperty("observableProperty");
         // 1. test the error recovery by the same value
         entity.setObservableProperty(100.0);
         entity.setObservableProperty(null);
@@ -482,7 +481,7 @@ public class AbstractEntityTest {
                 observed = true;
             }
         });
-        final MetaProperty metaProperty = entity.getProperty("number");
+        final MetaProperty<Integer> metaProperty = entity.getProperty("number");
         entity.setNumber(40);
         // 1. test warning generation on Domain Validation level:
         observed = false;
@@ -490,7 +489,7 @@ public class AbstractEntityTest {
         assertTrue("DOMAIN : The property should be valid with warning.", metaProperty.isValid());
         assertTrue("DOMAIN : The property should have warnings.", metaProperty.hasWarnings());
         assertTrue("DOMAIN : Observing logic should be invoked after setting warning value.", observed);
-        assertEquals("DOMAIN : Warning value should be set.", 77, entity.get("number"));
+        assertEquals("DOMAIN : Warning value should be set.", Integer.valueOf(77), entity.get("number"));
 
         // 2. recovery :
         observed = false;
@@ -498,7 +497,7 @@ public class AbstractEntityTest {
         assertTrue("DOMAIN : The property should remain valid after recovery.", metaProperty.isValid());
         assertFalse("DOMAIN : The property should not have warnings after recovery.", metaProperty.hasWarnings());
         assertTrue("DOMAIN : Observing logic should be invoked during recovery.", observed);
-        assertEquals("DOMAIN : Recovery value should be set.", 40, entity.get("number"));
+        assertEquals("DOMAIN : Recovery value should be set.", Integer.valueOf(40), entity.get("number"));
 
         // 3. test warning generation on Dynamic Validation level (validation inside setter):
         observed = false;
@@ -506,7 +505,7 @@ public class AbstractEntityTest {
         assertTrue("DYNAMIC : The property should be valid with warning.", metaProperty.isValid());
         assertTrue("DYNAMIC : The property should have warnings.", metaProperty.hasWarnings());
         assertTrue("DYNAMIC : Observing logic should be invoked after setting warning value.", observed);
-        assertEquals("DYNAMIC : Warning value should be set.", 777, entity.get("number"));
+        assertEquals("DYNAMIC : Warning value should be set.", Integer.valueOf(777), entity.get("number"));
 
         // 4. recovery :
         observed = false;
@@ -514,7 +513,7 @@ public class AbstractEntityTest {
         assertTrue("The property should remain valid after recovery.", metaProperty.isValid());
         assertFalse("The property should not have warnings after recovery.", metaProperty.hasWarnings());
         assertTrue("Observing logic should be invoked during recovery.", observed);
-        assertEquals("Recovery value should be set.", 40, entity.get("number"));
+        assertEquals("Recovery value should be set.", Integer.valueOf(40), entity.get("number"));
 
         // 5. test warning generation on Dynamic Validation level (validation inside setter):
         observed = false;
@@ -522,7 +521,7 @@ public class AbstractEntityTest {
         assertTrue("DYNAMIC : The property should be valid with warning.", metaProperty.isValid());
         assertTrue("DYNAMIC : The property should have warnings.", metaProperty.hasWarnings());
         assertTrue("DYNAMIC : Observing logic should be invoked after setting warning value.", observed);
-        assertEquals("DYNAMIC : Warning value should be set.", 777, entity.get("number"));
+        assertEquals("DYNAMIC : Warning value should be set.", Integer.valueOf(777), entity.get("number"));
 
         // 6. recovery by setting another warning value! :
         observed = false;
@@ -530,7 +529,7 @@ public class AbstractEntityTest {
         assertTrue("The property should remain valid after recovery (by setting another warning value).", metaProperty.isValid());
         assertTrue("The property should have warnings after recovery (by setting another warning value).", metaProperty.hasWarnings());
         assertTrue("Observing logic should be invoked during recovery.", observed);
-        assertEquals("Recovery warning value should be set.", 77, entity.get("number"));
+        assertEquals("Recovery warning value should be set.", Integer.valueOf(77), entity.get("number"));
     }
 
     @Test
@@ -566,28 +565,28 @@ public class AbstractEntityTest {
 
     @Test
     public void testCorrectAssignmentOfMetaPropertyPropertiesBaseOnAnnotations() {
-        final MetaProperty firstPropertyMetaProp = entity.getProperty("firstProperty");
+        final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
         assertTrue("Should be requried", firstPropertyMetaProp.isRequired());
         assertFalse("Should not be editable", firstPropertyMetaProp.isEditable());
         assertEquals("Incorrect title", "First Property", firstPropertyMetaProp.getTitle());
         assertEquals("Incorrect desc", "used for testing", firstPropertyMetaProp.getDesc());
 
-        final MetaProperty observablePropertyMetaProp = entity.getProperty("observableProperty");
+        final MetaProperty<Double> observablePropertyMetaProp = entity.getProperty("observableProperty");
         assertTrue("Should be requried", observablePropertyMetaProp.isRequired());
         assertTrue("Should be editable", observablePropertyMetaProp.isEditable());
         assertEquals("Incorrect title", "Observable Property", observablePropertyMetaProp.getTitle());
         assertEquals("Incorrect desc", "Observable Property", observablePropertyMetaProp.getDesc());
 
-        final MetaProperty finalPropertyMetaProp = entity.getProperty("finalProperty");
+        final MetaProperty<Double> finalPropertyMetaProp = entity.getProperty("finalProperty");
         assertFalse("Should not bevisible", finalPropertyMetaProp.isVisible());
 
-        final MetaProperty keyMetaProp = entity.getProperty("key");
+        final MetaProperty<String> keyMetaProp = entity.getProperty("key");
         assertTrue("Should be requried", keyMetaProp.isRequired());
         assertTrue("Should be editable", keyMetaProp.isEditable());
         assertEquals("Incorrect title", "Entity No", keyMetaProp.getTitle());
         assertEquals("Incorrect desc", "Key Property", keyMetaProp.getDesc());
 
-        final MetaProperty descMetaProp = entity.getProperty("desc");
+        final MetaProperty<String> descMetaProp = entity.getProperty("desc");
         assertTrue("Should be requried", descMetaProp.isRequired());
         assertTrue("Should be editable", descMetaProp.isEditable());
         assertEquals("Incorrect title", "Description", descMetaProp.getTitle());
@@ -596,7 +595,7 @@ public class AbstractEntityTest {
 
     @Test
     public void testMetaPropertyRequirementValidation() {
-        final MetaProperty firstPropertyMetaProp = entity.getProperty("firstProperty");
+        final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
         assertTrue("Should be required", firstPropertyMetaProp.isRequired());
         assertTrue("REQUIREDValidator should be present for 'required' property.", firstPropertyMetaProp.getValidators().containsKey(ValidationAnnotation.REQUIRED));
         entity.setFirstProperty(null);
@@ -612,7 +611,7 @@ public class AbstractEntityTest {
         entity.setFirstProperty(null);
         assertTrue("Not 'required' property with null value has to be valid.", firstPropertyMetaProp.isValid());
 
-        final MetaProperty secondMetaProperty = entity.getProperty("money");
+        final MetaProperty<Money> secondMetaProperty = entity.getProperty("money");
         secondMetaProperty.setRequired(true);
         assertTrue("Should be required", secondMetaProperty.isRequired());
         assertTrue("REQUIREDValidator should be present for 'required' property.", secondMetaProperty.getValidators().containsKey(ValidationAnnotation.REQUIRED));
@@ -629,7 +628,7 @@ public class AbstractEntityTest {
      */
     @Test
     public void testAbstractEntityRequirementValidation() {
-        final MetaProperty firstPropertyMetaProp = entity.getProperty("firstProperty");
+        final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
 
         firstPropertyMetaProp.setRequired(false);
         assertFalse("Should not be required", firstPropertyMetaProp.isRequired());
@@ -666,7 +665,7 @@ public class AbstractEntityTest {
 
     @Test
     public void testSetterExceptionsAndResultsHandling() {
-        final MetaProperty property = entity.getProperty("number");
+        final MetaProperty<Integer> property = entity.getProperty("number");
         // No exception have to be thrown from setter.
         try {
             entity.setNumber(10);

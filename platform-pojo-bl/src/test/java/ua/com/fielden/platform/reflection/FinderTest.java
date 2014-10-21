@@ -43,9 +43,9 @@ import com.google.inject.Injector;
 
 /**
  * Test case for {@link Finder}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class FinderTest {
     private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
@@ -102,7 +102,7 @@ public class FinderTest {
 
     @Test
     public void testFindCommonProperties() {
-        final List<Class<? extends AbstractEntity>> types = new ArrayList<Class<? extends AbstractEntity>>();
+        final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SimpleEntityWithCommonProperties.class);
         types.add(ComplexEntity.class);
         types.add(DynamicKeyEntity.class);
@@ -116,7 +116,7 @@ public class FinderTest {
 
     @Test
     public void testFindCommonPropertiesWithoutDesc() {
-        final List<Class<? extends AbstractEntity>> types = new ArrayList<Class<? extends AbstractEntity>>();
+        final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SimpleEntityWithCommonProperties.class);
         types.add(ComplexEntity.class);
         types.add(DynamicKeyEntity.class);
@@ -162,7 +162,7 @@ public class FinderTest {
     public void testGetMetaProperties() {
         // /////////////////////// simple case -- first level property ////////////////////
         final SecondLevelEntity entity = factory.newByKey(SecondLevelEntity.class, "key-1-1", "key-1-2", 1L);
-        final SortedSet<MetaProperty> metaProperties = Finder.getMetaProperties(entity);
+        final SortedSet<MetaProperty<?>> metaProperties = Finder.getMetaProperties(entity);
         // expected 6 -- 2 inherited from AbstractEntity, 2 -- from FirstLevelEntity and 2 are declared within SecondLevelEntity
         assertEquals("Incorrect number of properties.", 8, metaProperties.size());
     }

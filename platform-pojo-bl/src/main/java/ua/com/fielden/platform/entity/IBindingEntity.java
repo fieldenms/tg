@@ -28,7 +28,7 @@ public interface IBindingEntity {
      * @param propertyName
      * @return
      */
-    Object get(final String propertyName);
+    <T> T get(final String propertyName);
 
     PropertyChangeSupportEx getChangeSupport();
 

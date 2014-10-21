@@ -54,8 +54,7 @@ import ua.com.fielden.platform.reflection.Reflector;
  * <b>Date: 2010-03-18</b><br>
  * Implemented support for restoring to original value with validation error cancellation.<br>
  * <b>Date: 2011-09-26</b><br>
- * Significant modification due to introduction of BCE and ACE event lifecycle.
- * <b>Date: 2014-10-21</b><br>
+ * Significant modification due to introduction of BCE and ACE event lifecycle. <b>Date: 2014-10-21</b><br>
  * Modified handling of requiredness to fully replace NotNull. Corrected type parameterization.
  *
  * @author TG Team
@@ -76,7 +75,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      */
     private boolean dirty;
 
-    public static final String ORIGINAL_VALUE_NOT_INIT_COLL = "This is the original value for not-initialized collection.";
+    public static final Number ORIGINAL_VALUE_NOT_INIT_COLL = -1;
 
     ///////////////////////////////////////////////////////
     /// Holds an original value of the property.
@@ -95,8 +94,10 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      * should be set via setters. The use of factories would provide additional flexibility, where default values could be governed by business logic and a place of entity
      * instantiation.
      */
-    private Object originalValue;
-    private Object prevValue;
+    private Number collectionOrigSize;
+    private Number collectionPrevSize;
+    private T originalValue;
+    private T prevValue;
     private T lastInvalidValue;
     private int valueChangeCount = 0;
     /**
@@ -622,13 +623,13 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         return changeSupport;
     }
 
-    public final Object getOriginalValue() {
+    public final T getOriginalValue() {
         return originalValue;
     }
 
     public final void setCollectionOriginalValue(final Number size) {
         if (isCollectional()) {
-            this.originalValue = size;
+            this.collectionOrigSize = size;
         }
     }
 
@@ -640,20 +641,27 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      *
      * @param value
      */
-    public final MetaProperty<T> setOriginalValue(final Object value) {
+    public final MetaProperty<T> setOriginalValue(final T value) {
         if (value != null) {
             if (isCollectional() && value instanceof Collection) {
                 // possibly at this stage the "value" is the Hibernate proxy.
-                originalValue = MetaProperty.ORIGINAL_VALUE_NOT_INIT_COLL;
+                collectionOrigSize = MetaProperty.ORIGINAL_VALUE_NOT_INIT_COLL;
             } else { // The single property (proxied or not!!!)
                 originalValue = value;
             }
-        } else { // value == null;
-            originalValue = isCollectional() ? 0 : null;
+        } else if (isCollectional()) {
+            collectionOrigSize = 0;
+        } else {
+            originalValue = null;
         }
         // when original property value is set then the previous value should be the same
         // the previous value setter is not used deliberately since it has some logic not needed here
-        prevValue = originalValue;
+        if (isCollectional()) {
+            collectionPrevSize = collectionOrigSize;
+        } else {
+            prevValue = originalValue;
+        }
+
         // reset value change counter
         resetValueChageCount();
         //
@@ -694,13 +702,13 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      * @param prevValue
      * @return
      */
-    public final MetaProperty<T> setPrevValue(final Object prevValue) {
+    public final MetaProperty<T> setPrevValue(final T prevValue) {
         incValueChangeCount();
         // just in case cater for correct processing of collection properties
         if (isCollectional() && prevValue instanceof Collection) {
-            this.prevValue = ((Collection<?>) prevValue).size();
+            this.collectionPrevSize = ((Collection<?>) prevValue).size();
         } else if (isCollectional() && prevValue == null) { // very unlikely, but let's be defensive
-            this.prevValue = 0;
+            this.collectionPrevSize = 0;
         } else {
             this.prevValue = prevValue;
         }
@@ -715,11 +723,16 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public final boolean isChangedFromOriginal() {
         try {
             final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
-            final Object currValue = isCollectional() ? ((Collection<?>) getter.invoke(entity)).size() : getter.invoke(entity);
-            if (getOriginalValue() == null) {
-                return currValue != null;
+            if (!isCollectional()) {
+                final Object currValue = getter.invoke(entity);
+                if (getOriginalValue() == null) {
+                    return currValue != null;
+                } else {
+                    return currValue == null || !currValue.equals(getOriginalValue());
+                }
             } else {
-                return currValue == null || !currValue.equals(getOriginalValue());
+                final Integer currentSize = ((Collection<?>) getter.invoke(entity)).size();
+                return !currentSize.equals(getCollectionPrevSize());
             }
         } catch (final Exception e) {
             // TODO change to logging
@@ -766,6 +779,13 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public final MetaProperty<T> define(final T entityPropertyValue) {
         if (aceHandler != null) {
             aceHandler.handle(this, entityPropertyValue);
+        }
+        return this;
+    }
+
+    public final MetaProperty<T> defineForOriginalValue() {
+        if (aceHandler != null) {
+            aceHandler.handle(this, getOriginalValue());
         }
         return this;
     }
@@ -820,7 +840,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.visible = visible;
     }
 
-    public final Object getLastInvalidValue() {
+    public final T getLastInvalidValue() {
         return lastInvalidValue;
     }
 
@@ -846,7 +866,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      * @return
      */
     public final T getLastAttemptedValue() {
-        return isValid() ? (isAssigned() ? getValue() : (T) getOriginalValue()) : (T) getLastInvalidValue();
+        return isValid() ? (isAssigned() ? getValue() : getOriginalValue()) : getLastInvalidValue();
     }
 
     public final String getTitle() {
@@ -1107,8 +1127,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     /**
-     * Creates a dynamic proxy with the specified <code>mode</code> if argument <code>id</code> is not null.
-     * The created proxy is returned as the value for convenience.
+     * Creates a dynamic proxy with the specified <code>mode</code> if argument <code>id</code> is not null. The created proxy is returned as the value for convenience.
      *
      * In case of <code>id == null</code> value <code>null</code> is returned and property would also become <code>null</code>.
      *
@@ -1125,4 +1144,21 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         }
         return null;
     }
+
+    public Number getCollectionOrigSize() {
+        return collectionOrigSize;
+    }
+
+    public Number getCollectionPrevSize() {
+        return collectionPrevSize;
+    }
+
+    public void setCollectionOrigSize(final Number collectionOrigSize) {
+        this.collectionOrigSize = collectionOrigSize;
+    }
+
+    public void setCollectionPrevSize(final Number collectionPrevSize) {
+        this.collectionPrevSize = collectionPrevSize;
+    }
+
 }
