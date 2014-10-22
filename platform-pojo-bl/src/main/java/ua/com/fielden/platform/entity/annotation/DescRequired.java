@@ -7,9 +7,9 @@ import java.lang.annotation.Target;
 
 /**
  * Should be used to indicate if entity's desc property is required by default (i.e. cannot have null value).
- * The <code>Required</code> annotation can be overwritten by changing property <code>required</code> of a corresponding meta-property instance.
+ * The {@link Required} annotation can be overwritten by changing property <code>required</code> of a corresponding meta-property instance.
  *
- * @author 01es
+ * @author TG Team
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

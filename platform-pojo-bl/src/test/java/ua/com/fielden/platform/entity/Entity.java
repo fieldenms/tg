@@ -34,7 +34,7 @@ import ua.com.fielden.platform.types.Money;
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
 @DescTitle(value = "Description", desc = "Description Property")
-@DescRequired
+@DescRequired("Property \"{{prop-title}}\" in entity \"{{entity-title}}\" does not permit blank values.")
 public class Entity extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

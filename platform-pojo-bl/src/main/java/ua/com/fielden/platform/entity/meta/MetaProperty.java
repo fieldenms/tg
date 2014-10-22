@@ -238,8 +238,8 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         // should not to pass the validation : setRotable(null) in AdvicePosition when getRotable() == null!!!
         // that is why - - "&& (oldValue != null)" - - was removed!!!!!
         // The current condition is essential for UI binding logic.
-        return (newValue == null) /* && (oldValue != null) */
-                || (newValue instanceof String && StringUtils.isEmpty(newValue.toString()) && !StringUtils.isEmpty((String) oldValue));
+        return (newValue == null) || /* && (oldValue != null) */
+               (newValue instanceof String && StringUtils.isBlank(newValue.toString()));
     }
 
     /**

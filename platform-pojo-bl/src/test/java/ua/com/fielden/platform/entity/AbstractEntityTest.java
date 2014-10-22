@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -36,6 +37,7 @@ import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
@@ -1162,4 +1164,55 @@ public class AbstractEntityTest {
         assertFalse(thisEntity.sameAs(thatEntity));
     }
 
+    @Test
+    public void required_desc_should_not_permit_empty_values() {
+        final Entity entity = factory.newEntity(Entity.class, "key1", "description");
+        assertTrue(entity.getProperty("desc").isValid());
+
+        entity.setDesc("");
+        assertFalse(entity.getProperty("desc").isValid());
+
+    }
+
+    @Test
+    public void required_desc_should_not_permit_blank_values() {
+        final Entity entity = factory.newEntity(Entity.class, "key1", "description");
+        assertTrue(entity.getProperty("desc").isValid());
+
+        entity.setDesc("    ");
+        assertFalse(entity.getProperty("desc").isValid());
+    }
+
+    @Test
+    public void required_desc_should_not_permit_null_values() {
+        final Entity entity = factory.newEntity(Entity.class, "key1", "description");
+        assertTrue(entity.getProperty("desc").isValid());
+
+        entity.setDesc(null);
+        assertFalse(entity.getProperty("desc").isValid());
+    }
+
+    @Test
+    public void required_desc_should_not_be_valid_after_instantiation() {
+        final Entity entity = factory.newByKey(Entity.class, "key1");
+
+        final MetaProperty<String> descProperty = entity.getProperty("desc");
+        assertFalse(descProperty.isValid());
+
+        // let's also check that blank value is not permitted even when the original value was blank
+        entity.setDesc("    ");
+        assertFalse(descProperty.isValid());
+    }
+
+    @Test
+    public void required_desc_should_support_custo_error_messages_with_templating() {
+        final Entity entity = factory.newByKey(Entity.class, "key1");
+        final MetaProperty<String> descProperty = entity.getProperty("desc");
+        assertFalse(descProperty.isValid());
+        assertEquals(
+                format("Property \"%s\" in entity \"%s\" does not permit blank values.",
+                        TitlesDescsGetter.getTitleAndDesc("desc", Entity.class).getKey(),
+                        TitlesDescsGetter.getEntityTitleAndDesc(Entity.class).getKey()),
+                descProperty.getFirstFailure().getMessage());
+    }
 }
