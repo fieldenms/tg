@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.meta;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
 
 import java.beans.PropertyChangeListener;
@@ -26,7 +28,6 @@ import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-import ua.com.fielden.platform.entity.validation.NotNullValidator;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
@@ -53,22 +54,20 @@ import ua.com.fielden.platform.reflection.Reflector;
  * <b>Date: 2010-03-18</b><br>
  * Implemented support for restoring to original value with validation error cancellation.<br>
  * <b>Date: 2011-09-26</b><br>
- * Significant modification due to introduction of BCE and ACE event lifecycle.
- * <b>Date: 2014-10-06</b><br>
- * Implementing API for supporting proxy values.
- *
+ * Significant modification due to introduction of BCE and ACE event lifecycle. <b>Date: 2014-10-21</b><br>
+ * Modified handling of requiredness to fully replace NotNull. Corrected type parameterization.
  *
  * @author TG Team
  *
  */
-public final class MetaProperty implements Comparable<MetaProperty> {
+public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     private final AbstractEntity<?> entity;
     private final String name;
     private Class<?> type;
     private final Class<?> propertyAnnotationType;
-    private final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators;
+    private final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> validators;
     private final Set<Annotation> validationAnnotations = new HashSet<Annotation>();
-    private final IAfterChangeEventHandler aceHandler;
+    private final IAfterChangeEventHandler<T> aceHandler;
     private final boolean key;
     private final boolean collectional;
     /**
@@ -76,7 +75,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      */
     private boolean dirty;
 
-    public static final String ORIGINAL_VALUE_NOT_INIT_COLL = "This is the original value for not-initialized collection.";
+    public static final Number ORIGINAL_VALUE_NOT_INIT_COLL = -1;
 
     ///////////////////////////////////////////////////////
     /// Holds an original value of the property.
@@ -95,9 +94,11 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * should be set via setters. The use of factories would provide additional flexibility, where default values could be governed by business logic and a place of entity
      * instantiation.
      */
-    private Object originalValue;
-    private Object prevValue;
-    private Object lastInvalidValue;
+    private Number collectionOrigSize;
+    private Number collectionPrevSize;
+    private T originalValue;
+    private T prevValue;
+    private T lastInvalidValue;
     private int valueChangeCount = 0;
     /**
      * Indicates whether this property has an assigned value. This flag is requited due to the fact that the value of null could be assigned making it impossible to identify the
@@ -134,14 +135,32 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * Property supports specification of the precise type. For example, property <code>key</code> in entity classes is recognised by reflection API as Comparable. Therefore, it
      * might be desirable to specify type more accurately.
      *
+     * @param entity
      * @param field
      * @param type
+     * @param isKey
+     * @param isCollectional
+     * @param propertyAnnotationType
+     * @param calculated
+     * @param upperCase
+     * @param validationAnnotations
      * @param validators
+     * @param aceHandler
+     * @param dependentPropertyNames
      */
-    public MetaProperty(final AbstractEntity<?> entity, final Field field, final Class<?> type, //
-            final boolean isKey, final boolean isCollectional, final Class<?> propertyAnnotationType, final boolean calculated, final boolean upperCase,//
+    public MetaProperty(
+            final AbstractEntity<?> entity,
+            final Field field,
+            final Class<?> type,
+            final boolean isKey,
+            final boolean isCollectional,
+            final Class<?> propertyAnnotationType,
+            final boolean calculated,
+            final boolean upperCase,//
             final Set<Annotation> validationAnnotations,//
-            final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators, final IAfterChangeEventHandler aceHandler, final String[] dependentPropertyNames) {
+            final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> validators,
+            final IAfterChangeEventHandler<T> aceHandler,
+            final String[] dependentPropertyNames) {
         this.entity = entity;
         this.name = field.getName();
         this.type = type;
@@ -172,29 +191,55 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      *            - an actual method modifying the value - either {@link Mutator#SETTER}, {@link Mutator#INCREMENTOR} or {@link Mutator#DECREMENTOR}
      * @return
      */
-    public synchronized final Result validate(final Object newValue, final Object oldValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
+    public synchronized final Result validate(final T newValue, final T oldValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         setLastInvalidValue(null);
-        if (!ignoreRequiredness && isRequired() && NotNullValidator.isNull(newValue, oldValue)) {
-            final Map<IBeforeChangeEventHandler, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
+        if (!ignoreRequiredness && isRequired() && isNull(newValue, oldValue)) {
+            final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler == null || requiredHandler.size() > 1) {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
             }
 
+            // obtain custom error message in case it has been provided at the domain level
             final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
 
-            final Result result = new Result(getEntity(), new IllegalArgumentException(StringUtils.isEmpty(reqErrorMsg) ? "Required property "
-                    + (StringUtils.isEmpty(getTitle()) ? name : getTitle()) + " is not specified for entity " + getEntityTitleAndDesc(getEntity().getType()).getKey() : reqErrorMsg));
+            final Result result;
+            if (!StringUtils.isEmpty(reqErrorMsg)) {
+                result = Result.failure(getEntity(), reqErrorMsg);
+            } else {
+                final String msg = format("Required property %s is not specified for entity %s",
+                        getTitleAndDesc(name, getEntity().getType()),
+                        getEntityTitleAndDesc(getEntity().getType()).getKey());
+
+                result = Result.failure(getEntity(), msg);
+            }
+
             setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), result);
             return result;
         } else {
             // refresh REQUIRED validation result if REQUIRED validation annotation pair exists
-            final Map<IBeforeChangeEventHandler, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
+            final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler != null && requiredHandler.size() == 1) {
                 setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), new Result(getEntity(), "Requiredness updated by successful result."));
             }
             // process all registered validators (that have its own annotations)
             return processValidators(newValue, oldValue, applicableValidationAnnotations);
         }
+    }
+
+    /**
+     * Convenient method to determine if the newValue is "null" or is empty in terms of value.
+     *
+     * @param newValue
+     * @param oldValue
+     * @return
+     */
+    private boolean isNull(final T newValue, final T oldValue) {
+        // IMPORTANT : need to check NotNullValidator usage on existing logic. There is the case, when
+        // should not to pass the validation : setRotable(null) in AdvicePosition when getRotable() == null!!!
+        // that is why - - "&& (oldValue != null)" - - was removed!!!!!
+        // The current condition is essential for UI binding logic.
+        return (newValue == null) || /* && (oldValue != null) */
+               (newValue instanceof String && StringUtils.isBlank(newValue.toString()));
     }
 
     /**
@@ -223,13 +268,18 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @param mutatorType
      * @return
      */
-    private Result processValidators(final Object newValue, final Object oldValue, final Set<Annotation> applicableValidationAnnotations) {
+    private Result processValidators(final T newValue, final T oldValue, final Set<Annotation> applicableValidationAnnotations) {
         // iterate over registered validations
         for (final ValidationAnnotation va : validators.keySet()) {
-            final Set<Entry<IBeforeChangeEventHandler, Result>> pairs = validators.get(va).entrySet();
-            for (final Entry<IBeforeChangeEventHandler, Result> pair : pairs) {
+            // requiredness falls outside of processing logic for other validators, so simply ignore it
+            if (va == ValidationAnnotation.REQUIRED) {
+                continue;
+            }
+
+            final Set<Entry<IBeforeChangeEventHandler<T>, Result>> pairs = validators.get(va).entrySet();
+            for (final Entry<IBeforeChangeEventHandler<T>, Result> pair : pairs) {
                 // if validator exists ...and it should... then validated and set validation result
-                final IBeforeChangeEventHandler handler = pair.getKey();
+                final IBeforeChangeEventHandler<T> handler = pair.getKey();
                 if (handler != null && isValidatorApplicable(applicableValidationAnnotations, va.getType())) {
                     final Result result = pair.getKey().handle(this, newValue, oldValue, applicableValidationAnnotations);
                     setValidationResultNoSynch(va, handler, result); // important to call setValidationResult as it fires property change event listeners
@@ -264,7 +314,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
         return false;
     }
 
-    public final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> getValidators() {
+    public final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> getValidators() {
         return validators;
     }
 
@@ -305,10 +355,10 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      *            -- annotation representing validator
      * @param validationResult
      */
-    private void setValidationResultNoSynch(final ValidationAnnotation key, final IBeforeChangeEventHandler handler, final Result validationResult) {
+    private void setValidationResultNoSynch(final ValidationAnnotation key, final IBeforeChangeEventHandler<T> handler, final Result validationResult) {
         // fire validationResults change event!!
         if (validators.get(key) != null) {
-            final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(key);
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(key);
             final Result oldValue = annotationHandlers.get(handler);// getValue();
             annotationHandlers.put(handler, validationResult);
             final Result firstFailure = getFirstFailure();
@@ -327,7 +377,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @param handler
      * @param validationResult
      */
-    public synchronized final void setValidationResult(final ValidationAnnotation key, final IBeforeChangeEventHandler handler, final Result validationResult) {
+    public synchronized final void setValidationResult(final ValidationAnnotation key, final IBeforeChangeEventHandler<T> handler, final Result validationResult) {
         setValidationResultNoSynch(key, handler, validationResult);
     }
 
@@ -365,15 +415,15 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @param annotationHandlers
      */
     private void setValidationResultForFirtsValidator(final Result validationResult, final ValidationAnnotation va) {
-        Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
+        Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
 
         if (annotationHandlers == null) {
-            annotationHandlers = new HashMap<IBeforeChangeEventHandler, Result>();
+            annotationHandlers = new HashMap<>();
             annotationHandlers.put(StubValidator.singleton, null);
             validators.put(va, annotationHandlers);
         }
 
-        final IBeforeChangeEventHandler handler = annotationHandlers.keySet().iterator().next();
+        final IBeforeChangeEventHandler<T> handler = annotationHandlers.keySet().iterator().next();
         final Result oldValue = annotationHandlers.get(handler);
         annotationHandlers.put(handler, validationResult);
         final Result firstFailure = getFirstFailure();
@@ -420,7 +470,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      */
     public synchronized final Result getFirstWarning() {
         for (final ValidationAnnotation va : validators.keySet()) {
-            final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
             for (final Result result : annotationHandlers.values()) {
                 if (result != null && result.isWarning()) {
                     return result;
@@ -474,7 +524,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      */
     public synchronized final Result getFirstFailure() {
         for (final ValidationAnnotation va : validators.keySet()) {
-            final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
             for (final Result result : annotationHandlers.values()) {
                 if (result != null && !result.isSuccessful()) {
                     return result;
@@ -491,7 +541,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @return
      */
     private final Result getFirstFailureFor(final ValidationAnnotation annotation) {
-        final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(annotation);
+        final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(annotation);
         for (final Result result : annotationHandlers.values()) {
             if (result != null && !result.isSuccessful()) {
                 return result;
@@ -573,13 +623,13 @@ public final class MetaProperty implements Comparable<MetaProperty> {
         return changeSupport;
     }
 
-    public final Object getOriginalValue() {
+    public final T getOriginalValue() {
         return originalValue;
     }
 
     public final void setCollectionOriginalValue(final Number size) {
         if (isCollectional()) {
-            this.originalValue = size;
+            this.collectionOrigSize = size;
         }
     }
 
@@ -591,20 +641,27 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      *
      * @param value
      */
-    public final MetaProperty setOriginalValue(final Object value) {
+    public final MetaProperty<T> setOriginalValue(final T value) {
         if (value != null) {
             if (isCollectional() && value instanceof Collection) {
                 // possibly at this stage the "value" is the Hibernate proxy.
-                originalValue = MetaProperty.ORIGINAL_VALUE_NOT_INIT_COLL;
+                collectionOrigSize = MetaProperty.ORIGINAL_VALUE_NOT_INIT_COLL;
             } else { // The single property (proxied or not!!!)
                 originalValue = value;
             }
-        } else { // value == null;
-            originalValue = isCollectional() ? 0 : null;
+        } else if (isCollectional()) {
+            collectionOrigSize = 0;
+        } else {
+            originalValue = null;
         }
         // when original property value is set then the previous value should be the same
         // the previous value setter is not used deliberately since it has some logic not needed here
-        prevValue = originalValue;
+        if (isCollectional()) {
+            collectionPrevSize = collectionOrigSize;
+        } else {
+            prevValue = originalValue;
+        }
+
         // reset value change counter
         resetValueChageCount();
         //
@@ -633,8 +690,8 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      *
      * @return
      */
-    public final Object getValue() {
-        return entity.get(name);
+    public final T getValue() {
+        return entity.<T>get(name);
     }
 
     /**
@@ -645,13 +702,13 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @param prevValue
      * @return
      */
-    public final MetaProperty setPrevValue(final Object prevValue) {
+    public final MetaProperty<T> setPrevValue(final T prevValue) {
         incValueChangeCount();
         // just in case cater for correct processing of collection properties
         if (isCollectional() && prevValue instanceof Collection) {
-            this.prevValue = ((Collection<?>) prevValue).size();
+            this.collectionPrevSize = ((Collection<?>) prevValue).size();
         } else if (isCollectional() && prevValue == null) { // very unlikely, but let's be defensive
-            this.prevValue = 0;
+            this.collectionPrevSize = 0;
         } else {
             this.prevValue = prevValue;
         }
@@ -666,11 +723,16 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     public final boolean isChangedFromOriginal() {
         try {
             final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
-            final Object currValue = isCollectional() ? ((Collection<?>) getter.invoke(entity)).size() : getter.invoke(entity);
-            if (getOriginalValue() == null) {
-                return currValue != null;
+            if (!isCollectional()) {
+                final Object currValue = getter.invoke(entity);
+                if (getOriginalValue() == null) {
+                    return currValue != null;
+                } else {
+                    return currValue == null || !currValue.equals(getOriginalValue());
+                }
             } else {
-                return currValue == null || !currValue.equals(getOriginalValue());
+                final Integer currentSize = ((Collection<?>) getter.invoke(entity)).size();
+                return !currentSize.equals(getCollectionPrevSize());
             }
         } catch (final Exception e) {
             // TODO change to logging
@@ -714,9 +776,16 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @param entityPropertyValue
      * @return
      */
-    public final MetaProperty define(final Object entityPropertyValue) {
+    public final MetaProperty<T> define(final T entityPropertyValue) {
         if (aceHandler != null) {
             aceHandler.handle(this, entityPropertyValue);
+        }
+        return this;
+    }
+
+    public final MetaProperty<T> defineForOriginalValue() {
+        if (aceHandler != null) {
+            aceHandler.handle(this, getOriginalValue());
         }
         return this;
     }
@@ -752,7 +821,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * Comparison between key and non-key properties happens in reverse order to ensure that key properties are at the top.
      */
     @Override
-    public final int compareTo(final MetaProperty mp) {
+    public final int compareTo(final MetaProperty<T> mp) {
         if (isKey() && mp.isKey() || !isKey() && !mp.isKey()) {
             return getName().compareTo(mp.getName());
         }
@@ -771,11 +840,11 @@ public final class MetaProperty implements Comparable<MetaProperty> {
         this.visible = visible;
     }
 
-    public final Object getLastInvalidValue() {
+    public final T getLastInvalidValue() {
         return lastInvalidValue;
     }
 
-    public final void setLastInvalidValue(final Object lastInvalidValue) {
+    public final void setLastInvalidValue(final T lastInvalidValue) {
         this.lastInvalidValue = lastInvalidValue;
     }
 
@@ -796,7 +865,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      *
      * @return
      */
-    public final Object getLastAttemptedValue() {
+    public final T getLastAttemptedValue() {
         return isValid() ? (isAssigned() ? getValue() : getOriginalValue()) : getLastInvalidValue();
     }
 
@@ -901,7 +970,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @param valAnnotation
      */
     private void putValidator(final ValidationAnnotation valAnnotation) {
-        final Map<IBeforeChangeEventHandler, Result> map = new HashMap<IBeforeChangeEventHandler, Result>(2); // optimised with 2 as default value for this map -- not to create map with unnecessary 16 elements
+        final Map<IBeforeChangeEventHandler<T>, Result> map = new HashMap<>(2); // optimised with 2 as default value for this map -- not to create map with unnecessary 16 elements
         map.put(StubValidator.singleton, null);
         getValidators().put(valAnnotation, map);
     }
@@ -928,7 +997,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
         return dirty || !entity.isPersisted();
     }
 
-    public MetaProperty setDirty(final boolean dirty) {
+    public MetaProperty<T> setDirty(final boolean dirty) {
         this.dirty = dirty;
         return this;
     }
@@ -958,8 +1027,8 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      */
     public synchronized final void resetValidationResult() {
         for (final ValidationAnnotation va : validators.keySet()) {
-            final Map<IBeforeChangeEventHandler, Result> annotationHandlers = validators.get(va);
-            for (final IBeforeChangeEventHandler handler : annotationHandlers.keySet()) {
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
+            for (final IBeforeChangeEventHandler<T> handler : annotationHandlers.keySet()) {
                 annotationHandlers.put(handler, null);
             }
         }
@@ -973,9 +1042,9 @@ public final class MetaProperty implements Comparable<MetaProperty> {
         this.enforceMutator = enforceMutator;
     }
 
-    private MetaProperty parentMetaPropertyOnDependencyPath;
+    private MetaProperty<?> parentMetaPropertyOnDependencyPath;
 
-    public boolean onDependencyPath(final MetaProperty dependentMetaProperty) {
+    public boolean onDependencyPath(final MetaProperty<?> dependentMetaProperty) {
         if (parentMetaPropertyOnDependencyPath == null) {
             return false;
         }
@@ -987,7 +1056,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
         }
     }
 
-    public void addToDependencyPath(final MetaProperty metaProperty) {
+    public void addToDependencyPath(final MetaProperty<?> metaProperty) {
         if (parentMetaPropertyOnDependencyPath != null) {
             final String msg = "Parent meta-property " + parentMetaPropertyOnDependencyPath.getName() + " for dependency path is already assigned.";
             logger.error(msg);
@@ -1015,7 +1084,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
         parentMetaPropertyOnDependencyPath = metaProperty;
     }
 
-    public void removeFromDependencyPath(final MetaProperty metaProperty) {
+    public void removeFromDependencyPath(final MetaProperty<?> metaProperty) {
         if (metaProperty == null) {
             final String msg = "Meta-property to be removed should not be null.";
             logger.error(msg);
@@ -1053,13 +1122,12 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      *
      * @return
      */
-    public IAfterChangeEventHandler getAceHandler() {
+    public IAfterChangeEventHandler<T> getAceHandler() {
         return aceHandler;
     }
 
     /**
-     * Creates a dynamic proxy with the specified <code>mode</code> if argument <code>id</code> is not null.
-     * The created proxy is returned as the value for convenience.
+     * Creates a dynamic proxy with the specified <code>mode</code> if argument <code>id</code> is not null. The created proxy is returned as the value for convenience.
      *
      * In case of <code>id == null</code> value <code>null</code> is returned and property would also become <code>null</code>.
      *
@@ -1076,4 +1144,21 @@ public final class MetaProperty implements Comparable<MetaProperty> {
         }
         return null;
     }
+
+    public Number getCollectionOrigSize() {
+        return collectionOrigSize;
+    }
+
+    public Number getCollectionPrevSize() {
+        return collectionPrevSize;
+    }
+
+    public void setCollectionOrigSize(final Number collectionOrigSize) {
+        this.collectionOrigSize = collectionOrigSize;
+    }
+
+    public void setCollectionPrevSize(final Number collectionPrevSize) {
+        this.collectionPrevSize = collectionPrevSize;
+    }
+
 }

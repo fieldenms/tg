@@ -11,9 +11,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * ACE event handler for testing purposes.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AfterChangeEventHandler implements IAfterChangeEventHandler<Object> {
 
@@ -30,7 +30,7 @@ public class AfterChangeEventHandler implements IAfterChangeEventHandler<Object>
     private boolean invoked = false;
 
     @Override
-    public void handle(final MetaProperty property, final Object entityPropertyValue) {
+    public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
         setInvoked(true);
     }
 

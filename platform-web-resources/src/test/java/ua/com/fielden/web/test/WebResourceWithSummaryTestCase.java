@@ -40,9 +40,9 @@ import com.google.inject.Module;
 
 /**
  * Provides a unit test to ensure correct interaction with IPage summary model.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 
@@ -119,8 +119,8 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 
         assertEquals("Incorrect value of returned items.", 15, nextPage.data().size());
         assertNotNull("Summary should have been calculated.", nextPage.summary());
-        assertEquals("Incorrect value.", 830, nextPage.summary().get("intPropertySum"));
-        assertEquals("Incorrect value.", 10, nextPage.summary().get("minimaxDiff"));
+        assertEquals("Incorrect value.", Integer.valueOf(830), nextPage.summary().get("intPropertySum"));
+        assertEquals("Incorrect value.", Integer.valueOf(10), nextPage.summary().get("minimaxDiff"));
     }
 
     @Test
@@ -129,8 +129,8 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 
         assertEquals("Incorrect value of returned items.", 15, prevPage.data().size());
         assertNotNull("Summary should have been calculated.", prevPage.summary());
-        assertEquals("Incorrect value.", 830, prevPage.summary().get("intPropertySum"));
-        assertEquals("Incorrect value.", 10, prevPage.summary().get("minimaxDiff"));
+        assertEquals("Incorrect value.", Integer.valueOf(830), prevPage.summary().get("intPropertySum"));
+        assertEquals("Incorrect value.", Integer.valueOf(10), prevPage.summary().get("minimaxDiff"));
     }
 
     @Test
@@ -139,8 +139,8 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 
         assertEquals("Incorrect value of returned items.", 1, lastPage.data().size());
         assertNotNull("Summary should have been calculated.", lastPage.summary());
-        assertEquals("Incorrect value.", 830, lastPage.summary().get("intPropertySum"));
-        assertEquals("Incorrect value.", 10, lastPage.summary().get("minimaxDiff"));
+        assertEquals("Incorrect value.", Integer.valueOf(830), lastPage.summary().get("intPropertySum"));
+        assertEquals("Incorrect value.", Integer.valueOf(10), lastPage.summary().get("minimaxDiff"));
     }
 
     @Test
@@ -149,8 +149,8 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 
         assertEquals("Incorrect value of returned items.", 15, firstPage.data().size());
         assertNotNull("Summary should have been calculated.", firstPage.summary());
-        assertEquals("Incorrect value.", 830, firstPage.summary().get("intPropertySum"));
-        assertEquals("Incorrect value.", 10, firstPage.summary().get("minimaxDiff"));
+        assertEquals("Incorrect value.", Integer.valueOf(830), firstPage.summary().get("intPropertySum"));
+        assertEquals("Incorrect value.", Integer.valueOf(10), firstPage.summary().get("minimaxDiff"));
     }
 
     private List<byte[]> toByteArray(final List<ByteArray> list) {

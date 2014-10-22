@@ -76,10 +76,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private EntityFactory entityFactory;
 
-    
+
     @Inject
     private ICompanionObjectFinder coFinder;
-    
+
     @Inject
     private Injector injector;
 
@@ -174,7 +174,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     public T lazyLoad(final Long id) {
         final List<T> result = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants).getLazyEntitiesOnPage(from(select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model()).model(), 0, 1);
-        
+
         return !result.isEmpty() ? result.get(0) : null;
     }
 
@@ -220,7 +220,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 getSession().save(entity);
             } else {
                 // check validity of properties
-                for (final MetaProperty prop : entity.getProperties().values()) {
+                for (final MetaProperty<?> prop : entity.getProperties().values()) {
                     if (!prop.isValid()) {
                         throw prop.getFirstFailure();
                     }
@@ -228,7 +228,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 if (!entity.getDirtyProperties().isEmpty()) {
                     // let's also make sure that duplicate entities are not allowed
                     final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
-                    final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants).getEntities(from(model).model());   
+                    final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants).getEntities(from(model).model());
                     final int count = ids.size();
                     if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
                         throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()
@@ -252,7 +252,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     // When this purchase order item was validated at the client side it might have been using a stale work order.
                     // In here revalidation occurs, which would definitely work with the latest data.
                     for (final Object obj : entity.getDirtyProperties()) {
-                        final String propName = ((MetaProperty) obj).getName();
+                        final String propName = ((MetaProperty<?>) obj).getName();
                         //		    logger.error("is dirty: " + propName + " of " + getEntityType().getSimpleName() + " old = " + ((MetaProperty) obj).getOriginalValue() + " new = " + ((MetaProperty) obj).getValue());
                         final Object value = entity.get(propName);
                         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
@@ -299,9 +299,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return entity;
     }
 
-    private List<String> toStringList(final List<MetaProperty> dirtyProperties) {
+    private List<String> toStringList(final List<MetaProperty<?>> dirtyProperties) {
         final List<String> result = new ArrayList<>(dirtyProperties.size());
-        for (final MetaProperty prop : dirtyProperties) {
+        for (final MetaProperty<?> prop : dirtyProperties) {
             result.add(prop.getName());
         }
         return result;
@@ -698,7 +698,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public ICompanionObjectFinder getCoFinder() {
         return coFinder;
     }
-    
+
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
     }

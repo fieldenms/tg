@@ -11,16 +11,16 @@ import com.google.inject.Injector;
 
 /**
  * This is a preliminary interface for a meta-property factory.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public interface IMetaPropertyFactory {
     /**
      * Takes an annotation instance and instantiates validators based on that annotation.
      * <p>
      * If the passed annotation is not recognised as the validation annotation then an empty array should be returned or an exception thrown.
-     * 
+     *
      * @param <K>
      * @param annotation
      * @param entity
@@ -30,7 +30,7 @@ public interface IMetaPropertyFactory {
      * @return
      * @throws Exception
      */
-    IBeforeChangeEventHandler[] create(//
+    IBeforeChangeEventHandler<?>[] create(//
     final Annotation annotation, //
             final AbstractEntity<?> entity,//
             final String propertyName,//
@@ -38,19 +38,19 @@ public interface IMetaPropertyFactory {
 
     /**
      * Instantiates property ACE handler based on entity type and property field.
-     * 
+     *
      * @param entity
      * @param propertyField
      * @return
      * @throws Exception
      */
-    IAfterChangeEventHandler create(//
+    IAfterChangeEventHandler<?> create(//
     final AbstractEntity<?> entity,//
             final Field propertyField) throws Exception;
 
     /**
      * Sets injector, which can be used for instantiation of property before and after event handlers.
-     * 
+     *
      * @param injector
      */
     void setInjector(final Injector injector);

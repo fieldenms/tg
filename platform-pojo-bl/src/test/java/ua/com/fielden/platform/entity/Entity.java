@@ -20,8 +20,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.entity.validation.annotation.NotEmpty;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.equery.lifecycle.Categorizer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -36,7 +34,7 @@ import ua.com.fielden.platform.types.Money;
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
 @DescTitle(value = "Description", desc = "Description Property")
-@DescRequired
+@DescRequired("Property \"{{prop-title}}\" in entity \"{{entity-title}}\" does not permit blank values.")
 public class Entity extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
@@ -49,6 +47,7 @@ public class Entity extends AbstractEntity<String> {
     private Integer firstProperty = null;
     @IsProperty
     @Title("Observable Property")
+    @Required(NOT_NULL_MSG)
     private Double observableProperty = 0.0;
     @IsProperty
     @Monitoring(Categorizer.class)
@@ -59,6 +58,7 @@ public class Entity extends AbstractEntity<String> {
     @Invisible
     private Double finalProperty;
     @IsProperty(value = Double.class, linkProperty = "--stub to pass tests--")
+    @Required
     private List<Double> doubles = new ArrayList<Double>();
     @IsProperty(Entity.class)
     private List<Entity> entities = new ArrayList<Entity>();
@@ -88,7 +88,6 @@ public class Entity extends AbstractEntity<String> {
         return firstProperty;
     }
 
-    @NotNull
     @GreaterOrEqual(50)
     @DomainValidation
     @Observable
@@ -102,7 +101,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull(NOT_NULL_MSG)
     public Entity setObservableProperty(final Double observableProperty) {
         this.observableProperty = observableProperty;
         return this;
@@ -123,7 +121,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @DomainValidation
     public Entity setDoubles(final List<Double> doubles) {
         this.doubles.clear();
@@ -132,7 +129,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     public Entity addToDoubles(final Double value) {
         doubles.add(value);
         return this;
@@ -160,7 +156,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     public void setObservablePropertyInitialisedAsNull(final Double observablePropertyInitialisedAsNull) {
         this.observablePropertyInitialisedAsNull = observablePropertyInitialisedAsNull;
     }
@@ -234,7 +229,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotEmpty
     public void setStrProp(final String strProp) {
         this.strProp = strProp;
     }

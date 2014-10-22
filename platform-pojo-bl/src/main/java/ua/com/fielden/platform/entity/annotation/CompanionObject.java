@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.validation.annotation;
+package ua.com.fielden.platform.entity.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

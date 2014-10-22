@@ -10,13 +10,13 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * {@link CalculatedProperty} validation for its expression in a provided context.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class BceTitleValidation implements IBeforeChangeEventHandler<String> {
     @Override
-    public Result handle(final MetaProperty property, final String newTitle, final String oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<String> property, final String newTitle, final String oldValue, final Set<Annotation> mutatorAnnotations) {
         try {
             CalculatedProperty.validateTitle((CalculatedProperty) property.getEntity(), newTitle);
         } catch (final IncorrectCalcPropertyException e) {

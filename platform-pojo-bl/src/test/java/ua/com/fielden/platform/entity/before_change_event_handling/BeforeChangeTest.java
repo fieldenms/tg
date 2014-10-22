@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-import ua.com.fielden.platform.entity.validation.NotNullValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -27,10 +26,10 @@ import com.google.inject.Injector;
 
 /**
  * A test case to ensure correct construction and invocation of {@link BeforeChange} declarations.
- * 
- * 
+ *
+ *
  * @author TG Team
- * 
+ *
  */
 public class BeforeChangeTest {
     private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
@@ -41,10 +40,9 @@ public class BeforeChangeTest {
         final Entity entity = factory.newByKey(Entity.class, "key");
         assertNotNull("Should have been created", entity);
 
-        final Map<IBeforeChangeEventHandler, Result> handlers = entity.getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
-        assertEquals("Incorrect number of handlers.", 3, handlers.size());
-        final Iterator<IBeforeChangeEventHandler> iter = handlers.keySet().iterator();
-        assertEquals("Incorrect order of handlers", NotNullValidator.class, iter.next().getClass());
+        final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
+        assertEquals("Incorrect number of handlers.", 2, handlers.size());
+        final Iterator<IBeforeChangeEventHandler<String>> iter = handlers.keySet().iterator();
         assertEquals("Incorrect order of handlers", BeforeChangeEventHandler.class, iter.next().getClass());
         assertEquals("Incorrect order of handlers", InvalidBeforeChangeEventHandler.class, iter.next().getClass());
     }
@@ -53,10 +51,9 @@ public class BeforeChangeTest {
     public void test_parameterisation_of_BCE_handlers() {
         final Entity entity = factory.newByKey(Entity.class, "key");
 
-        final Map<IBeforeChangeEventHandler, Result> handlers = entity.getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
-        final Iterator<IBeforeChangeEventHandler> iter = handlers.keySet().iterator();
-        iter.next(); // skip not null handler
-        final BeforeChangeEventHandler handler = (BeforeChangeEventHandler) iter.next(); // get the second BCE event handler
+        final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
+        final Iterator<IBeforeChangeEventHandler<String>> iter = handlers.keySet().iterator();
+        final BeforeChangeEventHandler<String> handler = (BeforeChangeEventHandler<String>) iter.next();
         assertNotNull("Controller parameter should not be null.", handler.getControllerParam());
         assertEquals("Incorrect parameter value.", 1, handler.getIntParam1());
         assertEquals("Incorrect parameter value.", 12, handler.getIntParam2());
@@ -72,15 +69,14 @@ public class BeforeChangeTest {
         final Entity entity = factory.newByKey(Entity.class, "key");
         entity.setProperty1(null);
         // test validation error
-        final MetaProperty mp = entity.getProperty("property1");
+        final MetaProperty<String> mp = entity.getProperty("property1");
         final Result result = mp.getFirstFailure();
         assertNotNull("There should be a validation error.", result);
         assertEquals("Incorrect validation error message.", "Property cannot be null.", result.getMessage());
         // test that other validators have not been even invoked.
-        final Map<IBeforeChangeEventHandler, Result> handlers = entity.getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
-        final Iterator<IBeforeChangeEventHandler> iter = handlers.keySet().iterator();
-        iter.next(); // skip not null handler
-        final BeforeChangeEventHandler bceHandler = (BeforeChangeEventHandler) iter.next(); // get the second BCE event handler
+        final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
+        final Iterator<IBeforeChangeEventHandler<String>> iter = handlers.keySet().iterator();
+        final BeforeChangeEventHandler bceHandler = (BeforeChangeEventHandler) iter.next();
         assertFalse("Should not have been invoked.", bceHandler.isInvoked());
         final InvalidBeforeChangeEventHandler ibceHandler = (InvalidBeforeChangeEventHandler) iter.next(); // get the second BCE event handler
         assertFalse("Should not have been invoked.", ibceHandler.isInvoked());
@@ -95,13 +91,12 @@ public class BeforeChangeTest {
         final Result result = mp.getFirstFailure();
         assertNull("There should be no validation error.", result);
         // test invocation of validators
-        final Map<IBeforeChangeEventHandler, Result> handlers = entity.getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
-        final Iterator<IBeforeChangeEventHandler> iter = handlers.keySet().iterator();
-        iter.next(); // skip not null handler
-        final BeforeChangeEventHandler bceHandler = (BeforeChangeEventHandler) iter.next(); // get the second BCE event handler
+        final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
+        final Iterator<IBeforeChangeEventHandler<String>> iter = handlers.keySet().iterator();
+        final BeforeChangeEventHandler<String> bceHandler = (BeforeChangeEventHandler<String>) iter.next();
         assertTrue("Should have been invoked.", bceHandler.isInvoked());
         assertTrue("Should have been invoked.", bceHandler.getControllerParam().isInvoked());
-        final InvalidBeforeChangeEventHandler ibceHandler = (InvalidBeforeChangeEventHandler) iter.next(); // get the second BCE event handler
+        final InvalidBeforeChangeEventHandler<String> ibceHandler = (InvalidBeforeChangeEventHandler<String>) iter.next(); // get the second BCE event handler
         assertTrue("Should have been invoked.", ibceHandler.isInvoked());
     }
 
