@@ -15,9 +15,9 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * This validator implements a check that a value of the property representing upper boundary is greater or equal to the value of the property representing the lower boundary.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class RangePropertyValidator implements IBeforeChangeEventHandler<Object> {
     private final String[] opositeRangeProperties;
@@ -25,9 +25,9 @@ public class RangePropertyValidator implements IBeforeChangeEventHandler<Object>
 
     /**
      * Constructs range property validator for a property with <code>opositeRangeProperty</code> representing a property of the opposite side of the range.
-     * 
+     *
      * If <code>upperBoundaryRangePropery</code> is <code>true</code> then <code>opositeRangeProperty</code> indicates the property representing the lower boundary of the range.
-     * 
+     *
      * @param opositeRangeProperty
      * @param upperBoundaryRangePropery
      */
@@ -37,7 +37,7 @@ public class RangePropertyValidator implements IBeforeChangeEventHandler<Object>
     }
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
         Result result = new Result(null, "Valid");
         final List<Result> successfulResult = new ArrayList<Result>();
         for (final String opositeRangeProperty : opositeRangeProperties) {

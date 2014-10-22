@@ -22,7 +22,7 @@ public class InvalidBeforeChangeEventHandler<T> implements IBeforeChangeEventHan
     private boolean invoked = false;
 
     @Override
-    public Result handle(final MetaProperty property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<T> property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations) {
         setInvoked(true);
         return Result.successful(null);
     }

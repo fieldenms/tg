@@ -32,7 +32,7 @@ public class BeforeChangeEventHandler<T> implements IBeforeChangeEventHandler<T>
     private boolean invoked = false;
 
     @Override
-    public Result handle(final MetaProperty property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<T> property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations) {
         if (controllerParam != null) {
             controllerParam.run();
         }

@@ -10,13 +10,13 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * {@link CalculatedProperty} validation for its expression in a provided context.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class BceContextualExpressionValidation implements IBeforeChangeEventHandler<String> {
     @Override
-    public Result handle(final MetaProperty property, final String newContextualExpression, final String oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<String> property, final String newContextualExpression, final String oldValue, final Set<Annotation> mutatorAnnotations) {
         try {
             CalculatedProperty.validateContextualExpression((CalculatedProperty) property.getEntity(), newContextualExpression);
         } catch (final IncorrectCalcPropertyException e) {

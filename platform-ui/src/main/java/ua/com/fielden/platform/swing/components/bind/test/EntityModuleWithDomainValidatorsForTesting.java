@@ -86,7 +86,7 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
         // TODO not yet complete
         bind(IMetaPropertyFactory.class).toInstance(new IMetaPropertyFactory() {
             @Override
-            public IBeforeChangeEventHandler[] create( //
+            public IBeforeChangeEventHandler<?>[] create( //
             final Annotation annotation,//
                     final AbstractEntity<?> entity,//
                     final String propertyName,//
@@ -115,20 +115,20 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
                 case FINAL:
                     return new IBeforeChangeEventHandler[] { new FinalValidator() };
                 case DOMAIN:
-                    final IBeforeChangeEventHandler domainValidator = getDomainValidationConfig().getValidator(entity.getType(), propertyName);
+                    final IBeforeChangeEventHandler<?> domainValidator = getDomainValidationConfig().getValidator(entity.getType(), propertyName);
                     return new IBeforeChangeEventHandler[] { domainValidator != null ? domainValidator : new HappyValidator() };
                 case ENTITY_EXISTS:
                     if (ignoreEntityExistsAnnotation) {
                         return new IBeforeChangeEventHandler[] { new IBeforeChangeEventHandler<Object>() {
                             @Override
-                            public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+                            public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
                                 return new Result(null, "EntityExists annotation is ignored by " + EntityModuleWithDomainValidatorsForTesting.class.toString());
                             }
                         } };
                     } else {
                         return new IBeforeChangeEventHandler[] { new IBeforeChangeEventHandler<Object>() {
                             @Override
-                            public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+                            public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
                                 return new Result(null, "EntityExists annotation passes correcly " + EntityModuleWithDomainValidatorsForTesting.class.toString());
                             }
                         } };
@@ -144,7 +144,7 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
              * Returns definer, which always sets property <code>editable</code> to true.
              */
             @Override
-            public IAfterChangeEventHandler create(final AbstractEntity<?> entity, final Field propertyField) throws Exception {
+            public IAfterChangeEventHandler<?> create(final AbstractEntity<?> entity, final Field propertyField) throws Exception {
                 if ("vehicle".equals(propertyField.getName())) {
                     return new IAfterChangeEventHandler() {
                         @Override
