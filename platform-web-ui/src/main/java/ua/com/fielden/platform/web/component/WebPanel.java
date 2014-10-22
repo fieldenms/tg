@@ -8,12 +8,12 @@ import ua.com.fielden.platform.dom.DomElement;
  * @author TG Team
  *
  */
-public class WebPanel extends WebComponent {
+public class WebPanel extends AbstractWebComponent {
 
     @Override
     public DomElement render(final DomElement parent) {
-	// TODO Auto-generated method stub
-	return null;
+	final DomElement panel = new DomElement("div");
+	return parent == null ? panel : parent.add(panel);
     }
 
 }

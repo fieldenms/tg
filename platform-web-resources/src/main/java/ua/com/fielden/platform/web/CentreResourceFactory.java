@@ -9,9 +9,9 @@ import org.restlet.data.Method;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.CentreResource;
 
@@ -50,7 +50,7 @@ public class CentreResourceFactory extends Restlet {
         final IGlobalDomainTreeManager gdtm = injector.getInstance(IGlobalDomainTreeManager.class);
 
         if (Method.GET.equals(request.getMethod())) {
-            new CentreResource(centres.get(request.getAttributes().get("centreName")), getContext(), request, response, gdtm, injector.getInstance(EntityFactory.class)).handle();
+            new CentreResource(centres.get(request.getAttributes().get("centreName")), getContext(), request, response, gdtm, injector.getInstance(TgObjectMapper.class)).handle();
         }
     }
 }

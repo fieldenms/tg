@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.entity.functional.paginator.Page;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToAbstractEntityDeserialiser;
 import ua.com.fielden.platform.serialisation.json.serialiser.AbstractEntityToJsonSerialiser;
 import ua.com.fielden.platform.serialisation.json.serialiser.CentreManagerToJsonSerialiser;
@@ -30,11 +31,11 @@ public class TgObjectMapper extends ObjectMapper {
     private final TgModule module;
 
     @Inject
-    public TgObjectMapper(final EntityFactory entityFactory) {
-        this(new SimpleDateFormat("dd/MM/yyyy hh:mma"), entityFactory);
+    public TgObjectMapper(final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
+        this(new SimpleDateFormat("dd/MM/yyyy hh:mma"), entityFactory, provider);
     }
 
-    public TgObjectMapper(final DateFormat dateFormat, final EntityFactory entityFactory) {
+    public TgObjectMapper(final DateFormat dateFormat, final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
         super();
         this.module = new TgModule();
 
@@ -54,6 +55,12 @@ public class TgObjectMapper extends ObjectMapper {
         addDeserialiser(CritProp.class, new JsonToAbstractEntityDeserialiser<CritProp>(this, entityFactory));
         addDeserialiser(FetchProp.class, new JsonToAbstractEntityDeserialiser<FetchProp>(this, entityFactory));
         addDeserialiser(QueryEntity.class, new JsonToAbstractEntityDeserialiser<QueryEntity>(this, entityFactory));
+
+        for (final Class<?> type : provider.classes()) {
+            if (AbstractEntity.class.isAssignableFrom(type)) {
+        	addDeserialiser(type, new JsonToAbstractEntityDeserialiser<>(this, entityFactory));
+            }
+        }
 
         //Registering module.
         registerModule(module);

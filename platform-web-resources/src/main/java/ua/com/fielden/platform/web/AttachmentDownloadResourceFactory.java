@@ -8,7 +8,6 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.AttachmentDownloadResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -16,9 +15,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation for instantiating {@link AttachmentDownloadResource}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AttachmentDownloadResourceFactory extends Restlet {
     private final Injector injector;
@@ -27,11 +26,11 @@ public class AttachmentDownloadResourceFactory extends Restlet {
 
     /**
      * Instances of DAO and factory should be thread-safe as they are used by multiple instances of resources serving concurrent requests.
-     * 
+     *
      */
     public AttachmentDownloadResourceFactory(final String location, final Injector injector) {
         this.injector = injector;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
         this.location = location;
     }
 

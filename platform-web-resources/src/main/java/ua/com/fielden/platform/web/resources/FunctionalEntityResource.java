@@ -35,7 +35,7 @@ public class FunctionalEntityResource<T extends AbstractEntity<?>, DAO extends I
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
         try {
-            final T entity = restUtil.restoreJSONEntity(envelope, entityFactory, dao.getEntityType());
+            final T entity = restUtil.restoreJSONEntity(envelope, dao.getEntityType());
             // TODO: This validation does not really validate anything since restored entity would not have anything validated,
             //       so a full revalidation is required to be enforced for every property.
             //       However, since validation happens at the client side (only clients controlled by FMS)
@@ -46,14 +46,14 @@ public class FunctionalEntityResource<T extends AbstractEntity<?>, DAO extends I
                 return restUtil.singleJSONRepresentation(dao.save(entity));
             } else {
                 //getResponse().setEntity(restUtil.resultRepresentation(validationResult));
-                return restUtil.resultJSONRepresentation(validationResult, entityFactory);
+                return restUtil.resultJSONRepresentation(validationResult);
             }
         } catch (final Exception ex) {
             ex.printStackTrace();
             getResponse().setStatus(Status.CLIENT_ERROR_CONFLICT);
             final String msg = !StringUtils.isEmpty(ex.getMessage()) ? ex.getMessage() : "Exception does not contain any specific message.";
             //getResponse().setEntity(restUtil.errorRepresentation(msg));
-            return restUtil.errorJSONRepresentation(msg, entityFactory);
+            return restUtil.errorJSONRepresentation(msg);
         }
     }
 }

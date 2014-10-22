@@ -149,8 +149,10 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
 
                                 try {
                                     final PrintWriter out0 = new PrintWriter("entities.js");
-                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper(sdf, entityFactory) {
-                                        @Override
+                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper(sdf, entityFactory, () -> new ArrayList<Class<?>>()) {
+ 					private static final long serialVersionUID = 1L;
+
+					@Override
                                         protected void registerAbstractEntitySerialiser() {
                                             addSerialiser(AbstractEntity.class, new AbstractEntityToGeoJsonSerialiser());
                                         }
@@ -189,8 +191,11 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
 
                                 try {
                                     final PrintWriter out0 = new PrintWriter("entityCentre.js");
-                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper(entityFactory) {
-                                        @Override
+                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper(entityFactory, () -> new ArrayList<Class<?>>()) {
+
+                                	private static final long serialVersionUID = 1L;
+
+					@Override
                                         protected void registerAbstractEntitySerialiser() {
                                             addSerialiser(AbstractEntity.class, new AbstractEntityToGeoJsonSerialiser());
                                         }

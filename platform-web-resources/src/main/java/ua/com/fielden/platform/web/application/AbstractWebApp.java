@@ -21,6 +21,8 @@ import ua.com.fielden.platform.web.FunctionalEntityResourceFactory;
 import ua.com.fielden.platform.web.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.WebAppConfig;
 import ua.com.fielden.platform.web.WebModelResourceFactory;
+import ua.com.fielden.platform.web.WebViewResourceFactory;
+import ua.com.fielden.platform.web.model.WebModel;
 
 import com.google.inject.Injector;
 
@@ -72,6 +74,7 @@ public abstract class AbstractWebApp extends Application {
             final String author,
             final String username) {
         super(context);
+        WebModel.setAppSpecificResourcePath(resourcePaths[0]);
         //        this.platformJsScriptsLocation = "../../tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
         //        this.platformVendorJsScriptsLocation = "../../tg/platform-web-ui/src/main/resources/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
@@ -107,13 +110,14 @@ public abstract class AbstractWebApp extends Application {
         attachCentreResources(router, webAppConfig);
 
         // Registering web models.
-        attachWebModelResources(router, webAppConfig);
+        attachCustomWebViewResources(router, webAppConfig);
 
         // TODO Register entity masters and other custom views.
 
         // Attach resource for entity centre query runner.
         // TODO This is a spike resource. Must be replaced with generic functional entity resource.
         router.attach("/users/{username}/QueryRunner", new FunctionalEntityResourceFactory<QueryRunner, IQueryRunner>(IQueryRunner.class, injector));
+        attachFunctionalEntities(router, injector);
 
         // Register resources those are in resource paths.
         attacheResources(router);
@@ -122,15 +126,24 @@ public abstract class AbstractWebApp extends Application {
     }
 
     /**
+     * Attach custom functional entities to the router.
+     *
+     * @param router
+     * @param injector
+     */
+    protected abstract void attachFunctionalEntities(final Router router, final Injector injector);
+
+    /**
      * Configures router for entity centre resource.
      *
      * @param router
      * @param webAppConfig
      *            - holds the entity centre configurations.
      */
-    private void attachWebModelResources(final Router router, final WebAppConfig webAppConfig) {
+    private void attachCustomWebViewResources(final Router router, final WebAppConfig webAppConfig) {
         logger.info("\t\tWeb models resources (generated) attaching...");
         router.attach("/webmodel/{modelName}", new WebModelResourceFactory(webAppConfig.getWebModels()));
+        router.attach("/webview/{webViewName}", new WebViewResourceFactory(webAppConfig.getCustomViews()));
     }
 
     /**

@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.FunctionalEntityResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -25,7 +24,7 @@ public class FunctionalEntityResourceFactory<T extends AbstractEntity<?>, DAO ex
     public FunctionalEntityResourceFactory(final Class<DAO> daoType, final Injector injector) {
 	this.daoType = daoType;
 	this.injector = injector;
-	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+	this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
     @Override

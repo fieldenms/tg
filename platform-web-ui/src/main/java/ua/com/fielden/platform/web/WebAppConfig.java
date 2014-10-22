@@ -6,14 +6,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javafx.scene.web.WebView;
-
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.master.EntityMaster;
 import ua.com.fielden.platform.web.model.WebModel;
+import ua.com.fielden.platform.web.view.AbstractWebView;
 
 /**
  * The web application configurator. Allows one to specify which entity centre, entity master and other custom parameters for the application.
@@ -42,7 +41,7 @@ public class WebAppConfig{
      */
     private final Map<String, WebModel> webModels = new LinkedHashMap<>();
     private final List<EntityMaster> masters = new ArrayList<>();
-    private final List<WebView> customViews = new ArrayList<>();
+    private final Map<String, AbstractWebView<?>> customViews = new LinkedHashMap<>();
 
     /**
      * Creates web application instance and initialises it with application name.
@@ -137,6 +136,16 @@ public class WebAppConfig{
     }
 
     /**
+     * Adds new custom {@link AbstractWebView} to this web application configuration.
+     *
+     * @param webView
+     */
+    public void addCustomView(final AbstractWebView<?> webView) {
+	customViews.put(webView.getClass().getSimpleName(), webView);
+	webModels.put(webView.getWebModel().getClass().getSimpleName(), webView.getWebModel());
+    }
+
+    /**
      * Returns registered entity centres.
      *
      * @return
@@ -146,12 +155,12 @@ public class WebAppConfig{
     }
 
     /**
-     * Adds new {@link WebModel} instance to this web application configuration.
+     * Returns registered custom views.
      *
-     * @param centre
+     * @return
      */
-    public void addWebModel(final WebModel webModel) {
-	webModels.put(webModel.getClass().getSimpleName(), webModel);
+    public Map<String, AbstractWebView<?>> getCustomViews() {
+	return Collections.unmodifiableMap(customViews);
     }
 
     /**
@@ -185,9 +194,10 @@ public class WebAppConfig{
 	// TODO consider the ability to create menu item template for menu generator.
 	final List<String> menuBuilder = new ArrayList<>();
 	centres.forEach((key, value) -> {
-	   menuBuilder.add("<li ng-class=\"navClass('centre/"+
-		   		key + "')\"><a href=\"#/centre/"+
-		   key + "\">" + value.getName() + "</a></li>");
+	   menuBuilder.add("<li ng-class=\"navClass('centre/" + key + "')\" class=\"list-group-item\"><a href=\"#/centre/" + key + "\">" + value.getName() + "</a></li>");
+	});
+	customViews.forEach((key, value) -> {
+	    menuBuilder.add("<li ng-class=\"navClass('webview/" + key + "')\" class=\"list-group-item\"><a href=\"#/webview/" + key + "\">" + value.getName() + "</a></li>");
 	});
 	return StringUtils.join(menuBuilder, "\n");
     }

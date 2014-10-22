@@ -10,7 +10,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.EntityQueryExportResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -19,9 +18,9 @@ import com.google.inject.Injector;
 /**
  * This is {@link Restlet} implementation that provides logic for correct entity export resource instantiation. Specifically, it should be used to instantiate
  * {@link EntityQueryExportResource} for specific entity types.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntityQueryExportResourceFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends Restlet {
     private final Class<DAO> daoType;
@@ -35,7 +34,7 @@ public class EntityQueryExportResourceFactory<T extends AbstractEntity<?>, DAO e
     public EntityQueryExportResourceFactory(final Router router, final Class<DAO> daoType, final Injector injector) {
         this.daoType = daoType;
         this.injector = injector;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
         this.router = router;
     }
 

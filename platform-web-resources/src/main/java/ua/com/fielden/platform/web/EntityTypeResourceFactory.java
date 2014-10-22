@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.EntityQueryResource;
 import ua.com.fielden.platform.web.resources.EntityTypeResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -21,9 +20,9 @@ import com.google.inject.Injector;
 /**
  * This is {@link Restlet} implementation that provides logic for correct entity oriented resource instantiation. Specifically, it should be used to instantiate
  * {@link EntityTypeResource} for specific entity types.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class EntityTypeResourceFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends Restlet {
     private final Class<DAO> daoType;
@@ -40,7 +39,7 @@ public class EntityTypeResourceFactory<T extends AbstractEntity<?>, DAO extends 
         this.injector = injector;
         this.factory = factory;
         this.router = router;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
     @Override

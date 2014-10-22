@@ -23,7 +23,6 @@ import org.restlet.util.Series;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
@@ -34,6 +33,7 @@ import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
 import ua.com.fielden.platform.snappy.SnappyQuery;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.inject.Inject;
 
 /**
  * This is a convenience class providing some common routines used in the implementation of web-resources.
@@ -49,8 +49,13 @@ public class RestServerUtil {
     /** An application wide private key */
     private String appWidePrivateKey;
 
-    public RestServerUtil(final ISerialiser serialiser) {
+    // TODO will move to seriliser.
+    private final TgObjectMapper jsonSerialiser;
+
+    @Inject
+    public RestServerUtil(final ISerialiser serialiser, final TgObjectMapper jsonSerialiser) {
         this.serialiser = serialiser;
+        this.jsonSerialiser = jsonSerialiser;
     }
 
     private final Logger logger = Logger.getLogger(RestServerUtil.class);
@@ -100,13 +105,12 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public Representation errorJSONRepresentation(final String string, final EntityFactory entityFactory){
+    public Representation errorJSONRepresentation(final String string){
         logger.debug("Start building error JSON representation:" + new DateTime());
         //final byte[] bytes = serialiser.serialise(new Result(null, new Exception(string)), SerialiserEngine.JACKSON);
-        final TgObjectMapper mapper = new TgObjectMapper(entityFactory);
         byte[] bytes = new byte[0];
 	try {
-	    bytes = mapper.writeValueAsBytes(new Result(null, new Exception(string)));
+	    bytes = jsonSerialiser.writeValueAsBytes(new Result(null, new Exception(string)));
 	} catch (final JsonProcessingException e) {
 	    e.printStackTrace();
 	}
@@ -147,11 +151,10 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public Representation errorJSONRepresentation(final Exception ex, final EntityFactory entityFactory) throws JsonProcessingException {
+    public Representation errorJSONRepresentation(final Exception ex) throws JsonProcessingException {
         logger.debug("Start building error JSON representation:" + new DateTime());
         //final byte[] bytes = serialiser.serialise(new Result(ex), SerialiserEngine.JACKSON);
-        final TgObjectMapper mapper = new TgObjectMapper(entityFactory);
-        final byte[] bytes = mapper.writeValueAsBytes(new Result(ex));
+        final byte[] bytes = jsonSerialiser.writeValueAsBytes(new Result(ex));
         logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/ );
     }
@@ -176,11 +179,10 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public Representation resultJSONRepresentation(final Result result, final EntityFactory entityFactory) throws JsonProcessingException {
+    public Representation resultJSONRepresentation(final Result result) throws JsonProcessingException {
         logger.debug("Start building result JSON representation:" + new DateTime());
         //final byte[] bytes = serialiser.serialise(result, SerialiserEngine.JACKSON);
-        final TgObjectMapper mapper = new TgObjectMapper(entityFactory);
-        final byte[] bytes = mapper.writeValueAsBytes(result);
+        final byte[] bytes = jsonSerialiser.writeValueAsBytes(result);
         logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM /* , bytes.length */);
     }
@@ -289,12 +291,11 @@ public class RestServerUtil {
             // create a Result enclosing entity list
             final Result result = entity != null ? new Result(entity, "OK") : new Result(null, new Exception("Could not find entity."));
             //final byte[] bytes = serialiser.serialise(result, SerialiserEngine.JACKSON);
-            final TgObjectMapper mapper = new TgObjectMapper(entity.getEntityFactory());
-            final byte[] bytes = mapper.writeValueAsBytes(result);
+            final byte[] bytes = jsonSerialiser.writeValueAsBytes(result);
             return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/ );
         } catch (final Exception ex) {
             logger.error(ex);
-            return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage(), entity.getEntityFactory());
+            return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
         }
     }
 
@@ -371,9 +372,8 @@ public class RestServerUtil {
      * @return
      * @throws Exception
      */
-    public <T extends AbstractEntity> T restoreJSONEntity(final Representation representation, final EntityFactory entityFactory, final Class<T> type) throws Exception {
-	final TgObjectMapper mapper = new TgObjectMapper(entityFactory);
-	return mapper.readValue(representation.getStream(), type);
+    public <T extends AbstractEntity> T restoreJSONEntity(final Representation representation, final Class<T> type) throws Exception {
+	return jsonSerialiser.readValue(representation.getStream(), type);
     }
 
     /**
