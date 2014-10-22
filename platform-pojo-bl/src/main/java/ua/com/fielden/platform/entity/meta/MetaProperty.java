@@ -691,7 +691,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      * @return
      */
     public final T getValue() {
-        return (T) entity.get(name);
+        return entity.<T>get(name);
     }
 
     /**
