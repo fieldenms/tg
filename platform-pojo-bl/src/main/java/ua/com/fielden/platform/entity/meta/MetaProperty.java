@@ -1122,7 +1122,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      *
      * @return
      */
-    public IAfterChangeEventHandler<?> getAceHandler() {
+    public IAfterChangeEventHandler<T> getAceHandler() {
         return aceHandler;
     }
 

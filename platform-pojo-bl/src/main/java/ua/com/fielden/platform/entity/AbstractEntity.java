@@ -675,12 +675,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = collectValidators(metaPropertyFactory, field, type, isCollectional, declatedValidationAnnotations);
                 // create ACE handler
                 //logger.debug("Initiating meta-property ACE handler for " + field.getName());
-                final IAfterChangeEventHandler definer = metaPropertyFactory.create(this, field);
+                final IAfterChangeEventHandler<?> definer = metaPropertyFactory.create(this, field);
                 // create meta-property
                 //logger.debug("Creating meta-property for " + field.getName());
                 final boolean isUpperCase = AnnotationReflector.isAnnotationPresent(field, UpperCase.class);
                 //logger.debug("IS_UPPERCASE (" + field.getName() + ") : " + isUpperCase);
-                final MetaProperty metaProperty = new MetaProperty(this, field, type, isKey, isCollectional, propertyAnnotationType, AnnotationReflector.isAnnotationPresent(field, Calculated.class), isUpperCase, declatedValidationAnnotations, validators, definer, extractDependentProperties(field, fields));
+                final MetaProperty<?> metaProperty = new MetaProperty(this, field, type, isKey, isCollectional, propertyAnnotationType, AnnotationReflector.isAnnotationPresent(field, Calculated.class), isUpperCase, declatedValidationAnnotations, validators, definer, extractDependentProperties(field, fields));
                 // define meta-property properties used most commonly for UI construction: required, editable, title and desc //
                 //logger.debug("Initialising meta-property for " + field.getName());
                 initProperty(keyMembers, field, metaProperty);

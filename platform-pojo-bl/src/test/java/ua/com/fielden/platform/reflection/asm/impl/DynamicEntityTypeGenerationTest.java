@@ -279,15 +279,15 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void test_observation_of_setter_for_new_property_in_instance_of_generated_entity_type() throws Exception {
-        final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd1, pd1, pd1).endModification();
-        module.getDomainMetaPropertyConfig().setDefiner(newType, NEW_PROPERTY_1, new IAfterChangeEventHandler() {
+        final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity<?>>) cl.startModification(Entity.class.getName()).addProperties(pd1, pd1, pd1).endModification();
+        module.getDomainMetaPropertyConfig().setDefiner(newType, NEW_PROPERTY_1, new IAfterChangeEventHandler<Object>() {
             @Override
-            public void handle(final MetaProperty property, final Object entityPropertyValue) {
+            public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
                 observed = true;
             }
         });
 
-        final AbstractEntity entity = factory.newByKey(newType, "key");
+        final AbstractEntity<?> entity = factory.newByKey(newType, "key");
         entity.set(NEW_PROPERTY_1, new Money("23.32"));
         assertTrue("Setter for the new property should have been observed.", observed);
     }

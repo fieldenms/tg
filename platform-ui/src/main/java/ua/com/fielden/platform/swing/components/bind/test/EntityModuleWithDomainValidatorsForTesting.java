@@ -146,9 +146,9 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
             @Override
             public IAfterChangeEventHandler<?> create(final AbstractEntity<?> entity, final Field propertyField) throws Exception {
                 if ("vehicle".equals(propertyField.getName())) {
-                    return new IAfterChangeEventHandler() {
+                    return new IAfterChangeEventHandler<Object>() {
                         @Override
-                        public void handle(final MetaProperty property, final Object entityPropertyValue) {
+                        public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
                             System.out.println("\tdefine...");
                             try {
                                 Thread.sleep(10000);
@@ -161,10 +161,10 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
                         };
                     };
                 } else {
-                    return new IAfterChangeEventHandler() {
+                    return new IAfterChangeEventHandler<Object>() {
                         @Override
-                        public void handle(final MetaProperty property, final Object entityPropertyValue) {
-                            final MetaProperty metaProperty = entity.getProperty(propertyField.getName());
+                        public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
+                            final MetaProperty<Object> metaProperty = entity.getProperty(propertyField.getName());
                             if (metaProperty != null) {
                                 metaProperty.setEditable(true);
                             }

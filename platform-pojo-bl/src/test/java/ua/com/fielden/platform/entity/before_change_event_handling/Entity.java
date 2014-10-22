@@ -28,6 +28,8 @@ import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
  */
 @KeyType(String.class)
 public class Entity extends AbstractEntity<String> {
+    private static final long serialVersionUID = 1L;
+
     @IsProperty
     @MapTo
     @Title(value = "Property 1", desc = "Description")
