@@ -29,8 +29,6 @@ import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
 import ua.com.fielden.platform.entity.validation.MaxValueValidator;
-import ua.com.fielden.platform.entity.validation.NotEmptyValidator;
-import ua.com.fielden.platform.entity.validation.NotNullValidator;
 import ua.com.fielden.platform.entity.validation.RangePropertyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
@@ -47,9 +45,9 @@ import com.google.inject.Injector;
 
 /**
  * Base implementation for {@link IMetaPropertyFactory}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactory {
 
@@ -58,8 +56,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     public static final String INJECTOR_IS_MISSING = "Meta-property factory is not fully initialised -- injector is missing";
     public static final String HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER = "BCE/ACE handlers should not have a another BCE/ACE handler as its parameter.";
 
-    protected final NotNullValidator notNullValidator = new NotNullValidator();
-    protected final NotEmptyValidator notEmptyValidator = new NotEmptyValidator();
     protected final FinalValidator finalValidator = new FinalValidator();
     protected final Map<Class<? extends AbstractEntity<?>>, EntityExistsValidator> entityExistsValidators = Collections.synchronizedMap(new HashMap<>());
     protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = Collections.synchronizedMap(new HashMap<Integer, GreaterOrEqualValidator>());
@@ -103,10 +99,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         }
         // try to instantiate validator
         switch (value) {
-        case NOT_NULL:
-            return new IBeforeChangeEventHandler[] { notNullValidator };
-        case NOT_EMPTY:
-            return new IBeforeChangeEventHandler[] { notEmptyValidator };
+        //case NOT_NULL:
+        //    return new IBeforeChangeEventHandler[] { notNullValidator };
         case ENTITY_EXISTS:
             return new IBeforeChangeEventHandler[] { createEntityExists((EntityExists) annotation) };
         case FINAL:
@@ -135,7 +129,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     /**
      * Creates validators declared as BCE handlers.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param annotation
@@ -183,7 +177,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     /**
      * Initialises non-ordinary handler parameters as provided in {@link Handler#non_ordinary()}.
-     * 
+     *
      * @param entity
      * @param hd
      * @param handler
@@ -211,7 +205,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     /**
      * Initialises handler parameters of type Class as provided in {@link Handler#clazz()}.
-     * 
+     *
      * @param entity
      * @param hd
      * @param handler
@@ -238,7 +232,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     /**
      * Initialises integer handler parameters as provided in {@link Handler#integer()}.
-     * 
+     *
      * @param entity
      * @param hd
      * @param handler
@@ -257,7 +251,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     /**
      * Initialises double handler parameters as provided in {@link Handler#dbl()}.
-     * 
+     *
      * @param entity
      * @param hd
      * @param handler
@@ -276,7 +270,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     /**
      * Initialises {@link String} handler parameters as provided in {@link Handler#str()}.
-     * 
+     *
      * @param entity
      * @param hd
      * @param handler
@@ -295,7 +289,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     /**
      * Initialises {@link Date} handler parameters as provided in {@link Handler#date()}.
-     * 
+     *
      * @param entity
      * @param hd
      * @param handler
@@ -314,7 +308,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     /**
      * Initialises {@link DateTime} handler parameters as provided in {@link Handler#date_time()}.
-     * 
+     *
      * @param entity
      * @param hd
      * @param handler
@@ -333,7 +327,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     /**
      * Initialises {@link Money} handler parameters as provided in {@link Handler#money()}.
-     * 
+     *
      * @param entity
      * @param hd
      * @param handler
@@ -407,7 +401,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         final Class<?> type = entity.getType();
         Map<String, IAfterChangeEventHandler<?>> typeHandlers = afterChangeEventHandlers.get(type);
         if (typeHandlers == null) {
-            typeHandlers = new HashMap<String, IAfterChangeEventHandler<?>>();
+            typeHandlers = new HashMap<>();
             afterChangeEventHandlers.put(entity.getType(), typeHandlers);
         }
         IAfterChangeEventHandler<?> propHandler = typeHandlers.get(propertyName);

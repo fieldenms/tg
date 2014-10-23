@@ -17,9 +17,9 @@ import com.google.inject.Inject;
 
 /**
  * RAO driven {@link IMetaPropertyFactory} implementation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class RaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
 

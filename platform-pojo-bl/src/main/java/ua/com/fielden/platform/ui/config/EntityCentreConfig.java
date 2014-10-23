@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.ui.config;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -9,9 +10,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 
@@ -32,10 +31,10 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
  * together provide entity centre configuration uniqueness.<br>
  * However, due to the fact that non-base users use their and inherited configurations there can be a situation where there are two configurations with the same title under the
  * same menu -- one belonging to a base user, another -- to a derive user.<br>
- * 
+ *
  * This situation can either be restricted at the application level upon saving of a configuration instance, or allowed, which could potentially lead to a confusion by user seeing
  * two menu items with the same title.
- * 
+ *
  * @author TG Team
  */
 @KeyType(DynamicEntityKey.class)
@@ -98,7 +97,6 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     }
 
     @Observable
-    @NotNull
     @EntityExists(User.class)
     public EntityCentreConfig setOwner(final User owner) {
         this.owner = owner;
@@ -110,7 +108,6 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     }
 
     @Observable
-    @NotNull
     public EntityCentreConfig setTitle(final String title) {
         this.title = title;
         return this;

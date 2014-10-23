@@ -12,13 +12,13 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Test validator for {@link AbstractBaseClass} intProp.
- * 
+ *
  * @author Yura
  */
 public class DoublePropValidator implements IBeforeChangeEventHandler<Double> {
 
     @Override
-    public Result handle(final MetaProperty property, final Double newValue, final Double oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Double> property, final Double newValue, final Double oldValue, final Set<Annotation> mutatorAnnotations) {
         return Result.successful(property.getEntity());
     }
 

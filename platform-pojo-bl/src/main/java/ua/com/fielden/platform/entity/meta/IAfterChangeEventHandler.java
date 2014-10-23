@@ -6,18 +6,18 @@ package ua.com.fielden.platform.entity.meta;
  * could use a value of the associated with this meta-property entity property.
  * <p>
  * <b>IMPORTANT:</b> <i>Implementations of this contract must be immutable due to caching of handler instances for reuse on multiple entities.</i>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public interface IAfterChangeEventHandler<T> {
     /**
      * Should implement ACE handling logic.
-     * 
+     *
      * @param property
      *            -- meta property associated with a property, which is the source of ACE
      * @param entityPropertyValue
      *            -- the current value of the property
      */
-    void handle(final MetaProperty property, final T entityPropertyValue);
+    void handle(final MetaProperty<T> property, final T entityPropertyValue);
 }

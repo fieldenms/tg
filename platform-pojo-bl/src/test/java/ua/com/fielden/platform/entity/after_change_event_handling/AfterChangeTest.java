@@ -20,10 +20,10 @@ import com.google.inject.Injector;
 
 /**
  * A test case to ensure correct construction and invocation of {@link AfterChange} declarations.
- * 
- * 
+ *
+ *
  * @author TG Team
- * 
+ *
  */
 public class AfterChangeTest {
     private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
@@ -34,11 +34,11 @@ public class AfterChangeTest {
         final Entity entity = factory.newByKey(Entity.class, "key");
         assertNotNull("Should have been created", entity);
 
-        final IAfterChangeEventHandler handler1 = entity.getProperty("property1").getAceHandler();
+        final IAfterChangeEventHandler<String> handler1 = entity.<String>getProperty("property1").getAceHandler();
         assertNotNull("Incorrect number of handlers.", handler1);
         assertEquals("Incorrect handler type", AfterChangeEventHandler.class, handler1.getClass());
 
-        final IAfterChangeEventHandler handler2 = entity.getProperty("property2").getAceHandler();
+        final IAfterChangeEventHandler<String> handler2 = entity.<String>getProperty("property2").getAceHandler();
         assertNotNull("Incorrect number of handlers.", handler2);
         assertEquals("Incorrect handler type", InvalidAfterChangeEventHandler.class, handler2.getClass());
     }

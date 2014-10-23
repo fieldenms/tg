@@ -12,9 +12,9 @@ import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 
-public class AfterChangeAnnotation {
+public class AfterChangeAnnotation<T> {
 
-    private final Class<? extends IAfterChangeEventHandler> value;
+    private final Class<? extends IAfterChangeEventHandler<T>> value;
 
     //    private StrParam[] str;
     //    private ClassParam[] non_ordinary;
@@ -25,7 +25,7 @@ public class AfterChangeAnnotation {
     //    private DateParam[] date;
     //    private ClassParam[] clazz;
 
-    public AfterChangeAnnotation(final Class<? extends IAfterChangeEventHandler> value) {
+    public AfterChangeAnnotation(final Class<? extends IAfterChangeEventHandler<T>> value) {
         this.value = value;
     }
 
@@ -38,7 +38,7 @@ public class AfterChangeAnnotation {
             }
 
             @Override
-            public Class<? extends IAfterChangeEventHandler> value() {
+            public Class<? extends IAfterChangeEventHandler<?>> value() {
                 return value;
             }
 
