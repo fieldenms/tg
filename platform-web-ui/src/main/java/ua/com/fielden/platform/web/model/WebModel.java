@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.web.WebUtils;
 import ua.com.fielden.platform.web.action.AbstractWebAction;
+import ua.com.fielden.platform.web.minijs.JsCode;
 
 /**
  * Represents the contract for web UI models.
@@ -111,7 +112,7 @@ public class WebModel {
         return sb.toString();
     }
 
-    private String createAction(final String postAction, final String onError) {
+    private String createAction(final JsCode postAction, final JsCode onError) {
         final StringBuilder sb = new StringBuilder();
 
         sb.append(" functionalEntity.$action(function(result) { \n");

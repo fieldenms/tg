@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.action;
 
 import ua.com.fielden.platform.entity.functional.IFunctionalEntity;
+import ua.com.fielden.platform.web.minijs.JsCode;
 
 /**
  * Represents the action that is to be invoked from Web UI to the server resource represented with {@link IFunctionalEntity}.
@@ -29,19 +30,19 @@ public abstract class AbstractWebAction<F extends IFunctionalEntity> {
     /**
      * Will be invoked before sending request to {@link IFunctionalEntity} server resource.
      */
-    public abstract String preAction();
+    public abstract JsCode preAction();
 
     /**
      * Will be invoked after receiving result from {@link IFunctionalEntity} server resource.
      * The name of the result should be 'result' by convenience.
      */
-    public abstract String postAction();
+    public abstract JsCode postAction();
 
     /**
      * Will be invoked when exception raised during action execution or pre/post action execution.
      * The name of the error should be 'error' by convenience.
      */
-    public abstract String onError();
+    public abstract JsCode onError();
 
     /**
      * The generated counterpart of this method sets the <code>result</code> value for the scope object's property with the specified <code>propertyName</code>.
