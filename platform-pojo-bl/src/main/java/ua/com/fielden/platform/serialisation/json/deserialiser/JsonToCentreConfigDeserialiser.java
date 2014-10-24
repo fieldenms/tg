@@ -39,16 +39,18 @@ public class JsonToCentreConfigDeserialiser extends JsonDeserializer<Lightweight
     @SuppressWarnings("unchecked")
     @Override
     public LightweightCentre deserialize(final JsonParser parser, final DeserializationContext context) throws IOException, JsonProcessingException {
-        final JsonNode node = parser.readValueAsTree();
-        final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) findClass(node.get("entityType").asText());
-        final Map<String, CritProp> criteriaProperties = node//
-        .path("criteria")//
-        .traverse(mapper).readValueAs(new TypeReference<Map<String, CritProp>>() {
-        });
-        final Map<String, ResultProperty> resultProperties = node//
-        .path("fetch").traverse(mapper).readValueAs(new TypeReference<Map<String, ResultProperty>>() {
-        });
-        return new LightweightCentre(entityType, criteriaProperties, resultProperties);
+	final JsonNode node = parser.readValueAsTree();
+	final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) findClass(node.get("entityType").asText());
+	final Map<String, CritProp> criteriaProperties = node//
+		.path("criteria")//
+		.traverse(mapper).readValueAs(
+			new TypeReference<Map<String, CritProp>>() {
+		});
+	final Map<String, ResultProperty> resultProperties = node//
+		.path("fetch").traverse(mapper).readValueAs(
+			new TypeReference<Map<String, ResultProperty>>() {
+		});
+	return new LightweightCentre(entityType, criteriaProperties, resultProperties);
     }
 
     public static class LightweightCentre {

@@ -8,6 +8,6 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
  * @author TG Team
  *
  */
-public abstract class WebComponent implements IRenderable {
+public abstract class AbstractWebComponent implements IRenderable {
 
 }

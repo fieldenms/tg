@@ -5,9 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
@@ -82,12 +80,6 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
 
     @Override
     public IPage<LastLevelEntity> firstPage(final QueryExecutionModel<LastLevelEntity, ?> query, final int pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IPage<LastLevelEntity> firstPage(final QueryExecutionModel<LastLevelEntity, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
     }

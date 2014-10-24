@@ -8,9 +8,7 @@ import java.util.Set;
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.provider.IUserController;
@@ -147,12 +145,6 @@ public class UserControllerForTestPurposes implements IUserController {
 
     @Override
     public IPage<User> firstPage(final QueryExecutionModel<User, ?> query, final int pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IPage<User> firstPage(final QueryExecutionModel<User, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
     }

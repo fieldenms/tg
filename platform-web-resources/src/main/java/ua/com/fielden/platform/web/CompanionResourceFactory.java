@@ -8,7 +8,6 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.dao.IComputationMonitor;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.CompanionResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -22,7 +21,7 @@ public class CompanionResourceFactory extends Restlet {
     public CompanionResourceFactory(final IComputationMonitor resource, final Injector injector) {
         this.resource = resource;
         this.injector = injector;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
     @Override

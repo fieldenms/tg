@@ -39,7 +39,7 @@
 	<tr>
 		<th ng-repeat="prop in centre.centreConfig.resultProperties">{{prop.title}}</th>
 	</tr>
-	<tr ng-repeat="entity in pageData.page.data">
+	<tr ng-repeat="entity in pageData.page.results">
 		<td ng-repeat="prop in centre.centreConfig.resultProperties">{{getValueForEntityGrid(entity, prop)}}</td>
 	</tr>
 </table>

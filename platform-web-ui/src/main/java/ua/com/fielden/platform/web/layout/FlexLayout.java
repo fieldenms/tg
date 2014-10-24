@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.layout;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.web.component.WebComponent;
+import ua.com.fielden.platform.web.component.AbstractWebComponent;
 import ua.com.fielden.platform.web.interfaces.ILayout;
 
 /**
@@ -23,13 +23,13 @@ public class FlexLayout implements ILayout<String>{
     }
 
     @Override
-    public FlexLayout add(final WebComponent component) {
+    public FlexLayout add(final AbstractWebComponent component) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public FlexLayout add(final WebComponent component, final String constraints) {
+    public FlexLayout add(final AbstractWebComponent component, final String constraints) {
 	// TODO Auto-generated method stub
 	return null;
     }

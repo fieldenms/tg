@@ -8,7 +8,6 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.snappy.ISnappyDao;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.SnappyQueryResource;
@@ -18,9 +17,9 @@ import com.google.inject.Injector;
 /**
  * This is {@link Restlet} implementation that provides logic for correct snappy query oriented resource instantiation. Specifically, it should be used to instantiate
  * {@link SnappyQueryResource}.
- * 
+ *
  * @author Jhou
- * 
+ *
  */
 public class SnappyQueryRestlet<T extends AbstractEntity> extends Restlet {
     private final Injector injector;
@@ -31,7 +30,7 @@ public class SnappyQueryRestlet<T extends AbstractEntity> extends Restlet {
      */
     public SnappyQueryRestlet(final Injector injector) {
         this.injector = injector;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
     @Override

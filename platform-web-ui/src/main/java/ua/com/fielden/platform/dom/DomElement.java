@@ -32,6 +32,11 @@ public class DomElement {
     private DomElement parent = null;
 
     /**
+     * Represent the inner html text.
+     */
+    private String text;
+
+    /**
      * Creates new {@link DomElement} instance with specified tag name.
      *
      * @param tagName - the tag name of this element.
@@ -96,6 +101,17 @@ public class DomElement {
      */
     public DomElement getParent() {
 	return parent;
+    }
+
+    /**
+     * Set the inner text for this {@link DomElement}.
+     *
+     * @param text
+     * @return
+     */
+    public DomElement text(final String text) {
+	this.text = text;
+	return this;
     }
 
     /**
@@ -258,6 +274,7 @@ public class DomElement {
     public String toString() {
 	final String attributes = StringUtils.join(attrs.values(), " ");
 	return "<" + tagName + (StringUtils.isEmpty(attributes) ? "" : (" " + attributes)) + ">"
-		+ (children.isEmpty() ? "" : "\n" + StringUtils.join(children, "\n") + "\n") + "</" + tagName + ">";
+		+ (children.isEmpty() ? "" : "\n" + StringUtils.join(children, "\n") + "\n") + (StringUtils.isEmpty(text) ? "" : text)
+		+"</" + tagName + ">";
     };
 }
