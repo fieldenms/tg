@@ -58,7 +58,7 @@ public class StringValidatorTestCase {
     }
 
     @Test
-    public void email_address_is_not_required_so_null_values_should_not_be_permitted() {
+    public void email_address_is_not_required_so_null_values_should_be_permitted() {
         final EntityWithStringProperties entity = factory.newByKey(EntityWithStringProperties.class, "key1");
 
         final MetaProperty<String> emailProperty = entity.getProperty("email");

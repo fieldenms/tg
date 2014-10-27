@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
 import ua.com.fielden.platform.entity.annotation.mutator.DateTimeParam;
 import ua.com.fielden.platform.entity.annotation.mutator.DblParam;
+import ua.com.fielden.platform.entity.annotation.mutator.EnumParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
 import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
@@ -14,13 +15,13 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 
 /**
  * A factory for convenient instantiation of {@link Handler} annotations, which mainly should be used for dynamic property creation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class HandlerAnnotation {
 
-    private final Class<? extends IBeforeChangeEventHandler> value;
+    private final Class<? extends IBeforeChangeEventHandler<?>> value;
     private ClassParam[] non_ordinary = new ClassParam[] {};
     private ClassParam[] clazz = new ClassParam[] {};
     private IntParam[] integer = new IntParam[] {};
@@ -29,8 +30,9 @@ public class HandlerAnnotation {
     private DateParam[] date = new DateParam[] {};
     private DateTimeParam[] date_time = new DateTimeParam[] {};
     private MoneyParam[] money = new MoneyParam[] {};
+    private EnumParam[] enumeration = new EnumParam[] {};
 
-    public HandlerAnnotation(final Class<? extends IBeforeChangeEventHandler> value) {
+    public HandlerAnnotation(final Class<? extends IBeforeChangeEventHandler<?>> value) {
         this.value = value;
     }
 
@@ -74,6 +76,12 @@ public class HandlerAnnotation {
         return this;
     };
 
+    public HandlerAnnotation enumeration(final EnumParam[] values) {
+        this.enumeration = values;
+        return this;
+    };
+
+
     public Handler newInstance() {
         return new Handler() {
 
@@ -83,7 +91,7 @@ public class HandlerAnnotation {
             }
 
             @Override
-            public Class<? extends IBeforeChangeEventHandler> value() {
+            public Class<? extends IBeforeChangeEventHandler<?>> value() {
                 return value;
             }
 
@@ -126,6 +134,11 @@ public class HandlerAnnotation {
             public MoneyParam[] money() {
                 return money;
             }
+
+            @Override
+            public EnumParam[] enumeration() {
+                return enumeration;
+            }
         };
     }
 
@@ -138,7 +151,7 @@ public class HandlerAnnotation {
             }
 
             @Override
-            public Class<? extends IBeforeChangeEventHandler> value() {
+            public Class<? extends IBeforeChangeEventHandler<?>> value() {
                 return handler.value();
             }
 
@@ -181,6 +194,12 @@ public class HandlerAnnotation {
             public MoneyParam[] money() {
                 return handler.money();
             }
+
+            @Override
+            public EnumParam[] enumeration() {
+                return handler.enumeration();
+            }
+
         };
     }
 }
