@@ -413,7 +413,7 @@ public class Finder {
      * @return
      * @throws Exception
      */
-    public static Object findFieldValueByName(final Object instance, final String dotNotationExp) throws Exception {
+    public static <T> T findFieldValueByName(final Object instance, final String dotNotationExp) throws Exception {
         if (instance == null) {
             return null;
         }
@@ -425,7 +425,7 @@ public class Finder {
                 return null;
             }
         }
-        return value;
+        return (T) value;
     }
 
     /**

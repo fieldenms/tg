@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.type.BooleanType;
 import org.hibernate.type.Type;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -47,7 +48,7 @@ public class EntityFetcher {
     private final IFilter filter;
     private final String username;
     private final Logger logger = Logger.getLogger(this.getClass());
-   
+
     private final IUniversalConstants universalConstants;
 
     public EntityFetcher(final Session session, final EntityFactory entityFactory, final ICompanionObjectFinder coFinder, final DomainMetadata domainMetadata, final IFilter filter, final String username, final IUniversalConstants universalConstants) {
@@ -72,11 +73,11 @@ public class EntityFetcher {
             throw new IllegalStateException(e);
         }
     }
-    
+
     public <E extends AbstractEntity<?>> List<E> getLazyEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
         return getEntitiesOnPage(queryModel, pageNumber, pageCapacity, ProxyMode.LAZY);
     }
-    
+
     public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
         return getEntitiesOnPage(queryModel, pageNumber, pageCapacity, ProxyMode.STRICT);
     }
