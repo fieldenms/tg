@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.before_change_event_handling.Entity;
+import ua.com.fielden.platform.entity.before_change_event_handling.EnumForParams;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -56,6 +57,7 @@ public class AfterChangeTest {
         assertEquals("Incorrect parameter value.", StringConverter.toDateTime("2011-12-01 00:00:00"), handler.getDateTimeParam());
         assertEquals("Incorrect parameter value.", StringConverter.toMoney("12.36"), handler.getMoneyParam());
         assertEquals("Incorrect parameter value.", String.class, handler.getClassParam());
+        assertEquals("Incorrect parameter value.", EnumForParams.TWO, handler.getEnumParam());
     }
 
     @Test

@@ -454,6 +454,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             initDateHandlerParameters(entity, ach.date(), propHandler);
             initDateTimeHandlerParameters(entity, ach.date_time(), propHandler);
             initMoneyHandlerParameters(entity, ach.money(), propHandler);
+            initEnumHandlerParameters(entity, ach.enumeration(), propHandler);
 
             // associate handler with property name
             typeHandlers.put(propertyName, propHandler);

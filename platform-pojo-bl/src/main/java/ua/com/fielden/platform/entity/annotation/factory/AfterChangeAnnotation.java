@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
 import ua.com.fielden.platform.entity.annotation.mutator.DateTimeParam;
 import ua.com.fielden.platform.entity.annotation.mutator.DblParam;
+import ua.com.fielden.platform.entity.annotation.mutator.EnumParam;
 import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
 import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
@@ -15,15 +16,6 @@ import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 public class AfterChangeAnnotation<T> {
 
     private final Class<? extends IAfterChangeEventHandler<T>> value;
-
-    //    private StrParam[] str;
-    //    private ClassParam[] non_ordinary;
-    //    private MoneyParam[] money;
-    //    private IntParam[] integer;
-    //    private DblParam[] dbl;
-    //    private DateTimeParam[] dateTime;
-    //    private DateParam[] date;
-    //    private ClassParam[] clazz;
 
     public AfterChangeAnnotation(final Class<? extends IAfterChangeEventHandler<T>> value) {
         this.value = value;
@@ -80,6 +72,11 @@ public class AfterChangeAnnotation<T> {
             @Override
             public ClassParam[] clazz() {
                 return new ClassParam[0];
+            }
+
+            @Override
+            public EnumParam[] enumeration() {
+                return new EnumParam[0];
             }
         };
     }
