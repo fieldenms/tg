@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.GeneratedEntityQueryResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -32,7 +31,7 @@ public class GeneratedEntityQueryResourceFactory extends Restlet {
 
     public GeneratedEntityQueryResourceFactory(final Injector injector, final Router router) {
         this.injector = injector;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
         this.router = router;
     }
 

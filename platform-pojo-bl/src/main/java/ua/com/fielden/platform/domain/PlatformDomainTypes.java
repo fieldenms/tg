@@ -6,6 +6,11 @@ import java.util.List;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.functional.centre.CritProp;
+import ua.com.fielden.platform.entity.functional.centre.FetchProp;
+import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
+import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
+import ua.com.fielden.platform.entity.functional.paginator.Page;
 import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.migration.MigrationError;
 import ua.com.fielden.platform.migration.MigrationHistory;
@@ -43,5 +48,11 @@ public class PlatformDomainTypes {
         types.add(MigrationRun.class);
         types.add(MigrationHistory.class);
         types.add(MigrationError.class);
+        // The below is a functional entities provided for web UI. This might cause some problems when deserialising saved entity centres.
+        types.add(QueryRunner.class);
+        types.add(QueryEntity.class);
+        types.add(CritProp.class);
+        types.add(FetchProp.class);
+        types.add(Page.class);
     }
 }

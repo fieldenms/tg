@@ -12,9 +12,9 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation for EntityAggregates class used purely for internals of the EntityAggregatesDao.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @EntityType(EntityAggregates.class)
 public class CommonEntityAggregatesDao extends CommonEntityDao<EntityAggregates> implements IEntityDao<EntityAggregates> {

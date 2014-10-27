@@ -10,7 +10,6 @@ import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.EntityQueryResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -18,9 +17,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct {@link Attachment} query resource instantiation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AttachmentQueryResourceFactory extends Restlet {
     private final Injector injector;
@@ -33,7 +32,7 @@ public class AttachmentQueryResourceFactory extends Restlet {
     public AttachmentQueryResourceFactory(final Injector injector, final Router router) {
         this.injector = injector;
         this.router = router;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
     @Override

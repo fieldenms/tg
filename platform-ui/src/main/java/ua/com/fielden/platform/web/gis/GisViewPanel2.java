@@ -38,6 +38,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.javafx.gis.gps.IWebViewLoadedListener;
 import ua.com.fielden.platform.javafx.gis.gps.WebViewLoadEvent;
 import ua.com.fielden.platform.pagination.IPage;
@@ -84,7 +85,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
      *
      * @return
      */
-    public GisViewPanel2(final GpsGridAnalysisView2<T, ?> parentView, final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder) {
+    public GisViewPanel2(final GpsGridAnalysisView2<T, ?> parentView, final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder, final EntityFactory entityFactory) {
         this.parentView = parentView;
         this.egi = egi;
 
@@ -148,8 +149,10 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
 
                                 try {
                                     final PrintWriter out0 = new PrintWriter("entities.js");
-                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper(sdf) {
-                                        @Override
+                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper(sdf, entityFactory, () -> new ArrayList<Class<?>>()) {
+ 					private static final long serialVersionUID = 1L;
+
+					@Override
                                         protected void registerAbstractEntitySerialiser() {
                                             addSerialiser(AbstractEntity.class, new AbstractEntityToGeoJsonSerialiser());
                                         }
@@ -188,8 +191,11 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
 
                                 try {
                                     final PrintWriter out0 = new PrintWriter("entityCentre.js");
-                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper() {
-                                        @Override
+                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper(entityFactory, () -> new ArrayList<Class<?>>()) {
+
+                                	private static final long serialVersionUID = 1L;
+
+					@Override
                                         protected void registerAbstractEntitySerialiser() {
                                             addSerialiser(AbstractEntity.class, new AbstractEntityToGeoJsonSerialiser());
                                         }

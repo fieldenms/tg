@@ -36,9 +36,9 @@ import ua.com.fielden.platform.utils.Pair;
  * Base class for all RAO implementations. Provides REST-driven implementation of all {@link IEntityDao} functionality including Entity Query API and pagination.
  * <p>
  * Can be used as is when an ad-hoc instance of RAO is needed and entity type is known.
- * 
+ *
  * @author TG Team
- * 
+ *
  * @param <T>
  * @param <K>
  */
@@ -103,14 +103,6 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     @Override
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
         return new EntityQueryPage(model, new PageInfo(0, 0, pageCapacity));
-    }
-
-    /**
-     * Sends two POST request with {@link QueryExecutionModel} for data and {@link QueryExecutionModel} for summary. The resultant page will have both the data and the summary.
-     */
-    @Override
-    public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
-        return new EntityQueryPage(model, summaryModel, new PageInfo(0, 0, pageCapacity));
     }
 
     @Override
@@ -193,7 +185,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     /**
      * Sends a POST request to /entity-type-alias?page-capacity=pageCapacity&page-no=pageNumber with an envelope containing instance of {@link QueryExecutionModel}. The response
      * suppose to return an envelope containing entities resulting from the query.
-     * 
+     *
      * @param pageNumber
      *            -- numbers from a set of N+{0} indicate a page number to be retrieved; value of -1 (negative one) indicates the need for the last page.
      */
@@ -248,7 +240,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     /**
      * Sends a GET request to /entity-type-alias?page-capacity=pageCapacity&page-no=pageNumber with no envelope. The response suppose to return an envelope containing entities
      * resulting from the query.
-     * 
+     *
      * @param pageNumber
      *            -- numbers from a set of N+{0} indicate a page number to be retrieved; value of -1 (negative one) indicates the need for the last page.
      */
@@ -312,7 +304,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 
     /**
      * A convenient class capturing page stateful information, which is updated and reused when navigating between pages.
-     * 
+     *
      * @author TG Team
      */
     public static class PageInfo {
@@ -335,9 +327,9 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
      * serialised query.
      * <p>
      * If query is not provided (i.e. it is null) then page instantiation results in a GET method /entity-type-alias?page-capacity=pageCapacity&page-no=pageNumber.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     private class EntityQueryPage implements IPage<T> {
         private int pageNumber; // zero-based
@@ -619,7 +611,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 
     /**
      * Generates unique for a user token intended to register a companion web resource at the server end.
-     * 
+     *
      * @return
      */
     private String makeCoToken() {

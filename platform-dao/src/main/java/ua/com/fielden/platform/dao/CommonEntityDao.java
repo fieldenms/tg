@@ -68,7 +68,7 @@ import com.google.inject.Injector;
  */
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityDao<T> implements ISessionEnabled {
 
-    private Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = Logger.getLogger(this.getClass());
 
     private Session session;
 
@@ -453,6 +453,16 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
     }
 
+    /**
+     * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by the provided query model with appropriate summary model. This allows a query
+     * based pagination.
+     */
+    @Override
+    @SessionRequired
+    public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
+        return new EntityQueryPage(model, summaryModel, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
+    }
+
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
@@ -602,6 +612,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
+     * Calculates summary based on the assumption that <code>model</code> represents summary model for the type T.
+     */
+    private T calcSummary(final QueryExecutionModel<T, ?> model) {
+	final List<T> list = getAllEntities(model);
+        return list.size() == 1 ? list.get(0) : null;
+    }
+
+    /**
      * Implements pagination based on the provided query.
      *
      * @author TG Team
@@ -613,18 +631,29 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         private final int pageCapacity;
         private final List<T> data;
         private final QueryExecutionModel<T, ?> queryModel;
+        private final T summary;
 
         public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final int pageNumber, final int pageCapacity, final int numberOfPages) {
+            this(queryModel, (QueryExecutionModel<T, ?>) null, pageNumber, pageCapacity, numberOfPages);
+        }
+
+        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final QueryExecutionModel<T, ?> summaryModel, final int pageNumber, final int pageCapacity, final int numberOfPages) {
+            this(queryModel, summaryModel != null ? calcSummary(summaryModel) : null, pageNumber, pageCapacity, numberOfPages);
+        }
+
+        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final T summary, final int pageNumber, final int pageCapacity, final int numberOfPages) {
             this.pageNumber = pageNumber;
             this.pageCapacity = pageCapacity;
             this.numberOfPages = numberOfPages == 0 ? 1 : numberOfPages;
             this.queryModel = queryModel;
             data = getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+
+            this.summary = summary;
         }
 
         @Override
         public T summary() {
-            return null;
+            return summary;
         }
 
         @Override
@@ -650,7 +679,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         @Override
         public IPage<T> next() {
             if (hasNext()) {
-                return new EntityQueryPage(queryModel, no() + 1, capacity(), numberOfPages);
+        	if (queryModel != null && summary != null) {
+                    return new EntityQueryPage(queryModel, summary, pageNumber + 1, pageCapacity, numberOfPages);
+                } else if (queryModel != null) {
+                    return new EntityQueryPage(queryModel, pageNumber + 1, pageCapacity, numberOfPages);
+                } else {
+                    throw new IllegalStateException("There was no query provided to retrieve the data.");
+                }
             }
             return null;
         }
@@ -658,7 +693,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         @Override
         public IPage<T> prev() {
             if (hasPrev()) {
-                return new EntityQueryPage(queryModel, no() - 1, capacity(), numberOfPages);
+        	if (queryModel != null && summary != null) {
+                    return new EntityQueryPage(queryModel, summary, pageNumber - 1, pageCapacity, numberOfPages);
+                } else if (queryModel != null) {
+                    return new EntityQueryPage(queryModel, pageNumber - 1, pageCapacity, numberOfPages);
+                } else {
+                    throw new IllegalStateException("There was no query provided to retrieve the data.");
+                }
             }
             return null;
         }
@@ -666,7 +707,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         @Override
         public IPage<T> first() {
             if (hasPrev()) {
-                return new EntityQueryPage(queryModel, 0, capacity(), numberOfPages);
+        	if (queryModel != null && summary != null) {
+                    return new EntityQueryPage(queryModel, summary, 0, pageCapacity, numberOfPages);
+                } else if (queryModel != null) {
+                    return new EntityQueryPage(queryModel, 0, pageCapacity, numberOfPages);
+                } else {
+                    throw new IllegalStateException("There was no query provided to retrieve the data.");
+                }
             }
             return null;
         }
@@ -674,7 +721,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         @Override
         public IPage<T> last() {
             if (hasNext()) {
-                return new EntityQueryPage(queryModel, numberOfPages - 1, capacity(), numberOfPages);
+        	if (queryModel != null && summary != null) {
+                    return new EntityQueryPage(queryModel, summary, numberOfPages - 1, pageCapacity, numberOfPages);
+                } else if (queryModel != null) {
+                    return new EntityQueryPage(queryModel, numberOfPages - 1, pageCapacity, numberOfPages);
+                } else {
+                    throw new IllegalStateException("There was no query provided to retrieve the data.");
+                }
             }
             return null;
         }

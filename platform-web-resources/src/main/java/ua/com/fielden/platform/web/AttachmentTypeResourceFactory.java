@@ -10,7 +10,6 @@ import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.AttachmentTypeResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -18,9 +17,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct {@link Attachment} resource instantiation. *
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AttachmentTypeResourceFactory extends Restlet {
     private final Injector injector;
@@ -30,14 +29,14 @@ public class AttachmentTypeResourceFactory extends Restlet {
 
     /**
      * Instances of DAO and factory should be thread-safe as they are used by multiple instances of resources serving concurrent requests.
-     * 
+     *
      * @param dao
      * @param factory
      */
     public AttachmentTypeResourceFactory(final String location, final Injector injector, final EntityFactory factory) {
         this.injector = injector;
         this.factory = factory;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
         this.location = location;
     }
 
