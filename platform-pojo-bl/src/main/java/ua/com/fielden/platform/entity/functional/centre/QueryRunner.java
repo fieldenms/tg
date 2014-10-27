@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.functional.centre;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -9,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.functional.IFunctionalEntity;
 import ua.com.fielden.platform.entity.functional.paginator.Page;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * A functional entity that is responsible for running queries on the entity centre.
