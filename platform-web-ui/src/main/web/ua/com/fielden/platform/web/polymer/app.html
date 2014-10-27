@@ -27,6 +27,7 @@
     <title>Application name</title>
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <script src="/resources/polymer/platform/platform.js"></script>
+    <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
     <link rel="import" href="/resources/polymer/core-toolbar/core-toolbar.html">
     <link rel="import" href="/resources/polymer/core-scaffold/core-scaffold.html">
     <link rel="import" href="/resources/polymer/core-menu/core-menu.html">
@@ -74,45 +75,26 @@
 </head>
 
 <body unresolved fullbleed>
-    <template is="auto-binding">
+    <template is="auto-binding" id="t">
+        <core-ajax id="load_view" url="{{selectedMenuItem.menuItem.url}}" handleas="document" on-core-response="{{onResponse}}"></core-ajax>
         <core-scaffold id="scaffold">
             <nav>
                 <core-toolbar><span>TG Application</span>
                 </core-toolbar>
-                <core-menu valueattr="url" selected="{{route}}">
+                <core-menu valueattr="url" selected="{{route}}" selectedmodel="{{selectedMenuItem}}" on-core-select="{{menuItemSelected}}" on-click="{{ajaxLoad}}">
                     <template repeat="{{menuItem in menuItems}}">
                         <paper-item label="{{menuItem.name}}" url="{{menuItem.url}}">
                             <a href="#{{menuItem.url}}"></a>
-                        </paper-item>
-                    </template>
-                    <template repeat="{{centre in centres}}">
-                        <paper-item label="{{centre.name}}" url="{{centre.url}}">
-                            <a href="#{{centre.url}}"></a>
-                        </paper-item>
-                    </template>
-                    <template repeat="{{customView in customViews}}">
-                        <paper-item label="{{customView.name}}" url="{{customView.url}}">
-                            <a href="#{{customView.url}}"></a>
                         </paper-item>
                     </template>
                 </core-menu>
             </nav>
             <!--        <core-toolbar tool>Application</core-toolbar>-->
             <div layout horizontal center-center fit>
-                <core-animated-pages valueattr="url" selected="{{route}}" transitions="slide-from-right">
+                <core-animated-pages id="pages" valueattr="url" selected="{{route}}" transitions="slide-from-right">
                     <template repeat="{{menuItem in menuItems}}">
                         <section url="{{menuItem.url}}" layout vertical center-center>
                             <div>Loading {{menuItem.name}}...</div>
-                        </section>
-                    </template>
-                    <template repeat="{{centre in centres}}">
-                        <section url="{{centre.url}}" layout vertical center-center>
-                            <div>Loading {{centre.name}}...</div>
-                        </section>
-                    </template>
-                    <template repeat="{{customView in customViews}}">
-                        <section url="{{customView.url}}" layout vertical center-center>
-                            <div>Loading {{customView.name}}...</div>
                         </section>
                     </template>
                 </core-animated-pages>
@@ -120,24 +102,70 @@
         </core-scaffold>
     </template>
     <script>
-        var template = document.querySelector('template[is="auto-binding"]');
+        var template = document.querySelector('#t'),
+            cache = {},
+            scaffold,
+            viewLoader,
+            pages;
+
+
         template.menuItems = [{
             name: 'My Profile',
-            url: 'resources/myProfile.html'
-        }];
-        template.centres = [{
+            url: '/resources/myProfile.html'
+        }, {
             name: 'Personnel',
-            url: 'resources/centre/centre.html',
-            config: 'centre/fielden.main.menu.tablecodes.MiPerson'
-        }];
-        template.customViews = [{
+            url: '/resources/centre/tgCentre.html',
+            config: '/centre/fielden.main.menu.tablecodes.MiPerson'
+        }, {
             name: 'Custom View',
             url: '/webview/CustomWebView'
         }];
-        /*template.addEventListener('template-bound', function (e) { 
-            // Use URL hash for initial route. Otherwise, use the first page. 
-            this.route = this.route || DEFAULT_ROUTE; 
-        });*/
+
+        template.addEventListener('template-bound', function (e) {
+            scaffold = document.querySelector('#scaffold');
+            viewLoader = document.querySelector('#load_view');
+            pages = document.querySelector('#pages');
+            /*var keys = document.querySelector('#keys');
+
+            // Allow selecting pages by num keypad. Dynamically add
+            // [1, template.pages.length] to key mappings.
+            var keysToAdd = Array.apply(null, template.pages).map(function (x, i) {
+                return i + 1;
+            }).reduce(function (x, y) {
+                return x + ' ' + y;
+            });
+            keys.keys += ' ' + keysToAdd;
+
+            this.route = this.route || DEFAULT_ROUTE; // Select initial route.*/
+        });
+
+        template.menuItemSelected = function (e, detail, sender) {
+            if (detail.isSelected) {
+
+                // Need to wait one rAF so <core-ajax> has it's URL set.
+                this.async(function () {
+                    if (!cache[viewLoader.url]) {
+                        viewLoader.go();
+                    }
+
+                    scaffold.closeDrawer();
+                });
+
+            }
+        };
+
+        template.ajaxLoad = function (e, detail, sender) {
+            e.preventDefault(); // prevent link navigation.
+        };
+
+        template.onResponse = function (e, detail, sender) {
+            var view = detail.response.querySelector('body'),
+                html = view.innerHTML;
+
+            cache[viewLoader.url] = html; // Primitive caching by URL.
+
+            this.injectBoundHTML(html, pages.selectedItem.firstElementChild);
+        };
     </script>
 </body>
 
