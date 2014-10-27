@@ -15,14 +15,14 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  *
  */
-public class InvalidBeforeChangeEventHandler<T> implements IBeforeChangeEventHandler<T> {
+public class InvalidBeforeChangeEventHandler implements IBeforeChangeEventHandler<String> {
 
     private BeforeChangeEventHandler invalidParam;
 
     private boolean invoked = false;
 
     @Override
-    public Result handle(final MetaProperty<T> property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<String> property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
         setInvoked(true);
         return Result.successful(null);
     }

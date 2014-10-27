@@ -10,6 +10,7 @@ import static org.junit.Assert.fail;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -36,7 +37,7 @@ public class BeforeChangeTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     @Test
-    public void test_instanciation_of_BCE_handlers_during_entity_instantiation() {
+    public void test_instantiation_of_BCE_handlers_during_entity_instantiation() {
         final Entity entity = factory.newByKey(Entity.class, "key");
         assertNotNull("Should have been created", entity);
 
@@ -53,7 +54,7 @@ public class BeforeChangeTest {
 
         final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
         final Iterator<IBeforeChangeEventHandler<String>> iter = handlers.keySet().iterator();
-        final BeforeChangeEventHandler<String> handler = (BeforeChangeEventHandler<String>) iter.next();
+        final BeforeChangeEventHandler handler = (BeforeChangeEventHandler) iter.next();
         assertNotNull("Controller parameter should not be null.", handler.getControllerParam());
         assertEquals("Incorrect parameter value.", 1, handler.getIntParam1());
         assertEquals("Incorrect parameter value.", 12, handler.getIntParam2());
@@ -62,6 +63,18 @@ public class BeforeChangeTest {
         assertEquals("Incorrect parameter value.", StringConverter.toDateTime("2011-12-01 00:00:00"), handler.getDateTimeParam());
         assertEquals("Incorrect parameter value.", StringConverter.toMoney("12.36"), handler.getMoneyParam());
         assertEquals("Incorrect parameter value.", String.class, handler.getClassParam());
+        assertEquals("Incorrect parameter value.", EnumForParams.ONE, handler.getEnumParam());
+    }
+
+    @Test
+    public void instantiation_of_entity_with_invalid_enum_params_for_one_of_its_BCE_handlers_should_fail() {
+        try {
+            factory.newByKey(EntityWithInvalidEnumParam.class, "key");
+            fail();
+        } catch (final Exception ex) {
+            assertEquals(ExceptionUtils.getRootCause(ex).getMessage(), "Value \"INVALID\" is not of type \"ua.com.fielden.platform.entity.before_change_event_handling.EnumForParams\".");
+
+        }
     }
 
     @Test
@@ -87,16 +100,16 @@ public class BeforeChangeTest {
         final Entity entity = factory.newByKey(Entity.class, "key");
         entity.setProperty1("valid value");
         // test validation error
-        final MetaProperty mp = entity.getProperty("property1");
+        final MetaProperty<String> mp = entity.getProperty("property1");
         final Result result = mp.getFirstFailure();
         assertNull("There should be no validation error.", result);
         // test invocation of validators
         final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
         final Iterator<IBeforeChangeEventHandler<String>> iter = handlers.keySet().iterator();
-        final BeforeChangeEventHandler<String> bceHandler = (BeforeChangeEventHandler<String>) iter.next();
+        final BeforeChangeEventHandler bceHandler = (BeforeChangeEventHandler) iter.next();
         assertTrue("Should have been invoked.", bceHandler.isInvoked());
         assertTrue("Should have been invoked.", bceHandler.getControllerParam().isInvoked());
-        final InvalidBeforeChangeEventHandler<String> ibceHandler = (InvalidBeforeChangeEventHandler<String>) iter.next(); // get the second BCE event handler
+        final InvalidBeforeChangeEventHandler ibceHandler = (InvalidBeforeChangeEventHandler) iter.next(); // get the second BCE event handler
         assertTrue("Should have been invoked.", ibceHandler.isInvoked());
     }
 
