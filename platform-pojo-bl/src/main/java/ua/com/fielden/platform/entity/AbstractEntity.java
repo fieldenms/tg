@@ -36,6 +36,7 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -788,7 +789,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             if (AnnotationReflector.isAnnotationPresent(field, TransactionUser.class) || AnnotationReflector.isAnnotationPresent(field, TransactionDate.class)) {
                 metaProperty.setRequired(false);
             } else {
-                metaProperty.setRequired(AnnotationReflector.isAnnotationPresent(field, Required.class) || AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class));
+                metaProperty.setRequired(
+                        AnnotationReflector.isAnnotationPresent(field, Required.class) ||
+                        (AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class) &&
+                         !AnnotationReflector.isAnnotationPresent(field, Optional.class)));
             }
 
             if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {

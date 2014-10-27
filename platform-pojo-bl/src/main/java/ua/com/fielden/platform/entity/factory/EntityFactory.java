@@ -18,14 +18,14 @@ import com.google.inject.Module;
 import com.google.inject.Provider;
 
 /**
- * 
+ *
  * Factory for instantiating entities derived from {@link AbstractEntity} with APO/IoC support.
- * 
+ *
  * This factory is thread-safe -- the only state it has is final {@link Injector}, which is thread-safe because it uses new anonymous instances of {@link Provider} interface in its
  * {@link Injector#getInstance(Class)} method.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntityFactory {
     private Injector injector;
@@ -37,7 +37,7 @@ public class EntityFactory {
     /**
      * Setting of a different injector instead of the one created upon class instantiation might be required usually in cases where an injector with more modules is needed to
      * entity instantiation.
-     * 
+     *
      * @param injector
      */
     public void setInjector(final Injector injector) {
@@ -49,7 +49,7 @@ public class EntityFactory {
 
     /**
      * Constructor that allow passing one or more modules.
-     * 
+     *
      * @param module
      * @param modules
      */
@@ -59,9 +59,9 @@ public class EntityFactory {
 
     /**
      * Constructs factory instance using provided modules and internal modules for instantiation of the Guice injector.
-     * 
+     *
      * There can be zero or more provided modules.
-     * 
+     *
      * @param modules
      */
     private EntityFactory(final List<Module> modules) {
@@ -73,7 +73,7 @@ public class EntityFactory {
 
     /**
      * Sometimes it is more convenient to provide factory with already created injector rather than modules.
-     * 
+     *
      * @param injector
      */
     public EntityFactory(final Injector injector) {
@@ -82,7 +82,7 @@ public class EntityFactory {
 
     /**
      * This factory method should be used for lightweight entity instantiation (not via injector).
-     * 
+     *
      * @param <T>
      * @param entityClass
      * @param id
@@ -104,7 +104,7 @@ public class EntityFactory {
 
     /**
      * This factory method should be used strictly for Hibernate intercepter during entity instantiation.
-     * 
+     *
      * @param <T>
      * @param entityClass
      * @param id
@@ -124,7 +124,7 @@ public class EntityFactory {
 
     /**
      * A convenient factory method, which creates entity with <code>null</code> id.
-     * 
+     *
      * @param <T>
      * @param entityClass
      * @return
@@ -135,7 +135,7 @@ public class EntityFactory {
 
     /**
      * Invokes protected 'setEntityFactory' method on passed {@link AbstractEntity} to set reference to this {@link EntityFactory} instance.
-     * 
+     *
      * @param entity
      * @throws RuntimeException
      */
@@ -152,7 +152,7 @@ public class EntityFactory {
 
     /**
      * Instantiates an entity of the specified type with the passed parameters.
-     * 
+     *
      * @param <T>
      *            -- entity type
      * @param <K>
@@ -197,7 +197,7 @@ public class EntityFactory {
 
     /**
      * Creates entity with {@link DynamicEntityKey} with specified keys set
-     * 
+     *
      * @param keys
      *            - key values that are composite key members of {@link DynamicEntityKey} of entity
      * @return created entity with keys set
@@ -256,7 +256,7 @@ public class EntityFactory {
 
     /**
      * Puts the passed values into one list.
-     * 
+     *
      * @param module
      * @param modules
      * @return
