@@ -28,7 +28,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
  *
  */
 @KeyType(String.class)
-public class Entity extends AbstractEntity<String> {
+public class EntityWithInvalidEnumParam extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
@@ -47,20 +47,9 @@ public class Entity extends AbstractEntity<String> {
                     money = { @MoneyParam(name = "moneyParam", value = "12.36") },
                     non_ordinary = { @ClassParam(name = "controllerParam", value = Controller.class) },
                     clazz = { @ClassParam(name = "classParam", value = String.class) },
-                    enumeration = { @EnumParam(name = "enumParam", clazz = EnumForParams.class, value = "ONE")}),
+                    enumeration = { @EnumParam(name = "enumParam", clazz = EnumForParams.class, value = "INVALID")}),
             @Handler(InvalidBeforeChangeEventHandler.class) })
-    @AfterChange(
-            value = AfterChangeEventHandler.class,
-            integer = { @IntParam(name = "intParam1", value = 1),
-                        @IntParam(name = "intParam2", value = 12) },
-            str = { @StrParam(name = "strParam", value = "string value") },
-            dbl = { @DblParam(name = "dblParam", value = 0.65) },
-            date = { @DateParam(name = "dateParam", value = "2011-12-01 00:00:00") },
-            date_time = { @DateTimeParam(name = "dateTimeParam", value = "2011-12-01 00:00:00") },
-            money = { @MoneyParam(name = "moneyParam", value = "12.36") },
-            non_ordinary = { @ClassParam(name = "controllerParam", value = Controller.class) },
-            clazz = { @ClassParam(name = "classParam", value = String.class) },
-            enumeration = { @EnumParam(name = "enumParam", clazz = EnumForParams.class, value = "TWO")})
+    @AfterChange(value = AfterChangeEventHandler.class, integer = { @IntParam(name = "intParam1", value = 1), @IntParam(name = "intParam2", value = 12) }, str = { @StrParam(name = "strParam", value = "string value") }, dbl = { @DblParam(name = "dblParam", value = 0.65) }, date = { @DateParam(name = "dateParam", value = "2011-12-01 00:00:00") }, date_time = { @DateTimeParam(name = "dateTimeParam", value = "2011-12-01 00:00:00") }, money = { @MoneyParam(name = "moneyParam", value = "12.36") }, non_ordinary = { @ClassParam(name = "controllerParam", value = Controller.class) }, clazz = { @ClassParam(name = "classParam", value = String.class) })
     private String property1 = "default value";
 
     @IsProperty
@@ -70,7 +59,7 @@ public class Entity extends AbstractEntity<String> {
     private String property2;
 
     @Observable
-    public Entity setProperty2(final String property2) {
+    public EntityWithInvalidEnumParam setProperty2(final String property2) {
         this.property2 = property2;
         return this;
     }
@@ -80,7 +69,7 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    public Entity setProperty1(final String property) {
+    public EntityWithInvalidEnumParam setProperty1(final String property) {
         this.property1 = property;
         return this;
     }

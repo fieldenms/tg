@@ -90,4 +90,10 @@ public @interface AfterChange {
      * @return
      */
     MoneyParam[] money() default {};
+
+    /**
+     * Should be used for specifying parameters of some enum type.
+     * @return
+     */
+    EnumParam[] enumeration() default {};
 }

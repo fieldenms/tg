@@ -557,7 +557,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @Override
     public <T> T get(final String propertyName) {
         try {
-            return (T) Finder.findFieldValueByName(this, propertyName);
+            return Finder.findFieldValueByName(this, propertyName);
         } catch (final Exception e) {
             throw new IllegalArgumentException("Could not get the value for property " + propertyName + " for instance " + this + "@" + getType().getName(), e);
         }

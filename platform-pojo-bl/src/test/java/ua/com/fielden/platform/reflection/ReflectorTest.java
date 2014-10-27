@@ -42,9 +42,9 @@ import com.google.inject.Injector;
 
 /**
  * Test case for {@link Reflector}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ReflectorTest {
     final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
@@ -202,7 +202,7 @@ public class ReflectorTest {
     @Test
     public void test_annotataion_params() {
         final List<String> params = Reflector.annotataionParams(Handler.class);
-        assertEquals("Unexpected number of annotation parameters.", 9, params.size());
+        assertEquals("Unexpected number of annotation parameters.", 10, params.size());
         assertTrue(params.contains("value"));
         assertTrue(params.contains("non_ordinary"));
         assertTrue(params.contains("clazz"));

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.meta;
 
+import static java.lang.String.*;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -17,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
 import ua.com.fielden.platform.entity.annotation.mutator.DateTimeParam;
 import ua.com.fielden.platform.entity.annotation.mutator.DblParam;
+import ua.com.fielden.platform.entity.annotation.mutator.EnumParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
 import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
@@ -99,8 +102,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         }
         // try to instantiate validator
         switch (value) {
-        //case NOT_NULL:
-        //    return new IBeforeChangeEventHandler[] { notNullValidator };
         case ENTITY_EXISTS:
             return new IBeforeChangeEventHandler[] { createEntityExists((EntityExists) annotation) };
         case FINAL:
@@ -136,7 +137,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @return
      */
     private IBeforeChangeEventHandler<?>[] createBeforeChange(final AbstractEntity<?> entity, final String propertyName, final BeforeChange annotation) {
-        // TODO Implement creation of BCE handlers
         // 0. If the cache contains handlers for the entity and property then return them. Otherwise, step 1.
         final Map<String, IBeforeChangeEventHandler<?>[]> typeHandlers = beforeChangeEventHandlers.get(entity.getType());
         if (typeHandlers != null && typeHandlers.containsKey(propertyName)) {
@@ -161,6 +161,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             initDateHandlerParameters(entity, hd.date(), handler);
             initDateTimeHandlerParameters(entity, hd.date_time(), handler);
             initMoneyHandlerParameters(entity, hd.money(), handler);
+            initEnumHandlerParameters(entity, hd.enumeration(), handler);
 
             handlers[index] = handler;
         }
@@ -345,6 +346,36 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         }
     }
 
+    /**
+     * Initialises enumeration handler parameters as provided in {@link Handler#enumeration()}.
+     *
+     * @param entity
+     * @param hd
+     * @param handler
+     */
+    private <T extends Enum<T>> void initEnumHandlerParameters(final AbstractEntity<?> entity, final EnumParam[] params, final Object handler) {
+        for (final EnumParam param : params) {
+            @SuppressWarnings("unchecked") // this type casting is the best we can do in order to make the compiler happy
+            final Class<T> enumType = (Class<T>) param.clazz();
+
+            final Enum<?> value;
+            try {
+                value = Enum.valueOf(enumType, param.value());
+            } catch (final Exception e) {
+                throw new IllegalArgumentException(format("Value \"%s\" is not of type \"%s\".", param.value(), enumType.getName()));
+            }
+
+            final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
+            paramField.setAccessible(true);
+            try {
+                paramField.set(handler, value);
+            } catch (final Exception ex) {
+                throw new IllegalStateException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+            }
+        }
+    }
+
+
     private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty) {
         if (geRangeValidators.get(entity.getType()) == null) {
             geRangeValidators.put(entity.getType(), Collections.synchronizedMap(new HashMap<String, RangePropertyValidator>()));
@@ -423,6 +454,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             initDateHandlerParameters(entity, ach.date(), propHandler);
             initDateTimeHandlerParameters(entity, ach.date_time(), propHandler);
             initMoneyHandlerParameters(entity, ach.money(), propHandler);
+            initEnumHandlerParameters(entity, ach.enumeration(), propHandler);
 
             // associate handler with property name
             typeHandlers.put(propertyName, propHandler);
