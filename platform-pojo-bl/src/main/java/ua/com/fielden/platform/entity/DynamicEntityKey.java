@@ -37,17 +37,14 @@ import ua.com.fielden.platform.reflection.Reflector;
  * @param <T>
  */
 public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
+
+    private List<String> memberNames = new ArrayList<>();
+
     private transient final AbstractEntity<DynamicEntityKey> entity;
-    /**
-     * A list of JEXL expressions for every property to be used in the model.
-     */
-    private transient final List<Expression> propertyExpressions = new ArrayList<Expression>();
-    private transient final JexlContext jc = JexlHelper.createContext();
     private static final SimpleDateFormat dateFormatter = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
-    private static final String ENTITY = "entity";
     public final String KEY_MEMBERS_SEPARATOR;
     /** There case where key members do not implement Comparable. In such cases a comparator class should be provided. */
-    private transient final Map<Integer, Comparator<?>> keyMemberComparables = new HashMap<Integer, Comparator<?>>();
+    private transient final Map<Integer, Comparator<?>> keyMemberComparables = new HashMap<>();
 
     /**
      * This default constructor is required purely for Kryo serialisation.
@@ -64,22 +61,18 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
      * @param expressions
      */
     public DynamicEntityKey(final AbstractEntity<DynamicEntityKey> entity) {
+        final List<Field> compositeKeyMambers = Finder.getKeyMembers(entity.getType());
+        // If there is only one key member and it has name KEY then this is the wrong place to be using composite key
+        if (compositeKeyMambers.size() == 1 && AbstractEntity.KEY.equals(compositeKeyMambers.get(0).getName())) {
+            throw new IllegalStateException("Composite key should have at least one member.");
+        }
+
         this.entity = entity;
 
         KEY_MEMBERS_SEPARATOR = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) entity.getType());
 
-        final List<Field> compositeKeyMambers = Finder.getKeyMembers(entity.getType());
-        // TODO Should this be relaxed? Should a key with only one member be possible?
-        if (compositeKeyMambers.size() == 1 && AbstractEntity.KEY.equals(compositeKeyMambers.get(0).getName())) {
-            throw new IllegalStateException("Composite key should have at least one member.");
-        }
         for (final Field member : compositeKeyMambers) {
-            try {
-                // here "entity" is used as a place holder for the provided entity instance
-                propertyExpressions.add(ExpressionFactory.createExpression((ENTITY + "." + member.getName().trim())));
-            } catch (final Exception e) {
-                throw new IllegalArgumentException("Failed to create expression " + member + " for type " + entity.getClass().getName() + ": " + e.getMessage(), e);
-            }
+            memberNames.add(member.getName());
         }
     }
 
@@ -96,22 +89,14 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     }
 
     /**
-     * Evaluates an expression with a specified index.
+     * Obtains the value of the key member with the specified index.
      *
-     * @param expressionIndex
+     * @param memberIndex
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Object value(final int expressionIndex) {
-        jc.getVars().clear();
-        jc.getVars().put(ENTITY, entity);
-        try {
-            return propertyExpressions.get(expressionIndex).evaluate(jc);
-        } catch (final Exception e) {
-            throw new IllegalArgumentException("Failed to evaluate expression " + propertyExpressions.get(expressionIndex) + ": " + e.getMessage(), e);
-        } finally {
-            jc.getVars().clear();
-        }
+    private Object value(final int memberIndex) {
+        return entity.get(memberNames.get(memberIndex));
     }
 
     /**
@@ -121,7 +106,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
      */
     public Object[] getKeyValues() {
         final List<Object> values = new ArrayList<Object>();
-        for (int index = 0; index < propertyExpressions.size(); index++) {
+        for (int index = 0; index < memberNames.size(); index++) {
             values.add(value(index));
         }
         return values.toArray();
@@ -135,7 +120,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     @SuppressWarnings("unchecked")
     @Override
     public final int compareTo(final DynamicEntityKey key) {
-        for (int index = 0; index < propertyExpressions.size(); index++) {
+        for (int index = 0; index < memberNames.size(); index++) {
             if (keyMemberComparables.get(index + 1) != null) {
                 final Comparator comparator = keyMemberComparables.get(index + 1);
                 final int result = comparator.compare(value(index), key.value(index));
@@ -156,9 +141,9 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
                     return 0;
                 }
                 // there are no nulls, so need to perform comparison
-                final int result = thisValue.compareTo(thatValue);
-                if (result != 0) {
-                    return result;
+                final int partialCmpResult = thisValue.compareTo(thatValue);
+                if (partialCmpResult != 0) {
+                    return partialCmpResult;
                 }
             }
         }
@@ -185,7 +170,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     @Override
     public final int hashCode() {
         int result = 29;
-        for (int index = 0; index < propertyExpressions.size(); index++) {
+        for (int index = 0; index < memberNames.size(); index++) {
             final Object keyMemberValue = value(index);
             if (keyMemberValue != null) {
                 result += value(index).hashCode() * 13;
@@ -197,10 +182,10 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     @Override
     public final String toString() {
         final StringBuilder buffer = new StringBuilder();
-        for (int index = 0; index < propertyExpressions.size(); index++) {
+        for (int index = 0; index < memberNames.size(); index++) {
             final Object value = value(index);
             if (value != null) {
-                buffer.append(convertToString(value) + (index + 1 < propertyExpressions.size() ? KEY_MEMBERS_SEPARATOR : ""));
+                buffer.append(convertToString(value) + (index + 1 < memberNames.size() ? KEY_MEMBERS_SEPARATOR : ""));
             }
         }
         return buffer.toString();
@@ -214,7 +199,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
         }
     }
 
-    public final List<Expression> getPropertyExpressions() {
-        return propertyExpressions;
+    public final List<String> getMemberNames() {
+        return memberNames;
     }
 }
