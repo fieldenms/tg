@@ -58,7 +58,7 @@ public class TgObjectMapper extends ObjectMapper {
 
         for (final Class<?> type : provider.classes()) {
             if (AbstractEntity.class.isAssignableFrom(type)) {
-        	addDeserialiser(type, new JsonToAbstractEntityDeserialiser<>(this, entityFactory));
+        	addDeserialiser((Class<AbstractEntity<?>>)type, new JsonToAbstractEntityDeserialiser<AbstractEntity<?>>(this, entityFactory));
             }
         }
 
