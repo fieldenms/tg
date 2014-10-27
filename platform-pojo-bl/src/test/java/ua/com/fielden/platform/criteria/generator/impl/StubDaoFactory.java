@@ -8,18 +8,16 @@ import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
 
 /**
  * That is stub dao factory for testing purposes.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class StubDaoFactory implements IDaoFactory {
 
@@ -152,11 +150,6 @@ public class StubDaoFactory implements IDaoFactory {
 
                 @Override
                 public byte[] export(final QueryExecutionModel<TopLevelEntity, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-                    return null;
-                }
-
-                @Override
-                public IPage<TopLevelEntity> firstPage(final QueryExecutionModel<TopLevelEntity, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
                     return null;
                 }
 

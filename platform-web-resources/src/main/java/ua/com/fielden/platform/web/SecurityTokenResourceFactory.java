@@ -9,7 +9,6 @@ import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.SecurityTokenResource;
 
@@ -17,9 +16,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct instantiation of {@link SecurityTokenResource}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class SecurityTokenResourceFactory extends Restlet {
     private final Injector injector;
@@ -27,13 +26,13 @@ public class SecurityTokenResourceFactory extends Restlet {
 
     /**
      * Principle constructor.
-     * 
+     *
      * @param dao
      * @param factory
      */
     public SecurityTokenResourceFactory(final Injector injector) {
         this.injector = injector;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
     @Override

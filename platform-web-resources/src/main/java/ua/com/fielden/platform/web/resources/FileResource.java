@@ -1,16 +1,14 @@
 package ua.com.fielden.platform.web.resources;
 
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Encoding;
 import org.restlet.data.MediaType;
-import org.restlet.engine.application.EncodeRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
@@ -51,7 +49,9 @@ public class FileResource extends ServerResource {
             if (StringUtils.isEmpty(filePath)) {
         	throw new FileNotFoundException("The requested resource wasn't faound.");
             } else {
-        	return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(ResourceLoader.getStream(filePath), determineMediaType(extension)));
+        	final InputStream stream = ResourceLoader.getStream(filePath);
+		final MediaType mediaType = determineMediaType(extension);
+		return RestServerUtil.encodedRepresentation(stream, mediaType);
             }
         } catch (final FileNotFoundException e) {
             e.printStackTrace();
