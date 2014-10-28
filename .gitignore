@@ -1,12 +1,43 @@
+*.synctex.gz
+*.orig
+*.aux
+*.db
+*.backup
+*.tex~
+*.bib~
+*.dvi
+*.bbl
+*.log
+*.out
+*.pdf
+*.ps
+*.blg
+*.toc
+*~
+*.lof
+*.lot
+*.kate-swp
+*.~*
+*.tps
+target
+.classpath
+.project
+.idea
+.settings
 *.class
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+*.dtd
+*.nav
+*.snm
+*.vrb
+*.old
 
 # Package Files #
 *.jar
 *.war
 *.ear
+
+# artefacts of unit test should be ignored
+platform-web-resources/src/test/resources/data-files/attachments/NEW-ATTACHMENT-FILE.TXT
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
