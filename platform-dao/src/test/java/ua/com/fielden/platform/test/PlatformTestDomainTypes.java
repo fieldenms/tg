@@ -28,6 +28,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
@@ -61,6 +62,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
 
     static {
         entityTypes.addAll(PlatformDomainTypes.types);
+        add(TgPerson.class);
         add(TgPersonName.class);
         add(TgAuthor.class);
         add(TgAuthorship.class);

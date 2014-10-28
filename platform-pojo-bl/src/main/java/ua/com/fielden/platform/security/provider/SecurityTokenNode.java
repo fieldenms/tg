@@ -16,9 +16,9 @@ import ua.com.fielden.platform.security.ISecurityToken;
 
 /**
  * A node in a tree-like structure for representing security tokens in a hierarchical order. Natural ordering happens according to token's short description.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNode<Class<? extends ISecurityToken>> {
     /**
@@ -43,8 +43,18 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
     private final String longDesc;
 
     /**
+     * A convenient factory method for creating nodes representing top level security tokens, which is mainly useful for creation of unit tests.
+     *
+     * @param topLevelToken
+     * @return
+     */
+    public static SecurityTokenNode makeTopLevelNode(final Class<? extends ISecurityToken> topLevelToken) {
+        return new SecurityTokenNode(topLevelToken, null);
+    }
+
+    /**
      * A principle constructor.
-     * 
+     *
      * @param token
      * @param superTokenNode
      */
@@ -68,7 +78,7 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
 
     /**
      * A convenient constructor for top level tokens.
-     * 
+     *
      * @param token
      */
     public SecurityTokenNode(final Class<? extends ISecurityToken> token) {
@@ -77,7 +87,7 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
 
     /**
      * Provides a way to add direct sub token nodes to this node.
-     * 
+     *
      * @param subTokenNode
      * @return
      */
