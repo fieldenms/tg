@@ -32,7 +32,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.security.NoAuthorisation;
+import ua.com.fielden.platform.security.ServerAuthorisationModel;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
@@ -154,7 +154,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         if (tokenProvider != null) {
             bind(SecurityTokenProvider.class).toInstance(tokenProvider);
         }
-        bind(IAuthorisationModel.class).to(NoAuthorisation.class);
+        bind(IAuthorisationModel.class).to(ServerAuthorisationModel.class);
 
         // bind functional entities dao.
         bind(IQueryRunner.class).to(QueryRunnerDao.class);
