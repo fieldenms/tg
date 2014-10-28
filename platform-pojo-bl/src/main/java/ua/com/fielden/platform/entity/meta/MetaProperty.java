@@ -199,19 +199,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
             }
 
-            // obtain custom error message in case it has been provided at the domain level
-            final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
-
-            final Result result;
-            if (!StringUtils.isEmpty(reqErrorMsg)) {
-                result = Result.failure(getEntity(), reqErrorMsg);
-            } else {
-                final String msg = format("Required property %s is not specified for entity %s",
-                        getTitleAndDesc(name, getEntity().getType()),
-                        getEntityTitleAndDesc(getEntity().getType()).getKey());
-
-                result = Result.failure(getEntity(), msg);
-            }
+            final Result result = mkRequiredError();
 
             setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), result);
             return result;
@@ -224,6 +212,23 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
             // process all registered validators (that have its own annotations)
             return processValidators(newValue, oldValue, applicableValidationAnnotations);
         }
+    }
+
+    private Result mkRequiredError() {
+        // obtain custom error message in case it has been provided at the domain level
+        final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
+
+        final Result result;
+        if (!StringUtils.isEmpty(reqErrorMsg)) {
+            result = Result.failure(getEntity(), reqErrorMsg);
+        } else {
+            final String msg = format("Required property %s is not specified for entity %s",
+                    getTitleAndDesc(name, getEntity().getType()),
+                    getEntityTitleAndDesc(getEntity().getType()).getKey());
+
+            result = Result.failure(getEntity(), msg);
+        }
+        return result;
     }
 
     /**
@@ -239,7 +244,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         // that is why - - "&& (oldValue != null)" - - was removed!!!!!
         // The current condition is essential for UI binding logic.
         return (newValue == null) || /* && (oldValue != null) */
-               (newValue instanceof String && StringUtils.isBlank(newValue.toString()));
+                (newValue instanceof String && StringUtils.isBlank(newValue.toString()));
     }
 
     /**
@@ -495,11 +500,10 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                     throw new IllegalArgumentException("There are no REQUIRED validation annotation pair for required property!");
                 }
 
-                final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
 
-                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(getEntity(), new IllegalArgumentException(StringUtils.isEmpty(reqErrorMsg) ? "Required property "
-                        + (StringUtils.isEmpty(getTitle()) ? name : getTitle()) + " is not specified for entity " + getEntityTitleAndDesc(getEntity().getType()).getKey()
-                        : reqErrorMsg)));
+                final Result result1 = mkRequiredError();
+
+                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, result1);
                 return false;
             }
         }
@@ -691,7 +695,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      * @return
      */
     public final T getValue() {
-        return entity.<T>get(name);
+        return entity.<T> get(name);
     }
 
     /**
