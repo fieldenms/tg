@@ -27,8 +27,8 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
     private final MessagesComparator<MESSAGE> messagesComparator;
     protected static int jdbcInsertBatchSize = 100;
     private static int windowSize = 5;
-    private static int windowSize2 = 7;
-    private static int windowSize3 = 10;
+    private static int windowSize2 = 24;
+    private static int windowSize3 = 35;
     private final Logger logger = Logger.getLogger(AbstractAvlMachineActor.class);
 
     private MACHINE machine;
