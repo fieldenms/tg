@@ -1,0 +1,40 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+<!--
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input.html">
+-->
+<polymer-element name="entity-centre" attributes="centreName">
+    <template>
+        <core-ajax id="config_retriever" url="/users/SU/centre/{{centreName}}" handleas="json" response="{{config}}" on-core-error="{{onConfigLoadError}}" auto></core-ajax>
+        <core-ajax id="run" url="/users/SU/QueryRunner" method="POST" handleas="json" on-core-response="{{onResponse}}" on-core-error="{{onError}}"></core-ajax>
+        <span>{{centreName}}</span>
+        <span>{{config.centreConfig.criteria.columns}}</span>
+    
+    </template>
+    <script>
+        Polymer({
+            runAction: function () {
+                var actionRunner = this.$.action_runner,
+                    customFunction = {
+                        "@entityType": "fielden.functional.CustomFunction",
+                        key: "CustomFunction",
+                        name: this.prop
+                    };
+                actionRunner.body = JSON.stringify(customFunction);
+                actionRunner.go();
+
+            },
+            onResponse: function (e, detail, sender) {
+                var customFunction = detail.response;
+                this.prop = customFunction.instance.name;
+            },
+            onError: function (e, detail, sender) {
+                alert("Error happened");
+            },
+            onConfigLoadError: function (e, detail, sender) {
+                alert("Error happened");
+            }
+        });
+    </script>
+</polymer-element>
