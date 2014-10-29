@@ -53,7 +53,7 @@ public class Pair<K, V> implements Map.Entry<K, V>, Serializable {
         }
         final Pair<?, ?> cmpTo = (Pair<?, ?>) obj;
         return (getKey() == null ? cmpTo.getKey() == null : getKey().equals(cmpTo.getKey()))//
-                && (getValue() == null ? getValue() == null : getValue().equals(cmpTo.getValue()));
+                && (getValue() == null ? cmpTo.getValue() == null : getValue().equals(cmpTo.getValue()));
     }
 
     @Override

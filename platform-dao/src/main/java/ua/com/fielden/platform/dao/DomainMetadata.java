@@ -3,9 +3,9 @@ package ua.com.fielden.platform.dao;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.dao.EntityCategory.PERSISTED;
+import static ua.com.fielden.platform.dao.EntityCategory.PURE;
 import static ua.com.fielden.platform.dao.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.dao.EntityCategory.UNION;
-import static ua.com.fielden.platform.dao.EntityCategory.PURE;
 import static ua.com.fielden.platform.dao.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY;
@@ -61,6 +61,7 @@ import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -124,18 +125,22 @@ public class DomainMetadata {
         idPropertyInOne2One = new PropertyMetadata.Builder(ID, Long.class, false).column(id).hibType(typeResolver.basic("long")).type(ONE2ONE_ID).build();
         versionProperty = new PropertyMetadata.Builder(VERSION, Long.class, false).column(version).hibType(typeResolver.basic("long")).type(PRIMITIVE).build();
 
-        BaseInfoForDomainMetadata baseInfoForDomainMetadata = new BaseInfoForDomainMetadata(userMapTo);
+        final BaseInfoForDomainMetadata baseInfoForDomainMetadata = new BaseInfoForDomainMetadata(userMapTo);
         
         // carry on with other stuff
         if (hibTypesDefaults != null) {
             for (final Entry<Class, Class> entry : hibTypesDefaults.entrySet()) {
                 try {
-                    this.hibTypesDefaults.put(entry.getKey(), entry.getValue().newInstance());
+                    this.hibTypesDefaults.put(entry.getKey(), entry.getValue().newInstance());    
                 } catch (final Exception e) {
                     throw new IllegalStateException("Couldn't generate instantiate hibernate type [" + entry.getValue() + "] due to: " + e);
                 }
             }
         }
+        this.hibTypesDefaults.put(Boolean.class, typeResolver.basic("yes_no"));
+        this.hibTypesDefaults.put(boolean.class, typeResolver.basic("yes_no"));
+
+        
         this.hibTypesInjector = hibTypesInjector;
         for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
             try {
@@ -151,7 +156,7 @@ public class DomainMetadata {
                     break;
                 default:
                     pureEntityMetadataMap.put(entityType, generatePureEntityMetadata(entityType, baseInfoForDomainMetadata));
-                    System.out.println("PURE ENTITY: " + entityType);
+                    //System.out.println("PURE ENTITY: " + entityType);
                     //throw new IllegalStateException("Not yet supported category: " + baseInfoForDomainMetadata.getCategory(entityType) + " of " + entityType);
                 }
             } catch (final Exception e) {
@@ -163,19 +168,19 @@ public class DomainMetadata {
         //enhanceWithCalcProps(entityMetadataMap.values());
     }
     
-    public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> generatePersistedEntityMetadata(final Class<ET> entityType, BaseInfoForDomainMetadata baseInfoForDomainMetadata) throws Exception {
+    public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> generatePersistedEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata) throws Exception {
         return new PersistedEntityMetadata(baseInfoForDomainMetadata.getTableClause(entityType), entityType, generatePropertyMetadatasForEntity(entityType, PERSISTED));
     }
     
-    public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateModelledEntityMetadata(final Class<ET> entityType, BaseInfoForDomainMetadata baseInfoForDomainMetadata) throws Exception {
+    public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateModelledEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata) throws Exception {
         return new ModelledEntityMetadata(baseInfoForDomainMetadata.getEntityModels(entityType), entityType, generatePropertyMetadatasForEntity(entityType, QUERY_BASED));
     }    
 
-    public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateUnionedEntityMetadata(final Class<ET> entityType, BaseInfoForDomainMetadata baseInfoForDomainMetadata) throws Exception {
+    public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateUnionedEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata) throws Exception {
         return new ModelledEntityMetadata(baseInfoForDomainMetadata.getUnionEntityModels(entityType), entityType, generatePropertyMetadatasForEntity(entityType, UNION));
     }    
 
-    public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final Class<ET> entityType, BaseInfoForDomainMetadata baseInfoForDomainMetadata) throws Exception {
+    public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata) throws Exception {
         return new PureEntityMetadata(baseInfoForDomainMetadata.getTableClause(entityType), entityType, generatePropertyMetadatasForEntity(entityType, PURE));
     }
 
@@ -416,10 +421,11 @@ public class DomainMetadata {
         final boolean isEntity = isPersistedEntityType(javaType);
         final boolean isUnionEntity = isUnionEntityType(javaType);
         final MapTo mapTo = getMapTo(entityType, propName);
-        final boolean isCompositeKeyMember = getCompositeKeyMember(entityType, propName) != null;
+        final Boolean compositeKeyMemberOptionalityInfo = getCompositeKeyMemberOptionalityInfo(entityType, propName); 
+        final boolean isCompositeKeyMember = compositeKeyMemberOptionalityInfo != null;
         final boolean isRequired = AnnotationReflector.isAnnotationPresent(field, Required.class);
         final PersistedType persistedType = getPersistedType(entityType, propName);
-        final boolean nullable = !(isRequired || isCompositeKeyMember);
+        final boolean nullable = !(isRequired || (isCompositeKeyMember && !compositeKeyMemberOptionalityInfo));
 
         final Object hibernateType = getHibernateType(javaType, persistedType, isEntity);
 
@@ -502,8 +508,10 @@ public class DomainMetadata {
         return getPropertyAnnotation(MapTo.class, entityType, propName);
     }
 
-    private CompositeKeyMember getCompositeKeyMember(final Class entityType, final String propName) {
-        return getPropertyAnnotation(CompositeKeyMember.class, entityType, propName);
+    private Boolean getCompositeKeyMemberOptionalityInfo(final Class entityType, final String propName) {
+        final boolean isCompositeKeyMember = getPropertyAnnotation(CompositeKeyMember.class, entityType, propName) != null;
+        final boolean isOptionalCompositeKeyMember = getPropertyAnnotation(Optional.class, entityType, propName) != null;
+        return isCompositeKeyMember ? isOptionalCompositeKeyMember : null;
     }
 
     private PersistedType getPersistedType(final Class entityType, final String propName) {
@@ -537,5 +545,4 @@ public class DomainMetadata {
     public Map<Class<? extends AbstractEntity<?>>, PureEntityMetadata> getPureEntityMetadataMap() {
         return pureEntityMetadataMap;
     }
-
 }
