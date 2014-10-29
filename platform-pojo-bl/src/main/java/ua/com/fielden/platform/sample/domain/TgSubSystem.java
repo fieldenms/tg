@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -23,11 +23,7 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 @CompanionObject(ITgSubSystem.class)
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
-public class TgSubSystem extends AbstractEntity<String> {
-    @IsProperty
-    @MapTo
-    @Title("Active?")
-    private boolean active;
+public class TgSubSystem extends ActivatableAbstractEntity<String> {
 
     @IsProperty
     @MapTo
@@ -45,20 +41,10 @@ public class TgSubSystem extends AbstractEntity<String> {
         return category;
     }
 
-
-
-
+    @Override
     @Observable
     public TgSubSystem setActive(final boolean active) {
-        this.active = active;
+        super.setActive(active);
         return this;
     }
-
-    public boolean isActive() {
-        return active;
-    }
-
-
-
-
 }

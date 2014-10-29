@@ -25,8 +25,8 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.TypeFilter;
-import ua.com.fielden.platform.reflection.TypeFilter.EntityHasPropertyOfType;
+import ua.com.fielden.platform.reflection.filtering.ActivatableEntityHasPropertyOfTypePredicate;
+import ua.com.fielden.platform.reflection.filtering.TypeFilter;
 
 public final class Validators {
     private Validators() {
@@ -113,22 +113,35 @@ public final class Validators {
      * @return
      */
     public static <T extends AbstractEntity<?>> long countActiveDependencies(final List<Class<? extends AbstractEntity<?>>> entityTypes, final T entity, final IEntityAggregatesDao coAggregate) {
-        final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getType();
-        final List<Class<? extends AbstractEntity<?>>> relevantTypes = TypeFilter.filter(entityTypes, new EntityHasPropertyOfType(entityType));
+        // there should be exactly 0 active and persisted dependencies to not yet persisted entity
+        if (!entity.isPersisted()) {
+            return 0;
+        }
 
-        if (!entity.isPersisted() || relevantTypes.isEmpty()) {
+        // otherwise let's count
+        final Class<? extends AbstractEntity<?>> entityType = entity.getType();
+        // first analyse the domain tree
+        final List<Class<? extends AbstractEntity<?>>> relevantTypes = TypeFilter.filter(entityTypes, new ActivatableEntityHasPropertyOfTypePredicate(entityType));
+        // if there are no dependent entity types then there is no reason to check the actual persisted entity instances
+        if (relevantTypes.isEmpty()) {
             return 0;
         } else {
+            // otherwise, need to compose a complex query that would count active dependencies
+            // one important thing here is not to count self-references...
             final Iterator<Class<? extends AbstractEntity<?>>> iter = relevantTypes.iterator();
-            final Class<? extends AbstractEntity<?>> firstEntityType = iter.next();
+            final Class<? extends AbstractEntity<?>> firstDependentEntityType = iter.next();
 
-            final List<Field> propsForFirstEntityType = Finder.findPropertiesOfSpecifiedType(firstEntityType, entityType);
-            IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(getReferenceCountForSingleProp(firstEntityType, propsForFirstEntityType));
+            // let's start with making counting query for the first dependent entity type -- there is at least one if this code was reached
+            // first obtain list of properties of the type that matches the entity type of interest
+            final List<Field> propsForFirstEntityType = Finder.findPropertiesOfSpecifiedType(firstDependentEntityType, entityType);
+            // then actually make a counting query based on the obtained list
+            IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(mkQueryToCountReferencesInType(firstDependentEntityType, propsForFirstEntityType));
 
-            for (; iter.hasNext();) {
-                final Class<? extends AbstractEntity<?>> nextEntityType = iter.next();
-                final List<Field> propsForNextEntityType = Finder.findPropertiesOfSpecifiedType(nextEntityType, entityType);
-                expressionModelInProgress = expressionModelInProgress.add().model(getReferenceCountForSingleProp(nextEntityType, propsForNextEntityType));
+            // need to do the same operation with other dependent types in case there are more than one
+            while(iter.hasNext()) {
+                final Class<? extends AbstractEntity<?>> nextDependentEntityType = iter.next();
+                final List<Field> propsForNextEntityType = Finder.findPropertiesOfSpecifiedType(nextDependentEntityType, entityType);
+                expressionModelInProgress = expressionModelInProgress.add().model(mkQueryToCountReferencesInType(nextDependentEntityType, propsForNextEntityType));
             }
 
             final AggregatedResultQueryModel query = select(entityType).where().prop("id").eq().val(entity).yield().expr(expressionModelInProgress.model()).as("kount").modelAsAggregate();
@@ -139,13 +152,32 @@ public final class Validators {
         }
     }
 
-    private static <T extends AbstractEntity<?>> PrimitiveResultQueryModel getReferenceCountForSingleProp(final Class<? extends AbstractEntity<?>> entityType, final List<Field> props) {
+    /**
+     * Makes an EQL model that counts all instances of the specified entity <code>entityType</code> that contain references to the entity of interest that are expressed as properties <code>props</code>.
+     *
+     * @param entityType
+     * @param props
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> PrimitiveResultQueryModel mkQueryToCountReferencesInType(
+            final Class<? extends AbstractEntity<?>> entityType, // property owner
+            final List<Field> props // properties of the owning entity
+    ) {
         final Iterator<Field> iter = props.iterator();
         final Field firstProp = iter.next();
-        ICompoundCondition0<? extends AbstractEntity<?>> cond = select(entityType).where().prop("active").eq().val(true).and().prop(firstProp.getName()).eq().extProp("id");
-        for (; iter.hasNext();) {
+        ICompoundCondition0<? extends AbstractEntity<?>> cond =
+                select(entityType).
+                where().
+                    prop("id").ne().extProp("id").and(). // this is to prevent counting self-references, relies on throughout ID
+                    prop("active").eq().val(true).and().
+                    prop(firstProp.getName()).eq().extProp("id");
+
+        // need to add conditions to cover all properties of the referenced type in case there are more than one
+        while(iter.hasNext()) {
             cond = cond.and().prop(iter.next().getName()).eq().extProp("id");
         }
+
+        // yield count
         return cond.yield().countAll().modelAsPrimitive();
     }
 

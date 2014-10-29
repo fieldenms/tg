@@ -23,9 +23,8 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
     private final IApplicationDomainProvider domainProvider = getInstance(IApplicationDomainProvider.class);
 
     @Test
-    public void incorrect_number_of_active_dependencies_for_non_persisted() {
-
-        final TgCategory cat1 = new_(TgCategory.class, "Cat1");
+    public void there_should_be_no_dependencies_on_not_persisted_entity() {
+        final TgCategory cat1 = new_(TgCategory.class, "NEW");
         assertNotNull(cat1);
 
         final long count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat1, coAggregates);
@@ -34,17 +33,15 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void incorrect_number_of_active_dependencies_for_cat1() {
-
         final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
         assertNotNull(cat1);
 
         final long count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat1, coAggregates);
-        assertEquals(2, count);
+        assertEquals(3, count);
     }
 
     @Test
     public void incorrect_number_of_active_dependencies_for_cat2() {
-
         final TgCategory cat2 = ao(TgCategory.class).findByKey("Cat2");
         assertNotNull(cat2);
 
@@ -54,7 +51,6 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void incorrect_number_of_active_dependencies_for_cat3() {
-
         final TgCategory cat3 = ao(TgCategory.class).findByKey("Cat3");
         assertNotNull(cat3);
 
@@ -65,7 +61,9 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
     @Override
     protected void populateDomain() {
         final TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));
+        save(cat1.setParent(cat1));
         final TgCategory cat2 = save(new_(TgCategory.class, "Cat2").setActive(true));
+        save(cat2.setParent(cat1));
         final TgCategory cat3 = save(new_(TgCategory.class, "Cat3").setActive(true));
 
         save(new_(TgSystem.class, "Sys1").setActive(true).setCategory(cat1));
