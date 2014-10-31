@@ -29,6 +29,7 @@ import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
 import ua.com.fielden.platform.gis.gps.AbstractAvlModule;
 import ua.com.fielden.platform.gis.gps.AvlData;
 import ua.com.fielden.platform.gis.gps.IModuleLookup;
+import ua.com.fielden.platform.gis.gps.MachineServerState;
 import ua.com.fielden.platform.gis.gps.Option;
 import ua.com.fielden.platform.gis.gps.factory.DefaultGpsHandlerFactory;
 import ua.com.fielden.platform.gis.gps.server.ServerTeltonika;
@@ -293,6 +294,29 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
     }
 
     /**
+     * An API method for get server states update.
+     */
+    public Map<Long, MachineServerState> getServerStatesUpdate(final Map<Long, MachineServerState> serverStatesRequest) {
+        final DateTime st = new DateTime();
+        final Timeout timeout = new Timeout(Duration.create(50000, "seconds"));
+        // TODO use several (or even one) existing LastMessageRetrieverActors? just not to create new ones every time
+        final Future<Object> future = Patterns.ask(LastMessageRetrieverActor.create(getSystem(), getMachineActors()), new MachinesOldServerStates(serverStatesRequest), timeout);
+        try {
+            final Map<Long, MachineServerState> result = (Map<Long, MachineServerState>) Await.result(future, timeout.duration());
+            getLogger().info("final Map<Long, MachineServerState> result = ");
+            getLogger().info(result);
+            final Period p = new Period(st, new DateTime());
+            getLogger().info("New server states [" + result.size() + "] for " + serverStatesRequest.size() + " machines retrieved in "
+                    + (p.getHours() == 0 ? "" : p.getHours() + " h ")
+                    + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms.");
+            return result;
+        } catch (final Exception e) {
+            getLogger().error(e);
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
      * Performs some custom action after the actors has been started.
      */
     protected void machineActorsStartedPostAction() {
@@ -385,5 +409,9 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
 
     public boolean isEmergencyMode() {
         return emergencyMode;
+    }
+
+    protected Map<Long, ActorRef> getMachineActors() {
+        return machineActors;
     }
 }

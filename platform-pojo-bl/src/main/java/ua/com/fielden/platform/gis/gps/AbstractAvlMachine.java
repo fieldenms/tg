@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.gis.gps;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -19,7 +21,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 @KeyType(String.class)
 @EntityTitle(value = "Машина", desc = "Автомобіль, або спецтехніка.")
@@ -27,8 +28,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 @DescTitle(value = "Опис", desc = "Тут можна вказати описову інформацію про машину.")
 @MapEntityTo
 //TODO do not forget to provide companion object in its descendants -- @CompanionObject(IMachine.class)
-@TransactionEntity("lastMessage.packetReceived") // this is marker only -- the actual "delta" query uses special MachineMonitor resource
-public abstract class AbstractAvlMachine <T extends AbstractAvlMessage> extends AbstractEntity<String> {
+@TransactionEntity("lastMessage.packetReceived")
+// this is marker only -- the actual "delta" query uses special MachineMonitor resource
+public abstract class AbstractAvlMachine<T extends AbstractAvlMessage> extends AbstractEntity<String> {
     private static final long serialVersionUID = -50301420153223995L;
 
     @IsProperty
@@ -55,39 +57,54 @@ public abstract class AbstractAvlMachine <T extends AbstractAvlMessage> extends 
     @Title(value = "Title", desc = "Desc")
     private boolean ignitionTracked;
 
+    @IsProperty
+    // just a calculated manually @MapTo
+    @Title(value = "Last Server State", desc = "Last Server State")
+    private MachineServerState lastServerState;
+
     @Observable
-    public  AbstractAvlMachine<T> setIgnitionTracked(final boolean ignitionTracked) {
-	this.ignitionTracked = ignitionTracked;
-	return this;
+    public AbstractAvlMachine<T> setLastServerState(final MachineServerState lastServerState) {
+        this.lastServerState = lastServerState;
+        return this;
+    }
+
+    public MachineServerState getLastServerState() {
+        return lastServerState;
+    }
+
+    @Observable
+    public AbstractAvlMachine<T> setIgnitionTracked(final boolean ignitionTracked) {
+        this.ignitionTracked = ignitionTracked;
+        return this;
     }
 
     public boolean getIgnitionTracked() {
-	return ignitionTracked;
+        return ignitionTracked;
     }
 
     // IMPORTANT: a similar lastMessage property should be added to AbstractAvlMessage descendant (+getter and setter)
-//    @IsProperty
-//    @Readonly
-//    @Calculated
-//    @Title(value = "Останнє GPS повідомлення", desc = "Містить інформацію про останнє GPS повідомлення, отримане від GPS модуля.")
-//    private T lastMessage;
+    //    @IsProperty
+    //    @Readonly
+    //    @Calculated
+    //    @Title(value = "Останнє GPS повідомлення", desc = "Містить інформацію про останнє GPS повідомлення, отримане від GPS модуля.")
+    //    private T lastMessage;
     private static ExpressionModel lastMessage_ = expr().val(null).model();
-	    // expr().model(select(Message.class).where().prop(Message.MACHINE_PROP_ALIAS).eq().extProp("id").and().//
-	    // notExists(select(Message.class).where().prop(Message.MACHINE_PROP_ALIAS).eq().extProp(Message.MACHINE_PROP_ALIAS).and().prop("gpsTime").gt().extProp("gpsTime").model()).model()).model();
+    // expr().model(select(Message.class).where().prop(Message.MACHINE_PROP_ALIAS).eq().extProp("id").and().//
+    // notExists(select(Message.class).where().prop(Message.MACHINE_PROP_ALIAS).eq().extProp(Message.MACHINE_PROP_ALIAS).and().prop("gpsTime").gt().extProp("gpsTime").model()).model()).model();
 
     // TODO @IsProperty(value = Message.class, linkProperty="machine")
     @Title(value = "Останні GPS повідомлення", desc = "Містить інформацію про останні GPS повідомлення, починаючи з деякого часу")
-    private List<T> lastMessages = new ArrayList<T>();
+    private final List<T> lastMessages = new ArrayList<T>();
 
     @Observable
     protected AbstractAvlMachine<T> setLastMessages(final List<T> lastMessages) {
-	this.lastMessages.clear();
-	this.lastMessages.addAll(lastMessages);
-	return this;
+        this.lastMessages.clear();
+        this.lastMessages.addAll(lastMessages);
+        return this;
     }
 
     public List<T> getLastMessages() {
-	return Collections.unmodifiableList(lastMessages);
+        return Collections.unmodifiableList(lastMessages);
     }
 
     @Observable
@@ -98,38 +115,38 @@ public abstract class AbstractAvlMachine <T extends AbstractAvlMessage> extends 
     @Override
     @NotNull
     @Observable
-    public AbstractAvlMachine<T>  setKey(final String key) {
-	super.setKey(key);
-	return this;
+    public AbstractAvlMachine<T> setKey(final String key) {
+        super.setKey(key);
+        return this;
     }
 
     @Observable
-    public AbstractAvlMachine<T>  setEnabled(final boolean enabled) {
-	this.enabled = enabled;
-	return this;
+    public AbstractAvlMachine<T> setEnabled(final boolean enabled) {
+        this.enabled = enabled;
+        return this;
     }
 
     public boolean isEnabled() {
-	return enabled;
+        return enabled;
     }
 
     @Observable
-    public AbstractAvlMachine<T>  setDeletedTime(final Date deletedTime) {
-	this.deletedTime = deletedTime;
-	return this;
+    public AbstractAvlMachine<T> setDeletedTime(final Date deletedTime) {
+        this.deletedTime = deletedTime;
+        return this;
     }
 
     public Date getDeletedTime() {
-	return deletedTime;
+        return deletedTime;
     }
 
     @Observable
-    public AbstractAvlMachine<T>  setDeleted(final boolean deleted) {
-	this.deleted = deleted;
-	return this;
+    public AbstractAvlMachine<T> setDeleted(final boolean deleted) {
+        this.deleted = deleted;
+        return this;
     }
 
     public boolean isDeleted() {
-	return deleted;
+        return deleted;
     }
 }

@@ -22,26 +22,26 @@ import ua.com.fielden.platform.ui.config.MainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 
-public class PlatformDomainTypes{
+public class PlatformDomainTypes {
     public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<Class<? extends AbstractEntity<?>>>();
 
     static {
-	types.add(MainMenuItem.class);
-	types.add(MainMenuItemInvisibility.class);
-	types.add(MainMenu.class);
-	types.add(User.class);
-	types.add(UserRole.class);
-	types.add(UserAndRoleAssociation.class);
-	types.add(SecurityRoleAssociation.class);
-	types.add(EntityCentreConfig.class);
-	types.add(EntityCentreAnalysisConfig.class);
-	types.add(EntityMasterConfig.class);
-	types.add(EntityLocatorConfig.class);
-	types.add(Attachment.class);
-	types.add(EntityAttachmentAssociation.class);
-	types.add(KeyNumber.class);
-	types.add(MigrationRun.class);
-	types.add(MigrationHistory.class);
-	types.add(MigrationError.class);
+        types.add(MainMenuItem.class);
+        types.add(MainMenuItemInvisibility.class);
+        types.add(MainMenu.class);
+        types.add(User.class);
+        types.add(UserRole.class);
+        types.add(UserAndRoleAssociation.class);
+        types.add(SecurityRoleAssociation.class);
+        types.add(EntityCentreConfig.class);
+        types.add(EntityCentreAnalysisConfig.class);
+        types.add(EntityMasterConfig.class);
+        types.add(EntityLocatorConfig.class);
+        types.add(Attachment.class);
+        types.add(EntityAttachmentAssociation.class);
+        types.add(KeyNumber.class);
+        types.add(MigrationRun.class);
+        types.add(MigrationHistory.class);
+        types.add(MigrationError.class);
     }
 }

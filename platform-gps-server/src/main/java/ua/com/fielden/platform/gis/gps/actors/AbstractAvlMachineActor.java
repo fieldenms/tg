@@ -12,7 +12,9 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.gis.MapUtils;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMessage;
+import ua.com.fielden.platform.gis.gps.MachineServerState;
 import ua.com.fielden.platform.persistence.HibernateUtil;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -198,6 +200,16 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
                 } else {
                     getSender().tell(new NoLastMessage(), getSelf());
                 }
+            } else if (data instanceof LastServerStateRequest) {
+                final LastServerStateRequest lastServerStateRequest = (LastServerStateRequest) data;
+
+                final MachineServerState latestServerState = extractServerState();
+
+                if (!EntityUtils.equalsEx(latestServerState, lastServerStateRequest.getOldServerState())) {
+                    getSender().tell(new ServerState(lastServerStateRequest.getMachineId(), latestServerState), getSelf());
+                } else {
+                    getSender().tell(new NoServerState(), getSelf());
+                }
             } else if (data instanceof Changed) {
                 promoteChangedMachine((Changed<MACHINE>) data);
             } else {
@@ -207,6 +219,10 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
             logger.error(e.getMessage(), e);
             throw e;
         }
+    }
+
+    private MachineServerState extractServerState() {
+        return new MachineServerState().setBlackoutSize(blackout.getMessages().size()).setDummy("DUMMY");
     }
 
     protected void promoteChangedMachine(final Changed<MACHINE> changedMachine) {

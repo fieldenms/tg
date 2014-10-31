@@ -79,73 +79,73 @@ public class BasicWebServerModule extends CommonFactoryModule {
     private final Class<? extends IFilter> automaticDataFilterType;
 
     public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes, //
-	    final IApplicationDomainProvider applicationDomainProvider,//
-	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-	    final Class<? extends IFilter> automaticDataFilterType, //
-	    final SecurityTokenProvider tokenProvider,//
-	    final Properties props) throws Exception {
-	super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
-	this.props = props;
-	this.tokenProvider = tokenProvider;
-	this.applicationDomainProvider = applicationDomainProvider;
-	this.serialisationClassProviderType = serialisationClassProviderType;
-	this.automaticDataFilterType = automaticDataFilterType;
+            final IApplicationDomainProvider applicationDomainProvider,//
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
+            final Class<? extends IFilter> automaticDataFilterType, //
+            final SecurityTokenProvider tokenProvider,//
+            final Properties props) throws Exception {
+        super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
+        this.props = props;
+        this.tokenProvider = tokenProvider;
+        this.applicationDomainProvider = applicationDomainProvider;
+        this.serialisationClassProviderType = serialisationClassProviderType;
+        this.automaticDataFilterType = automaticDataFilterType;
     }
 
     @Override
     protected void configure() {
-	super.configure();
-	// bind application specific constants
-	bindConstant().annotatedWith(Names.named("app.home")).to("");
-	bindConstant().annotatedWith(Names.named("reports.path")).to("");
-	bindConstant().annotatedWith(Names.named("domain.path")).to(props.getProperty("domain.path"));
-	bindConstant().annotatedWith(Names.named("domain.package")).to(props.getProperty("domain.package"));
-	bindConstant().annotatedWith(Names.named("private-key")).to(props.getProperty("private-key"));
-	bindConstant().annotatedWith(Names.named("tokens.path")).to(props.getProperty("tokens.path"));
-	bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
-	bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
-	bindConstant().annotatedWith(Names.named("attachments.location")).to(props.getProperty("attachments.location")); // server only
+        super.configure();
+        // bind application specific constants
+        bindConstant().annotatedWith(Names.named("app.home")).to("");
+        bindConstant().annotatedWith(Names.named("reports.path")).to("");
+        bindConstant().annotatedWith(Names.named("domain.path")).to(props.getProperty("domain.path"));
+        bindConstant().annotatedWith(Names.named("domain.package")).to(props.getProperty("domain.package"));
+        bindConstant().annotatedWith(Names.named("private-key")).to(props.getProperty("private-key"));
+        bindConstant().annotatedWith(Names.named("tokens.path")).to(props.getProperty("tokens.path"));
+        bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
+        bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
+        bindConstant().annotatedWith(Names.named("attachments.location")).to(props.getProperty("attachments.location")); // server only
 
-	bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
-	bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
-	// serialisation related binding
-	bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON); // FleetSerialisationClassProvider.class
-	bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
-	bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON); //
+        bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
+        bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
+        // serialisation related binding
+        bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON); // FleetSerialisationClassProvider.class
+        bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
+        bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON); //
 
-	// bind DAO and any other implementations of the required application controllers
-	bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
-	bind(IKeyNumber.class).to(KeyNumberDao.class);
+        // bind DAO and any other implementations of the required application controllers
+        bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
+        bind(IKeyNumber.class).to(KeyNumberDao.class);
 
-	// bind attachment controllers
-	bind(IAttachment.class).to(AttachmentDao.class);
-	bind(IEntityAttachmentAssociationController.class).to(EntityAttachmentAssociationDao.class);
+        // bind attachment controllers
+        bind(IAttachment.class).to(AttachmentDao.class);
+        bind(IEntityAttachmentAssociationController.class).to(EntityAttachmentAssociationDao.class);
 
-	// configuration related binding
-	bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
-	bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerDao.class);
-	bind(IMainMenu.class).to(MainMenuDao.class);
-	bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
-	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);
-	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
-	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
-	bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
+        // configuration related binding
+        bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
+        bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerDao.class);
+        bind(IMainMenu.class).to(MainMenuDao.class);
+        bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
+        bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);
+        bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
+        bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
+        bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
 
-	// user security related bindings
-	bind(IUserRoleDao.class).to(UserRoleDao.class);
-	bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
-	bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
-	bind(IUserController.class).to(UserController.class);
-	bind(IUserDao.class).to(UserController.class);
-	bind(ISecurityTokenController.class).to(SecurityTokenController.class);
-	if (tokenProvider != null) {
-	    bind(SecurityTokenProvider.class).toInstance(tokenProvider);
-	}
-	bind(IAuthorisationModel.class).to(NoAuthorisation.class);
+        // user security related bindings
+        bind(IUserRoleDao.class).to(UserRoleDao.class);
+        bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
+        bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
+        bind(IUserController.class).to(UserController.class);
+        bind(IUserDao.class).to(UserController.class);
+        bind(ISecurityTokenController.class).to(SecurityTokenController.class);
+        if (tokenProvider != null) {
+            bind(SecurityTokenProvider.class).toInstance(tokenProvider);
+        }
+        bind(IAuthorisationModel.class).to(NoAuthorisation.class);
 
-	// bind value matcher factory to support autocompleters
-	bind(IDaoFactory.class).toInstance(getDaoFactory());
-	// TODO is this binding really needed for the server side???
-	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
+        // bind value matcher factory to support autocompleters
+        bind(IDaoFactory.class).toInstance(getDaoFactory());
+        // TODO is this binding really needed for the server side???
+        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
     }
 }
