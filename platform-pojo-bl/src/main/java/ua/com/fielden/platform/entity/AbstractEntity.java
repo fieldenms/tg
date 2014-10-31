@@ -730,7 +730,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = new EnumMap<>(ValidationAnnotation.class);
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
             // removeFrom[property name], addTo[property name] and set[property name]
-            final List<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, type, isCollectional);
+            final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, type, isCollectional);
             for (final Annotation annotation : propertyValidationAnotations) {
                 final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
                 // if property factory cannot instantiate a validator for the specified annotation then null is returned;
@@ -835,8 +835,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      * @throws NoSuchMethodException
      */
-    public List<Annotation> extractValidationAnnotationForProperty(final Field field, final Class<?> type, final boolean isCollectional) {
-        final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
+    public Set<Annotation> extractValidationAnnotationForProperty(final Field field, final Class<?> type, final boolean isCollectional) {
+        final Set<Annotation> propertyValidationAnotations = new HashSet<>();
         // try to obtain setter
         propertyValidationAnotations.addAll(extractSetterAnnotations(field, type));
         propertyValidationAnotations.addAll(extractFieldBeforeChangeAnnotations(field));
@@ -859,10 +859,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private List<Annotation> extractDecrementorAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractDecrementorAnnotations(final Field field, final Class<?> type) {
         try {
             final Method decrementor = Reflector.getMethod(/* getType() */this, "removeFrom" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-            final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
+            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
             if (annotations.size() > 0 && AnnotationReflector.getAnnotation(decrementor, Observable.class) == null) {
                 throw new IllegalStateException("Property " + field.getName() + " in " + getType()
                         + " requires validation, but corresponding decrementor is not observable (no Observable annotation).");
@@ -871,7 +871,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         } catch (final NoSuchMethodException e) {
             // do nothing if decrementor does not exist
         }
-        return new ArrayList<Annotation>();
+        return new HashSet<>();
     }
 
     /**
@@ -882,10 +882,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private List<Annotation> extractIncrementorAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractIncrementorAnnotations(final Field field, final Class<?> type) {
         try {
             final Method incremetor = Reflector.getMethod(/* getType() */this, "addTo" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-            final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
+            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
             if (annotations.size() > 0 && AnnotationReflector.getAnnotation(incremetor, Observable.class) == null) {
                 throw new IllegalStateException("Property " + field.getName() + " in " + getType()
                         + " requires validation, but corresponding incremetor is not observable (no Observable annotation).");
@@ -894,7 +894,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         } catch (final NoSuchMethodException e1) {
             // do nothing if incrementor does not exist
         }
-        return new ArrayList<Annotation>();
+        return new HashSet<>();
     }
 
     /**
@@ -904,7 +904,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private List<Annotation> extractSetterAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractSetterAnnotations(final Field field, final Class<?> type) {
         //logger.debug("Extracting validation annotations for property " + field.getName() + ".");
         try {
             final Method setter = Reflector.getMethod(this, "set" + Character.toUpperCase(field.getName().charAt(0)) + field.getName().substring(1), type);
@@ -913,14 +913,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 logger.error(errorMsg);
                 throw new IllegalStateException(errorMsg);
             }
-            final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(setter);
+            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(setter);
             //logger.debug("Number of validation annotations for property " + field.getName() + ": " + annotations.size());
             return annotations;
         } catch (final NoSuchMethodException e1) {
             // do nothing if setter does not exist
             logger.debug("There is no setter for property " + field.getName() + ".");
         }
-        return new ArrayList<Annotation>();
+        return new HashSet<>();
     }
 
     /**

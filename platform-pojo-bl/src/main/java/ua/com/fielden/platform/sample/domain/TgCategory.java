@@ -28,7 +28,7 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Selfy", desc = "Desc")
-    private TgCategory parent;
+    private TgCategory parent; // is property is introduced to test activation/deactivation of self referenced
 
     @Observable
     @EntityExists(TgCategory.class)

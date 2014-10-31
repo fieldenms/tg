@@ -13,6 +13,20 @@ public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends
     @Title(value = "Active", desc = "Designates whether an entity instance is active or not.")
     private boolean active;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Ref Count", desc = "The count of active entities pointing to this entity.")
+    private Integer refCount;
+
+    @Observable
+    public ActivatableAbstractEntity<K> setRefCount(final Integer refCount) {
+        this.refCount = refCount;
+        return this;
+    }
+
+    public Integer getRefCount() {
+        return refCount;
+    }
 
     @Observable
     protected ActivatableAbstractEntity<K> setActive(final boolean active) {
@@ -23,8 +37,5 @@ public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends
     public boolean isActive() {
         return active;
     }
-
-
-
 
 }
