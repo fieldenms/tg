@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.entity.property;
 
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
@@ -21,20 +21,23 @@ import com.google.inject.Inject;
  */
 public class DaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
 
-    private final DaoFactory factory;
+    private final ICompanionObjectFinder coFinder;
 
     @Inject
-    public DaoMetaPropertyFactory(final DaoFactory factory, final DomainValidationConfig domainConfig, final DomainMetaPropertyConfig domainMetaConfig) {
+    public DaoMetaPropertyFactory(
+            final DomainValidationConfig domainConfig,
+            final DomainMetaPropertyConfig domainMetaConfig,
+            final ICompanionObjectFinder coFinder) {
         super(domainConfig, domainMetaConfig);
-        this.factory = factory;
+        this.coFinder = coFinder;
     }
 
     @Override
     protected synchronized IBeforeChangeEventHandler<?> createEntityExists(final EntityExists anotation) {
         final Class<? extends AbstractEntity<?>> key = anotation.value();
+
         if (!entityExistsValidators.containsKey(key)) {
-            final IEntityDao<?> dao = factory.newDao(key);
-            entityExistsValidators.put(key, new EntityExistsValidator(dao));
+            entityExistsValidators.put(key, new EntityExistsValidator(key, coFinder));
         }
 
         return entityExistsValidators.get(key);

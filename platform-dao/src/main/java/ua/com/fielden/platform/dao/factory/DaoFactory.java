@@ -10,9 +10,9 @@ import com.google.inject.Injector;
 
 /**
  * Factory for instantiating DAO by means of Guice injection.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DaoFactory implements IDaoFactory {
     private Injector injector;
@@ -21,14 +21,14 @@ public class DaoFactory implements IDaoFactory {
     }
 
     @Override
-    public IEntityDao<?> newDao(final Class<? extends AbstractEntity<?>> entityType) {
-        final Class<? extends IEntityDao<? extends AbstractEntity<?>>> coType = CompanionObjectAutobinder.companionObjectType(entityType);
+    public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T newDao(final Class<E> entityType) {
+        final Class<T> coType = CompanionObjectAutobinder.companionObjectType(entityType);
         if (coType != null) {
             return injector.getInstance(coType);
         } else {
-            final DynamicEntityDao dao = injector.getInstance(DynamicEntityDao.class);
+            final DynamicEntityDao<E> dao = injector.getInstance(DynamicEntityDao.class);
             dao.setEntityType(entityType);
-            return dao;
+            return (T) dao;
         }
     }
 

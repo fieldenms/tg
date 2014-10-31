@@ -5,8 +5,12 @@ import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
+
+import com.google.inject.Inject;
 
 /**
  * Validator that checks entity value for existence using an {@link IEntityDao} instance.
@@ -16,21 +20,27 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  *
  */
-public class EntityExistsValidator implements IBeforeChangeEventHandler<Object> {
+public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<Object> {
 
-    private IEntityDao companionObject;
+    private final Class<T> type;
+    private final ICompanionObjectFinder coFinder;
 
     protected EntityExistsValidator() {
+        type = null;
+        coFinder = null;
     }
 
-    public EntityExistsValidator(final IEntityDao dao) {
-        this.companionObject = dao;
+    public EntityExistsValidator(final Class<T> type, final ICompanionObjectFinder coFinder) {
+        this.type = type;
+        this.coFinder = coFinder;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-        if (companionObject == null) {
+        final IEntityDao<T> co = coFinder.find(type);
+
+        if (co == null) {
             throw new IllegalStateException("Entity exists validator is not fully initialise: companion object is missing");
         }
         final AbstractEntity<?> entity = property.getEntity();
@@ -39,7 +49,16 @@ public class EntityExistsValidator implements IBeforeChangeEventHandler<Object> 
                 return new Result(entity, "EntityExists validator : Entity " + newValue + " is null.");
             }
 
-            final boolean exists = newValue instanceof AbstractEntity ? companionObject.entityExists((AbstractEntity<?>) newValue) : companionObject.entityWithKeyExists(newValue);
+            // entity value should either be an actual entity instance or an instance of a corresponding key
+            final boolean exists;
+            if (newValue instanceof ActivatableAbstractEntity) {
+                exists = co.entityExists((T) newValue);
+            } else if (newValue instanceof AbstractEntity) {
+                exists = co.entityExists((T) newValue);
+            } else {
+                exists = co.entityWithKeyExists(newValue);
+            }
+
             if (!exists) {
                 return new Result(entity, new Exception("EntityExists validator : Could not find entity " + newValue));
             } else {

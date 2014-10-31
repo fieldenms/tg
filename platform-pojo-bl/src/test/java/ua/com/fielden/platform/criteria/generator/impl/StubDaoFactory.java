@@ -22,9 +22,9 @@ import ua.com.fielden.platform.security.user.User;
 public class StubDaoFactory implements IDaoFactory {
 
     @Override
-    public IEntityDao<?> newDao(final Class<? extends AbstractEntity<?>> entityType) {
+    public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T newDao(final Class<E> entityType) {
         if (TopLevelEntity.class.equals(entityType)) {
-            return new IEntityDao<TopLevelEntity>() {
+            return (T) new IEntityDao<TopLevelEntity>() {
 
                 @Override
                 public String getUsername() {

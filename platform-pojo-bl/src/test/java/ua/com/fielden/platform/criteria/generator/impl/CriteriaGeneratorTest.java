@@ -39,6 +39,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -518,8 +519,8 @@ public class CriteriaGeneratorTest {
         assertNotNull(classParams);
         assertEquals("The number of class params is incorrect", 1, classParams.length);
         final ClassParam classParam = classParams[0];
-        assertEquals("The name of class param property is incorrect", "companionObject", classParam.name());
-        assertEquals("The value of class param annottion is incorrect", ILastLevelEntity.class, classParam.value());
+        assertEquals("The name of class param property is incorrect", "coFinder", classParam.name());
+        assertEquals("The value of class param annottion is incorrect", ICompanionObjectFinder.class, classParam.value());
     }
 
     @Test

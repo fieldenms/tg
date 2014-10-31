@@ -10,9 +10,9 @@ import com.google.inject.Inject;
 
 /**
  * Factory for instantiating DAO by means of Guice injection.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class RaoFactory implements IDaoFactory {
     private final RestClientUtil util;
@@ -23,9 +23,9 @@ public class RaoFactory implements IDaoFactory {
     }
 
     @Override
-    public IEntityDao<?> newDao(final Class<? extends AbstractEntity<?>> entityType) {
-        final DynamicEntityRao rao = new DynamicEntityRao(util);
+    public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T newDao(final Class<E> entityType) {
+        final DynamicEntityRao<E> rao = new DynamicEntityRao<>(util);
         rao.setEntityType(entityType);
-        return rao;
+        return (T) rao;
     }
 }
