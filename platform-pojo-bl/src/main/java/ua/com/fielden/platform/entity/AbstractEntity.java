@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
@@ -23,6 +25,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.entity.annotation.Autosave;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Dependent;
@@ -42,6 +45,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
+import ua.com.fielden.platform.entity.annotation.factory.EntityExistsAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
@@ -54,6 +58,7 @@ import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -713,7 +718,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      *
      * @param metaPropertyFactory
      * @param field
-     * @param type
+     * @param properyType
      * @param isCollectional
      * @return map of validators
      * @throws Exception
@@ -721,7 +726,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> collectValidators(
             final IMetaPropertyFactory metaPropertyFactory,
             final Field field,
-            final Class<?> type,
+            final Class<?> properyType,
             final boolean isCollectional,
             final Set<Annotation> validationAnnotations)
             throws Exception {
@@ -730,11 +735,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = new EnumMap<>(ValidationAnnotation.class);
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
             // removeFrom[property name], addTo[property name] and set[property name]
-            final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, type, isCollectional);
+            final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, properyType, isCollectional);
             for (final Annotation annotation : propertyValidationAnotations) {
                 final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
                 // if property factory cannot instantiate a validator for the specified annotation then null is returned;
-                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), type);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), properyType);
                 if (annotationValidators.length > 0) {
                     final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
                     for (final IBeforeChangeEventHandler<?> handler : annotationValidators) {
@@ -743,6 +748,24 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                     validators.put(validationAnnotation, handlersAndResults);
                 }
             }
+
+            // now let's see if we need to add EntityExists validation
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(getType(), field.getName(), properyType)) {
+                final EntityExists eeAnnotation = new EntityExistsAnnotation((Class<? extends AbstractEntity<?>>) properyType).newInstance();
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
+
+                if (annotationValidators.length != 1) {
+                    throw new IllegalStateException(format("Unexpexted number of EntityExists validators (expected 1, but actual %s) during entity \"%s\" instantiation.", annotationValidators.length, getType().getName()));
+                }
+
+                propertyValidationAnotations.add(eeAnnotation);
+                final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
+                final IBeforeChangeEventHandler<?> handler = annotationValidators[0];
+                handlersAndResults.put(handler, null);
+
+                validators.put(ValidationAnnotation.ENTITY_EXISTS, handlersAndResults);
+            }
+
             // logger.debug("Finished collecting validators for property " + field.getName() + ".");
             validationAnnotations.addAll(propertyValidationAnotations);
 
@@ -751,6 +774,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             logger.error("Exception during collection of validators for property " + field.getName() + ".", ex);
             throw ex;
         }
+    }
+
+    /**
+     * Determines whether entity exists validation is applicable for the provided type.
+     *
+     * @param propName
+     * @param propType
+     * @return
+     */
+    private boolean isEntityExistsValidationApplicable(final Class<?> entityType, final String propName, final Class<?> propType) {
+        return !AnnotationReflector.isPropertyAnnotationPresent(Autosave.class, entityType, propName) && EntityUtils.isPersistedEntityType(propType);
     }
 
     /**

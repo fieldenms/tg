@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 /**
  * Master entity object.
@@ -24,6 +23,7 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 public class TgCategory extends ActivatableAbstractEntity<String> {
+    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo
@@ -31,7 +31,6 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
     private TgCategory parent; // is property is introduced to test activation/deactivation of self referenced
 
     @Observable
-    @EntityExists(TgCategory.class)
     public TgCategory setParent(final TgCategory parent) {
         this.parent = parent;
         return this;
