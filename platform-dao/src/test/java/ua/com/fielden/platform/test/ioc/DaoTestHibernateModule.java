@@ -79,9 +79,9 @@ import com.google.inject.TypeLiteral;
 
 /**
  * Guice injector module for Hibernate related injections for testing purposes.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DaoTestHibernateModule extends CommonFactoryModule {
 
@@ -136,7 +136,6 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IMigrationRunDao.class).to(MigrationRunDao.class);
         bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);
 
-        bind(IDaoFactory.class).toInstance(getDaoFactory());
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
 
         bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
