@@ -18,7 +18,6 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 import org.restlet.routing.Router;
 
-import ua.com.fielden.platform.dao.DynamicEntityDao;
 import ua.com.fielden.platform.dao.IComputationMonitor;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -30,7 +29,7 @@ import com.google.inject.Injector;
 
 /**
  * Represents a web resource mapped to URI /export/generated-type.
- * 
+ *
  * @author TG Team
  */
 public class GeneratedEntityQueryExportResource extends ServerResource implements IComputationMonitor {
@@ -45,7 +44,7 @@ public class GeneratedEntityQueryExportResource extends ServerResource implement
 
     /**
      * The main resource constructor accepting a DAO instance in addition to the standard {@link Resource} parameters.
-     * 
+     *
      * @param dao
      * @param context
      * @param request
