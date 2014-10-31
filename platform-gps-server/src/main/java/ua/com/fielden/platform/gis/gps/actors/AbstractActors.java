@@ -67,12 +67,17 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
     private final Integer gpsPort;
     private final Injector injector;
     private final boolean emergencyMode;
+    private final int windowSize;
+    private final int windowSize2;
+    private final int windowSize3;
+    private final double averagePacketSizeThreshould;
+    private final double averagePacketSizeThreshould2;
 
     /**
      * Creates an actor system responsible for processing messages and getting efficiently a state from it (e.g. last machine message).
      *
      */
-    public AbstractActors(final Injector injector, final Map<MACHINE, MESSAGE> machinesWithLastMessages, final Map<MODULE, List<ASSOCIATION>> modulesWithAssociations, final String gpsHost, final Integer gpsPort, final boolean emergencyMode) {
+    public AbstractActors(final Injector injector, final Map<MACHINE, MESSAGE> machinesWithLastMessages, final Map<MODULE, List<ASSOCIATION>> modulesWithAssociations, final String gpsHost, final Integer gpsPort, final boolean emergencyMode, final int windowSize, final int windowSize2, final int windowSize3, final double averagePacketSizeThreshould, final double averagePacketSizeThreshould2) {
         this.gpsHost = gpsHost;
         this.gpsPort = gpsPort;
         this.injector = injector;
@@ -88,6 +93,11 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
         this.machineActors = new HashMap<>();
         this.moduleActors = new ConcurrentHashMap<>(); // needed thread-safe map not to produce conflicts by dataReceived() and promoteChangedModule()
         this.emergencyMode = emergencyMode;
+        this.windowSize = windowSize;
+        this.windowSize2 = windowSize2;
+        this.windowSize3 = windowSize3;
+        this.averagePacketSizeThreshould = averagePacketSizeThreshould;
+        this.averagePacketSizeThreshould2 = averagePacketSizeThreshould2;
     }
 
     private static <T extends AbstractEntity<String>> Set<String> keys(final Set<T> keySet) {
@@ -409,6 +419,26 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
 
     public boolean isEmergencyMode() {
         return emergencyMode;
+    }
+
+    public int windowSize() {
+        return windowSize;
+    }
+
+    public int windowSize2() {
+        return windowSize2;
+    }
+
+    public int windowSize3() {
+        return windowSize3;
+    }
+
+    public double averagePacketSizeThreshould() {
+        return averagePacketSizeThreshould;
+    }
+
+    public double averagePacketSizeThreshould2() {
+        return averagePacketSizeThreshould2;
     }
 
     protected Map<Long, ActorRef> getMachineActors() {

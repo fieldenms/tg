@@ -28,9 +28,11 @@ import akka.actor.UntypedActor;
 public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>> extends UntypedActor {
     private final MessagesComparator<MESSAGE> messagesComparator;
     protected static int jdbcInsertBatchSize = 100;
-    private static int windowSize = 5;
-    private static int windowSize2 = 24;
-    private static int windowSize3 = 35;
+    private final int windowSize;
+    private final int windowSize2;
+    private final int windowSize3;
+    private final double averagePacketSizeThreshould;
+    private final double averagePacketSizeThreshould2;
     private final Logger logger = Logger.getLogger(AbstractAvlMachineActor.class);
 
     private MACHINE machine;
@@ -43,7 +45,7 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
     private ActorRef machinesCounterRef;
     private final boolean emergencyMode;
 
-    public AbstractAvlMachineActor(final EntityFactory factory, final MACHINE machine, final MESSAGE lastMessage, final HibernateUtil hibUtil, final ActorRef machinesCounterRef, final boolean emergencyMode) {
+    public AbstractAvlMachineActor(final EntityFactory factory, final MACHINE machine, final MESSAGE lastMessage, final HibernateUtil hibUtil, final ActorRef machinesCounterRef, final boolean emergencyMode, final int windowSize, final int windowSize2, final int windowSize3, final double averagePacketSizeThreshould, final double averagePacketSizeThreshould2) {
         this.machinesCounterRef = machinesCounterRef;
 
         messagesComparator = new MessagesComparator<MESSAGE>();
@@ -56,6 +58,11 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
         this.hibUtil = hibUtil;
         // do not forget to invoke processTempMessages()!
         this.emergencyMode = emergencyMode;
+        this.windowSize = windowSize;
+        this.windowSize2 = windowSize2;
+        this.windowSize3 = windowSize3;
+        this.averagePacketSizeThreshould = averagePacketSizeThreshould;
+        this.averagePacketSizeThreshould2 = averagePacketSizeThreshould2;
     }
 
     @Override
@@ -307,12 +314,14 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
     }
 
     private int calcNewWindowSize(final float recentAvgPacketSize) {
-        if (recentAvgPacketSize < 1.1) {
+        if (recentAvgPacketSize < averagePacketSizeThreshould) {
             return windowSize;
-        } else if (recentAvgPacketSize < 1.3) {
-            return windowSize2;
         } else {
-            return windowSize3;
+            if (recentAvgPacketSize < averagePacketSizeThreshould2) {
+                return windowSize2;
+            } else {
+                return windowSize3;
+            }
         }
     }
 
