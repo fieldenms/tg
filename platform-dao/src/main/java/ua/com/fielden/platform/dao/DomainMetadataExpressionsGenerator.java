@@ -41,13 +41,16 @@ public class DomainMetadataExpressionsGenerator {
         return expressionModelInProgress.otherwise().val(null).end().model();
     }
 
-    ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-        final List<Field> keyMembers = Finder.getKeyMembers(entityType);
-        final Iterator<Field> iterator = keyMembers.iterator();
-        IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().concat().prop(getKeyMemberConcatenationExpression(iterator.next()));
+    ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final List<Pair<Field, Boolean>> keyMembers) {
+        final Iterator<Pair<Field, Boolean>> iterator = keyMembers.iterator();
+        final Pair<Field, Boolean> firstMember = iterator.next();
+        IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = firstMember.getValue() ? //
+                expr().concat().prop(getKeyMemberConcatenationExpression(firstMember.getKey())) 
+                :
+                   expr().concat().prop(getKeyMemberConcatenationExpression(firstMember.getKey()));
         for (; iterator.hasNext();) {
             expressionModelInProgress = expressionModelInProgress.with().val(Reflector.getKeyMemberSeparator(entityType));
-            expressionModelInProgress = expressionModelInProgress.with().prop(getKeyMemberConcatenationExpression(iterator.next()));
+            expressionModelInProgress = expressionModelInProgress.with().prop(getKeyMemberConcatenationExpression(iterator.next().getKey()));
         }
         return expressionModelInProgress.end().model();
     }
