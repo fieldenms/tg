@@ -8,6 +8,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends AbstractEntity<K> {
     private static final long serialVersionUID = 1L;
 
+    public static final String ACTIVE = "active";
+    public static final String REF_COUNT = "refCount";
+
     @IsProperty
     @MapTo("ACTIVE_FLAG_")
     @Title(value = "Active", desc = "Designates whether an entity instance is active or not.")

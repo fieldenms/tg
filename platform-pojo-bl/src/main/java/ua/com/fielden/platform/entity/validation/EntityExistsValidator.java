@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity.validation;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -8,9 +12,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
-
-import com.google.inject.Inject;
 
 /**
  * Validator that checks entity value for existence using an {@link IEntityDao} instance.
@@ -20,7 +23,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<Object> {
+public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<T> {
 
     private final Class<T> type;
     private final ICompanionObjectFinder coFinder;
@@ -35,9 +38,8 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         this.coFinder = coFinder;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<T> property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations) {
         final IEntityDao<T> co = coFinder.find(type);
 
         if (co == null) {
@@ -46,26 +48,28 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         final AbstractEntity<?> entity = property.getEntity();
         try {
             if (newValue == null) {
-                return new Result(entity, "EntityExists validator : Entity " + newValue + " is null.");
+                return Result.successful(entity);
             }
 
             // entity value should either be an actual entity instance or an instance of a corresponding key
             final boolean exists;
             if (newValue instanceof ActivatableAbstractEntity) {
-                exists = co.entityExists((T) newValue);
-            } else if (newValue instanceof AbstractEntity) {
-                exists = co.entityExists((T) newValue);
+                // if entity is activatable then it should both exists and be active to pass validation
+                final Class<T> entityType = co.getEntityType();
+                final fetch<T> fm = fetchOnly(entityType).with(ACTIVE);
+                final T ent = co.findByEntityAndFetch(fm, newValue);
+                exists = (ent != null && ent.<Boolean>get(ACTIVE));
             } else {
-                exists = co.entityWithKeyExists(newValue);
+                exists = co.entityExists(newValue);
             }
 
             if (!exists) {
-                return new Result(entity, new Exception("EntityExists validator : Could not find entity " + newValue));
+                return Result.failure(entity, format("EntityExists validator : Could not find entity %s", newValue));
             } else {
-                return new Result(entity, "EntityExists validator : Entity " + newValue + " is valid.");
+                return Result.successful(entity);
             }
         } catch (final Exception e) {
-            return new Result(entity, "EntityExists validator : Failed validation for property " + property.getName() + " on type " + entity.getType(), e);
+            return Result.failure(entity, e);
         }
     }
 
