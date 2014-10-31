@@ -45,7 +45,8 @@
 
     template.menuItemSelected = function (e, detail, sender) {
         if (detail.isSelected) {
-            scaffold = document.querySelector('#scaffold');
+            //scaffold = document.querySelector('#scaffold');
+            scaffold.closeDrawer();
         }
     };
 
