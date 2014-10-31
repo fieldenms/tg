@@ -127,9 +127,10 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
                     processLatestGpsMessage(oldLatestGpsMessage, latestGpsMessage);
                 }
 
-                if (!onStart) {
-                    persistTemporarily(packet);
-                }
+                persistTemporarily(packet);
+                //                if (!onStart) { // onStart has been deprecated
+                //                    persistTemporarily(packet);
+                //                }
 
                 incomingPackets.add(packet);
                 if (fillBuffer()) {

@@ -23,44 +23,44 @@ public class Blackout<T extends AbstractAvlMessage> {
     private final Set<Long> gpsTimes = new HashSet<>();
 
     public Blackout(final MessagesComparator<T> messagesComparator) {
-	this.messages = new TreeSet<>(messagesComparator);
+        this.messages = new TreeSet<>(messagesComparator);
     }
 
     public void add(final Packet<T> packet) {
-	for (final T message : packet.getMessages()) {
-	    if (!gpsTimes.contains(message.getGpsTime().getTime())) {
-		messages.add(message);
-		gpsTimes.add(message.getGpsTime().getTime());
-	    } else {
-		final boolean rm = messages.remove(message);
-		final boolean ad = messages.add(message);
-	    }
-	}
+        for (final T message : packet.getMessages()) {
+            if (!gpsTimes.contains(message.getGpsTime().getTime())) {
+                messages.add(message);
+                gpsTimes.add(message.getGpsTime().getTime());
+            } else {
+                final boolean rm = messages.remove(message);
+                final boolean ad = messages.add(message);
+            }
+        }
     }
 
     public Collection<T> reset() {
-	if (messages.size() > 0) {
-	    final List<T> result = new ArrayList<>();
-	    for (final T message : messages) {
-		result.add(message);
-	    }
-	    messages.clear();
-	    gpsTimes.clear();
-	    return result;
-	} else {
-	    return Collections.emptySet();
-	}
+        if (messages.size() > 0) {
+            final List<T> result = new ArrayList<>();
+            for (final T message : messages) {
+                result.add(message);
+            }
+            messages.clear();
+            gpsTimes.clear();
+            return result;
+        } else {
+            return Collections.emptySet();
+        }
     }
 
     public SortedSet<T> getMessages() {
-	return messages;
+        return messages;
     }
 
     public T getStart() {
-	return messages.isEmpty() ? null : messages.first();
+        return messages.isEmpty() ? null : messages.first();
     }
 
     public T getFinish() {
-	return messages.isEmpty() ? null : messages.last();
+        return messages.isEmpty() ? null : messages.last();
     }
 }
