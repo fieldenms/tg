@@ -85,6 +85,7 @@ public class FileResource extends ServerResource {
 	case "png":
 	    return MediaType.IMAGE_PNG;
 	case "js":
+	case "min.js":
 	case "json":
 	    return MediaType.TEXT_JAVASCRIPT;
 	case "html":

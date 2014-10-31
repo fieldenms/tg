@@ -1,21 +1,34 @@
 (function () {
-    var template = document.querySelector('#app_template'),
-        DEFAULT_ITEM = 'My Profile';
 
-    template.menuItems = [
+    var template = document.querySelector('#app_template'),
+        DEFAULT_ROUTE = 'custom/my-profile',
+        scaffold,
+        pages;
+
+    template.pages = [
         {
             name: 'My Profile',
-            url: '/resources/my-profile.html'
-        }, {
-            name: 'Personnel',
-            url: '/centre/fielden.main.menu.tablecodes.MiPerson'
+            hash: 'custom/my-profile',
+            url: '/resources/my-profile.html',
+            lazyLoad: false
         }, {
             name: 'Custom View',
-            url: '/resources/custom/custom-view.html'
+            hash: 'custom/custom-view',
+            url: '/resources/custom/custom-view.html',
+            lazyLoad: true
         }
+        /*, {
+            name: 'Personnel',
+            hash: 'centre/personnel',
+            url: '/resources/centre/entity-centre.html',
+            attributes: '{centreName: "fielden.main.menu.tablecodes.MiPerson"}',
+            lazyLoad: true
+        }*/
     ];
 
     template.addEventListener('template-bound', function (e) {
+        scaffold = document.querySelector('#scaffold');
+        pages = document.querySelector('#pages');
         /*var keys = document.querySelector('#keys');
 
             // Allow selecting pages by num keypad. Dynamically add
@@ -27,14 +40,19 @@
             });
             keys.keys += ' ' + keysToAdd;*/
 
-        this.selectedItem = this.selectedItem || DEFAULT_ITEM; // Select initial route.
+        this.route = this.route || DEFAULT_ROUTE; // Select initial route.
     });
 
     template.menuItemSelected = function (e, detail, sender) {
-        var scaffold;
         if (detail.isSelected) {
             scaffold = document.querySelector('#scaffold');
-            scaffold.closeDrawer();
-        };
+        }
+    };
+
+    template.pageSelected = function (e, detail, sender) {
+        var elementToLoad = pages.selectedItem.querySelector('load-element');
+        if (!elementToLoad.wasLoaded) {
+            pages.selectedItem.querySelector('load-element').load();
+        }
     };
 })();

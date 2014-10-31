@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <script src="platform.js"></script>
+    <link rel="import" href="polymer.html">
+  </head>
+  <body>
+    <dynamic-element>
+      I'm just an unknown element.
+    </dynamic-element>
+
+    <button>Import</button>
+
+    <script>
+      var button = document.querySelector('button');
+      button.addEventListener('click', function() {
+        Polymer.import(['dynamic-element.html'], function() {
+          document.querySelector('dynamic-element').description = 'a dynamic import';
+        });
+      });
+    </script>
+  </body>
+</html>

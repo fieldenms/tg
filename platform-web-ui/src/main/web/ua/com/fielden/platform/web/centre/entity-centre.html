@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+<link rel="import" href="/resources/accordion/accordion-element.html">
 <!--
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
@@ -8,9 +9,10 @@
     <template>
         <core-ajax id="config_retriever" url="/users/SU/centre/{{centreName}}" handleas="json" response="{{config}}" on-core-error="{{onConfigLoadError}}" auto></core-ajax>
         <core-ajax id="run" url="/users/SU/QueryRunner" method="POST" handleas="json" on-core-response="{{onResponse}}" on-core-error="{{onError}}"></core-ajax>
-        <span>{{centreName}}</span>
-        <span>{{config.centreConfig.criteria.columns}}</span>
-    
+        <accordion-element heading="Selection Criteria">
+            <span>{{centreName}}</span>
+            <span>{{config.centreConfig.criteria.columns}}</span>
+        </accordion-element>
     </template>
     <script>
         Polymer({
