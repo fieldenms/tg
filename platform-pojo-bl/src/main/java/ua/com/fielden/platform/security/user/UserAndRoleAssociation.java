@@ -3,7 +3,7 @@ package ua.com.fielden.platform.security.user;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.Autosave;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -28,13 +28,13 @@ public class UserAndRoleAssociation extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @CompositeKeyMember(1)
     @MapTo("ID_CRAFT")
-    @Autosave
+    @SkipEntityExistsValidation
     private User user;
 
     @IsProperty
     @CompositeKeyMember(2)
     @MapTo("ID_USER_ROLE")
-    @Autosave
+    @SkipEntityExistsValidation
     private UserRole userRole;
 
     protected UserAndRoleAssociation() {

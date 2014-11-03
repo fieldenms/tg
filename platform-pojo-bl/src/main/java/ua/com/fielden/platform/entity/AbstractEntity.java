@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.entity.annotation.Autosave;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Dependent;
@@ -784,7 +784,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     private boolean isEntityExistsValidationApplicable(final Class<?> entityType, final String propName, final Class<?> propType) {
-        return !AnnotationReflector.isPropertyAnnotationPresent(Autosave.class, entityType, propName) && EntityUtils.isPersistedEntityType(propType);
+        return !AnnotationReflector.isPropertyAnnotationPresent(SkipEntityExistsValidation.class, entityType, propName) && EntityUtils.isPersistedEntityType(propType);
     }
 
     /**

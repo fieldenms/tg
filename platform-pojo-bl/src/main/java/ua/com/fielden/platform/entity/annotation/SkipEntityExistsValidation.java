@@ -7,13 +7,13 @@ import java.lang.annotation.Target;
 
 /**
  * This annotation should be used to indicate properties of an entity type that should not be validated for entity existence.
- * Semantically this suggests that such values should be most likely persisted at the time of saving their owning entity.
- * However, at this stage such semantics should be implemented at the domain level rather than generically at the platform level.
+ * In case of persistent properties, semantically, this suggests that such values should be most likely persisted at the time of saving their owning entity.
+ * However, the actual semantics can only be defined at the domain level.
  *
  * @author TG Team
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
-public @interface Autosave {
+public @interface SkipEntityExistsValidation {
 }
