@@ -138,11 +138,11 @@ public class LastMessageRetrieverActor<T extends AbstractAvlMessage> extends Unt
             receivedMachinesCount++;
             if (data instanceof ServerState) {
                 final ServerState lm = (ServerState) data;
-                logger.info("Non-empty server state response has been obtained for [" + getSelf() + "] actor for machine id [" + lm.getMachineId()
+                logger.debug("Non-empty server state response has been obtained for [" + getSelf() + "] actor for machine id [" + lm.getMachineId()
                         + "]. receivedMachinesCount == " + receivedMachinesCount + " (from " + machinesCount + ").");
                 serverStates.put(lm.getMachineId(), lm.getServerState());
             } else if (data instanceof NoServerState) {
-                logger.info("Empty server state response has been obtained for [" + getSelf() + "] actor. receivedMachinesCount == " + receivedMachinesCount + " (from "
+                logger.debug("Empty server state response has been obtained for [" + getSelf() + "] actor. receivedMachinesCount == " + receivedMachinesCount + " (from "
                         + machinesCount + ").");
                 // no server state has been changed for this machine
             } else {
