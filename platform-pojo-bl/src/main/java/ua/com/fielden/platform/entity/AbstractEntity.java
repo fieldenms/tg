@@ -1139,7 +1139,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     public final boolean isDirty() {
-        return getDirtyProperties().size() != 0 || !isPersisted();
+        return !getDirtyProperties().isEmpty() || !isPersisted();
     }
 
     public final void setDirty(final boolean dirty) {

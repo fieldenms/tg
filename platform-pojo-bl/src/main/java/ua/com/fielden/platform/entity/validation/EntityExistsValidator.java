@@ -64,7 +64,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             }
 
             if (!exists) {
-                return Result.failure(entity, format("EntityExists validator : Could not find entity %s", newValue));
+                return Result.failure(entity, format("EntityExists validator: Could not find entity %s", newValue));
             } else {
                 return Result.successful(entity);
             }

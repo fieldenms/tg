@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.dao;
 
+import static java.lang.String.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -75,7 +76,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private DomainMetadata domainMetadata;
 
     private EntityFactory entityFactory;
-
 
     @Inject
     private ICompanionObjectFinder coFinder;
@@ -188,104 +188,31 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new IllegalArgumentException("Entity should not be null when saving.");
         }
         logger.debug("Start saving entity " + entity + " (ID = " + entity.getId() + ")");
+
+        // need to capture names of dirty properties before the actual saving takes place and makes all properties not dirty
+        // this is needed for executing after save event handler
         final List<String> dirtyProperties = toStringList(entity.getDirtyProperties());
+
+        // let's try to save entity
         try {
-            if (!entity.isPersisted()) {
-                // first check if the passed in entity is valid
-                final Result isValid = entity.isValid();
-                if (!isValid.isSuccessful()) {
-                    throw isValid;
-                }
-                // let's also make sure that duplicate entities are not allowed
-                final Integer count = count(createQueryByKey(entity.getKey()), Collections.<String, Object> emptyMap());
-                if (count > 0) {
-                    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " already exists: "
-                            + entity));
-                }
-
-                // check and assign properties annotated with @TransactionDate
-                try {
-                    assignTransactionDate(entity);
-                } catch (final Exception e) {
-                    throw new IllegalStateException("Could not assign transaction date properties.", e);
-                }
-                // check and assign properties annotated with @TransactionUser
-                try {
-                    assignTransactionUser(entity);
-                } catch (final Exception e) {
-                    throw new IllegalStateException("Could not assign transaction user properties.", e);
-                }
-
-                // save the entity
-                getSession().save(entity);
-            } else {
-                // check validity of properties
-                for (final MetaProperty<?> prop : entity.getProperties().values()) {
-                    if (!prop.isValid()) {
-                        throw prop.getFirstFailure();
-                    }
-                }
-                if (!entity.getDirtyProperties().isEmpty()) {
-                    // let's also make sure that duplicate entities are not allowed
-                    final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
-                    final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants).getEntities(from(model).model());
-                    final int count = ids.size();
-                    if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
-                        throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()
-                                + " entity already exists."));
-                    }
-
-                    // If entity with id exists then the returned instance is proxied since it is retrieved using standard Hibernate session get method,
-                    // and thus is associated with current Hibernate session.
-                    // This seems to be advantageous since entity validation would work relying on standard Hibernate lazy initialisation.
-
-                    final T persistedEntity = (T) getSession().load(getEntityType(), entity.getId());
-                    // first check any concurrent modification
-                    if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion()) {
-                        throw new Result(entity, new IllegalStateException("Cannot save a stale entity " + entity.getKey() + " ("
-                                + TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey() + ") -- another user has changed it."));
-                    }
-                    // if there are changes persist them
-                    // Setting modified values triggers any associated validation.
-                    // An interesting case is with validation based on associative properties such as a work order for purchase order item.
-                    // If a purchase order item is being persisted some of its property validation might depend on the state of the associated work order.
-                    // When this purchase order item was validated at the client side it might have been using a stale work order.
-                    // In here revalidation occurs, which would definitely work with the latest data.
-                    for (final Object obj : entity.getDirtyProperties()) {
-                        final String propName = ((MetaProperty<?>) obj).getName();
-                        //		    logger.error("is dirty: " + propName + " of " + getEntityType().getSimpleName() + " old = " + ((MetaProperty) obj).getOriginalValue() + " new = " + ((MetaProperty) obj).getValue());
-                        final Object value = entity.get(propName);
-                        // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
-                        // the easiest way to do that is to load entity by id using the current session
-                        if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
-                            persistedEntity.set(propName, getSession().load(((AbstractEntity<?>) value).getType(), ((AbstractEntity<?>) value).getId()));
-                        } else {
-                            persistedEntity.set(propName, value);
-                        }
-                    }
-                    // check if entity is valid after changes
-                    final Result res = persistedEntity.isValid();
-                    if (res.isSuccessful()) {
-                        // during the update a StaleObjectStateException might be thrown.
-                        // getSession().flush();
-                        getSession().update(persistedEntity);
-                    } else {
-                        throw res;
-                    }
-                    // set incremented version
-                    try {
-                        final Method setVersion = Reflector.getMethod(entity/* .getType() */, "setVersion", Long.class);
-                        setVersion.setAccessible(true);
-                        setVersion.invoke(entity, entity.getVersion() + 1);
-                    } catch (final Exception e) {
-                        throw new IllegalStateException("Could not set updated entity version.");
-                    }
-
-                }
+            // firstly validate the entity
+            final Result isValid = entity.isValid();
+            if (!isValid.isSuccessful()) {
+                throw isValid;
             }
 
-            entity.setDirty(false);
-            entity.resetMetaState();
+            // entity is valid and we should proceed with saving, but only if there are some changes
+            if (entity.isDirty()) { // is there anything to save?
+                // new and previously saved entities are handled differently
+                if (!entity.isPersisted()) { // is it a new entity?
+                    saveNewEntity(entity);
+                } else { // so, this is a modified entity
+                    saveModifiedEntity(entity);
+
+                }
+                // in both cases (new or modified) need to resent entity meta state as if it was just fetched
+                entity.resetMetaState();
+            }
         } finally {
             logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
@@ -297,6 +224,103 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         processAfterSaveEvent(entity, dirtyProperties);
 
         return entity;
+    }
+
+    /**
+     * Saves previously persisted and now modified entity.
+     *
+     * @param entity
+     */
+    private void saveModifiedEntity(final T entity) {
+        // let's make sure that entity is not a duplicate
+        final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
+        final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants).getEntities(from(model).model());
+        final int count = ids.size();
+        if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
+            throw Result.failure(
+                    entity,
+                    new IllegalArgumentException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey())));
+        }
+
+        // If entity with id exists then the returned instance is proxied since it is retrieved using standard Hibernate session get method,
+        // and thus is associated with current Hibernate session.
+        // This is required to ensure correct entity re-validation where all necessary values would we loaded automatically (i.e. without any fetch model) using Hibernate's lazy-loading mechanism.
+
+        // Load existing entity version by id
+        final T persistedEntity = (T) getSession().load(getEntityType(), entity.getId());
+
+        // Check any concurrent modification
+        // TODO This is where automatic conflict resolution should be implemented (refer #83)
+        if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion()) {
+            throw new Result(entity, new IllegalStateException("Cannot save a stale entity " + entity.getKey() + " ("
+                    + TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey() + ") -- another user has changed it."));
+        }
+        // if there are changes persist them
+        // Setting modified values triggers any associated validation.
+        // An interesting case is with validation based on associative properties such as a work order for purchase order item.
+        // If a purchase order item is being persisted some of its property validation might depend on the state of the associated work order.
+        // When this purchase order item was validated at the client side it might have been using a stale work order.
+        // In here revalidation occurs, which would definitely work with the latest data.
+        for (final Object obj : entity.getDirtyProperties()) {
+            final String propName = ((MetaProperty<?>) obj).getName();
+            //		    logger.error("is dirty: " + propName + " of " + getEntityType().getSimpleName() + " old = " + ((MetaProperty) obj).getOriginalValue() + " new = " + ((MetaProperty) obj).getValue());
+            final Object value = entity.get(propName);
+            // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
+            // the easiest way to do that is to load entity by id using the current session
+            if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
+                persistedEntity.set(propName, getSession().load(((AbstractEntity<?>) value).getType(), ((AbstractEntity<?>) value).getId()));
+            } else {
+                persistedEntity.set(propName, value);
+            }
+        }
+        // check if entity is valid after changes
+        final Result res = persistedEntity.isValid();
+        if (res.isSuccessful()) {
+            // during the update a StaleObjectStateException might be thrown.
+            // getSession().flush();
+            getSession().update(persistedEntity);
+        } else {
+            throw res;
+        }
+        // set incremented version
+        try {
+            final Method setVersion = Reflector.getMethod(entity/* .getType() */, "setVersion", Long.class);
+            setVersion.setAccessible(true);
+            setVersion.invoke(entity, entity.getVersion() + 1);
+        } catch (final Exception e) {
+            throw new IllegalStateException("Could not set updated entity version.");
+        }
+    }
+
+    /**
+     * Persists an entity that was not persisted before.
+     *
+     * @param entity
+     */
+    private void saveNewEntity(final T entity) {
+        // let's make sure that entity is not a duplicate
+        final Integer count = count(createQueryByKey(entity.getKey()), Collections.<String, Object> emptyMap());
+        if (count > 0) {
+            throw Result.failure(
+                    entity,
+                    new IllegalArgumentException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey())));
+        }
+
+        // check and assign properties annotated with @TransactionDate
+        try {
+            assignTransactionDate(entity);
+        } catch (final Exception e) {
+            throw new IllegalStateException("Could not assign transaction date properties.", e);
+        }
+        // check and assign properties annotated with @TransactionUser
+        try {
+            assignTransactionUser(entity);
+        } catch (final Exception e) {
+            throw new IllegalStateException("Could not assign transaction user properties.", e);
+        }
+
+        // save the entity
+        getSession().save(entity);
     }
 
     private List<String> toStringList(final List<MetaProperty<?>> dirtyProperties) {
@@ -615,7 +639,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * Calculates summary based on the assumption that <code>model</code> represents summary model for the type T.
      */
     private T calcSummary(final QueryExecutionModel<T, ?> model) {
-	final List<T> list = getAllEntities(model);
+        final List<T> list = getAllEntities(model);
         return list.size() == 1 ? list.get(0) : null;
     }
 
@@ -679,7 +703,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         @Override
         public IPage<T> next() {
             if (hasNext()) {
-        	if (queryModel != null && summary != null) {
+                if (queryModel != null && summary != null) {
                     return new EntityQueryPage(queryModel, summary, pageNumber + 1, pageCapacity, numberOfPages);
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, pageNumber + 1, pageCapacity, numberOfPages);
@@ -693,7 +717,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         @Override
         public IPage<T> prev() {
             if (hasPrev()) {
-        	if (queryModel != null && summary != null) {
+                if (queryModel != null && summary != null) {
                     return new EntityQueryPage(queryModel, summary, pageNumber - 1, pageCapacity, numberOfPages);
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, pageNumber - 1, pageCapacity, numberOfPages);
@@ -707,7 +731,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         @Override
         public IPage<T> first() {
             if (hasPrev()) {
-        	if (queryModel != null && summary != null) {
+                if (queryModel != null && summary != null) {
                     return new EntityQueryPage(queryModel, summary, 0, pageCapacity, numberOfPages);
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, 0, pageCapacity, numberOfPages);
@@ -721,7 +745,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         @Override
         public IPage<T> last() {
             if (hasNext()) {
-        	if (queryModel != null && summary != null) {
+                if (queryModel != null && summary != null) {
                     return new EntityQueryPage(queryModel, summary, numberOfPages - 1, pageCapacity, numberOfPages);
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, numberOfPages - 1, pageCapacity, numberOfPages);
