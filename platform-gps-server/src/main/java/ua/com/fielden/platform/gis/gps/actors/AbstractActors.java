@@ -313,8 +313,6 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
         final Future<Object> future = Patterns.ask(LastMessageRetrieverActor.create(getSystem(), getMachineActors()), new MachinesOldServerStates(serverStatesRequest), timeout);
         try {
             final Map<Long, MachineServerState> result = (Map<Long, MachineServerState>) Await.result(future, timeout.duration());
-            getLogger().info("final Map<Long, MachineServerState> result = ");
-            getLogger().info(result);
             final Period p = new Period(st, new DateTime());
             getLogger().info("New server states [" + result.size() + "] for " + serverStatesRequest.size() + " machines retrieved in "
                     + (p.getHours() == 0 ? "" : p.getHours() + " h ")
