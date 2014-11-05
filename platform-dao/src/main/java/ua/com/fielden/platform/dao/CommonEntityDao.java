@@ -86,8 +86,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private final IFilter filter;
 
     @Inject
-    private IUserController userController;
-    @Inject
     private IUniversalConstants universalConstants;
     @Inject
     private IUserProvider up;
@@ -263,7 +261,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // In here revalidation occurs, which would definitely work with the latest data.
         for (final Object obj : entity.getDirtyProperties()) {
             final String propName = ((MetaProperty<?>) obj).getName();
-            //		    logger.error("is dirty: " + propName + " of " + getEntityType().getSimpleName() + " old = " + ((MetaProperty) obj).getOriginalValue() + " new = " + ((MetaProperty) obj).getValue());
+            // logger.error("is dirty: " + propName + " of " + getEntityType().getSimpleName() + " old = " + ((MetaProperty) obj).getOriginalValue() + " new = " + ((MetaProperty) obj).getValue());
             final Object value = entity.get(propName);
             // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
             // the easiest way to do that is to load entity by id using the current session
