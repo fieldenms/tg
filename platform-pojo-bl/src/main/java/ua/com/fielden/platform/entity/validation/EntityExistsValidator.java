@@ -41,14 +41,16 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     @Override
     public Result handle(final MetaProperty<T> property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations) {
         final IEntityDao<T> co = coFinder.find(type);
-
         if (co == null) {
             throw new IllegalStateException("Entity exists validator is not fully initialise: companion object is missing");
         }
+
         final AbstractEntity<?> entity = property.getEntity();
         try {
             if (newValue == null) {
                 return Result.successful(entity);
+            } else if (newValue.isDirty()) {
+                throw Result.failure(entity, format("EntityExists validator: dirty entity %s is not acceptable.", newValue));
             }
 
             // entity value should either be an actual entity instance or an instance of a corresponding key
